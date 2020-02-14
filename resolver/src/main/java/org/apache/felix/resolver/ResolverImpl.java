@@ -807,7 +807,7 @@ public class ResolverImpl implements Resolver
         return resourcePkgs;
     }
 
-    private static void computeUses(
+    private void computeUses(
             ResolveSession session,
             Map<Resource, List<WireCandidate>> allWireCandidates,
             Map<Resource, Packages> resourcePkgMap,
@@ -1016,7 +1016,7 @@ public class ResolverImpl implements Resolver
         }
     }
 
-    private static void mergeUses(
+    private void mergeUses(
         ResolveSession session, Resource current, Packages currentPkgs,
         Capability mergeCap, List<Requirement> blameReqs, Capability matchingCap,
         Map<Resource, Packages> resourcePkgMap,
@@ -1122,7 +1122,7 @@ public class ResolverImpl implements Resolver
         }
     }
 
-    private static Map<Resource, Packages> calculatePackageSpaces(
+    private Map<Resource, Packages> calculatePackageSpaces(
             final ResolveSession session,
             final Candidates allCandidates,
             Collection<Resource> hosts)
@@ -1279,7 +1279,7 @@ public class ResolverImpl implements Resolver
         return uses;
     }
 
-    private static void addUsedBlames(
+    private void addUsedBlames(
         ArrayMap<Set<Capability>, UsedBlames> usedBlames, Collection<Blame> blames, Capability matchingCap, Map<Resource, Packages> resourcePkgMap)
     {
         Set<Capability> usedCaps;
@@ -1295,7 +1295,15 @@ public class ResolverImpl implements Resolver
                 usedCaps.addAll(getPackageSources(blame.m_cap, resourcePkgMap));
             }
         }
-
+        if (usedCaps.isEmpty())
+        {
+            // This most likely is an issue with the resolve context.
+            // To avoid total failure we do not add blames if there is
+            // no source capabilities
+            m_logger.log(Logger.LOG_INFO,
+                "Package sources are empty for used capability: " + blames);
+            return;
+        }
         // Find UsedBlame that uses the same capability as the new blame.
         UsedBlames addToBlame = usedBlames.getOrCompute(usedCaps);
         // Add the new Blames and record the matching capability cause
