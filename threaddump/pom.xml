@@ -26,9 +26,9 @@
     <description>Thread Dump classes for OSGi.</description>
 
     <scm>
-        <connection>scm:svn:http://svn.apache.org/repos/asf/felix/trunk/threaddump</connection>
-        <developerConnection>scm:svn:https://svn.apache.org/repos/asf/felix/trunk/threaddump</developerConnection>
-        <url>http://svn.apache.org/repos/asf/felix/threaddump</url>
+        <connection>scm:git:https://github.com/apache/felix-dev.git</connection>
+        <developerConnection>scm:git:https://github.com/apache/felix-dev.git</developerConnection>
+        <url>https://gitbox.apache.org/repos/asf?p=felix-dev.git</url>
     </scm>
 
     <dependencies>

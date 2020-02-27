@@ -42,16 +42,16 @@
  <url>http://felix.apache.org/components/bundle-plugin/</url>
 
  <scm>
-     <connection>scm:svn:http://svn.apache.org/repos/asf/felix/trunk/tools/maven-bundle-plugin</connection>
-     <developerConnection>scm:svn:https://svn.apache.org/repos/asf/felix/trunk/tools/maven-bundle-plugin</developerConnection>
-     <url>http://svn.apache.org/viewvc/felix/trunk/tools/maven-bundle-plugin</url>
+     <connection>scm:git:https://github.com/apache/felix-dev.git</connection>
+     <developerConnection>scm:git:https://github.com/apache/felix-dev.git</developerConnection>
+     <url>https://gitbox.apache.org/repos/asf?p=felix-dev.git</url>
  </scm>
 
  <!-- Support for publishing the mvn site. -->
   <distributionManagement>
     <site>
       <id>apache.website</id>
-      <url>scm:svn:https://svn.apache.org/repos/asf/felix/site/trunk/content/components/${maven.site.path}</url>
+      <url>https://gitbox.apache.org/repos/asf?p=felix-dev.git</url>
     </site>
   </distributionManagement>
 

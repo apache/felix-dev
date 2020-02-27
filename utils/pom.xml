@@ -31,9 +31,9 @@
     <artifactId>org.apache.felix.utils</artifactId>
 
     <scm>
-        <connection>scm:svn:http://svn.apache.org/repos/asf/felix/trunk/utils</connection>
-        <developerConnection>scm:svn:https://svn.apache.org/repos/asf/felix/trunk/utils</developerConnection>
-        <url>http://svn.apache.org/repos/asf/felix/utils</url>
+        <connection>scm:git:https://github.com/apache/felix-dev.git</connection>
+        <developerConnection>scm:git:https://github.com/apache/felix-dev.git</developerConnection>
+        <url>https://gitbox.apache.org/repos/asf?p=felix-dev.git</url>
     </scm>
 
     <properties>

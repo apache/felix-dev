@@ -39,9 +39,9 @@
     </description>
 
     <scm>
-        <connection>scm:svn:http://svn.apache.org/repos/asf/felix/trunk/tools/org.apache.felix.scr.generator</connection>
-        <developerConnection>scm:svn:https://svn.apache.org/repos/asf/felix/trunk/tools/org.apache.felix.scr.generator</developerConnection>
-        <url>http://svn.apache.org/repos/asf/felix/tools/org.apache.felix.scr.generator</url>
+        <connection>scm:git:https://github.com/apache/felix-dev.git</connection>
+        <developerConnection>scm:git:https://github.com/apache/felix-dev.git</developerConnection>
+        <url>https://gitbox.apache.org/repos/asf?p=felix-dev.git</url>
     </scm>
 
     <properties>

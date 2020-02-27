@@ -41,9 +41,9 @@
     </properties>
 
     <scm>
-        <connection>scm:svn:http://svn.apache.org/repos/asf/felix/trunk/configadmin-plugins/interpolation</connection>
-        <developerConnection>scm:svn:https://svn.apache.org/repos/asf/felix/trunk/configadmin-plugins/interpolation</developerConnection>
-        <url>http://svn.apache.org/viewvc/felix/trunk/configadmin-plugins/interpolation</url>
+        <connection>scm:git:https://github.com/apache/felix-dev.git</connection>
+        <developerConnection>scm:git:https://github.com/apache/felix-dev.git</developerConnection>
+        <url>https://gitbox.apache.org/repos/asf?p=felix-dev.git</url>
     </scm>
 
     <build>

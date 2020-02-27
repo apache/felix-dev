@@ -35,9 +35,9 @@
 		<module>complete</module>
 	</modules>
 	<scm>
-		<connection>scm:svn:http://svn.apache.org/repos/asf/felix/trunk/httplite</connection>
-		<developerConnection>scm:svn:https://svn.apache.org/repos/asf/felix/trunk/httplite</developerConnection>
-		<url>http://svn.apache.org/repos/asf/felix/trunk/httplite</url>
+		<connection>scm:git:https://github.com/apache/felix-dev.git</connection>
+		<developerConnection>scm:git:https://github.com/apache/felix-dev.git</developerConnection>
+		<url>https://gitbox.apache.org/repos/asf?p=felix-dev.git</url>
 	</scm>
 	<url>http://felix.apache.org/site/apache-felix-lightweight-http-service.html</url>
 </project>

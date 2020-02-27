@@ -30,9 +30,9 @@
   <artifactId>org.apache.felix.bundlerepository</artifactId>
   <version>2.0.11-SNAPSHOT</version>
   <scm>
-    <connection>scm:svn:http://svn.apache.org/repos/asf/felix/trunk/bundlerepository</connection>
-    <developerConnection>scm:svn:https://svn.apache.org/repos/asf/felix/trunk/bundlerepository</developerConnection>
-    <url>http://svn.apache.org/repos/asf/felix/trunk/bundlerepository</url>
+    <connection>scm:git:https://github.com/apache/felix-dev.git</connection>
+    <developerConnection>scm:git:https://github.com/apache/felix-dev.git</developerConnection>
+    <url>https://gitbox.apache.org/repos/asf?p=felix-dev.git</url>
   </scm>
   <dependencies>
     <dependency>

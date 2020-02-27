@@ -33,9 +33,9 @@
     <packaging>pom</packaging>
 
     <scm>
-        <connection>scm:svn:http://svn.apache.org/repos/asf/felix/trunk/http</connection>
-        <developerConnection>scm:svn:https://svn.apache.org/repos/asf/felix/trunk/http</developerConnection>
-        <url>http://svn.apache.org/viewvc/felix/trunk/http/</url>
+        <connection>scm:git:https://github.com/apache/felix-dev.git</connection>
+        <developerConnection>scm:git:https://github.com/apache/felix-dev.git</developerConnection>
+        <url>https://gitbox.apache.org/repos/asf?p=felix-dev.git</url>
     </scm>
     
     <modules>

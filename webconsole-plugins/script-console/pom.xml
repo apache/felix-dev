@@ -48,11 +48,11 @@
   </properties>
 
   <scm>
-    <connection>scm:svn:http://svn.apache.org/repos/asf/felix/trunk/webconsole-plugins/script-console</connection>
+    <connection>scm:git:https://github.com/apache/felix-dev.git</connection>
     <developerConnection>
         scm:svn:https://svn.apache.org/repos/asf/felix/trunk/webconsole-plugins/script-console
     </developerConnection>
-    <url>http://svn.apache.org/viewvc/felix/trunk/webconsole-plugins/script-console</url>
+    <url>https://gitbox.apache.org/repos/asf?p=felix-dev.git</url>
   </scm>
 
     <build>

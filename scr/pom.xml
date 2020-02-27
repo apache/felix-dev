@@ -32,9 +32,9 @@
     <artifactId>org.apache.felix.scr</artifactId>
     <version>2.1.17-SNAPSHOT</version>
     <scm>
-        <connection>scm:svn:https://svn.apache.org/repos/asf/felix/trunk/scr</connection>
-        <developerConnection>scm:svn:https://svn.apache.org/repos/asf/felix/trunk/scr</developerConnection>
-        <url>scm:svn:https://svn.apache.org/repos/asf/felix/trunk/scr</url>
+        <connection>scm:git:https://github.com/apache/felix-dev.git</connection>
+        <developerConnection>scm:git:https://github.com/apache/felix-dev.git</developerConnection>
+        <url>https://gitbox.apache.org/repos/asf?p=felix-dev.git</url>
     </scm>
     
     <!--

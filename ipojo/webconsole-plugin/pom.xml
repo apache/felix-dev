@@ -126,8 +126,8 @@
     </dependencies>
 
     <scm>
-        <connection>scm:svn:http://svn.apache.org/repos/asf/felix/trunk/ipojo/webconsole-plugin</connection>
-        <developerConnection>scm:svn:https://svn.apache.org/repos/asf/felix/trunk/ipojo/webconsole-plugin</developerConnection>
-        <url>http://svn.apache.org/viewvc/felix/trunk/ipojo/webconsole-plugin</url>
+        <connection>scm:git:https://github.com/apache/felix-dev.git</connection>
+        <developerConnection>scm:git:https://github.com/apache/felix-dev.git</developerConnection>
+        <url>https://gitbox.apache.org/repos/asf?p=felix-dev.git</url>
     </scm>
 </project>

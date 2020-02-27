@@ -35,9 +35,9 @@
     <description>Some tests for Gogo JLine shell.</description>
     <url>http://felix.apache.org/</url>
     <scm>
-        <connection>scm:svn:https://svn.apache.org/repos/asf/felix/trunk/gogo/itest-jline/</connection>
-        <developerConnection>scm:svn:https://svn.apache.org/repos/asf/felix/trunk/gogo/itest-jline/</developerConnection>
-        <url>https://svn.apache.org/repos/asf/felix/trunk/gogo/itest-jline/</url>
+        <connection>scm:git:https://github.com/apache/felix-dev.git</connection>
+        <developerConnection>scm:git:https://github.com/apache/felix-dev.git</developerConnection>
+        <url>https://gitbox.apache.org/repos/asf?p=felix-dev.git</url>
     </scm>
 
     <properties>

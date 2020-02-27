@@ -33,9 +33,9 @@
 	to generated xml component descriptors
     </description>
      <scm>
-        <connection>scm:svn:https://svn.apache.org/repos/asf/felix/trunk/scr-ext-anno</connection>
-        <developerConnection>scm:svn:https://svn.apache.org/repos/asf/felix/trunk/scr-ext-anno</developerConnection>
-        <url>scm:svn:https://svn.apache.org/repos/asf/felix/trunk/scr-ext-anno</url>
+        <connection>scm:git:https://github.com/apache/felix-dev.git</connection>
+        <developerConnection>scm:git:https://github.com/apache/felix-dev.git</developerConnection>
+        <url>https://gitbox.apache.org/repos/asf?p=felix-dev.git</url>
     </scm>
  <properties>
     <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>

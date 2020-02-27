@@ -35,9 +35,9 @@
     <description>Some tests for Gogo Shell.</description>
     <url>http://felix.apache.org/</url>
     <scm>
-        <connection>scm:svn:https://svn.apache.org/repos/asf/felix/trunk/gogo/itest-shell/</connection>
-        <developerConnection>scm:svn:https://svn.apache.org/repos/asf/felix/trunk/gogo/itest-shell/</developerConnection>
-        <url>https://svn.apache.org/repos/asf/felix/trunk/gogo/itest-shell/</url>
+        <connection>scm:git:https://github.com/apache/felix-dev.git</connection>
+        <developerConnection>scm:git:https://github.com/apache/felix-dev.git</developerConnection>
+        <url>https://gitbox.apache.org/repos/asf?p=felix-dev.git</url>
     </scm>
 
     <properties>

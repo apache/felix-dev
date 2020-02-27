@@ -32,9 +32,9 @@
   <version>3.6.5-SNAPSHOT</version>
   <artifactId>org.apache.felix.fileinstall</artifactId>
   <scm>
-    <connection>scm:svn:http://svn.apache.org/repos/asf/felix/trunk/fileinstall</connection>
-    <developerConnection>scm:svn:https://svn.apache.org/repos/asf/felix/trunk/fileinstall</developerConnection>
-    <url>http://svn.apache.org/repos/asf/felix/fileinstall</url>
+    <connection>scm:git:https://github.com/apache/felix-dev.git</connection>
+    <developerConnection>scm:git:https://github.com/apache/felix-dev.git</developerConnection>
+    <url>https://gitbox.apache.org/repos/asf?p=felix-dev.git</url>
   </scm>
   <properties>
     <felix.java.version>7</felix.java.version>
