@@ -13,7 +13,7 @@ Directly related projects:
 
 ## OSGi Compendium
 
-Several sub-projects cover various **OSGi Compendium** specifications such as:
+Several sub-projects cover various [**OSGi Compendium**](https://osgi.org/specification/osgi.cmpn/7.0.0/) specifications such as:
 
 - [**Configuration Admin**](https://osgi.org/specification/osgi.cmpn/7.0.0/service.cm.html) `/configadmin`
 - [**Configurator**](https://osgi.org/specification/osgi.cmpn/7.0.0/service.configurator.html) `/configurator`
