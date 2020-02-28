@@ -42,7 +42,7 @@
 
     <scm>
         <connection>scm:git:https://github.com/apache/felix-dev.git</connection>
-        <developerConnection>scm:git:git@github.com:apache/felix-dev.git</developerConnection>
+        <developerConnection>scm:git:https://github.com:apache/felix-dev.git</developerConnection>
         <url>https://gitbox.apache.org/repos/asf?p=felix-dev.git</url>
       <tag>HEAD</tag>
   </scm>
@@ -128,7 +128,7 @@
         <dependency>
             <groupId>junit</groupId>
             <artifactId>junit</artifactId>
-            <version>4.12</version>
+            <version>4.13</version>
             <scope>test</scope>
         </dependency>
         <dependency>
