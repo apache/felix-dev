@@ -98,8 +98,9 @@ as framework properties default to system properties.
 
 ### Consistent processing
 
-It is recommended to configure the Configuration Admin to only start processing once this plugin is active. In case of
-the Apache Felix ConfigAdmin implementation, this can be achieved by using the following property:
+It is recommended to configure the Configuration Admin to only start processing once this plugin is active. Otherwise there is the risk that configurations get delivered without placeholders being replaced.
+
+In case of the Apache Felix ConfigAdmin implementation, this can be achieved by using the following property:
 
 * `felix.cm.config.plugins`: `org.apache.felix.configadmin.plugin.interpolation`
 
