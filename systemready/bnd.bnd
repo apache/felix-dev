@@ -1,0 +1,4 @@
+
+Import-Package: \
+	javax.servlet*;resolution:=optional,\
+	*
