@@ -18,6 +18,7 @@
  */
 package org.apache.felix.framework;
 
+import org.apache.felix.framework.cache.ConnectContentContent;
 import org.apache.felix.framework.cache.Content;
 import org.apache.felix.framework.capabilityset.SimpleFilter;
 import org.apache.felix.framework.resolver.ResourceNotFoundException;
@@ -37,6 +38,8 @@ import org.osgi.framework.Constants;
 import org.osgi.framework.FrameworkEvent;
 import org.osgi.framework.PackagePermission;
 import org.osgi.framework.ServiceReference;
+import org.osgi.framework.connect.ConnectContent;
+import org.osgi.framework.connect.ConnectModule;
 import org.osgi.framework.hooks.weaving.WeavingException;
 import org.osgi.framework.hooks.weaving.WeavingHook;
 import org.osgi.framework.hooks.weaving.WovenClass;
@@ -113,7 +116,7 @@ public class BundleWiringImpl implements BundleWiring
 
     private volatile List<BundleRequirement> m_wovenReqs = null;
 
-    private volatile BundleClassLoader m_classLoader;
+    private volatile ClassLoader m_classLoader;
 
     // Bundle-specific class loader for boot delegation.
     private final ClassLoader m_bootClassLoader;
@@ -727,16 +730,24 @@ public class BundleWiringImpl implements BundleWiring
         // is not disposed.
         if (!m_isDisposed && (m_classLoader == null))
         {
-            m_classLoader = BundleRevisionImpl.getSecureAction().run(
-                new PrivilegedAction<BundleClassLoader>()
-                {
-                    @Override
-                    public BundleClassLoader run()
+            if (m_revision.getContent() instanceof ConnectContentContent)
+            {
+                m_classLoader = ((ConnectContentContent) m_revision.getContent()).getClassLoader();
+            }
+
+            if (m_classLoader == null)
+            {
+                m_classLoader = BundleRevisionImpl.getSecureAction().run(
+                    new PrivilegedAction<BundleClassLoader>()
                     {
-                        return new BundleClassLoader(BundleWiringImpl.this, determineParentClassLoader(), m_logger);
+                        @Override
+                        public BundleClassLoader run()
+                        {
+                            return new BundleClassLoader(BundleWiringImpl.this, determineParentClassLoader(), m_logger);
+                        }
                     }
-                }
-            );
+                );
+            }
         }
         return m_classLoader;
     }
@@ -1522,24 +1533,21 @@ public class BundleWiringImpl implements BundleWiring
 
                     try
                     {
-                        result = tryImplicitBootDelegation(name, isClass);
-                    }
-                    catch (Exception ex)
-                    {
-                        // Ignore, will throw using CNFE_CLASS_LOADER
-                    }
+                        // Get the appropriate class loader for delegation.
+                        ClassLoader bdcl = getBootDelegationClassLoader();
+                        result = (isClass) ? (Object) bdcl.loadClass(name) : (Object) bdcl.getResource(name);
 
-                    if (result != null)
-                    {
-                        m_accessorLookupCache.put(name, BundleRevisionImpl.getSecureAction()
-                                .getClassLoader(this.getClass()));
-                        return result;
+                        if (result != null)
+                        {
+                            m_accessorLookupCache.put(name, bdcl);
+                            return result;
+                        }
                     }
-                    else
+                    catch (ClassNotFoundException ex)
                     {
-                        m_accessorLookupCache.put(name, CNFE_CLASS_LOADER);
-                        CNFE_CLASS_LOADER.loadClass(name);
                     }
+                    m_accessorLookupCache.put(name, CNFE_CLASS_LOADER);
+                    CNFE_CLASS_LOADER.loadClass(name);
                 }
 
                 // Look in the revision's imports. Note that the search may
@@ -1550,24 +1558,37 @@ public class BundleWiringImpl implements BundleWiring
                 // If not found, try the revision's own class path.
                 if (result == null)
                 {
-                    if (isClass)
+                    ClassLoader cl = getClassLoaderInternal();
+                    if (cl == null)
                     {
-                        ClassLoader cl = getClassLoaderInternal();
-                        if (cl == null)
+                        if (isClass)
                         {
                             throw new ClassNotFoundException(
-                                    "Unable to load class '"
-                                            + name
-                                            + "' because the bundle wiring for "
-                                            + m_revision.getSymbolicName()
-                                            + " is no longer valid.");
+                                "Unable to load class '"
+                                    + name
+                                    + "' because the bundle wiring for "
+                                    + m_revision.getSymbolicName()
+                                    + " is no longer valid.");
                         }
-                        result = ((BundleClassLoader) cl).findClass(name);
+                         else
+                        {
+                            throw new ResourceNotFoundException("Unable to load resource '"
+                                + name
+                                + "' because the bundle wiring for "
+                                + m_revision.getSymbolicName()
+                                + " is no longer valid.");
+                        }
                     }
-                    else
+                    if (cl instanceof BundleClassLoader)
                     {
-                        result = m_revision.getResourceLocal(name);
+                        result = isClass ? ((BundleClassLoader) cl).findClass(name) :
+                            ((BundleClassLoader) cl).findResource(name);
                     }
+                    else {
+                        result = isClass ? cl.loadClass(name) : !name.startsWith("/") ? cl.getResource(name) :
+                        cl.getResource(name.substring(1));
+                    }
+
 
                     // If still not found, then try the revision's dynamic imports.
                     if (result == null)

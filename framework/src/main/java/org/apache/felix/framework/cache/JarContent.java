@@ -398,7 +398,7 @@ public class JarContent implements Content
         return m_file;
     }
 
-    private static class DevNullRunnable implements Runnable
+    static class DevNullRunnable implements Runnable
     {
         private final InputStream m_in;
 

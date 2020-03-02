@@ -1,5 +1,5 @@
 /*
- * Copyright (c) OSGi Alliance (2012, 2013). All Rights Reserved.
+ * Copyright (c) OSGi Alliance (2012, 2019). All Rights Reserved.
  * 
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -41,7 +41,7 @@ import org.osgi.resource.Namespace;
  * capability.
  * 
  * @Immutable
- * @author $Id: 7bc7a11c45b30538ffbb7572c4539f6160557684 $
+ * @author $Id: 27ae5d1c50d9fffcd7089d0fb225d8e793c4677a $
  */
 public final class IdentityNamespace extends Namespace {
 
@@ -103,6 +103,16 @@ public final class IdentityNamespace extends Namespace {
 	 * @see #CAPABILITY_TYPE_ATTRIBUTE
 	 */
 	public static final String	TYPE_UNKNOWN						= "unknown";
+
+	/**
+	 * The attribute value that contains tags for the resource. A tag is used to
+	 * identify an aspect of the resource that is not otherwise expressed by the
+	 * capabilities of the resource. The value of this attribute must be of type
+	 * {@code List<String>}.
+	 * 
+	 * @since 1.2
+	 */
+	public static final String	CAPABILITY_TAGS_ATTRIBUTE			= "tags";
 
 	/**
 	 * The capability attribute that contains a human readable copyright notice

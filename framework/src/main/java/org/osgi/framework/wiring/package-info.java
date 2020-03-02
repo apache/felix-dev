@@ -25,7 +25,7 @@
  * Import-Package: org.osgi.framework.wiring; version=&quot;[1.2,2.0)&quot;
  * </pre>
  * 
- * @author $Id$
+ * @author $Id: package-info.java 1614569 2014-07-30 07:22:32Z cziegeler $
  */
 
 @Version("1.2")

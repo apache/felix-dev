@@ -22,6 +22,7 @@ import org.apache.felix.framework.Logger;
 import org.apache.felix.framework.util.SecureAction;
 import org.apache.felix.framework.util.WeakZipFileFactory;
 import org.osgi.framework.Constants;
+import org.osgi.framework.connect.ModuleConnector;
 
 import java.io.File;
 import java.io.FileOutputStream;
@@ -386,6 +387,10 @@ public class BundleCache
         }
     }
 
+    public File getCacheDir() {
+        return determineCacheDir(m_configMap);
+    }
+
     /* package */ static SecureAction getSecureAction()
     {
         return m_secureAction;
@@ -398,7 +403,7 @@ public class BundleCache
         deleteDirectoryTree(cacheDir);
     }
 
-    public BundleArchive[] getArchives()
+    public BundleArchive[] getArchives(ModuleConnector connectFactory)
         throws Exception
     {
         // Get buffer size value.
@@ -431,7 +436,7 @@ public class BundleCache
                 {
                     archiveList.add(
                         new BundleArchive(
-                            m_logger, m_configMap, m_zipFactory, children[i]));
+                            m_logger, m_configMap, m_zipFactory, connectFactory, children[i]));
                 }
                 catch (Exception ex)
                 {
@@ -447,7 +452,7 @@ public class BundleCache
             archiveList.toArray(new BundleArchive[archiveList.size()]);
     }
 
-    public BundleArchive create(long id, int startLevel, String location, InputStream is)
+    public BundleArchive create(long id, int startLevel, String location, InputStream is, ModuleConnector connectFactory)
         throws Exception
     {
         File cacheDir = determineCacheDir(m_configMap);
@@ -461,7 +466,7 @@ public class BundleCache
             // Create the archive and add it to the list of archives.
             BundleArchive ba =
                 new BundleArchive(
-                    m_logger, m_configMap, m_zipFactory, archiveRootDir,
+                    m_logger, m_configMap, m_zipFactory, connectFactory, archiveRootDir,
                     id, startLevel, location, is);
             return ba;
         }

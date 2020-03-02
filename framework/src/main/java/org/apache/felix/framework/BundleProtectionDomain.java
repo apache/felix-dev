@@ -76,7 +76,7 @@ public class BundleProtectionDomain extends ProtectionDomain
 
             int count = 0;
             String manifest = null;
-            for (Enumeration e = m_root.getEntries(); e.hasMoreElements();)
+            for (Enumeration e = m_root.getEntries(); e != null && e.hasMoreElements();)
             {
                 String entry = (String) e.nextElement();
                 if (entry.endsWith("/"))

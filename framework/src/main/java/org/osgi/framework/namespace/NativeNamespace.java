@@ -31,7 +31,7 @@ import org.osgi.resource.Namespace;
  * 
  * @Immutable
  * @since 1.1
- * @author $Id$
+ * @author $Id: NativeNamespace.java 1825132 2018-02-23 15:11:00Z pauls $
  */
 public final class NativeNamespace extends Namespace {
 

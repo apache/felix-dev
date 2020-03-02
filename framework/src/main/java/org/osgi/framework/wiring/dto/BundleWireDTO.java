@@ -26,7 +26,7 @@ import org.osgi.resource.dto.WiringDTO;
  * <p>
  * {@code BundleWireDTO}s are referenced {@link BundleWiringDTO.NodeDTO}s.
  * 
- * @author $Id$
+ * @author $Id: BundleWireDTO.java 1614569 2014-07-30 07:22:32Z cziegeler $
  * @NotThreadSafe
  */
 public class BundleWireDTO extends WireDTO {

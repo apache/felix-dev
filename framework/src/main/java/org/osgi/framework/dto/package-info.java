@@ -32,7 +32,7 @@
  * <p>
  * {@code  Import-Package: org.osgi.framework.dto; version="[1.8,1.9)"}
  * 
- * @author $Id$
+ * @author $Id: package-info.java 1614569 2014-07-30 07:22:32Z cziegeler $
  */
 
 @Version("1.8")

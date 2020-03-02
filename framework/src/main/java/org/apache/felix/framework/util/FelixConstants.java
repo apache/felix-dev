@@ -20,7 +20,7 @@ package org.apache.felix.framework.util;
 
 public interface FelixConstants extends org.osgi.framework.Constants
 {
-    String SYSTEM_BUNDLE_SYMBOLICNAME = "org.apache.felix.framework";
+    String SYSTEM_BUNDLE_SYMBOLICNAME = "org.apache.felix.framework.connect";
     // Framework constants and values.
     String FRAMEWORK_VERSION_VALUE = "1.9";
     String FRAMEWORK_VENDOR_VALUE = "Apache Software Foundation";

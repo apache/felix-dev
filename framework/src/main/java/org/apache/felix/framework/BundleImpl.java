@@ -34,6 +34,7 @@ import org.osgi.framework.Constants;
 import org.osgi.framework.ServicePermission;
 import org.osgi.framework.ServiceReference;
 import org.osgi.framework.Version;
+import org.osgi.framework.connect.ConnectModule;
 import org.osgi.framework.hooks.bundle.CollisionHook;
 import org.osgi.framework.startlevel.BundleStartLevel;
 import org.osgi.framework.wiring.BundleRevision;
@@ -188,16 +189,23 @@ class BundleImpl implements Bundle, BundleRevisions
         {
             // Get current revision, since we can reuse it.
             BundleRevisionImpl current = adapt(BundleRevisionImpl.class);
-            // Close all existing revisions.
-            closeRevisions();
-            // Clear all revisions.
+
+            if (isRemovalPending()) {
+                closeRevisions();
+                // Purge all old archive revisions, only keeping the newest one.
+                m_archive.purge();
+
+                current.resetContent(m_archive.getCurrentRevision().getContent());
+            }
+            else {
+                // Remove the revision from the resolver state.
+                getFramework().getResolver().removeRevision(current);
+                current.resolve(null);
+                current.disposeContentPath();
+            }
+
             m_revisions.clear();
 
-            // Purge all old archive revisions, only keeping the newest one.
-            m_archive.purge();
-
-            // Reset the content of the current bundle revision.
-            current.resetContent(m_archive.getCurrentRevision().getContent());
             // Re-add the revision to the bundle.
             addRevision(current);
 
@@ -1332,7 +1340,7 @@ class BundleImpl implements Bundle, BundleRevisions
                     }
                 }
             }
-            if (!collisionCanditates.isEmpty())
+            if (!collisionCanditates.isEmpty() && m_installingBundle != null)
             {
                 throw new BundleException(
                     "Bundle symbolic name and version are not unique: "

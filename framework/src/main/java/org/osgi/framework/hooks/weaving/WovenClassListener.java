@@ -47,7 +47,7 @@ import org.osgi.annotation.versioning.ConsumerType;
  * 
  * @ThreadSafe
  * @since 1.1
- * @author $Id$
+ * @author $Id: WovenClassListener.java 1614569 2014-07-30 07:22:32Z cziegeler $
  */
 @ConsumerType
 public interface WovenClassListener {

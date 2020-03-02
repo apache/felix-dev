@@ -23,6 +23,8 @@ import java.lang.reflect.Method;
 import java.net.URL;
 import java.net.URLClassLoader;
 
+import org.apache.felix.framework.util.SecureAction;
+
 public interface ClassPathExtenderFactory
 {
     interface ClassPathExtender
@@ -50,7 +52,7 @@ public interface ClassPathExtenderFactory
                 try
                 {
                     append = app.getClass().getDeclaredMethod("appendToClassPathForInstrumentation", String.class);
-                    append.setAccessible(true);
+                    new SecureAction().setAccesssible(append);
                     break;
                 }
                 catch (Exception e)
@@ -74,7 +76,7 @@ public interface ClassPathExtenderFactory
             try
             {
                 addURL = URLClassLoader.class.getDeclaredMethod("addURL", URL.class);
-                addURL.setAccessible(true);
+                new SecureAction().setAccesssible(addURL);
             }
             catch (Exception e)
             {

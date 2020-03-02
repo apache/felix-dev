@@ -22,7 +22,7 @@
  * the types in this package just contain constants for capability and 
  * requirement namespaces specified by the OSGi Alliance.
  * 
- * @author $Id$
+ * @author $Id: package-info.java 1614569 2014-07-30 07:22:32Z cziegeler $
  */
 
 @Version("1.1")

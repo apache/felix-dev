@@ -35,7 +35,7 @@ class URLHandlersBundleURLConnection extends URLConnection
     private Felix m_framework;
     private BundleRevision m_targetRevision;
     private int m_classPathIdx = -1;
-    private int m_contentLength;
+    private long m_contentLength;
     private long m_contentTime;
     private String m_contentType;
     private InputStream m_is;
@@ -83,7 +83,6 @@ class URLHandlersBundleURLConnection extends URLConnection
         {
             throw new IOException("No bundle associated with resource: " + url);
         }
-        m_contentTime = bundle.getLastModified();
 
         // Get the bundle's revisions to find the target revision.
         BundleRevisions revisions = bundle.adapt(BundleRevisions.class);
@@ -145,6 +144,7 @@ class URLHandlersBundleURLConnection extends URLConnection
             m_is = ((BundleRevisionImpl)
                 m_targetRevision).getInputStream(m_classPathIdx, url.getPath());
             m_contentLength = (m_is == null) ? 0 : m_is.available();
+            m_contentTime = ((BundleRevisionImpl) m_targetRevision).getContentTime(m_classPathIdx, url.getPath());
             m_contentType = URLConnection.guessContentTypeFromName(url.getFile());
             connected = true;
         }
@@ -160,6 +160,11 @@ class URLHandlersBundleURLConnection extends URLConnection
 
     public int getContentLength()
     {
+        return (int) getContentLengthLong();
+    }
+
+    public long getContentLengthLong()
+    {
         try
         {
             connect();
@@ -170,11 +175,6 @@ class URLHandlersBundleURLConnection extends URLConnection
         }
 
         return m_contentLength;
-    }
-
-    public long getContentLengthLong()
-    {
-        return getContentLength();
     }
 
     public long getLastModified()

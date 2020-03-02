@@ -26,7 +26,7 @@
  * <p>
  * {@code  Import-Package: org.osgi.framework.hooks.bundle; version="[1.1,2.0)"}
  * 
- * @author $Id$
+ * @author $Id: package-info.java 1614569 2014-07-30 07:22:32Z cziegeler $
  */
 
 @Version("1.1")

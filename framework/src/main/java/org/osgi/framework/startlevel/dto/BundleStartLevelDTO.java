@@ -26,7 +26,7 @@ import org.osgi.framework.startlevel.BundleStartLevel;
  * An installed Bundle can be adapted to provide a {@code BundleStartLevelDTO}
  * for the Bundle.
  * 
- * @author $Id$
+ * @author $Id: BundleStartLevelDTO.java 1614569 2014-07-30 07:22:32Z cziegeler $
  * @NotThreadSafe
  */
 public class BundleStartLevelDTO extends DTO {

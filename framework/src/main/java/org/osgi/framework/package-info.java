@@ -24,10 +24,10 @@
  * <p>
  * {@code  Import-Package: org.osgi.framework; version="[1.9,2.0)"}
  * 
- * @author $Id$
+ * @author $Id: package-info.java 1874504 2020-02-25 15:53:01Z pauls $
  */
 
-@Version("1.9")
+@Version("1.10")
 package org.osgi.framework;
 
 import org.osgi.annotation.versioning.Version;

@@ -18,6 +18,7 @@
  */
 package org.apache.felix.framework;
 
+import org.apache.felix.framework.cache.ConnectContentContent;
 import org.apache.felix.framework.cache.Content;
 import org.apache.felix.framework.util.FelixConstants;
 import org.apache.felix.framework.util.MultiReleaseContent;
@@ -28,6 +29,7 @@ import org.apache.felix.framework.util.manifestparser.NativeLibrary;
 import org.osgi.framework.BundleException;
 import org.osgi.framework.Constants;
 import org.osgi.framework.Version;
+import org.osgi.framework.connect.ConnectModule;
 import org.osgi.framework.wiring.BundleCapability;
 import org.osgi.framework.wiring.BundleRequirement;
 import org.osgi.framework.wiring.BundleRevision;
@@ -318,6 +320,15 @@ public class BundleRevisionImpl implements BundleRevision, Resource
 
             m_wiring = wiring;
         }
+    }
+
+    synchronized void disposeContentPath()
+    {
+        for (int i = 0; (m_contentPath != null) && (i < m_contentPath.size()); i++)
+        {
+            m_contentPath.get(i).close();
+        }
+        m_contentPath = null;
     }
 
     public void setProtectionDomain(ProtectionDomain pd)
@@ -615,6 +626,29 @@ public class BundleRevisionImpl implements BundleRevision, Resource
             return getContent().getEntryAsStream(urlPath);
         }
         return getContentPath().get(index - 1).getEntryAsStream(urlPath);
+    }
+
+
+    public long getContentTime(int index, String urlPath)
+    {
+        if (urlPath.startsWith("/"))
+        {
+            urlPath = urlPath.substring(1);
+        }
+        Content content;
+        if (index == 0)
+        {
+            content = getContent();
+        }
+        else {
+            content = getContentPath().get(index - 1);
+        }
+        if (content instanceof ConnectContentContent) {
+            return ((ConnectContentContent) content).getContentTime(urlPath);
+        }
+        else {
+            return m_bundle.getLastModified();
+        }
     }
 
     public URL getLocalURL(int index, String urlPath)

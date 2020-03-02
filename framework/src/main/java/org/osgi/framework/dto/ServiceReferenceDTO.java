@@ -32,7 +32,7 @@ import org.osgi.framework.ServiceReference;
  * property values which are not valid value types for DTOs to type
  * {@code String} using {@code String.valueOf(Object)}.
  * 
- * @author $Id$
+ * @author $Id: ServiceReferenceDTO.java 1825132 2018-02-23 15:11:00Z pauls $
  * @NotThreadSafe
  */
 public class ServiceReferenceDTO extends DTO {

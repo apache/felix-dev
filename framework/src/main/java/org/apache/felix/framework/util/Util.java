@@ -47,12 +47,15 @@ import java.util.Collections;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Iterator;
+import java.util.LinkedHashMap;
+import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
 import java.util.Properties;
 import java.util.Random;
 import java.util.Set;
+import java.util.TreeMap;
 import java.util.TreeSet;
 import java.util.concurrent.ConcurrentHashMap;
 
@@ -60,37 +63,46 @@ public class Util
 {
     /**
      * The default name used for the default configuration properties file.
-    **/
-    private static final String DEFAULT_PROPERTIES_FILE = "default.properties";
+     **/
+    private static final String DEFAULT_PROPERTIES_FILE = "/default.properties";
 
-    public static Properties loadDefaultProperties(Logger logger)
+    private static final Properties DEFAULTS;
+
+    private static final IOException DEFAULT_EX;
+
+    private static final Map<String, Set<String>> MODULES_MAP;
+
+    static
+    {
+        Properties defaults = null;
+        IOException defaultEX = null;
+        try
+        {
+            defaults = loadDefaultProperties();
+        } catch (IOException ex) {
+            defaultEX = ex;
+        }
+        DEFAULTS = defaults;
+        DEFAULT_EX = defaultEX;
+
+        MODULES_MAP = calculateModulesMap();
+    }
+
+    public static Properties loadDefaultProperties(Logger logger) {
+        if (DEFAULTS.isEmpty()) {
+            logger.log(Logger.LOG_ERROR, "Unable to load any configuration properties.", DEFAULT_EX);
+        }
+        return DEFAULTS;
+    }
+
+    private static Properties loadDefaultProperties() throws IOException
     {
         Properties defaultProperties = new Properties();
-        URL propURL = Util.class.getClassLoader().getResource(DEFAULT_PROPERTIES_FILE);
+        URL propURL = Util.class.getResource(DEFAULT_PROPERTIES_FILE);
         if (propURL != null)
         {
-            InputStream is = null;
-            try
-            {
-                // Load properties from URL.
-                is = propURL.openConnection().getInputStream();
+            try (InputStream is = propURL.openConnection().getInputStream()) {
                 defaultProperties.load(is);
-                is.close();
-            }
-            catch (Exception ex)
-            {
-                // Try to close input stream if we have one.
-                try
-                {
-                    if (is != null) is.close();
-                }
-                catch (IOException ex2)
-                {
-                    // Nothing we can do.
-                }
-
-                logger.log(
-                    Logger.LOG_ERROR, "Unable to load any configuration properties.", ex);
             }
         }
         return defaultProperties;
@@ -138,6 +150,8 @@ public class Util
                 properties.put("ee-jpms", ee.toString());
 
                 properties.put("eecap-jpms", eecap.toString());
+
+                properties.put("felix.detect.jpms", "jpms");
             }
 
             properties.put("felix.detect.java.specification.version", version.getMajor() < 9 ? ("1." + (version.getMinor() > 6 ? version.getMinor() : 6)) : Integer.toString(version.getMajor()));
@@ -157,9 +171,9 @@ public class Util
         }
     }
 
-    public static Map<String, Set<String>> initializeJPMS(Properties properties)
+    private static Map<String, Set<String>> calculateModulesMap()
     {
-        Map<String,Set<String>> exports = null;
+        Map<String, Set<String>> result = new LinkedHashMap<>();
         try
         {
             Class<?> c_ModuleLayer = Felix.class.getClassLoader().loadClass("java.lang.ModuleLayer");
@@ -179,16 +193,13 @@ public class Util
                 moduleLayer = c_ModuleLayer.getMethod("boot").invoke(null);
             }
 
-            Set<String> modules = new TreeSet<String>();
-            exports = new HashMap<String, Set<String>>();
             for (Object module : ((Iterable) c_ModuleLayer.getMethod("modules").invoke(moduleLayer)))
             {
                 if ((Boolean) m_canRead.invoke(self, module))
                 {
-                    Object name = m_getName.invoke(module);
-                    properties.put("felix.detect.jpms." + name, name);
-                    modules.add("felix.jpms." + name);
-                    Set<String> pkgs = new HashSet<String>();
+                    String name = (String) m_getName.invoke(module);
+
+                    Set<String> pkgs = new LinkedHashSet<>();
 
                     Object descriptor = c_Module.getMethod("getDescriptor").invoke(module);
 
@@ -199,24 +210,45 @@ public class Util
                             pkgs.add((String) c_Exports.getMethod("source").invoke(export));
                         }
                     }
-                    if (!pkgs.isEmpty())
-                    {
-                        exports.put("felix.jpms." + c_Descriptor.getMethod("toNameAndVersion").invoke(descriptor), pkgs);
-                    }
+                    result.put(name, pkgs);
+                }
+            }
+        }
+        catch (Exception ex)
+        {
+            //ex.printStackTrace();
+            // Not much we can do - probably not on java9
+        }
+        return result;
+    }
+
+    public static Map<String, Set<String>> initializeJPMS(Properties properties)
+    {
+        Map<String,Set<String>> exports = null;
+        if (!MODULES_MAP.isEmpty())
+        {
+            Set<String> modules = new TreeSet<String>();
+            exports = new HashMap<String, Set<String>>();
+            for (Map.Entry<String, Set<String>> module : MODULES_MAP.entrySet())
+            {
+                Object name = module.getKey();
+                properties.put("felix.detect.jpms." + name, name);
+                modules.add("felix.jpms." + name);
+                Set<String> pkgs = module.getValue();
+
+                if (!pkgs.isEmpty())
+                {
+                    exports.put("felix.jpms." + name, pkgs);
                 }
             }
 
-            properties.put("felix.detect.jpms", "jpms");
             String modulesString = "";
             for (String module : modules) {
                 modulesString += "${" + module + "}";
             }
             properties.put("jre-jpms", modulesString);
         }
-        catch (Exception ex)
-        {
-            // Not much we can do - probably not on java9
-        }
+
         return exports;
     }
 

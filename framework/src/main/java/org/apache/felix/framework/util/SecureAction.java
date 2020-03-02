@@ -23,11 +23,15 @@ import java.lang.reflect.*;
 import java.lang.reflect.Proxy;
 import java.net.*;
 import java.security.*;
+import java.util.Arrays;
 import java.util.Collection;
 import java.util.HashMap;
 import java.util.Hashtable;
 import java.util.Map;
+import java.util.concurrent.ConcurrentHashMap;
+import java.util.function.Consumer;
 import java.util.jar.JarFile;
+import java.util.stream.Stream;
 import java.util.zip.ZipFile;
 
 import org.osgi.framework.Bundle;
@@ -56,6 +60,30 @@ import org.osgi.framework.wiring.BundleRevision;
 **/
 public class SecureAction
 {
+    private static final byte[] accessor;
+
+    static {
+        byte[] result;
+
+        try (ByteArrayOutputStream output = new ByteArrayOutputStream();
+             InputStream input = SecureAction.class.getResourceAsStream("accessor.bytes"))
+        {
+
+            byte[] buffer = new byte[input.available() > 0 ? input.available() : 1024];
+            for (int i = input.read(buffer); i != -1; i = input.read(buffer))
+            {
+                output.write(buffer, 0, i);
+            }
+            result = output.toByteArray();
+        }
+        catch (Throwable t) {
+            t.printStackTrace();
+            result = new byte[0];
+        }
+        accessor = result;
+        getAccessor(URL.class);
+    }
+
     private static final ThreadLocal m_actions = new ThreadLocal()
     {
         public Object initialValue()
@@ -762,7 +790,7 @@ public class SecureAction
             Method addURL =
                 URLClassLoader.class.getDeclaredMethod("addURL",
                 new Class[] {URL.class});
-            addURL.setAccessible(true);
+            getAccessor(URLClassLoader.class).accept(new AccessibleObject[]{addURL});
             addURL.invoke(loader, new Object[]{extension});
         }
     }
@@ -851,7 +879,7 @@ public class SecureAction
         }
     }
 
-    public void setAccesssible(AccessibleObject ao)
+    public void setAccesssible(Executable ao)
     {
         if (System.getSecurityManager() != null)
         {
@@ -868,7 +896,7 @@ public class SecureAction
         }
         else
         {
-            ao.setAccessible(true);
+            getAccessor(ao.getDeclaringClass()).accept(new AccessibleObject[]{ao});
         }
     }
 
@@ -889,7 +917,8 @@ public class SecureAction
         }
         else
         {
-            method.setAccessible(true);
+            getAccessor(method.getDeclaringClass()).accept(new AccessibleObject[]{method});
+
             return method.invoke(target, params);
         }
     }
@@ -955,8 +984,7 @@ public class SecureAction
         else
         {
             Field field = targetClass.getDeclaredField(name);
-            field.setAccessible(true);
-
+            getAccessor(targetClass).accept(new AccessibleObject[]{field});
             return field.get(target);
         }
     }
@@ -985,9 +1013,50 @@ public class SecureAction
         }
     }
 
+    private static volatile Consumer<AccessibleObject[]> m_accessorCache = null;
+
+    @SuppressWarnings("unchecked")
+    private static Consumer<AccessibleObject[]> getAccessor(Class clazz) {
+        String packageName = clazz.getPackage().getName();
+        if ("java.net".equals(packageName) || "jdk.internal.loader".equals(packageName))
+        {
+            if (m_accessorCache == null)
+            {
+                try
+                {
+                    // Use reflection on Unsafe to avoid having to compile against it
+                    Class<?> unsafeClass = Class.forName("sun.misc.Unsafe"); //$NON-NLS-1$
+                    Field theUnsafe = unsafeClass.getDeclaredField("theUnsafe"); //$NON-NLS-1$
+                    // NOTE: deep reflection is allowed on sun.misc package for java 9.
+                    theUnsafe.setAccessible(true);
+                    Object unsafe = theUnsafe.get(null);
+                    // using defineAnonymousClass here because it seems more simple to get what we need
+                    Method defineAnonymousClass = unsafeClass.getMethod("defineAnonymousClass", Class.class, byte[].class, Object[].class); //$NON-NLS-1$
+                    // The bytes stored in a resource to avoid real loading of it (see accessible.src for source).
+
+                    Class<Consumer<AccessibleObject[]>> result =
+                        (Class<Consumer<AccessibleObject[]>>)
+                            defineAnonymousClass.invoke(unsafe, URL.class, accessor , null);
+                    m_accessorCache = result.getConstructor().newInstance();
+
+                }
+                catch (Throwable t)
+                {
+                    t.printStackTrace();
+                    m_accessorCache = objects -> AccessibleObject.setAccessible(objects, true);
+                }
+            }
+            return m_accessorCache;
+        }
+        else {
+            return objects -> AccessibleObject.setAccessible(objects, true);
+        }
+    }
+
     private static Object _swapStaticFieldIfNotClass(Class targetClazz,
         Class targetType, Class condition, String lockName) throws Exception
     {
+
         Object lock = null;
         if (lockName != null)
         {
@@ -995,7 +1064,7 @@ public class SecureAction
             {
                 Field lockField =
                     targetClazz.getDeclaredField(lockName);
-                lockField.setAccessible(true);
+                getAccessor(targetClazz).accept(new AccessibleObject[]{lockField});
                 lock = lockField.get(null);
             }
             catch (NoSuchFieldException ex)
@@ -1010,14 +1079,14 @@ public class SecureAction
         {
             Field[] fields = targetClazz.getDeclaredFields();
 
+            getAccessor(targetClazz).accept(fields);
+
             Object result = null;
             for (int i = 0; (i < fields.length) && (result == null); i++)
             {
                 if (Modifier.isStatic(fields[i].getModifiers()) &&
                     (fields[i].getType() == targetType))
                 {
-                    fields[i].setAccessible(true);
-
                     result = fields[i].get(null);
 
                     if (result != null)
@@ -1040,7 +1109,6 @@ public class SecureAction
                         if (Modifier.isStatic(fields[i].getModifiers()) &&
                             (fields[i].getType() == Hashtable.class))
                         {
-                            fields[i].setAccessible(true);
                             Hashtable cache = (Hashtable) fields[i].get(null);
                             if (cache != null)
                             {
@@ -1081,13 +1149,13 @@ public class SecureAction
         synchronized (lock)
         {
             Field[] fields = targetClazz.getDeclaredFields();
+            getAccessor(targetClazz).accept(fields);
             // reset cache
             for (int i = 0; i < fields.length; i++)
             {
                 if (Modifier.isStatic(fields[i].getModifiers()) &&
                     ((fields[i].getType() == Hashtable.class) || (fields[i].getType() == HashMap.class)))
                 {
-                    fields[i].setAccessible(true);
                     if (fields[i].getType() == Hashtable.class)
                     {
                         Hashtable cache = (Hashtable) fields[i].get(null);
@@ -1708,7 +1776,7 @@ public class SecureAction
                     Method addURL =
                         URLClassLoader.class.getDeclaredMethod("addURL",
                         new Class[] {URL.class});
-                    addURL.setAccessible(true);
+                    getAccessor(URLClassLoader.class).accept(new AccessibleObject[]{addURL});
                     addURL.invoke(arg2, new Object[]{arg1});
                     return null;
                 case CREATE_TMPFILE_ACTION:
@@ -1740,7 +1808,7 @@ public class SecureAction
                     return ((Class) arg1).getDeclaredMethod((String) arg2, (Class[]) arg3);
                 case GET_FIELD_ACTION:
                     Field field = ((Class) arg1).getDeclaredField((String) arg2);
-                    field.setAccessible(true);
+                    getAccessor((Class) arg1).accept(new AccessibleObject[]{field});
                     return field.get(arg3);
                 case GET_FILE_INPUT_ACTION:
                     return new FileInputStream((File) arg1);
@@ -1765,7 +1833,7 @@ public class SecureAction
                 case INVOKE_DIRECTMETHOD_ACTION:
                     return ((Method) arg1).invoke(arg2, (Object[]) arg3);
                 case INVOKE_METHOD_ACTION:
-                    ((Method) arg1).setAccessible(true);
+                    getAccessor(((Method) arg1).getDeclaringClass()).accept(new AccessibleObject[]{(Method) arg1});
                     return ((Method) arg1).invoke(arg2, (Object[]) arg3);
                 case LIST_DIRECTORY_ACTION:
                     return ((File) arg1).listFiles();
@@ -1780,7 +1848,7 @@ public class SecureAction
                 case RENAME_FILE_ACTION:
                     return ((File) arg1).renameTo((File) arg2) ? Boolean.TRUE : Boolean.FALSE;
                 case SET_ACCESSIBLE_ACTION:
-                    ((AccessibleObject) arg1).setAccessible(true);
+                    getAccessor(((Executable) arg1).getDeclaringClass()).accept(new AccessibleObject[]{(Executable) arg1});
                     return null;
                 case START_ACTIVATOR_ACTION:
                     ((BundleActivator) arg1).start((BundleContext) arg2);

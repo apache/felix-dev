@@ -26,7 +26,7 @@ import org.osgi.framework.startlevel.FrameworkStartLevel;
  * The System Bundle can be adapted to provide a {@code FrameworkStartLevelDTO}
  * for the framework of the Bundle.
  * 
- * @author $Id$
+ * @author $Id: FrameworkStartLevelDTO.java 1614569 2014-07-30 07:22:32Z cziegeler $
  * @NotThreadSafe
  */
 public class FrameworkStartLevelDTO extends DTO {

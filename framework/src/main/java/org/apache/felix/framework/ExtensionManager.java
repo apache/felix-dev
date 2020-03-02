@@ -18,6 +18,7 @@
  */
 package org.apache.felix.framework;
 
+import org.apache.felix.framework.cache.ConnectContentContent;
 import org.apache.felix.framework.cache.Content;
 import org.apache.felix.framework.cache.DirectoryContent;
 import org.apache.felix.framework.cache.JarContent;
@@ -245,11 +246,21 @@ class ExtensionManager implements Content
 
         String sysprops = felix._getProperty(Constants.FRAMEWORK_SYSTEMPACKAGES);
 
+
+        boolean subst = "true".equalsIgnoreCase(felix._getProperty(FelixConstants.USE_PROPERTY_SUBSTITUTION_IN_SYSTEMPACKAGES));
+
+        if (sysprops != null && sysprops.isEmpty()) {
+            if (felix.hasConnectFramework()) {
+                subst = true;
+                sysprops = "${osgi-exports}";
+                config.put(Constants.FRAMEWORK_SYSTEMPACKAGES, sysprops);
+            }
+        }
+
         final Map<String, Set<String>> exports = Util.initializeJPMS(defaultProperties);
 
         if (exports != null && (sysprops == null || "true".equalsIgnoreCase(felix._getProperty(FelixConstants.USE_PROPERTY_SUBSTITUTION_IN_SYSTEMPACKAGES))))
         {
-            java.nio.file.FileSystem fs = java.nio.file.FileSystems.getFileSystem(URI.create("jrt:/"));
             final ClassParser classParser = new ClassParser();
             final Set<String> imports = new HashSet<String>();
             for (Set<String> moduleImport : exports.values())
@@ -271,6 +282,7 @@ class ExtensionManager implements Content
                     final SortedMap<String, SortedSet<String>> referred = new TreeMap<String, SortedSet<String>>();
                     if ("true".equalsIgnoreCase(felix._getProperty(FelixConstants.CALCULATE_SYSTEMPACKAGES_USES)))
                     {
+                        java.nio.file.FileSystem fs = java.nio.file.FileSystems.getFileSystem(URI.create("jrt:/"));
                         try
                         {
                             Properties cachedProps = new Properties();
@@ -344,7 +356,7 @@ class ExtensionManager implements Content
             }
         }
 
-        if(sysprops != null && "true".equalsIgnoreCase(felix._getProperty(FelixConstants.USE_PROPERTY_SUBSTITUTION_IN_SYSTEMPACKAGES)))
+        if(sysprops != null && subst)
         {
             config.put(Constants.FRAMEWORK_SYSTEMPACKAGES, Util.getPropertyWithSubs(Util.toProperties(config), Constants.FRAMEWORK_SYSTEMPACKAGES));
         }
@@ -414,23 +426,6 @@ class ExtensionManager implements Content
             ((BundleRevisionImpl) bundle.adapt(BundleRevision.class))
                 .getHeaders().get(Constants.FRAGMENT_HOST));
 
-        if (!Constants.EXTENSION_FRAMEWORK.equals(directive))
-        {
-           throw new BundleException("Unsupported Extension Bundle type: " +
-                directive, new UnsupportedOperationException(
-                "Unsupported Extension Bundle type!"));
-        }
-        else if (m_extenderFramework == null)
-        {
-            // We don't support extensions
-            m_logger.log(bundle, Logger.LOG_WARNING,
-                "Unable to add extension bundle - Maybe ClassLoader is not supported " +
-                        "(on java9, try --add-opens=java.base/jdk.internal.loader=ALL-UNNAMED)?");
-
-            throw new UnsupportedOperationException(
-                "Unable to add extension bundle.");
-        }
-
         Content content = bundle.adapt(BundleRevisionImpl.class).getContent();
         final File file;
         if (content instanceof JarContent)
@@ -445,14 +440,31 @@ class ExtensionManager implements Content
         {
             file = null;
         }
-        if (file == null)
+        if (file == null && !(content instanceof ConnectContentContent))
         {
             // We don't support revision type for extension
             m_logger.log(bundle, Logger.LOG_WARNING,
-                    "Unable to add extension bundle - wrong revision type?");
+                "Unable to add extension bundle - wrong revision type?");
 
             throw new UnsupportedOperationException(
-                    "Unable to add extension bundle.");
+                "Unable to add extension bundle.");
+        }
+
+        if (!Constants.EXTENSION_FRAMEWORK.equals(directive))
+        {
+           throw new BundleException("Unsupported Extension Bundle type: " +
+                directive, new UnsupportedOperationException(
+                "Unsupported Extension Bundle type!"));
+        }
+        else if (m_extenderFramework == null && file != null)
+        {
+            // We don't support extensions
+            m_logger.log(bundle, Logger.LOG_WARNING,
+                "Unable to add extension bundle - Maybe ClassLoader is not supported " +
+                        "(on java9, try --add-opens=java.base/jdk.internal.loader=ALL-UNNAMED)?");
+
+            throw new UnsupportedOperationException(
+                "Unable to add extension bundle.");
         }
 
         BundleRevisionImpl bri = bundle.adapt(BundleRevisionImpl.class);
@@ -559,25 +571,32 @@ class ExtensionManager implements Content
             {
                 f = ((JarContent) revisionContent).getFile();
             }
-            else
+            else if (revisionContent instanceof DirectoryContent)
             {
                 f = ((DirectoryContent) revisionContent).getFile();
             }
-            try
-            {
-                AccessController.doPrivileged(new PrivilegedExceptionAction<Void>()
-                {
-                    @Override
-                    public Void run() throws Exception {
-                        m_extenderFramework.add(f);
-                        return null;
-                    }
-                });
+            else {
+                f = null;
             }
-            catch (Exception ex)
+            if (f != null)
             {
-                m_logger.log(revision.getBundle(), Logger.LOG_ERROR,
-                    "Error adding extension bundle to framework classloader: " + revision.getBundle(), ex);
+                try
+                {
+                    AccessController.doPrivileged(new PrivilegedExceptionAction<Void>()
+                    {
+                        @Override
+                        public Void run() throws Exception
+                        {
+                            m_extenderFramework.add(f);
+                            return null;
+                        }
+                    });
+                }
+                catch (Exception ex)
+                {
+                    m_logger.log(revision.getBundle(), Logger.LOG_ERROR,
+                        "Error adding extension bundle to framework classloader: " + revision.getBundle(), ex);
+                }
             }
 
             felix.setBundleStateAndNotify(revision.getBundle(), Bundle.RESOLVED);

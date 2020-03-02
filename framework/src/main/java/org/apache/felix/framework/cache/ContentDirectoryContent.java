@@ -143,14 +143,17 @@ public class ContentDirectoryContent implements Content
 
         private String findNextEntry()
         {
-            // Find next entry that is inside the root directory.
-            while (m_enumeration.hasMoreElements())
+            if (m_enumeration != null)
             {
-                String next = (String) m_enumeration.nextElement();
-                if (next.startsWith(m_rootPath) && !next.equals(m_rootPath))
+                // Find next entry that is inside the root directory.
+                while (m_enumeration.hasMoreElements())
                 {
-                    // Strip off the root directory.
-                    return next.substring(m_rootPath.length());
+                    String next = (String) m_enumeration.nextElement();
+                    if (next.startsWith(m_rootPath) && !next.equals(m_rootPath))
+                    {
+                        // Strip off the root directory.
+                        return next.substring(m_rootPath.length());
+                    }
                 }
             }
             return null;

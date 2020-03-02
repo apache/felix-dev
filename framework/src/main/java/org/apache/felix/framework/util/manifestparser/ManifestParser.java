@@ -20,6 +20,7 @@ package org.apache.felix.framework.util.manifestparser;
 
 import org.apache.felix.framework.BundleRevisionImpl;
 import org.apache.felix.framework.Logger;
+import org.apache.felix.framework.cache.ConnectContentContent;
 import org.apache.felix.framework.capabilityset.SimpleFilter;
 import org.apache.felix.framework.util.FelixConstants;
 import org.apache.felix.framework.wiring.BundleCapabilityImpl;
@@ -28,6 +29,7 @@ import org.osgi.framework.BundleException;
 import org.osgi.framework.Constants;
 import org.osgi.framework.Version;
 import org.osgi.framework.VersionRange;
+import org.osgi.framework.connect.ConnectContent;
 import org.osgi.framework.namespace.BundleNamespace;
 import org.osgi.framework.namespace.ExecutionEnvironmentNamespace;
 import org.osgi.framework.namespace.IdentityNamespace;
@@ -37,10 +39,13 @@ import org.osgi.framework.wiring.BundleRequirement;
 import org.osgi.framework.wiring.BundleRevision;
 
 import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.Collection;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.LinkedHashMap;
+import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
@@ -109,7 +114,7 @@ public class ManifestParser
         // Parse bundle symbolic name.
         //
 
-        BundleCapabilityImpl bundleCap = parseBundleSymbolicName(owner, m_headerMap);
+        BundleCapabilityImpl bundleCap = parseBundleSymbolicName(logger, owner, m_headerMap);
         if (bundleCap != null)
         {
             m_bundleSymbolicName = (String)
@@ -215,7 +220,7 @@ public class ManifestParser
         List<ParsedHeaderClause> exportClauses =
             parseStandardHeader((String) headerMap.get(Constants.EXPORT_PACKAGE));
         exportClauses = normalizeExportClauses(logger, exportClauses,
-            getManifestVersion(), m_bundleSymbolicName, m_bundleVersion);
+            getManifestVersion(), m_bundleSymbolicName, m_bundleVersion, owner instanceof BundleRevisionImpl && ((BundleRevisionImpl) owner).getContent() instanceof ConnectContentContent);
         List<BundleCapability> exportCaps = convertExports(exportClauses, owner);
 
         //
@@ -696,7 +701,7 @@ public class ManifestParser
         throws BundleException
     {
 
-        if (!mv.equals("2") && !clauses.isEmpty())
+        if (mv != null && !mv.equals("2") && !clauses.isEmpty())
         {
             // Should we error here if we are not an R4 bundle?
         }
@@ -836,7 +841,7 @@ public class ManifestParser
 
     private static List<ParsedHeaderClause> normalizeExportClauses(
         Logger logger, List<ParsedHeaderClause> clauses,
-        String mv, String bsn, Version bv)
+        String mv, String bsn, Version bv, boolean connectModule)
         throws BundleException
     {
         for (ParsedHeaderClause clause : clauses)
@@ -845,7 +850,7 @@ public class ManifestParser
             for (String pkgName : clause.m_paths)
             {
                 // Verify that java.* packages are not exported (except from the system bundle).
-                if (!FelixConstants.SYSTEM_BUNDLE_SYMBOLICNAME.equals(bsn) && pkgName.startsWith("java."))
+                if ((!FelixConstants.SYSTEM_BUNDLE_SYMBOLICNAME.equals(bsn) && !connectModule) && pkgName.startsWith("java."))
                 {
                     throw new BundleException(
                         "Exporting java.* packages not allowed: "
@@ -1358,12 +1363,12 @@ public class ManifestParser
         return false;
     }
 
-    private static BundleCapabilityImpl parseBundleSymbolicName(
+    private static BundleCapabilityImpl parseBundleSymbolicName(Logger logger,
         BundleRevision owner, Map<String, Object> headerMap)
         throws BundleException
     {
-        List<ParsedHeaderClause> clauses = parseStandardHeader(
-            (String) headerMap.get(Constants.BUNDLE_SYMBOLICNAME));
+        List<ParsedHeaderClause> clauses = normalizeCapabilityClauses(logger, parseStandardHeader(
+            (String) headerMap.get(Constants.BUNDLE_SYMBOLICNAME)), getManifestVersion(headerMap));
         if (clauses.size() > 0)
         {
             if (clauses.size() > 1)
@@ -1377,6 +1382,11 @@ public class ManifestParser
                 throw new BundleException(
                     "Cannot have multiple symbolic names: "
                         + headerMap.get(Constants.BUNDLE_SYMBOLICNAME));
+            }
+            else if (clauses.get(0).m_attrs.containsKey(Constants.BUNDLE_VERSION))
+            {
+                throw new BundleException(
+                    "Cannot have a bundle version: " + headerMap.get(Constants.BUNDLE_VERSION));
             }
 
             // Get bundle version.
@@ -1400,6 +1410,48 @@ public class ManifestParser
                 }
             }
 
+            Object tagList = clauses.get(0).m_attrs.get(IdentityNamespace.CAPABILITY_TAGS_ATTRIBUTE);
+            LinkedHashSet<String> tags = new LinkedHashSet<>();
+            if (tagList != null)
+            {
+                if (tagList instanceof List)
+                {
+                    for (Object member : ((List) tagList))
+                    {
+                        if (member instanceof String)
+                        {
+                            tags.add((String) member);
+                        }
+                        else
+                        {
+                            throw new BundleException("Invalid tags list: " + headerMap.get(Constants.BUNDLE_SYMBOLICNAME));
+                        }
+                    }
+                }
+                else if (tagList instanceof String)
+                {
+                    tags.add((String) tagList);
+                }
+                else
+                {
+                    throw new BundleException("Invalid tags list: " + headerMap.get(Constants.BUNDLE_SYMBOLICNAME));
+                }
+            }
+
+            if (tags.contains(ConnectContent.TAG_OSGI_CONNECT))
+            {
+                throw new BundleException("Invalid tags list: " + headerMap.get(Constants.BUNDLE_SYMBOLICNAME));
+            }
+            if (owner != null && ((BundleRevisionImpl) owner).getContent() instanceof ConnectContentContent)
+            {
+                tags.add(ConnectContent.TAG_OSGI_CONNECT);
+            }
+
+            if (!tags.isEmpty())
+            {
+                clauses.get(0).m_attrs.put(IdentityNamespace.CAPABILITY_TAGS_ATTRIBUTE, new ArrayList<>(tags));
+            }
+
             // Create a require capability and return it.
             String symName = (String) clauses.get(0).m_paths.get(0);
             clauses.get(0).m_attrs.put(BundleRevision.BUNDLE_NAMESPACE, symName);
@@ -1415,9 +1467,9 @@ public class ManifestParser
     }
 
     private static BundleCapabilityImpl addIdentityCapability(BundleRevision owner,
-        Map<String, Object> headerMap, BundleCapabilityImpl bundleCap)
+        Map<String, Object> headerMap, BundleCapabilityImpl bundleCap) throws BundleException
     {
-        Map<String, Object> attrs = new HashMap<String, Object>();
+        Map<String, Object> attrs = new HashMap<String, Object>(bundleCap.getAttributes());
 
         attrs.put(IdentityNamespace.IDENTITY_NAMESPACE,
             bundleCap.getAttributes().get(BundleNamespace.BUNDLE_NAMESPACE));

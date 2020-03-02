@@ -21,12 +21,16 @@ package org.apache.felix.framework.cache;
 import java.io.*;
 
 import java.util.Map;
+import java.util.Optional;
 import java.util.SortedMap;
 import java.util.TreeMap;
 import org.apache.felix.framework.Logger;
 import org.apache.felix.framework.util.WeakZipFileFactory;
 import org.osgi.framework.Bundle;
+import org.osgi.framework.BundleException;
 import org.osgi.framework.Constants;
+import org.osgi.framework.connect.ModuleConnector;
+import org.osgi.framework.connect.ConnectModule;
 
 /**
  * <p>
@@ -100,6 +104,8 @@ public class BundleArchive
     **/
     private long m_refreshCount = -1;
 
+    private final ModuleConnector m_connector;
+
     // Maps a Long revision number to a BundleRevision.
     private final SortedMap<Long, BundleArchiveRevision> m_revisions
         = new TreeMap<Long, BundleArchiveRevision>();
@@ -121,7 +127,8 @@ public class BundleArchive
      * @param is input stream from which to read the bundle content.
      * @throws Exception if any error occurs.
     **/
-    public BundleArchive(Logger logger, Map configMap, WeakZipFileFactory zipFactory,
+    public BundleArchive(Logger logger, Map configMap, WeakZipFileFactory zipFactory, ModuleConnector
+        connectFactory,
         File archiveRootDir, long id, int startLevel, String location, InputStream is)
         throws Exception
     {
@@ -140,6 +147,8 @@ public class BundleArchive
         m_startLevel = startLevel;
         m_lastModified = System.currentTimeMillis();
         m_refreshCount = 0;
+
+        m_connector = connectFactory;
 
         // Save state.
         initialize();
@@ -160,7 +169,7 @@ public class BundleArchive
      * @param configMap configMap for BundleArchive
      * @throws Exception if any error occurs.
     **/
-    public BundleArchive(Logger logger, Map configMap, WeakZipFileFactory zipFactory,
+    public BundleArchive(Logger logger, Map configMap, WeakZipFileFactory zipFactory, ModuleConnector connectFactory,
         File archiveRootDir)
         throws Exception
     {
@@ -211,8 +220,12 @@ public class BundleArchive
         Long currentRevNum = m_revisions.lastKey();
         m_revisions.remove(currentRevNum);
 
+        String location = getRevisionLocation(currentRevNum);
+
+        m_connector = connectFactory;
+
         // Add the revision object for the most recent revision.
-        reviseInternal(true, currentRevNum, getRevisionLocation(currentRevNum), null);
+        reviseInternal(true, currentRevNum, location, null);
     }
 
     /**
@@ -795,9 +808,19 @@ public class BundleArchive
             }
             else
             {
-                // Anything else is assumed to be a URL to a JAR file.
-                result = new JarRevision(m_logger, m_configMap,
-                    m_zipFactory, revisionRootDir, location, false, null);
+                ConnectModule module = m_connector != null ?
+                    m_connector.connect(location).orElse(null) : null;
+
+                if (module != null)
+                {
+                    result = new ConnectRevision(m_logger, m_configMap, m_zipFactory, revisionRootDir, location, module);
+                }
+                else
+                {
+                    // Anything else is assumed to be a URL to a JAR file.
+                    result = new JarRevision(m_logger, m_configMap,
+                        m_zipFactory, revisionRootDir, location, false, null);
+                }
             }
         }
         catch (Exception ex)
