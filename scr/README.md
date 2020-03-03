@@ -16,22 +16,22 @@ First of all the component must be implemented in a simple Java class. The Decla
 
 Lets define a very simple class, which implements a `java.util.Comparator` service:
 
-    :::java
-    package sample;
+```java
+package sample;
 
-    import java.util.Comparator;
-    import org.osgi.service.component.annotations.Component;
+import java.util.Comparator;
+import org.osgi.service.component.annotations.Component;
 
-    @Component(service = Comparator.class)
-    public class SampleComparator implements Comparator
+@Component(service = Comparator.class)
+public class SampleComparator implements Comparator
+{
+    public int compare( Object o1, Object o2 )
     {
-        public int compare( Object o1, Object o2 )
-        {
-            // TODO: calculate the result
-            return o1.equals( o2 ) ? 0 : -1;
-        }
+        // TODO: calculate the result
+        return o1.equals( o2 ) ? 0 : -1;
     }
-
+}
+```
 
 This is of course a very simple and not very intelligently implemented comparator...
 
@@ -40,35 +40,35 @@ This is of course a very simple and not very intelligently implemented comparato
 It may well be that the component needs to be notified, when it is activated and deactivated. For this, the component may implement an `activate` method/constructor and a `deactivate` method. Both methods must be `public` or `protected` and can take a variety of parameters.
 Here is the initial class extended with activation and deactivation methods:
 
-    :::java
-    package sample;
+```java
+package sample;
 
-    import java.util.Comparator;
-    import org.osgi.service.component.annotations.Component;
-    import org.osgi.service.component.annotations.Activate;
-    import org.osgi.service.component.annotations.Deactivate;
+import java.util.Comparator;
+import org.osgi.service.component.annotations.Component;
+import org.osgi.service.component.annotations.Activate;
+import org.osgi.service.component.annotations.Deactivate;
 
-    @Component(service = Comparator.class)
-    public class SampleComparator implements Comparator
+@Component(service = Comparator.class)
+public class SampleComparator implements Comparator
+{
+    public SampleComparator()
     {
-        public SampleComparator()
-        {
-            // TODO: Do something on activation
-        }
-
-        public int compare( Object o1, Object o2 )
-        {
-            // TODO: calculate the result
-            return o1.equals( o2 ) ? 0 : -1;
-        }
-
-        @Deactivate
-        protected void deactivate()
-        {
-            // TODO: Do something on deactivation
-        }
+        // TODO: Do something on activation
     }
 
+    public int compare( Object o1, Object o2 )
+    {
+        // TODO: calculate the result
+        return o1.equals( o2 ) ? 0 : -1;
+    }
+
+    @Deactivate
+    protected void deactivate()
+    {
+        // TODO: Do something on deactivation
+    }
+}
+```
 
 ### Service Binding
 
@@ -78,39 +78,39 @@ The next step would probably be to do some service binding. This is somewhat mor
 
 To use the service, the reference must be declared by using the @Reference annotation. Here is the respective declaration for a log service to lookup:
 
-    :::java
-    private LogService log;
+```java
+private LogService log;
 
-    @Reference
-    protected void bindLog(LogService log)
-    {
-        this.log = log;
-    }
+@Reference
+protected void bindLog(LogService log)
+{
+    this.log = log;
+}
 
-    protected void unbindLog(LogService log)
-    {
-        this.log = null;
-    }
-
+protected void unbindLog(LogService log)
+{
+    this.log = null;
+}
+```
 
 Or if you want to use field injection, it is just:
 
-    :::java
-    @Reference
-    private LogService log;
-
+```java
+@Reference
+private LogService log;
+```
 
 You can also use contructor injection:
 
-:::java
-    private final LogService log;
+```java
+private final LogService log;
 
-    @Activate
-    public Comparator(@Reference LogService logService)
-    {
-        this.log = logService;
-    }
-
+@Activate
+public Comparator(@Reference LogService logService)
+{
+    this.log = logService;
+}
+```
 
 ## Apache Maven Support
 
@@ -160,7 +160,7 @@ For details also refer to [FELIX-1416](https://issues.apache.org/jira/browse/FEL
 The OSGi Compendium specification defines an administrative API for Declarative Services through the [Service Component Runtime](https://osgi.org/specification/osgi.cmpn/7.0.0/service.component.html#service.component-service.component.runtime). This bundle implements that service, too.
 
 
-Based on the runtime api, the [Declarative Service Plugin](https://github.com/apache/felix-dev/tree/master/webconsole-plugins/ds] for the [Apache Felix Web Console](http://felix.apache.org/documentation/subprojects/apache-felix-web-console.html) provides support for Declarative Services administration through a browser.
+Based on the runtime api, the [Declarative Service Plugin](https://github.com/apache/felix-dev/tree/master/webconsole-plugins/ds) for the [Apache Felix Web Console](http://felix.apache.org/documentation/subprojects/apache-felix-web-console.html) provides support for Declarative Services administration through a browser.
 
 This bundle itself also has a Felix Shell Command providing easy commands to introspect the states of the registered components.
 
