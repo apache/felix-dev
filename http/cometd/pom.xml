@@ -22,7 +22,7 @@
     <parent>
         <groupId>org.apache.felix</groupId>
         <artifactId>org.apache.felix.http.parent</artifactId>
-        <version>9</version>
+        <version>12</version>
         <relativePath>../parent/pom.xml</relativePath>
     </parent>
 
@@ -39,6 +39,8 @@
 
     <properties>
         <felix.java.version>8</felix.java.version>
+        <jetty.version>9.4.26.v20200117</jetty.version>
+        <cometd.version>3.0.8</cometd.version>    
     </properties>
 
     <build>
@@ -93,6 +95,8 @@
         <dependency>
             <groupId>org.osgi</groupId>
             <artifactId>osgi.cmpn</artifactId>
+            <version>6.0.0</version>
+            <scope>provided</scope>
         </dependency>
         <dependency>
             <groupId>javax.servlet</groupId>
