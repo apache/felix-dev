@@ -24,6 +24,7 @@ import java.io.StringWriter;
 import java.io.Writer;
 import java.lang.reflect.Array;
 import java.text.MessageFormat;
+import java.util.AbstractMap;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Comparator;
@@ -1628,9 +1629,10 @@ public class BundlesServlet extends SimpleWebConsolePlugin implements OsgiManage
         if ( bundleFile != null )
         {
 
-            // try to get the bundle name, fail if none
-            String symbolicName = getSymbolicName( bundleFile );
-            String version = getBundleVersion( bundleFile ); 
+            // try to get the bundle name & version, fail if none
+            Map.Entry<String, String> snv =getSymbolicNameVersion( bundleFile );
+            String symbolicName = snv.getKey();
+            String version = snv.getValue(); 
             if ( symbolicName == null )
             {
                 bundleFile.delete();
@@ -1677,6 +1679,11 @@ public class BundlesServlet extends SimpleWebConsolePlugin implements OsgiManage
 
     private String getSymbolicName( File bundleFile )
     {
+        return  getSymbolicNameVersion(bundleFile).getKey();
+    }
+    
+    private Map.Entry<String, String> getSymbolicNameVersion( File bundleFile )
+    {
         JarFile jar = null;
         try
         {
@@ -1693,48 +1700,13 @@ public class BundlesServlet extends SimpleWebConsolePlugin implements OsgiManage
                         sn = sn.substring(0, paramPos);
                     }
                 }
-                return sn;
-            }
-        }
-        catch ( IOException ioe )
-        {
-            log( LogService.LOG_WARNING, "Cannot extract symbolic name of bundle file " + bundleFile, ioe );
-        }
-        finally
-        {
-            if ( jar != null )
-            {
-                try
-                {
-                    jar.close();
-                }
-                catch ( IOException ioe )
-                {
-                    // ignore
-                }
-            }
-        }
-
-        // fall back to "not found"
-        return null;
-    }
-    
-    private String getBundleVersion( File bundleFile )
-    {
-        JarFile jar = null;
-        try
-        {
-            jar = new JarFile( bundleFile );
-            Manifest m = jar.getManifest();
-            if ( m != null )
-            {
                 String v = m.getMainAttributes().getValue( Constants.BUNDLE_VERSION );
-                return v;
+                return new AbstractMap.SimpleImmutableEntry(sn, v);
             }
         }
         catch ( IOException ioe )
         {
-            log( LogService.LOG_WARNING, "Cannot extract version name of bundle file " + bundleFile, ioe );
+            log( LogService.LOG_WARNING, "Cannot extract symbolic name and version of bundle file " + bundleFile, ioe );
         }
         finally
         {
@@ -1754,6 +1726,7 @@ public class BundlesServlet extends SimpleWebConsolePlugin implements OsgiManage
         // fall back to "not found"
         return null;
     }
+
 
 
 
