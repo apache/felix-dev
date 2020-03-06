@@ -1,5 +1,7 @@
 Changes in 4.3.18
 -----------------
+** Improvement
+    * [FELIX-6232] - Allow Webconsole to install parallel versions of bundles
 ** Bug
     * [FELIX-6185] - jQuery <3.4.0 is vulnerable to prototype pollution attacks
     * [FELIX-5661] - The heuristic to derive the password type from the metatype id does not work reliably
