@@ -55,7 +55,7 @@ public interface ClassPathExtenderFactory
                     new SecureAction().setAccesssible(append);
                     break;
                 }
-                catch (Exception e)
+                catch (Throwable e)
                 {
                     append = null;
                     try
@@ -78,7 +78,7 @@ public interface ClassPathExtenderFactory
                 addURL = URLClassLoader.class.getDeclaredMethod("addURL", URL.class);
                 new SecureAction().setAccesssible(addURL);
             }
-            catch (Exception e)
+            catch (Throwable e)
             {
                 addURL = null;
             }
