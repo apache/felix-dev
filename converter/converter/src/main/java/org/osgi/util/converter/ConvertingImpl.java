@@ -1126,10 +1126,14 @@ class ConvertingImpl extends AbstractSpecifying<Converting>
 		Set<Class< ? >> interfaces = getInterfaces0(cls);
 		outer: for (Iterator<Class< ? >> it = interfaces.iterator(); it.hasNext();) {
 			Class< ? > intf = it.next();
-			for (Method method : intf.getMethods()) {
+			Method[] methods=intf.getMethods();
+			for (Method method : methods) {
 				if(method.getDeclaringClass() == intf) {
 					continue outer;
 				}
+			}
+			if(intf==cls&&methods.length==0) {
+			    continue outer;
 			}
 			it.remove();
 		}
