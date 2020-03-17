@@ -20,61 +20,57 @@ package org.apache.felix.systemready;
 
 import static java.util.stream.Collectors.minBy;
 
+import java.util.Objects;
 import java.util.stream.Stream;
 
 public final class CheckStatus {
-    public enum State { 
-    	// Be aware that the order of the enum declarations matters for the Comparator
-    	RED, YELLOW, GREEN;
+    public enum State {
+        // Be aware that the order of the enum declarations matters for the Comparator
+        RED, YELLOW, GREEN;
 
-    	public static State fromBoolean(boolean ready) {
+        public static State fromBoolean(boolean ready) {
             return (ready) ? State.GREEN : State.YELLOW;
         }
-        
+
         public static State worstOf(Stream<State> states) {
             return states.collect(minBy(State::compareTo)).orElse(State.GREEN);
         }
     }
-    
+
     private final String checkName;
-    
+
     private final StateType type;
 
     private final State state;
 
     private final String details;
-    
+
     public CheckStatus(String checkName, StateType type, State state, String details) {
-		this.checkName = checkName;
-		this.type = type;
-		this.state = state;
-        this.details = details;
+        this.checkName = Objects.requireNonNull(checkName);
+        this.type = Objects.requireNonNull(type);
+        this.state = Objects.requireNonNull(state);
+        this.details = Objects.toString(details, "");
     }
-    
+
     public String getCheckName() {
-		return checkName;
-	}
-    
-    
+        return checkName;
+    }
+
     public StateType getType() {
-		return type;
-	}
-    
+        return type;
+    }
+
     public State getState() {
         return state;
     }
-    
+
     public String getDetails() {
         return details;
     }
 
     @Override
     public String toString() {
-        return "CheckStatus{" +
-                "state=" + state +
-                ", details='" + details + '\'' +
-                '}';
+        return "CheckStatus{" + "state=" + state + ", details='" + details + '\'' + '}';
     }
-    
-    
+
 }
