@@ -71,7 +71,7 @@ public class SingleRefPair<S, T> extends RefPair<S, T>
         {
             if (bundleContext != null)
             {
-                bundleContext.ungetService(getRef());
+                safeUngetService(bundleContext, getRef());
             }
         }
     }
@@ -97,8 +97,20 @@ public class SingleRefPair<S, T> extends RefPair<S, T>
         if (!setServiceObject(key, service))
         {
             // Another thread got the service before, so unget our
-            context.ungetService( getRef() );
+            safeUngetService(context, getRef());
         }
         return true;
+    }
+
+    static private void safeUngetService(BundleContext context, ServiceReference<?> ref)
+    {
+        try
+        {
+            context.ungetService(ref);
+        }
+        catch (IllegalStateException e)
+        {
+            // ignore
+        }
     }
 }
