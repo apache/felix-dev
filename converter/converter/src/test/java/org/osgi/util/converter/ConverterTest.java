@@ -1451,11 +1451,40 @@ public class ConverterTest {
         assertEquals(Integer.valueOf(0), inter.value());
     }
 
+    @Test
+    public void testMapToEmptyInterface() throws Exception {
+        Map<String, Object> map = new HashMap<String, Object>();
+        map.put("a", "b");
+        EmptyInterface i = Converters.standardConverter().convert(map).to(EmptyInterface.class);
+        assertNotNull(i);
+
+        EmptyInterface2 j = Converters.standardConverter().convert(map).to(EmptyInterface2.class);
+        assertNotNull(j);
+
+        EmptyInterface3 k = Converters.standardConverter().convert(map).to(EmptyInterface3.class);
+        assertNotNull(k);
+    }
+
     static interface MyIntf2 {
         String code();
         Integer value();
     }
 
+    static interface EmptyInterface
+    {
+    }
+
+    static interface EmptyInterface2 extends EmptyInterface
+    {
+    }
+    static interface NonEmptyInterface
+    {
+       int a();
+    }
+
+    static interface EmptyInterface3 extends NonEmptyInterface
+    {
+    }
     static class MyClass2 {
         private final String value;
         public MyClass2(String v) {
