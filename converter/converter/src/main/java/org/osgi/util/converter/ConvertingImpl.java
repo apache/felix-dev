@@ -17,6 +17,9 @@
 package org.osgi.util.converter;
 
 import java.lang.annotation.Annotation;
+import java.lang.invoke.MethodHandles;
+import java.lang.invoke.MethodType;
+import java.lang.invoke.MethodHandles.Lookup;
 import java.lang.reflect.Array;
 import java.lang.reflect.Constructor;
 import java.lang.reflect.Field;
@@ -809,6 +812,32 @@ class ConvertingImpl extends AbstractSpecifying<Converting>
 				if (val == null) {
 					if (cls.isAnnotation()) {
 						val = method.getDefaultValue();
+					}
+					else if (method.isDefault())
+					{
+						double javaVersion = Double.parseDouble(
+							System.getProperty("java.class.version"));
+						double java8 = 52.0;
+						if (javaVersion > java8)
+						{
+							val = MethodHandles.lookup().findSpecial(
+								method.getDeclaringClass(), method.getName(),
+								MethodType.methodType(method.getReturnType(),
+									new Class[] {}),
+								method.getDeclaringClass()).bindTo(
+									proxy).invokeWithArguments(args);
+						}
+						else
+						{
+							Constructor<Lookup> c = Lookup.class.getDeclaredConstructor(
+								Class.class);
+							if (!c.isAccessible())
+							{
+								c.setAccessible(true);
+							}
+							val = c.newInstance(cls).in(cls).unreflectSpecial(method,
+								cls).bindTo(proxy).invokeWithArguments(args);
+						}
 					}
 
 					if (val == null) {
