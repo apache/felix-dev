@@ -1465,6 +1465,14 @@ public class ConverterTest {
         assertNotNull(k);
     }
 
+    @Test
+    public void testDefaultInterfaceMethod() throws Throwable
+    {
+        Class<?> clazz = InterfaceWithDefaultMethod.class;
+        InterfaceWithDefaultMethod i = (InterfaceWithDefaultMethod) Converters.standardConverter().convert(
+            new HashMap<String, Object>()).to(clazz);
+        assertEquals(InterfaceWithDefaultMethod.RESULT, i.defaultMethod());
+    }
     static interface MyIntf2 {
         String code();
         Integer value();
