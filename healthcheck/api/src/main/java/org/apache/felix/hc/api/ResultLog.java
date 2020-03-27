@@ -43,17 +43,35 @@ public class ResultLog implements Iterable<ResultLog.Entry> {
         private final boolean isDebug;
         private final Exception exception;
 
+        /**
+         * @param s The status of the message 
+         * @param message The message
+         */
         public Entry(Status s, String message) {
             this(s, message, false, null);
         }
         
+        /**
+         * @param message The message with status OK
+         * @param isDebug Whether this is a debug message
+         */
         public Entry(String message, boolean isDebug) {
             this(Status.OK, message, isDebug, null);
         }
+        /**
+         * @param message The message with status OK
+         * @param isDebug Whether this is a debug message
+         * @param exception An exception that belongs to this message
+         */
         public Entry(String message, boolean isDebug, Exception exception) {
             this(Status.OK, message, isDebug, exception);
         }
         
+        /**
+         * @param s The status of the message 
+         * @param message The message 
+         * @param exception An exception that belongs to this message
+         */
         public Entry(Status s, String message, Exception exception) {
             this(s, message, false, exception);
         }
@@ -75,10 +93,16 @@ public class ResultLog implements Iterable<ResultLog.Entry> {
             return builder.toString();
         }
 
+        /**
+         * @return The status of this entry
+         */
         public Status getStatus() {
             return status;
         }
 
+        /**
+         * @return The log level of this entry
+         */
         public String getLogLevel() {
             switch (status) {
             case OK:
@@ -88,14 +112,23 @@ public class ResultLog implements Iterable<ResultLog.Entry> {
             }
         }
 
+        /**
+         * @return The message of this entry
+         */
         public String getMessage() {
             return message;
         }
 
+        /**
+         * @return The exception of this entry or null if no exception exists for this message
+         */
         public Exception getException() {
             return exception;
         }
 
+        /**
+         * @return true if this is a debug message
+         */
         public boolean isDebug() {
             return isDebug;
         }
@@ -108,13 +141,33 @@ public class ResultLog implements Iterable<ResultLog.Entry> {
         setupLogger();
     }
 
-    /** Create a copy of the result log */
+    /** Create a copy of the result log
+     * @param log Clone constructor */
     public ResultLog(final ResultLog log) {
         this.aggregateStatus = log.aggregateStatus;
         this.entries = new ArrayList<ResultLog.Entry>(log.entries);
         setupLogger();
     }
 
+    /** Add an entry to this log. The aggregate status of this is set to the highest of the current 
+     * aggregate status and the new Entry's status 
+     * @param entry The entry to add
+     * @return the result log for chaining */
+    public ResultLog add(Entry entry) {
+        if (entries.isEmpty()) {
+            aggregateStatus = Result.Status.OK;
+        }
+
+        entries.add(entry);
+
+        logEntry(entry);
+
+        if (entry.getStatus().ordinal() > aggregateStatus.ordinal()) {
+            aggregateStatus = entry.getStatus();
+        }
+        return this;
+    }
+    
     private void setupLogger() {
         if(Boolean.valueOf(System.getProperty(HC_LOGGING_SYS_PROP))) {
             StackTraceElement[] stackTraceElements = Thread.currentThread().getStackTrace();
@@ -131,24 +184,6 @@ public class ResultLog implements Iterable<ResultLog.Entry> {
                 break; // stop searching
             }
        }
-    }
-
-    
-    /** Add an entry to this log. The aggregate status of this is set to the highest of the current aggregate status and the new Entry's
-     * status */
-    public ResultLog add(Entry entry) {
-        if (entries.isEmpty()) {
-            aggregateStatus = Result.Status.OK;
-        }
-
-        entries.add(entry);
-
-        logEntry(entry);
-
-        if (entry.getStatus().ordinal() > aggregateStatus.ordinal()) {
-            aggregateStatus = entry.getStatus();
-        }
-        return this;
     }
 
     private void logEntry(Entry entry) {
@@ -181,14 +216,17 @@ public class ResultLog implements Iterable<ResultLog.Entry> {
         return e.status.name() + " " + e.getMessage();
     }
     
-    /** Return an Iterator on our entries */
+    /** Return an Iterator on our entries
+     * @return the iterator over all entries */
     @Override
     public Iterator<ResultLog.Entry> iterator() {
         return entries.iterator();
     }
 
     /** Return our aggregate status, i.e. the highest status of the entries added to this log. Starts at OK for an empty ResultLog, so
-     * cannot be lower than that. */
+     * cannot be lower than that.
+     * 
+     *  @return the aggregate status */
     public Status getAggregateStatus() {
         return aggregateStatus;
     }

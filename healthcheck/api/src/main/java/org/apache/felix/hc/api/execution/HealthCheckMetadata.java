@@ -57,7 +57,11 @@ public class HealthCheckMetadata {
     @Deprecated
     private final String WARNINGS_STICK_FOR_MINUTES = "hc.warningsStickForMinutes";
 
-    
+    /**
+     * Creates a HealthCheckMetadata from an OSGi service based on the service properties.
+     * 
+     * @param ref the ServiceReference for the HC service
+     */
     public HealthCheckMetadata(final ServiceReference ref) {
         this.serviceId = (Long) ref.getProperty(Constants.SERVICE_ID);
         this.name = (String) ref.getProperty(HealthCheck.NAME);
@@ -101,34 +105,40 @@ public class HealthCheckMetadata {
     }
 
     /** The title of the health check. If the health check has a name, this is used as the title. Otherwise the description, PID and service
-     * ID are checked for values. */
+     * ID are checked for values. 
+     * 
+     * @return The computed title */
     public String getTitle() {
         return title;
     }
 
     /** Return the list of defined tags for this check as set through {@link HealthCheckMetadata#tags}
      * 
-     * @return */
+     * @return list of tags (may be empty but never returns <code>null</code>)  */
     public List<String> getTags() {
         return tags;
     }
 
-    /** Return the cron expression used for asynchronous execution. */
+    /** Return the cron expression used for asynchronous execution.
+     * @return the async cron expression (or <code>null</code> if not set)  */
     public String getAsyncCronExpression() {
         return asyncCronExpression;
     }
 
-    /** Return the interval in sec used for asynchronous execution. */
+    /** Return the interval in sec used for asynchronous execution.
+     * @return the async interval (or <code>null</code> if not set)  */
     public Long getAsyncIntervalInSec() {
         return asyncIntervalInSec;
     }
 
-    /** Return the service id. */
+    /** Return the service id.
+     * @return the service id (never <code>null</code>)  */
     public long getServiceId() {
         return this.serviceId;
     }
 
-    /** Get the service reference. */
+    /** Get the service reference.
+     * @return the service reference (never <code>null</code>)  */
     public ServiceReference getServiceReference() {
         return this.serviceReference;
     }

@@ -22,6 +22,7 @@ import java.util.Iterator;
 /** The result of executing a {@link HealthCheck} */
 public class Result implements Iterable<ResultLog.Entry> {
 
+	/** The status of a {@link Result}. */
     public enum Status {
         OK, // system is fully operational
         WARN, // attention required but system is operational 
@@ -34,34 +35,39 @@ public class Result implements Iterable<ResultLog.Entry> {
 
     /** Build a single-value Result
      * 
-     * @param s if lower than OK, our status is set to OK */
+     * @param s if lower than OK, our status is set to OK
+     * @param explanation message for the status  */
     public Result(final Status s, final String explanation) {
         resultLog = new ResultLog().add(new ResultLog.Entry(s, explanation));
     }
 
     /** Build a single-value Result with exception
      * 
-     * @param s if lower than OK, our status is set to OK */
+     * @param s if lower than OK, our status is set to OK 
+     * @param explanation message for the status
+     * @param e the exception for this Result */
     public Result(final Status s, final String explanation, final Exception e) {
         resultLog = new ResultLog().add(new ResultLog.Entry(s, explanation, e));
     }
 
-    /** Build a a Result based on a ResultLog, which can provide more details than a single-value Result. */
+    /** Build a a Result based on a ResultLog, which can provide more details than a single-value Result
+     * @param log the log to base the result on*/
     public Result(final ResultLog log) {
         resultLog = new ResultLog(log);
     }
 
-    /** True if our status is OK - provides a convenient way of checking that. */
+    /** True if our status is OK - provides a convenient way of checking that
+     * @return true if the status is ok. */
     public boolean isOk() {
         return getStatus().equals(Status.OK);
     }
 
-    /** Return our Status */
+    /** @return the status of this result */
     public Status getStatus() {
         return resultLog.getAggregateStatus();
     }
 
-    /** Return an Iterator on the entries of our ResultLog */
+    /** @return an Iterator on the entries of our ResultLog */
     @Override
     public Iterator<ResultLog.Entry> iterator() {
         return resultLog.iterator();

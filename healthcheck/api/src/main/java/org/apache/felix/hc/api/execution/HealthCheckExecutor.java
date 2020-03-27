@@ -22,7 +22,18 @@ import java.util.List;
 import org.apache.felix.hc.api.HealthCheck;
 import org.osgi.annotation.versioning.ProviderType;
 
-/** Executes health checks registered as OSGi services and implementing the interface {@link HealthCheck}. */
+/**
+ * Executes health checks registered as OSGi services and implementing the
+ * interface {@link HealthCheck}.
+ * 
+ * The executor is optimized:
+ * <ul>
+ * <li>All health checks as selected by {@link HealthCheckSelector} are executed in parallel</li>
+ * <li>If the same health check is triggered in parallel, it is only executed once</li>
+ * <li>Special handling for async execution, timeout, stickiness and caching as defined by service properties in {@link HealthCheck}</li>
+ * </ul>
+ * 
+ */
 @ProviderType
 public interface HealthCheckExecutor {
 

@@ -26,10 +26,11 @@ import org.osgi.annotation.versioning.ProviderType;
 @ProviderType
 public interface HealthCheckExecutionResult {
 
-    /** Get the result of the health check run. */
+    /** Get the result of the health check run. 
+     * @return the plain result {@link Result} */
     Result getHealthCheckResult();
 
-    /** Get the elapsed time in ms */
+    /** @return The elapsed time in ms */
     long getElapsedTimeInMs();
 
     /** Get the date, the health check finished or if the execution timed out, the execution was aborted.
@@ -43,6 +44,7 @@ public interface HealthCheckExecutionResult {
      * @return <code>true</code> if execution timed out. */
     boolean hasTimedOut();
 
-    /** Get the meta data about the health check service */
+    /** Get the meta data about the health check service
+     * @return The  {@link HealthCheckMetadata} the result was created for.  */
     HealthCheckMetadata getHealthCheckMetadata();
 }

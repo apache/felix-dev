@@ -24,15 +24,10 @@ public class HealthCheckExecutionOptions {
     private boolean combineTagsWithOr = false;
     private int overrideGlobalTimeout = 0;
 
-    @Override
-    public String toString() {
-        return "[HealthCheckExecutionOptions forceInstantExecution=" + forceInstantExecution + ", combineTagsWithOr=" + combineTagsWithOr
-                + ", overrideGlobalTimeout=" + overrideGlobalTimeout + "]";
-    }
-
     /** If activated, this will ensure that asynchronous checks will be executed immediately.
      * 
-     * @param forceInstantExecution boolean flag */
+     * @param forceInstantExecution boolean flag
+     * @return the HealthCheckExecutionOptions options for chaining */
     public HealthCheckExecutionOptions setForceInstantExecution(boolean forceInstantExecution) {
         this.forceInstantExecution = forceInstantExecution;
         return this;
@@ -40,7 +35,8 @@ public class HealthCheckExecutionOptions {
 
     /** If activated, the given tags will be combined with a logical "or" instead of "and".
      * 
-     * @param combineTagsWithOr boolean flag */
+     * @param combineTagsWithOr boolean flag
+     * @return the HealthCheckExecutionOptions options for chaining */
     public HealthCheckExecutionOptions setCombineTagsWithOr(boolean combineTagsWithOr) {
         this.combineTagsWithOr = combineTagsWithOr;
         return this;
@@ -48,7 +44,8 @@ public class HealthCheckExecutionOptions {
 
     /** Allows to override the global timeout for this particular execution of the health check.
      * 
-     * @param overrideGlobalTimeout timeout in ms to be used for this execution of the execution */
+     * @param overrideGlobalTimeout timeout in ms to be used for this execution of the execution
+     * @return the HealthCheckExecutionOptions options for chaining  */
     public HealthCheckExecutionOptions setOverrideGlobalTimeout(int overrideGlobalTimeout) {
         this.overrideGlobalTimeout = overrideGlobalTimeout;
         return this;
@@ -67,6 +64,12 @@ public class HealthCheckExecutionOptions {
     /** @return the timeout to be used for this execution (overriding the global timeout) */
     public int getOverrideGlobalTimeout() {
         return overrideGlobalTimeout;
+    }
+
+    @Override
+    public String toString() {
+        return "[HealthCheckExecutionOptions forceInstantExecution=" + forceInstantExecution + ", combineTagsWithOr=" + combineTagsWithOr
+                + ", overrideGlobalTimeout=" + overrideGlobalTimeout + "]";
     }
 
     @Override

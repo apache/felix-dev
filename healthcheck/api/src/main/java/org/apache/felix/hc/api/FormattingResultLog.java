@@ -27,38 +27,56 @@ import org.slf4j.helpers.MessageFormatter;
 @ProviderType
 public class FormattingResultLog extends ResultLog {
 
-    private ResultLog.Entry createEntry(Result.Status status, String format, Object... args) {
-        return new ResultLog.Entry(status, MessageFormatter.arrayFormat(format, args).getMessage());
-    }
-    private ResultLog.Entry createEntry(boolean isDebug, String format, Object... args) {
-        return new ResultLog.Entry(MessageFormatter.arrayFormat(format, args).getMessage(), isDebug);
-    }
-
-    public void debug(String format, Object... args) {
-        add(createEntry(true, format, args));
+    /**
+     * @param message The message for the log entry (with {} placeholders as known from slf4j)
+     * @param args The args for the placeholders given in message 
+     */
+    public void debug(String message, Object... args) {
+        add(createEntry(true, message, args));
     }
 
-    public void info(String format, Object... args) {
-        add(createEntry(false, format, args));
+    /**
+     * @param message The message for the log entry (with {} placeholders as known from slf4j)
+     * @param args The args for the placeholders given in message 
+     */
+    public void info(String message, Object... args) {
+        add(createEntry(false, message, args));
     }
 
-    public void warn(String format, Object... args) {
-        add(createEntry(Result.Status.WARN, format, args));
+    /**
+     * @param message The message for the log entry (with {} placeholders as known from slf4j)
+     * @param args The args for the placeholders given in message 
+     */
+    public void warn(String message, Object... args) {
+        add(createEntry(Result.Status.WARN, message, args));
     }
 
-    public void critical(String format, Object... args) {
-        add(createEntry(Result.Status.CRITICAL, format, args));
+    /**
+     * @param message The message for the log entry (with {} placeholders as known from slf4j)
+     * @param args The args for the placeholders given in message 
+     */
+    public void critical(String message, Object... args) {
+        add(createEntry(Result.Status.CRITICAL, message, args));
     }
 
-    public void temporarilyUnavailable(String format, Object... args) {
-        add(createEntry(Result.Status.TEMPORARILY_UNAVAILABLE, format, args));
+    /**
+     * 
+     * @param message The message for the log entry (with {} placeholders as known from slf4j)
+     * @param args The args for the placeholders given in message 
+     */
+    public void temporarilyUnavailable(String message, Object... args) {
+        add(createEntry(Result.Status.TEMPORARILY_UNAVAILABLE, message, args));
     }
     
-    public void healthCheckError(String format, Object... args) {
-        add(createEntry(Result.Status.HEALTH_CHECK_ERROR, format, args));
+    /**
+     * @param message The message for the log entry (with {} placeholders as known from slf4j)
+     * @param args The args for the placeholders given in message 
+     */
+    public void healthCheckError(String message, Object... args) {
+        add(createEntry(Result.Status.HEALTH_CHECK_ERROR, message, args));
     }
 
-    /** Utility method to return any magnitude of milliseconds in a human readable format using the appropriate time unit (ms, sec, min)
+    /** Utility method to return any magnitude of milliseconds in a human readable message using the appropriate time unit (ms, sec, min)
      * depending on the magnitude of the input.
      * 
      * @param millis milliseconds
@@ -111,5 +129,12 @@ public class FormattingResultLog extends ResultLog {
         return retVal;
     }
         
+
+    private ResultLog.Entry createEntry(Result.Status status, String message, Object... args) {
+        return new ResultLog.Entry(status, MessageFormatter.arrayFormat(message, args).getMessage());
+    }
     
+    private ResultLog.Entry createEntry(boolean isDebug, String message, Object... args) {
+        return new ResultLog.Entry(MessageFormatter.arrayFormat(message, args).getMessage(), isDebug);
+    }
 }

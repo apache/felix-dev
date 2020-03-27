@@ -23,8 +23,8 @@ import org.osgi.annotation.versioning.ConsumerType;
  * for most cases it is most convenient to use {@link FormattingResultLog} that automatically derives the correct {@link Result.Status} from
  * the log messages.
  *
- * Clients should not look up health checks directly but rather use the {@link org.apache.felix.hc.api.execution.HealthCheckExecutor}
- * service and executed checks based on tags.
+ * Clients must not look up health checks directly but rather use the {@link org.apache.felix.hc.api.execution.HealthCheckExecutor}
+ * service and execute checks based on tags (or name). 
  *
  * If the {@link #MBEAN_NAME} service registration property is set, the health check is registered as an mbean and can be invoked by getting
  * the MBean from the JMX registry. */
@@ -61,6 +61,7 @@ public interface HealthCheck {
      * to OK with a delay (can be useful for load balancers). */
     String KEEP_NON_OK_RESULTS_STICKY_FOR_SEC = "hc.keepNonOkResultsStickyForSec";
     
-    /** Execute this health check and return a {@link Result}.*/
+    /** Execute this health check.
+     * @return a {@link Result}.*/
     Result execute();
 }
