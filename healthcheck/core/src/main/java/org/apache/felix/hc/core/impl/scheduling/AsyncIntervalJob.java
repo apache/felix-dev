@@ -15,32 +15,31 @@
  * KIND, either express or implied. See the License for the
  * specific language governing permissions and limitations under the License.
  */
-package org.apache.felix.hc.core.impl.executor.async;
+package org.apache.felix.hc.core.impl.scheduling;
 
 import java.util.concurrent.ScheduledFuture;
 
-import org.apache.felix.hc.api.execution.HealthCheckMetadata;
 import org.apache.felix.hc.core.impl.executor.HealthCheckExecutorThreadPool;
-import org.osgi.framework.BundleContext;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 /** Runs health checks that are configured with an interval (ScheduledThreadPoolExecutor.scheduleAtFixedRate()) for asynchronous execution.  */
-public class AsyncHealthCheckIntervalJob extends AsyncHealthCheckJob implements Runnable {
-    private static final Logger LOG = LoggerFactory.getLogger(AsyncHealthCheckExecutor.class);
+public class AsyncIntervalJob extends AsyncJob {
+    private static final Logger LOG = LoggerFactory.getLogger(AsyncIntervalJob.class);
 
     private final HealthCheckExecutorThreadPool healthCheckExecutorThreadPool;
+    private final Long asyncIntervalInSec;
+    
     private ScheduledFuture<?> scheduleFuture = null;
 
-    public AsyncHealthCheckIntervalJob(HealthCheckMetadata healthCheckDescriptor, AsyncHealthCheckExecutor asyncHealthCheckExecutor,
-            BundleContext bundleContext, HealthCheckExecutorThreadPool healthCheckExecutorThreadPool) {
-        super(healthCheckDescriptor, asyncHealthCheckExecutor, bundleContext);
+    public AsyncIntervalJob(Runnable runnable, HealthCheckExecutorThreadPool healthCheckExecutorThreadPool, Long asyncIntervalInSec) {
+        super(runnable);
         this.healthCheckExecutorThreadPool = healthCheckExecutorThreadPool;
+        this.asyncIntervalInSec = asyncIntervalInSec;
     }
 
     public boolean schedule() {
-        Long asyncIntervalInSec = healthCheckDescriptor.getAsyncIntervalInSec();
-        scheduleFuture = healthCheckExecutorThreadPool.scheduleAtFixedRate(this, asyncIntervalInSec);
+        scheduleFuture = healthCheckExecutorThreadPool.scheduleAtFixedRate(runnable, asyncIntervalInSec);
         LOG.info("Scheduled job {} for execution every {}sec", this, asyncIntervalInSec);
         return true;
     }
@@ -49,12 +48,17 @@ public class AsyncHealthCheckIntervalJob extends AsyncHealthCheckJob implements 
     public boolean unschedule() {
 
         if (scheduleFuture != null) {
-            LOG.debug("Unscheduling async job for {}", healthCheckDescriptor);
+            LOG.debug("Unscheduling async job for {}", runnable);
             return scheduleFuture.cancel(false);
         } else {
-            LOG.debug("No scheduled future for {} exists", healthCheckDescriptor);
+            LOG.debug("No scheduled future for {} exists", runnable);
             return false;
         }
+    }
+    
+    @Override
+    public String toString() {
+        return "[Async interval job for " + runnable + "]";
     }
 
 }

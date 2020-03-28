@@ -35,7 +35,14 @@ import org.apache.felix.hc.api.execution.HealthCheckMetadata;
 import org.apache.felix.hc.api.execution.HealthCheckSelector;
 import org.apache.felix.hc.core.impl.executor.ExecutionResult;
 import org.apache.felix.hc.core.impl.executor.HealthCheckExecutorThreadPool;
+import org.apache.felix.hc.core.impl.executor.HealthCheckFuture;
+import org.apache.felix.hc.core.impl.executor.HealthCheckFuture.Callback;
 import org.apache.felix.hc.core.impl.executor.HealthCheckResultCache;
+import org.apache.felix.hc.core.impl.scheduling.AsyncQuartzCronJob;
+import org.apache.felix.hc.core.impl.scheduling.AsyncIntervalJob;
+import org.apache.felix.hc.core.impl.scheduling.AsyncJob;
+import org.apache.felix.hc.core.impl.scheduling.QuartzCronScheduler;
+import org.apache.felix.hc.core.impl.scheduling.QuartzCronSchedulerProvider;
 import org.apache.felix.hc.core.impl.util.HealthCheckFilter;
 import org.osgi.framework.BundleContext;
 import org.osgi.framework.InvalidSyntaxException;
@@ -56,16 +63,17 @@ public class AsyncHealthCheckExecutor implements ServiceListener {
 
     private static final Logger LOG = LoggerFactory.getLogger(AsyncHealthCheckExecutor.class);
 
-    @Reference
-    HealthCheckExecutorThreadPool healthCheckExecutorThreadPool;
+    private Map<HealthCheckMetadata, ExecutionResult> asyncResultsByDescriptor = new ConcurrentHashMap<>();
 
-    private Map<HealthCheckMetadata, ExecutionResult> asyncResultsByDescriptor = new ConcurrentHashMap<HealthCheckMetadata, ExecutionResult>();
-
-    private Map<HealthCheckMetadata, AsyncHealthCheckJob> registeredJobs = new HashMap<HealthCheckMetadata, AsyncHealthCheckJob>();
+    private Map<HealthCheckMetadata, AsyncJob> registeredJobs = new HashMap<>();
 
     private BundleContext bundleContext;
 
-    private QuartzCronScheduler quartzCronScheduler = null;
+    @Reference
+    HealthCheckExecutorThreadPool healthCheckExecutorThreadPool;
+    
+    @Reference
+    QuartzCronSchedulerProvider quartzCronSchedulerProvider;
 
     @Activate
     protected final void activate(final ComponentContext componentContext) throws InvalidSyntaxException {
@@ -94,10 +102,6 @@ public class AsyncHealthCheckExecutor implements ServiceListener {
         LOG.debug("Unscheduling {} jobs for asynchronous health checks", registeredJobs.size());
         for (HealthCheckMetadata healthCheckDescriptor : new LinkedList<HealthCheckMetadata>(registeredJobs.keySet())) {
             unscheduleHealthCheck(healthCheckDescriptor);
-        }
-
-        if (quartzCronScheduler != null) {
-            quartzCronScheduler.shutdown();
         }
     }
 
@@ -131,24 +135,18 @@ public class AsyncHealthCheckExecutor implements ServiceListener {
     private boolean scheduleHealthCheck(HealthCheckMetadata descriptor) {
 
         try {
-            AsyncHealthCheckJob healthCheckAsyncJob = null;
-
+            AsyncJob healthCheckAsyncJob = null;
+            
             if (isAsyncCron(descriptor)) {
-
-                if (quartzCronScheduler == null) {
-                    if (classExists("org.quartz.CronTrigger")) {
-                        quartzCronScheduler = new QuartzCronScheduler(healthCheckExecutorThreadPool);
-                        LOG.info("Created quartz scheduler for async HC");
-                    } else {
-                        LOG.warn("Can not schedule async health check '{}' with cron expression '{}' since quartz library is not on classpath", descriptor.getName(), descriptor.getAsyncCronExpression());
-                        return false;
-                    }
+            	
+                try {
+    				healthCheckAsyncJob = new AsyncQuartzCronJob(getAsyncJob(descriptor), quartzCronSchedulerProvider, "job-hc-" + descriptor.getServiceId(), "async-healthchecks", descriptor.getAsyncCronExpression());
+                } catch(ClassNotFoundException|NoClassDefFoundError e) {
+                    LOG.warn("Can not schedule async health check '{}' with cron expression '{}' since quartz library is not on classpath", descriptor.getName(), descriptor.getAsyncCronExpression());
+                    return false;
                 }
-
-                healthCheckAsyncJob = new AsyncHealthCheckQuartzCronJob(descriptor, this, bundleContext, quartzCronScheduler);
             } else if (isAsyncInterval(descriptor)) {
-
-                healthCheckAsyncJob = new AsyncHealthCheckIntervalJob(descriptor, this, bundleContext, healthCheckExecutorThreadPool);
+                healthCheckAsyncJob = new AsyncIntervalJob(getAsyncJob(descriptor), healthCheckExecutorThreadPool, descriptor.getAsyncIntervalInSec());
             }
 
             if (healthCheckAsyncJob != null) {
@@ -166,13 +164,38 @@ public class AsyncHealthCheckExecutor implements ServiceListener {
 
     }
 
+	private Runnable getAsyncJob(HealthCheckMetadata descriptor) {
+		
+		return new Runnable() {
+			@Override
+			public void run() {
+		        LOG.debug("Running job {}", this);
+		        HealthCheckFuture healthCheckFuture = new HealthCheckFuture(descriptor, bundleContext, new Callback() {
+
+		            @Override
+		            public void finished(HealthCheckExecutionResult result) {
+		                updateWith(result);
+		            }
+		        });
+
+		        // run future in same thread (as we are already async via scheduler)
+		        healthCheckFuture.run();
+			}
+			
+			@Override
+			public String toString() {
+				return descriptor.toString();
+			}
+		};
+	}
+
     private boolean unscheduleHealthCheck(HealthCheckMetadata descriptor) {
 
         // here no check for isAsync must be used to ensure previously
         // scheduled async checks are correctly unscheduled if they have
         // changed from async to sync.
 
-        AsyncHealthCheckJob job = registeredJobs.remove(descriptor);
+        AsyncJob job = registeredJobs.remove(descriptor);
         if (job != null) {
             return job.unschedule();
         } else {
@@ -248,15 +271,6 @@ public class AsyncHealthCheckExecutor implements ServiceListener {
 
     private boolean isAsyncInterval(HealthCheckMetadata healthCheckMetadata) {
         return healthCheckMetadata.getAsyncIntervalInSec() != null && healthCheckMetadata.getAsyncIntervalInSec() > 0L;
-    }
-
-    private boolean classExists(String className) {
-        try {
-            Class.forName(className);
-            return true;
-        } catch (ClassNotFoundException e) {
-            return false;
-        }
     }
 
 }
