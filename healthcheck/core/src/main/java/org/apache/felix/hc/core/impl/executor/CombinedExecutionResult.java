@@ -89,5 +89,14 @@ public class CombinedExecutionResult implements HealthCheckExecutionResult {
     public HealthCheckMetadata getHealthCheckMetadata() {
         throw new UnsupportedOperationException();
     }
+    
+    @Override
+    public String toString() {
+    	return "CombinedExecutionResult [size="+executionResults.size()+" overall status=" + getHealthCheckResult().getStatus() +
+                ", finishedAt=" + getFinishedAt() +
+                ", elapsedTimeInMs=" + getElapsedTimeInMs() +
+                ", timedOut=" + hasTimedOut() +
+                "]";
+    }
 
 }
