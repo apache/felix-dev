@@ -38,7 +38,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 /** {@link HealthCheck} that runs an arbitrary script. */
-@Component(service = HealthCheck.class, configurationPolicy = ConfigurationPolicy.REQUIRE)
+@Component(configurationPolicy = ConfigurationPolicy.REQUIRE)
 @Designate(ocd = ScriptedHealthCheck.Config.class, factory = true)
 public class ScriptedHealthCheck implements HealthCheck {
 
@@ -97,15 +97,13 @@ public class ScriptedHealthCheck implements HealthCheck {
             LOG.info("Both 'script' and 'scriptUrl' (=()) are configured, ignoring 'scriptUrl'", scriptUrl);
             scriptUrl = null;
         }
-
-        LOG.debug("Activated Scripted HC "+config.hc_name()+" with "+ (StringUtils.isNotBlank(script)?"script "+script: "script url "+scriptUrl));
-
+        final String scriptLog = StringUtils.isNotBlank(script)?"script " + script : "script url " + scriptUrl;
+		LOG.debug("Activated Scripted HC '{}' with '{}'", config.hc_name(), scriptLog);
     }
 
     @Override
     public Result execute() {
         FormattingResultLog log = new FormattingResultLog();
-        
         
         boolean urlIsUsed = StringUtils.isBlank(script);
         String scriptToExecute = urlIsUsed ? scriptHelper.getFileContents(scriptUrl): script;
@@ -115,11 +113,9 @@ public class ScriptedHealthCheck implements HealthCheck {
             ScriptEngine scriptEngine = scriptHelper.getScriptEngine(scriptEnginesTracker, language);
             scriptHelper.evalScript(bundleContext, scriptEngine, scriptToExecute, log, null, true);
         }  catch (Exception e) {
-            log.healthCheckError("Exception while executing script: "+e, e);
+            log.healthCheckError("Exception while executing script: " + e, e);
         }
-
         return new Result(log);
     }
-
 
 }

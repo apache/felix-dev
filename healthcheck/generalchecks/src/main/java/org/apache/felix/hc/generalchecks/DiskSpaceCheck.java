@@ -83,11 +83,9 @@ public class DiskSpaceCheck implements HealthCheck {
 
     @Override
     public Result execute() {
-
         FormattingResultLog log = new FormattingResultLog();
 
         for (String diskPath : diskPaths) {
-
             File diskPathFile = new File(diskPath);
 
             if (!diskPathFile.exists()) {
@@ -97,7 +95,6 @@ public class DiskSpaceCheck implements HealthCheck {
                 log.warn("Directory '{}' is not a directory", diskPathFile);
                 continue;
             }
-
             double total = diskPathFile.getTotalSpace();
             double free = diskPathFile.getUsableSpace();
             double usedPercentage = (total - free) / total * 100d;
@@ -115,9 +112,7 @@ public class DiskSpaceCheck implements HealthCheck {
             log.add(new ResultLog.Entry(status, msg));
 
         }
-
         return new Result(log);
     }
-
 
 }

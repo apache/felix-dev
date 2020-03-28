@@ -41,7 +41,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 /** {@link HealthCheck} that checks one (or multiple) JMX attribute(s). */
-@Component(service = HealthCheck.class, configurationPolicy = ConfigurationPolicy.REQUIRE)
+@Component(configurationPolicy = ConfigurationPolicy.REQUIRE)
 @Designate(ocd = JmxAttributeCheck.Config.class, factory = true)
 public class JmxAttributeCheck implements HealthCheck {
 
@@ -54,7 +54,6 @@ public class JmxAttributeCheck implements HealthCheck {
 
     @ObjectClassDefinition(name = HC_LABEL, description = "Checks the value of a single JMX attribute.")
     @interface Config {
-
         @AttributeDefinition(name = "Name", description = "Name of this health check.")
         String hc_name() default HC_NAME;
 
@@ -92,7 +91,6 @@ public class JmxAttributeCheck implements HealthCheck {
         }
     }
 
-
     @Override
     public Result execute() {
         FormattingResultLog resultLog = new FormattingResultLog();
@@ -107,17 +105,17 @@ public class JmxAttributeCheck implements HealthCheck {
         try {
             final MBeanServer jmxServer = ManagementFactory.getPlatformMBeanServer();
             final ObjectName objectName = new ObjectName(attributeConstraintConfig.mbeanName);
-            if (jmxServer.queryNames(objectName, null).size() == 0) {
+            if (jmxServer.queryNames(objectName, null).isEmpty()) {
                 resultLog.warn("MBean not found: {}", objectName);
             } else {
                 final Object value = jmxServer.getAttribute(objectName, attributeConstraintConfig.attributeName);
                 resultLog.debug("{} {} returns {}", attributeConstraintConfig.mbeanName, attributeConstraintConfig.attributeName, value);
                 boolean matches = new SimpleConstraintChecker().check(value, attributeConstraintConfig.attributeValueConstraint);
-                String baseMsg = "JMX attribute "+attributeConstraintConfig.mbeanName+" -> '"+attributeConstraintConfig.attributeName+"': Value [" + value + "] ";
+                String baseMsg = "JMX attribute "+attributeConstraintConfig.mbeanName+" -> '" + attributeConstraintConfig.attributeName+"': Value [" + value + "] ";
                 if (matches) {
                     resultLog.add(new ResultLog.Entry(Result.Status.OK, baseMsg+"matches constraint [" + attributeConstraintConfig.attributeValueConstraint + "]"));
                 } else {
-                    resultLog.add(new ResultLog.Entry( statusForFailedContraint, baseMsg+"does not match constraint [" + attributeConstraintConfig.attributeValueConstraint + "]"));
+                    resultLog.add(new ResultLog.Entry( statusForFailedContraint, baseMsg + "does not match constraint [" + attributeConstraintConfig.attributeValueConstraint + "]"));
                 }
             }
         } catch (Exception e) {
@@ -125,7 +123,6 @@ public class JmxAttributeCheck implements HealthCheck {
             resultLog.healthCheckError("JMX attribute check failed: {}", attributeConstraintConfig, e);
         }
     }
-    
     
     private static class AttributeConstraintConfig {
         
@@ -136,7 +133,7 @@ public class JmxAttributeCheck implements HealthCheck {
         public static final String SUFFIX_VALUE_CONSTRAINT = ".value.constraint";
 
         private static List<AttributeConstraintConfig> load(final Config config, final Map<String, Object> rawConfig) {
-            List<AttributeConstraintConfig> attributeConstraintConfigs = new ArrayList<AttributeConstraintConfig>();
+            List<AttributeConstraintConfig> attributeConstraintConfigs = new ArrayList<>();
             
             // first attribute via metatype
             attributeConstraintConfigs.add(new AttributeConstraintConfig(config.mbean_name(), config.attribute_name(),config.attribute_value_constraint()));
@@ -177,13 +174,13 @@ public class JmxAttributeCheck implements HealthCheck {
             this.attributeName = (String) rawConfig.get(propNameAttribute);
             this.attributeValueConstraint = (String) rawConfig.get(PROP_ATTRIBUTE + attributeCounter + SUFFIX_VALUE_CONSTRAINT);
             if(StringUtils.isAnyBlank(mbeanName, attributeName, attributeValueConstraint)) {
-                throw new IllegalArgumentException("Invalid JmxAttributeCheck config for property "+mbeanName+" -> "+propNameAttribute+": "+toString());
+                throw new IllegalArgumentException("Invalid JmxAttributeCheck config for property "+mbeanName+" -> " + propNameAttribute+": " + toString());
             }
         }
         
         @Override
         public String toString() {
-            return "JMX attribute "+mbeanName+" -> '"+attributeName+"': Constraint: "+attributeValueConstraint;
-        };
+            return "JMX attribute "+mbeanName+" -> '" + attributeName+"': Constraint: " + attributeValueConstraint;
+        }
     }
 }

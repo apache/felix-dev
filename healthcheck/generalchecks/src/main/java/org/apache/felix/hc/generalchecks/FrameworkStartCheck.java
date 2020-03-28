@@ -36,7 +36,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 @Component(immediate = true, configurationPolicy = ConfigurationPolicy.OPTIONAL)
-@HealthCheckService(name = FrameworkStartCheck.HC_NAME, tags = { FrameworkStartCheck.HC_DEFAULT_TAG })
+@HealthCheckService(name = FrameworkStartCheck.HC_NAME, tags = FrameworkStartCheck.HC_DEFAULT_TAG)
 @Designate(ocd = FrameworkStartCheck.Config.class)
 public class FrameworkStartCheck implements HealthCheck {
 
@@ -44,8 +44,6 @@ public class FrameworkStartCheck implements HealthCheck {
 
     public static final String HC_NAME = "OSGi Framework Ready Check";
     public static final String HC_DEFAULT_TAG = "systemalive";
-
-
 
     public static final String PROP_START_LEVEL_BEGINNING = "org.osgi.framework.startlevel.beginning";
     
@@ -67,7 +65,6 @@ public class FrameworkStartCheck implements HealthCheck {
                 "It takes precedence over the 'targetStartLevel' config. " +
                 "If the startlevel cannot be derived from the osgi property, this config attribute is ignored.")
         String targetStartLevel_propName() default "";
-
     }
 
     private BundleContext bundleContext;
@@ -75,13 +72,12 @@ public class FrameworkStartCheck implements HealthCheck {
     private String beginningStartLevel;
 
     @Activate
-    protected void activate(final BundleContext ctx, final Config config) throws InterruptedException {
+    protected void activate(final BundleContext ctx, final Config config) {
         this.bundleContext = ctx;
         this.targetStartLevel = getTargetStartLevel(config);
         this.beginningStartLevel = getBeginningStartLevel();
         LOG.debug("Activated targetStartLevel={}, beginningStartLevel={}, ", targetStartLevel, beginningStartLevel);
     }
-
 
     private long getTargetStartLevel(final Config config) {
         final FrameworkStartLevel fsl = bundleContext.getBundle(Constants.SYSTEM_BUNDLE_ID).adapt(FrameworkStartLevel.class);
@@ -100,11 +96,9 @@ public class FrameworkStartCheck implements HealthCheck {
         }
         return tStartLevel;
     }
-    
 
     private String getBeginningStartLevel() {
-        String beginningStartLevel = StringUtils.defaultIfBlank(bundleContext.getProperty(PROP_START_LEVEL_BEGINNING), "<unknown>");
-        return beginningStartLevel;
+        return StringUtils.defaultIfBlank(bundleContext.getProperty(PROP_START_LEVEL_BEGINNING), "<unknown>");
     }
 
     @Override
@@ -121,17 +115,23 @@ public class FrameworkStartCheck implements HealthCheck {
         }
     }
 
-    private String stateToStr(int state) {
-        switch(state) {
-        case Bundle.ACTIVE: return "ACTIVE";
-        case Bundle.INSTALLED: return "INSTALLED";
-        case Bundle.RESOLVED: return "RESOLVED";
-        case Bundle.STARTING: return "STARTING";
-        case Bundle.STOPPING: return "STOPPING";
-        case Bundle.UNINSTALLED: return "UNINSTALLED";
-        default: return "unknown";
-        }
-
-    }
+	private String stateToStr(int state) {
+		switch (state) {
+		case Bundle.ACTIVE:
+			return "ACTIVE";
+		case Bundle.INSTALLED:
+			return "INSTALLED";
+		case Bundle.RESOLVED:
+			return "RESOLVED";
+		case Bundle.STARTING:
+			return "STARTING";
+		case Bundle.STOPPING:
+			return "STOPPING";
+		case Bundle.UNINSTALLED:
+			return "UNINSTALLED";
+		default:
+			return "unknown";
+		}
+	}
 
 }

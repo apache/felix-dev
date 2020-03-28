@@ -27,7 +27,6 @@ import java.io.InputStreamReader;
 import java.io.StringWriter;
 import java.net.HttpURLConnection;
 import java.net.InetSocketAddress;
-import java.net.ProtocolException;
 import java.net.Proxy;
 import java.net.URI;
 import java.net.URISyntaxException;
@@ -76,6 +75,9 @@ public class HttpRequestsCheck implements HealthCheck {
 
     public static final String HC_NAME = "Http Requests";
     public static final String HC_LABEL = "Health Check: " + HC_NAME;
+    
+    private static final int READ_TIMEOUT_MS = 7000;
+    private static final int CONNECT_TIMEOUT_MS = 7000;
 
     @ObjectClassDefinition(name = HC_LABEL, description = "Performs http(s) request(s) and checks the response for return code and optionally checks the response entity")
     public @interface Config {
@@ -104,10 +106,10 @@ public class HttpRequestsCheck implements HealthCheck {
         };
         
         @AttributeDefinition(name = "Connect Timeout", description = "Default connect timeout in ms. Can be overwritten per request with option --connect-timeout (in sec)")
-        int connectTimeoutInMs() default 7000;
+        int connectTimeoutInMs() default CONNECT_TIMEOUT_MS;
 
         @AttributeDefinition(name = "Read Timeout", description = "Default read timeout in ms. Can be overwritten with per request option -m or --max-time (in sec)")
-        int readTimeoutInMs() default 7000;
+        int readTimeoutInMs() default READ_TIMEOUT_MS;
         
         @AttributeDefinition(name = "Status for failed request constraint", description = "Status to fail with if the constraint check fails")
         Result.Status statusForFailedContraint() default Result.Status.WARN;
@@ -115,10 +117,8 @@ public class HttpRequestsCheck implements HealthCheck {
         @AttributeDefinition(name = "Run in parallel", description = "Run requests in parallel (only active if more than one request spec is configured)")
         boolean runInParallel() default true;
         
-        
         @AttributeDefinition
         String webconsole_configurationFactory_nameHint() default "{hc.name}: {requests}";
-
     }
 
     private List<RequestSpec> requestSpecs;
@@ -127,7 +127,7 @@ public class HttpRequestsCheck implements HealthCheck {
     private Result.Status statusForFailedContraint;
     private boolean runInParallel;
     
-    private String defaultBaseUrl = null;
+    private String defaultBaseUrl;
 
     private FormattingResultLog configErrors;
     
@@ -158,7 +158,6 @@ public class HttpRequestsCheck implements HealthCheck {
 
     @Override
     public Result execute() {
-
         FormattingResultLog overallLog = new FormattingResultLog();
         
         // take over config errors
@@ -176,14 +175,13 @@ public class HttpRequestsCheck implements HealthCheck {
         logsForEachRequest.stream().forEach( l -> stream(l.spliterator(), false).forEach(e -> overallLog.add(e)));
 
         return new Result(overallLog);
-
     }
 
     private List<RequestSpec> getRequestSpecs(String[] requestSpecStrArr) {
         
         configErrors = new FormattingResultLog();
         
-        List<RequestSpec> requestSpecs = new ArrayList<RequestSpec>();
+        List<RequestSpec> requestSpecs = new ArrayList<>();
         for(String requestSpecStr: requestSpecStrArr) {
             try {
                 RequestSpec requestSpec = new RequestSpec(requestSpecStr);
@@ -203,7 +201,7 @@ public class HttpRequestsCheck implements HealthCheck {
         
         String method = "GET";
         String url;
-        Map<String,String> headers = new HashMap<String,String>();
+        Map<String,String> headers = new HashMap<>();
         String data = null;
         
         String user;
@@ -213,7 +211,7 @@ public class HttpRequestsCheck implements HealthCheck {
         
         Proxy proxy;
         
-        List<ResponseCheck> responseChecks = new ArrayList<ResponseCheck>();
+        List<ResponseCheck> responseChecks = new ArrayList<>();
   
         RequestSpec(String requestSpecStr) throws ParseException, URISyntaxException {
             
@@ -316,7 +314,7 @@ public class HttpRequestsCheck implements HealthCheck {
         }
 
         String[] splitArgsRespectingQuotes(String requestInfo) {
-            List<String> argList = new ArrayList<String>();
+            List<String> argList = new ArrayList<>();
             Pattern regex = Pattern.compile("[^\\s\"']+|\"[^\"]*\"|'[^']*'");
             Matcher regexMatcher = regex.matcher(requestInfo);
             while (regexMatcher.find()) {
@@ -346,7 +344,7 @@ public class HttpRequestsCheck implements HealthCheck {
             }
             
             if(response != null) {
-                List<String> resultBits = new ArrayList<String>();
+                List<String> resultBits = new ArrayList<>();
                 boolean hasFailed = false;
                 for(ResponseCheck responseCheck: responseChecks) {
                     ResponseCheck.ResponseCheckResult result = responseCheck.checkResponse(response, log);
@@ -385,7 +383,7 @@ public class HttpRequestsCheck implements HealthCheck {
         }
 
         private HttpURLConnection openConnection(int defaultConnectTimeoutInMs, int defaultReadTimeoutInMs, URL effectiveUrl, FormattingResultLog log)
-                throws IOException, ProtocolException {
+                throws IOException {
             HttpURLConnection conn;
             conn = (HttpURLConnection) (proxy==null ? effectiveUrl.openConnection() : effectiveUrl.openConnection(proxy));
             conn.setInstanceFollowRedirects(false);
@@ -432,9 +430,7 @@ public class HttpRequestsCheck implements HealthCheck {
             }
             
             long requestDurationInMs = System.currentTimeMillis() - startTime;
-            Response response = new Response(actualResponseCode, actualResponseMessage, responseHeaders, responseEntityWriter.toString(), requestDurationInMs);
-            
-            return response;
+            return new Response(actualResponseCode, actualResponseMessage, responseHeaders, responseEntityWriter.toString(), requestDurationInMs);
         }
         
     }
@@ -469,12 +465,10 @@ public class HttpRequestsCheck implements HealthCheck {
             }
             
         }
-        
         ResponseCheckResult checkResponse(Response response, FormattingResultLog log);
     }
 
     static class ResponseCodeCheck implements ResponseCheck {
-        
         private final int expectedResponseCode;
         
         public ResponseCodeCheck(int expectedResponseCode) {
@@ -492,7 +486,7 @@ public class HttpRequestsCheck implements HealthCheck {
     }
     
     static class ResponseTimeCheck implements ResponseCheck {
-        final static String TIME = "TIME ";
+        static final String TIME = "TIME ";
         
         private final String timeConstraint;
         
@@ -514,7 +508,7 @@ public class HttpRequestsCheck implements HealthCheck {
     }
     
     static class ResponseEntityRegExCheck implements ResponseCheck {
-        final static String MATCHES = "MATCHES ";
+        static final String MATCHES = "MATCHES ";
         
         private final Pattern expectedResponseEntityRegEx;
         
@@ -532,7 +526,7 @@ public class HttpRequestsCheck implements HealthCheck {
     }
 
     static class ResponseHeaderCheck implements ResponseCheck {
-        final static String HEADER = "HEADER ";
+        static final String HEADER = "HEADER ";
         
         private final String headerName;
         private final String headerConstraint;
@@ -561,13 +555,12 @@ public class HttpRequestsCheck implements HealthCheck {
     }
 
     static class JsonPropertyCheck implements ResponseCheck {
-        final static String JSON = "JSON ";
+        static final String JSON = "JSON ";
         
         private final String jsonPropertyPath;
         private final String jsonPropertyConstraint;
         
         private final SimpleConstraintChecker simpleConstraintChecker = new SimpleConstraintChecker();
-
         
         public JsonPropertyCheck(String jsonExpression) {
             String[] jsonCheckBits = jsonExpression.split(" +", 2);
@@ -576,7 +569,6 @@ public class HttpRequestsCheck implements HealthCheck {
         }
         
         public ResponseCheckResult checkResponse(Response response, FormattingResultLog log) {
-
             JSONParser jsonParser;
             try {
                 jsonParser = new JSONParser(response.actualResponseEntity);

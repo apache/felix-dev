@@ -31,12 +31,10 @@ import org.apache.felix.hc.api.HealthCheck;
 import org.apache.felix.hc.api.Result;
 import org.apache.felix.hc.api.ResultLog.Entry;
 import org.apache.felix.hc.generalchecks.scrutil.DsRootCauseAnalyzer;
-import org.osgi.framework.BundleContext;
 import org.osgi.service.component.annotations.Activate;
 import org.osgi.service.component.annotations.Component;
 import org.osgi.service.component.annotations.ConfigurationPolicy;
 import org.osgi.service.component.annotations.Reference;
-import org.osgi.service.component.annotations.ReferenceCardinality;
 import org.osgi.service.component.annotations.ReferencePolicyOption;
 import org.osgi.service.component.runtime.ServiceComponentRuntime;
 import org.osgi.service.component.runtime.dto.ComponentConfigurationDTO;
@@ -48,7 +46,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 @Component(configurationPolicy = ConfigurationPolicy.REQUIRE)
-@HealthCheckService(name = DsComponentsCheck.HC_NAME, tags = { DsComponentsCheck.HC_DEFAULT_TAG })
+@HealthCheckService(name = DsComponentsCheck.HC_NAME, tags = DsComponentsCheck.HC_DEFAULT_TAG)
 @Designate(ocd = DsComponentsCheck.Config.class, factory = true)
 public class DsComponentsCheck implements HealthCheck {
 
@@ -60,7 +58,6 @@ public class DsComponentsCheck implements HealthCheck {
     @ObjectClassDefinition(name = "Health Check: "
             + HC_NAME, description = "System ready check that checks a list of DS components and provides root cause analysis in case of errors")
     public @interface Config {
-
         @AttributeDefinition(name = "Name", description = "Name of this health check")
         String hc_name() default HC_NAME;
 
@@ -84,10 +81,10 @@ public class DsComponentsCheck implements HealthCheck {
     private DsRootCauseAnalyzer analyzer;
 
     @Reference(policyOption = ReferencePolicyOption.GREEDY)
-    ServiceComponentRuntime scr;
+    private ServiceComponentRuntime scr;
 
     @Activate
-    public void activate(final BundleContext ctx, final Config config) throws InterruptedException {
+    public void activate(final Config config) {
         componentsList = Arrays.asList(config.components_list());
         statusForMissing = config.statusForMissing();
         LOG.debug("Activated DS Components HC for componentsList={}", componentsList);
@@ -95,11 +92,10 @@ public class DsComponentsCheck implements HealthCheck {
 
     @Override
     public Result execute() {
-
         Collection<ComponentDescriptionDTO> componentDescriptionDTOs = scr.getComponentDescriptionDTOs();
-        List<ComponentDescriptionDTO> watchedComps = new LinkedList<ComponentDescriptionDTO>();
+        List<ComponentDescriptionDTO> watchedComps = new LinkedList<>();
         FormattingResultLog log = new FormattingResultLog();
-        List<String> missingComponents = new LinkedList<String>(componentsList);
+        List<String> missingComponents = new LinkedList<>(componentsList);
         for (ComponentDescriptionDTO desc : componentDescriptionDTOs) {
             if (componentsList.contains(desc.name)) {
                 watchedComps.add(desc);
@@ -109,16 +105,12 @@ public class DsComponentsCheck implements HealthCheck {
         for (String missingComp : missingComponents) {
             log.temporarilyUnavailable("Not found {}", missingComp);
         }
-
         int countEnabled = 0;
         int countDisabled = 0;
         for (ComponentDescriptionDTO dsComp : watchedComps) {
-
             boolean isActive;
-
             boolean componentEnabled = scr.isComponentEnabled(dsComp);
             if (componentEnabled) {
-
                 Collection<ComponentConfigurationDTO> componentConfigurationDTOs = scr.getComponentConfigurationDTOs(dsComp);
                 List<String> idStateTuples = new ArrayList<>();
                 boolean foundActiveOrSatisfiedConfig = false;
@@ -142,7 +134,6 @@ public class DsComponentsCheck implements HealthCheck {
                 countDisabled++;
                 isActive = false;
             }
-
             if (!isActive) {
                 if (analyzer != null) {
                     analyzer.logNotEnabledComponent(log, dsComp, statusForMissing);
@@ -150,19 +141,15 @@ public class DsComponentsCheck implements HealthCheck {
                     log.add(new Entry(statusForMissing, "Not active: " + dsComp.name));
                 }
             }
-
         }
-
         if (countDisabled > 0) {
             log.temporarilyUnavailable("{} required components are not active", countDisabled);
         }
         log.info("{} required components are active", countEnabled);
-
         return new Result(log);
     }
 
     static final String toStateString(int state) {
-
         final int FAILED_ACTIVATION = 16; // not yet available in r6, but dependency should be left on r6 for max compatibility
 
         switch (state) {

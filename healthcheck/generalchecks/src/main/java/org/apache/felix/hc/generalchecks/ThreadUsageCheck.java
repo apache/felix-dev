@@ -63,7 +63,6 @@ public class ThreadUsageCheck implements HealthCheck {
 
         @AttributeDefinition(name = "CPU Time Threshold for WARN in %", description = "Will WARN once this threshold is reached in average for all threads. This value is multiplied by number of available cores as reported by Runtime.getRuntime().availableProcessors()")
         long cpuPercentageThresholdWarn() default 95;
-
     }
 
     private long samplePeriodInMs;
@@ -121,19 +120,15 @@ public class ThreadUsageCheck implements HealthCheck {
             log.add(new ResultLog.Entry(status, msg));
 
             checkForDeadlock(log, threadMxBean);
-
         } catch (Exception e) {
             LOG.error("Could not analyse thread usage " + e, e);
             log.healthCheckError("Could not analyse thread usage", e);
         }
-
         return new Result(log);
-
     }
 
     List<ThreadTimeInfo> collectThreadTimeInfos(FormattingResultLog log, ThreadMXBean threadMxBean) {
-
-        Map<Long, ThreadTimeInfo> threadTimeInfos = new HashMap<Long, ThreadTimeInfo>();
+        Map<Long, ThreadTimeInfo> threadTimeInfos = new HashMap<>();
 
         long[] allThreadIds = threadMxBean.getAllThreadIds();
         for (long threadId : allThreadIds) {
@@ -159,10 +154,7 @@ public class ThreadUsageCheck implements HealthCheck {
             long threadCpuTimeStop = threadMxBean.getThreadCpuTime(threadId);
             threadTimeInfo.stop = threadCpuTimeStop;
         }
-
-        List<ThreadTimeInfo> threads = new ArrayList<ThreadTimeInfo>(threadTimeInfos.values());
-
-        return threads;
+        return new ArrayList<>(threadTimeInfos.values());
     }
 
     void checkForDeadlock(FormattingResultLog log, ThreadMXBean threadMxBean) {
@@ -194,5 +186,6 @@ public class ThreadUsageCheck implements HealthCheck {
             }
             return (int) (otherThreadTimeInfo.getCpuTime() - this.getCpuTime());
         }
+
     }
 }

@@ -18,11 +18,9 @@
 package org.apache.felix.hc.generalchecks;
 
 import static org.junit.Assert.assertEquals;
-import static org.mockito.Matchers.eq;
 import static org.mockito.Mockito.doReturn;
 import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
-import static org.mockito.Mockito.when;
 import static org.mockito.MockitoAnnotations.initMocks;
 
 import java.lang.annotation.Annotation;
@@ -41,7 +39,6 @@ import org.junit.Before;
 import org.junit.Test;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
-import org.mockito.Mockito;
 import org.mockito.Spy;
 import org.osgi.framework.BundleContext;
 import org.osgi.framework.ServiceReference;
@@ -50,7 +47,6 @@ public class ScriptedHealthCheckTest {
 
     private static final String GROOVY = "Groovy";
 
-    
     @Spy
     @InjectMocks
     ScriptedHealthCheck scriptedHealthCheck;

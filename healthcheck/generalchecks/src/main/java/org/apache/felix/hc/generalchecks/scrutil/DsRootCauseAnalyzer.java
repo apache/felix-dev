@@ -40,8 +40,7 @@ public class DsRootCauseAnalyzer {
     private ServiceComponentRuntime scr;
 
     @Activate
-    public void activate() throws InterruptedException {
-
+    public void activate() {
         String rootCauseClassName = "org.apache.felix.rootcause.DSRootCause";
         try {
             Class<?> rootCauseClass = Class.forName(rootCauseClassName);

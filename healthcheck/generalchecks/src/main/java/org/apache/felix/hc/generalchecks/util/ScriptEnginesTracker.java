@@ -40,14 +40,14 @@ import org.osgi.service.component.annotations.Deactivate;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-/** Simple service to track script engines available via osgi bundles that define META-INF/services/javax.script.ScriptEngineFactory, e.g. like groovy-all. */
+/** Simple service to track script engines available via OSGi bundles that define META-INF/services/javax.script.ScriptEngineFactory, e.g. like groovy-all. */
 @Component(immediate=true, service = ScriptEnginesTracker.class)
 public class ScriptEnginesTracker implements BundleListener {
     private static final Logger LOG = LoggerFactory.getLogger(ScriptEnginesTracker.class);
 
     private static final String ENGINE_FACTORY_SERVICE = "META-INF/services/"  + ScriptEngineFactory.class.getName();
-    private final Map<String, ScriptEngineFactory> enginesByLanguage = new ConcurrentHashMap<String, ScriptEngineFactory>();
-    private final Map<Bundle, List<String>> languagesByBundle = new ConcurrentHashMap<Bundle, List<String>>();
+    private final Map<String, ScriptEngineFactory> enginesByLanguage = new ConcurrentHashMap<>();
+    private final Map<Bundle, List<String>> languagesByBundle = new ConcurrentHashMap<>();
 
     /** ServiceTracker for ScriptEngineFactory */
     private BundleContext context;
@@ -72,9 +72,7 @@ public class ScriptEnginesTracker implements BundleListener {
         if (factory == null) {
             return null;
         }
-        
-        ScriptEngine engine = factory.getScriptEngine();
-        return engine;
+        return factory.getScriptEngine();
     }
 
     public Map<Bundle, List<String>> getLanguagesByBundle() {
@@ -123,7 +121,7 @@ public class ScriptEnginesTracker implements BundleListener {
         URL url = bundle.getEntry(ENGINE_FACTORY_SERVICE);
         InputStream ins = null;
         
-        List<ScriptEngineFactory> scriptEngineFactoriesInBundle = new ArrayList<ScriptEngineFactory>();
+        List<ScriptEngineFactory> scriptEngineFactoriesInBundle = new ArrayList<>();
         
         try {
             ins = url.openStream();
@@ -133,12 +131,10 @@ public class ScriptEnginesTracker implements BundleListener {
                     Class<ScriptEngineFactory> clazz = (Class<ScriptEngineFactory>) bundle.loadClass(className);
                     ScriptEngineFactory spi = clazz.newInstance();
                     scriptEngineFactoriesInBundle.add(spi);
-                    
                 } catch (Throwable t) {
                     LOG.error("Cannot register ScriptEngineFactory {}", className, t);
                 }
             }
-
         } catch (IOException ioe) {
             LOG.warn("Exception while trying to load factories as defined in {}", ENGINE_FACTORY_SERVICE, ioe);
         } finally {
@@ -167,17 +163,12 @@ public class ScriptEnginesTracker implements BundleListener {
         
         enginesByLanguage.put(scriptLang, factory);
         
-        List<String> languages = languagesByBundle.get(bundle);
-        if(languages==null) {
-            languages = new ArrayList<String>();
-            languagesByBundle.put(bundle, languages);
-        }
+        List<String> languages = languagesByBundle.computeIfAbsent(bundle, b -> new ArrayList<>());
         languages.add(scriptLang);
     }
 
-
     static List<String> getClassNames(BufferedReader reader) throws IOException {
-        List<String> classNames = new ArrayList<String>();
+        List<String> classNames = new ArrayList<>();
         String line;
         while ((line = reader.readLine()) != null) {
             if (!line.startsWith("#") && line.trim().length() > 0) {

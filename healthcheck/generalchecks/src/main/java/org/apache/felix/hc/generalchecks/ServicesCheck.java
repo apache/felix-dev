@@ -52,7 +52,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 @Component(configurationPolicy = ConfigurationPolicy.REQUIRE)
-@HealthCheckService(name = ServicesCheck.HC_NAME, tags = { ServicesCheck.HC_DEFAULT_TAG })
+@HealthCheckService(name = ServicesCheck.HC_NAME, tags = ServicesCheck.HC_DEFAULT_TAG)
 @Designate(ocd = ServicesCheck.Config.class, factory = true)
 public class ServicesCheck implements HealthCheck {
 
@@ -63,9 +63,7 @@ public class ServicesCheck implements HealthCheck {
 
     @ObjectClassDefinition(name = "Health Check: " + HC_NAME, description = "System ready check that checks a list of DS components "
             + "and provides root cause analysis in case of errors")
-
     public @interface Config {
-
         @AttributeDefinition(name = "Name", description = "Name of this health check")
         String hc_name() default HC_NAME;
 
@@ -94,12 +92,11 @@ public class ServicesCheck implements HealthCheck {
     private ServiceComponentRuntime scr;
 
     @Activate
-    public void activate(final BundleContext ctx, final Config config) throws InterruptedException {
+    public void activate(final BundleContext ctx, final Config config) {
         this.servicesList = Arrays.asList(config.services_list());
         this.trackers = this.servicesList.stream().collect(toMap(identity(), serviceName -> new Tracker(ctx, serviceName)));
         statusForMissing = config.statusForMissing();
         LOG.debug("Activated Services HC for servicesList={}", servicesList);
-
     }
 
     @Deactivate
@@ -113,7 +110,6 @@ public class ServicesCheck implements HealthCheck {
         FormattingResultLog log = new FormattingResultLog();
         List<String> missingServiceNames = getMissingServiceNames(log);
 
-
         for (String missingServiceName : missingServiceNames) {
             if (!missingServiceName.startsWith("(")) {
                 analyzer.logMissingService(log, missingServiceName, statusForMissing);
@@ -121,7 +117,6 @@ public class ServicesCheck implements HealthCheck {
                 log.info("Service '{}' is missing", missingServiceName);
             }
         }
-
         if (missingServiceNames.isEmpty()) {
             log.info("All {} required services are available", servicesList.size());
         } else {
@@ -160,7 +155,7 @@ public class ServicesCheck implements HealthCheck {
         }
 
         public boolean present() {
-            return getTrackingCount() > 0;
+            return !this.stracker.getTracked().isEmpty();
         }
         
         public int getTrackingCount() {

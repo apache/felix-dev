@@ -44,7 +44,7 @@ import org.osgi.service.component.annotations.Component;
 import org.osgi.service.component.annotations.Reference;
 
 /** Webconsole plugin to execute health check services */
-@Component(service=Servlet.class, property={
+@Component(service = Servlet.class, property = {
         org.osgi.framework.Constants.SERVICE_DESCRIPTION + "=Apache Felix Health Check Web Console Plugin",
         "felix.webconsole.label=" + HealthCheckWebconsolePlugin.LABEL,
         "felix.webconsole.title="+ HealthCheckWebconsolePlugin.TITLE,
@@ -69,8 +69,7 @@ public class HealthCheckWebconsolePlugin extends HttpServlet {
     private HealthCheckExecutor healthCheckExecutor;
 
     /** Serve static resource if applicable, and return true in that case */
-    private boolean getStaticResource(final HttpServletRequest req, final HttpServletResponse resp)
-   throws ServletException, IOException {
+    private boolean getStaticResource(final HttpServletRequest req, final HttpServletResponse resp) throws IOException {
         final String pathInfo = req.getPathInfo();
         if (pathInfo!= null && pathInfo.contains("res/ui")) {
             final String prefix = "/" + LABEL;
@@ -148,7 +147,6 @@ public class HealthCheckWebconsolePlugin extends HttpServlet {
             c.titleHtml("Summary", total + " HealthCheck executed, " + failed + " failures");
             pw.println("</table>");
             pw.println("<a href='configMgr/org.apache.felix.hc.core.impl.executor.HealthCheckExecutorImpl'>Configure executor</a><br/><br/>");
-
         }
     }
 
@@ -202,8 +200,7 @@ public class HealthCheckWebconsolePlugin extends HttpServlet {
             final boolean quiet,
             final boolean combineTagsWithOr,
             final boolean forceInstantExecution,
-            final String overrideGlobalTimeoutStr)
-    throws IOException {
+            final String overrideGlobalTimeoutStr) {
         final WebConsoleHelper c = new WebConsoleHelper(pw);
         pw.print("<form method='get'>");
         pw.println("<table class='content' cellpadding='0' cellspacing='0' width='100%'>");

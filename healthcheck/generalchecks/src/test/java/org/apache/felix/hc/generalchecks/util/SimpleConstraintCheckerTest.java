@@ -23,16 +23,11 @@ import static org.junit.Assert.assertTrue;
 import java.util.Calendar;
 import java.util.Date;
 
-import org.junit.Before;
 import org.junit.Test;
 
 public class SimpleConstraintCheckerTest {
 
     private final SimpleConstraintChecker checker = new SimpleConstraintChecker();
-
-    @Before
-    public void setup() {
-    }
 
     @Test
     public void testStringEquals() {
@@ -190,12 +185,12 @@ public class SimpleConstraintCheckerTest {
         Calendar cal = Calendar.getInstance();
         cal.add(Calendar.MINUTE, -55);
 
-        assertTrue(checker.check(cal.getTime().getTime()+"", "OLDER_THAN 53 min"));
-        assertFalse(checker.check(cal.getTime().getTime()+"", "OLDER_THAN 57 min"));
-        assertTrue(checker.check(cal.getTime().getTime()+"", "NOT OLDER_THAN 57 min"));
-        assertFalse(checker.check(cal.getTime().getTime()+"", "OLDER_THAN 1 hour"));
-        assertFalse(checker.check(cal.getTime().getTime()+"", "OLDER_THAN 1 days"));
-        assertTrue(checker.check(cal.getTime().getTime()+"", "OLDER_THAN 100 ms"));
+        assertTrue(checker.check(cal.getTime().getTime() + "", "OLDER_THAN 53 min"));
+        assertFalse(checker.check(cal.getTime().getTime() + "", "OLDER_THAN 57 min"));
+        assertTrue(checker.check(cal.getTime().getTime() + "", "NOT OLDER_THAN 57 min"));
+        assertFalse(checker.check(cal.getTime().getTime() + "", "OLDER_THAN 1 hour"));
+        assertFalse(checker.check(cal.getTime().getTime() + "", "OLDER_THAN 1 days"));
+        assertTrue(checker.check(cal.getTime().getTime() + "", "OLDER_THAN 100 ms"));
     }
     
 }

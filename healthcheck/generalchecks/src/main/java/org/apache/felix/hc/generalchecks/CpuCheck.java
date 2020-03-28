@@ -50,6 +50,8 @@ public class CpuCheck implements HealthCheck {
 
     public static final String HC_NAME = "CPU";
     public static final String HC_LABEL = "Health Check: " + HC_NAME;
+    
+    private static final int CPU_PERCENTAGE_THRESHOLD = 95;
 
     @ObjectClassDefinition(name = HC_LABEL, description = "Checks for high CPU load")
     public @interface Config {
@@ -60,8 +62,7 @@ public class CpuCheck implements HealthCheck {
         String[] hc_tags() default {};
 
         @AttributeDefinition(name = "CPU usage threshold for WARN", description = "in percent, if CPU usage is over this limit the result is WARN")
-        long cpuPercentageThresholdWarn() default 95;
-
+        long cpuPercentageThresholdWarn() default CPU_PERCENTAGE_THRESHOLD;
     }
 
     private long cpuPercentageThresholdWarn;
@@ -74,7 +75,6 @@ public class CpuCheck implements HealthCheck {
 
     @Override
     public Result execute() {
-
         FormattingResultLog log = new FormattingResultLog();
 
         double processCpuLoad = Double.NaN;
@@ -92,11 +92,9 @@ public class CpuCheck implements HealthCheck {
             log.add(new ResultLog.Entry(status, "Process CPU Usage: " + loadStr + "%"));
         }
         return new Result(log);
-
     }
 
     public double getProcessCpuLoad() throws MalformedObjectNameException, ReflectionException, InstanceNotFoundException {
-
         MBeanServer mbs = ManagementFactory.getPlatformMBeanServer();
         ObjectName name = ObjectName.getInstance("java.lang:type=OperatingSystem");
         AttributeList list = mbs.getAttributes(name, new String[] { "ProcessCpuLoad" });
@@ -111,7 +109,6 @@ public class CpuCheck implements HealthCheck {
         if (value == -1.0) {
             return Double.NaN;
         }
-
         return value * 100;
     }
 

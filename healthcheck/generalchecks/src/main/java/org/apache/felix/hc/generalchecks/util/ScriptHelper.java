@@ -58,7 +58,7 @@ public class ScriptHelper {
                 content = reader.lines().collect(Collectors.joining("\n"));
             }
             return content;
-        }catch(IOException e) {
+        } catch(IOException e) {
             throw new IllegalArgumentException("Could not read URL "+url+": "+e, e);
         }
     }
@@ -72,7 +72,6 @@ public class ScriptHelper {
     }
     
     public Object evalScript(BundleContext bundleContext, ScriptEngine scriptEngine, String scriptToExecute, FormattingResultLog log, Map<String,Object> additionalBindings, boolean logScriptResult) throws ScriptException, IOException {
-
         final Bindings bindings = new SimpleBindings();
         final ScriptHelperBinding scriptHelper = new ScriptHelperBinding(bundleContext);
 
@@ -88,7 +87,6 @@ public class ScriptHelper {
                 bindings.put(additionalBinding.getKey(), additionalBinding.getValue());
             }
         }
-        
         SimpleScriptContext scriptContext = new SimpleScriptContext();
         scriptContext.setBindings(bindings, ScriptContext.ENGINE_SCOPE);
         scriptContext.setWriter(stdout);
@@ -107,14 +105,11 @@ public class ScriptHelper {
             } else if(scriptResult != null && logScriptResult){
                 log.info("Script result: {}", scriptResult);
             }
-            
             return scriptResult;
         } finally  {
             scriptHelper.ungetServices();
         }
     }
-
-    
     
     private void appendStreamsToResult(FormattingResultLog log, StringWriter stdout, StringWriter stderr, SimpleScriptContext scriptContext)
             throws IOException {

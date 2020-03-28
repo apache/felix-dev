@@ -24,7 +24,6 @@ import static org.mockito.Mockito.when;
 import java.util.HashMap;
 
 import org.apache.felix.hc.api.Result;
-import org.apache.felix.hc.generalchecks.JmxAttributeCheck;
 import org.junit.Test;
 
 public class JmxAttributeHealthCheckTest {
