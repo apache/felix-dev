@@ -65,7 +65,9 @@ public class ConnectRevision extends BundleArchiveRevision
         return (Map) m_module.getHeaders().orElseGet(() -> m_module.getEntry("META-INF/MANIFEST.MF").flatMap(entry -> {
                 try
                 {
-                    return Optional.of((Map<String, String>) (Map) BundleCache.getMainAttributes(new StringMap(), entry.getInputStream(), entry.getContentLength()));
+                    byte[] manifest = entry.getBytes();
+
+                    return Optional.of((Map<String, String>) (Map) BundleCache.getMainAttributes(new StringMap(), new java.io.ByteArrayInputStream(manifest), manifest.length));
                 }
                 catch (Exception e)
                 {

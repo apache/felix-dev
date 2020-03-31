@@ -154,11 +154,11 @@ public class Util
                 properties.put("felix.detect.jpms", "jpms");
             }
 
-            properties.put("felix.detect.java.specification.version", version.getMajor() < 9 ? ("1." + (version.getMinor() > 6 ? version.getMinor() : 6)) : Integer.toString(version.getMajor()));
+            properties.put("felix.detect.java.specification.version", version.getMajor() < 9 ? ("1." + (version.getMinor() > 6 ? version.getMinor() < 8 ? version.getMinor() : 8 : 6)) : Integer.toString(version.getMajor()));
 
             if (version.getMajor() < 9)
             {
-                properties.put("felix.detect.java.version", String.format("0.0.0.JavaSE_001_%03d", version.getMinor() > 6 ? version.getMinor() : 6));
+                properties.put("felix.detect.java.version", String.format("0.0.0.JavaSE_001_%03d", version.getMinor() > 6 ? version.getMinor() < 8 ? version.getMinor() : 8 : 6));
             }
             else
             {
