@@ -149,7 +149,9 @@ public class FileInstall implements BundleActivator, ServiceTrackerCustomizer
     public Object addingService(ServiceReference serviceReference)
     {
         ArtifactListener listener = (ArtifactListener) context.getService(serviceReference);
-        addListener(serviceReference, listener);
+        if (listener != null) {
+            addListener(serviceReference, listener);
+        }
         return listener;
     }
     public void modifiedService(ServiceReference reference, Object service)
