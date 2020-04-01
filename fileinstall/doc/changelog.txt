@@ -1,3 +1,11 @@
+Version 3.6.6
+-------------
+** Bug
+    * [FELIX-5832] - ConfigInstaller should only handle events for configurations it manages
+    * [FELIX-6103] - ConfigInstaller, when using NotCachablePersistenceManager, can restore cached stale properties
+    * [FELIX-6109] - NPE from null listener in DirectoryWatcher.findListener
+    * [FELIX-6211] - fileinstall filter out subdirectories even though felix.fileinstall.subdir.mode property is set to 'recurse'
+
 Version 3.6.4
 -------------
 ** Bug
