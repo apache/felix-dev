@@ -20,7 +20,7 @@
   <parent>
     <groupId>org.apache.felix</groupId>
     <artifactId>felix-parent</artifactId>
-    <version>3</version>
+    <version>6</version>
     <relativePath>../pom/pom.xml</relativePath>
   </parent>
 	
@@ -37,7 +37,7 @@
     <url>https://gitbox.apache.org/repos/asf?p=felix-dev.git</url>
   </scm>
   <properties>
-    <felix.java.version>7</felix.java.version>
+    <felix.java.version>8</felix.java.version>
   </properties>
   <dependencies>
     <dependency>
@@ -61,6 +61,18 @@
       <groupId>org.apache.felix</groupId>
       <artifactId>org.apache.felix.utils</artifactId>
       <version>1.11.2</version>
+    </dependency>
+    <dependency>
+      <groupId>org.easymock</groupId>
+      <artifactId>easymock</artifactId>
+      <version>3.6</version>
+      <scope>test</scope>
+    </dependency>
+    <dependency>
+      <groupId>junit</groupId>
+      <artifactId>junit</artifactId>
+      <version>4.13</version>
+      <scope>test</scope>
     </dependency>
   </dependencies>
   <build>

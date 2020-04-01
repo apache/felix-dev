@@ -96,6 +96,8 @@ public class ConfigInstallerTest extends TestCase {
         EasyMock.expect(mockBundleContext.getProperty((String) EasyMock.anyObject()))
                 .andReturn(null)
                 .anyTimes();
+        EasyMock.expect(mockBundleContext.getBundle())
+                .andReturn(mockBundle);
         mockConfiguration.update(EasyMock.capture(props));
         EasyMock.expectLastCall();
         EasyMock.replay(mockConfiguration, mockConfigurationAdmin, mockBundleContext);
@@ -127,6 +129,8 @@ public class ConfigInstallerTest extends TestCase {
         EasyMock.expect(mockBundleContext.getProperty((String) EasyMock.anyObject()))
                 .andReturn(null)
                 .anyTimes();
+        EasyMock.expect(mockBundleContext.getBundle())
+                .andReturn(mockBundle);
         mockConfiguration.update(EasyMock.capture(props));
         EasyMock.expectLastCall();
         EasyMock.replay(mockConfiguration, mockConfigurationAdmin, mockBundleContext);
@@ -191,8 +195,8 @@ public class ConfigInstallerTest extends TestCase {
     public void testDeleteConfig() throws Exception
     {
         mockConfiguration.delete();
-        EasyMock.expect(mockBundleContext.getProperty(DirectoryWatcher.LOG_DEFAULT)).andReturn(null);
         EasyMock.expect(mockBundleContext.getProperty(DirectoryWatcher.LOG_LEVEL)).andReturn(null);
+        EasyMock.expect(mockBundleContext.getBundle()).andReturn(mockBundle).anyTimes();
         EasyMock.expect(mockConfigurationAdmin.listConfigurations((String) EasyMock.anyObject()))
                         .andReturn(null);
         EasyMock.expect(mockConfigurationAdmin.getConfiguration("pid", "?" ))
@@ -405,6 +409,7 @@ public class ConfigInstallerTest extends TestCase {
         EasyMock.expect(mockBundleContext.getProperty(DirectoryWatcher.CONFIG_ENCODING)).andReturn(null);
         EasyMock.expect(mockBundleContext.getProperty(DirectoryWatcher.LOG_DEFAULT)).andReturn(null);
         EasyMock.expect(mockBundleContext.getProperty(DirectoryWatcher.LOG_LEVEL)).andReturn(null);
+        EasyMock.expect(mockBundleContext.getBundle()).andReturn(mockBundle).anyTimes();
         EasyMock.expect(mockConfiguration.getProperties()).andReturn(new Hashtable<String, Object>());
         EasyMock.reportMatcher(new IArgumentMatcher()
         {
