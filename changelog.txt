@@ -1,4 +1,4 @@
-Changes in 4.3.18
+Changes in 4.4.0
 -----------------
 ** Improvement
     * [FELIX-6232] - Allow Webconsole to install parallel versions of bundles
