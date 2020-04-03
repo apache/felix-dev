@@ -163,6 +163,10 @@ public abstract class RegionConfigurationSupport
             final List<String> confPids = holder.getComponentMetadata().getConfigurationPid();
 
             final ConfigurationAdmin ca = getConfigAdmin( bundleContext );
+            if (ca == null)
+            {
+                return false; // bundle was stopped concurrently
+            }
             try
             {
                 for ( final String confPid : confPids )
@@ -501,6 +505,10 @@ public abstract class RegionConfigurationSupport
         try
         {
             final ConfigurationAdmin ca = getConfigAdmin( bundleContext );
+            if (ca == null)
+            {
+                return null;
+            }
             try
             {
                 Configuration[] configs = ca.listConfigurations( filter( pid.getRawPid() ) );
@@ -539,7 +547,7 @@ public abstract class RegionConfigurationSupport
         catch ( IllegalStateException ise )
         {
             // If the bundle has been stopped concurrently
-            logger.log( LogService.LOG_WARNING, "Bundle in unexpected state", ise );
+            logger.log(LogService.LOG_DEBUG, "Bundle in unexpected state", ise);
         }
         return null;
     }
@@ -826,6 +834,13 @@ public abstract class RegionConfigurationSupport
 
     private ConfigurationAdmin getConfigAdmin(BundleContext bundleContext)
     {
-        return bundleContext.getService( caReference );
+        try
+        {
+            return bundleContext.getService(caReference);
+        }
+        catch (IllegalStateException e)
+        {
+            return null;
+        }
     }
 }
