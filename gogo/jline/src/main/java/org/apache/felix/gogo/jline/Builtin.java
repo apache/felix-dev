@@ -638,12 +638,12 @@ public class Builtin {
         return list;
     }
 
-    public void history(CommandSession session, String[] argv) throws IOException {
+    public void history(CommandSession session, String[] argv) throws Exception {
         Process process = Process.Utils.current();
-        Commands.history(Shell.getReader(session), process.out(), process.err(), argv);
+        Commands.history(Shell.getReader(session), process.out(), process.err(), null, argv);
     }
 
-    public void complete(CommandSession session, String[] argv) {
+    public void complete(CommandSession session, String[] argv) throws Exception {
         Process process = Process.Utils.current();
         Commands.complete(Shell.getReader(session), process.out(), process.err(), Shell.getCompletions(session), argv);
     }
@@ -662,17 +662,17 @@ public class Builtin {
         Commands.widget(Shell.getReader(session), process.out(), process.err(), creator, argv);
     }
 
-    public void keymap(CommandSession session, String[] argv) {
+    public void keymap(CommandSession session, String[] argv) throws Exception {
         Process process = Process.Utils.current();
         Commands.keymap(Shell.getReader(session), process.out(), process.err(), argv);
     }
 
-    public void setopt(CommandSession session, String[] argv) {
+    public void setopt(CommandSession session, String[] argv) throws Exception {
         Process process = Process.Utils.current();
         Commands.setopt(Shell.getReader(session), process.out(), process.err(), argv);
     }
 
-    public void unsetopt(CommandSession session, String[] argv) {
+    public void unsetopt(CommandSession session, String[] argv) throws Exception {
         Process process = Process.Utils.current();
         Commands.unsetopt(Shell.getReader(session), process.out(), process.err(), argv);
     }

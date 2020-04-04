@@ -61,7 +61,7 @@
         <dependency>
             <groupId>org.jline</groupId>
             <artifactId>jline</artifactId>
-            <version>3.7.0</version>
+            <version>3.13.2</version>
         </dependency>
         <dependency>
             <groupId>org.apache.sshd</groupId>
@@ -91,7 +91,7 @@
                         </Export-Package>
                         <Import-Package>
                             !org.apache.felix.gogo.runtime.threadio,
-                            org.jline*;version="[3.0,4)",
+                            org.jline*;version="[3.13,4)",
                             *
                         </Import-Package>
                     </instructions>

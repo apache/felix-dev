@@ -957,7 +957,7 @@ public class Posix {
             return;
         }
 
-        Less less = new Less(Shell.getTerminal(session));
+        Less less = new Less(Shell.getTerminal(session), null);
         less.quitAtFirstEof = opt.isSet("QUIT-AT-EOF");
         less.quitAtSecondEof = opt.isSet("quit-at-eof");
         less.quiet = opt.isSet("quiet");
@@ -966,7 +966,7 @@ public class Posix {
         less.ignoreCaseAlways = opt.isSet("IGNORE-CASE");
         less.ignoreCaseCond = opt.isSet("ignore-case");
         if (opt.isSet("tabs")) {
-            less.tabs = opt.getNumber("tabs");
+            less.tabs(Collections.singletonList(opt.getNumber("tabs")));
         }
         less.printLineNumbers = opt.isSet("LINE-NUMBERS");
         if (hasExtendedOptions) {
@@ -2121,6 +2121,11 @@ public class Posix {
         @Override
         public InputStream read() {
             return process.in();
+        }
+
+        @Override
+        public Long lines() {
+            return null;
         }
     }
 }
