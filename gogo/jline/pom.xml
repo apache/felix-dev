@@ -28,14 +28,15 @@
     <packaging>bundle</packaging>
     <name>Apache Felix Gogo JLine Shell</name>
     <artifactId>org.apache.felix.gogo.jline</artifactId>
-    <version>1.1.5-SNAPSHOT</version>
+    <version>1.1.6</version>
     <url>http://felix.apache.org/</url>
 
     <scm>
         <connection>scm:git:https://gitbox.apache.org/repos/asf/felix-dev.git</connection>
         <developerConnection>scm:git:https://gitbox.apache.org/repos/asf/felix-dev.git</developerConnection>
         <url>https://gitbox.apache.org/repos/asf?p=felix-dev.git</url>
-    </scm>
+      <tag>org.apache.felix.gogo.jline-1.1.6</tag>
+  </scm>
 
     <properties>
         <animal.sniffer.skip>true</animal.sniffer.skip>
