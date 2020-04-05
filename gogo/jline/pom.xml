@@ -21,7 +21,7 @@
     <parent>
         <groupId>org.apache.felix</groupId>
         <artifactId>gogo-parent</artifactId>
-        <version>6-SNAPSHOT</version>
+        <version>6</version>
         <relativePath>../gogo-parent/pom.xml</relativePath>
     </parent>
     <modelVersion>4.0.0</modelVersion>
