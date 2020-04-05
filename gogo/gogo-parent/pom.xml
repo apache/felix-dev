@@ -29,14 +29,15 @@
     <name>Apache Felix Gogo</name>
     <description>Apache Felix Gogo Subproject</description>
     <artifactId>gogo-parent</artifactId>
-    <version>6-SNAPSHOT</version>
+    <version>6</version>
     <url>http://felix.apache.org/</url>
 
     <scm>
         <connection>scm:git:https://gitbox.apache.org/repos/asf/felix-dev.git</connection>
         <developerConnection>scm:git:https://gitbox.apache.org/repos/asf/felix-dev.git</developerConnection>
         <url>https://gitbox.apache.org/repos/asf?p=felix-dev.git</url>
-    </scm>
+      <tag>gogo-parent-6</tag>
+  </scm>
 
     <properties>
         <felix.java.version>7</felix.java.version>
