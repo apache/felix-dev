@@ -161,12 +161,7 @@ public class DependencyManager<S, T> implements ReferenceManager<S, T>
         @Override
         public boolean isSatisfied()
         {
-            ServiceTracker<T, RefPair<S, T>, ExtendedServiceEvent> tracker = getTracker();
-            if (tracker == null)
-            {
-                return false;
-            }
-            return cardinalitySatisfied(tracker.getServiceCount());
+            return cardinalitySatisfied();
         }
 
         protected ServiceTracker<T, RefPair<S, T>, ExtendedServiceEvent> getTracker()
@@ -180,7 +175,8 @@ public class DependencyManager<S, T> implements ReferenceManager<S, T>
          */
         protected boolean isActive()
         {
-            return getTracker().isActive();
+            ServiceTracker<T, RefPair<S, T>, ExtendedServiceEvent> tracker = getTracker();
+            return tracker != null && tracker.isActive();
         }
 
         protected boolean isTrackerOpened()
@@ -266,7 +262,7 @@ public class DependencyManager<S, T> implements ReferenceManager<S, T>
             ExtendedServiceEvent event)
         {
             refPair.markDeleted();
-            if (!cardinalitySatisfied(getTracker().getServiceCount()))
+            if (!cardinalitySatisfied())
             {
                 deactivateComponentManager();
             }
@@ -275,8 +271,13 @@ public class DependencyManager<S, T> implements ReferenceManager<S, T>
         @Override
         public boolean prebind(ComponentContextImpl<S> key)
         {
+            ServiceTracker<T, RefPair<S, T>, ExtendedServiceEvent> tracker = getTracker();
+            if (tracker == null)
+            {
+                return false;
+            }
             AtomicInteger trackingCount = new AtomicInteger();
-            int serviceCount = getTracker().getTracked(true, trackingCount).size();
+            int serviceCount = tracker.getTracked(true, trackingCount).size();
             return cardinalitySatisfied(serviceCount);
         }
 
@@ -376,7 +377,7 @@ public class DependencyManager<S, T> implements ReferenceManager<S, T>
             m_componentManager.getLogger().log(LogService.LOG_DEBUG, "dm {0} tracking {1} MultipleDynamic removed {2} (enter)",
                     null, getName(), trackingCount, serviceReference );
             refPair.markDeleted();
-            boolean unbind = cardinalitySatisfied(getTracker().getServiceCount());
+            boolean unbind = cardinalitySatisfied();
             if (unbind)
             {
                 if (isActive())
@@ -404,9 +405,15 @@ public class DependencyManager<S, T> implements ReferenceManager<S, T>
         @Override
         public boolean prebind(ComponentContextImpl<S> key)
         {
+            ServiceTracker<T, RefPair<S, T>, ExtendedServiceEvent> tracker = getTracker();
+            if (tracker == null)
+            {
+                return false;
+            }
             int serviceCount = 0;
             AtomicInteger trackingCount = new AtomicInteger();
-            SortedMap<ServiceReference<T>, RefPair<S, T>> tracked = getTracker().getTracked(true, trackingCount);
+            SortedMap<ServiceReference<T>, RefPair<S, T>> tracked = tracker.getTracked(
+                true, trackingCount);
             List<RefPair<S, T>> failed = new ArrayList<>();
             for (RefPair<S, T> refPair : tracked.values())
             {
@@ -453,7 +460,7 @@ public class DependencyManager<S, T> implements ReferenceManager<S, T>
                     trackingCount.set(lastRefPairTrackingCount);
                     return Collections.emptyList();
                 }
-                return getTracker().getTracked(null, trackingCount).values();
+                return tracker.getTracked(null, trackingCount).values();
             }
             else
             {
@@ -547,7 +554,7 @@ public class DependencyManager<S, T> implements ReferenceManager<S, T>
                     event.addComponentManager(m_componentManager);
                 }
             }
-            else if (!cardinalitySatisfied(getTracker().getServiceCount())) //may be called from an old tracker, so getTracker() may give a different answer
+            else if (!cardinalitySatisfied()) //may be called from an old tracker, so getTracker() may give a different answer
             {
                 m_componentManager.getLogger().log(LogService.LOG_DEBUG,
                     "Dependency Manager: Static dependency on {0}/{1} is broken",
@@ -563,9 +570,13 @@ public class DependencyManager<S, T> implements ReferenceManager<S, T>
         @Override
         public boolean prebind(ComponentContextImpl<S> key)
         {
+            final ServiceTracker<T, RefPair<S, T>, ExtendedServiceEvent> tracker = getTracker();
+            if (tracker == null)
+            {
+                return false;
+            }
             int serviceCount = 0;
             AtomicInteger trackingCount = new AtomicInteger();
-            final ServiceTracker<T, RefPair<S, T>, ExtendedServiceEvent> tracker = getTracker();
             SortedMap<ServiceReference<T>, RefPair<S, T>> tracked = tracker.getTracked(
                 cardinalitySatisfied(tracker.getServiceCount()), trackingCount);
             for (RefPair<S, T> refPair : tracked.values())
@@ -685,7 +696,7 @@ public class DependencyManager<S, T> implements ReferenceManager<S, T>
 
                 }
             }
-            else if (!cardinalitySatisfied(getTracker().getServiceCount()))
+            else if (!cardinalitySatisfied())
             {
                 m_componentManager.getLogger().log(LogService.LOG_DEBUG,
                     "Dependency Manager: Static dependency on {0}/{1} is broken",
@@ -717,7 +728,16 @@ public class DependencyManager<S, T> implements ReferenceManager<S, T>
             }
             refs = new ArrayList<>();
             AtomicInteger trackingCount = new AtomicInteger();
-            SortedMap<ServiceReference<T>, RefPair<S, T>> tracked = getTracker().getTracked(true, trackingCount);
+            ServiceTracker<T, RefPair<S, T>, ExtendedServiceEvent> tracker = getTracker();
+            Map<ServiceReference<T>, RefPair<S, T>> tracked;
+            if (tracker == null)
+            {
+                tracked = Collections.emptyMap();
+            }
+            else
+            {
+                tracked = tracker.getTracked(true, trackingCount);
+            }
             for (RefPair<S, T> refPair : tracked.values())
             {
                 if (getServiceObject(key, m_bindMethods.getBind(), refPair))
@@ -794,11 +814,16 @@ public class DependencyManager<S, T> implements ReferenceManager<S, T>
             {
                 if (isActive())
                 {
-                    boolean invokeBind;
-                    synchronized (getTracker().tracked())
+                    boolean invokeBind = false;
+                    ServiceTracker<T, RefPair<S, T>, ExtendedServiceEvent> tracker = getTracker();
+                    Object monitor = tracker == null ? null : tracker.tracked();
+                    if (monitor != null)
                     {
-                        invokeBind = this.refPair == null
-                            || (!isReluctant() && refPair.getRef().compareTo(this.refPair.getRef()) > 0);
+                        synchronized (monitor)
+                        {
+                            invokeBind = this.refPair == null || (!isReluctant()
+                                && refPair.getRef().compareTo(this.refPair.getRef()) > 0);
+                        }
                     }
                     if (invokeBind)
                     {
@@ -842,10 +867,15 @@ public class DependencyManager<S, T> implements ReferenceManager<S, T>
         {
             m_componentManager.getLogger().log(LogService.LOG_DEBUG, "dm {0} tracking {1} SingleDynamic modified {2} (enter)",
                     null, getName(), trackingCount, serviceReference );
-            boolean invokeUpdated;
-            synchronized (getTracker().tracked())
+            boolean invokeUpdated = false;
+            ServiceTracker<T, RefPair<S, T>, ExtendedServiceEvent> tracker = getTracker();
+            Object monitor = tracker == null ? null : tracker.tracked();
+            if (monitor != null)
             {
-                invokeUpdated = isActive() && refPair == this.refPair;
+                synchronized (monitor)
+                {
+                    invokeUpdated = isActive() && refPair == this.refPair;
+                }
             }
             if (invokeUpdated)
             {
@@ -868,32 +898,38 @@ public class DependencyManager<S, T> implements ReferenceManager<S, T>
             boolean untracked = true;
             RefPair<S, T> oldRefPair = null;
             RefPair<S, T> nextRefPair = null;
-            synchronized (getTracker().tracked())
+            ServiceTracker<T, RefPair<S, T>, ExtendedServiceEvent> tracker = getTracker();
+            Object monitor = tracker == null ? null : tracker.tracked();
+            if (monitor != null)
             {
-                if (refPair == this.refPair && isActive())
+                synchronized (monitor)
                 {
-                    if (!getTracker().isEmpty())
+                    if (refPair == this.refPair && isActive())
                     {
-                        AtomicInteger trackingCount2 = new AtomicInteger();
-                        SortedMap<ServiceReference<T>, RefPair<S, T>> tracked = getTracker().getTracked(true, //TODO true here looks odd.
-                            trackingCount2);
-                        nextRefPair = tracked.values().iterator().next();
-                    }
+                        if (!getTracker().isEmpty())
+                        {
+                            AtomicInteger trackingCount2 = new AtomicInteger();
+                            SortedMap<ServiceReference<T>, RefPair<S, T>> tracked = getTracker().getTracked(
+                                true, //TODO true here looks odd.
+                                trackingCount2);
+                            nextRefPair = tracked.values().iterator().next();
+                        }
 
-                    //n.b. we cannot use cardinalitySatisfied( serviceCount ) here as the call may come from an old tracker during target change.
-                    if (isEffectivelyOptional() || nextRefPair != null)
-                    {
-                        oldRefPair = this.refPair;
-                        this.refPair = null;
+                        //n.b. we cannot use cardinalitySatisfied( serviceCount ) here as the call may come from an old tracker during target change.
+                        if (isEffectivelyOptional() || nextRefPair != null)
+                        {
+                            oldRefPair = this.refPair;
+                            this.refPair = null;
+                        }
+                        else
+                        {
+                            deactivate = true; //required and no replacement service, deactivate
+                        }
                     }
-                    else
+                    else if (!cardinalitySatisfied() && this.refPair == null)
                     {
-                        deactivate = true; //required and no replacement service, deactivate
+                        deactivate = true;
                     }
-                }
-                else if (!cardinalitySatisfied(getTracker().getServiceCount()) && this.refPair == null)
-                {
-                    deactivate = true;
                 }
             }
             if (nextRefPair != null)
@@ -938,16 +974,21 @@ public class DependencyManager<S, T> implements ReferenceManager<S, T>
             RefPair<S, T> refPair = null;
             boolean success = cardinalitySatisfied(0);
             AtomicInteger trackingCount = new AtomicInteger();
-            synchronized (getTracker().tracked())
+            ServiceTracker<T, RefPair<S, T>, ExtendedServiceEvent> tracker = getTracker();
+            Object monitor = tracker == null ? null : tracker.tracked();
+            if (monitor != null)
             {
-                if (success || !getTracker().isEmpty())
+                synchronized (monitor)
                 {
-                    SortedMap<ServiceReference<T>, RefPair<S, T>> tracked = getTracker().getTracked(true,
-                        trackingCount);
-                    if (!tracked.isEmpty())
+                    if (success || !tracker.isEmpty())
                     {
-                        refPair = tracked.values().iterator().next();
-                        this.refPair = refPair;
+                        SortedMap<ServiceReference<T>, RefPair<S, T>> tracked = tracker.getTracked(
+                            true, trackingCount);
+                        if (!tracked.isEmpty())
+                        {
+                            refPair = tracked.values().iterator().next();
+                            this.refPair = refPair;
+                        }
                     }
                 }
             }
@@ -982,7 +1023,8 @@ public class DependencyManager<S, T> implements ReferenceManager<S, T>
         @Override
         public Collection<RefPair<S, T>> getRefs(AtomicInteger trackingCount)
         {
-            Object monitor = getTracker() == null ? null : getTracker().tracked();
+            ServiceTracker<T, RefPair<S, T>, ExtendedServiceEvent> tracker = getTracker();
+            Object monitor = tracker == null ? null : tracker.tracked();
             if (monitor != null)
             {
                 synchronized (monitor)
@@ -1019,10 +1061,12 @@ public class DependencyManager<S, T> implements ReferenceManager<S, T>
                     null, getName(), trackingCount, serviceReference);
             this.trackingCount = trackingCount;
             tracked(trackingCount);
-            if (isActive())
+            ServiceTracker<T, RefPair<S, T>, ExtendedServiceEvent> tracker = getTracker();
+            Object monitor = tracker == null ? null : tracker.tracked();
+            if (monitor != null && isActive())
             {
                 boolean reactivate;
-                synchronized (getTracker().tracked())
+                synchronized (monitor)
                 {
                     reactivate = !isReluctant()
                         && (this.refPair == null || refPair.getRef().compareTo(this.refPair.getRef()) > 0);
@@ -1104,29 +1148,33 @@ public class DependencyManager<S, T> implements ReferenceManager<S, T>
             this.trackingCount = trackingCount;
             tracked(trackingCount);
             boolean reactivate;
-            final Object sync = getTracker().tracked();
-            synchronized (sync)
+            ServiceTracker<T, RefPair<S, T>, ExtendedServiceEvent> tracker = getTracker();
+            Object monitor = tracker == null ? null : tracker.tracked();
+            if (monitor != null)
             {
-                reactivate = (isActive() && refPair == this.refPair)
-                    || (!cardinalitySatisfied(getTracker().getServiceCount()));
-                if (!reactivate && refPair == this.refPair)
+                synchronized (monitor)
                 {
-                    this.refPair = null;
-                }
-            }
-            if (reactivate)
-            {
-                deactivateComponentManager();
-                synchronized (sync)
-                {
-                    if (refPair == this.refPair)
+                    reactivate = (isActive() && refPair == this.refPair)
+                        || (!cardinalitySatisfied(tracker.getServiceCount()));
+                    if (!reactivate && refPair == this.refPair)
                     {
                         this.refPair = null;
                     }
                 }
-                if (event != null)
+                if (reactivate)
                 {
-                    event.addComponentManager(m_componentManager);
+                    deactivateComponentManager();
+                    synchronized (monitor)
+                    {
+                        if (refPair == this.refPair)
+                        {
+                            this.refPair = null;
+                        }
+                    }
+                    if (event != null)
+                    {
+                        event.addComponentManager(m_componentManager);
+                    }
                 }
             }
             m_componentManager.getLogger().log(LogService.LOG_DEBUG, "dm {0} tracking {1} SingleStatic removed {2} (exit)",
@@ -1137,13 +1185,16 @@ public class DependencyManager<S, T> implements ReferenceManager<S, T>
         public boolean prebind(ComponentContextImpl<S> key)
         {
             boolean success = cardinalitySatisfied(0);
-            if (success || !getTracker().isEmpty())
+            ServiceTracker<T, RefPair<S, T>, ExtendedServiceEvent> tracker = getTracker();
+            Object monitor = tracker == null ? null : tracker.tracked();
+            if (success || (tracker != null && !tracker.isEmpty()))
             {
                 RefPair<S, T> refPair = null;
                 AtomicInteger trackingCount = new AtomicInteger();
-                synchronized (getTracker().tracked())
+                synchronized (monitor)
                 {
-                    SortedMap<ServiceReference<T>, RefPair<S, T>> tracked = getTracker().getTracked(true,
+                    SortedMap<ServiceReference<T>, RefPair<S, T>> tracked = tracker.getTracked(
+                        true,
                         trackingCount);
                     if (!tracked.isEmpty())
                     {
@@ -1168,10 +1219,11 @@ public class DependencyManager<S, T> implements ReferenceManager<S, T>
         public void close()
         {
             ServiceTracker<T, RefPair<S, T>, ExtendedServiceEvent> tracker = getTracker();
-            if (tracker != null)
+            Object monitor = tracker == null ? null : tracker.tracked();
+            if (monitor != null)
             {
                 RefPair<S, T> ref;
-                synchronized (tracker.tracked())
+                synchronized (monitor)
                 {
                     ref = refPair;
                     refPair = null;
@@ -1187,7 +1239,8 @@ public class DependencyManager<S, T> implements ReferenceManager<S, T>
         @Override
         public Collection<RefPair<S, T>> getRefs(AtomicInteger trackingCount)
         {
-            Object monitor = getTracker() == null ? null : getTracker().tracked();
+            ServiceTracker<T, RefPair<S, T>, ExtendedServiceEvent> tracker = getTracker();
+            Object monitor = tracker == null ? null : tracker.tracked();
             if (monitor != null)
             {
                 synchronized (monitor)
@@ -1284,6 +1337,12 @@ public class DependencyManager<S, T> implements ReferenceManager<S, T>
         return m_minCardinality == 0;
     }
 
+    boolean cardinalitySatisfied()
+    {
+        final ServiceTracker<T, RefPair<S, T>, ExtendedServiceEvent> tracker = m_tracker;
+        return cardinalitySatisfied(tracker == null ? 0 : tracker.getServiceCount());
+    }
+
     public boolean cardinalitySatisfied(int serviceCount)
     {
         return m_minCardinality <= serviceCount;
@@ -1329,6 +1388,11 @@ public class DependencyManager<S, T> implements ReferenceManager<S, T>
     int size()
     {
         AtomicInteger trackingCount = new AtomicInteger();
+        final ServiceTracker<T, RefPair<S, T>, ExtendedServiceEvent> tracker = m_tracker;
+        if (tracker == null)
+        {
+            return 0;
+        }
         return m_tracker.getTracked(null, trackingCount).size();
     }
 
@@ -1694,7 +1758,8 @@ public class DependencyManager<S, T> implements ReferenceManager<S, T>
 
     public void invokeBindMethodLate(final ServiceReference<T> ref, int trackingCount)
     {
-        if ( m_tracker == null || !m_tracker.isActive() )
+        final ServiceTracker<T, RefPair<S, T>, ExtendedServiceEvent> tracker = m_tracker;
+        if (tracker == null || !tracker.isActive())
         {
             m_componentManager.notifyWaiters();
             return;
@@ -1718,7 +1783,7 @@ public class DependencyManager<S, T> implements ReferenceManager<S, T>
             }
         }
         //TODO dynamic reluctant
-        RefPair<S, T> refPair = m_tracker.getService(ref);
+        RefPair<S, T> refPair = tracker.getService(ref);
         if (refPair == null)
         {
             return; // The service is no longer available, probably because the tracker has been closed
@@ -1835,6 +1900,12 @@ public class DependencyManager<S, T> implements ReferenceManager<S, T>
     boolean invokeUpdatedMethod(ComponentContextImpl<S> componentContext, final RefPair<S, T> refPair,
         int trackingCount, EdgeInfo info)
     {
+        final ServiceTracker<T, RefPair<S, T>, ExtendedServiceEvent> tracker = m_tracker;
+        final Object monitor = tracker == null ? null : tracker.tracked();
+        if (monitor == null)
+        {
+            return false;
+        }
         if (m_dependencyMetadata.getUpdated() == null && m_dependencyMetadata.getField() == null)
         {
             return false;
@@ -1843,7 +1914,7 @@ public class DependencyManager<S, T> implements ReferenceManager<S, T>
         // null. This is valid for both immediate and delayed components
         if (componentContext != null)
         {
-            synchronized (m_tracker.tracked())
+            synchronized (monitor)
             {
                 if (info.outOfRange(trackingCount))
                 {
@@ -1894,11 +1965,17 @@ public class DependencyManager<S, T> implements ReferenceManager<S, T>
     void invokeUnbindMethod(ComponentContextImpl<S> componentContext, final RefPair<S, T> refPair, int trackingCount,
         EdgeInfo info)
     {
+        final ServiceTracker<T, RefPair<S, T>, ExtendedServiceEvent> tracker = m_tracker;
+        Object monitor = tracker == null ? null : tracker.tracked();
+        if (monitor == null)
+        {
+            return;
+        }
         // The unbind method is only invoked if the implementation object is not
         // null. This is valid for both immediate and delayed components
         if (componentContext != null)
         {
-            synchronized (m_tracker.tracked())
+            synchronized (monitor)
             {
                 if (info.beforeRange(trackingCount))
                 {
@@ -1908,7 +1985,7 @@ public class DependencyManager<S, T> implements ReferenceManager<S, T>
             }
             info.waitForOpen(m_componentManager, getName(), "invokeUnbindMethod");
             boolean outOfRange;
-            synchronized (m_tracker.tracked())
+            synchronized (monitor)
             {
                 outOfRange = info.afterRange(trackingCount);
             }
