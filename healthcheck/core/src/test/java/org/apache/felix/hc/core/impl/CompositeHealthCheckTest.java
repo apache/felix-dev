@@ -18,8 +18,8 @@
 package org.apache.felix.hc.core.impl;
 
 import static org.junit.Assert.assertEquals;
-import static org.mockito.Matchers.any;
-import static org.mockito.Matchers.argThat;
+import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.argThat;
 import static org.mockito.Mockito.doReturn;
 import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.times;
@@ -45,6 +45,7 @@ import org.hamcrest.Matcher;
 import org.hamcrest.TypeSafeMatcher;
 import org.junit.Before;
 import org.junit.Test;
+import org.mockito.ArgumentMatcher;
 import org.mockito.Matchers;
 import org.mockito.Mock;
 import org.mockito.MockitoAnnotations;
@@ -97,16 +98,16 @@ public class CompositeHealthCheckTest {
 
     }
 
-    private Matcher<HealthCheckSelector> selectorWithTags(final String[] tags) {
-        return new TypeSafeMatcher<HealthCheckSelector>() {
+    private ArgumentMatcher<HealthCheckSelector> selectorWithTags(final String[] tags) {
+        return new ArgumentMatcher<HealthCheckSelector>() {
             @Override
-            protected boolean matchesSafely(HealthCheckSelector healthCheckSelector) {
+            public boolean matches(HealthCheckSelector healthCheckSelector) {
                 return Arrays.equals(healthCheckSelector.tags(), tags) && healthCheckSelector.names() == null;
             }
 
             @Override
-            public void describeTo(Description description) {
-                description.appendText("a select with tags (" + Arrays.toString(tags) + ") and no names.");
+            public String toString() {
+                return "a select with tags (" + Arrays.toString(tags) + ") and no names.";
             }
         };
     }
@@ -205,27 +206,27 @@ public class CompositeHealthCheckTest {
         verify(healthCheckExecutor, times(1)).execute(argThat(selectorWithTags(filterTags)), argThat(orOptions));
     }
 
-    private Matcher<HealthCheckExecutionOptions> orOptions = new TypeSafeMatcher<HealthCheckExecutionOptions>() {
+    private ArgumentMatcher<HealthCheckExecutionOptions> orOptions = new ArgumentMatcher<HealthCheckExecutionOptions>() {
         @Override
-        protected boolean matchesSafely(HealthCheckExecutionOptions options) {
+        public boolean matches(HealthCheckExecutionOptions options) {
             return options.isCombineTagsWithOr();
         }
 
         @Override
-        public void describeTo(Description description) {
-            description.appendText("options combining tags with or.");
+        public String toString() {
+            return "options combining tags with or.";
         }
     };
 
-    private Matcher<HealthCheckExecutionOptions> andOptions = new TypeSafeMatcher<HealthCheckExecutionOptions>() {
+    private ArgumentMatcher<HealthCheckExecutionOptions> andOptions = new ArgumentMatcher<HealthCheckExecutionOptions>() {
         @Override
-        protected boolean matchesSafely(HealthCheckExecutionOptions options) {
+        public boolean matches(HealthCheckExecutionOptions options) {
             return !options.isCombineTagsWithOr();
         }
 
         @Override
-        public void describeTo(Description description) {
-            description.appendText("options combining tags with and.");
+        public String toString() {
+            return "options combining tags with and.";
         }
     };
 

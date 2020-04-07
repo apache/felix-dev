@@ -18,15 +18,15 @@
 package org.apache.felix.hc.core.impl.servlet;
 
 import static org.junit.Assert.assertEquals;
-import static org.mockito.Matchers.any;
-import static org.mockito.Matchers.anyString;
-import static org.mockito.Matchers.argThat;
-import static org.mockito.Matchers.contains;
-import static org.mockito.Matchers.eq;
+import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.anyString;
+import static org.mockito.ArgumentMatchers.argThat;
+import static org.mockito.ArgumentMatchers.contains;
+import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.doReturn;
 import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.verify;
-import static org.mockito.Mockito.verifyZeroInteractions;
+import static org.mockito.Mockito.verifyNoInteractions;
 import static org.mockito.MockitoAnnotations.initMocks;
 
 import java.io.IOException;
@@ -48,7 +48,6 @@ import org.apache.felix.hc.api.execution.HealthCheckExecutor;
 import org.apache.felix.hc.api.execution.HealthCheckMetadata;
 import org.apache.felix.hc.api.execution.HealthCheckSelector;
 import org.apache.felix.hc.core.impl.executor.ExecutionResult;
-import org.hamcrest.Description;
 import org.junit.Before;
 import org.junit.Test;
 import org.mockito.ArgumentMatcher;
@@ -118,9 +117,9 @@ public class HealthCheckExecutorServletTest {
 
         healthCheckExecutorServlet.doGet(request, response);
 
-        verifyZeroInteractions(jsonSerializer);
-        verifyZeroInteractions(txtSerializer);
-        verifyZeroInteractions(verboseTxtSerializer);
+        verifyNoInteractions(jsonSerializer);
+        verifyNoInteractions(txtSerializer);
+        verifyNoInteractions(verboseTxtSerializer);
         verify(htmlSerializer)
                 .serialize(resultEquals(new Result(Result.Status.CRITICAL, "Overall Status CRITICAL")), eq(executionResults),
                         contains("Supported URL parameters"), eq(false));
@@ -142,9 +141,9 @@ public class HealthCheckExecutorServletTest {
 
         verify(request, never()).getParameter(HealthCheckExecutorServlet.PARAM_TAGS.name);
         verify(request, never()).getParameter(HealthCheckExecutorServlet.PARAM_NAMES.name);
-        verifyZeroInteractions(jsonSerializer);
-        verifyZeroInteractions(txtSerializer);
-        verifyZeroInteractions(verboseTxtSerializer);
+        verifyNoInteractions(jsonSerializer);
+        verifyNoInteractions(txtSerializer);
+        verifyNoInteractions(verboseTxtSerializer);
         verify(htmlSerializer)
                 .serialize(resultEquals(new Result(Result.Status.CRITICAL, "Overall Status CRITICAL")), eq(executionResults),
                         contains("Supported URL parameters"), eq(false));
@@ -166,11 +165,11 @@ public class HealthCheckExecutorServletTest {
 
         healthCheckExecutorServlet.doGet(request, response);
 
-        verifyZeroInteractions(htmlSerializer);
-        verifyZeroInteractions(txtSerializer);
-        verifyZeroInteractions(verboseTxtSerializer);
+        verifyNoInteractions(htmlSerializer);
+        verifyNoInteractions(txtSerializer);
+        verifyNoInteractions(verboseTxtSerializer);
         verify(jsonSerializer).serialize(resultEquals(new Result(Result.Status.WARN, "Overall Status WARN")), eq(executionResults),
-                anyString(),
+                any(),
                 eq(false));
 
     }
@@ -193,9 +192,9 @@ public class HealthCheckExecutorServletTest {
 
         healthCheckExecutorServlet.doGet(request, response);
 
-        verifyZeroInteractions(htmlSerializer);
-        verifyZeroInteractions(jsonSerializer);
-        verifyZeroInteractions(verboseTxtSerializer);
+        verifyNoInteractions(htmlSerializer);
+        verifyNoInteractions(jsonSerializer);
+        verifyNoInteractions(verboseTxtSerializer);
         verify(txtSerializer).serialize(resultEquals(new Result(Result.Status.WARN, "Overall Status WARN")));
 
     }
@@ -213,9 +212,9 @@ public class HealthCheckExecutorServletTest {
 
         healthCheckExecutorServlet.doGet(request, response);
 
-        verifyZeroInteractions(htmlSerializer);
-        verifyZeroInteractions(jsonSerializer);
-        verifyZeroInteractions(txtSerializer);
+        verifyNoInteractions(htmlSerializer);
+        verifyNoInteractions(jsonSerializer);
+        verifyNoInteractions(txtSerializer);
         verify(verboseTxtSerializer).serialize(resultEquals(new Result(Result.Status.WARN, "Overall Status WARN")), eq(executionResults),
                 eq(false));
 
@@ -280,7 +279,7 @@ public class HealthCheckExecutorServletTest {
         return argThat(new ResultMatcher(expected));
     }
 
-    static class ResultMatcher extends ArgumentMatcher<Result> {
+    static class ResultMatcher implements ArgumentMatcher<Result> {
 
         private final Result expectedResult;
 
@@ -288,22 +287,20 @@ public class HealthCheckExecutorServletTest {
             this.expectedResult = expected;
         }
 
-        @Override
-        public boolean matches(Object actual) {
-            Result actualResult = (Result) actual;
+        public boolean matches(Result actualResult) {
             return actualResult.getStatus().equals(expectedResult.getStatus()); // simple status matching only sufficient for this test case
         }
 
         @Override
-        public void describeTo(Description description) {
-            description.appendText(expectedResult == null ? null : expectedResult.toString());
+        public String toString() {
+            return expectedResult == null ? null : expectedResult.toString();
         }
     }
 
     HealthCheckSelector selector(final String[] tags, final String[] names) {
         return argThat(new ArgumentMatcher<HealthCheckSelector>() {
             @Override
-            public boolean matches(Object actual) {
+            public boolean matches(HealthCheckSelector actual) {
                 if (actual instanceof HealthCheckSelector) {
                     HealthCheckSelector actualSelector = (HealthCheckSelector) actual;
                     return Arrays.equals(actualSelector.tags(), tags.length == 0 ? new String[] { "" } : tags) &&

@@ -95,4 +95,30 @@ public final class HealthCheckSelector {
                 ", names=" + (names == null ? "*" : Arrays.toString(names)) +
                 '}';
     }
+
+    @Override
+    public int hashCode() {
+        final int prime = 31;
+        int result = 1;
+        result = prime * result + Arrays.hashCode(names);
+        result = prime * result + Arrays.hashCode(tags);
+        return result;
+    }
+
+    @Override
+    public boolean equals(Object obj) {
+        if (this == obj)
+            return true;
+        if (obj == null)
+            return false;
+        if (getClass() != obj.getClass())
+            return false;
+        HealthCheckSelector other = (HealthCheckSelector) obj;
+        if (!Arrays.equals(names, other.names))
+            return false;
+        if (!Arrays.equals(tags, other.tags))
+            return false;
+        return true;
+    }
+
 }

@@ -14,3 +14,4 @@ maven-eclipse.xml
 .idea/
 *~
 dependency-reduced-pom.xml
+.DS_Store

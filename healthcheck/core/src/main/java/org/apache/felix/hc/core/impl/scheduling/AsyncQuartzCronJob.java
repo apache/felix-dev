@@ -15,14 +15,12 @@
  * KIND, either express or implied. See the License for the
  * specific language governing permissions and limitations under the License.
  */
-package org.apache.felix.hc.core.impl.executor.async;
+package org.apache.felix.hc.core.impl.scheduling;
 
 import static org.quartz.CronScheduleBuilder.cronSchedule;
 import static org.quartz.JobBuilder.newJob;
 import static org.quartz.TriggerBuilder.newTrigger;
 
-import org.apache.felix.hc.api.execution.HealthCheckMetadata;
-import org.osgi.framework.BundleContext;
 import org.quartz.CronTrigger;
 import org.quartz.Job;
 import org.quartz.JobDataMap;
@@ -39,18 +37,24 @@ import org.slf4j.LoggerFactory;
  * 
  * This implementation uses quartz to support the cron syntax (which is not supported by executors from standard java java.util.concurrent
  * package) */
-public class AsyncHealthCheckQuartzCronJob extends AsyncHealthCheckJob implements Runnable {
-    private static final Logger LOG = LoggerFactory.getLogger(AsyncHealthCheckExecutor.class);
+public class AsyncQuartzCronJob extends AsyncJob {
+    private static final Logger LOG = LoggerFactory.getLogger(AsyncQuartzCronJob.class);
 
     private static final String JOB_DATA_KEY_JOB = "asyncHcJob";
 
     protected final QuartzCronScheduler quartzCronScheduler;
+    private final String id;
+    private final String group;
+    private final String cronExpression;
+
     private JobKey jobKey = null;
 
-    public AsyncHealthCheckQuartzCronJob(HealthCheckMetadata healthCheckDescriptor, AsyncHealthCheckExecutor asyncHealthCheckExecutor,
-            BundleContext bundleContext, QuartzCronScheduler quartzScheduler) {
-        super(healthCheckDescriptor, asyncHealthCheckExecutor, bundleContext);
-        this.quartzCronScheduler = quartzScheduler;
+    public AsyncQuartzCronJob(Runnable runnable, QuartzCronSchedulerProvider quartzCronSchedulerProvider, String id, String group, String cronExpression) throws ClassNotFoundException {
+        super(runnable);
+        this.quartzCronScheduler = quartzCronSchedulerProvider.getQuartzCronScheduler();
+        this.id = id;
+        this.group = group;
+        this.cronExpression = cronExpression;
     }
 
     public JobKey getJobKey() {
@@ -59,10 +63,10 @@ public class AsyncHealthCheckQuartzCronJob extends AsyncHealthCheckJob implement
 
     private JobDetail getQuartzJobDetail() {
         JobDataMap jobData = new JobDataMap();
-        jobData.put(JOB_DATA_KEY_JOB, this);
+        jobData.put(JOB_DATA_KEY_JOB, runnable);
 
-        JobDetail job = newJob(AsyncHealthCheckQuartzCronJob.QuartzJob.class).setJobData(jobData)
-                .withIdentity("job-hc-" + healthCheckDescriptor.getServiceId(), "async-healthchecks")
+        JobDetail job = newJob(AsyncQuartzCronJob.QuartzJob.class).setJobData(jobData)
+                .withIdentity(id, group)
                 .build();
 
         jobKey = job.getKey();
@@ -76,14 +80,14 @@ public class AsyncHealthCheckQuartzCronJob extends AsyncHealthCheckJob implement
             Scheduler scheduler = quartzCronScheduler.getScheduler();
 
             JobDetail job = getQuartzJobDetail();
-            CronTrigger cronTrigger = newTrigger().withSchedule(cronSchedule(healthCheckDescriptor.getAsyncCronExpression())).forJob(job)
+            CronTrigger cronTrigger = newTrigger().withSchedule(cronSchedule(cronExpression)).forJob(job)
                     .build();
 
             scheduler.scheduleJob(job, cronTrigger);
             LOG.info("Scheduled job {} with trigger {}", job, cronTrigger);
             return true;
         } catch (SchedulerException e) {
-            LOG.error("Could not schedule job for " + healthCheckDescriptor + ": " + e, e);
+            LOG.error("Could not schedule job for " + runnable + ": " + e, e);
             return false;
         }
 
@@ -102,15 +106,19 @@ public class AsyncHealthCheckQuartzCronJob extends AsyncHealthCheckJob implement
         }
     }
 
+    @Override
+    public String toString() {
+        return "[Async quartz job for " + runnable + "]";
+    }
+    
     // quartz forces to pass in a class object (and not an instance), hence this helper class is needed
     public static class QuartzJob implements Job {
 
         @Override
         public void execute(JobExecutionContext context) throws JobExecutionException {
-            AsyncHealthCheckQuartzCronJob hc = (AsyncHealthCheckQuartzCronJob) context.getJobDetail().getJobDataMap().get(JOB_DATA_KEY_JOB);
-            hc.run();
+        	Runnable ayncJob = (Runnable) context.getJobDetail().getJobDataMap().get(JOB_DATA_KEY_JOB);
+        	ayncJob.run();
         }
-
     }
 
 }
