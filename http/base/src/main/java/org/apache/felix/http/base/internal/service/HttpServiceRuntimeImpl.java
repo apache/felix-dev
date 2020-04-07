@@ -22,6 +22,7 @@ import java.util.Dictionary;
 import java.util.Hashtable;
 import java.util.Timer;
 import java.util.TimerTask;
+import java.util.concurrent.atomic.AtomicLong;
 
 import org.apache.felix.http.base.internal.registry.HandlerRegistry;
 import org.apache.felix.http.base.internal.runtime.dto.RequestInfoDTOBuilder;
@@ -52,13 +53,15 @@ public final class HttpServiceRuntimeImpl implements HttpServiceRuntime
     private final HandlerRegistry registry;
     private final WhiteboardManager contextManager;
 
-    private volatile long changeCount;
-
     private volatile ServiceRegistration<HttpServiceRuntime> serviceReg;
 
     private volatile ServiceReferenceDTO serviceRefDTO;
-    
-    private volatile Timer timer;
+
+    private final AtomicLong changeCount = new AtomicLong();
+
+    private volatile Timer changeCountTimer;
+
+    private final Object changeCountTimerLock = new Object();
 
     private final long updateChangeCountDelay;
 
@@ -94,22 +97,22 @@ public final class HttpServiceRuntimeImpl implements HttpServiceRuntime
     	if ( this.serviceRefDTO == null )
     	{
     		// it might happen that this code is executed in several threads
-    		// but that's very unlikely and even if, fetching the service 
+    		// but that's very unlikely and even if, fetching the service
     		// reference several times is not a big deal
     		final ServiceRegistration<HttpServiceRuntime> reg = this.serviceReg;
     		if ( reg != null )
     		{
                 final long id = (long) reg.getReference().getProperty(Constants.SERVICE_ID);
                 final ServiceReferenceDTO[] dtos = reg.getReference().getBundle().adapt(ServiceReferenceDTO[].class);
-                for(final ServiceReferenceDTO dto : dtos) 
+                for(final ServiceReferenceDTO dto : dtos)
                 {
-                	if ( dto.id == id) 
+                	if ( dto.id == id)
                 	{
                 		this.serviceRefDTO = dto;
                 		break;
                 	}
                 }
-    			
+
     		}
     	}
         if ( this.serviceRefDTO != null )
@@ -151,10 +154,10 @@ public final class HttpServiceRuntimeImpl implements HttpServiceRuntime
                 this,
                 attributes);
     }
-    
+
     public void unregister()
     {
-    	if ( this.serviceReg != null ) 
+    	if ( this.serviceReg != null )
     	{
         	try
         	{
@@ -164,69 +167,30 @@ public final class HttpServiceRuntimeImpl implements HttpServiceRuntime
         	{
         		// we just ignore it
         	}
-        	this.serviceReg = null;    		
+        	this.serviceReg = null;
     	}
     	this.serviceRefDTO = null;
     }
-    
+
     public ServiceReference<HttpServiceRuntime> getServiceReference()
     {
     	final ServiceRegistration<HttpServiceRuntime> reg = this.serviceReg;
-    	if ( reg != null ) 
+    	if ( reg != null )
     	{
     		return reg.getReference();
     	}
     	return null;
     }
-    
+
     public void updateChangeCount()
     {
-    	final ServiceRegistration<HttpServiceRuntime> reg = this.serviceReg;
+        final ServiceRegistration<HttpServiceRuntime> reg = this.serviceReg;
         if ( reg != null )
         {
-            boolean setPropsDirectly = false;
-            synchronized ( this )
-            {
-                this.changeCount++;
-                final long count = this.changeCount;
-                this.setAttribute(PROP_CHANGECOUNT, this.changeCount);
-                if ( this.updateChangeCountDelay <= 0L )
-                {
-                    setPropsDirectly = true;
-                }
-                else
-                {
-                    if ( this.timer == null )
-                    {
-                        this.timer = new Timer();
-                    }
-                    timer.schedule(new TimerTask()
-                    {
+            final long count = this.changeCount.incrementAndGet();
 
-                        @Override
-                        public void run()
-                        {
-                            synchronized ( HttpServiceRuntimeImpl.this )
-                            {
-                                if ( changeCount == count )
-                                {
-                                    try
-                                    {
-                                        reg.setProperties(attributes);
-                                    }
-                                    catch ( final IllegalStateException ise)
-                                    {
-                                        // we ignore this as this might happen on shutdown
-                                    }
-                                    timer.cancel();
-                                    timer = null;
-                                }
-                            }
-                        }
-                    }, this.updateChangeCountDelay);
-                }
-            }
-            if ( setPropsDirectly )
+            this.setAttribute(PROP_CHANGECOUNT, this.changeCount);
+            if ( this.updateChangeCountDelay <= 0L )
             {
                 try
                 {
@@ -237,6 +201,51 @@ public final class HttpServiceRuntimeImpl implements HttpServiceRuntime
                     // we ignore this as this might happen on shutdown
                 }
             }
+            else
+            {
+                final Timer timer;
+                synchronized ( this.changeCountTimerLock ) {
+                    if ( this.changeCountTimer == null ) {
+                        this.changeCountTimer = new Timer();
+                    }
+                    timer = this.changeCountTimer;
+                }
+                try
+                {
+                    timer.schedule(new TimerTask()
+                    {
+
+                        @Override
+                        public void run()
+                        {
+                            if ( changeCount.get() == count )
+                            {
+                                try
+                                {
+                                    reg.setProperties(attributes);
+                                }
+                                catch ( final IllegalStateException ise)
+                                {
+                                    // we ignore this as this might happen on shutdown
+                                }
+                                synchronized ( changeCountTimerLock )
+                                {
+                                    if ( changeCount.get() == count )
+                                    {
+                                        changeCountTimer.cancel();
+                                        changeCountTimer = null;
+                                    }
+                                }
+
+                            }
+                        }
+                    }, this.updateChangeCountDelay);
+                }
+                catch (final Exception e) {
+                    // we ignore this
+                }
+            }
         }
     }
+
 }
