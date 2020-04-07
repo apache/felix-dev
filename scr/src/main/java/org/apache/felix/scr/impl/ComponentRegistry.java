@@ -32,6 +32,7 @@ import java.util.Timer;
 import java.util.TimerTask;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ConcurrentMap;
+import java.util.concurrent.atomic.AtomicLong;
 
 import org.apache.felix.scr.impl.inject.ComponentMethods;
 import org.apache.felix.scr.impl.inject.internal.ComponentMethodsImpl;
@@ -701,18 +702,18 @@ public class ComponentRegistry
 
 	}
 
-	private final Object changeCountLock = new Object();
+    private final AtomicLong changeCount = new AtomicLong();
 
-    private volatile long changeCount;
+    private volatile Timer changeCountTimer;
 
-    private volatile Timer timer;
+    private final Object changeCountTimerLock = new Object();
 
     private volatile ServiceRegistration<ServiceComponentRuntime> registration;
 
     public Dictionary<String, Object> getServiceRegistrationProperties()
     {
         final Dictionary<String, Object> props = new Hashtable<>();
-        props.put(PROP_CHANGECOUNT, this.changeCount);
+        props.put(PROP_CHANGECOUNT, this.changeCount.get());
 
         return props;
     }
@@ -726,45 +727,50 @@ public class ComponentRegistry
     {
         if ( registration != null )
         {
-            synchronized ( changeCountLock )
-            {
-                this.changeCount++;
-                final long count = this.changeCount;
-                if ( this.timer == null )
-                {
-                    this.timer = new Timer();
-                }
-                try
-                {
-                    timer.schedule(new TimerTask()
-                        {
+            final long count = this.changeCount.incrementAndGet();
 
-                            @Override
-                            public void run() {
-                                synchronized ( changeCountLock )
+            final Timer timer;
+            synchronized ( this.changeCountTimerLock ) {
+                if ( this.changeCountTimer == null ) {
+                    this.changeCountTimer = new Timer();
+                }
+                timer = this.changeCountTimer;
+            }
+            try
+            {
+                timer.schedule(new TimerTask()
+                    {
+
+                        @Override
+                        public void run()
+                        {
+                            if ( changeCount.get() == count )
+                            {
+                                try
                                 {
-                                    if ( changeCount == count )
+                                    registration.setProperties(getServiceRegistrationProperties());
+                                }
+                                catch ( final IllegalStateException ise)
+                                {
+                                    // we ignore this as this might happen on shutdown
+                                }
+                                synchronized ( changeCountTimerLock )
+                                {
+                                    if ( changeCount.get() == count )
                                     {
-                                        try
-                                        {
-                                            registration.setProperties(getServiceRegistrationProperties());
-                                        }
-                                        catch ( final IllegalStateException ise)
-                                        {
-                                            // we ignore this as this might happen on shutdown
-                                        }
-                                        timer.cancel();
-                                        timer = null;
+                                        changeCountTimer.cancel();
+                                        changeCountTimer = null;
                                     }
                                 }
+
                             }
-                        }, m_configuration.serviceChangecountTimeout());
-                }
-                catch (Exception e) {
-                    m_logger.log(LogService.LOG_WARNING,
-                        "Service changecount Timer for {0} had a problem", e,
-                        registration.getReference());
-                }
+                        }
+                    }, m_configuration.serviceChangecountTimeout());
+            }
+            catch (Exception e) {
+                m_logger.log(LogService.LOG_WARNING,
+                    "Service changecount Timer for {0} had a problem", e,
+                    registration.getReference());
             }
         }
     }
