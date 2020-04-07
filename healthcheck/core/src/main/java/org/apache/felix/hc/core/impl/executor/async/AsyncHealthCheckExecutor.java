@@ -164,30 +164,30 @@ public class AsyncHealthCheckExecutor implements ServiceListener {
 
     }
 
-	private Runnable getAsyncJob(HealthCheckMetadata descriptor) {
-		
-		return new Runnable() {
-			@Override
-			public void run() {
-		        LOG.debug("Running job {}", this);
-		        HealthCheckFuture healthCheckFuture = new HealthCheckFuture(descriptor, bundleContext, new Callback() {
+    private Runnable getAsyncJob(HealthCheckMetadata descriptor) {
 
-		            @Override
-		            public void finished(HealthCheckExecutionResult result) {
-		                updateWith(result);
-		            }
-		        });
+        return new Runnable() {
+            @Override
+            public void run() {
+                LOG.debug("Running job {}", this);
+                HealthCheckFuture healthCheckFuture = new HealthCheckFuture(descriptor, bundleContext, new Callback() {
 
-		        // run future in same thread (as we are already async via scheduler)
-		        healthCheckFuture.run();
-			}
-			
-			@Override
-			public String toString() {
-				return descriptor.toString();
-			}
-		};
-	}
+                    @Override
+                    public void finished(HealthCheckExecutionResult result) {
+                        updateWith(result);
+                    }
+                });
+
+                // run future in same thread (as we are already async via scheduler)
+                healthCheckFuture.run();
+            }
+
+            @Override
+            public String toString() {
+                return descriptor.toString();
+            }
+        };
+    }
 
     private boolean unscheduleHealthCheck(HealthCheckMetadata descriptor) {
 

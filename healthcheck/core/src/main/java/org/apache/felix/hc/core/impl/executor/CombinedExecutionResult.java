@@ -92,7 +92,7 @@ public class CombinedExecutionResult implements HealthCheckExecutionResult {
     
     @Override
     public String toString() {
-    	return "CombinedExecutionResult [size="+executionResults.size()+" overall status=" + getHealthCheckResult().getStatus() +
+        return "CombinedExecutionResult [size="+executionResults.size()+" overall status=" + getHealthCheckResult().getStatus() +
                 ", finishedAt=" + getFinishedAt() +
                 ", elapsedTimeInMs=" + getElapsedTimeInMs() +
                 ", timedOut=" + hasTimedOut() +

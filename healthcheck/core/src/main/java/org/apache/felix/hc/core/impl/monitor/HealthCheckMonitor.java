@@ -63,7 +63,8 @@ import org.slf4j.LoggerFactory;
  * Monitors health check tags and/or names and depending on configuration:
  * <p>
  * <ul>
- * <li>Activates the condition marker services {@link SystemReady}, {@link Healthy}, {@link Unhealthy}</li>
+ * <li>Activates the condition marker services {@link SystemReady},
+ * {@link Healthy}, {@link Unhealthy}</li>
  * <li>Sends OSGi events</li>
  * </ul>
  * <p>
@@ -72,273 +73,290 @@ import org.slf4j.LoggerFactory;
 @Component(immediate = true, configurationPolicy = ConfigurationPolicy.REQUIRE)
 @Designate(ocd = HealthCheckMonitor.Config.class, factory = true)
 public class HealthCheckMonitor implements Runnable {
-	private static final Logger LOG = LoggerFactory.getLogger(HealthCheckMonitor.class);
-	
-	public static final String TAG_SYSTEMREADY = "systemready";
-	
-	public static final String EVENT_TOPIC_PREFIX = "org/apache/felix/healthchange";
-	public static final String EVENT_PROP_EXECUTION_RESULT = "executionResult";
-	public static final String EVENT_PROP_STATUS = "status";
-	public static final String EVENT_PROP_PREVIOUS_STATUS = "previousStatus";
-	
-	private static final Healthy MARKER_SERVICE_HEALTHY = new Healthy() { };
-	private static final Unhealthy MARKER_SERVICE_UNHEALTHY = new Unhealthy() { };
-	private static final SystemReady MARKER_SERVICE_SYSTEMREADY = new SystemReady() { };
+    private static final Logger LOG = LoggerFactory.getLogger(HealthCheckMonitor.class);
 
-	
-	@ObjectClassDefinition(name = "Health Check Monitor", description = "Regularly executes health checks according to given interval/cron expression")
-	public @interface Config {
+    public static final String TAG_SYSTEMREADY = "systemready";
 
-		@AttributeDefinition(name = "Tags", description = "List of tags to query regularly")
-		String[] tags() default {};
+    public static final String EVENT_TOPIC_PREFIX = "org/apache/felix/healthchange";
+    public static final String EVENT_PROP_EXECUTION_RESULT = "executionResult";
+    public static final String EVENT_PROP_STATUS = "status";
+    public static final String EVENT_PROP_PREVIOUS_STATUS = "previousStatus";
 
-		@AttributeDefinition(name = "Names", description = "List of health check names to query regularly")
-		String[] names() default {};
+    static final Healthy MARKER_SERVICE_HEALTHY = new Healthy() {
+    };
+    static final Unhealthy MARKER_SERVICE_UNHEALTHY = new Unhealthy() {
+    };
+    static final SystemReady MARKER_SERVICE_SYSTEMREADY = new SystemReady() {
+    };
 
-		@AttributeDefinition(name = "Interval (Sec)", description = "Will execute the checks for give tags every n seconds (either use intervalInSec or cronExpression )")
-		long intervalInSec() default 0;
+    @ObjectClassDefinition(name = "Health Check Monitor", description = "Regularly executes health checks according to given interval/cron expression")
+    public @interface Config {
 
-		@AttributeDefinition(name = "Interval (Cron Expresson)", description = "Will execute the checks for give tags according to cron expression")
-		String cronExpression() default "";
+        @AttributeDefinition(name = "Tags", description = "List of tags to query regularly")
+        String[] tags() default {};
 
-		@AttributeDefinition(name = "Register Healthy Marker Service", description = "For the case a given tag/name is healthy, will register a service Healthy with property tag=<tagname> (or name=<hc.name>) that other services can depend on")
-		boolean registerHealthyMarkerService() default true;
+        @AttributeDefinition(name = "Names", description = "List of health check names to query regularly")
+        String[] names() default {};
 
-		@AttributeDefinition(name = "Register Unhealthy Marker Service", description = "For the case a given tag/name is unhealthy, will register a service Unhealthy with property tag=<tagname> (or name=<hc.name>) that other services can depend on")
-		boolean registerUnhealthyMarkerService() default false;
+        @AttributeDefinition(name = "Interval (Sec)", description = "Will execute the checks for give tags every n seconds (either use intervalInSec or cronExpression )")
+        long intervalInSec() default 0;
 
-		@AttributeDefinition(name = "Treat WARN as Healthy", description = "Whether to treat status WARN as healthy (it normally should because WARN indicates a working system that only possibly might become unavailable if no action is taken")
-		boolean treatWarnAsHealthy() default true;
+        @AttributeDefinition(name = "Interval (Cron Expresson)", description = "Will execute the checks for give tags according to cron expression")
+        String cronExpression() default "";
 
-		@AttributeDefinition(name = "Send Events", description = "Whether to send OSGi events for the case a status has changed")
-		boolean sendEvents() default true;
-		
-		@AttributeDefinition
-		String webconsole_configurationFactory_nameHint() default "Health Monitor for '{tags}'/'{names}', {intervalInSec}sec/{cronExpression}, Marker Service Healthy:{registerHealthyMarkerService} Unhealthy:{registerUnhealthyMarkerService}, Send Events {sendEvents}";
-	}
+        @AttributeDefinition(name = "Register Healthy Marker Service", description = "For the case a given tag/name is healthy, will register a service Healthy with property tag=<tagname> (or name=<hc.name>) that other services can depend on")
+        boolean registerHealthyMarkerService() default true;
 
-	private List<String> tags;
-	private List<String> names;
-	private List<HealthState> healthStates = new ArrayList<>();
-	
-	private long intervalInSec;
-	private String cronExpression;
+        @AttributeDefinition(name = "Register Unhealthy Marker Service", description = "For the case a given tag/name is unhealthy, will register a service Unhealthy with property tag=<tagname> (or name=<hc.name>) that other services can depend on")
+        boolean registerUnhealthyMarkerService() default false;
 
-	private boolean registerHealthyMarkerService;
-	private boolean registerUnhealthyMarkerService;
+        @AttributeDefinition(name = "Treat WARN as Healthy", description = "Whether to treat status WARN as healthy (it normally should because WARN indicates a working system that only possibly might become unavailable if no action is taken")
+        boolean treatWarnAsHealthy() default true;
 
-	private boolean treatWarnAsHealthy;
+        @AttributeDefinition(name = "Send Events", description = "Whether to send OSGi events for the case a status has changed")
+        boolean sendEvents() default true;
 
-	private boolean sendEvents;
-	
+        @AttributeDefinition
+        String webconsole_configurationFactory_nameHint() default "Health Monitor for '{tags}'/'{names}', {intervalInSec}sec/{cronExpression}, Marker Service Healthy:{registerHealthyMarkerService} Unhealthy:{registerUnhealthyMarkerService}, Send Events {sendEvents}";
+    }
+
+    @Reference
+    HealthCheckExecutor executor;
+    
     @Reference
     HealthCheckExecutorThreadPool healthCheckExecutorThreadPool;
-    
+
     @Reference
     QuartzCronSchedulerProvider quartzCronSchedulerProvider;
-	
-    AsyncJob monitorJob = null;
+
+    @Reference
+    private EventAdmin eventAdmin;
     
-	@Reference
-	private HealthCheckExecutor executor;
+    // component state
+    AsyncJob monitorJob = null;
+    List<String> tags;
+    List<String> names;
+    List<HealthState> healthStates = new ArrayList<>();
 
-	@Reference
-	private EventAdmin eventAdmin;
+    private long intervalInSec;
+    private String cronExpression;
 
-	private BundleContext bundleContext;
+    private boolean registerHealthyMarkerService;
+    private boolean registerUnhealthyMarkerService;
 
-	@Activate
-	protected final void activate(BundleContext bundleContext, Config config, ComponentContext componentContext) throws InvalidSyntaxException {
+    private boolean treatWarnAsHealthy;
 
-		this.bundleContext = bundleContext;
+    private boolean sendEvents;
 
-		this.tags = Arrays.asList(config.tags());
-		this.tags.stream().filter(StringUtils::isNotBlank).forEach(tag -> healthStates.add(new HealthState(tag, true)));
+    private BundleContext bundleContext;
 
-		this.names = Arrays.asList(config.names());
-		this.names.stream().filter(StringUtils::isNotBlank).forEach(name -> healthStates.add(new HealthState(name, false)));
+    @Activate
+    protected final void activate(BundleContext bundleContext, Config config, ComponentContext componentContext)
+            throws InvalidSyntaxException {
 
-		this.registerHealthyMarkerService = config.registerHealthyMarkerService();
-		this.registerUnhealthyMarkerService = config.registerUnhealthyMarkerService();
+        this.bundleContext = bundleContext;
 
-		this.treatWarnAsHealthy = config.treatWarnAsHealthy();
-		this.sendEvents = config.sendEvents();
+        this.tags = Arrays.asList(config.tags());
+        this.tags.stream().filter(StringUtils::isNotBlank).forEach(tag -> healthStates.add(new HealthState(tag, true)));
 
-		this.intervalInSec = config.intervalInSec();
-		this.cronExpression = config.cronExpression();
+        this.names = Arrays.asList(config.names());
+        this.names.stream().filter(StringUtils::isNotBlank)
+                .forEach(name -> healthStates.add(new HealthState(name, false)));
+
+        this.registerHealthyMarkerService = config.registerHealthyMarkerService();
+        this.registerUnhealthyMarkerService = config.registerUnhealthyMarkerService();
+
+        this.treatWarnAsHealthy = config.treatWarnAsHealthy();
+        this.sendEvents = config.sendEvents();
+
+        this.intervalInSec = config.intervalInSec();
+        this.cronExpression = config.cronExpression();
         if (StringUtils.isNotBlank(cronExpression)) {
             try {
-            	monitorJob = new AsyncQuartzCronJob(this, quartzCronSchedulerProvider, "job-hc-monitor-"+componentContext.getProperties().get(ComponentConstants.COMPONENT_ID), "healthcheck-monitor", cronExpression);
-            } catch(ClassNotFoundException e) {
-            	throw new IllegalArgumentException("Cannot use cron expression "+cronExpression+" while class is not available: "+cronExpression);
+                monitorJob = new AsyncQuartzCronJob(this, quartzCronSchedulerProvider,
+                        "job-hc-monitor-" + componentContext.getProperties().get(ComponentConstants.COMPONENT_ID),
+                        "healthcheck-monitor", cronExpression);
+            } catch (ClassNotFoundException e) {
+                throw new IllegalArgumentException("Cannot use cron expression " + cronExpression
+                        + " while class is not available: " + cronExpression);
             }
         } else if (intervalInSec > 0) {
-        	monitorJob = new AsyncIntervalJob(this, healthCheckExecutorThreadPool, intervalInSec);
+            monitorJob = new AsyncIntervalJob(this, healthCheckExecutorThreadPool, intervalInSec);
         } else {
-        	throw new IllegalArgumentException("Either cronExpression or intervalInSec needs to be set");
+            throw new IllegalArgumentException("Either cronExpression or intervalInSec needs to be set");
         }
         monitorJob.schedule();
-		LOG.info("HealthCheckMonitor active for tags {} and names {}", this.tags, this.names);
-	}
-	
-	@Override
-	public String toString() {
-		return "[HealthCheckMonitor tags=" + tags + "/names=" + names + ", intervalInSec="+intervalInSec+"/cron="+cronExpression+"]";
-	}
+        LOG.info("HealthCheckMonitor active for tags {} and names {}", this.tags, this.names);
+    }
 
-	@Deactivate
-	protected final void deactivate() {
-		healthStates.stream().forEach(HealthState::cleanUp);
-		monitorJob.unschedule();
-		LOG.info("HealthCheckMonitor deactivated for tags {} and names {}", this.tags, this.names);
-	}
+    @Override
+    public String toString() {
+        return "[HealthCheckMonitor tags=" + tags + "/names=" + names + ", intervalInSec=" + intervalInSec + "/cron="
+                + cronExpression + "]";
+    }
 
-	public void run() {
-		try { 
-			// run in tags/names in parallel
-			healthStates.parallelStream().forEach((healthState) -> {
-				HealthCheckSelector selector = healthState.isTag ? HealthCheckSelector.tags(healthState.tagOrName)
-						: HealthCheckSelector.names(healthState.tagOrName);
-				
-				List<HealthCheckExecutionResult> executionResults = executor.execute(selector);
-				
-				HealthCheckExecutionResult result =  executionResults.size() == 1 ?  executionResults.get(0) 
-						: new CombinedExecutionResult(executionResults, Result.Status.TEMPORARILY_UNAVAILABLE);
-				
-				LOG.trace("Result of '{}' => {}", healthState.tagOrName, result.getHealthCheckResult().getStatus());
-				
-				healthState.update(result);		
-			});
-			
-			LOG.trace("HealthCheckMonitor: updated results for tags {} and names {}", this.tags, this.names);			
-		} catch(Exception e) {
-			LOG.error("Exception HealthCheckMonitor run(): "+e, e);
-		}
+    @Deactivate
+    protected final void deactivate() {
+        healthStates.stream().forEach(HealthState::cleanUp);
+        healthStates.clear();
+        monitorJob.unschedule();
+        LOG.info("HealthCheckMonitor deactivated for tags {} and names {}", this.tags, this.names);
+    }
 
-	}
+    public void run() {
+        try {
+            // run in tags/names in parallel
+            healthStates.parallelStream().forEach(healthState -> {
+                HealthCheckSelector selector = healthState.isTag ? HealthCheckSelector.tags(healthState.tagOrName)
+                        : HealthCheckSelector.names(healthState.tagOrName);
 
-	private class HealthState {
+                List<HealthCheckExecutionResult> executionResults = executor.execute(selector);
 
-		private String tagOrName;
-		private boolean isTag;
-		private String propertyName;
+                HealthCheckExecutionResult result = executionResults.size() == 1 ? executionResults.get(0)
+                        : new CombinedExecutionResult(executionResults, Result.Status.TEMPORARILY_UNAVAILABLE);
 
-		private ServiceRegistration<?> healthyRegistration = null;
-		private ServiceRegistration<Unhealthy> unhealthyRegistration = null;
+                LOG.trace("Result of '{}' => {}", healthState.tagOrName, result.getHealthCheckResult().getStatus());
 
-		private Result.Status status = null;
-		private boolean isHealthy = false;
-		private boolean statusChanged = false;
+                healthState.update(result);
+            });
 
-		public HealthState(String tagOrName, boolean isTag) {
-			this.tagOrName = tagOrName;
-			this.isTag = isTag;
-			this.propertyName = isTag ? "tag" : "name";
-		}
+            LOG.trace("HealthCheckMonitor: updated results for tags {} and names {}", this.tags, this.names);
+        } catch (Exception e) {
+            LOG.error("Exception HealthCheckMonitor run(): " + e, e);
+        }
 
-		synchronized void update(HealthCheckExecutionResult executionResult) {
-			Result.Status previousStatus = status;
-			status = executionResult.getHealthCheckResult().getStatus();
+    }
 
-			isHealthy = (status == Result.Status.OK || (treatWarnAsHealthy && status == Result.Status.WARN));
-			statusChanged = previousStatus != status;
-			LOG.trace("  {}: isHealthy={} statusChanged={}", tagOrName, isHealthy, statusChanged);
+    class HealthState {
 
-			registerMarkerServices();
-			sendEvent(executionResult, previousStatus);
-		}
+        private String tagOrName;
+        private boolean isTag;
+        private String propertyName;
 
-		private void registerMarkerServices() {
-			if (registerHealthyMarkerService) {
-				if (isHealthy && healthyRegistration == null) {
-					registerHealthyService();
-				} else if (!isHealthy && healthyRegistration != null) {
-					unregisterHealthyService();
-				}
-			}
-			if (registerUnhealthyMarkerService) {
-				if (!isHealthy && unhealthyRegistration == null) {
-					registerUnhealthyService();
-				} else if (isHealthy && unhealthyRegistration != null) {
-					unregisterUnhealthyService();
-				}
-			}
-		}
+        private ServiceRegistration<?> healthyRegistration = null;
+        private ServiceRegistration<Unhealthy> unhealthyRegistration = null;
 
-		private void registerHealthyService() {
-			if (healthyRegistration == null) {
-				LOG.debug("HealthCheckMonitor: registerHealthyService() {} ", tagOrName);
-				Dictionary<String, String> registrationProps = new Hashtable<>();
-				registrationProps.put(propertyName, tagOrName);
-				registrationProps.put("activated", new SimpleDateFormat("yyyy-MM-dd HH:mm:ss").format(new Date()));
+        private Result.Status status = null;
+        private boolean isHealthy = false;
+        private boolean statusChanged = false;
 
-				if (StringUtils.equals(tagOrName, TAG_SYSTEMREADY)) {
-					LOG.debug("HealthCheckMonitor: SYSTEM READY");
-					healthyRegistration = bundleContext.registerService(
-							new String[] { SystemReady.class.getName(), Healthy.class.getName()}, 
-							MARKER_SERVICE_SYSTEMREADY, registrationProps);
-				} else {
-					healthyRegistration = bundleContext.registerService(Healthy.class, MARKER_SERVICE_HEALTHY,
-							registrationProps);
-				}
-				LOG.debug("HealthCheckMonitor: Healthy service for {} '{}' registered", propertyName, tagOrName);
-			}
-		}
+        HealthState(String tagOrName, boolean isTag) {
+            this.tagOrName = tagOrName;
+            this.isTag = isTag;
+            this.propertyName = isTag ? "tag" : "name";
+        }
 
-		private void unregisterHealthyService() {
-			if (healthyRegistration != null) {
-				healthyRegistration.unregister();
-				healthyRegistration = null;
-				LOG.debug("HealthCheckMonitor: Healthy service for {} '{}' unregistered", propertyName, tagOrName);
-			}
-		}
+        @Override
+        public String toString() {
+            return "[HealthState tagOrName=" + tagOrName + ", isTag=" + isTag + ", status=" + status + ", isHealthy="
+                    + isHealthy + ", statusChanged=" + statusChanged + "]";
+        }
 
-		private void registerUnhealthyService() {
-			if (unhealthyRegistration == null) {
-				Dictionary<String, String> registrationProps = new Hashtable<>();
-				registrationProps.put("tag", tagOrName);
-				registrationProps.put("activated", new SimpleDateFormat("yyyy-MM-dd HH:mm:ss").format(new Date()));
-				unhealthyRegistration = bundleContext.registerService(Unhealthy.class, MARKER_SERVICE_UNHEALTHY,
-						registrationProps);
-				LOG.debug("HealthCheckMonitor: Unhealthy service for {} '{}' registered", propertyName, tagOrName);
-			}
-		}
+        synchronized void update(HealthCheckExecutionResult executionResult) {
+            Result.Status previousStatus = status;
+            status = executionResult.getHealthCheckResult().getStatus();
 
-		private void unregisterUnhealthyService() {
-			if (unhealthyRegistration != null) {
-				unhealthyRegistration.unregister();
-				unhealthyRegistration = null;
-				LOG.debug("HealthCheckMonitor: Unhealthy service for {} '{}' unregistered", propertyName, tagOrName);
-			}
-		}
+            isHealthy = (status == Result.Status.OK || (treatWarnAsHealthy && status == Result.Status.WARN));
+            statusChanged = previousStatus != status;
+            LOG.trace("  {}: isHealthy={} statusChanged={}", tagOrName, isHealthy, statusChanged);
 
+            registerMarkerServices();
+            sendEvent(executionResult, previousStatus);
+        }
 
-		private void sendEvent(HealthCheckExecutionResult executionResult, Result.Status previousStatus) {
-			if(sendEvents && statusChanged) {
-	            Map<String,Object> properties = new HashMap<>();
-	            properties.put(EVENT_PROP_STATUS , status);
-	            if(previousStatus != null) {
-			        properties.put(EVENT_PROP_PREVIOUS_STATUS , previousStatus);	            	
-	            }
-	            properties.put(EVENT_PROP_EXECUTION_RESULT, executionResult);
-	            String topic = EVENT_TOPIC_PREFIX + "/" +propertyName + "/" + tagOrName.replaceAll("\\s+","_");
-				eventAdmin.postEvent(new Event(topic, properties));
-				LOG.debug("HealthCheckMonitor: Posted event for topic '{}': Status change from {} to {}", topic, previousStatus, status);
-				if(!(executionResult instanceof CombinedExecutionResult)) {
-					String componentClass = (String) executionResult.getHealthCheckMetadata().getServiceReference().getProperty(ComponentConstants.COMPONENT_NAME);
-					if(StringUtils.isNotBlank(componentClass)) {
-			            String topicClass = EVENT_TOPIC_PREFIX + "/class/" + componentClass.replace(".", "/");
-						eventAdmin.postEvent(new Event(topicClass, properties));
-						LOG.debug("HealthCheckMonitor: Posted event for topic '{}': Status change from {} to {}", topicClass, previousStatus, status);
-					}
-				}
-			}
-		}
-		
-		synchronized void cleanUp() {
-			unregisterHealthyService();
-			unregisterUnhealthyService();
-		}
-		
-	}
+        private void registerMarkerServices() {
+            if (registerHealthyMarkerService) {
+                if (isHealthy && healthyRegistration == null) {
+                    registerHealthyService();
+                } else if (!isHealthy && healthyRegistration != null) {
+                    unregisterHealthyService();
+                }
+            }
+            if (registerUnhealthyMarkerService) {
+                if (!isHealthy && unhealthyRegistration == null) {
+                    registerUnhealthyService();
+                } else if (isHealthy && unhealthyRegistration != null) {
+                    unregisterUnhealthyService();
+                }
+            }
+        }
+
+        private void registerHealthyService() {
+            if (healthyRegistration == null) {
+                LOG.debug("HealthCheckMonitor: registerHealthyService() {} ", tagOrName);
+                Dictionary<String, String> registrationProps = new Hashtable<>();
+                registrationProps.put(propertyName, tagOrName);
+                registrationProps.put("activated", new SimpleDateFormat("yyyy-MM-dd HH:mm:ss").format(new Date()));
+
+                if (StringUtils.equals(tagOrName, TAG_SYSTEMREADY)) {
+                    LOG.debug("HealthCheckMonitor: SYSTEM READY");
+                    healthyRegistration = bundleContext.registerService(
+                            new String[] { SystemReady.class.getName(), Healthy.class.getName() },
+                            MARKER_SERVICE_SYSTEMREADY, registrationProps);
+                } else {
+                    healthyRegistration = bundleContext.registerService(Healthy.class, MARKER_SERVICE_HEALTHY,
+                            registrationProps);
+                }
+                LOG.debug("HealthCheckMonitor: Healthy service for {} '{}' registered", propertyName, tagOrName);
+            }
+        }
+
+        private void unregisterHealthyService() {
+            if (healthyRegistration != null) {
+                healthyRegistration.unregister();
+                healthyRegistration = null;
+                LOG.debug("HealthCheckMonitor: Healthy service for {} '{}' unregistered", propertyName, tagOrName);
+            }
+        }
+
+        private void registerUnhealthyService() {
+            if (unhealthyRegistration == null) {
+                Dictionary<String, String> registrationProps = new Hashtable<>();
+                registrationProps.put("tag", tagOrName);
+                registrationProps.put("activated", new SimpleDateFormat("yyyy-MM-dd HH:mm:ss").format(new Date()));
+                unhealthyRegistration = bundleContext.registerService(Unhealthy.class, MARKER_SERVICE_UNHEALTHY,
+                        registrationProps);
+                LOG.debug("HealthCheckMonitor: Unhealthy service for {} '{}' registered", propertyName, tagOrName);
+            }
+        }
+
+        private void unregisterUnhealthyService() {
+            if (unhealthyRegistration != null) {
+                unhealthyRegistration.unregister();
+                unhealthyRegistration = null;
+                LOG.debug("HealthCheckMonitor: Unhealthy service for {} '{}' unregistered", propertyName, tagOrName);
+            }
+        }
+
+        private void sendEvent(HealthCheckExecutionResult executionResult, Result.Status previousStatus) {
+            if (sendEvents && statusChanged) {
+                Map<String, Object> properties = new HashMap<>();
+                properties.put(EVENT_PROP_STATUS, status);
+                if (previousStatus != null) {
+                    properties.put(EVENT_PROP_PREVIOUS_STATUS, previousStatus);
+                }
+                properties.put(EVENT_PROP_EXECUTION_RESULT, executionResult);
+                String topic = EVENT_TOPIC_PREFIX + "/" + propertyName + "/" + tagOrName.replaceAll("\\s+", "_");
+                eventAdmin.postEvent(new Event(topic, properties));
+                LOG.debug("HealthCheckMonitor: Posted event for topic '{}': Status change from {} to {}", topic,
+                        previousStatus, status);
+                if (!(executionResult instanceof CombinedExecutionResult)) {
+                    String componentClass = (String) executionResult.getHealthCheckMetadata().getServiceReference()
+                            .getProperty(ComponentConstants.COMPONENT_NAME);
+                    if (StringUtils.isNotBlank(componentClass)) {
+                        String topicClass = EVENT_TOPIC_PREFIX + "/class/" + componentClass.replace(".", "/");
+                        eventAdmin.postEvent(new Event(topicClass, properties));
+                        LOG.debug("HealthCheckMonitor: Posted event for topic '{}': Status change from {} to {}",
+                                topicClass, previousStatus, status);
+                    }
+                }
+            }
+        }
+
+        synchronized void cleanUp() {
+            unregisterHealthyService();
+            unregisterUnhealthyService();
+        }
+
+    }
 }
