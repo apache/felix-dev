@@ -189,7 +189,7 @@ public final class HttpServiceRuntimeImpl implements HttpServiceRuntime
         {
             final long count = this.changeCount.incrementAndGet();
 
-            this.setAttribute(PROP_CHANGECOUNT, this.changeCount);
+            this.setAttribute(PROP_CHANGECOUNT, this.changeCount.get());
             if ( this.updateChangeCountDelay <= 0L )
             {
                 try
