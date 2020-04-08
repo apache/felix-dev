@@ -257,6 +257,58 @@ based on their tags (positive and negative selection, see the `HealthCheckFilter
 
 The DEBUG logs of health checks can optionally be displayed, and an option allows for showing only health checks that have a non-OK status.
 
+## Monitoring Health Checks
+
+### Setting up a monitor configuration
+
+By default, health checks are only executed if explicitly triggered via one of the mechanisms as described in [Executing Health Checks](#executing-health-checks) (servlet, web console plugin, JMX, executor API). With the `HealthCheckMonitor`, Health checks can be regularly monitored by configuring the the **factory PID** `org.apache.felix.hc.core.impl.monitor.HealthCheckMonitor` with the following properties:
+
+Property    | Type     | Default | Description  
+----------- | -------- | ------ | ------------
+`tags` and/or `names` | String[] | none, at least one of the two is required | **Will regularly call all given tags and/or names**. All given tags/names are executed in parallel. If the set of tags/names include some checks multiple times it does not matter, the `HealthCheckExecutor` will always ensure checks are executed once at a time only.
+`intervalInSec` or `cronExpression` | Long or String (cron) | none, one of the two is required | The interval in which the given tags/names will be executed
+`registerHealthyMarkerService` | boolean | true | For the case a given tag/name is healthy, will register a service `org.apache.felix.hc.api.condition.Healthy` with property tag=<tagname> (or name=<hc.name>) that other services can depend on. For the special case of the tag `systemready`, the marker service `org.apache.felix.hc.api.condition.SystemReady` is registered
+`registerUnhealthyMarkerService` | boolean | false | For the case a given tag/name is **un**healthy, will register a service `org.apache.felix.hc.api.condition.Unhealthy` with property tag=<tagname> (or name=<hc.name>) that other services can depend on
+`treatWarnAsHealthy` | boolean | true | `WARN` usually means [the system is usable](#semantic-meaning-of-health-check-results), hence WARN is treated as healthy by default. When set to false `WARN` is treated as `Unhealthy`
+`sendEvents` | boolean | false | Whether to send events for health check status changes. See [below](#osgi-events-for-health-check-status-changes) for details.
+
+### Marker Service to depend on a health status in SCR Components
+
+It is possible to use OSGi service references to depend on the health status of a certain  
+tag or name. For that to work, a `HealthCheckMonitor` needs to be configured for the relevant tag or name. To depend on a health status in a component, use a `@Reference` to one of the marker services `Healthy`, `Unhealthy` and `SystemReady` - this will then automatically activate/deactivate the component based on the certain health status. To activate a component only upon healthiness of a certain tag/name use the following code:
+
+```
+   @Reference(target="(tag=dbavail)")
+   Healthy healthy;
+ 
+   @Reference(target="(name=My Health Check)")
+   Healthy healthy;
+```
+For the special tag `systemready`, there is a convenience marker interface available:
+
+```
+   @Reference
+   SystemReady systemReady;
+```
+It is also possible to depend on a unhealthy state (e.g. for fallback functionality or self-healing):
+
+``` 
+   @Reference(target="(tag=dbavail)")
+   Unhealthy unhealthy;
+```
+
+NOTE: This does not support the [RFC 242 Condition Service](https://github.com/osgi/design/blob/master/rfcs/rfc0242/rfc-0242-Condition-Service.pdf) yet - however once final the marker services will also be able to implement the `Condition` interface.
+
+### OSGi events for Health Check status changes
+
+For tags/names that a `HealthCheckMonitor` is configured for and `sendEvents` is set to true, events are sent whenever a result status for any of the given tags/names has changed. The events are sent for the topic `org/apache/felix/healthchange/*`. The following events are sent:
+
+Topic Prefix | Example | Description  
+------ | ------- | -----
+`org/apache/felix/healthchange/tag/`  | `org/apache/felix/healthchange/tag/mytag` | Sent whenever the aggregate status for any of the tags as configured in `HealthCheckMonitor` changed
+`org/apache/felix/healthchange/name/`  | `org/apache/felix/healthchange/tag/My_Tag_Name ` (spaces are replaced with underscores to ensure valid topic names) | Sent whenever the status for any of the names as configured in `HealthCheckMonitor` changed
+`org/apache/felix/healthchange/component/`  | `org/apache/felix/healthchange/component/com/mycomp/myproj/MyHealthCheck` (`.` are replaced with slashes to produce valid topic names) | Sent for health checks that are based on SCR components (in addition to the name event)
+
 ## Servlet Filters
 
 ### Service Unavailable Filter
