@@ -341,10 +341,10 @@ public class HealthCheckMonitor implements Runnable {
                 LOG.debug("HealthCheckMonitor: Posted event for topic '{}': Status change from {} to {}", topic,
                         previousStatus, status);
                 if (!(executionResult instanceof CombinedExecutionResult)) {
-                    String componentClass = (String) executionResult.getHealthCheckMetadata().getServiceReference()
+                    String componentName = (String) executionResult.getHealthCheckMetadata().getServiceReference()
                             .getProperty(ComponentConstants.COMPONENT_NAME);
-                    if (StringUtils.isNotBlank(componentClass)) {
-                        String topicClass = EVENT_TOPIC_PREFIX + "/class/" + componentClass.replace(".", "/");
+                    if (StringUtils.isNotBlank(componentName)) {
+                        String topicClass = EVENT_TOPIC_PREFIX + "/component/" + componentName.replace(".", "/");
                         eventAdmin.postEvent(new Event(topicClass, properties));
                         LOG.debug("HealthCheckMonitor: Posted event for topic '{}': Status change from {} to {}",
                                 topicClass, previousStatus, status);

@@ -204,7 +204,7 @@ public class HealthCheckMonitorTest {
         assertEquals(2, postedEvents.size());
         assertEquals("org/apache/felix/healthchange/tag/test-tag", postedEvents.get(0).getTopic());
         assertEquals(Result.Status.OK, postedEvents.get(0).getProperty(HealthCheckMonitor.EVENT_PROP_STATUS));
-        assertEquals("org/apache/felix/healthchange/class/org/apache/felix/TestHealthCheck", postedEvents.get(1).getTopic());
+        assertEquals("org/apache/felix/healthchange/component/org/apache/felix/TestHealthCheck", postedEvents.get(1).getTopic());
 
         reset(eventAdmin);
         // without status change
@@ -222,7 +222,7 @@ public class HealthCheckMonitorTest {
         assertEquals("org/apache/felix/healthchange/tag/test-tag", postedEvents.get(0).getTopic());
         assertEquals(Result.Status.CRITICAL, postedEvents.get(0).getProperty(HealthCheckMonitor.EVENT_PROP_STATUS));
         assertEquals(Result.Status.OK, postedEvents.get(0).getProperty(HealthCheckMonitor.EVENT_PROP_PREVIOUS_STATUS));
-        assertEquals("org/apache/felix/healthchange/class/org/apache/felix/TestHealthCheck", postedEvents.get(1).getTopic());
+        assertEquals("org/apache/felix/healthchange/component/org/apache/felix/TestHealthCheck", postedEvents.get(1).getTopic());
         
         reset(eventAdmin);
         // without status change
