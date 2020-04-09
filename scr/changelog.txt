@@ -3,8 +3,14 @@ Changes in 2.1.18
 ** Bug
     * [FELIX-6096] - SCR fails if the Java Runtime Environment does not support permissions
     * [FELIX-6206] - NPE in ComponentRegistry.getComponentHolders()
+    * [FELIX-6251] - Possible NullPointerException when DependencyManager.m_tracker is null
+    * [FELIX-6252] - Deadlock in SCR ComponentRegistry updateChangeCount
 ** Improvement
     * [FELIX-6107] - Logging Passwords when invoking activate Method
+    * [FELIX-6215] - Cannot run scr unit tests on Java 11
+    * [FELIX-6218] - Replace kxml2 with standard SAX XML parser
+    * [FELIX-6220] - Refactor injection implementation
+    * [FELIX-6241] - IllegalStateException can be thrown from listener if BundleContext is invalid
 
 Changes in 2.1.16
 -----------------
