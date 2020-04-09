@@ -88,6 +88,7 @@
                 <artifactId>maven-bundle-plugin</artifactId>
                 <configuration>
                     <instructions>
+                        <Bundle-Activator>org.apache.felix.gogo.jline.Activator</Bundle-Activator>
                         <Export-Package>
                             org.apache.felix.gogo.jline
                         </Export-Package>
