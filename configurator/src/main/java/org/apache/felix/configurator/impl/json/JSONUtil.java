@@ -23,40 +23,27 @@ import java.io.IOException;
 import java.io.InputStreamReader;
 import java.io.Reader;
 import java.io.StringReader;
-import java.io.StringWriter;
-import java.io.Writer;
 import java.net.URL;
 import java.net.URLConnection;
 import java.util.ArrayList;
 import java.util.Collections;
-import java.util.Dictionary;
 import java.util.Enumeration;
-import java.util.LinkedHashMap;
+import java.util.HashMap;
+import java.util.Hashtable;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
-import javax.json.Json;
-import javax.json.JsonArray;
-import javax.json.JsonArrayBuilder;
-import javax.json.JsonNumber;
-import javax.json.JsonObject;
-import javax.json.JsonObjectBuilder;
-import javax.json.JsonReader;
-import javax.json.JsonString;
-import javax.json.JsonStructure;
-import javax.json.JsonValue;
-import javax.json.JsonValue.ValueType;
-
+import org.apache.felix.cm.json.ConfigurationReader;
+import org.apache.felix.cm.json.ConfigurationResource;
+import org.apache.felix.cm.json.Configurations;
 import org.apache.felix.configurator.impl.model.BundleState;
 import org.apache.felix.configurator.impl.model.Config;
 import org.apache.felix.configurator.impl.model.ConfigPolicy;
 import org.apache.felix.configurator.impl.model.ConfigurationFile;
-import org.osgi.service.configurator.ConfiguratorConstants;
+import org.osgi.util.converter.Converters;
 
 public class JSONUtil {
-
-    private static final String INTERNAL_PREFIX = ":configurator:";
 
     private static final String PROP_RANKING = "ranking";
 
@@ -101,7 +88,7 @@ public class JSONUtil {
      * @param report The report for errors and warnings
      * @return A list of configuration files - sorted by url, might be empty.
      */
-    public static List<ConfigurationFile> readJSON(final BinUtil.ResourceProvider provider,
+    private static List<ConfigurationFile> readJSON(final BinUtil.ResourceProvider provider,
             final String path,
             final Report report) {
         final List<ConfigurationFile> result = new ArrayList<>();
@@ -117,16 +104,16 @@ public class JSONUtil {
                 try {
                     final String contents = getResource(name, url);
                     boolean done = false;
-                    final TypeConverter converter = new TypeConverter(provider);
+                    final BinaryManager binaryManager = new BinaryManager(provider, report);
                     try {
-                        final ConfigurationFile file = readJSON(converter, name, url, provider.getBundleId(), contents, report);
+                        final ConfigurationFile file = readJSON(binaryManager, name, url, provider.getBundleId(), contents, report);
                         if ( file != null ) {
                             result.add(file);
                             done = true;
                         }
                     } finally {
                         if ( !done ) {
-                            converter.cleanupFiles();
+                            binaryManager.cleanupFiles();
                         }
                     }
                 } catch ( final IOException ioe ) {
@@ -142,329 +129,100 @@ public class JSONUtil {
 
     /**
      * Read a single JSON file
-     * @param converter type converter
-     * @param name The name of the file
-     * @param url The url to that file or {@code null}
-     * @param bundleId The bundle id of the bundle containing the file
-     * @param contents The contents of the file
-     * @param report The report for errors and warnings
+     *
+     * @param binaryManager The binary manager
+     * @param name      The name of the file
+     * @param url       The url to that file or {@code null}
+     * @param bundleId  The bundle id of the bundle containing the file
+     * @param contents  The contents of the file
+     * @param report    The report for errors and warnings
      * @return The configuration file or {@code null}.
      */
     public static ConfigurationFile readJSON(
-            final TypeConverter converter,
+            final BinaryManager binaryManager,
             final String name,
             final URL url,
             final long bundleId,
             final String contents,
             final Report report) {
         final String identifier = (url == null ? name : url.toString());
-        final JsonObject json = parseJSON(name, contents, report);
-        final Map<String, ?> configs = verifyJSON(name, json, url != null, report);
-        if ( configs != null ) {
-            final List<Config> list = readConfigurationsJSON(converter, bundleId, identifier, configs, report);
+        try (final Reader reader = new StringReader(contents)) {
+
+            final Map<String, Integer> rankingMap = new HashMap<>();
+            final Map<String, ConfigPolicy> policyMap = new HashMap<>();
+
+            final ConfigurationReader cfgReader = Configurations.buildReader()
+                    .verifyAsBundleResource()
+                    .withIdentifier(identifier)
+                    .withBinaryHandler( binaryManager )
+                    .withConfiguratorPropertyHandler( (pid, key, value) -> {
+                        if (key.equals(PROP_RANKING)) {
+                            final Integer intObj = Converters.standardConverter().convert(value).defaultValue(null)
+                                    .to(Integer.class);
+                            if (intObj == null) {
+                                report.warnings.add(identifier.concat(" : PID ").concat(pid).concat(" : Invalid ranking ")
+                                        .concat(value.toString()));
+                            } else {
+                                rankingMap.put(pid, intObj);
+                            }
+                        } else if (key.equals(PROP_POLICY)) {
+                            final String stringVal = Converters.standardConverter().convert(value).defaultValue(null)
+                                    .to(String.class);
+                            if (stringVal == null) {
+                                report.errors.add(identifier.concat(" : PID ").concat(pid)
+                                        .concat(" : Invalid policy for configuration : ").concat(value.toString()));
+                            } else {
+                                if (value.equals("default") || value.equals("force")) {
+                                    policyMap.put(pid, ConfigPolicy.valueOf(stringVal.toUpperCase()));
+                                } else {
+                                    report.errors.add(identifier.concat(" : PID ").concat(pid)
+                                            .concat(" : Invalid policy for configuration : ").concat(value.toString()));
+                                }
+                            }
+                        }
+
+                    })
+                    .build(reader);
+            final ConfigurationResource rsrc = cfgReader.readConfigurationResource();
+            report.errors.addAll(cfgReader.getIgnoredErrors());
+
+            final List<Config> list = createModel(binaryManager, bundleId, rsrc, rankingMap, policyMap);
             if ( !list.isEmpty() ) {
                 final ConfigurationFile file = new ConfigurationFile(url, list);
 
                 return file;
             }
+        } catch (final IOException ioe) {
+            report.errors.add("Invalid JSON from " + identifier);
         }
         return null;
     }
 
     /**
-     * Read the configurations JSON
-     * @param converter The converter to use
+     * Create the model
+     * @param binaryManager The binary manager
      * @param bundleId The bundle id
-     * @param identifier The identifier
-     * @param configs The map containing the configurations
-     * @param report The report for errors and warnings
-     * @return The list of {@code Config}s or {@code null}
+     * @param rsrc The map containing the configurations
+     * @param rankingMap The map with ranking information
+     * @param policyMap The map with policy information
+     * @return The list of {@code Config}s
      */
-    public static List<Config> readConfigurationsJSON(final TypeConverter converter,
+    public static List<Config> createModel(final BinaryManager binaryManager,
             final long bundleId,
-            final String identifier,
-            final Map<String, ?> configs,
-            final Report report) {
+            final ConfigurationResource rsrc,
+            final Map<String, Integer> rankingMap,
+            final Map<String, ConfigPolicy> policyMap) {
         final List<Config> configurations = new ArrayList<>();
-        for(final Map.Entry<String, ?> entry : configs.entrySet()) {
-            if ( ! (entry.getValue() instanceof Map) ) {
-            	    if ( !entry.getKey().startsWith(INTERNAL_PREFIX) ) {
-            	    	    report.errors.add("Ignoring configuration in '" + identifier + "' (not a configuration) : " + entry.getKey());
-            	    }
-            } else {
-                @SuppressWarnings("unchecked")
-                final Map<String, ?> mainMap = (Map<String, ?>)entry.getValue();
-                final String pid = entry.getKey();
+        for (final Map.Entry<String, Hashtable<String, Object>> entry : rsrc.getConfigurations().entrySet()) {
+            final String pid = entry.getKey();
+            final Hashtable<String, Object> properties = entry.getValue();
 
-                int ranking = 0;
-                ConfigPolicy policy = ConfigPolicy.DEFAULT;
-
-                final Dictionary<String, Object> properties = new OrderedDictionary();
-                boolean valid = true;
-                for(final String mapKey : mainMap.keySet()) {
-                    final Object value = mainMap.get(mapKey);
-
-                    final boolean internalKey = mapKey.startsWith(INTERNAL_PREFIX);
-                    String key = mapKey;
-                    if ( internalKey ) {
-                        key = key.substring(INTERNAL_PREFIX.length());
-                    }
-                    final int pos = key.indexOf(':');
-                    String typeInfo = null;
-                    if ( pos != -1 ) {
-                        typeInfo = key.substring(pos + 1);
-                        key = key.substring(0, pos);
-                    }
-
-                    if ( internalKey ) {
-                        // no need to do type conversion based on typeInfo for internal props, type conversion is done directly below
-                        if ( key.equals(PROP_RANKING) ) {
-                            final Integer intObj = TypeConverter.getConverter().convert(value).defaultValue(null).to(Integer.class);
-                            if ( intObj == null ) {
-                                report.warnings.add("Invalid ranking for configuration in '" + identifier + "' : " + pid + " - " + value);
-                            } else {
-                                ranking = intObj.intValue();
-                            }
-                        } else if ( key.equals(PROP_POLICY) ) {
-                            final String stringVal = TypeConverter.getConverter().convert(value).defaultValue(null).to(String.class);
-                            if ( stringVal == null ) {
-                                report.errors.add("Invalid policy for configuration in '" + identifier + "' : " + pid + " - " + value);
-                            } else {
-                                if ( value.equals("default") || value.equals("force") ) {
-                                    policy = ConfigPolicy.valueOf(stringVal.toUpperCase());
-                                } else {
-                                    report.errors.add("Invalid policy for configuration in '" + identifier + "' : " + pid + " - " + value);
-                                }
-                            }
-                        }
-                    } else {
-                        try {
-
-                            final Object convertedVal = getTypedValue(converter, pid, value, typeInfo);
-                            properties.put(key, convertedVal);
-                        } catch ( final IOException io ) {
-                            report.errors.add("Invalid value/type for configuration in '" + identifier + "' : " + pid + " - " + mapKey + " : " + io.getMessage());
-                            valid = false;
-                            break;
-                        }
-                    }
-                }
-
-                if ( valid ) {
-                    final Config c = new Config(pid, properties, bundleId, ranking, policy);
-                    c.setFiles(converter.flushFiles());
-                    configurations.add(c);
-                }
-            }
+            final Config c = new Config(pid, properties, bundleId, rankingMap.computeIfAbsent(pid, id -> 0), policyMap.computeIfAbsent(pid, id -> ConfigPolicy.DEFAULT));
+            // TODO this is per config
+            c.setFiles(binaryManager.flushFiles(pid));
+            configurations.add(c);
         }
         return configurations;
-    }
-
-    public static JsonStructure build(final Object value) {
-        if (value instanceof List) {
-            @SuppressWarnings("unchecked")
-            final List<Object> list = (List<Object>) value;
-            final JsonArrayBuilder builder = Json.createArrayBuilder();
-            for (final Object obj : list) {
-                if (obj instanceof String) {
-                    builder.add(obj.toString());
-                } else if (obj instanceof Long) {
-                    builder.add((Long) obj);
-                } else if (obj instanceof Double) {
-                    builder.add((Double) obj);
-                } else if (obj instanceof Boolean) {
-                    builder.add((Boolean) obj);
-                } else if (obj instanceof Map) {
-                    builder.add(build(obj));
-                } else if (obj instanceof List) {
-                    builder.add(build(obj));
-                }
-
-            }
-            return builder.build();
-        } else if (value instanceof Map) {
-            @SuppressWarnings("unchecked")
-            final Map<String, Object> map = (Map<String, Object>) value;
-            final JsonObjectBuilder builder = Json.createObjectBuilder();
-            for (final Map.Entry<String, Object> entry : map.entrySet()) {
-                if (entry.getValue() instanceof String) {
-                    builder.add(entry.getKey(), entry.getValue().toString());
-                } else if (entry.getValue() instanceof Long) {
-                    builder.add(entry.getKey(), (Long) entry.getValue());
-                } else if (entry.getValue() instanceof Double) {
-                    builder.add(entry.getKey(), (Double) entry.getValue());
-                } else if (entry.getValue() instanceof Boolean) {
-                    builder.add(entry.getKey(), (Boolean) entry.getValue());
-                } else if (entry.getValue() instanceof Map) {
-                    builder.add(entry.getKey(), build(entry.getValue()));
-                } else if (entry.getValue() instanceof List) {
-                    builder.add(entry.getKey(), build(entry.getValue()));
-                }
-            }
-            return builder.build();
-        }
-        return null;
-    }
-
-    /**
-     * Parse a JSON content
-     * @param name The name of the file
-     * @param contents The contents
-     * @param report The report for errors and warnings
-     * @return The parsed JSON object or {@code null} on failure,
-     */
-    public static JsonObject parseJSON(final String name,
-            String contents,
-            final Report report) {
-        // minify JSON first (remove comments)
-        try (final Reader in = new StringReader(contents);
-             final Writer out = new StringWriter()) {
-            final JSMin min = new JSMin(in, out);
-            min.jsmin();
-            contents = out.toString();
-        } catch ( final IOException ioe) {
-            report.errors.add("Invalid JSON from " + name);
-            return null;
-        }
-        try (final JsonReader reader = Json.createReader(new StringReader(contents))) {
-
-            final JsonStructure obj = reader.read();
-            if (obj != null && obj.getValueType() == ValueType.OBJECT) {
-                return (JsonObject) obj;
-            }
-            report.errors.add("Invalid JSON from " + name);
-        }
-        return null;
-    }
-
-    /**
-     * Get the value of a JSON property
-     * @param root The JSON Object
-     * @param key The key in the JSON Obejct
-     * @return The value or {@code null}
-     */
-    public static Object getValue(final JsonObject root, final String key) {
-        if ( !root.containsKey(key) ) {
-            return null;
-        }
-        final JsonValue value = root.get(key);
-        return getValue(value);
-    }
-
-    public static Object getValue(final JsonValue value) {
-        switch ( value.getValueType() ) {
-            // type NULL -> return null
-            case NULL : return null;
-            // type TRUE or FALSE -> return boolean
-            case FALSE : return false;
-            case TRUE : return true;
-            // type String -> return String
-            case STRING : return ((JsonString)value).getString();
-            // type Number -> return long or double
-            case NUMBER : final JsonNumber num = (JsonNumber)value;
-                          if (num.isIntegral()) {
-                               return num.longValue();
-                          }
-                          return num.doubleValue();
-            // type ARRAY -> return list and call this method for each value
-            case ARRAY : final List<Object> array = new ArrayList<>();
-                         for(final JsonValue x : ((JsonArray)value)) {
-                             array.add(getValue(x));
-                         }
-                         return array;
-             // type OBJECT -> return map
-             case OBJECT : final Map<String, Object> map = new LinkedHashMap<>();
-                           final JsonObject obj = (JsonObject)value;
-                           for(final Map.Entry<String, JsonValue> entry : obj.entrySet()) {
-                               map.put(entry.getKey(), getValue(entry.getValue()));
-                           }
-                           return map;
-        }
-        return null;
-    }
-
-    public static Object getTypedValue(final TypeConverter converter,
-            final String pid,
-            final Object value,
-            final String typeInfo) throws IOException {
-        Object convertedVal = converter.convert(pid, value, typeInfo);
-        if ( convertedVal == null ) {
-            if ( typeInfo != null ) {
-                throw new IOException("Unable to convert to type " + typeInfo);
-            }
-            JsonStructure json = build(value);
-            if ( json == null ) {
-                convertedVal = value.toString();
-            } else {
-                // JSON Structure, this will result in a String or in an array of Strings
-                if ( json.getValueType() == ValueType.ARRAY ) {
-                    final JsonArray arr = (JsonArray)json;
-                    final String[] val = new String[arr.size()];
-                    for(int i=0;i<val.length;i++) {
-                        val[i] = TypeConverter.getConverter().convert(arr.get(i)).to(String.class);
-                    }
-                    convertedVal = val;
-
-                } else {
-                    convertedVal = TypeConverter.getConverter().convert(value).to(String.class);
-                }
-            }
-        }
-        return convertedVal;
-    }
-
-    /**
-     * Verify the JSON according to the rules
-     * @param name The JSON name
-     * @param root The JSON root object.
-     * @param report The report for errors and warnings
-     * @return JSON map with configurations or {@code null}
-     */
-    @SuppressWarnings("unchecked")
-    public static Map<String, ?> verifyJSON(final String name,
-            final JsonObject root,
-            final boolean bundleResource,
-            final Report report) {
-        if ( root == null ) {
-            return null;
-        }
-        final Object version = getValue(root, ConfiguratorConstants.PROPERTY_RESOURCE_VERSION);
-        if ( version != null ) {
-
-            final int v = TypeConverter.getConverter().convert(version).defaultValue(-1).to(Integer.class);
-            if ( v == -1 ) {
-                report.errors.add("Invalid resource version information in " + name + " : " + version);
-                return null;
-            }
-            // we only support version 1
-            if ( v != 1 ) {
-                report.errors.add("Invalid resource version number in " + name + " : " + version);
-                return null;
-            }
-        }
-        if ( !bundleResource) {
-            // if this is not a bundle resource
-            // then version and symbolic name must be set
-            final Object rsrcVersion = getValue(root, ConfiguratorConstants.PROPERTY_VERSION);
-            if ( rsrcVersion == null ) {
-                report.errors.add("Missing version information in " + name);
-                return null;
-            }
-            if ( !(rsrcVersion instanceof String) ) {
-                report.errors.add("Invalid version information in " + name + " : " + rsrcVersion);
-                return null;
-            }
-            final Object rsrcName = getValue(root, ConfiguratorConstants.PROPERTY_SYMBOLIC_NAME);
-            if ( rsrcName == null ) {
-                report.errors.add("Missing symbolic name information in " + name);
-                return null;
-            }
-            if ( !(rsrcName instanceof String) ) {
-                report.errors.add("Invalid symbolic name information in " + name + " : " + rsrcName);
-                return null;
-            }
-        }
-        return (Map<String, ?>) getValue(root);
     }
 
     /**
