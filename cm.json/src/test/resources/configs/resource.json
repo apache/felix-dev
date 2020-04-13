@@ -1,0 +1,10 @@
+{
+    ":configurator:version" : "1.0.0",
+    ":configurator:symbolic-name" : "feature",
+    "config.a" : {
+        "text" : "Hello World"
+    },
+    "config.b" : {
+        "port:Integer" : 8080
+    }
+}
