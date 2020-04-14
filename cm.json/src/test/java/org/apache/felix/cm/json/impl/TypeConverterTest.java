@@ -113,10 +113,12 @@ public class TypeConverterTest {
         assertEquals(3.1, TypeConverter.convertObjectToType(Json.createValue(3.1), null));
     }
 
+    @Test
     public void testConvertStringToObjectNoTypeInfo() {
         assertEquals("hello world", TypeConverter.convertObjectToType(Json.createValue("hello world"), null));
     }
 
+    @Test
     public void testConvertObjectToObjectNoTypeInfo() {
         final JsonObjectBuilder builder = Json.createObjectBuilder();
         builder.add("hello", "world");
@@ -151,9 +153,11 @@ public class TypeConverterTest {
         assertArrayEquals(new Long[] { 5L, 3L }, (Long[]) TypeConverter.convertObjectToType(lBuilder.build(), null));
         assertArrayEquals(new Double[] { 5.7, 3.7 },
                 (Double[]) TypeConverter.convertObjectToType(dBuilder.build(), null));
-        assertEquals("[5.7,3]", TypeConverter.convertObjectToType(mBuilder.build(), null));
+        assertArrayEquals(new Double[] { 5.7, 3d },
+                (Double[]) TypeConverter.convertObjectToType(mBuilder.build(), null));
     }
 
+    @Test
     public void testConvertStringArrayToObjectNoTypeInfo() {
         final JsonArrayBuilder sBuilder = Json.createArrayBuilder();
         sBuilder.add("hello");
@@ -169,6 +173,7 @@ public class TypeConverterTest {
         assertArrayEquals(new String[] { "hello", "3" }, (String[]) TypeConverter.convertObjectToType(mBuilder.build(), null));
     }
 
+    @Test
     public void testConvertObjectArrayToObjectNoTypeInfo() {
         final JsonArrayBuilder sBuilder = Json.createArrayBuilder();
         final JsonObjectBuilder o1 = Json.createObjectBuilder();
@@ -538,7 +543,8 @@ public class TypeConverterTest {
         assertEquals(jsonValue, entry.getValue());
     }
 
-    @Test public void testConvertScalarsToJson() throws Exception {
+    @Test
+    public void testConvertScalarsToJson() throws Exception {
          // null
         assertEntry(TypeConverter.NO_TYPE_INFO, JsonValue.NULL,
                 TypeConverter.convertObjectToTypedJsonValue(null));

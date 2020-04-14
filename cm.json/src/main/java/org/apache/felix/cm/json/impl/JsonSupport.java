@@ -40,6 +40,7 @@ import javax.json.JsonValue;
 import javax.json.JsonValue.ValueType;
 
 import org.apache.felix.cm.json.Configurations;
+import org.osgi.util.converter.Converters;
 
 public class JsonSupport {
 
@@ -81,16 +82,26 @@ public class JsonSupport {
             if (arrayType == ValueType.FALSE || arrayType == ValueType.TRUE) {
                 objArray = new Boolean[array.size()];
             } else if (arrayType == ValueType.NUMBER) {
-                final boolean isLong = ((JsonNumber) array.get(0)).isIntegral();
-                objArray = isLong ? new Long[array.size()] : new Double[array.size()];
-            } else if (arrayType == ValueType.STRING) {
+                objArray = new Object[array.size()];
+            } else if (arrayType == ValueType.STRING || arrayType == ValueType.OBJECT) {
                 objArray = new String[array.size()];
             } else {
-                objArray = null;
+            	objArray = null;
             }
             if (objArray != null) {
+                boolean isLong = true;
                 for (int i = 0; i < array.size(); i++) {
                     objArray[i] = convertToObject(array.get(i));
+                    if ( arrayType == ValueType.NUMBER && !(objArray[i] instanceof Long) ) {
+                        isLong = false;
+                    }
+                }
+                if ( arrayType == ValueType.NUMBER ) {
+                    if ( isLong ) {
+                        return Converters.standardConverter().convert(objArray).to(Long[].class);
+                    } else {
+                        return Converters.standardConverter().convert(objArray).to(Double[].class);
+                    }
                 }
                 return objArray;
             }
@@ -104,7 +115,7 @@ public class JsonSupport {
 
     /**
      * Detect the value type of a json array. If all elements in the array have the
-     * same type, this type is returned. Otherwise {@code ValueType#OBJECT} is
+     * same type, this type is returned. Otherwise {@code null} is
      * returned. For an empty array {@code ValueType#STRING} is returned.
      *
      * @param array The array
@@ -115,24 +126,18 @@ public class JsonSupport {
             return ValueType.STRING;
         }
         final ValueType vt = array.get(0).getValueType();
-        final boolean isLong = vt == ValueType.NUMBER && ((JsonNumber) array.get(0)).isIntegral();
         for (int i = 1; i < array.size(); i++) {
             final ValueType ct = array.get(i).getValueType();
             boolean isSame = false;
             if (ct == vt) {
                 isSame = true;
-                if (vt == ValueType.NUMBER) {
-                    if (isLong != ((JsonNumber) array.get(i)).isIntegral()) {
-                        isSame = false;
-                    }
-                }
             } else if (vt == ValueType.TRUE && ct == ValueType.FALSE) {
                 isSame = true;
             } else if (vt == ValueType.FALSE && ct == ValueType.TRUE) {
                 isSame = true;
             }
             if (!isSame) {
-                return ValueType.OBJECT;
+                return null;
             }
         }
         return vt;

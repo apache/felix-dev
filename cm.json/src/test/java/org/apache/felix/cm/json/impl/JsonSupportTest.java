@@ -96,9 +96,10 @@ public class JsonSupportTest {
 
         assertArrayEquals(new Long[] { 5L, 3L }, (Long[]) Configurations.convertToObject(lBuilder.build()));
         assertArrayEquals(new Double[] { 5.7, 3.7 }, (Double[]) Configurations.convertToObject(dBuilder.build()));
-        assertEquals("[5.7,3]", Configurations.convertToObject(mBuilder.build()));
+        assertArrayEquals(new Double[] { 5.7, 3d }, (Double[]) Configurations.convertToObject(mBuilder.build()));
     }
 
+    @Test
     public void testConvertStringArrayToObject() {
         final JsonArrayBuilder sBuilder = Json.createArrayBuilder();
         sBuilder.add("hello");
@@ -114,6 +115,7 @@ public class JsonSupportTest {
         assertArrayEquals(new String[] { "hello", "3" }, (String[]) Configurations.convertToObject(mBuilder.build()));
     }
 
+    @Test
     public void testConvertObjectArrayToObject() {
         final JsonArrayBuilder sBuilder = Json.createArrayBuilder();
         final JsonObjectBuilder o1 = Json.createObjectBuilder();
@@ -141,7 +143,8 @@ public class JsonSupportTest {
         }
     }
 
-    @Test public void testLineCommentTop() throws IOException {
+    @Test
+    public void testLineCommentTop() throws IOException {
         final String input = "// Some comment\n" +
                              "{\n"
                              + "  \"a\" : 1,\n"
@@ -155,7 +158,8 @@ public class JsonSupportTest {
                 + "}\n", parse(input));
     }
 
-    @Test public void testLineComment() throws IOException {
+    @Test
+    public void testLineComment() throws IOException {
         final String input = "{\n"
                              + "  \"a\" : 1,\n"
                              + "  // another comment\n"
@@ -169,7 +173,8 @@ public class JsonSupportTest {
                 + "}\n", parse(input));
     }
 
-    @Test public void testSeveralComments() throws IOException {
+    @Test
+    public void testSeveralComments() throws IOException {
         final String input = "// Some comment\n" +
                              "{\n"
                              + "  \"a\" : 1,\n"
