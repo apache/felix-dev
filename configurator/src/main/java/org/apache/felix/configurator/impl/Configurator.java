@@ -258,7 +258,7 @@ public class Configurator {
                 final BinaryManager converter = new BinaryManager(null, report);
                 final List<ConfigurationFile> allFiles = new ArrayList<>();
                 for(final Map.Entry<String, String> entry : files.entrySet()) {
-                    final ConfigurationFile file = org.apache.felix.configurator.impl.json.JSONUtil.readJSON(converter, entry.getKey(), null, -1, entry.getValue(), report);
+                    final ConfigurationFile file = JSONUtil.readJSON(converter, entry.getKey(), null, -1, entry.getValue(), report);
                     if ( file != null ) {
                         allFiles.add(file);
                     }

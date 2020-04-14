@@ -77,7 +77,7 @@ public class ConfigurationReaderImplTest {
     @Test
     public void testReadBundleConfigurationResource() throws IOException {
         final ConfigurationReaderImpl cfgReader = new ConfigurationReaderImpl();
-        cfgReader.verifyAsBundleResource();
+        cfgReader.verifyAsBundleResource(true);
         final Map<String, Hashtable<String, Object>> configs;
         try (final InputStream jsonStream = this.getClass().getResourceAsStream("/configs/bundle.json");
                 final Reader jsonReader = new InputStreamReader(jsonStream, StandardCharsets.UTF_8)) {

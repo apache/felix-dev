@@ -73,9 +73,10 @@ public interface ConfigurationReader {
          * By default a configuration resource is not treated as a bundle resource.
          * Additional rules apply for a resource outside of a bundle.
          *
+         * @param flag Enable or disable verification as bundle resource
          * @return This builder
          */
-        Builder verifyAsBundleResource();
+        Builder verifyAsBundleResource(boolean flag);
 
         /**
          * Set an identifier. If set all ignored error messages and most exceptions will

@@ -55,8 +55,8 @@ public class ConfigurationReaderImpl
     private ConfiguratorPropertyHandler propertyHandler;
 
     @Override
-    public Builder verifyAsBundleResource() {
-        this.verifyAsBundleResource = true;
+    public Builder verifyAsBundleResource(final boolean flag) {
+        this.verifyAsBundleResource = flag;
         return this;
     }
 

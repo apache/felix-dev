@@ -152,7 +152,7 @@ public class JSONUtil {
             final Map<String, ConfigPolicy> policyMap = new HashMap<>();
 
             final ConfigurationReader cfgReader = Configurations.buildReader()
-                    .verifyAsBundleResource()
+                    .verifyAsBundleResource(url != null)
                     .withIdentifier(identifier)
                     .withBinaryHandler( binaryManager )
                     .withConfiguratorPropertyHandler( (pid, key, value) -> {
