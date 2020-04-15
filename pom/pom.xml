@@ -71,8 +71,8 @@
     </mailingLists>
 
     <scm>
-        <connection>scm:git:https://github.com/apache/felix-dev.git/tree/master/pom</connection>
-        <developerConnection>scm:git:https://github.com/apache/felix-dev.git/tree/master/pom</developerConnection>
+        <connection>scm:git:https://github.com/apache/felix-dev/tree/master/pom</connection>
+        <developerConnection>scm:git:https://github.com/apache/felix-dev/tree/master/pom</developerConnection>
         <url>https://gitbox.apache.org/repos/asf?p=felix-dev.git;f=pom</url>
       <tag>felix-parent-7</tag>
   </scm>
