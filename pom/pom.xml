@@ -22,7 +22,7 @@
     <parent>
         <groupId>org.apache</groupId>
         <artifactId>apache</artifactId>
-        <version>21</version>
+        <version>23</version>
         <relativePath />
     </parent>
 
@@ -32,19 +32,15 @@
 
     <name>Apache Felix</name>
     <version>7-SNAPSHOT</version>
-    <url>http://felix.apache.org/</url>
+    <url>https://felix.apache.org/</url>
     <inceptionYear>2006</inceptionYear>
     <description>Apache Felix is a community effort to implement the OSGi Framework and Service platform and other interesting OSGi-related technologies.</description>
-
-    <prerequisites>
-        <maven>3.5.0</maven>
-    </prerequisites>
 
     <properties>
         <sourceReleaseAssemblyDescriptor>source-release-zip-tar</sourceReleaseAssemblyDescriptor>
 
         <!-- Default Java VM and API compatibility -->
-        <felix.java.version>7</felix.java.version>
+        <felix.java.version>8</felix.java.version>
         
         <!-- Default settings for the site plugins -->
         <site.javadoc.exclude>*.impl:*.internal:</site.javadoc.exclude>
@@ -63,14 +59,14 @@
             <subscribe>dev-subscribe@felix.apache.org</subscribe>
             <unsubscribe>dev-unsubscribe@felix.apache.org</unsubscribe>
             <post>-</post>
-            <archive>http://www.mail-archive.com/dev%40felix.apache.org/</archive>
+            <archive>https://www.mail-archive.com/dev%40felix.apache.org/</archive>
         </mailingList>
         <mailingList>
             <name>Felix Commits</name>
             <subscribe>commits-subscribe@felix.apache.org</subscribe>
             <unsubscribe>commits-unsubscribe@felix.apache.org</unsubscribe>
             <post>-</post>
-            <archive>http://www.mail-archive.com/commits%40felix.apache.org/</archive>
+            <archive>https://www.mail-archive.com/commits%40felix.apache.org/</archive>
         </mailingList>
     </mailingLists>
 
@@ -91,7 +87,7 @@
         <pluginRepository>
             <id>apache.snapshots</id>
             <name>snapshot plugins</name>
-            <url>http://repository.apache.org/snapshots</url>
+            <url>https://repository.apache.org/snapshots</url>
             <releases>
                 <enabled>false</enabled>
             </releases>
@@ -107,17 +103,17 @@
                 <plugin>
                     <groupId>org.apache.maven.plugins</groupId>
                     <artifactId>maven-enforcer-plugin</artifactId>
-                    <version>3.0.0-M1</version>
+                    <version>3.0.0-M3</version>
                 </plugin>
                 <plugin>
                     <groupId>org.apache.maven.plugins</groupId>
                     <artifactId>maven-project-info-reports-plugin</artifactId>
-                    <version>2.9</version>
+                    <version>3.0.0</version>
                 </plugin>
                 <plugin>
                     <groupId>org.apache.maven.plugins</groupId>
                     <artifactId>maven-jxr-plugin</artifactId>
-                    <version>2.5</version>
+                    <version>3.0.0</version>
                 </plugin>
                 <plugin>
                     <groupId>org.codehaus.mojo</groupId>
@@ -127,17 +123,22 @@
                 <plugin>
                     <groupId>org.apache.rat</groupId>
                     <artifactId>apache-rat-plugin</artifactId>
-                    <version>0.12</version>
+                    <version>0.13</version>
+                </plugin>
+                <plugin>
+                    <groupId>org.apache.maven.plugins</groupId>
+                    <artifactId>maven-compiler-plugin</artifactId>
+                    <version>3.8.1</version>
                 </plugin>
                 <plugin>
                     <groupId>org.apache.maven.plugins</groupId>
                     <artifactId>maven-javadoc-plugin</artifactId>
-                    <version>2.10.4</version>
+                    <version>3.2.0</version>
                 </plugin>
                 <plugin>
                     <groupId>org.codehaus.mojo</groupId>
                     <artifactId>animal-sniffer-maven-plugin</artifactId>
-                    <version>1.15</version>
+                    <version>1.18</version>
                     <configuration>
                         <signature>
                             <groupId>org.codehaus.mojo.signature</groupId>
@@ -149,7 +150,7 @@
                 <plugin>
                     <groupId>org.apache.maven.plugins</groupId>
                     <artifactId>maven-site-plugin</artifactId>
-                    <version>3.3</version>
+                    <version>3.9.0</version>
                 </plugin>
                 <plugin>
                     <groupId>org.apache.maven.plugins</groupId>
@@ -163,21 +164,6 @@
                 <groupId>org.apache.maven.plugins</groupId>
                 <artifactId>maven-enforcer-plugin</artifactId>
                 <executions>
-                     <execution>
-                        <id>enforce-property-values</id>
-                        <goals>
-                          <goal>enforce</goal>
-                        </goals>
-                        <configuration>
-                          <rules>
-                            <requireProperty>
-                              <property>felix.java.version</property>
-                              <regex>[6-9]</regex>
-                              <regexMessage>The property "felix.java.version" may only have one of the following values: 6, 7, 8 or 9.</regexMessage>
-                            </requireProperty>
-                          </rules>
-                        </configuration>
-                    </execution>
                     <execution>
                         <id>enforce-java</id>
                         <goals>
@@ -185,12 +171,12 @@
                         </goals>
                         <configuration>
                             <rules>
-                                <!-- Require Java 7 or higher for building (as bnd since version 3.0 is built with Java 7) -->
+                                <!-- Require Java 8 or higher for building (as bnd since version 4.0 is built with Java 8) -->
                                 <requireJavaVersion>
                                     <message>
-                                        Apache Felix must be compiled with Java 7 or higher
+                                        Apache Felix must be compiled with Java 8 or higher
                                     </message>
-                                    <version>1.7.0</version>
+                                    <version>1.8.0</version>
                                 </requireJavaVersion>
                                 <requireMavenVersion>
                                     <version>3.5.0</version>
@@ -234,9 +220,6 @@
             <plugin>
                 <groupId>org.apache.maven.plugins</groupId>
                 <artifactId>maven-release-plugin</artifactId>
-                <configuration>
-                    <tagBase>https://svn.apache.org/repos/asf/felix/releases</tagBase>
-                </configuration>
             </plugin>
             <plugin>
                 <groupId>org.codehaus.mojo</groupId>
