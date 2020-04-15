@@ -31,7 +31,7 @@
     <packaging>pom</packaging>
 
     <name>Apache Felix</name>
-    <version>7</version>
+    <version>8-SNAPSHOT</version>
     <url>https://felix.apache.org/</url>
     <inceptionYear>2006</inceptionYear>
     <description>Apache Felix is a community effort to implement the OSGi Framework and Service platform and other interesting OSGi-related technologies.</description>
