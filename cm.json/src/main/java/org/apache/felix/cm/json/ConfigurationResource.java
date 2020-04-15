@@ -43,7 +43,7 @@ public final class ConfigurationResource {
 
     /**
      * The properties of the resource
-     * @return A map pf properties
+     * @return A map of properties
      */
     public Map<String, Object> getProperties() {
         return properties;

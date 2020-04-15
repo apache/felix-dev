@@ -50,22 +50,22 @@ public class TypeConverter {
     static {
         // scalar types and primitive types
         TYPE_MAP.put("String", String.class);
-        TYPE_MAP.put("int", Integer.class);
         TYPE_MAP.put("Integer", Integer.class);
-        TYPE_MAP.put("long", Long.class);
+        TYPE_MAP.put("int", Integer.class);
         TYPE_MAP.put("Long", Long.class);
-        TYPE_MAP.put("float", Float.class);
+        TYPE_MAP.put("long", Long.class);
         TYPE_MAP.put("Float", Float.class);
-        TYPE_MAP.put("double", Double.class);
+        TYPE_MAP.put("float", Float.class);
         TYPE_MAP.put("Double", Double.class);
-        TYPE_MAP.put("byte", Byte.class);
+        TYPE_MAP.put("double", Double.class);
         TYPE_MAP.put("Byte", Byte.class);
-        TYPE_MAP.put("short", Short.class);
+        TYPE_MAP.put("byte", Byte.class);
         TYPE_MAP.put("Short", Short.class);
-        TYPE_MAP.put("char", Character.class);
+        TYPE_MAP.put("short", Short.class);
         TYPE_MAP.put("Character", Character.class);
-        TYPE_MAP.put("boolean", Boolean.class);
+        TYPE_MAP.put("char", Character.class);
         TYPE_MAP.put("Boolean", Boolean.class);
+        TYPE_MAP.put("boolean", Boolean.class);
          // array of scalar types and primitive types
         TYPE_MAP.put("String[]", String[].class);
         TYPE_MAP.put("int[]", int[].class);

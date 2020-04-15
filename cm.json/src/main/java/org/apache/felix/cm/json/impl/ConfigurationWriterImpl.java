@@ -73,6 +73,7 @@ public class ConfigurationWriterImpl
     public void writeConfiguration(final Dictionary<String, Object> properties) throws IOException {
         checkClosed();
         writeConfigurationInternal(properties);
+        this.generator.close();
     }
 
     private void writeConfigurationInternal(final Dictionary<String, Object> properties) throws IOException {
@@ -106,6 +107,6 @@ public class ConfigurationWriterImpl
             writeConfigurationInternal(entry.getValue());
         }
         generator.writeEnd();
-
+        this.generator.close();
     }
 }
