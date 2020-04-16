@@ -21,6 +21,7 @@ var bundlesBody     = false;
 var bundlesTemplate = false;
 var bundleOpError   = false;
 var bundleOpSuccess = false;
+var updateDialog = false;
 
 function renderData( eventData, filter )  {
 	lastBundleData = eventData;
@@ -115,7 +116,10 @@ function entrySetupState( /* Object */ bundle, tr, id) {
 	var start   = tr.children('td:eq(5)').find('ul li:eq(0)').removeClass('ui-helper-hidden').unbind('click');
 	var stop    = tr.children('td:eq(5)').find('ul li:eq(1)').removeClass('ui-helper-hidden').unbind('click');
 	var refresh = tr.children('td:eq(5)').find('ul li:eq(2)').unbind('click').click(function() {return changeDataEntryState(id, 'refresh')});
-	var update  = tr.children('td:eq(5)').find('ul li:eq(3)').unbind('click').click(function() {return changeDataEntryState(id, 'update')});
+	var update  = tr.children('td:eq(5)').find('ul li:eq(3)').unbind('click').click(function() {
+		updateDialog.attr('__id', id).dialog('open');
+		return false;
+	});
 	var remove  = tr.children('td:eq(5)').find('ul li:eq(4)').removeClass('ui-helper-hidden').unbind('click');
 	start = hasStart(bundle) ?
 		start.click(function() {return changeDataEntryState(id, 'start')}) :
@@ -313,6 +317,23 @@ $(document).ready(function(){
 		modal   : true,
 		width   : '50%',
 		buttons : uploadDialogButtons
+	});
+
+	// update dialog
+	var updateDialogButtons = {};
+	updateDialogButtons[i18n.updateloc] = function() {
+		return changeDataEntryState($(this).attr('__id'), 'refresh')
+	}
+	updateDialogButtons[i18n.upload] = function() {
+		var pid = $(this).attr('__id');
+		$('#uploadid').val(pid);
+		$(this).find('form').submit();
+	}
+	updateDialog = $('#updateDialog').dialog({
+		autoOpen: false,
+		modal   : true,
+		width   : '50%',
+		buttons : updateDialogButtons
 	});
 
 	// check for cookie

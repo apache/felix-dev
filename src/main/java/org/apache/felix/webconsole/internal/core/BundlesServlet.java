@@ -119,8 +119,8 @@ public class BundlesServlet extends SimpleWebConsolePlugin implements OsgiManage
     // see #activate and #isBootDelegated
     private boolean[] bootPkgWildcards;
 
-    private ServiceRegistration configurationPrinter;
-    private ServiceTracker bundleInfoTracker;
+    private ServiceRegistration<ConfigurationPrinter> configurationPrinter;
+    private ServiceTracker<BundleInfoProvider, BundleInfoProvider> bundleInfoTracker;
 
     // templates
     private final String TEMPLATE_MAIN;
@@ -142,7 +142,7 @@ public class BundlesServlet extends SimpleWebConsolePlugin implements OsgiManage
     {
         super.activate( bundleContext );
 
-        bundleInfoTracker = new ServiceTracker( bundleContext, BundleInfoProvider.class.getName(), null);
+        bundleInfoTracker = new ServiceTracker<>( bundleContext, BundleInfoProvider.class, null);
         bundleInfoTracker.open();
 
         // bootdelegation property parsing from Apache Felix R4SearchPolicyCore
@@ -162,10 +162,10 @@ public class BundlesServlet extends SimpleWebConsolePlugin implements OsgiManage
             bootPkgs[i] = bootDelegation;
         }
 
-        Hashtable props = new Hashtable();
+        Hashtable<String, Object> props = new Hashtable<>();
         props.put( WebConsoleConstants.CONFIG_PRINTER_MODES, new String[] { ConfigurationPrinter.MODE_TXT,
                 ConfigurationPrinter.MODE_ZIP } );
-        configurationPrinter = bundleContext.registerService( ConfigurationPrinter.SERVICE, this, props );
+        configurationPrinter = bundleContext.registerService( ConfigurationPrinter.class, this, props );
     }
 
 
@@ -201,7 +201,7 @@ public class BundlesServlet extends SimpleWebConsolePlugin implements OsgiManage
     {
         try
         {
-            final Map map = createObjectStructure(null, null, null, true, Locale.ENGLISH, null, null );
+            final Map<String, Object> map = createObjectStructure(null, null, null, true, Locale.ENGLISH, null, null );
 
             pw.println( "Status: " + map.get( "status" ) );
             pw.println();
@@ -680,11 +680,11 @@ public class BundlesServlet extends SimpleWebConsolePlugin implements OsgiManage
             }
             buffer.append('.');
         }
-        ret.add(new Integer(bundles.length));
-        ret.add(new Integer(active));
-        ret.add(new Integer(fragments));
-        ret.add(new Integer(resolved));
-        ret.add(new Integer(installed));
+        ret.add(bundles.length);
+        ret.add(active);
+        ret.add(fragments);
+        ret.add(resolved);
+        ret.add(installed);
         ret.add(buffer.toString());
         return ret;
     }
@@ -1518,6 +1518,14 @@ public class BundlesServlet extends SimpleWebConsolePlugin implements OsgiManage
             return;
         }
 
+        final long uploadId;
+        final String uidVal = WebConsoleUtil.getParameter( request, "uploadid" );
+        if ( uidVal != null ) {
+            uploadId = Long.valueOf(uidVal);
+        } else {
+            uploadId = -1;
+        }
+
         final FileItem startItem = getParameter( params, FIELD_START );
         final FileItem startLevelItem = getParameter( params, FIELD_STARTLEVEL );
         final FileItem[] bundleItems = getFileItems( params, FIELD_BUNDLEFILE );
@@ -1582,7 +1590,7 @@ public class BundlesServlet extends SimpleWebConsolePlugin implements OsgiManage
                 final boolean parallelVersion = parallelVersionItem != null;
 
                 bundleLocation = "inputstream:" + bundleItem.getName();
-                installBundle( bundleLocation, tmpFile, startLevel, start, refreshPackages, parallelVersion);
+                installBundle( bundleLocation, tmpFile, startLevel, start, refreshPackages, parallelVersion, uploadId);
             }
         }
     }
@@ -1626,7 +1634,7 @@ public class BundlesServlet extends SimpleWebConsolePlugin implements OsgiManage
     }
 
 
-    private void installBundle( String location, File bundleFile, int startLevel, boolean start, boolean refreshPackages, boolean parallelVersion)
+    private void installBundle( String location, File bundleFile, int startLevel, boolean start, boolean refreshPackages, boolean parallelVersion, final long uploadId)
     throws IOException
     {
         // try to get the bundle name & version, fail if none
@@ -1647,16 +1655,20 @@ public class BundlesServlet extends SimpleWebConsolePlugin implements OsgiManage
         }
         else
         {
-            Bundle[] bundles = BundleContextUtil.getWorkingBundleContext(this.getBundleContext()).getBundles();
-            for ( int i = 0; i < bundles.length; i++ )
-            {
-                boolean isSameBSN = (bundles[i].getSymbolicName() != null && bundles[i].getSymbolicName().equals( symbolicName ));
-                boolean isSameVersion = (bundles[i].getVersion() != null && bundles[i].getVersion().equals( Version.parseVersion(version) ));
-                if ( ( bundles[i].getLocation() != null && bundles[i].getLocation().equals( location ) )
-                        || ( isSameBSN && !(parallelVersion && !isSameVersion) ) )
+            if ( uploadId != -1 ) {
+                updateBundle = BundleContextUtil.getWorkingBundleContext(this.getBundleContext()).getBundle(uploadId);
+            } else {
+                Bundle[] bundles = BundleContextUtil.getWorkingBundleContext(this.getBundleContext()).getBundles();
+                for ( int i = 0; i < bundles.length; i++ )
                 {
-                    updateBundle = bundles[i];
-                    break;
+                    boolean isSameBSN = (bundles[i].getSymbolicName() != null && bundles[i].getSymbolicName().equals( symbolicName ));
+                    boolean isSameVersion = (bundles[i].getVersion() != null && bundles[i].getVersion().equals( Version.parseVersion(version) ));
+                    if ( ( bundles[i].getLocation() != null && bundles[i].getLocation().equals( location ) )
+                            || ( isSameBSN && !(parallelVersion && !isSameVersion) ) )
+                    {
+                        updateBundle = bundles[i];
+                        break;
+                    }
                 }
             }
         }

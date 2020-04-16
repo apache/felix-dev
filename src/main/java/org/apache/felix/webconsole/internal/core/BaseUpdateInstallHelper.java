@@ -278,7 +278,7 @@ abstract class BaseUpdateInstallHelper implements Runnable
         private Bundle searchHost(final BundleContext bundleContext, final Bundle bundle) {
             final String host = bundle.getHeaders().get( Constants.FRAGMENT_HOST );
             if ( host != null && host.indexOf(Constants.EXTENSION_DIRECTIVE) == -1 ) {
-                for(final Bundle i : bundleContext.getBundles()) {
+                for(final Bundle i : BundleContextUtil.getWorkingBundleContext(bundleContext).getBundles()) {
                     if ( host.equals(i.getSymbolicName()) ) {
                         return i;
                     }
@@ -302,7 +302,7 @@ abstract class BaseUpdateInstallHelper implements Runnable
             {
                 // search fragment hosts
                 refreshFragments = new ArrayList<>();
-                for(final Bundle i : bundleContext.getBundles()) {
+                for(final Bundle i : BundleContextUtil.getWorkingBundleContext(bundleContext).getBundles()) {
                     if ( i.getState() != Bundle.RESOLVED ) {
                         final Bundle hostBundle = searchHost(bundleContext, i);
                         if ( hostBundle != null ) {

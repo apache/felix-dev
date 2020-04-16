@@ -39,6 +39,8 @@ var i18n = {
     statlineResolved      : '${bundles.statline.resolved}',
     statlineInstalled     : '${bundles.statline.installed}',
 	install_update        : '${bundles.install_or_update}',
+    updateloc             : '${bundles.updateloc}',
+    upload                : '${bundles.upload}',
 	filterNoMatch         : '${bundles.filter.no_match}',
 	state                 : {
 		1  : '${bundles.state.1}', // uninstalled
@@ -159,6 +161,23 @@ var i18n = {
 	</table>
 	</form>
 </div>
-
+<div id="updateDialog" class="ui-helper-hidden" title="${bundles.update.caption}">
+    <form method="post" enctype="multipart/form-data" action="${pluginRoot}">
+    <table class="nicetable">
+        <tr>
+            <td style="text-align:right">${bundles.upload.level}</td>
+            <td><input type="text" name="bundlestartlevel" id="bundlestartlevel" value="${startLevel}" size="4"/></td>
+        </tr>
+        <tr>
+            <td>&nbsp;</td>
+            <td>
+                <input type="hidden" name="action" value="install"/>
+                <input type="hidden" name="uploadid" id="uploadid" value=""/>
+                <input class="single" accept="jar|war" type="file" name="bundlefile" />
+            </td>
+        </tr>
+    </table>
+    </form>
+</div>
 <div id="bundleOpError" class="ui-helper-hidden" title="${bundles.error.title}"><pre>&nbsp;</pre></div>
 <div id="bundleOpSuccess" class="ui-helper-hidden" title="${bundles.success.title}">${bundles.success.text}</div>
