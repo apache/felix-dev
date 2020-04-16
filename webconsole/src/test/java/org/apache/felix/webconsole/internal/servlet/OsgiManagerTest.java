@@ -18,6 +18,21 @@
  */
 package org.apache.felix.webconsole.internal.servlet;
 
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertFalse;
+import static org.junit.Assert.assertNull;
+import static org.junit.Assert.assertSame;
+import static org.junit.Assert.assertTrue;
+
+import java.lang.reflect.Field;
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.Collections;
+import java.util.Dictionary;
+import java.util.HashSet;
+import java.util.List;
+import java.util.Set;
+
 import org.junit.Test;
 import org.mockito.Mockito;
 import org.mockito.invocation.InvocationOnMock;
@@ -31,21 +46,6 @@ import org.osgi.framework.ServiceReference;
 import org.osgi.service.http.HttpContext;
 import org.osgi.service.http.HttpService;
 import org.osgi.util.tracker.ServiceTrackerCustomizer;
-
-import java.lang.reflect.Field;
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.Collections;
-import java.util.Dictionary;
-import java.util.HashSet;
-import java.util.List;
-import java.util.Set;
-
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertFalse;
-import static org.junit.Assert.assertNull;
-import static org.junit.Assert.assertSame;
-import static org.junit.Assert.assertTrue;
 
 public class OsgiManagerTest {
     @Test
@@ -71,6 +71,7 @@ public class OsgiManagerTest {
 
         final List<Boolean> updateCalled = new ArrayList<Boolean>();
         OsgiManager mgr = new OsgiManager(bc) {
+            @Override
             void updateRegistrationState() {
                 updateCalled.add(true);
             }
@@ -96,6 +97,7 @@ public class OsgiManagerTest {
 
         final List<Boolean> updateCalled = new ArrayList<Boolean>();
         OsgiManager mgr = new OsgiManager(bc) {
+            @Override
             void updateRegistrationState() {
                 updateCalled.add(true);
             }
@@ -239,6 +241,7 @@ public class OsgiManagerTest {
 
         final List<Boolean> updateCalled = new ArrayList<Boolean>();
         OsgiManager mgr = new OsgiManager(bc) {
+            @Override
             void updateRegistrationState() {
                 updateCalled.add(true);
             }
@@ -265,6 +268,7 @@ public class OsgiManagerTest {
         final List<Boolean> updateCalled = new ArrayList<Boolean>();
         final List<Boolean> unregisterCalled = new ArrayList<Boolean>();
         OsgiManager mgr = new OsgiManager(bc) {
+            @Override
             void updateRegistrationState() {
                 updateCalled.add(true);
             }
@@ -392,7 +396,7 @@ public class OsgiManagerTest {
         Mockito.when(bc.createFilter(Mockito.anyString())).then(new Answer<Filter>() {
             @Override
             public Filter answer(InvocationOnMock invocation) throws Throwable {
-                String fs = invocation.getArgumentAt(0, String.class);
+                String fs = invocation.getArgument(0, String.class);
                 return FrameworkUtil.createFilter(fs);
             }
         });
