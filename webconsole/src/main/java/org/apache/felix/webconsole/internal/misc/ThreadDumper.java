@@ -45,7 +45,7 @@ public class ThreadDumper
     {
         Method _getStackTrace = null;
         Method _getId = null;
-        final Class[] nullArgs = null;
+        final Class<?>[] nullArgs = null;
         try
         {
             _getStackTrace = Thread.class.getMethod("getStackTrace", nullArgs); //$NON-NLS-1$
@@ -60,9 +60,9 @@ public class ThreadDumper
     }
 
     /**
-     * Prints all available thread groups, threads and a summary of threads availability. 
+     * Prints all available thread groups, threads and a summary of threads availability.
      * The thread groups and the threads will be sorted alphabetically regardless of the case.
-     * 
+     *
      * @param pw the writer where to print the threads information
      * @param withStackTrace to include or not the stack traces
      */
@@ -92,7 +92,7 @@ public class ThreadDumper
 
     /**
      * Prints information for the given thread.
-     * 
+     *
      * @param pw the writer where to print the threads information
      * @param thread the thread for which to print the information
      * @param withStackTrace to include or not the stack traces
@@ -224,15 +224,15 @@ public class ThreadDumper
         int threadGroupCount = 0;
         int threadGroupDestroyed = 0;
 
-        ArrayList/*<ThreadGroup>*/list = new ArrayList(groups.length + 1);
+        ArrayList<ThreadGroup> list = new ArrayList<>(groups.length + 1);
         list.add(rootGroup);
         list.addAll(Arrays.asList(groups));
         // main group will eventually enumerate ALL threads, so don't
         // count a thread, it if is already processed
-        Collection threadSet = new HashSet();
+        Collection<Thread> threadSet = new HashSet<>();
         for (int j = 0; j < list.size(); j++)
         {
-            ThreadGroup group = (ThreadGroup) list.get(j);
+            ThreadGroup group = list.get(j);
             if (null == group)
             {
                 continue;
@@ -291,7 +291,7 @@ public class ThreadDumper
         {
             try
             {
-                ret = "#" + getId.invoke(thread, null); //$NON-NLS-1$
+                ret = "#" + getId.invoke(thread, (Object[]) null); //$NON-NLS-1$
             }
             catch (Throwable e)
             {
@@ -309,7 +309,7 @@ public class ThreadDumper
             try
             {
 
-                ret = getStackTrace.invoke(thread, null);
+                ret = getStackTrace.invoke(thread, (Object[]) null);
 
             }
             catch (Throwable e)
@@ -331,7 +331,7 @@ public class ThreadDumper
     }
 }
 
-final class ThreadComparator implements Comparator
+final class ThreadComparator implements Comparator<Thread>
 {
 
     private ThreadComparator()
@@ -339,14 +339,15 @@ final class ThreadComparator implements Comparator
         // prevent instantiation
     }
 
-    private static final Comparator instance = new ThreadComparator();
+    private static final Comparator<Thread> instance = new ThreadComparator();
 
-    public static final Comparator getInstance()
+    public static final Comparator<Thread> getInstance()
     {
         return instance;
     }
 
-    public int compare(Object thread1, Object thread2)
+    @Override
+    public int compare(Thread thread1, Thread thread2)
     {
         if (thread1 == null && thread2 == null)
         {
@@ -358,11 +359,11 @@ final class ThreadComparator implements Comparator
         }
         if (thread2 == null)
         {
-            return -1; // first is always < than null, moves nulls at the end 
+            return -1; // first is always < than null, moves nulls at the end
         }
 
-        String t1 = ((Thread) thread1).getName();
-        String t2 = ((Thread) thread2).getName();
+        String t1 = thread1.getName();
+        String t2 = thread2.getName();
         if (null == t1)
         {
             t1 = ""; //$NON-NLS-1$
@@ -377,7 +378,7 @@ final class ThreadComparator implements Comparator
 
 }
 
-final class ThreadGroupComparator implements Comparator
+final class ThreadGroupComparator implements Comparator<ThreadGroup>
 {
 
     private ThreadGroupComparator()
@@ -385,14 +386,15 @@ final class ThreadGroupComparator implements Comparator
         // prevent instantiation
     }
 
-    private static final Comparator instance = new ThreadGroupComparator();
+    private static final Comparator<ThreadGroup> instance = new ThreadGroupComparator();
 
-    public static final Comparator getInstance()
+    public static final Comparator<ThreadGroup> getInstance()
     {
         return instance;
     }
 
-    public int compare(Object thread1, Object thread2)
+    @Override
+    public int compare(ThreadGroup thread1, ThreadGroup thread2)
     {
         if (thread1 == null && thread2 == null)
         {
@@ -404,11 +406,11 @@ final class ThreadGroupComparator implements Comparator
         }
         if (thread2 == null)
         {
-            return -1; // first is always < than null, moves nulls at the end 
+            return -1; // first is always < than null, moves nulls at the end
         }
 
-        String t1 = ((ThreadGroup) thread1).getName();
-        String t2 = ((ThreadGroup) thread2).getName();
+        String t1 = thread1.getName();
+        String t2 = thread2.getName();
         if (null == t1)
         {
             t1 = ""; //$NON-NLS-1$
