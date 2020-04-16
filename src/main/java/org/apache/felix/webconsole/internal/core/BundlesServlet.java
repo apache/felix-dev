@@ -48,7 +48,6 @@ import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 
 import org.apache.commons.fileupload.FileItem;
-import org.apache.felix.framework.util.VersionRange;
 import org.apache.felix.utils.json.JSONWriter;
 import org.apache.felix.utils.manifest.Clause;
 import org.apache.felix.utils.manifest.Parser;
@@ -71,6 +70,7 @@ import org.osgi.framework.InvalidSyntaxException;
 import org.osgi.framework.ServiceReference;
 import org.osgi.framework.ServiceRegistration;
 import org.osgi.framework.Version;
+import org.osgi.framework.VersionRange;
 import org.osgi.service.cm.ConfigurationAdmin;
 import org.osgi.service.log.LogService;
 import org.osgi.service.packageadmin.ExportedPackage;
@@ -103,7 +103,7 @@ public class BundlesServlet extends SimpleWebConsolePlugin implements OsgiManage
 
     // set to ask for PackageAdmin.refreshPackages() after install/update
     private static final String FIELD_REFRESH_PACKAGES = "refreshPackages";
-    
+
     // set to force a parallel version to be created instead of updating an existing version of a bundle
     private static final String FIELD_PARALLEL_VERSION = "parallelVersion";
 
@@ -1389,8 +1389,8 @@ public class BundlesServlet extends SimpleWebConsolePlugin implements OsgiManage
                 return true;
             }
 
-            VersionRange required = VersionRange.parse( versionAttr );
-            return required.isInRange( exported.getVersion() );
+            VersionRange required = VersionRange.valueOf( versionAttr );
+            return required.includes( exported.getVersion() );
         }
 
         // no this export does not satisfy the import
@@ -1624,55 +1624,51 @@ public class BundlesServlet extends SimpleWebConsolePlugin implements OsgiManage
 
 
     private void installBundle( String location, File bundleFile, int startLevel, boolean start, boolean refreshPackages, boolean parallelVersion)
-            throws IOException
+    throws IOException
     {
-        if ( bundleFile != null )
+        // try to get the bundle name & version, fail if none
+        Map.Entry<String, String> snv = getSymbolicNameVersion( bundleFile );
+        String symbolicName = snv.getKey();
+        String version = snv.getValue();
+        if ( symbolicName == null )
         {
+            bundleFile.delete();
+            throw new IOException( Constants.BUNDLE_SYMBOLICNAME + " header missing, cannot install bundle" );
+        }
 
-            // try to get the bundle name & version, fail if none
-            Map.Entry<String, String> snv =getSymbolicNameVersion( bundleFile );
-            String symbolicName = snv.getKey();
-            String version = snv.getValue(); 
-            if ( symbolicName == null )
+        // check for existing bundle first
+        Bundle updateBundle = null;
+        if ( Constants.SYSTEM_BUNDLE_SYMBOLICNAME.equals( symbolicName ) )
+        {
+            updateBundle = getBundleContext().getBundle( 0 );
+        }
+        else
+        {
+            Bundle[] bundles = BundleContextUtil.getWorkingBundleContext(this.getBundleContext()).getBundles();
+            for ( int i = 0; i < bundles.length; i++ )
             {
-                bundleFile.delete();
-                throw new IOException( Constants.BUNDLE_SYMBOLICNAME + " header missing, cannot install bundle" );
-            }
-
-            // check for existing bundle first
-            Bundle updateBundle = null;
-            if ( Constants.SYSTEM_BUNDLE_SYMBOLICNAME.equals( symbolicName ) )
-            {
-                updateBundle = getBundleContext().getBundle( 0 );
-            }
-            else
-            {
-                Bundle[] bundles = BundleContextUtil.getWorkingBundleContext(this.getBundleContext()).getBundles();
-                for ( int i = 0; i < bundles.length; i++ )
+                boolean isSameBSN = (bundles[i].getSymbolicName() != null && bundles[i].getSymbolicName().equals( symbolicName ));
+                boolean isSameVersion = (bundles[i].getVersion() != null && bundles[i].getVersion().equals( Version.parseVersion(version) ));
+                if ( ( bundles[i].getLocation() != null && bundles[i].getLocation().equals( location ) )
+                        || ( isSameBSN && !(parallelVersion && !isSameVersion) ) )
                 {
-                    boolean isSameBSN = (bundles[i].getSymbolicName() != null && bundles[i].getSymbolicName().equals( symbolicName ));
-                    boolean isSameVersion = (bundles[i].getVersion() != null && bundles[i].getVersion().equals( Version.parseVersion(version) ));
-                    if ( ( bundles[i].getLocation() != null && bundles[i].getLocation().equals( location ) )
-                            || ( isSameBSN && !(parallelVersion && !isSameVersion) ) )
-                    {
-                        updateBundle = bundles[i];
-                        break;
-                    }
+                    updateBundle = bundles[i];
+                    break;
                 }
             }
+        }
 
-            if ( updateBundle != null )
-            {
+        if ( updateBundle != null )
+        {
 
-                updateBackground( updateBundle, bundleFile, refreshPackages );
+            updateBackground( updateBundle, bundleFile, refreshPackages );
 
-            }
-            else
-            {
+        }
+        else
+        {
 
-                installBackground( bundleFile, location, startLevel, start, refreshPackages );
+            installBackground( bundleFile, location, startLevel, start, refreshPackages );
 
-            }
         }
     }
 
@@ -1681,7 +1677,7 @@ public class BundlesServlet extends SimpleWebConsolePlugin implements OsgiManage
     {
         return  getSymbolicNameVersion(bundleFile).getKey();
     }
-    
+
     private Map.Entry<String, String> getSymbolicNameVersion( File bundleFile )
     {
         JarFile jar = null;

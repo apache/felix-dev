@@ -864,30 +864,35 @@ class ConfigAdminSupport
         }
 
 
+        @Override
         public String getPid()
         {
             return ConfigManager.PLACEHOLDER_PID;
         }
 
 
+        @Override
         public String getFactoryPid()
         {
             return factoryPid;
         }
 
 
+        @Override
         public void setBundleLocation( String bundleLocation )
         {
             this.bundleLocation = bundleLocation;
         }
 
 
+        @Override
         public String getBundleLocation()
         {
             return bundleLocation;
         }
 
 
+        @Override
         public Dictionary getProperties()
         {
             // dummy configuration has no properties
@@ -895,23 +900,32 @@ class ConfigAdminSupport
         }
 
 
+        @Override
         public void update()
         {
             // dummy configuration cannot be updated
         }
 
 
+        @Override
         public void update( Dictionary properties )
         {
             // dummy configuration cannot be updated
         }
 
 
+        @Override
         public void delete()
         {
             // dummy configuration cannot be deleted
         }
 
+
+        @Override
+        public long getChangeCount() {
+            // dummy configuration always returns 0
+            return 0;
+        }
     }
 
     public Configuration[] listConfigurations(String filter) throws IOException, InvalidSyntaxException
