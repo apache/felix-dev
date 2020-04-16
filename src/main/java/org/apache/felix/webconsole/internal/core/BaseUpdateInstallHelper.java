@@ -23,16 +23,21 @@ import java.io.File;
 import java.io.FileInputStream;
 import java.io.IOException;
 import java.io.InputStream;
+import java.util.ArrayList;
+import java.util.Collections;
+import java.util.Iterator;
+import java.util.List;
 
 import org.apache.commons.io.IOUtils;
 import org.apache.felix.webconsole.SimpleWebConsolePlugin;
 import org.osgi.framework.Bundle;
 import org.osgi.framework.BundleContext;
 import org.osgi.framework.BundleException;
+import org.osgi.framework.Constants;
 import org.osgi.framework.FrameworkEvent;
 import org.osgi.framework.FrameworkListener;
+import org.osgi.framework.wiring.FrameworkWiring;
 import org.osgi.service.log.LogService;
-import org.osgi.service.packageadmin.PackageAdmin;
 import org.osgi.service.startlevel.StartLevel;
 
 
@@ -77,7 +82,7 @@ abstract class BaseUpdateInstallHelper implements Runnable
     {
         return plugin;
     }
-    
+
     protected Bundle getTargetBundle()
     {
         return null;
@@ -114,25 +119,26 @@ abstract class BaseUpdateInstallHelper implements Runnable
     }
 
 
+    @Override
     public final void run()
     {
         // now deploy the resolved bundles
         try
         {
-            // we need the package admin before we call the bundle
+            // we need the framework wiring before we call the bundle
             // installation or update, since we might be updating
             // our selves in which case the bundle context will be
             // invalid by the time we want to call the update
-            PackageAdmin pa = ( refreshPackages ) ? ( PackageAdmin ) getService( PackageAdmin.class.getName() ) : null;
+            final FrameworkWiring fw = refreshPackages ? plugin.getBundle().getBundleContext().getBundle(Constants.SYSTEM_BUNDLE_LOCATION).adapt(FrameworkWiring.class) : null;
 
             // same for the startlevel
             StartLevel startLevel = null;
-            
+
             Bundle bundle = getTargetBundle();
-            
-            int state = pa != null && bundle != null ? bundle.getState() : 0;
+
+            int state = fw != null && bundle != null ? bundle.getState() : 0;
             int startFlags = 0;
-            
+
             // If the bundle has been started we want to stop it first, then update it, refresh it, and restart it
             // because otherwise, it will be stopped and started twice (once by the update and once by the refresh)
             if ((state & (Bundle.ACTIVE | Bundle.STARTING)) != 0)
@@ -142,39 +148,39 @@ abstract class BaseUpdateInstallHelper implements Runnable
                 // our selves in which case the bundle context will be
                 // invalid by the time we want to call the startlevel
                 startLevel = (StartLevel) getService(StartLevel.class.getName());
-                
+
                 // We want to start the bundle afterwards without affecting the persistent state of the bundle
-                // However, we can only use the transient options if the framework startlevel is not less than the 
+                // However, we can only use the transient options if the framework startlevel is not less than the
                 // bundle startlevel (in case that there is no starlevel service we assume we are good).
                 if (startLevel == null || startLevel.getStartLevel() >= startLevel.getBundleStartLevel(bundle))
                 {
                     startFlags |= Bundle.START_TRANSIENT;
                 }
-                
-                // If the bundle is in the starting state it might be lazy and not started yet - hence, start it 
+
+                // If the bundle is in the starting state it might be lazy and not started yet - hence, start it
                 // according to its policy.
                 if (state == Bundle.STARTING)
                 {
                     startFlags |= Bundle.START_ACTIVATION_POLICY;
                 }
-                
+
                 // We stop the bundle transiently - assuming we can also start it transiently later (see above) in which
                 // case we didn't mess with its persistent state at all.
                 bundle.stop(Bundle.STOP_TRANSIENT);
             }
-            
+
             // We want to catch an exception during update to be able to restart the bundle if we stopped it previously
             Exception rethrow = null;
             try
             {
                 // perform the action!
                 bundle = doRun();
-    
-                
-                if ( pa != null && bundle != null )
+
+
+                if ( bundle != null )
                 {
                     // refresh packages and give it at most 5 seconds to finish
-                    refreshPackages( pa, plugin.getBundle().getBundleContext(), 5000L, bundle );
+                    refreshPackages(fw, plugin.getBundle().getBundleContext(), 5000L, bundle );
                 }
             }
             catch (Exception ex)
@@ -249,19 +255,18 @@ abstract class BaseUpdateInstallHelper implements Runnable
     /**
      * This is an utility method that issues refresh package instruction to the framework.
      *
-     * @param packageAdmin is the package admin service obtained using the bundle context of the caller.
-     *   If this is <code>null</code> no refresh packages is performed
+     * @param fw framework wiring (might be null)
      * @param bundleContext of the caller. This is needed to add a framework listener.
      * @param maxWait the maximum time to wait for the packages to be refreshed
      * @param bundle the bundle, which packages to refresh or <code>null</code> to refresh all packages.
      * @return true if refresh is succesfull within the given time frame
      */
-    static boolean refreshPackages(final PackageAdmin packageAdmin,
+    static boolean refreshPackages(final FrameworkWiring fw,
         final BundleContext bundleContext,
         final long maxWait,
         final Bundle bundle)
     {
-        return new RefreshPackageTask().refreshPackages( packageAdmin, bundleContext, maxWait, bundle );
+        return new RefreshPackageTask().refreshPackages(fw, bundleContext, maxWait, bundle );
     }
 
     static class RefreshPackageTask implements FrameworkListener
@@ -270,32 +275,77 @@ abstract class BaseUpdateInstallHelper implements Runnable
         private volatile boolean refreshed = false;
         private final Object lock = new Object();
 
-        boolean refreshPackages( final PackageAdmin packageAdmin,
-            final BundleContext bundleContext,
-            final long maxWait,
-            final Bundle bundle )
+        private Bundle searchHost(final BundleContext bundleContext, final Bundle bundle) {
+            final String host = bundle.getHeaders().get( Constants.FRAGMENT_HOST );
+            if ( host != null && host.indexOf(Constants.EXTENSION_DIRECTIVE) == -1 ) {
+                for(final Bundle i : bundleContext.getBundles()) {
+                    if ( host.equals(i.getSymbolicName()) ) {
+                        return i;
+                    }
+                }
+            }
+            return null;
+        }
+
+        boolean refreshPackages(final FrameworkWiring fw,
+                  final BundleContext bundleContext,
+                  final long maxWait,
+                  Bundle bundle )
         {
-            if (null == packageAdmin)
+            List<Bundle> refreshFragments = null;
+            if (null == bundleContext || fw == null )
             {
                 return false;
             }
-
-            if (null == bundleContext)
-            {
-                return false;
-            }
-
-            bundleContext.addFrameworkListener(this);
 
             if (null == bundle)
             {
-                packageAdmin.refreshPackages(null);
+                // search fragment hosts
+                refreshFragments = new ArrayList<>();
+                for(final Bundle i : bundleContext.getBundles()) {
+                    if ( i.getState() != Bundle.RESOLVED ) {
+                        final Bundle hostBundle = searchHost(bundleContext, i);
+                        if ( hostBundle != null ) {
+                            refreshFragments.add(hostBundle);
+                        }
+                    }
+                }
+                if ( refreshFragments.isEmpty() ) {
+                    refreshFragments = null;
+                }
+                fw.refreshBundles(null, this);
             }
             else
             {
-                packageAdmin.refreshPackages(new Bundle[] { bundle });
+                // For a fragment, refresh the host instead
+                final Bundle hostBundle = searchHost(bundleContext, bundle);
+                if ( hostBundle != null ) {
+                    bundle = hostBundle;
+                }
+
+                fw.refreshBundles(Collections.singleton(bundle), this);
             }
 
+            waitForRefresh(maxWait);
+
+            if ( refreshFragments != null ) {
+                // check for uninstalled
+                final Iterator<Bundle> iter = refreshFragments.iterator();
+                while ( iter.hasNext() ) {
+                    if ( iter.next().getState() == Bundle.UNINSTALLED ) {
+                        iter.remove();
+                    }
+                }
+                if ( !refreshFragments.isEmpty() ) {
+                    refreshed = false;
+                    fw.refreshBundles(refreshFragments, this);
+                    waitForRefresh(maxWait);
+                }
+            }
+            return refreshed;
+        }
+
+        private void waitForRefresh(long maxWait) {
             try
             {
                 // check for spurious wait
@@ -319,13 +369,9 @@ abstract class BaseUpdateInstallHelper implements Runnable
                 // just return if the thread is interrupted
                 Thread.currentThread().interrupt();
             }
-            finally
-            {
-                bundleContext.removeFrameworkListener(this);
-            }
-            return refreshed;
         }
 
+        @Override
         public void frameworkEvent(final FrameworkEvent e)
         {
             if (e.getType() == FrameworkEvent.PACKAGES_REFRESHED)

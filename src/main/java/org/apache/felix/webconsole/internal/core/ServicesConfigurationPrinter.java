@@ -35,7 +35,7 @@ import org.osgi.framework.ServiceReference;
  * ServicesConfigurationPrinter provides a configuration printer for inspecting the
  * registered services.
  */
-public class ServicesConfigurationPrinter extends AbstractConfigurationPrinter implements Constants
+public class ServicesConfigurationPrinter extends AbstractConfigurationPrinter
 {
     private static final String TITLE = "Services";
 
@@ -52,6 +52,7 @@ public class ServicesConfigurationPrinter extends AbstractConfigurationPrinter i
     /**
      * @see org.apache.felix.webconsole.ConfigurationPrinter#getTitle()
      */
+    @Override
     public final String getTitle()
     {
         return TITLE;
@@ -60,6 +61,7 @@ public class ServicesConfigurationPrinter extends AbstractConfigurationPrinter i
     /**
      * @see org.apache.felix.webconsole.ConfigurationPrinter#printConfiguration(java.io.PrintWriter)
      */
+    @Override
     public final void printConfiguration(PrintWriter pw)
     {
         final Object[] data = new Object[4]; // used as message formatter parameters
@@ -84,8 +86,8 @@ public class ServicesConfigurationPrinter extends AbstractConfigurationPrinter i
                 {
                     final String key = keys[j];
                     // skip common keys - already added above
-                    if (SERVICE_ID.equals(key) || OBJECTCLASS.equals(key)
-                        || SERVICE_PID.equals(key))
+                    if (Constants.SERVICE_ID.equals(key) || Constants.OBJECTCLASS.equals(key)
+                        || Constants.SERVICE_PID.equals(key))
                         continue;
 
                     pw.print("    ");
@@ -118,9 +120,9 @@ public class ServicesConfigurationPrinter extends AbstractConfigurationPrinter i
 
     private static final Object[] params(ServiceReference ref, Object[] data)
     {
-        data[0] = ServicesServlet.propertyAsString(ref, SERVICE_ID);
-        data[1] = ServicesServlet.propertyAsString(ref, OBJECTCLASS);
-        data[2] = ServicesServlet.propertyAsString(ref, SERVICE_PID);
+        data[0] = ServicesServlet.propertyAsString(ref, Constants.SERVICE_ID);
+        data[1] = ServicesServlet.propertyAsString(ref, Constants.OBJECTCLASS);
+        data[2] = ServicesServlet.propertyAsString(ref, Constants.SERVICE_PID);
         data[3] = "";
         return data;
     }
@@ -180,6 +182,7 @@ class ServiceReferenceComparator implements Comparator
         return id1.compareTo(id2);
     }
 
+    @Override
     public int compare(Object o1, Object o2)
     {
         return compare((ServiceReference) o1, (ServiceReference) o2);

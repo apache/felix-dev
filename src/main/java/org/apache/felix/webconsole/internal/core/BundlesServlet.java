@@ -71,6 +71,7 @@ import org.osgi.framework.ServiceReference;
 import org.osgi.framework.ServiceRegistration;
 import org.osgi.framework.Version;
 import org.osgi.framework.VersionRange;
+import org.osgi.framework.wiring.FrameworkWiring;
 import org.osgi.service.cm.ConfigurationAdmin;
 import org.osgi.service.log.LogService;
 import org.osgi.service.packageadmin.ExportedPackage;
@@ -326,7 +327,8 @@ public class BundlesServlet extends SimpleWebConsolePlugin implements OsgiManage
         if ( "refreshPackages".equals( action ) )
         {
             // refresh packages and give it most 15 seconds to finish
-            BaseUpdateInstallHelper.refreshPackages( getPackageAdmin(), getBundleContext(), 15000L, null );
+            final FrameworkWiring fw = getBundleContext().getBundle(Constants.SYSTEM_BUNDLE_LOCATION).adapt(FrameworkWiring.class);
+            BaseUpdateInstallHelper.refreshPackages( fw, getBundleContext(), 15000L, null );
             success = true;
         }
         else if ( "install".equals( action ) )
@@ -384,7 +386,8 @@ public class BundlesServlet extends SimpleWebConsolePlugin implements OsgiManage
                 else if ( "refresh".equals( action ) )
                 {
                     // refresh bundle wiring and give at most 5 seconds to finish
-                    BaseUpdateInstallHelper.refreshPackages( getPackageAdmin(), getBundleContext(), 5000L, bundle );
+                    final FrameworkWiring fw = getBundleContext().getBundle(Constants.SYSTEM_BUNDLE_LOCATION).adapt(FrameworkWiring.class);
+                    BaseUpdateInstallHelper.refreshPackages( fw, getBundleContext(), 5000L, bundle );
                 }
                 else if ( "update".equals( action ) )
                 {

@@ -26,6 +26,7 @@ import org.apache.felix.webconsole.SimpleWebConsolePlugin;
 import org.osgi.framework.Bundle;
 import org.osgi.framework.BundleContext;
 import org.osgi.framework.BundleException;
+import org.osgi.framework.Constants;
 import org.osgi.service.startlevel.StartLevel;
 
 
@@ -49,6 +50,7 @@ class InstallHelper extends BaseUpdateInstallHelper
     }
 
 
+    @Override
     protected Bundle doRun( InputStream bundleStream ) throws BundleException
     {
         Bundle bundle = bundleContext.installBundle( location, bundleStream );
@@ -62,7 +64,8 @@ class InstallHelper extends BaseUpdateInstallHelper
             }
         }
 
-        if ( doStart )
+        // don't start fragments
+        if ( doStart && bundle.getHeaders().get( Constants.FRAGMENT_HOST ) == null )
         {
             bundle.start();
         }
