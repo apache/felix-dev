@@ -349,13 +349,13 @@ public class ConverterTest {
         assertArrayEquals(new char [] {'x', 'y'}, ca4b);
         assertNotSame("Should have created a new instance", ca4a, ca4b);
     }
-    
+
     /**
      * 707.4.3.1 - null becomes an empty array
      */
     @Test
     public void testNullToArrayConversion() {
-    	
+
     	checkArray(String[].class);
     	checkArray(boolean[].class);
     	checkArray(byte[].class);
@@ -376,7 +376,7 @@ public class ConverterTest {
     	checkArray(long[][].class);
     	checkArray(double[][].class);
 
-    	
+
     	checkArray(String[][][].class);
     	checkArray(boolean[][][].class);
     	checkArray(byte[][][].class);
@@ -390,7 +390,7 @@ public class ConverterTest {
 
 	private void checkArray(Class<?> arrayType) {
 		assertTrue(arrayType.isArray());
-		
+
 		Object array = converter.convert(null).to(arrayType);
     	assertEquals(0, Array.getLength(array));
     	assertTrue(arrayType.isInstance(array));
@@ -1473,6 +1473,17 @@ public class ConverterTest {
             new HashMap<String, Object>()).to(clazz);
         assertEquals(InterfaceWithDefaultMethod.RESULT, i.defaultMethod());
     }
+
+    @Test
+    public void testConvertBooleanToNumber() {
+        assertEquals(Byte.valueOf((byte) 1), converter.convert(Boolean.TRUE).to(Byte.class));
+        assertEquals(Short.valueOf((short) 1), converter.convert(Boolean.TRUE).to(Short.class));
+        assertEquals(Integer.valueOf(1), converter.convert(Boolean.TRUE).to(Integer.class));
+        assertEquals(Long.valueOf(1), converter.convert(Boolean.TRUE).to(Long.class));
+        assertEquals(Float.valueOf(1.0f), converter.convert(Boolean.TRUE).to(Float.class));
+        assertEquals(Double.valueOf(1.0), converter.convert(Boolean.TRUE).to(Double.class));
+    }
+
     static interface MyIntf2 {
         String code();
         Integer value();

@@ -18,8 +18,8 @@ package org.osgi.util.converter;
 
 import java.lang.annotation.Annotation;
 import java.lang.invoke.MethodHandles;
-import java.lang.invoke.MethodType;
 import java.lang.invoke.MethodHandles.Lookup;
+import java.lang.invoke.MethodType;
 import java.lang.reflect.Array;
 import java.lang.reflect.Constructor;
 import java.lang.reflect.Field;
@@ -915,7 +915,9 @@ class ConvertingImpl extends AbstractSpecifying<Converting>
 			}
 		} else if (Number.class.isAssignableFrom(targetAsClass)) {
 			if (object instanceof Boolean) {
-				return ((Boolean) object).booleanValue() ? 1 : 0;
+				return c.convert(((Boolean) object).booleanValue() ? 1 : 0)
+	                    .targetAs(targetAsClass)
+	                    .to(targetType);
 			} else if (object instanceof Number) {
 				if (Byte.class.isAssignableFrom(targetAsClass)) {
 					return ((Number) object).byteValue();
