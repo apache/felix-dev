@@ -33,13 +33,14 @@
     <description>
         Support for OSGi configurations specified in JSON documents.
     </description>
-    <version>0.0.1-SNAPSHOT</version>
+    <version>1.0.0</version>
 
     <scm>
         <connection>scm:git:https://github.com/apache/felix-dev/tree/master/cm.json</connection>
         <developerConnection>scm:git:https://github.com/apache/felix-dev/tree/master/cm.json</developerConnection>
         <url>https://gitbox.apache.org/repos/asf?p=felix-dev.git;f=cm.json</url>
-    </scm>
+      <tag>org.apache.felix.cm.json-1.0.0</tag>
+  </scm>
 
     <properties>
         <felix.java.version>8</felix.java.version>
