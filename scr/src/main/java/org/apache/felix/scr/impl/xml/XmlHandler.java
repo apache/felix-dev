@@ -463,10 +463,8 @@ public class XmlHandler extends DefaultHandler
                 if (propertyBuilder != null) {
                     m_pendingProperty.setValues(propertyBuilder.toString());
                     propertyBuilder = null;
-                } else {
-                    m_pendingProperty.setValues("");
+                    m_currentComponent.addProperty( m_pendingProperty );
                 }
-                m_currentComponent.addProperty( m_pendingProperty );
                 m_pendingProperty = null;
             }
             else if ( localName.equals( XmlConstants.EL_FACTORY_PROPERTY ) && m_pendingFactoryProperty != null )
@@ -474,10 +472,8 @@ public class XmlHandler extends DefaultHandler
                 if (propertyBuilder != null) {
                     m_pendingFactoryProperty.setValues(propertyBuilder.toString());
                     propertyBuilder = null;
-                } else {
-                    m_pendingFactoryProperty.setValues("");
+                    m_currentComponent.addFactoryProperty( m_pendingFactoryProperty );
                 }
-                m_currentComponent.addFactoryProperty( m_pendingFactoryProperty );
                 m_pendingFactoryProperty = null;
             }
         }

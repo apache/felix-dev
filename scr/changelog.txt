@@ -1,3 +1,9 @@
+Changes in 2.1.20
+-----------------
+** Bug
+    * [FELIX-6261] - [Regression] Empty property values are treated as String arrays
+
+
 Changes in 2.1.18
 -----------------
 ** Bug
