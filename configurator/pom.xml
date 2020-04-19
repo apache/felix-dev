@@ -22,7 +22,7 @@
     <parent>
         <groupId>org.apache.felix</groupId>
         <artifactId>felix-parent</artifactId>
-        <version>6</version>
+        <version>7</version>
         <relativePath />
     </parent>
 
@@ -49,7 +49,7 @@
             <plugin>
                 <groupId>org.apache.felix</groupId>
                 <artifactId>maven-bundle-plugin</artifactId>
-                <version>3.5.0</version>
+                <version>4.2.1</version>
                 <extensions>true</extensions>
                 <configuration>
                     <instructions>
@@ -103,14 +103,14 @@
         </dependency>
         <dependency>
             <groupId>org.apache.felix</groupId>
-		    <artifactId>org.apache.felix.converter</artifactId>
-		    <version>1.0.0</version>
+            <artifactId>org.apache.felix.converter</artifactId>
+            <version>1.0.0</version>
             <scope>provided</scope>
         </dependency>
         <dependency>
             <groupId>org.apache.felix</groupId>
             <artifactId>org.apache.felix.cm.json</artifactId>
-            <version>0.0.1-SNAPSHOT</version>
+            <version>1.0.0</version>
             <scope>provided</scope>
         </dependency>
         <dependency>
