@@ -35,7 +35,7 @@ import org.osgi.annotation.versioning.ProviderType;
 public interface ConfigurationWriter {
 
     /**
-     * Write a single configuration to the provided writer. The writer is not
+     * Write a single configuration to the provided writer. The writer/generator is not
      * closed.
      *
      * @param properties The configuration
@@ -44,7 +44,7 @@ public interface ConfigurationWriter {
     void writeConfiguration(Dictionary<String, Object> properties) throws IOException;
 
     /**
-     * Write a configuration resource to the provided writer. The writer is not
+     * Write a configuration resource to the provided writer. The writer/generator is not
      * closed.
      *
      * @param resource The configuration resource
@@ -60,6 +60,7 @@ public interface ConfigurationWriter {
 
         /**
          * Build the configuration writer for the provided writer.
+         * The writer is not closed when configuration(s) are written
          *
          * @param writer The writer for the JSON
          * @return The configuration writer
@@ -68,6 +69,7 @@ public interface ConfigurationWriter {
 
         /**
          * Build the configuration writer for the provided JSON generator.
+         * The generator is not closed when configuration(s) are written
          *
          * @param generator The JSON generator
          * @return The configuration writer

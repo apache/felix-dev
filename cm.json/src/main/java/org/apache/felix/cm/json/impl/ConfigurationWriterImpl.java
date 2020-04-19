@@ -41,6 +41,8 @@ public class ConfigurationWriterImpl
 
     private JsonGenerator generator;
 
+    private boolean closeGenerator;
+
     private void checkClosed() throws IOException {
         if (this.closed) {
             throw new IOException("Writer already closed");
@@ -60,12 +62,14 @@ public class ConfigurationWriterImpl
                     }
 
                 });
+        this.closeGenerator = true;
         return this;
     }
 
     @Override
     public ConfigurationWriter build(final JsonGenerator generator) {
         this.generator = generator;
+        this.closeGenerator = false;
         return this;
     }
 
@@ -73,7 +77,7 @@ public class ConfigurationWriterImpl
     public void writeConfiguration(final Dictionary<String, Object> properties) throws IOException {
         checkClosed();
         writeConfigurationInternal(properties);
-        this.generator.close();
+        if ( this.closeGenerator) this.generator.close();
     }
 
     private void writeConfigurationInternal(final Dictionary<String, Object> properties) throws IOException {
@@ -107,6 +111,6 @@ public class ConfigurationWriterImpl
             writeConfigurationInternal(entry.getValue());
         }
         generator.writeEnd();
-        this.generator.close();
+        if ( this.closeGenerator) this.generator.close();
     }
 }
