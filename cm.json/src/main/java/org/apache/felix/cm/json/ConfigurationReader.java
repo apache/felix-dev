@@ -29,7 +29,7 @@ import org.osgi.annotation.versioning.ProviderType;
 
 /**
  * A configuration reader can read configuration resources as defined in
- * {@link https://osgi.org/specification/osgi.cmpn/7.0.0/service.configurator.html}.
+ * <a href="https://osgi.org/specification/osgi.cmpn/7.0.0/service.configurator.html">OSGi Configurator specificiation</a>.
  * A reader can be obtained through a {@link Builder}.
  */
 @ProviderType
