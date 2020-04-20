@@ -50,7 +50,7 @@
             <plugin>
                 <groupId>org.apache.felix</groupId>
                 <artifactId>maven-bundle-plugin</artifactId>
-                <version>3.5.0</version>
+                <version>4.2.1</version>
                 <extensions>true</extensions>
                 <configuration>
                     <instructions>
@@ -95,7 +95,7 @@
         <dependency>
             <groupId>org.apache.felix</groupId>
             <artifactId>org.apache.felix.converter</artifactId>
-            <version>1.0.12</version>
+            <version>1.0.15-SNAPSHOT</version>
             <scope>provided</scope>
         </dependency>
         <dependency>

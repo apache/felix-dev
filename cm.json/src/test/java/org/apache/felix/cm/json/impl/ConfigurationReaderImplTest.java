@@ -20,16 +20,20 @@ package org.apache.felix.cm.json.impl;
 
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotNull;
+import static org.junit.Assert.assertTrue;
 import static org.junit.Assert.fail;
 
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.InputStreamReader;
 import java.io.Reader;
+import java.io.StringReader;
 import java.nio.charset.StandardCharsets;
 import java.util.Dictionary;
 import java.util.Hashtable;
 import java.util.Map;
+
+import javax.json.JsonException;
 
 import org.junit.Test;
 
@@ -88,5 +92,18 @@ public class ConfigurationReaderImplTest {
         assertNotNull(configs.get("config.b"));
         assertEquals("Hello World", configs.get("config.a").get("text"));
         assertEquals(8080, configs.get("config.b").get("port"));
+    }
+
+    @Test
+    public void testReadInvalidJson() throws IOException {
+        final String json = "{\n \"a\" : 5 \n \"b\" : 2\n}";
+
+        final ConfigurationReaderImpl cfgReader = new ConfigurationReaderImpl();
+        try {
+            cfgReader.build(new StringReader(json)).readConfigurationResource();
+            fail();
+        } catch ( final IOException ioe) {
+            assertTrue(ioe.getCause() instanceof JsonException);
+        }
     }
 }

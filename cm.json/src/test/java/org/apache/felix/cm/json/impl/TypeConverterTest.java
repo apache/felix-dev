@@ -478,24 +478,24 @@ public class TypeConverterTest {
                 (Integer[]) TypeConverter.convertObjectToType(JsonValue.TRUE, "Integer[]"));
         assertArrayEquals(new long[] { 1 },
                 (long[]) TypeConverter.convertObjectToType(JsonValue.TRUE, "long[]"));
-//        assertArrayEquals(new Long[] { 1L },
-//                (Long[]) TypeConverter.convertObjectToType(JsonValue.TRUE, "Long[]"));
-//        assertArrayEquals(new float[] { 1f },
-//                (float[]) TypeConverter.convertObjectToType(JsonValue.TRUE, "float[]"), 0.1f);
-//        assertArrayEquals(new Float[] { 1f },
-//                (Float[]) TypeConverter.convertObjectToType(JsonValue.TRUE, "Float[]"));
-//        assertArrayEquals(new double[] { 1 },
-//                (double[]) TypeConverter.convertObjectToType(JsonValue.TRUE, "double[]"), 0.1);
-//        assertArrayEquals(new Double[] { 1.0 },
-//                (Double[]) TypeConverter.convertObjectToType(JsonValue.TRUE, "Double[]"));
-//        assertArrayEquals(new byte[] { 1 },
-//                (byte[]) TypeConverter.convertObjectToType(JsonValue.TRUE, "byte[]"));
-//        assertArrayEquals(new Byte[] { 1 },
-//                (Byte[]) TypeConverter.convertObjectToType(JsonValue.TRUE, "Byte[]"));
-//        assertArrayEquals(new short[] { 1 },
-//                (short[]) TypeConverter.convertObjectToType(JsonValue.TRUE, "short[]"));
-//        assertArrayEquals(new Short[] { 1 },
-//                (Short[]) TypeConverter.convertObjectToType(JsonValue.TRUE, "Short[]"));
+        assertArrayEquals(new Long[] { 1L },
+                (Long[]) TypeConverter.convertObjectToType(JsonValue.TRUE, "Long[]"));
+        assertArrayEquals(new float[] { 1f },
+                (float[]) TypeConverter.convertObjectToType(JsonValue.TRUE, "float[]"), 0.1f);
+        assertArrayEquals(new Float[] { 1f },
+                (Float[]) TypeConverter.convertObjectToType(JsonValue.TRUE, "Float[]"));
+        assertArrayEquals(new double[] { 1 },
+                (double[]) TypeConverter.convertObjectToType(JsonValue.TRUE, "double[]"), 0.1);
+        assertArrayEquals(new Double[] { 1.0 },
+                (Double[]) TypeConverter.convertObjectToType(JsonValue.TRUE, "Double[]"));
+        assertArrayEquals(new byte[] { 1 },
+                (byte[]) TypeConverter.convertObjectToType(JsonValue.TRUE, "byte[]"));
+        assertArrayEquals(new Byte[] { 1 },
+                (Byte[]) TypeConverter.convertObjectToType(JsonValue.TRUE, "Byte[]"));
+        assertArrayEquals(new short[] { 1 },
+                (short[]) TypeConverter.convertObjectToType(JsonValue.TRUE, "short[]"));
+        assertArrayEquals(new Short[] { 1 },
+                (Short[]) TypeConverter.convertObjectToType(JsonValue.TRUE, "Short[]"));
         assertArrayEquals(new char[] { (char)1 },
                 (char[]) TypeConverter.convertObjectToType(JsonValue.TRUE, "char[]"));
         assertArrayEquals(new Character[] { Character.valueOf((char)1) },
@@ -513,21 +513,21 @@ public class TypeConverterTest {
         assertArrayEquals(new Integer[] { 1 },
                 ((Collection<?>) TypeConverter.convertObjectToType(JsonValue.TRUE, "Collection<Integer>"))
                         .toArray());
-//        assertArrayEquals(new Long[] { 1L },
-//                ((Collection<?>) TypeConverter.convertObjectToType(JsonValue.TRUE, "Collection<Long>"))
-//                        .toArray());
-//        assertArrayEquals(new Float[] { 1f },
-//                ((Collection<?>) TypeConverter.convertObjectToType(JsonValue.TRUE, "Collection<Float>"))
-//                        .toArray());
-//        assertArrayEquals(new Double[] { 1.0 },
-//                ((Collection<?>) TypeConverter.convertObjectToType(JsonValue.TRUE, "Collection<Double>"))
-//                        .toArray());
-//        assertArrayEquals(new Byte[] { 1 },
-//                ((Collection<?>) TypeConverter.convertObjectToType(JsonValue.TRUE, "Collection<Byte>"))
-//                        .toArray());
-//        assertArrayEquals(new Short[] { 1 },
-//                ((Collection<?>) TypeConverter.convertObjectToType(JsonValue.TRUE, "Collection<Short>"))
-//                        .toArray());
+        assertArrayEquals(new Long[] { 1L },
+                ((Collection<?>) TypeConverter.convertObjectToType(JsonValue.TRUE, "Collection<Long>"))
+                        .toArray());
+        assertArrayEquals(new Float[] { 1f },
+                ((Collection<?>) TypeConverter.convertObjectToType(JsonValue.TRUE, "Collection<Float>"))
+                        .toArray());
+        assertArrayEquals(new Double[] { 1.0 },
+                ((Collection<?>) TypeConverter.convertObjectToType(JsonValue.TRUE, "Collection<Double>"))
+                        .toArray());
+        assertArrayEquals(new Byte[] { 1 },
+                ((Collection<?>) TypeConverter.convertObjectToType(JsonValue.TRUE, "Collection<Byte>"))
+                        .toArray());
+        assertArrayEquals(new Short[] { 1 },
+                ((Collection<?>) TypeConverter.convertObjectToType(JsonValue.TRUE, "Collection<Short>"))
+                        .toArray());
         assertArrayEquals(Arrays.asList(Character.valueOf((char)1)).toArray(),
                 ((Collection<?>) TypeConverter.convertObjectToType(JsonValue.TRUE, "Collection<Character>"))
                         .toArray());

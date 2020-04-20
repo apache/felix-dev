@@ -28,6 +28,7 @@ import java.util.Hashtable;
 import java.util.Map;
 
 import javax.json.Json;
+import javax.json.JsonException;
 import javax.json.JsonValue;
 import javax.json.stream.JsonGenerator;
 
@@ -76,8 +77,12 @@ public class ConfigurationWriterImpl
     @Override
     public void writeConfiguration(final Dictionary<String, Object> properties) throws IOException {
         checkClosed();
-        writeConfigurationInternal(properties);
-        if ( this.closeGenerator) this.generator.close();
+        try {
+            writeConfigurationInternal(properties);
+            if ( this.closeGenerator) this.generator.close();
+        } catch ( final JsonException je) {
+            throw new IOException(je.getMessage(), je);
+        }
     }
 
     private void writeConfigurationInternal(final Dictionary<String, Object> properties) throws IOException {
@@ -102,15 +107,19 @@ public class ConfigurationWriterImpl
     @Override
     public void writeConfigurationResource(final ConfigurationResource resource) throws IOException {
         checkClosed();
-        generator.writeStartObject();
-        for (final Map.Entry<String, Object> entry : resource.getProperties().entrySet()) {
-            generator.write(entry.getKey(), JsonSupport.convertToJson(entry.getValue()));
+        try {
+            generator.writeStartObject();
+            for (final Map.Entry<String, Object> entry : resource.getProperties().entrySet()) {
+                generator.write(entry.getKey(), JsonSupport.convertToJson(entry.getValue()));
+            }
+            for (final Map.Entry<String, Hashtable<String, Object>> entry : resource.getConfigurations().entrySet()) {
+                generator.writeKey(entry.getKey());
+                writeConfigurationInternal(entry.getValue());
+            }
+            generator.writeEnd();
+            if ( this.closeGenerator) this.generator.close();
+        } catch ( final JsonException je) {
+            throw new IOException(je.getMessage(), je);
         }
-        for (final Map.Entry<String, Hashtable<String, Object>> entry : resource.getConfigurations().entrySet()) {
-            generator.writeKey(entry.getKey());
-            writeConfigurationInternal(entry.getValue());
-        }
-        generator.writeEnd();
-        if ( this.closeGenerator) this.generator.close();
     }
 }

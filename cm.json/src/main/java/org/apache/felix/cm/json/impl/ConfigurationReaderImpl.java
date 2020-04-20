@@ -25,6 +25,7 @@ import java.util.Hashtable;
 import java.util.List;
 import java.util.Map;
 
+import javax.json.JsonException;
 import javax.json.JsonObject;
 import javax.json.JsonValue;
 import javax.json.JsonValue.ValueType;
@@ -106,7 +107,11 @@ public class ConfigurationReaderImpl
     public Hashtable<String, Object> readConfiguration() throws IOException {
         checkClosed();
         if (this.reader != null) {
-            this.jsonObject = JsonSupport.parseJson(this.identifier, this.reader);
+            try {
+                this.jsonObject = JsonSupport.parseJson(this.identifier, this.reader);
+            } catch ( final JsonException jpe) {
+                throw new IOException("Invalid JSON " + jpe.getMessage(), jpe);
+            }
         }
         return readSingleConfiguration("<configuration>", this.jsonObject);
     }
@@ -115,7 +120,11 @@ public class ConfigurationReaderImpl
     public ConfigurationResource readConfigurationResource() throws IOException {
         checkClosed();
         if (this.reader != null) {
-            this.jsonObject = JsonSupport.parseJson(this.identifier, this.reader);
+            try {
+                this.jsonObject = JsonSupport.parseJson(this.identifier, this.reader);
+            } catch ( final JsonException jpe) {
+                throw new IOException("Invalid JSON " + jpe.getMessage(), jpe);
+            }
         }
         verifyJsonResource();
         final ConfigurationResource resource = new ConfigurationResource();
