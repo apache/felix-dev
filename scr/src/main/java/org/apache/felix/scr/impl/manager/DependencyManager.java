@@ -42,7 +42,6 @@ import org.apache.felix.scr.impl.metadata.ReferenceMetadata.ReferenceScope;
 import org.apache.felix.scr.impl.metadata.ServiceMetadata.Scope;
 import org.osgi.framework.BundleContext;
 import org.osgi.framework.Constants;
-import org.osgi.framework.Filter;
 import org.osgi.framework.InvalidSyntaxException;
 import org.osgi.framework.ServicePermission;
 import org.osgi.framework.ServiceReference;
@@ -2239,48 +2238,12 @@ public class DependencyManager<S, T> implements ReferenceManager<S, T>
         m_componentManager.getLogger().log(LogService.LOG_DEBUG, "Setting target property for dependency {0} to {1}",
                 null, getName(), target );
         BundleContext bundleContext = m_componentManager.getBundleContext();
-        Filter eventFilter = null;
-        if (bundleContext != null)
-        {
-            if (eventFilterString != null)
-            {
-                try
-                {
-                    eventFilter = bundleContext.createFilter(eventFilterString);
-                }
-                catch (InvalidSyntaxException ise)
-                {
-                    m_componentManager.getLogger().log(LogService.LOG_ERROR,
-                        "Invalid syntax in target property for dependency {0} to {1}",
-                        null, getName(), target );
-
-                    //create a filter that will never be satisfied
-                    eventFilterString = "(component.id=-1)";
-                    try
-                    {
-                        eventFilter = bundleContext.createFilter(eventFilterString);
-                    }
-                    catch (InvalidSyntaxException e)
-                    {
-                        //this should not happen
-                        return;
-                    }
-
-                }
-            }
-        }
-        else
-        {
-            m_componentManager.getLogger().log(LogService.LOG_ERROR, "Bundle is shut down for dependency {0} to {1}",
-                    null, getName(), target );
-            return;
-        }
 
         m_customizer.setPreviousRefMap(refMap);
         boolean initialActive = oldTracker != null && oldTracker.isActive();
         m_componentManager.getLogger().log(LogService.LOG_DEBUG,
-            "New service tracker for {0}, initial active: {1}, previous references: {2}, classFilter: {3}, eventFilter {4}, initialReferenceFilter {5}",
-            null, getName(), initialActive, refMap, classFilterString, eventFilter,
+            "New service tracker for {0}, initial active: {1}, previous references: {2}, classFilter: {3}, initialReferenceFilter {4}",
+            null, getName(), initialActive, refMap, classFilterString,
                     initialReferenceFilterString );
         ServiceTracker<T, RefPair<S, T>, ExtendedServiceEvent> tracker = new ServiceTracker<>(
             bundleContext, m_customizer, initialActive, m_componentManager.getActivator(),
