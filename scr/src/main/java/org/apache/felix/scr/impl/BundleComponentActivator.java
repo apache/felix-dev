@@ -172,8 +172,10 @@ public class BundleComponentActivator implements ComponentActivator
             ListenerInfo listenerInfo = listenerMap.get( serviceFilterString );
             if ( listenerInfo != null )
             {
-                listenerMap.remove( serviceFilterString );
-                m_context.removeServiceListener( listenerInfo );
+                if (listenerInfo.remove(listener)) {
+                    listenerMap.remove(serviceFilterString);
+                    m_context.removeServiceListener(listenerInfo);
+                }
             }
         }
     }
