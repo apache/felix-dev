@@ -51,7 +51,7 @@ public class SingleComponentManagerTest
     private ComponentActivator componentActivator = new ComponentActivator() {
 
         @Override
-        public void addServiceListener(String className, Filter filter,
+        public void addServiceListener(String serviceFilterString,
             ExtendedServiceListener<ExtendedServiceEvent> listener)
         {
             // TODO Auto-generated method stub
@@ -59,7 +59,7 @@ public class SingleComponentManagerTest
         }
 
         @Override
-        public void removeServiceListener(String className, Filter filter,
+        public void removeServiceListener(String serviceFilterString,
             ExtendedServiceListener<ExtendedServiceEvent> listener)
         {
             // TODO Auto-generated method stub

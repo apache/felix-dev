@@ -2283,8 +2283,8 @@ public class DependencyManager<S, T> implements ReferenceManager<S, T>
             null, getName(), initialActive, refMap, classFilterString, eventFilter,
                     initialReferenceFilterString );
         ServiceTracker<T, RefPair<S, T>, ExtendedServiceEvent> tracker = new ServiceTracker<>(
-            bundleContext, m_customizer, initialActive, m_componentManager.getActivator(), eventFilter,
-            classFilterString, initialReferenceFilterString);
+            bundleContext, m_customizer, initialActive, m_componentManager.getActivator(),
+            initialReferenceFilterString);
         m_customizer.setTracker(tracker);
         //set minimum cardinality
         m_minCardinality = minimumCardinality;
