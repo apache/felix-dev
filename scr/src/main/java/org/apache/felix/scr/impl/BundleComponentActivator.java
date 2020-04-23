@@ -51,7 +51,6 @@ import org.apache.felix.scr.impl.metadata.ComponentMetadata;
 import org.apache.felix.scr.impl.xml.XmlHandler;
 import org.osgi.framework.Bundle;
 import org.osgi.framework.BundleContext;
-import org.osgi.framework.Filter;
 import org.osgi.framework.InvalidSyntaxException;
 import org.osgi.framework.ServiceEvent;
 import org.osgi.framework.ServiceListener;
@@ -103,7 +102,6 @@ public class BundleComponentActivator implements ComponentActivator
         @Override
         public void serviceChanged(ServiceEvent event)
         {
-            ServiceReference<?> ref = event.getServiceReference();
             ExtendedServiceEvent extEvent = new ExtendedServiceEvent(event);
             List<ExtendedServiceListener<ExtendedServiceEvent>> listeners;
             synchronized ( this )

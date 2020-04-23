@@ -63,12 +63,16 @@ public class Felix6161Test extends ComponentTestBase
 
         final String firstComponent = "felix.6161";
         final String secondComponent = "felix.6161.2nd";
+        final String targetMatch = "(value=foo)";
+
+        final String otherTarget = "felix.6161.other.target";
+        final String otherTargetMatch = "(value=bar)";
 
         // Enabling the component should activate the ServiceListener
         getDisabledConfigurationAndEnable(firstComponent, ComponentConfigurationDTO.ACTIVE);
 
         // Validate if the ListenerHook was triggered on the added flow
-        TestCase.assertTrue(isMatchingListenerInfoPresent(listenerInfoAdded));
+        TestCase.assertTrue(isMatchingListenerInfoPresent(listenerInfoAdded, targetMatch));
 
         // Clear the list of added callbacks, as we want to be able to verify if no additional ServiceListener is opened in the next step
         listenerInfoAdded.clear();
@@ -77,29 +81,65 @@ public class Felix6161Test extends ComponentTestBase
         getDisabledConfigurationAndEnable(secondComponent, ComponentConfigurationDTO.ACTIVE);
 
         // Verify that indeed there was no additional ServiceListener opened
-        TestCase.assertFalse(isMatchingListenerInfoPresent(listenerInfoAdded));
+        TestCase.assertFalse(isMatchingListenerInfoPresent(listenerInfoAdded, targetMatch));
+
+        // Enabled the otherTarget component, that requires a different service (due to different target)
+        getDisabledConfigurationAndEnable(otherTarget, ComponentConfigurationDTO.ACTIVE);
+
+        // Verify that the otherTarget has opened a new ServiceListener
+        TestCase.assertTrue(isMatchingListenerInfoPresent(listenerInfoAdded, otherTargetMatch));
 
         // Disable the first component, whilst the second remains active
         disableAndCheck(firstComponent);
 
         // The ListenerHook should not have seen the ServiceListener being closed (as it is still in use for the second component)
-        TestCase.assertFalse(isMatchingListenerInfoPresent(listenerInfoRemoved));
+        TestCase.assertFalse(isMatchingListenerInfoPresent(listenerInfoRemoved, targetMatch));
 
         // Disable the second component as well
         disableAndCheck(secondComponent);
 
         // Now the ListenerHook should have received the removed callback
-        TestCase.assertTrue(isMatchingListenerInfoPresent(listenerInfoRemoved));
+        TestCase.assertTrue(isMatchingListenerInfoPresent(listenerInfoRemoved, targetMatch));
     }
 
-    private boolean isMatchingListenerInfoPresent(List<ListenerHook.ListenerInfo> listenerInfoRemoved)
+    @Test
+    public void test_invalid_target() throws Exception
+    {
+        // Register a ListenerHook that records all ListenerInfo on the added callbacks
+        final List<ListenerHook.ListenerInfo> listenerInfoAdded = new CopyOnWriteArrayList<>();
+        final ListenerHook listenerHook = new ListenerHook()
+        {
+            @Override
+            public void added(Collection<ListenerInfo> listeners)
+            {
+                listenerInfoAdded.addAll(listeners);
+            }
+
+            @Override
+            public void removed(Collection<ListenerInfo> listeners)
+            {
+            }
+        };
+        bundleContext.registerService(ListenerHook.class, listenerHook, null);
+
+        final String invalidTarget = "felix.6161.invalid.target";
+        final String targetMatch = "(&(invalid.target.cannot.resolve=*)(!(invalid.target.cannot.resolve=*)))";
+
+        // Enabling the component with invalid target filter
+        getDisabledConfigurationAndEnable(invalidTarget, ComponentConfigurationDTO.ACTIVE);
+
+        // Validate if the ListenerHook was triggered with an altered target filter
+        TestCase.assertTrue(isMatchingListenerInfoPresent(listenerInfoAdded, targetMatch));
+    }
+
+    private boolean isMatchingListenerInfoPresent(List<ListenerHook.ListenerInfo> listenerInfoRemoved, String targetMatch)
     {
         boolean matchingListenerInfoPresent = false;
         for (ListenerHook.ListenerInfo listenerInfo : listenerInfoRemoved)
         {
             if (listenerInfo.getFilter() != null && listenerInfo.getFilter().contains("objectClass=" + SimpleService.class.getName()))
             {
-                TestCase.assertTrue(listenerInfo.getFilter().contains("(value=foo)"));
+                TestCase.assertTrue(listenerInfo.getFilter().contains(targetMatch));
                 matchingListenerInfoPresent = true;
             }
         }

@@ -61,4 +61,48 @@
                 target="(value=foo)"
         />
     </scr:component>
+
+    <scr:component name="felix.6161.other.target"
+                   xmlns:scr="http://www.osgi.org/xmlns/scr/v1.1.0"
+                   immediate="true"
+                   enabled="false"
+                   configuration-policy="optional"
+                   activate="activate"
+                   modified="modified">
+        <implementation class="org.apache.felix.scr.integration.components.SimpleComponent" />
+        <service>
+            <provide interface="org.apache.felix.scr.integration.components.SimpleComponent" />
+        </service>
+        <reference
+                name="one"
+                interface="org.apache.felix.scr.integration.components.SimpleService"
+                cardinality="0..1"
+                policy="dynamic"
+                bind="setSimpleService"
+                unbind="unsetSimpleService"
+                target="(value=bar)"
+        />
+    </scr:component>
+
+    <scr:component name="felix.6161.invalid.target"
+                   xmlns:scr="http://www.osgi.org/xmlns/scr/v1.1.0"
+                   immediate="true"
+                   enabled="false"
+                   configuration-policy="optional"
+                   activate="activate"
+                   modified="modified">
+        <implementation class="org.apache.felix.scr.integration.components.SimpleComponent" />
+        <service>
+            <provide interface="org.apache.felix.scr.integration.components.SimpleComponent" />
+        </service>
+        <reference
+                name="one"
+                interface="org.apache.felix.scr.integration.components.SimpleService"
+                cardinality="0..1"
+                policy="dynamic"
+                bind="setSimpleService"
+                unbind="unsetSimpleService"
+                target="(value=invalid"
+        />
+    </scr:component>
 </components>
