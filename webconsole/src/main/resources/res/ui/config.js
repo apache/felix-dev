@@ -31,6 +31,9 @@ var factoryRow = false;
 var editor = false;
 var editorMessage = false;
 
+// json support
+var jsonSupport = false;
+
 function configure(pid, create) {
 	var uri = pluginRoot + '/' + pid;
 	// we have to add a cache killer for IE8
@@ -40,6 +43,12 @@ function configure(pid, create) {
 	}
 	postUri = postUri + 'ts='+new Date().getMilliseconds();
 	$.get(postUri, null, displayConfigForm, 'json');
+}
+
+function showjson(pid) {
+    var ref =  pluginRoot;
+    ref = ref.substring(0, ref.lastIndexOf('/')) + "/osgi-installer-config-printer?format=JSON&pid=" + pid;
+	window.location = ref;
 }
 
 function displayConfigForm(obj) {
@@ -560,19 +569,25 @@ function addConfig(conf) {
 	tr.find('li:eq(0)').click(function() { // edit
 		configure(conf.id);
 	});
-	tr.find('li:eq(2)').click(function() { // delete
-	    	deleteConfig(conf.id, conf.bundle_name);
-	});
 	if (conf.bundle) {
-	    	tr.find('li:eq(1)').click(function() { // unbind
-        		unbindConfig(conf.id, conf.bundle_name);
-        	}).removeClass('ui-state-disabled');
+	    tr.find('li:eq(1)').click(function() { // unbind
+        	unbindConfig(conf.id, conf.bundle_name);
+        }).removeClass('ui-state-disabled');
 	}
+    if ( conf.has_config ) {
+    	tr.find('li:eq(2)').click(function() { // delete
+    	    deleteConfig(conf.id, conf.bundle_name);
+    	}).removeClass('ui-state-disabled');
+    	if ( jsonSupport ) {
+            tr.find('li:eq(3)').click(function() { // json
+		        showjson(conf.id);
+            }).show();
+        }
+    }
 }
 
 function addFactoryConfig(conf) {
 	var tr = factoryRow.clone().appendTo(configTable).attr('fpid', conf.name);
-	//tr.find('td:eq(1)').text(conf.id); // fpid
 	tr.find('td:eq(1)').text(conf.name).click(function() { // name & edit
 		configure(conf.id, true);
 	});
@@ -679,6 +694,8 @@ $(document).ready(function() {
 		close    : function( event, ui ) { navigateAfterConfigurationClose(); }
 	});
 	editorMessage = editor.find('p');
+
+	jsonSupport = configData.jsonsupport;
 
 	// display the configuration data
 	$(".statline").html(configData.status ? i18n.stat_ok : i18n.stat_missing);
