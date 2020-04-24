@@ -51,7 +51,6 @@ import org.apache.felix.scr.impl.metadata.ComponentMetadata;
 import org.apache.felix.scr.impl.xml.XmlHandler;
 import org.osgi.framework.Bundle;
 import org.osgi.framework.BundleContext;
-import org.osgi.framework.Filter;
 import org.osgi.framework.InvalidSyntaxException;
 import org.osgi.framework.ServiceEvent;
 import org.osgi.framework.ServiceListener;
@@ -98,108 +97,59 @@ public class BundleComponentActivator implements ComponentActivator
 
     private static class ListenerInfo implements ServiceListener
     {
-        private Map<Filter, List<ExtendedServiceListener<ExtendedServiceEvent>>> filterMap = new HashMap<>();
+        List<ExtendedServiceListener<ExtendedServiceEvent>> listeners = new ArrayList<>();
 
         @Override
         public void serviceChanged(ServiceEvent event)
         {
-            ServiceReference<?> ref = event.getServiceReference();
-            ExtendedServiceEvent extEvent = null;
-            ExtendedServiceEvent endMatchEvent = null;
-            Map<Filter, List<ExtendedServiceListener<ExtendedServiceEvent>>> filterMap;
+            ExtendedServiceEvent extEvent = new ExtendedServiceEvent(event);
+            List<ExtendedServiceListener<ExtendedServiceEvent>> listeners;
             synchronized ( this )
             {
-                filterMap = this.filterMap;
+                listeners = this.listeners;
             }
-            for ( Map.Entry<Filter, List<ExtendedServiceListener<ExtendedServiceEvent>>> entry : filterMap.entrySet() )
+
+            for ( ExtendedServiceListener<ExtendedServiceEvent> forwardTo : listeners)
             {
-                Filter filter = entry.getKey();
-                if ( filter == null || filter.match( ref ) )
-                {
-                    if ( extEvent == null )
-                    {
-                        extEvent = new ExtendedServiceEvent( event );
-                    }
-                    for ( ExtendedServiceListener<ExtendedServiceEvent> forwardTo : entry.getValue() )
-                    {
-                        forwardTo.serviceChanged( extEvent );
-                    }
-                }
-                else if ( event.getType() == ServiceEvent.MODIFIED )
-                {
-                    if ( endMatchEvent == null )
-                    {
-                        endMatchEvent = new ExtendedServiceEvent( ServiceEvent.MODIFIED_ENDMATCH, ref );
-                    }
-                    for ( ExtendedServiceListener<ExtendedServiceEvent> forwardTo : entry.getValue() )
-                    {
-                        forwardTo.serviceChanged( endMatchEvent );
-                    }
-                }
+                forwardTo.serviceChanged( extEvent );
             }
+
             if ( extEvent != null )
             {
                 extEvent.activateManagers();
             }
-            if ( endMatchEvent != null )
-            {
-                endMatchEvent.activateManagers();
-            }
         }
 
-        public synchronized void add(Filter filter, ExtendedServiceListener<ExtendedServiceEvent> listener)
+        public synchronized void add(ExtendedServiceListener<ExtendedServiceEvent> listener)
         {
-            filterMap = new HashMap<>( filterMap );
-            List<ExtendedServiceListener<ExtendedServiceEvent>> listeners = filterMap.get( filter );
-            if ( listeners == null )
-            {
-                listeners = Collections.<ExtendedServiceListener<ExtendedServiceEvent>> singletonList( listener );
-            }
-            else
-            {
-                listeners = new ArrayList<>( listeners );
-                listeners.add( listener );
-            }
-            filterMap.put( filter, listeners );
+            listeners = new ArrayList<>(listeners);
+            listeners.add(listener);
         }
 
-        public synchronized boolean remove(Filter filter, ExtendedServiceListener<ExtendedServiceEvent> listener)
+        public synchronized boolean remove(ExtendedServiceListener<ExtendedServiceEvent> listener)
         {
-            List<ExtendedServiceListener<ExtendedServiceEvent>> listeners = filterMap.get( filter );
-            if ( listeners != null )
-            {
-                filterMap = new HashMap<>( filterMap );
-                listeners = new ArrayList<>( listeners );
-                listeners.remove( listener );
-                if ( listeners.isEmpty() )
-                {
-                    filterMap.remove( filter );
-                }
-                else
-                {
-                    filterMap.put( filter, listeners );
-                }
-            }
-            return filterMap.isEmpty();
+            listeners = new ArrayList<>(listeners);
+            listeners.remove(listener);
+            return listeners.isEmpty();
         }
     }
 
     @Override
-    public void addServiceListener(String classNameFilter, Filter eventFilter,
+    public void addServiceListener(String serviceFilterString,
         ExtendedServiceListener<ExtendedServiceEvent> listener)
     {
         ListenerInfo listenerInfo;
         synchronized ( listenerMap )
         {
-            logger.log( LogService.LOG_DEBUG, "classNameFilter: " + classNameFilter + " event filter: " + eventFilter, null);
-            listenerInfo = listenerMap.get( classNameFilter );
+            logger.log( LogService.LOG_DEBUG, "serviceFilterString: " + serviceFilterString, null);
+            listenerInfo = listenerMap.get( serviceFilterString );
             if ( listenerInfo == null )
             {
                 listenerInfo = new ListenerInfo();
-                listenerMap.put( classNameFilter, listenerInfo );
+                listenerMap.put( serviceFilterString, listenerInfo );
                 try
                 {
-                    m_context.addServiceListener( listenerInfo, classNameFilter );
+                    m_context.addServiceListener( listenerInfo, serviceFilterString );
                 }
                 catch ( InvalidSyntaxException e )
                 {
@@ -207,23 +157,22 @@ public class BundleComponentActivator implements ComponentActivator
                         "invalid class name filter" ).initCause( e );
                 }
             }
+            listenerInfo.add(listener);
         }
-        listenerInfo.add( eventFilter, listener );
     }
 
     @Override
-    public void removeServiceListener(String className, Filter filter,
+    public void removeServiceListener(String serviceFilterString,
         ExtendedServiceListener<ExtendedServiceEvent> listener)
     {
         synchronized ( listenerMap )
         {
-            ListenerInfo listenerInfo = listenerMap.get( className );
+            ListenerInfo listenerInfo = listenerMap.get( serviceFilterString );
             if ( listenerInfo != null )
             {
-                if ( listenerInfo.remove( filter, listener ) )
-                {
-                    listenerMap.remove( className );
-                    m_context.removeServiceListener( listenerInfo );
+                if (listenerInfo.remove(listener)) {
+                    listenerMap.remove(serviceFilterString);
+                    m_context.removeServiceListener(listenerInfo);
                 }
             }
         }

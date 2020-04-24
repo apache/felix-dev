@@ -35,7 +35,6 @@ import org.junit.Test;
 import org.mockito.Mockito;
 import org.osgi.framework.Bundle;
 import org.osgi.framework.BundleContext;
-import org.osgi.framework.Filter;
 import org.osgi.framework.ServiceReference;
 import org.osgi.framework.ServiceRegistration;
 import org.osgi.service.cm.ConfigurationAdmin;
@@ -51,7 +50,7 @@ public class SingleComponentManagerTest
     private ComponentActivator componentActivator = new ComponentActivator() {
 
         @Override
-        public void addServiceListener(String className, Filter filter,
+        public void addServiceListener(String serviceFilterString,
             ExtendedServiceListener<ExtendedServiceEvent> listener)
         {
             // TODO Auto-generated method stub
@@ -59,7 +58,7 @@ public class SingleComponentManagerTest
         }
 
         @Override
-        public void removeServiceListener(String className, Filter filter,
+        public void removeServiceListener(String serviceFilterString,
             ExtendedServiceListener<ExtendedServiceEvent> listener)
         {
             // TODO Auto-generated method stub

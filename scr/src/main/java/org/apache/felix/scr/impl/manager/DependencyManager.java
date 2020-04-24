@@ -42,7 +42,7 @@ import org.apache.felix.scr.impl.metadata.ReferenceMetadata.ReferenceScope;
 import org.apache.felix.scr.impl.metadata.ServiceMetadata.Scope;
 import org.osgi.framework.BundleContext;
 import org.osgi.framework.Constants;
-import org.osgi.framework.Filter;
+import org.osgi.framework.FrameworkUtil;
 import org.osgi.framework.InvalidSyntaxException;
 import org.osgi.framework.ServicePermission;
 import org.osgi.framework.ServiceReference;
@@ -2168,11 +2168,26 @@ public class DependencyManager<S, T> implements ReferenceManager<S, T>
                 return;
             }
         }
+        if (target != null)
+        {
+            try
+            {
+                FrameworkUtil.createFilter(target);
+            }
+            catch (InvalidSyntaxException e)
+            {
+                m_componentManager.getLogger().log(LogService.LOG_ERROR,
+                        "Invalid syntax in target property for dependency {0} to {1}", null,
+                        getName(), target);
+
+                //create a filter that will never be satisfied
+                target = "(&(invalid.target.cannot.resolve=*)(!(invalid.target.cannot.resolve=*)))";
+            }
+        }
         m_target = target;
 
-        // three filters are created:
+        // two filters are created:
         // classFilter = filters only on the service interface
-        // eventFilter = filters only on the provided target and service scope (if prototype required)
         // initialReferenceFilter = classFilter & eventFilter
 
         // classFilter
@@ -2182,23 +2197,6 @@ public class DependencyManager<S, T> implements ReferenceManager<S, T>
         classFilterSB.append(m_dependencyMetadata.getInterface());
         classFilterSB.append(')');
         final String classFilterString = classFilterSB.toString();
-
-        // eventFilter
-        String eventFilterString;
-        if (m_target != null
-            && m_dependencyMetadata.getScope() == ReferenceScope.prototype_required)
-        {
-            final StringBuilder sb = new StringBuilder("(&").append(PROTOTYPE_SCOPE_CLAUSE).append(m_target).append(")");
-            eventFilterString = sb.toString();
-        }
-        else if ( m_dependencyMetadata.getScope() == ReferenceScope.prototype_required )
-        {
-            eventFilterString = PROTOTYPE_SCOPE_CLAUSE;
-        }
-        else
-        {
-            eventFilterString = m_target;
-        }
 
         // initialReferenceFilter
         final boolean multipleExpr = m_target != null
@@ -2239,52 +2237,16 @@ public class DependencyManager<S, T> implements ReferenceManager<S, T>
         m_componentManager.getLogger().log(LogService.LOG_DEBUG, "Setting target property for dependency {0} to {1}",
                 null, getName(), target );
         BundleContext bundleContext = m_componentManager.getBundleContext();
-        Filter eventFilter = null;
-        if (bundleContext != null)
-        {
-            if (eventFilterString != null)
-            {
-                try
-                {
-                    eventFilter = bundleContext.createFilter(eventFilterString);
-                }
-                catch (InvalidSyntaxException ise)
-                {
-                    m_componentManager.getLogger().log(LogService.LOG_ERROR,
-                        "Invalid syntax in target property for dependency {0} to {1}",
-                        null, getName(), target );
-
-                    //create a filter that will never be satisfied
-                    eventFilterString = "(component.id=-1)";
-                    try
-                    {
-                        eventFilter = bundleContext.createFilter(eventFilterString);
-                    }
-                    catch (InvalidSyntaxException e)
-                    {
-                        //this should not happen
-                        return;
-                    }
-
-                }
-            }
-        }
-        else
-        {
-            m_componentManager.getLogger().log(LogService.LOG_ERROR, "Bundle is shut down for dependency {0} to {1}",
-                    null, getName(), target );
-            return;
-        }
 
         m_customizer.setPreviousRefMap(refMap);
         boolean initialActive = oldTracker != null && oldTracker.isActive();
         m_componentManager.getLogger().log(LogService.LOG_DEBUG,
-            "New service tracker for {0}, initial active: {1}, previous references: {2}, classFilter: {3}, eventFilter {4}, initialReferenceFilter {5}",
-            null, getName(), initialActive, refMap, classFilterString, eventFilter,
+            "New service tracker for {0}, initial active: {1}, previous references: {2}, classFilter: {3}, initialReferenceFilter {4}",
+            null, getName(), initialActive, refMap, classFilterString,
                     initialReferenceFilterString );
         ServiceTracker<T, RefPair<S, T>, ExtendedServiceEvent> tracker = new ServiceTracker<>(
-            bundleContext, m_customizer, initialActive, m_componentManager.getActivator(), eventFilter,
-            classFilterString, initialReferenceFilterString);
+            bundleContext, m_customizer, initialActive, m_componentManager.getActivator(),
+            initialReferenceFilterString);
         m_customizer.setTracker(tracker);
         //set minimum cardinality
         m_minCardinality = minimumCardinality;

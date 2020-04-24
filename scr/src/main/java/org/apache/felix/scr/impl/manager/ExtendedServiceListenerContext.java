@@ -18,15 +18,14 @@
  */
 package org.apache.felix.scr.impl.manager;
 
-import org.osgi.framework.Filter;
 import org.osgi.framework.ServiceEvent;
 
 public interface ExtendedServiceListenerContext<U extends ServiceEvent>
 {
 
-    void addServiceListener(String className, Filter filter,
+    void addServiceListener(String serviceFilterString,
         ExtendedServiceListener<U> listener);
 
-    void removeServiceListener(String className, Filter filter,
+    void removeServiceListener(String serviceFilterString,
         ExtendedServiceListener<U> listener);
 }

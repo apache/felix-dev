@@ -28,7 +28,6 @@ import java.util.TreeMap;
 import java.util.concurrent.atomic.AtomicInteger;
 
 import org.osgi.framework.BundleContext;
-import org.osgi.framework.Filter;
 import org.osgi.framework.InvalidSyntaxException;
 import org.osgi.framework.ServiceEvent;
 import org.osgi.framework.ServiceReference;
@@ -76,13 +75,6 @@ public class ServiceTracker<S, T, U extends ServiceEvent> {
 	 * The Bundle Context used by this {@code ServiceTracker}.
 	 */
 	protected final BundleContext			context;
-	/**
-	 * The Filter used by this {@code ServiceTracker} which specifies the search
-	 * criteria for the services to track.
-	 * 
-	 * @since 1.1
-	 */
-	protected final Filter					eventFilter;
     /**
      * The {@code ServiceTrackerCustomizer} for this tracker.
      */
@@ -118,8 +110,6 @@ public class ServiceTracker<S, T, U extends ServiceEvent> {
 	}
 
     private ExtendedServiceListenerContext<U> extendedServiceListenerContext;
-    private String classFilterString;
-
 
 	/**
 	 * Create a {@code ServiceTracker} on the specified {@code Filter} object.
@@ -137,8 +127,6 @@ public class ServiceTracker<S, T, U extends ServiceEvent> {
 	 *        will call the {@code ServiceTrackerCustomizer} methods on itself.
 	 * @param initialActive Initial active state of the tracker.
 	 * @param bundleComponentActivator TODO
-	 * @param eventFilter The {@code Filter} to select the services to be tracked.
-	 * @param classFilterString TODO
 	 * @param initialReferenceFilterString TODO
 	 * @since 1.1
 	 */
@@ -146,8 +134,6 @@ public class ServiceTracker<S, T, U extends ServiceEvent> {
 	    final ServiceTrackerCustomizer<S, T, U> customizer,
 	    boolean initialActive,
 	    ExtendedServiceListenerContext<U> bundleComponentActivator,
-	    final Filter eventFilter,
-	    final String classFilterString,
 	    final String initialReferenceFilterString) {
         if ((context == null)) {
             /*
@@ -157,11 +143,9 @@ public class ServiceTracker<S, T, U extends ServiceEvent> {
         }
 		this.context = context;
 		this.initialReferenceFilterString = initialReferenceFilterString;
-		this.eventFilter = eventFilter;
 		this.customizer = customizer;
 		this.active = initialActive;
 		this.extendedServiceListenerContext = bundleComponentActivator;
-		this.classFilterString = classFilterString;
 	}
 
 	/**
@@ -206,12 +190,12 @@ public class ServiceTracker<S, T, U extends ServiceEvent> {
 				return;
 			}
 			if (DEBUG) {
-				System.out.println("ServiceTracker.open: " + eventFilter);
+				System.out.println("ServiceTracker.open: " + initialReferenceFilterString);
 			}
 			t = new Tracked( trackingCount );
 			synchronized (t) {
 				try {
-					extendedServiceListenerContext.addServiceListener(classFilterString, eventFilter, t);
+					extendedServiceListenerContext.addServiceListener(initialReferenceFilterString, t);
 					ServiceReference<S>[] references = getInitialReferences(null, initialReferenceFilterString);
 					/* set tracked with the initial references */
 					t.setInitial(references);
@@ -263,7 +247,7 @@ public class ServiceTracker<S, T, U extends ServiceEvent> {
 				return map;
 			}
 			if (DEBUG) {
-				System.out.println("ServiceTracker.close: " + eventFilter);
+				System.out.println("ServiceTracker.close: " + initialReferenceFilterString);
 			}
 			outgoing.close();
             synchronized ( outgoing )
@@ -274,7 +258,7 @@ public class ServiceTracker<S, T, U extends ServiceEvent> {
 //			references = getServiceReferences();
 //			tracked = null;
 			try {
-				extendedServiceListenerContext.removeServiceListener(classFilterString, eventFilter, outgoing);
+				extendedServiceListenerContext.removeServiceListener(initialReferenceFilterString, outgoing);
 			} catch (IllegalStateException e) {
 				/* In case the context was stopped. */
 			}
@@ -289,7 +273,7 @@ public class ServiceTracker<S, T, U extends ServiceEvent> {
 //			}
 //		}
 		if (DEBUG) {
-				System.out.println("ServiceTracker.close[cached cleared]: " + eventFilter);
+				System.out.println("ServiceTracker.close[cached cleared]: " + initialReferenceFilterString);
 		}
         return map;
 	}
@@ -302,7 +286,7 @@ public class ServiceTracker<S, T, U extends ServiceEvent> {
                 return;
             }
             if (DEBUG) {
-                System.out.println("ServiceTracker.close: " + eventFilter);
+                System.out.println("ServiceTracker.close: " + initialReferenceFilterString);
             }
         }
         for (ServiceReference<S> ref: toUntrack.keySet()) {
@@ -534,7 +518,7 @@ public class ServiceTracker<S, T, U extends ServiceEvent> {
 	 */
 	void modified() {
 		if (DEBUG) {
-			System.out.println("ServiceTracker.modified: " + eventFilter);
+			System.out.println("ServiceTracker.modified: " + initialReferenceFilterString);
 		}
 	}
 
