@@ -21,6 +21,7 @@ import java.io.IOException;
 import java.io.PrintWriter;
 import java.io.StringWriter;
 import java.util.Locale;
+import java.util.Map;
 
 import javax.servlet.ServletException;
 import javax.servlet.http.HttpServletRequest;
@@ -29,6 +30,7 @@ import javax.servlet.http.HttpServletResponse;
 import org.apache.felix.utils.json.JSONWriter;
 import org.apache.felix.webconsole.DefaultVariableResolver;
 import org.apache.felix.webconsole.SimpleWebConsolePlugin;
+import org.apache.felix.webconsole.WebConsoleConstants;
 import org.apache.felix.webconsole.WebConsoleUtil;
 import org.apache.felix.webconsole.internal.OsgiManagerPlugin;
 import org.osgi.framework.Constants;
@@ -112,6 +114,7 @@ public class ConfigManager extends SimpleWebConsolePlugin implements OsgiManager
     /**
      * @see javax.servlet.http.HttpServlet#doPost(javax.servlet.http.HttpServletRequest, javax.servlet.http.HttpServletResponse)
      */
+    @Override
     protected void doPost( HttpServletRequest request, HttpServletResponse response ) throws IOException
     {
         // needed multiple times below
@@ -207,6 +210,7 @@ public class ConfigManager extends SimpleWebConsolePlugin implements OsgiManager
     /**
      * @see org.apache.felix.webconsole.AbstractWebConsolePlugin#doGet(javax.servlet.http.HttpServletRequest, javax.servlet.http.HttpServletResponse)
      */
+    @Override
     protected void doGet( HttpServletRequest request, HttpServletResponse response )
             throws ServletException, IOException
     {
@@ -334,6 +338,7 @@ public class ConfigManager extends SimpleWebConsolePlugin implements OsgiManager
     /**
      * @see org.apache.felix.webconsole.AbstractWebConsolePlugin#renderContent(javax.servlet.http.HttpServletRequest, javax.servlet.http.HttpServletResponse)
      */
+    @Override
     protected void renderContent( HttpServletRequest request, HttpServletResponse response ) throws IOException
     {
 
@@ -390,6 +395,10 @@ public class ConfigManager extends SimpleWebConsolePlugin implements OsgiManager
         JSONWriter jw = new JSONWriter(json);
         jw.object();
         final ConfigAdminSupport ca = getConfigurationAdminSupport();
+        // check for osgi installer plugin
+        @SuppressWarnings("unchecked")
+        final Map<String, Object> labelMap = (Map<String, Object>) request.getAttribute(WebConsoleConstants.ATTR_LABEL_MAP);
+        jw.key("jsonsupport").value( labelMap.containsKey("osgi-installer-config-printer") ); //$NON-NLS-1$
         jw.key("status").value( ca != null ? Boolean.TRUE : Boolean.FALSE); //$NON-NLS-1$
         if ( ca != null )
         {
