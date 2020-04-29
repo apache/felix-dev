@@ -243,7 +243,7 @@ public class ConnectTest extends TestCase
                 }
 
                 @Override
-                public Optional<BundleActivator> createBundleActivator()
+                public Optional<BundleActivator> newBundleActivator()
                 {
                     return Optional.empty();
                 }

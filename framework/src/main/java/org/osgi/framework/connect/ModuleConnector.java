@@ -91,5 +91,5 @@ public interface ModuleConnector {
 	 * @return a new activator for this module connector or
 	 *         {@link Optional#empty() empty} if no activator is available
 	 */
-	Optional<BundleActivator> createBundleActivator();
+	Optional<BundleActivator> newBundleActivator();
 }

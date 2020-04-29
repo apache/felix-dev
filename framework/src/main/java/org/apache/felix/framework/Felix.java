@@ -866,7 +866,7 @@ public class Felix extends BundleImpl implements Framework
 
                 if (m_connectFramework != null)
                 {
-                    m_connectFramework.createBundleActivator().ifPresent(m_activatorList::add);
+                    m_connectFramework.newBundleActivator().ifPresent(m_activatorList::add);
                 }
 
                 // Now that we have loaded all cached bundles and have determined the
