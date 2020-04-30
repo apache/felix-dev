@@ -1639,13 +1639,12 @@ public class BundlesServlet extends SimpleWebConsolePlugin implements OsgiManage
     {
         // try to get the bundle name & version, fail if none
         Map.Entry<String, String> snv = getSymbolicNameVersion( bundleFile );
-        String symbolicName = snv.getKey();
-        String version = snv.getValue();
-        if ( symbolicName == null )
-        {
+        if ( snv == null || snv.getKey() == null ) {
             bundleFile.delete();
             throw new IOException( Constants.BUNDLE_SYMBOLICNAME + " header missing, cannot install bundle" );
         }
+        String symbolicName = snv.getKey();
+        String version = snv.getValue();
 
         // check for existing bundle first
         Bundle updateBundle = null;
