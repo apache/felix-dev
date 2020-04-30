@@ -1,5 +1,19 @@
+Changes in 4.5.2
+----------------
+** Bug
+    * [FELIX-6270] - webconsole-all bundle doesn't contain required package
+    * [FELIX-6271] - Make sure invalid bundles are deleted in BundleServlet
+
+Changes in 4.5.0
+----------------
+** Improvement
+    * [FELIX-6254] - Package refresh does not attach fragments
+    * [FELIX-6255] - Allow to update a specific bundle through the UI
+    * [FELIX-6260] - Require Java 8 and OSGi R6
+    * [FELIX-6268] - Add a link to the configuration json serializer if available
+
 Changes in 4.4.0
------------------
+----------------
 ** Improvement
     * [FELIX-6232] - Allow Webconsole to install parallel versions of bundles
 ** Bug
