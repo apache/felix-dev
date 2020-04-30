@@ -114,7 +114,6 @@
                         </Export-Package>
                         <Import-Package>
                             javax.servlet.*;version="[2.4,4)",
-                            org.apache.commons.io; version="[1.4,3)",
                             !org.apache.felix.bundlerepository,
                             !org.osgi.service.obr,
                             !org.osgi.service.cm,
@@ -217,27 +216,22 @@
                                        <Bundle-Version>
                                            ${project.version}-all
                                        </Bundle-Version>
-                                       <Export-Package>                                         
-                                            org.apache.commons.fileupload,
-                                            org.apache.commons.fileupload.disk,
-                                            org.apache.commons.fileupload.servlet,
-                                            org.apache.commons.fileupload.util,
-                                            org.apache.commons.io,
-                                            org.apache.commons.io.filefilter,
-                                            org.apache.commons.io.output,
-                                            org.apache.felix.inventory;version=1.0.0,
-                                            ${webconsole.exports}
+                                       <Export-Package>
+                                           org.apache.commons.fileupload,
+                                           org.apache.commons.fileupload.disk,
+                                           org.apache.commons.fileupload.servlet,
+                                           org.apache.commons.fileupload.util,
+                                           org.apache.commons.io.*,
+                                           org.apache.felix.inventory,
+                                           ${webconsole.exports}
                                        </Export-Package>
                                        <Embed-Dependency>
                                            <!-- Import/Export-Package parsing -->
                                            org.apache.felix.utils;inline=org/apache/felix/utils/manifest/**,
                                            org.apache.felix.utils;inline=org/apache/felix/utils/json/**,
-                                           org.apache.felix.framework;inline=org/apache/felix/framework/util/VersionRange**,
-                                            
-                                           <!-- ServiceTracker -->
-                                           org.osgi.compendium;
-                                              inline=org/osgi/util/tracker/*,
-                                           org.apache.felix.inventory;inline=true
+                                           org.apache.felix.inventory;inline=true,
+                                           commons-fileupload;inline=true,
+                                           commons-io;inline=true
                                        </Embed-Dependency>
                                        
                                        <_removeheaders>
