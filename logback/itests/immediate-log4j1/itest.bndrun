@@ -18,9 +18,9 @@
     org.slf4j.spi;version=1.7.25
 
 -runproperties: \
-    logback.configurationFile=file:${.}/logback.xml
+    logback.configurationFile=${fileuri;${.}/logback.xml}
 
 -runbundles: \
-    biz.aQute.junit;version='[4.1.0,4.1.1)',\
+    biz.aQute.junit;version='[5.0.1,5.0.2)',\
     log4j.over.slf4j;version='[1.7.25,1.7.26)',\
     org.apache.felix.logback.itests.immediate.log4j1;version='[1.0.0,1.0.1)'

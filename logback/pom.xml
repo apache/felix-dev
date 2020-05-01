@@ -38,7 +38,7 @@
     </scm>
 
     <properties>
-        <bnd.version>4.1.0</bnd.version>
+        <bnd.version>5.0.1</bnd.version>
     </properties>
 
     <modules>
@@ -50,19 +50,6 @@
         <defaultGoal>install</defaultGoal>
         <pluginManagement>
             <plugins>
-                <plugin>
-                    <groupId>biz.aQute.bnd</groupId>
-                    <artifactId>bnd-indexer-maven-plugin</artifactId>
-                    <version>${bnd.version}</version>
-                    <executions>
-                        <execution>
-                            <id>index</id>
-                            <goals>
-                                <goal>index</goal>
-                            </goals>
-                        </execution>
-                    </executions>
-                </plugin>
                 <plugin>
                     <groupId>biz.aQute.bnd</groupId>
                     <artifactId>bnd-maven-plugin</artifactId>

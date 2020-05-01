@@ -21,7 +21,6 @@ package org.apache.felix.logback.test;
 import org.apache.felix.logback.test.helper.LogTestHelper;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
-import org.junit.Ignore;
 import org.junit.Test;
 
 public class Log4j2Test extends LogTestHelper {

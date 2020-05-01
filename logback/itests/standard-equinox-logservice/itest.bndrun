@@ -11,10 +11,10 @@
 
 -runproperties: \
     eclipse.log.enabled=false,\
-    logback.configurationFile=file:${.}/logback.xml
+    logback.configurationFile=${fileuri;${.}/logback.xml}
 
 -runbundles: \
-    biz.aQute.junit;version='[4.1.0,4.1.1)',\
+    biz.aQute.junit;version='[5.0.1,5.0.2)',\
     ch.qos.logback.classic;version='[1.2.3,1.2.4)',\
     ch.qos.logback.core;version='[1.2.3,1.2.4)',\
     org.apache.felix.logback.itests.standard.equinox.logservice;version='[1.0.0,1.0.1)',\

@@ -18,10 +18,10 @@
     org.slf4j.spi;version=1.7.25
 
 -runproperties: \
-    logback.configurationFile=file:${.}/logback.xml,\
+    logback.configurationFile=${fileuri;${.}/logback.xml},\
     org.jboss.logging.provider=slf4j
 
 -runbundles: \
-    biz.aQute.junit;version='[4.1.0,4.1.1)',\
+    biz.aQute.junit;version='[5.0.1,5.0.2)',\
     org.apache.felix.logback.itests.immediate.jbl;version='[1.0.0,1.0.1)',\
     org.jboss.logging.jboss-logging;version='[3.3.2,3.3.3)'
