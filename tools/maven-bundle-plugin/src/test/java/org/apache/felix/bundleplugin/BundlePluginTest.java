@@ -1,6 +1,10 @@
 package org.apache.felix.bundleplugin;
 
 
+import static org.hamcrest.CoreMatchers.containsString;
+import static org.hamcrest.CoreMatchers.not;
+import static org.hamcrest.MatcherAssert.assertThat;
+
 /*
  * Licensed to the Apache Software Foundation (ASF) under one
  * or more contributor license agreements.  See the NOTICE file
@@ -22,6 +26,7 @@ package org.apache.felix.bundleplugin;
 
 import java.io.File;
 import java.io.FileOutputStream;
+import java.nio.charset.StandardCharsets;
 import java.util.Arrays;
 import java.util.HashMap;
 import java.util.LinkedHashSet;
@@ -35,12 +40,12 @@ import org.apache.felix.bundleplugin.BundlePlugin.ClassPathItem;
 import org.apache.maven.model.Organization;
 import org.apache.maven.plugin.testing.stubs.MavenProjectStub;
 import org.apache.maven.project.MavenProject;
-import org.apache.maven.shared.dependency.graph.DependencyNode;
 import org.osgi.framework.Constants;
 
 import aQute.bnd.osgi.Analyzer;
 import aQute.bnd.osgi.Builder;
 import aQute.bnd.osgi.Jar;
+import aQute.bnd.osgi.Resource;
 
 
 /**
@@ -374,6 +379,22 @@ public class BundlePluginTest extends AbstractBundlePluginTest
         assertEquals( eas1, eas2 );
     }
 
+    /**
+     * Test that no comment with a time stamp is added to the pom.properties file so ensure a reproducible build. Easiest way is
+     * to remove all comments.
+     */
+    public void testIgnoreTimestampInPomProperties() throws Exception
+    {
+        final MavenProject project = this.getMavenProjectStub();
+        final Map<String, String> instructions = new HashMap<>();
+
+        final Builder builder = this.plugin.buildOSGiBundle( project, instructions, this.plugin.getClasspath( project) );
+
+        final String path = "META-INF/maven/" + project.getGroupId() + "/" + project.getArtifactId() + "/pom.properties";
+        final Resource resource = builder.getJar().getResource(path);
+        final String fileContent = new String(resource.buffer().array(), StandardCharsets.ISO_8859_1);
+        assertThat(fileContent, not(containsString("#")));
+    }
 
     public void testPropertySanitizing() throws Exception
     {
