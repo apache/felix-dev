@@ -1183,7 +1183,8 @@ public class BundlePlugin extends AbstractMojo
 
             for ( String header : Arrays.asList( Constants.IMPORT_PACKAGE, Constants.DYNAMICIMPORT_PACKAGE,
                                                  Constants.EXPORT_PACKAGE, Constants.PRIVATE_PACKAGE,
-                                                 Constants.PROVIDE_CAPABILITY, Constants.REQUIRE_CAPABILITY ) )
+                                                 Constants.PROVIDE_CAPABILITY, Constants.REQUIRE_CAPABILITY,
+                                                 "Bundle-Blueprint", "Service-Component" ) )
             {
                 reformatClauses( bundleManifest.getMainAttributes(), header );
             }
