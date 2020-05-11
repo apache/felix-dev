@@ -36,6 +36,7 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
 import java.util.Collections;
+import java.util.Comparator;
 import java.util.Enumeration;
 import java.util.HashMap;
 import java.util.HashSet;
@@ -1180,6 +1181,13 @@ public class BundlePlugin extends AbstractMojo
                 bundleManifest.getMainAttributes().putValue( "Import-Package", result );
             }
 
+            for ( String header : Arrays.asList( Constants.IMPORT_PACKAGE, Constants.DYNAMICIMPORT_PACKAGE,
+                                                 Constants.EXPORT_PACKAGE, Constants.PRIVATE_PACKAGE,
+                                                 Constants.PROVIDE_CAPABILITY, Constants.REQUIRE_CAPABILITY ) )
+            {
+                reformatClauses( bundleManifest.getMainAttributes(), header );
+            }
+
             jar.setManifest( bundleManifest );
         }
         catch ( Exception e )
@@ -1200,6 +1208,26 @@ public class BundlePlugin extends AbstractMojo
         builder.setJar( jar );
     }
 
+    protected static void reformatClauses( Attributes attributes, String name )
+    {
+        String header = attributes.getValue( name );
+        if ( header != null )
+        {
+            Map<String, Map<String, String>> params = OSGiHeader.parseHeader( header, null ).toBasic();
+            Map<String, Map<String, String>> sorted = new TreeMap<>();
+            for ( Map.Entry<String, Map<String, String>> entry : params.entrySet() )
+            {
+                String key = entry.getKey();
+                Map<String, String> attrs = entry.getValue();
+                Map<String, String> newAttrs = new TreeMap<>(
+                            Comparator.<String, Boolean>comparing( s -> !s.endsWith( ":" ) ).thenComparing( s -> s ) );
+                newAttrs.putAll( attrs );
+                sorted.put( key, newAttrs );
+            }
+            String nh = new Parameters( sorted ).toString();
+            attributes.putValue( name, nh );
+        }
+    }
 
     protected static void mergeManifest( Instructions instructions, Manifest... manifests ) throws IOException
     {
