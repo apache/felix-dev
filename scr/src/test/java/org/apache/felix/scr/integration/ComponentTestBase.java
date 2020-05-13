@@ -185,6 +185,7 @@ public abstract class ComponentTestBase
                         mavenBundle( "org.apache.felix", "org.apache.felix.configadmin", felixCaVersion ) ),
                         mavenBundle( "org.osgi", "org.osgi.util.promise"),
                         mavenBundle( "org.osgi", "org.osgi.util.function"),
+                        mavenBundle( "org.ops4j.pax.url", "pax-url-aether"),
                 junitBundles(), frameworkProperty( "org.osgi.framework.bsnversion" ).value( bsnVersionUniqueness ),
                 systemProperty( "ds.factory.enabled" ).value( Boolean.toString( NONSTANDARD_COMPONENT_FACTORY_BEHAVIOR ) ),
                 systemProperty( "ds.loglevel" ).value( DS_LOGLEVEL ),
@@ -211,8 +212,10 @@ public abstract class ComponentTestBase
                 ConfigurationAdmin.class, null );
         configAdminTracker.open();
 
-        bundle = installBundle( descriptorFile, COMPONENT_PACKAGE );
-        bundle.start();
+        if( descriptorFile != null ) {
+            bundle = installBundle( descriptorFile, COMPONENT_PACKAGE );
+            bundle.start();
+        }
     }
 
     @After
