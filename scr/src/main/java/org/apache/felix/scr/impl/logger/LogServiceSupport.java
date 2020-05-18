@@ -30,7 +30,7 @@ class LogServiceSupport
 {
     private final boolean r7Enabled;
 
-    private final LogService logService;
+    private final Object logService;
 
     private final Bundle bundle;
 
@@ -57,26 +57,45 @@ class LogServiceSupport
 
     public LogServiceSupport(final Bundle bundle, final Object logService)
     {
-        this.logService = (LogService) logService;
+        this.logService = logService;
         this.bundle = bundle;
         this.r7Enabled = checkForLoggerFactory(this.logService.getClass());
     }
 
     InternalLogger getLogger()
     {
-        if ( r7Enabled )
-        {
-            return new R7LogServiceLogger(this.bundle, this.logService, null);
-        }
-        return new R6LogServiceLogger(this.logService);
+    	try 
+    	{
+            if ( r7Enabled )
+            {
+                return LogService.class.isInstance( logService ) ? 
+            	    	new R7LogServiceLogger( this.bundle, ( LogService ) this.logService, null ) :
+            	        new ReflectiveR7LogServiceLogger( this.bundle, logService, null );
+            }
+            return LogService.class.isInstance( logService ) ? new R6LogServiceLogger( ( LogService ) this.logService ) :
+        	    new ReflectiveR6LogServiceLogger(logService);
+    	} catch ( Throwable t ) {
+    		InternalLogger logger = new StdOutLogger();
+    		logger.log(1, "An error occurred creating the logger ", t);
+    		return logger;
+    	}
     }
 
     InternalLogger getLogger(final String className)
     {
-        if ( r7Enabled )
-        {
-            return new R7LogServiceLogger(this.bundle, this.logService, className);
-        }
-        return new R6LogServiceLogger(this.logService);
+    	try {
+    		if ( r7Enabled )
+    		{
+    			return LogService.class.isInstance( logService ) ? 
+    					new R7LogServiceLogger( this.bundle, ( LogService ) this.logService, className ) :
+    						new ReflectiveR7LogServiceLogger( this.bundle, logService, className );
+    		}
+    		return LogService.class.isInstance( logService ) ? new R6LogServiceLogger( ( LogService ) this.logService ) :
+    			new ReflectiveR6LogServiceLogger(logService);
+    	} catch ( Throwable t ) {
+    		InternalLogger logger = new StdOutLogger();
+    		logger.log(1, "An error occurred creating the logger for " + className, t);
+    		return logger;
+    	}
     }
 }
