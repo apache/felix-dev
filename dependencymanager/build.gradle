@@ -17,6 +17,6 @@
  * under the License.
  */
 
-task wrapper(type: Wrapper) {
+tasks.named('wrapper') {
   jarFile = rootProject.file('.gradle-wrapper/gradle-wrapper.jar')
 }

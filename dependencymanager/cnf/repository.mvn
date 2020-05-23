@@ -16,8 +16,8 @@
 #
 
 ant:ant:1.5
-biz.aQute.bnd:biz.aQute.bnd.gradle:3.5.0
-biz.aQute.bnd:biz.aQute.bndlib:3.5.0
+biz.aQute.bnd:biz.aQute.bnd.gradle:5.0.1
+biz.aQute.bnd:biz.aQute.bndlib:5.0.1
 org.apache.felix:org.apache.felix.framework:5.6.10
 org.apache.felix:org.apache.felix.eventadmin:1.4.4
 org.apache.felix:org.apache.felix.gogo.command:1.0.2

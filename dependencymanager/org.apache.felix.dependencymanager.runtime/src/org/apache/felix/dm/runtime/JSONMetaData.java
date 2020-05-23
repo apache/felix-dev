@@ -176,7 +176,11 @@ public class JSONMetaData implements MetaData, Cloneable
         }
         else if (type.equals(Character.class))
         {
-            return Character.valueOf((char) Integer.parseInt(value));
+            try {
+                return Character.valueOf((char) Integer.parseInt(value));
+            } catch (NumberFormatException e) {
+                return value.charAt(0);
+            }
         }
         else if (type.equals(Boolean.class))
         {
@@ -235,7 +239,11 @@ public class JSONMetaData implements MetaData, Cloneable
         else if (type.equals(Character.class))
         {
             for (int i = 0; i < len; i ++) {
-                Array.set(result, i,  Character.valueOf((char) Integer.parseInt(array.get(i).toString())));
+                try {
+                    Array.set(result, i,  Character.valueOf((char) Integer.parseInt(array.get(i).toString())));
+                } catch (NumberFormatException e) {
+                    Array.set(result, i,  Character.valueOf((char) array.get(i).toString().charAt(0)));  
+                }
             }
         }
         else if (type.equals(Boolean.class))
