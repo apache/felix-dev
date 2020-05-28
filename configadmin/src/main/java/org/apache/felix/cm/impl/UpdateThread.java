@@ -178,7 +178,7 @@ public class UpdateThread implements Runnable
                 Log.logger.log( LogService.LOG_ERROR,
                     "Worker thread {0} did not terminate within 5 seconds; trying to kill", new Object[]
                         { workerBaseName } );
-                workerThread.interrupt();
+                workerThread.stop();
             }
         }
     }
