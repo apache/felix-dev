@@ -321,6 +321,9 @@ public class LoggerImpl implements Logger {
     }
 
     String format(String format, LogParameters logParameters) {
+        if (logParameters.isEmpty()) {
+            return format;
+        }
         StringBuilder sb = new StringBuilder();
         int offset = 0;
         int length = format.length();
@@ -368,6 +371,9 @@ public class LoggerImpl implements Logger {
             this.args = args;
             this.sr = sr;
             this.t = t;
+        }
+        public boolean isEmpty() {
+            return (args == null) || (args.length == 0);
         }
         final Object[] args;
         final ServiceReference<?> sr;
