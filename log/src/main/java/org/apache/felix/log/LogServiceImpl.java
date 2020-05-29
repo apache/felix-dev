@@ -19,8 +19,6 @@
 package org.apache.felix.log;
 
 import org.osgi.framework.Bundle;
-import org.osgi.framework.BundleContext;
-import org.osgi.framework.FrameworkUtil;
 import org.osgi.framework.ServiceReference;
 import org.osgi.service.log.LogService;
 import org.osgi.service.log.Logger;
@@ -126,8 +124,7 @@ final class LogServiceImpl implements LogService
 
     @Override
     public Logger getLogger(Class<?> clazz) {
-        LogService logService = getLogService(clazz);
-        return logService.getLogger(clazz.getName());
+        return m_loggerAdminImpl.getLogger(m_bundle, clazz.getName(), Logger.class);
     }
 
     @Override
@@ -137,29 +134,12 @@ final class LogServiceImpl implements LogService
 
     @Override
     public <L extends Logger> L getLogger(Class<?> clazz, Class<L> loggerType) {
-        LogService logService = getLogService(clazz);
-        return logService.getLogger(clazz.getName(), loggerType);
+        return m_loggerAdminImpl.getLogger(m_bundle, clazz.getName(), loggerType);
     }
 
     @Override
     public <L extends Logger> L getLogger(Bundle bundle, String name, Class<L> loggerType) {
-        LogService logService = getLogService(bundle);
-        return logService.getLogger(name, loggerType);
-    }
-
-    private LogService getLogService(Bundle bundle) {
-        if (((bundle.getState() & Bundle.ACTIVE) != Bundle.ACTIVE) &&
-            ((bundle.getState() & Bundle.RESOLVED) != Bundle.RESOLVED)) {
-            throw new IllegalArgumentException("Bundle " + bundle + " is not resolved.");
-        }
-        BundleContext bundleContext = bundle.getBundleContext();
-        ServiceReference<LogService> serviceReference = bundleContext.getServiceReference(LogService.class);
-        return bundleContext.getService(serviceReference);
-    }
-
-    private LogService getLogService(Class<?> clazz) {
-        Bundle bundle = FrameworkUtil.getBundle(clazz);
-        return getLogService(bundle);
+        return m_loggerAdminImpl.getLogger(bundle, name, loggerType);
     }
 
 }
