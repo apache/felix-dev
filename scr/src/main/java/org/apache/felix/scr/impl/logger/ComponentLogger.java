@@ -18,6 +18,7 @@
  */
 package org.apache.felix.scr.impl.logger;
 
+import org.apache.felix.scr.impl.logger.InternalLogger.Level;
 import org.apache.felix.scr.impl.metadata.ComponentMetadata;
 
 /**
@@ -39,7 +40,7 @@ public class ComponentLogger extends AbstractLogger
 
     public ComponentLogger(final ComponentMetadata metadata, final BundleLogger parent)
     {
-        super(parent.getConfiguration(), ""); // we set the prefix later
+        super(""); // we set the prefix later
         this.parent = parent;
         if ( metadata.getName() != null )
         {
@@ -92,7 +93,9 @@ public class ComponentLogger extends AbstractLogger
     }
 
     @Override
-    public boolean log(final int level, final String pattern, final Throwable ex, final Object... arguments) {
+    public boolean log(final Level level, final String pattern, final Throwable ex,
+        final Object... arguments)
+    {
         // delegate to parent if not logging
         if ( !super.log(level, pattern, ex, arguments) ) {
             return this.parent.log(level, pattern, ex, arguments);
@@ -101,7 +104,8 @@ public class ComponentLogger extends AbstractLogger
     }
 
     @Override
-    public boolean log(final int level, final String message, final Throwable ex) {
+    public boolean log(final Level level, final String message, final Throwable ex)
+    {
         // delegate to parent if not logging
         if ( !super.log(level, message, ex) ) {
             return this.parent.log(level, message, ex);

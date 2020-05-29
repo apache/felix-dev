@@ -39,9 +39,10 @@ import org.apache.felix.scr.impl.inject.ValueUtils.ValueType;
 import org.apache.felix.scr.impl.inject.field.FieldUtils.FieldSearchResult;
 import org.apache.felix.scr.impl.inject.internal.ClassUtils;
 import org.apache.felix.scr.impl.logger.ComponentLogger;
+import org.apache.felix.scr.impl.logger.InternalLogger.Level;
 import org.apache.felix.scr.impl.metadata.ReferenceMetadata;
 import org.osgi.framework.BundleContext;
-import org.osgi.service.log.LogService;
+import org.osgi.service.log.LogLevel;
 
 /**
  * Handler for field references
@@ -111,14 +112,17 @@ public class FieldHandler
                     {
                         if ( Modifier.isFinal(this.field.getModifiers()) )
                         {
-                            logger.log( LogService.LOG_ERROR, "Field {0} in class {1} must not be declared as final", null,
+                            logger.log(Level.ERROR,
+                                "Field {0} in class {1} must not be declared as final",
+                                null,
                                     metadata.getField(), this.componentClass );
                             valueType = ValueType.ignore;
                             return true;
                         }
                         if ( fieldType != ClassUtils.LIST_CLASS && fieldType != ClassUtils.COLLECTION_CLASS )
                         {
-                            logger.log( LogService.LOG_ERROR, "Field {0} in class {1} has unsupported type {2}."+
+                            logger.log(Level.ERROR,
+                                "Field {0} in class {1} has unsupported type {2}." +
                                 " It must be one of java.util.Collection or java.util.List.", null,
                                 metadata.getField(), this.componentClass, fieldType.getName() );
                             valueType = ValueType.ignore;
@@ -149,7 +153,7 @@ public class FieldHandler
         {
             valueType = ValueType.ignore;
 
-            logger.log( LogService.LOG_ERROR, "Field {0} in class {1} can't be initialized.",
+            logger.log(Level.ERROR, "Field {0} in class {1} can't be initialized.",
                     ite, metadata.getField(), this.componentClass );
             return false;
 
@@ -353,7 +357,8 @@ public class FieldHandler
 
         private void resolve(final FieldHandler handler, final ComponentLogger logger)
         {
-            logger.log( LogService.LOG_DEBUG, "getting field: {0}", null, handler.metadata.getField() );
+            logger.log(Level.DEBUG, "getting field: {0}", null,
+                handler.metadata.getField());
 
             // resolve the field
         	    final FieldUtils.FieldSearchResult result = FieldUtils.searchField( handler.componentClass, handler.metadata.getField(), logger );
@@ -392,7 +397,8 @@ public class FieldHandler
                 final Object componentInstance,
                 final BindParameters rawParameter)
         {
-            rawParameter.getComponentContext().getLogger().log( LogService.LOG_ERROR, "Field [{0}] not found", null,
+            rawParameter.getComponentContext().getLogger().log(Level.ERROR,
+                "Field [{0}] not found", null,
                 handler.metadata.getField() );
             return null;
         }
@@ -441,7 +447,7 @@ public class FieldHandler
             valueType = null;
             state = NotFound.INSTANCE;
             // TODO - will component really fail?
-            logger.log(LogService.LOG_ERROR, "Field [{0}] not found; Component will fail",
+            logger.log(Level.ERROR, "Field [{0}] not found; Component will fail",
                     null, metadata.getField());
         }
         else
@@ -457,7 +463,7 @@ public class FieldHandler
                     result.field.getType(), result.field, logger);
             }
             state = Resolved.INSTANCE;
-            logger.log(LogService.LOG_DEBUG, "Found field: {0}",
+            logger.log(Level.DEBUG, "Found field: {0}",
                 null, result.field );
         }
     }
@@ -495,7 +501,8 @@ public class FieldHandler
             }
             catch ( final InvocationTargetException ite )
             {
-                rawParameter.getComponentContext().getLogger().log( LogService.LOG_ERROR, "The {0} field has thrown an exception", null,
+                rawParameter.getComponentContext().getLogger().log(Level.ERROR,
+                    "The {0} field has thrown an exception", null,
                     handler.metadata.getField() );
             }
 

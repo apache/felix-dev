@@ -18,6 +18,7 @@
  */
 package org.apache.felix.scr.impl.manager;
 
+import org.apache.felix.scr.impl.logger.InternalLogger.Level;
 
 /**
  * The <code>ScrConfiguration</code> class conveys configuration for the
@@ -74,7 +75,7 @@ public interface ScrConfiguration
      * Returns the current log level.
      * @return
      */
-    int getLogLevel();
+    Level getLogLevel();
 
 
     boolean isFactoryEnabled();

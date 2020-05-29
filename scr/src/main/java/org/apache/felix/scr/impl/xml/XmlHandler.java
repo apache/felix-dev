@@ -27,13 +27,13 @@ import java.util.Map;
 import java.util.Properties;
 
 import org.apache.felix.scr.impl.logger.BundleLogger;
+import org.apache.felix.scr.impl.logger.InternalLogger.Level;
 import org.apache.felix.scr.impl.metadata.ComponentMetadata;
 import org.apache.felix.scr.impl.metadata.DSVersion;
 import org.apache.felix.scr.impl.metadata.PropertyMetadata;
 import org.apache.felix.scr.impl.metadata.ReferenceMetadata;
 import org.apache.felix.scr.impl.metadata.ServiceMetadata;
 import org.osgi.framework.Bundle;
-import org.osgi.service.log.LogService;
 import org.xml.sax.Attributes;
 import org.xml.sax.SAXException;
 import org.xml.sax.helpers.DefaultHandler;
@@ -237,7 +237,7 @@ public class XmlHandler extends DefaultHandler
                 // not inside a component element, ignore current element
                 else if ( !this.isComponent )
                 {
-                    m_logger.log( LogService.LOG_DEBUG,
+                    m_logger.log(Level.DEBUG,
                             "Not currently parsing a component; ignoring element {0} (bundle {1})", null,
                                     localName, m_bundle.getLocation() );
                 }
@@ -419,7 +419,8 @@ public class XmlHandler extends DefaultHandler
                 // used by the Maven SCR Plugin, which is just silently ignored)
                 else if ( !localName.equals( XmlConstants.EL_COMPONENTS ) )
                 {
-                    m_logger.log( LogService.LOG_DEBUG, "Ignoring unsupported element {0} (bundle {1})", null,
+                    m_logger.log(Level.DEBUG,
+                        "Ignoring unsupported element {0} (bundle {1})", null,
                             localName, m_bundle.getLocation() );
                 }
             }
@@ -433,7 +434,8 @@ public class XmlHandler extends DefaultHandler
         // used by the Maven SCR Plugin, which is just silently ignored)
         else if ( !localName.equals( XmlConstants.EL_COMPONENTS ) )
         {
-            m_logger.log( LogService.LOG_DEBUG, "Ignoring unsupported element '{'{0}'}'{1} (bundle {2})", null,
+            m_logger.log(Level.DEBUG,
+                "Ignoring unsupported element '{'{0}'}'{1} (bundle {2})", null,
                     uri, localName, m_bundle.getLocation()  );
         }
     }

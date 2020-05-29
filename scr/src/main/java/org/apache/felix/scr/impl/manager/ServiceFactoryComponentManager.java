@@ -28,11 +28,11 @@ import org.apache.felix.scr.impl.inject.ComponentMethods;
 import org.apache.felix.scr.impl.inject.LifecycleMethod;
 import org.apache.felix.scr.impl.inject.MethodResult;
 import org.apache.felix.scr.impl.inject.RefPair;
+import org.apache.felix.scr.impl.logger.InternalLogger.Level;
 import org.osgi.framework.Bundle;
 import org.osgi.framework.ServiceRegistration;
 import org.osgi.service.component.ComponentConstants;
 import org.osgi.service.component.ComponentInstance;
-import org.osgi.service.log.LogService;
 
 
 /**
@@ -82,7 +82,8 @@ public class ServiceFactoryComponentManager<S> extends SingleComponentManager<S>
         for (ComponentContextImpl<S> componentContext: getComponentContexts() )
         {
             disposeImplementationObject( componentContext, reason );
-            getLogger().log( LogService.LOG_DEBUG, "Unset implementation object for component in deleteComponent for reason {0}",
+            getLogger().log(Level.DEBUG,
+                "Unset implementation object for component in deleteComponent for reason {0}",
                     null, REASONS[ reason ] );
         }
         serviceContexts.clear();
@@ -96,14 +97,14 @@ public class ServiceFactoryComponentManager<S> extends SingleComponentManager<S>
     @Override
     public S getService( Bundle bundle, ServiceRegistration<S> serviceRegistration )
     {
-        getLogger().log( LogService.LOG_DEBUG, "ServiceFactory.getService()", null );
+        getLogger().log(Level.DEBUG, "ServiceFactory.getService()", null);
 
         // When the getServiceMethod is called, the implementation object must be created
 
         ComponentContextImpl<S> componentContext = new ComponentContextImpl<>(this, bundle, serviceRegistration);
         if (collectDependencies(componentContext) )
         {
-            getLogger().log( LogService.LOG_DEBUG,
+            getLogger().log(Level.DEBUG,
                     "getService (ServiceFactory) dependencies collected.",
                     null );
 
@@ -142,7 +143,8 @@ public class ServiceFactoryComponentManager<S> extends SingleComponentManager<S>
         {
             // log that the service factory component cannot be created (we don't
             // know why at this moment; this should already have been logged)
-            getLogger().log( LogService.LOG_DEBUG, "Failed creating the component instance; see log for reason", null );
+            getLogger().log(Level.DEBUG,
+                "Failed creating the component instance; see log for reason", null);
         }
         else
         {
@@ -159,7 +161,7 @@ public class ServiceFactoryComponentManager<S> extends SingleComponentManager<S>
     @Override
     public void ungetService( Bundle bundle, ServiceRegistration<S> registration, S service )
     {
-        getLogger().log( LogService.LOG_DEBUG, "ServiceFactory.ungetService()", null );
+        getLogger().log(Level.DEBUG, "ServiceFactory.ungetService()", null);
 
         // When the ungetServiceMethod is called, the implementation object must be deactivated
         // private ComponentContext and implementation instances

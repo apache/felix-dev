@@ -31,9 +31,9 @@ import org.apache.felix.scr.impl.inject.ScrComponentContext;
 import org.apache.felix.scr.impl.inject.ValueUtils;
 import org.apache.felix.scr.impl.inject.internal.ClassUtils;
 import org.apache.felix.scr.impl.logger.ComponentLogger;
+import org.apache.felix.scr.impl.logger.InternalLogger.Level;
 import org.apache.felix.scr.impl.metadata.DSVersion;
 import org.osgi.framework.BundleContext;
-import org.osgi.service.log.LogService;
 
 
 /**
@@ -96,9 +96,9 @@ implements org.apache.felix.scr.impl.inject.ReferenceMethod
         // flag indicating a suitable but inaccessible method has been found
         boolean suitableMethodNotAccessible = false;
 
-        if ( logger.isLogEnabled( LogService.LOG_DEBUG ) )
+        if (logger.isLogEnabled(Level.DEBUG))
         {
-            logger.log( LogService.LOG_DEBUG,
+            logger.log(Level.DEBUG,
                     "doFindMethod: Looking for method " + targetClass.getName() + "." + getMethodName(), null );
         }
 
@@ -109,9 +109,10 @@ implements org.apache.felix.scr.impl.inject.ReferenceMethod
             method = getServiceReferenceMethod( targetClass, acceptPrivate, acceptPackage, logger );
             if ( method != null )
             {
-                if ( logger.isLogEnabled( LogService.LOG_DEBUG ) )
+                if (logger.isLogEnabled(Level.DEBUG))
                 {
-                    logger.log( LogService.LOG_DEBUG, "doFindMethod: Found Method " + method, null );
+                    logger.log(Level.DEBUG, "doFindMethod: Found Method " + method,
+                        null);
                 }
                 return new MethodInfo<>(method, Collections.singletonList(ValueUtils.ValueType.ref_serviceReference));
             }
@@ -129,9 +130,10 @@ implements org.apache.felix.scr.impl.inject.ReferenceMethod
                 method = getComponentObjectsMethod( targetClass, acceptPrivate, acceptPackage, logger );
                 if ( method != null )
                 {
-                    if ( logger.isLogEnabled( LogService.LOG_DEBUG ) )
+                    if (logger.isLogEnabled(Level.DEBUG))
                     {
-                        logger.log( LogService.LOG_DEBUG, "doFindMethod: Found Method " + method, null );
+                        logger.log(Level.DEBUG, "doFindMethod: Found Method " + method,
+                            null);
                     }
                     return new MethodInfo<>(method, Collections.singletonList(ValueUtils.ValueType.ref_serviceObjects));
                 }
@@ -147,10 +149,10 @@ implements org.apache.felix.scr.impl.inject.ReferenceMethod
         if ( parameterClass != null )
         {
 
-            if ( logger.isLogEnabled( LogService.LOG_DEBUG ) )
+            if (logger.isLogEnabled(Level.DEBUG))
             {
                 logger.log(
-                        LogService.LOG_DEBUG,
+                    Level.DEBUG,
                         "doFindMethod: No method taking ServiceReference found, checking method taking "
                                 + parameterClass.getName(), null );
             }
@@ -161,9 +163,10 @@ implements org.apache.felix.scr.impl.inject.ReferenceMethod
                 method = getServiceObjectMethod( targetClass, parameterClass, acceptPrivate, acceptPackage, logger );
                 if ( method != null )
                 {
-                    if ( logger.isLogEnabled( LogService.LOG_DEBUG ) )
+                    if (logger.isLogEnabled(Level.DEBUG))
                     {
-                        logger.log( LogService.LOG_DEBUG, "doFindMethod: Found Method " + method, null );
+                        logger.log(Level.DEBUG, "doFindMethod: Found Method " + method,
+                            null);
                     }
                     return new MethodInfo<>(method,
                         Collections.singletonList(ValueUtils.ValueType.ref_serviceType));
@@ -180,9 +183,10 @@ implements org.apache.felix.scr.impl.inject.ReferenceMethod
                 method = getServiceObjectAssignableMethod( targetClass, parameterClass, acceptPrivate, acceptPackage, logger );
                 if ( method != null )
                 {
-                    if ( logger.isLogEnabled( LogService.LOG_DEBUG ) )
+                    if (logger.isLogEnabled(Level.DEBUG))
                     {
-                        logger.log( LogService.LOG_DEBUG, "doFindMethod: Found Method " + method, null );
+                        logger.log(Level.DEBUG, "doFindMethod: Found Method " + method,
+                            null);
                     }
                     return new MethodInfo<>(method,
                         Collections.singletonList(ValueUtils.ValueType.ref_serviceType));
@@ -201,9 +205,10 @@ implements org.apache.felix.scr.impl.inject.ReferenceMethod
                     method = getMapMethod( targetClass, parameterClass, acceptPrivate, acceptPackage, logger );
                     if ( method != null )
                     {
-                        if ( logger.isLogEnabled( LogService.LOG_DEBUG ) )
+                        if (logger.isLogEnabled(Level.DEBUG))
                         {
-                            logger.log( LogService.LOG_DEBUG, "doFindMethod: Found Method " + method, null );
+                            logger.log(Level.DEBUG,
+                                "doFindMethod: Found Method " + method, null);
                         }
                         return new MethodInfo<>(method,
                             Collections.singletonList(ValueUtils.ValueType.ref_map));
@@ -225,9 +230,10 @@ implements org.apache.felix.scr.impl.inject.ReferenceMethod
                     method = getServiceObjectWithMapMethod( targetClass, parameterClass, acceptPrivate, acceptPackage, logger );
                     if ( method != null )
                     {
-                        if ( logger.isLogEnabled( LogService.LOG_DEBUG ) )
+                        if (logger.isLogEnabled(Level.DEBUG))
                         {
-                            logger.log( LogService.LOG_DEBUG, "doFindMethod: Found Method " + method, null );
+                            logger.log(Level.DEBUG,
+                                "doFindMethod: Found Method " + method, null);
                         }
                         List<ValueUtils.ValueType> paramTypes = new ArrayList<>(2);
                         paramTypes.add(ValueUtils.ValueType.ref_serviceType);
@@ -247,9 +253,10 @@ implements org.apache.felix.scr.impl.inject.ReferenceMethod
                             acceptPackage );
                     if ( method != null )
                     {
-                        if ( logger.isLogEnabled( LogService.LOG_DEBUG ) )
+                        if (logger.isLogEnabled(Level.DEBUG))
                         {
-                            logger.log( LogService.LOG_DEBUG, "doFindMethod: Found Method " + method, null );
+                            logger.log(Level.DEBUG,
+                                "doFindMethod: Found Method " + method, null);
                         }
                         List<ValueUtils.ValueType> paramTypes = new ArrayList<>(2);
                         paramTypes.add(ValueUtils.ValueType.ref_serviceType);
@@ -342,9 +349,10 @@ implements org.apache.felix.scr.impl.inject.ReferenceMethod
                         {
                             if ( accept( m, acceptPrivate, acceptPackage, returnValue() ) )
                             {
-                                if ( logger.isLogEnabled( LogService.LOG_DEBUG ) )
+                                if (logger.isLogEnabled(Level.DEBUG))
                                 {
-                                    logger.log( LogService.LOG_DEBUG, "doFindMethod: Found Method " + m, null );
+                                    logger.log(Level.DEBUG,
+                                        "doFindMethod: Found Method " + m, null);
                                 }
                                 return new MethodInfo<>(m, paramTypes);
                             }
@@ -354,10 +362,10 @@ implements org.apache.felix.scr.impl.inject.ReferenceMethod
                 }
             }
         }
-        else if ( logger.isLogEnabled( LogService.LOG_WARNING ) )
+        else if (logger.isLogEnabled(Level.WARN))
         {
             logger.log(
-                    LogService.LOG_WARNING,
+                Level.WARN,
                     "doFindMethod: Cannot check for methods taking parameter class " + m_referenceClassName + ": "
                             + targetClass.getName() + " does not see it", null );
         }
@@ -366,7 +374,7 @@ implements org.apache.felix.scr.impl.inject.ReferenceMethod
         // the suitable methods are accessible, we have to terminate
         if ( suitableMethodNotAccessible )
         {
-            logger.log( LogService.LOG_ERROR,
+            logger.log(Level.ERROR,
                     "doFindMethod: Suitable but non-accessible method found in class {0}",null,
                             targetClass.getName() );
             throw new SuitableMethodNotAccessibleException();
@@ -469,10 +477,10 @@ implements org.apache.felix.scr.impl.inject.ReferenceMethod
         Method candidateBindMethods[] = targetClass.getDeclaredMethods();
         boolean suitableNotAccessible = false;
 
-        if ( logger.isLogEnabled( LogService.LOG_DEBUG ) )
+        if (logger.isLogEnabled(Level.DEBUG))
         {
             logger.log(
-                    LogService.LOG_DEBUG,
+                Level.DEBUG,
                     "getServiceObjectAssignableMethod: Checking " + candidateBindMethods.length
                     + " declared method in class " + targetClass.getName(), null );
         }
@@ -481,9 +489,10 @@ implements org.apache.felix.scr.impl.inject.ReferenceMethod
         for ( int i = 0; i < candidateBindMethods.length; i++ )
         {
             Method method = candidateBindMethods[i];
-            if ( logger.isLogEnabled( LogService.LOG_DEBUG ) )
+            if (logger.isLogEnabled(Level.DEBUG))
             {
-                logger.log( LogService.LOG_DEBUG, "getServiceObjectAssignableMethod: Checking " + method, null );
+                logger.log(Level.DEBUG,
+                    "getServiceObjectAssignableMethod: Checking " + method, null);
             }
 
             // Get the parameters for the current method
@@ -495,9 +504,10 @@ implements org.apache.felix.scr.impl.inject.ReferenceMethod
             if ( parameters.length == 1 && method.getName().equals( getMethodName() ) )
             {
 
-                if ( logger.isLogEnabled( LogService.LOG_DEBUG ) )
+                if (logger.isLogEnabled(Level.DEBUG))
                 {
-                    logger.log( LogService.LOG_DEBUG, "getServiceObjectAssignableMethod: Considering " + method, null );
+                    logger.log(Level.DEBUG,
+                        "getServiceObjectAssignableMethod: Considering " + method, null);
                 }
 
                 // Get the parameter type
@@ -516,10 +526,10 @@ implements org.apache.felix.scr.impl.inject.ReferenceMethod
                     // suitable method is not accessible, flag for exception
                     suitableNotAccessible = true;
                 }
-                else if ( logger.isLogEnabled( LogService.LOG_DEBUG ) )
+                else if (logger.isLogEnabled(Level.DEBUG))
                 {
                     logger.log(
-                            LogService.LOG_DEBUG,
+                        Level.DEBUG,
                             "getServiceObjectAssignableMethod: Parameter failure: Required " + theParameter + "; actual "
                                     + parameterClass.getName(), null );
                 }

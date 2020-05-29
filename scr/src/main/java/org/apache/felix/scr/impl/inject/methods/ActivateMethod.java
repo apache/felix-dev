@@ -34,8 +34,8 @@ import org.apache.felix.scr.impl.inject.ScrComponentContext;
 import org.apache.felix.scr.impl.inject.internal.Annotations;
 import org.apache.felix.scr.impl.inject.internal.ClassUtils;
 import org.apache.felix.scr.impl.logger.ComponentLogger;
+import org.apache.felix.scr.impl.logger.InternalLogger.Level;
 import org.apache.felix.scr.impl.metadata.DSVersion;
-import org.osgi.service.log.LogService;
 
 
 public class ActivateMethod extends BaseMethod<ActivatorParameter, Object> implements LifecycleMethod
@@ -77,7 +77,7 @@ public class ActivateMethod extends BaseMethod<ActivatorParameter, Object> imple
         }
         catch ( SuitableMethodNotAccessibleException thrown )
         {
-            logger.log( LogService.LOG_DEBUG, "SuitableMethodNotAccessible", thrown );
+            logger.log(Level.DEBUG, "SuitableMethodNotAccessible", thrown);
             suitableMethodNotAccessible = true;
         }
         if (getDSVersion().isDS11())

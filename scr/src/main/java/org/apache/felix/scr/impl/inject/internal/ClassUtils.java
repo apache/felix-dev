@@ -23,11 +23,11 @@ import java.util.List;
 import java.util.Map;
 
 import org.apache.felix.scr.impl.logger.ComponentLogger;
+import org.apache.felix.scr.impl.logger.InternalLogger.Level;
 import org.osgi.framework.BundleContext;
 import org.osgi.framework.ServiceReference;
 import org.osgi.service.component.ComponentContext;
 import org.osgi.service.component.ComponentServiceObjects;
-import org.osgi.service.log.LogService;
 import org.osgi.service.packageadmin.ExportedPackage;
 import org.osgi.service.packageadmin.PackageAdmin;
 import org.osgi.util.tracker.ServiceTracker;
@@ -85,10 +85,10 @@ public class ClassUtils
             final String className,
             final ComponentLogger logger )
     {
-        if ( logger.isLogEnabled( LogService.LOG_DEBUG ) )
+        if (logger.isLogEnabled(Level.DEBUG))
         {
             logger.log(
-                LogService.LOG_DEBUG,
+                Level.DEBUG,
                 "getReferenceClass: Looking for interface class {0} through loader of {1}", null,
                     className, componentClass.getName() );
         }
@@ -104,9 +104,9 @@ public class ClassUtils
             }
 
             final Class<?> referenceClass = loader.loadClass( className );
-            if ( logger.isLogEnabled( LogService.LOG_DEBUG ) )
+            if (logger.isLogEnabled(Level.DEBUG))
             {
-                logger.log( LogService.LOG_DEBUG,
+                logger.log(Level.DEBUG,
                     "getParameterClass: Found class {0}", null, referenceClass.getName() );
             }
             return referenceClass;
@@ -117,9 +117,9 @@ public class ClassUtils
             // super class so we try this class next
         }
 
-        if ( logger.isLogEnabled( LogService.LOG_DEBUG ) )
+        if (logger.isLogEnabled(Level.DEBUG))
         {
-            logger.log( LogService.LOG_DEBUG,
+            logger.log(Level.DEBUG,
                 "getParameterClass: Not found through component class, using PackageAdmin service", null );
         }
 
@@ -136,18 +136,18 @@ public class ClassUtils
                 {
                     try
                     {
-                        if ( logger.isLogEnabled( LogService.LOG_DEBUG ) )
+                        if (logger.isLogEnabled(Level.DEBUG))
                         {
                             logger.log(
-                                LogService.LOG_DEBUG,
+                                Level.DEBUG,
                                 "getParameterClass: Checking Bundle {0}/{1}",
                                 null, pkg[i].getExportingBundle().getSymbolicName(), pkg[i].getExportingBundle().getBundleId() );
                         }
 
                         Class<?> referenceClass = pkg[i].getExportingBundle().loadClass( className );
-                        if ( logger.isLogEnabled( LogService.LOG_DEBUG ) )
+                        if (logger.isLogEnabled(Level.DEBUG))
                         {
-                            logger.log( LogService.LOG_DEBUG,
+                            logger.log(Level.DEBUG,
                                     "getParameterClass: Found class {0}", null,referenceClass.getName() );
                         }
                         return referenceClass;
@@ -158,23 +158,23 @@ public class ClassUtils
                     }
                 }
             }
-            else if ( logger.isLogEnabled( LogService.LOG_DEBUG ) )
+            else if (logger.isLogEnabled(Level.DEBUG))
             {
-                logger.log( LogService.LOG_DEBUG,
+                logger.log(Level.DEBUG,
                     "getParameterClass: No bundles exporting package {0} found", null, referenceClassPackage );
             }
         }
-        else if ( logger.isLogEnabled( LogService.LOG_DEBUG ) )
+        else if (logger.isLogEnabled(Level.DEBUG))
         {
-            logger.log( LogService.LOG_DEBUG,
+            logger.log(Level.DEBUG,
                 "getParameterClass: PackageAdmin service not available, cannot find class", null );
         }
 
         // class cannot be found, neither through the component nor from an
         // export, so we fall back to assuming Object
-        if ( logger.isLogEnabled( LogService.LOG_DEBUG ) )
+        if (logger.isLogEnabled(Level.DEBUG))
         {
-            logger.log( LogService.LOG_DEBUG,
+            logger.log(Level.DEBUG,
                 "getParameterClass: No class found, falling back to class Object", null );
         }
         return OBJECT_CLASS;

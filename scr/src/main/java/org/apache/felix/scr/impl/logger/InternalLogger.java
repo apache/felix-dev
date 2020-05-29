@@ -18,11 +18,19 @@
  */
 package org.apache.felix.scr.impl.logger;
 
-interface InternalLogger {
+public interface InternalLogger
+{
+    public enum Level
+    {
+        AUDIT, ERROR, WARN, INFO, DEBUG, TRACE;
 
-    void log(int level, String message, Throwable exception);
+        public boolean implies(Level other)
+        {
+            return ordinal() >= other.ordinal();
+        }
+    }
 
-    boolean isLogEnabled(int level);
+    void log(Level level, String message, Throwable ex);
 
-    boolean checkScrConfig();
+    boolean isLogEnabled(Level level);
 }

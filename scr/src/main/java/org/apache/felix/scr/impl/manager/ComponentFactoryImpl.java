@@ -30,6 +30,7 @@ import org.apache.felix.scr.component.ExtFactoryComponentInstance;
 import org.apache.felix.scr.impl.BundleComponentActivator;
 import org.apache.felix.scr.impl.inject.ComponentMethods;
 import org.apache.felix.scr.impl.inject.RefPair;
+import org.apache.felix.scr.impl.logger.InternalLogger.Level;
 import org.apache.felix.scr.impl.metadata.ComponentMetadata;
 import org.apache.felix.scr.impl.metadata.ReferenceMetadata;
 import org.apache.felix.scr.impl.metadata.TargetedPID;
@@ -38,7 +39,6 @@ import org.osgi.service.component.ComponentConstants;
 import org.osgi.service.component.ComponentException;
 import org.osgi.service.component.ComponentFactory;
 import org.osgi.service.component.ComponentInstance;
-import org.osgi.service.log.LogService;
 
 /**
  * The <code>ComponentFactoryImpl</code> extends the {@link AbstractComponentManager}
@@ -122,7 +122,8 @@ public class ComponentFactoryImpl<S> extends AbstractComponentManager<S> impleme
     public ComponentInstance<S> newInstance( Dictionary<String, ?> dictionary )
     {
         final SingleComponentManager<S> cm = createComponentManager();
-        getLogger().log(LogService.LOG_DEBUG, "Creating new instance from component factory", null);
+        getLogger().log(Level.DEBUG, "Creating new instance from component factory",
+            null);
 
         cm.setFactoryProperties( dictionary );
         //configure the properties

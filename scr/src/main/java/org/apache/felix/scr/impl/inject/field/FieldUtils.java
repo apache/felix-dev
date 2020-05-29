@@ -26,7 +26,7 @@ import java.security.PrivilegedAction;
 
 import org.apache.felix.scr.impl.inject.internal.ClassUtils;
 import org.apache.felix.scr.impl.logger.ComponentLogger;
-import org.osgi.service.log.LogService;
+import org.apache.felix.scr.impl.logger.InternalLogger.Level;
 
 /**
  * Utility methods for handling field injection.
@@ -79,7 +79,7 @@ public class FieldUtils {
         while (true)
         {
 
-            logger.log( LogService.LOG_DEBUG,
+            logger.log(Level.DEBUG,
                 "Locating field {0} in class {1}", null, fieldName, theClass.getName() );
 
             try
@@ -92,7 +92,8 @@ public class FieldUtils {
             }
             catch ( final InvocationTargetException ex )
             {
-                logger.log( LogService.LOG_ERROR, "Field {0} cannot be found in component class {1}. The field will be ignored.",
+                logger.log(Level.ERROR,
+                    "Field {0} cannot be found in component class {1}. The field will be ignored.",
                         ex.getTargetException(),
                         fieldName, componentClass.getName()  );
                 return null;
@@ -116,7 +117,9 @@ public class FieldUtils {
         }
 
         // nothing found
-        logger.log( LogService.LOG_ERROR, "Field {0} cannot be found in component class {1}. The field will be ignored.", null,
+        logger.log(Level.ERROR,
+            "Field {0} cannot be found in component class {1}. The field will be ignored.",
+            null,
                       fieldName, componentClass.getName() );
         return new FieldSearchResult(null, false);
     }
@@ -160,9 +163,10 @@ public class FieldUtils {
         {
             // thrown if no field is declared with the given name and
             // parameters
-            if ( logger.isLogEnabled( LogService.LOG_DEBUG ) )
+            if (logger.isLogEnabled(Level.DEBUG))
             {
-                logger.log( LogService.LOG_DEBUG, "Declared Field {0}.{1} not found", null, targetClass.getName(), fieldName );
+                logger.log(Level.DEBUG, "Declared Field {0}.{1} not found", null,
+                    targetClass.getName(), fieldName);
             }
         }
         catch ( Throwable throwable )
@@ -212,7 +216,8 @@ public class FieldUtils {
         // static fields
         if ( Modifier.isStatic( mod ) )
         {
-            logger.log( LogService.LOG_ERROR, "Field {0} must not be static", null, toString(componentClass, field) );
+            logger.log(Level.ERROR, "Field {0} must not be static", null,
+                toString(componentClass, field));
             return new FieldSearchResult(field, false);
         }
 
@@ -244,7 +249,7 @@ public class FieldUtils {
 
         // else don't accept
         // the method would fit the requirements but is not acceptable
-        logger.log( LogService.LOG_ERROR,
+        logger.log(Level.ERROR,
                 "findField: Suitable but non-accessible field {0}", null, toString(componentClass, field));
         return new FieldSearchResult(field, false);
     }
@@ -300,11 +305,11 @@ public class FieldUtils {
         }
         catch ( final IllegalArgumentException iae )
         {
-            logger.log( LogService.LOG_ERROR, "Field {0} can't be set", iae, f.getName() );
+            logger.log(Level.ERROR, "Field {0} can't be set", iae, f.getName());
         }
         catch ( final IllegalAccessException iae )
         {
-            logger.log( LogService.LOG_ERROR, "Field {0} can't be set", iae, f.getName() );
+            logger.log(Level.ERROR, "Field {0} can't be set", iae, f.getName());
         }
     }
 }

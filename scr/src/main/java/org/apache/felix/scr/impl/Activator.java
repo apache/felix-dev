@@ -42,6 +42,7 @@ import java.util.concurrent.locks.ReentrantLock;
 
 import org.apache.felix.scr.impl.config.ScrConfigurationImpl;
 import org.apache.felix.scr.impl.inject.internal.ClassUtils;
+import org.apache.felix.scr.impl.logger.InternalLogger.Level;
 import org.apache.felix.scr.impl.logger.ScrLogger;
 import org.apache.felix.scr.impl.manager.ComponentHolder;
 import org.apache.felix.scr.impl.metadata.ComponentMetadata;
@@ -59,7 +60,6 @@ import org.osgi.framework.wiring.BundleWiring;
 import org.osgi.namespace.extender.ExtenderNamespace;
 import org.osgi.service.component.ComponentConstants;
 import org.osgi.service.component.runtime.ServiceComponentRuntime;
-import org.osgi.service.log.LogService;
 
 /**
  * This activator is used to cover requirement described in section 112.8.1 @@ -27,14
@@ -137,7 +137,9 @@ public class Activator extends AbstractExtender
         }
         if ( ClassUtils.m_packageAdmin != null )
         {
-            logger.log(LogService.LOG_INFO, "Stopping to restart with new globalExtender setting: {0}", null, globalExtender);
+            logger.log(Level.INFO,
+                "Stopping to restart with new globalExtender setting: {0}", null,
+                globalExtender);
 
             //this really is a restart, not the initial start
             // the initial start where m_globalContext is null should skip this as m_packageAdmin should not yet be set.
@@ -150,21 +152,20 @@ public class Activator extends AbstractExtender
                 // logger might be null
                 if ( logger != null )
                 {
-                    logger.log(LogService.LOG_ERROR,  "Exception stopping during restart", e);
+                    logger.log(Level.ERROR, "Exception stopping during restart", e);
                 }
             }
-            // reinstantiate logger
-            logger = new ScrLogger(m_configuration, m_context);
         }
         try
         {
-            logger.log(LogService.LOG_INFO, "Starting with globalExtender setting: {0}", null, globalExtender);
+            logger.log(Level.INFO, "Starting with globalExtender setting: {0}", null,
+                globalExtender);
 
             super.start( m_globalContext );
         }
         catch ( final Exception e )
         {
-            logger.log(LogService.LOG_ERROR,  "Exception starting during restart", e);
+            logger.log(Level.ERROR, "Exception starting during restart", e);
         }
 
     }
@@ -184,7 +185,7 @@ public class Activator extends AbstractExtender
         m_componentRegistry.setRegistration(m_runtime_reg);
 
         // log SCR startup
-        logger.log( LogService.LOG_INFO, " Version = {0}",
+        logger.log(Level.INFO, " Version = {0}",
             null, m_bundle.getVersion().toString() );
 
         // create and start the component actor
@@ -207,6 +208,7 @@ public class Activator extends AbstractExtender
         super.stop( context );
         m_configuration.stop();
         store(m_componentMetadataStore, context, logger, m_configuration.cacheMetadata());
+        logger.closeTracker();
     }
 
     @Override
@@ -277,7 +279,7 @@ public class Activator extends AbstractExtender
                 }
                 catch (IOException e)
                 {
-                    logger.log(LogService.LOG_WARNING,
+                    logger.log(Level.WARN,
                         "Error loading component metadata cache.", e);
                 }
             }
@@ -286,7 +288,7 @@ public class Activator extends AbstractExtender
         catch (RuntimeException re)
         {
             // avoid failing all of SCR start on cache load bug
-            logger.log(LogService.LOG_ERROR,
+            logger.log(Level.ERROR,
                 "Error loading component metadata cache.", re);
             return new ConcurrentHashMap<>();
         }
@@ -339,7 +341,7 @@ public class Activator extends AbstractExtender
         }
         catch (IOException e)
         {
-            logger.log(LogService.LOG_WARNING, "Error storing component metadata cache.",
+            logger.log(Level.WARN, "Error storing component metadata cache.",
                 e);
         }
     }
@@ -376,13 +378,6 @@ public class Activator extends AbstractExtender
             m_componentActor.terminate();
             m_componentActor = null;
         }
-
-        // close the LogService tracker now
-        if ( logger != null )
-        {
-            logger.close();
-            logger = null;
-        }
         ClassUtils.close();
     }
 
@@ -418,7 +413,9 @@ public class Activator extends AbstractExtender
                 catch ( final InterruptedException e )
                 {
                     Thread.currentThread().interrupt();
-                    logger.log(LogService.LOG_WARNING,  "The wait for {0} being destroyed before destruction has been interrupted.", e,
+                    logger.log(Level.WARN,
+                        "The wait for {0} being destroyed before destruction has been interrupted.",
+                        e,
                             bundle );
                 }
                 loadComponents( ScrExtension.this.bundle );
@@ -445,7 +442,9 @@ public class Activator extends AbstractExtender
                 catch ( final InterruptedException e )
                 {
                     Thread.currentThread().interrupt();
-                    logger.log(LogService.LOG_WARNING,  "The wait for {0} being started before destruction has been interrupted.", e,
+                    logger.log(Level.WARN,
+                        "The wait for {0} being started before destruction has been interrupted.",
+                        e,
                             bundle );
 
                 }
@@ -494,7 +493,7 @@ public class Activator extends AbstractExtender
         BundleContext context = bundle.getBundleContext();
         if ( context == null )
         {
-            logger.log(LogService.LOG_DEBUG,  "Cannot get BundleContext of {0}.", null, bundle);
+            logger.log(Level.DEBUG, "Cannot get BundleContext of {0}.", null, bundle);
 
             return;
         }
@@ -509,7 +508,8 @@ public class Activator extends AbstractExtender
             {
                 if ( !m_bundle.adapt( BundleRevision.class ).equals( wire.getProvider() ) )
                 {
-                    logger.log(LogService.LOG_DEBUG,  "{0} wired to a different extender: {1}.", null,
+                    logger.log(Level.DEBUG, "{0} wired to a different extender: {1}.",
+                        null,
                             bundle, wire.getProvider().getBundle());
 
                     return;
@@ -540,7 +540,8 @@ public class Activator extends AbstractExtender
         // terminate if already loaded (or currently being loaded)
         if ( loaded )
         {
-            logger.log(LogService.LOG_DEBUG,  "Components for {0} already loaded. Nothing to do.", null,
+            logger.log(Level.DEBUG,
+                "Components for {0} already loaded. Nothing to do.", null,
                     bundle );
 
             return;
@@ -578,12 +579,15 @@ public class Activator extends AbstractExtender
 
             if ( e instanceof IllegalStateException && bundle.getState() != Bundle.ACTIVE )
             {
-                logger.log(LogService.LOG_DEBUG,  "{0} has been stopped while trying to activate its components. Trying again when the bundles gets started again.", e,
+                logger.log(Level.DEBUG,
+                    "{0} has been stopped while trying to activate its components. Trying again when the bundles gets started again.",
+                    e,
                         bundle );
             }
             else
             {
-                logger.log(LogService.LOG_ERROR,  "Error while loading components of {0}", e, bundle);
+                logger.log(Level.ERROR, "Error while loading components of {0}", e,
+                    bundle);
             }
         }
     }
@@ -610,7 +614,8 @@ public class Activator extends AbstractExtender
             }
             catch ( Exception e )
             {
-                logger.log(LogService.LOG_ERROR,  "Error while disposing components of {0}", e, bundle);
+                logger.log(Level.ERROR, "Error while disposing components of {0}", e,
+                    bundle);
             }
         }
     }
@@ -618,15 +623,15 @@ public class Activator extends AbstractExtender
     @Override
     protected void debug(final Bundle bundle, final String msg)
     {
-        if ( logger.isLogEnabled(LogService.LOG_DEBUG) )
+        if (logger.isLogEnabled(Level.DEBUG))
         {
             if ( bundle != null )
             {
-                logger.log( LogService.LOG_DEBUG, "{0} : " + msg, null, bundle );
+                logger.log(Level.DEBUG, "{0} : " + msg, null, bundle);
             }
             else
             {
-                logger.log( LogService.LOG_DEBUG, msg, null );
+                logger.log(Level.DEBUG, msg, null);
             }
         }
     }
@@ -634,15 +639,15 @@ public class Activator extends AbstractExtender
     @Override
     protected void warn(final Bundle bundle, final String msg, final Throwable t)
     {
-        if ( logger.isLogEnabled(LogService.LOG_WARNING) )
+        if (logger.isLogEnabled(Level.WARN))
         {
             if ( bundle != null )
             {
-                logger.log( LogService.LOG_WARNING, "{0} : " + msg, t, bundle );
+                logger.log(Level.WARN, "{0} : " + msg, t, bundle);
             }
             else
             {
-                logger.log( LogService.LOG_WARNING, msg, t );
+                logger.log(Level.WARN, msg, t);
             }
         }
     }

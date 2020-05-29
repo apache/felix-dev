@@ -20,6 +20,8 @@ package org.apache.felix.scr.impl.logger;
 
 import org.apache.felix.scr.impl.manager.ScrConfiguration;
 import org.osgi.framework.BundleContext;
+import org.osgi.service.log.LoggerFactory;
+import org.osgi.util.tracker.ServiceTracker;
 
 /**
  * This is the "global" logger used by the implementation for all logging
@@ -27,15 +29,30 @@ import org.osgi.framework.BundleContext;
  */
 public class ScrLogger extends LogServiceEnabledLogger
 {
-    public ScrLogger(final ScrConfiguration config, final BundleContext bundleContext)
+    private final ScrConfiguration config;
+    public ScrLogger(final ScrConfiguration config, BundleContext context)
     {
-        super(config, bundleContext);
+        super(context.getBundle(), getTracker(context));
+        this.config = config;
     }
-
 
     @Override
     InternalLogger getDefaultLogger()
     {
-        return new StdOutLogger();
+        return new StdOutLogger(config);
+    }
+
+    private static ServiceTracker<LoggerFactory, LoggerFactory> getTracker(
+        BundleContext context)
+    {
+        ServiceTracker<LoggerFactory, LoggerFactory> tracker = new ServiceTracker<>(
+            context, "org.osgi.service.log.LoggerFactory", null);
+        tracker.open();
+        return tracker;
+    }
+
+    public void closeTracker()
+    {
+        getLoggerFactoryTracker().close();
     }
 }

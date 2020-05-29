@@ -28,10 +28,10 @@ import org.apache.felix.scr.impl.helper.ReadOnlyDictionary;
 import org.apache.felix.scr.impl.inject.internal.Annotations;
 import org.apache.felix.scr.impl.inject.internal.ClassUtils;
 import org.apache.felix.scr.impl.logger.ComponentLogger;
+import org.apache.felix.scr.impl.logger.InternalLogger.Level;
 import org.apache.felix.scr.impl.metadata.ReferenceMetadata;
 import org.osgi.framework.Bundle;
 import org.osgi.framework.ServiceReference;
-import org.osgi.service.log.LogService;
 
 /**
  * Utility methods for handling references and activation
@@ -152,12 +152,15 @@ public class ValueUtils {
             {
                 if ( field != null )
                 {
-                    logger.log( LogService.LOG_ERROR, "Field {0} in class {1} has unsupported type {2}", null,
+                    logger.log(Level.ERROR,
+                        "Field {0} in class {1} has unsupported type {2}", null,
                             metadata.getField(), componentClass, typeClass.getName() );
                 }
                 else
                 {
-                    logger.log( LogService.LOG_ERROR, "Constructor argument {0} in class {1} has unsupported type {2}", null,
+                    logger.log(Level.ERROR,
+                        "Constructor argument {0} in class {1} has unsupported type {2}",
+                        null,
                             metadata.getParameterIndex(), componentClass, typeClass.getName() );
                 }
                 valueType = ValueType.ignore;
@@ -165,7 +168,9 @@ public class ValueUtils {
 
             // if the field is dynamic, it has to be volatile (field is ignored, case logged) (112.3.8.1)
             if ( field != null && !metadata.isStatic() && !Modifier.isVolatile(field.getModifiers()) ) {
-                logger.log( LogService.LOG_ERROR, "Field {0} in class {1} must be declared volatile to handle a dynamic reference", null,
+                logger.log(Level.ERROR,
+                    "Field {0} in class {1} must be declared volatile to handle a dynamic reference",
+                    null,
                         metadata.getField(), componentClass );
                 valueType = ValueType.ignore;
             }
@@ -173,7 +178,8 @@ public class ValueUtils {
             // the field must not be final (field is ignored, case logged) (112.3.8.1)
             if ( field != null && Modifier.isFinal(field.getModifiers()) )
             {
-                logger.log( LogService.LOG_ERROR, "Field {0} in class {1} must not be declared as final", null,
+                logger.log(Level.ERROR,
+                    "Field {0} in class {1} must not be declared as final", null,
                         metadata.getField(), componentClass );
                 valueType = ValueType.ignore;
             }
@@ -207,12 +213,15 @@ public class ValueUtils {
             {
                 if ( field != null )
                 {
-                    logger.log( LogService.LOG_ERROR, "Field {0} in class {1} has unsupported type {2}", null,
+                    logger.log(Level.ERROR,
+                        "Field {0} in class {1} has unsupported type {2}", null,
                             metadata.getField(), componentClass, typeClass.getName() );
                 }
                 else
                 {
-                    logger.log( LogService.LOG_ERROR, "Constructor argument {0} in class {1} has unsupported type {2}", null,
+                    logger.log(Level.ERROR,
+                        "Constructor argument {0} in class {1} has unsupported type {2}",
+                        null,
                             metadata.getParameterIndex(), componentClass, typeClass.getName() );
                 }
                 valueType = ValueType.ignore;
@@ -224,7 +233,9 @@ public class ValueUtils {
                 // if the field is dynamic wit has to be volatile (field is ignored, case logged) (112.3.8.1)
                 if ( !metadata.isStatic() && !Modifier.isVolatile(field.getModifiers()) )
                 {
-                    logger.log( LogService.LOG_ERROR, "Field {0} in class {1} must be declared volatile to handle a dynamic reference", null,
+                    logger.log(Level.ERROR,
+                        "Field {0} in class {1} must be declared volatile to handle a dynamic reference",
+                        null,
                             metadata.getField(), componentClass );
                     valueType = ValueType.ignore;
                 }
@@ -233,7 +244,8 @@ public class ValueUtils {
                 //                   only collection and list allowed
                 if ( typeClass != ClassUtils.LIST_CLASS && typeClass != ClassUtils.COLLECTION_CLASS )
                 {
-                    logger.log( LogService.LOG_ERROR, "Field {0} in class {1} has unsupported type {2}."+
+                    logger.log(Level.ERROR,
+                        "Field {0} in class {1} has unsupported type {2}." +
                             " It must be one of java.util.Collection or java.util.List.", null,
                             metadata.getField(), componentClass, typeClass.getName() );
                     valueType = ValueType.ignore;
@@ -241,7 +253,8 @@ public class ValueUtils {
                 }
                 if ( Modifier.isFinal(field.getModifiers()) )
                 {
-                    logger.log( LogService.LOG_ERROR, "Field {0} in class {1} must not be declared as final", null,
+                    logger.log(Level.ERROR,
+                        "Field {0} in class {1} must not be declared as final", null,
                             metadata.getField(), componentClass );
                     valueType = ValueType.ignore;
                 }
@@ -250,7 +263,9 @@ public class ValueUtils {
         // static references only allowed for replace strategy
         if ( field != null && metadata.isStatic() && !metadata.isReplace() )
         {
-            logger.log( LogService.LOG_ERROR, "Update strategy for field {0} in class {1} only allowed for non static field references.", null,
+            logger.log(Level.ERROR,
+                "Update strategy for field {0} in class {1} only allowed for non static field references.",
+                null,
                     metadata.getField(), componentClass );
             valueType = ValueType.ignore;
         }
@@ -327,7 +342,8 @@ public class ValueUtils {
             } catch (final NoSuchMethodException | SecurityException | IllegalAccessException | IllegalArgumentException | InvocationTargetException e) {
                 error = e;
             }
-            componentContext.getLogger().log( LogService.LOG_ERROR, "Unexpected error while trying to get logger.", null, error );
+            componentContext.getLogger().log(Level.ERROR,
+                "Unexpected error while trying to get logger.", null, error);
         }
         return null;
     }

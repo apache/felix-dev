@@ -21,8 +21,8 @@ package org.apache.felix.scr.impl.logger;
 
 import org.apache.felix.scr.impl.MockBundle;
 import org.apache.felix.scr.impl.MockBundleContext;
+import org.apache.felix.scr.impl.logger.InternalLogger.Level;
 import org.apache.felix.scr.impl.manager.ScrConfiguration;
-import org.osgi.service.log.LogService;
 
 
 public class MockScrLogger extends ScrLogger
@@ -69,9 +69,9 @@ public class MockScrLogger extends ScrLogger
             }
 
             @Override
-            public int getLogLevel()
+            public Level getLogLevel()
             {
-                return LogService.LOG_ERROR;
+                return Level.ERROR;
             }
 
             @Override

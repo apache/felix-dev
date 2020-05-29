@@ -21,7 +21,7 @@ package org.apache.felix.scr.impl.manager;
 import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.TimeUnit;
 
-import org.osgi.service.log.LogService;
+import org.apache.felix.scr.impl.logger.InternalLogger.Level;
 
 /**
  * EdgeInfo holds information about the service event tracking counts for creating (open) and disposing (close)
@@ -86,7 +86,7 @@ class EdgeInfo
         {
             if (!latch.await( m_componentManager.getLockTimeout(), TimeUnit.MILLISECONDS ))
             {
-                m_componentManager.getLogger().log( LogService.LOG_ERROR,
+                m_componentManager.getLogger().log(Level.ERROR,
                         "DependencyManager : {0} : timeout on {1} latch {2}",  null, methodName, latchName, componentName );
                 m_componentManager.dumpThreads();
             }
@@ -97,14 +97,14 @@ class EdgeInfo
             {
                 if (!latch.await( m_componentManager.getLockTimeout(), TimeUnit.MILLISECONDS ))
                 {
-                    m_componentManager.getLogger().log( LogService.LOG_ERROR,
+                    m_componentManager.getLogger().log(Level.ERROR,
                             "DependencyManager : {0} : timeout on {1} latch {2}",  null, methodName, latchName, componentName );
                     m_componentManager.dumpThreads();
                 }
             }
             catch ( InterruptedException e1 )
             {
-                m_componentManager.getLogger().log( LogService.LOG_ERROR,
+                m_componentManager.getLogger().log(Level.ERROR,
                         "DependencyManager : {0} : Interrupted twice on {1} latch {2}",
                         null, methodName, latchName, componentName );
                 Thread.currentThread().interrupt();

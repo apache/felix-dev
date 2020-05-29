@@ -59,14 +59,16 @@ public class Felix6274Test extends ComponentTestBase
     
     @Before
     public void installBundles() throws BundleException {
-        
-        // Install an older version of the log service 
-        String url = mavenBundle( "org.apache.felix", "org.apache.felix.log", "1.0.1" ).getURL();
-        installedBundles.add( bundleContext.installBundle( url ) );
+        String log101 = mavenBundle( "org.apache.felix", "org.apache.felix.log", "1.0.1" ).getURL();
 
-        // Install the R7 version of the log service 
-        url = mavenBundle( "org.apache.felix", "org.apache.felix.log", "1.2.2" ).getURL();
-        installedBundles.add( bundleContext.installBundle( url ) );
+        // install and start the resolver hook first
+        Bundle hookBundle = bundleContext.installBundle("integration.test.6274_hook", createHookBundle());
+        installedBundles.add(hookBundle);
+        hookBundle.start();
+
+        // Install an older version of the log service 
+        installedBundles.add( bundleContext.installBundle( log101 ) );
+
         
         log_1_4_bundle = bundleContext.installBundle( "integration.test.6274", 
                 createStream( "6274", "[1.4,1.5)" ) );
@@ -91,7 +93,7 @@ public class Felix6274Test extends ComponentTestBase
             }
         }
     }
-    
+
     private InputStream createStream(String testNumber, String logImportVersionRange) {
         String classFilePath = "org/apache/felix/scr/integration/components/felix" + testNumber + "/Component.class";
         String componentXML = "integration_test_FELIX_" + testNumber + ".xml";
@@ -110,7 +112,20 @@ public class Felix6274Test extends ComponentTestBase
                                 + ";filter:=\"(&(osgi.extender=osgi.component)(version>=1.4)(!(version>=2.0)))\"" )
                 .build( withClassicBuilder() );
     }
-    
+
+    private InputStream createHookBundle()
+    {
+        String activatorClass = "org.apache.felix.scr.integration.components.felix6274_hook.Activator";
+        String activatorFilePath = activatorClass.replace('.', '/') + ".class";
+        return bundle().add(activatorFilePath, getClass().getResource("/" + activatorFilePath))
+            .set( Constants.BUNDLE_MANIFESTVERSION, "2" )
+            .set( Constants.BUNDLE_SYMBOLICNAME, "integration.test.6274_hook" )
+            .set( Constants.BUNDLE_VERSION, "1.0.0" )
+            .set( Constants.BUNDLE_ACTIVATOR, activatorClass)
+            .set( Constants.IMPORT_PACKAGE, "org.osgi.framework, org.osgi.framework.hooks.resolver, org.osgi.framework.namespace, org.osgi.framework.wiring" )
+            .build( withClassicBuilder() );
+    }
+
     @Test
     public void test_incompatible_log_service_version() throws Exception
     {
@@ -136,15 +151,15 @@ public class Felix6274Test extends ComponentTestBase
         
         assertEquals( 1, running_1_4_components.size() );
         assertEquals( 1, running_1_3_components.size() );
-        
+
         // Check the components are active
         assertEquals( "1.4 Log Service Component failed to activate", 
                 ComponentConfigurationDTO.ACTIVE, running_1_4_components.iterator().next().state );
         log.log( LogService.LOG_INFO, "R7LoggerComponent checked active" );
         
-        assertEquals( "1.3 Log Service Component failed to activate", 
+        assertEquals("1.3 Log Service Component failed to activate",
                 ComponentConfigurationDTO.ACTIVE, running_1_3_components.iterator().next().state);
-        log.log( LogService.LOG_INFO, "LogServiceComponent checked active" );
-        
+        log.log(LogService.LOG_INFO, "LogServiceComponent checked active");
+
     }
 }

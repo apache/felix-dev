@@ -25,7 +25,7 @@ import java.util.concurrent.TimeUnit;
 import java.util.concurrent.locks.Lock;
 import java.util.concurrent.locks.ReentrantLock;
 
-import org.osgi.service.log.LogService;
+import org.apache.felix.scr.impl.logger.InternalLogger.Level;
 
 abstract class RegistrationManager<T>
 {
@@ -92,13 +92,15 @@ abstract class RegistrationManager<T>
             {
                 if ((desired == RegState.unregistered) == (m_serviceRegistration == null))
                 {
-                    log( LogService.LOG_DEBUG, "Already in desired state {0}", null, desired);
+                    log(Level.DEBUG, "Already in desired state {0}", null, desired);
                     return false;
                 }
             }
             else if (opqueue.get( opqueue.size() - 1 ).getRegState() == desired)
             {
-                log( LogService.LOG_DEBUG, "Duplicate request on other thread: registration change queue {0}", null, opqueue);
+                log(Level.DEBUG,
+                    "Duplicate request on other thread: registration change queue {0}",
+                    null, opqueue);
                 rsw = opqueue.get( opqueue.size() - 1 );
                 return false; //another thread will do our work and owns the state change
             }
@@ -106,13 +108,16 @@ abstract class RegistrationManager<T>
             opqueue.add( rsw );
             if (opqueue.size() > 1)
             {
-                log( LogService.LOG_DEBUG, "Allowing other thread to process request: registration change queue {0}", null, opqueue);
+                log(Level.DEBUG,
+                    "Allowing other thread to process request: registration change queue {0}",
+                    null, opqueue);
                 return true; //some other thread will do it later but this thread owns the state change.
             }
             //we're next
             do
             {
-                log( LogService.LOG_DEBUG, "registration change queue {0}", null, opqueue);;
+                log(Level.DEBUG, "registration change queue {0}", null, opqueue);
+                ;
                 RegStateWrapper next = opqueue.get( 0 );
                 T serviceRegistration = m_serviceRegistration;
                 if ( next.getRegState() == RegState.unregistered)
@@ -136,7 +141,9 @@ abstract class RegistrationManager<T>
                         }
                         else
                         {
-                            log( LogService.LOG_ERROR, "Unexpected unregistration request with no registration present",  new Exception("Stack trace"));
+                            log(Level.ERROR,
+                                "Unexpected unregistration request with no registration present",
+                                new Exception("Stack trace"));
 
                         }
                     }
@@ -165,7 +172,9 @@ abstract class RegistrationManager<T>
                 {
                     if ( !rsw.getLatch().await( getTimeout(), TimeUnit.MILLISECONDS ))
                     {
-                        log( LogService.LOG_ERROR, "Timeout waiting for reg change to complete {0}", null, rsw.getRegState());
+                        log(Level.ERROR,
+                            "Timeout waiting for reg change to complete {0}", null,
+                            rsw.getRegState());
                         reportTimeout();
                     }
                 }
@@ -175,13 +184,17 @@ abstract class RegistrationManager<T>
                     {
                         if ( !rsw.getLatch().await( getTimeout(), TimeUnit.MILLISECONDS ))
                         {
-                            log( LogService.LOG_ERROR, "Timeout waiting for reg change to complete {0}", null, rsw.getRegState());
+                            log(Level.ERROR,
+                                "Timeout waiting for reg change to complete {0}", null,
+                                rsw.getRegState());
                             reportTimeout();
                         }
                     }
                     catch ( InterruptedException e1 )
                     {
-                        log( LogService.LOG_ERROR, "Interrupted twice waiting for reg change to complete {0}",null, rsw.getRegState());
+                        log(Level.ERROR,
+                            "Interrupted twice waiting for reg change to complete {0}",
+                            null, rsw.getRegState());
                     }
                     Thread.currentThread().interrupt();
                 }
@@ -196,7 +209,7 @@ abstract class RegistrationManager<T>
 
     abstract void unregister(T serviceRegistration);
 
-    abstract void log( int level, String message, Throwable ex, Object... arguments );
+    abstract void log(Level level, String message, Throwable ex, Object... arguments);
 
     abstract long getTimeout();
 
