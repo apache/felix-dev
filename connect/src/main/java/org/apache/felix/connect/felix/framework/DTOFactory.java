@@ -41,6 +41,7 @@ import org.osgi.framework.wiring.BundleWiring;
 import org.osgi.framework.wiring.dto.BundleRevisionDTO;
 import org.osgi.framework.wiring.dto.BundleWireDTO;
 import org.osgi.framework.wiring.dto.BundleWiringDTO;
+import org.osgi.framework.wiring.dto.FrameworkWiringDTO;
 import org.osgi.framework.wiring.dto.BundleWiringDTO.NodeDTO;
 import org.osgi.resource.Capability;
 import org.osgi.resource.Requirement;
@@ -112,6 +113,10 @@ public class DTOFactory
         else if (type == FrameworkStartLevelDTO.class && bundle instanceof Framework)
         {
             return type.cast(createFrameworkStartLevelDTO((Framework) bundle));
+        }
+        else if (type == FrameworkWiringDTO.class)
+        {
+            return type.cast(createFrameworkWiringDTO(bundle));
         }
         return null;
     }
@@ -395,6 +400,23 @@ public class DTOFactory
         FrameworkStartLevelDTO dto = new FrameworkStartLevelDTO();
         dto.initialBundleStartLevel = fsl.getInitialBundleStartLevel();
         dto.startLevel = fsl.getStartLevel();
+
+        return dto;
+    }
+
+    private static FrameworkWiringDTO createFrameworkWiringDTO(Bundle framework)
+    {
+        FrameworkWiringDTO dto = new FrameworkWiringDTO();
+
+        dto.resources = new HashSet<BundleRevisionDTO>();
+        dto.wirings = new HashSet<NodeDTO>();
+
+        Set<Bundle> bundles = new LinkedHashSet<Bundle>(Arrays.asList(framework.getBundleContext().getBundles()));
+
+        for (Bundle bundle : bundles)
+        {
+            addBundleWiring(bundle, dto.resources, dto.wirings);
+        }
 
         return dto;
     }
