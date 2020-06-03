@@ -18,18 +18,18 @@
  */
 package org.apache.felix.connect.launch;
 
+import java.io.File;
 import java.io.InputStream;
 import java.net.URL;
 import java.util.ArrayList;
-import java.util.Enumeration;
+import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
+import org.apache.felix.connect.felix.framework.util.MapToDictionary;
 import org.osgi.framework.Filter;
 import org.osgi.framework.FrameworkUtil;
-
-import org.apache.felix.connect.felix.framework.util.MapToDictionary;
 
 public class ClasspathScanner
 {
@@ -52,6 +52,34 @@ public class ClasspathScanner
     public List<BundleDescriptor> scanForBundles(String filterString, ClassLoader loader)
             throws Exception
     {
+        loader = (loader != null) ? loader : getClass().getClassLoader();
+    	return scanForBundles(filterString, loader, Collections.list(loader.getResources("META-INF/MANIFEST.MF")));    			
+    }
+ 
+    public List<BundleDescriptor> scanForBundles(String filterString, ClassLoader loader, String directory)
+            throws Exception
+    {
+        List<URL> bundlesURL = new ArrayList<URL>();
+        File dir = new File(directory);
+        if (! dir.exists() || ! dir.isDirectory()) 
+        {
+        	throw new IllegalArgumentException("path " + directory + " does not exist or is not a directory");
+        }
+
+        for (File file : dir.listFiles()) 
+        {
+        	if (file.isFile() && file.getPath().endsWith(".jar"))
+        	{
+        		URL jarUrl = new URL("jar:file://" + file.getPath() + "!/META-INF/MANIFEST.MF");
+        		bundlesURL.add(jarUrl);
+        	}
+        }
+        return scanForBundles(filterString, loader, bundlesURL);
+    }
+
+    public List<BundleDescriptor> scanForBundles(String filterString, ClassLoader loader, List<URL> manifestURLS)
+            throws Exception
+    {
         Filter filter = (filterString != null) ? FrameworkUtil
                 .createFilter(filterString) : null;
 
@@ -59,10 +87,8 @@ public class ClasspathScanner
 
         List<BundleDescriptor> bundles = new ArrayList<BundleDescriptor>();
         byte[] bytes = new byte[1024 * 1024 * 2];
-        for (Enumeration<URL> e = loader.getResources(
-                "META-INF/MANIFEST.MF"); e.hasMoreElements(); )
+        for (URL  manifestURL : manifestURLS)
         {
-            URL manifestURL = e.nextElement();
             InputStream input = null;
             try
             {
