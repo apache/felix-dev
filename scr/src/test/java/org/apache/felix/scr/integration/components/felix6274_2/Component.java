@@ -16,21 +16,18 @@
  * specific language governing permissions and limitations
  * under the License.
  */
-package org.apache.felix.scr.impl.logger;
+package org.apache.felix.scr.integration.components.felix6274_2;
 
-public interface InternalLogger
+import org.osgi.service.log.LogService;
+
+public class Component
 {
-    public enum Level
-    {
-        AUDIT, ERROR, WARN, INFO, DEBUG, TRACE;
 
-        public boolean implies(Level other)
-        {
-            return ordinal() >= other.ordinal();
-        }
+	LogService logger;
+	
+    void activate()
+    {
+        logger.log(LogService.LOG_INFO, "Hello from felix6274_2");
     }
 
-    void log(Level level, String message, Throwable ex);
-
-    boolean isLogEnabled(Level level);
 }

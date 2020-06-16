@@ -16,37 +16,18 @@
  * specific language governing permissions and limitations
  * under the License.
  */
-package org.apache.felix.scr.impl.logger;
+package org.apache.felix.scr.integration.components.felix6274;
 
-import org.osgi.service.log.LogService;
+import org.osgi.service.log.Logger;
 
-/**
- * This is a logger based on the R6 LogService.
- */
-class R6LogServiceLogger implements InternalLogger
+public class Component
 {
-    private final LogService logService;
 
-    public R6LogServiceLogger(final LogService logService)
+	Logger logger;
+	
+    void activate()
     {
-        this.logService = logService;
+        logger.info("Hello from felix6274");
     }
 
-    @Override
-    public boolean isLogEnabled(final int level)
-    {
-        return true;
-    }
-
-    @Override
-    public boolean checkScrConfig() {
-        return true;
-    }
-
-    @SuppressWarnings("deprecation")
-    @Override
-    public void log(final int level, final String message, final Throwable ex)
-    {
-        this.logService.log(level, message, ex);
-    }
 }

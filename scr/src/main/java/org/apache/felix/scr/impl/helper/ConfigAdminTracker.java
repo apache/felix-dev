@@ -18,11 +18,11 @@
  */
 package org.apache.felix.scr.impl.helper;
 
+import org.apache.felix.scr.impl.logger.InternalLogger.Level;
 import org.apache.felix.scr.impl.manager.ComponentActivator;
 import org.apache.felix.scr.impl.manager.RegionConfigurationSupport;
 import org.osgi.framework.ServiceReference;
 import org.osgi.service.cm.ConfigurationAdmin;
-import org.osgi.service.log.LogService;
 import org.osgi.util.tracker.ServiceTracker;
 import org.osgi.util.tracker.ServiceTrackerCustomizer;
 
@@ -57,7 +57,7 @@ public class ConfigAdminTracker
                     }
                     catch ( final Exception ex)
                     {
-                        componentActivator.getLogger().log(LogService.LOG_ERROR,
+                            componentActivator.getLogger().log(Level.ERROR,
                                 "Configuration admin API visible to bundle " + componentActivator.getBundleContext().getBundle() +
                                 " is not the same as the Configuration Admin API visible to the SCR implementation.", ex);
                     }

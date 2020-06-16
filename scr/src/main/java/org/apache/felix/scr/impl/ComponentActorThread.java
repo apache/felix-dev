@@ -21,8 +21,8 @@ package org.apache.felix.scr.impl;
 
 import java.util.LinkedList;
 
+import org.apache.felix.scr.impl.logger.InternalLogger.Level;
 import org.apache.felix.scr.impl.logger.ScrLogger;
-import org.osgi.service.log.LogService;
 
 
 /**
@@ -68,7 +68,7 @@ class ComponentActorThread implements Runnable
     @Override
     public void run()
     {
-        logger.log( LogService.LOG_DEBUG, "Starting ComponentActorThread", null );
+        logger.log(Level.DEBUG, "Starting ComponentActorThread", null);
 
         for ( ;; )
         {
@@ -104,17 +104,19 @@ class ComponentActorThread implements Runnable
                 // return if the task is this thread itself
                 if ( task == TERMINATION_TASK )
                 {
-                    logger.log( LogService.LOG_DEBUG, "Shutting down ComponentActorThread", null );
+                    logger.log(Level.DEBUG, "Shutting down ComponentActorThread",
+                        null);
                     return;
                 }
 
                 // otherwise execute the task, log any issues
-                logger.log( LogService.LOG_DEBUG, "Running task: " + task, null );
+                logger.log(Level.DEBUG, "Running task: " + task, null);
                 task.run();
             }
             catch ( Throwable t )
             {
-                logger.log( LogService.LOG_ERROR, "Unexpected problem executing task " + task, t );
+                logger.log(Level.ERROR, "Unexpected problem executing task " + task,
+                    t);
             }
             finally
             {
@@ -144,7 +146,7 @@ class ComponentActorThread implements Runnable
                 catch ( InterruptedException e )
                 {
                     interrupted = true;
-                    logger.log(LogService.LOG_ERROR,
+                    logger.log(Level.ERROR,
                         "Interrupted exception waiting for queue to empty", e);
                 }
                 finally
@@ -167,7 +169,7 @@ class ComponentActorThread implements Runnable
             // append to the task queue
             tasks.add( task );
 
-            logger.log( LogService.LOG_DEBUG, "Adding task [{0}] as #{1} in the queue", null,
+            logger.log(Level.DEBUG, "Adding task [{0}] as #{1} in the queue", null,
                     task, tasks.size());
 
             // notify the waiting thread

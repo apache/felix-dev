@@ -82,6 +82,9 @@ import org.osgi.service.component.runtime.ServiceComponentRuntime;
 import org.osgi.service.component.runtime.dto.ComponentConfigurationDTO;
 import org.osgi.service.component.runtime.dto.ComponentDescriptionDTO;
 import org.osgi.service.log.LogService;
+import org.osgi.service.log.Logger;
+import org.osgi.service.log.LoggerConsumer;
+import org.osgi.service.log.LoggerFactory;
 import org.osgi.util.tracker.ServiceTracker;
 
 import junit.framework.Assert;
@@ -180,11 +183,15 @@ public abstract class ComponentTestBase
         }
 
         final Option[] base = options(
-                provision( CoreOptions.bundle( bundleFile.toURI().toString() ),
+                provision(
+                        CoreOptions.bundle( bundleFile.toURI().toString() ),
                         mavenBundle( "org.ops4j.pax.tinybundles", "tinybundles", "1.0.0" ),
+                        mavenBundle( "org.osgi", "org.osgi.service.log", "1.4.0"),
+                        mavenBundle( "org.osgi", "org.osgi.util.pushstream", "1.0.0"),
                         mavenBundle( "org.apache.felix", "org.apache.felix.configadmin", felixCaVersion ) ),
                         mavenBundle( "org.osgi", "org.osgi.util.promise"),
                         mavenBundle( "org.osgi", "org.osgi.util.function"),
+                        mavenBundle( "org.ops4j.pax.url", "pax-url-aether"),
                 junitBundles(), frameworkProperty( "org.osgi.framework.bsnversion" ).value( bsnVersionUniqueness ),
                 systemProperty( "ds.factory.enabled" ).value( Boolean.toString( NONSTANDARD_COMPONENT_FACTORY_BEHAVIOR ) ),
                 systemProperty( "ds.loglevel" ).value( DS_LOGLEVEL ),
@@ -202,7 +209,9 @@ public abstract class ComponentTestBase
         log = new Log( restrictedLogging, ignoredWarnings );
         log.start();
         bundleContext.addFrameworkListener( log );
-        bundleContext.registerService( LogService.class.getName(), log, null );
+        bundleContext.registerService(
+            new String[] { LogService.class.getName(), LoggerFactory.class.getName() },
+            log, null);
 
         scrTracker = new ServiceTracker<>( bundleContext,
                 ServiceComponentRuntime.class, null );
@@ -211,8 +220,10 @@ public abstract class ComponentTestBase
                 ConfigurationAdmin.class, null );
         configAdminTracker.open();
 
-        bundle = installBundle( descriptorFile, COMPONENT_PACKAGE );
-        bundle.start();
+        if( descriptorFile != null ) {
+            bundle = installBundle( descriptorFile, COMPONENT_PACKAGE );
+            bundle.start();
+        }
     }
 
     @After
@@ -848,7 +859,7 @@ public abstract class ComponentTestBase
         }
     }
 
-    public static class Log implements LogService, FrameworkListener, Runnable
+    public static class Log implements LogService, Logger, FrameworkListener, Runnable
     {
         private static final int RESTRICTED_LOG_SIZE = 1000;
         private final SimpleDateFormat m_sdf = new SimpleDateFormat( "HH:mm:ss,S" );
@@ -1092,6 +1103,220 @@ public abstract class ComponentTestBase
             default:
                 return null;
             }
+        }
+
+        @Override
+        public <L extends Logger> L getLogger(String name, Class<L> loggerType)
+        {
+            return (L) this;
+        }
+
+        @Override
+        public Logger getLogger(String name)
+        {
+            return this;
+        }
+
+        @Override
+        public Logger getLogger(Class<?> clazz)
+        {
+            return this;
+        }
+
+        @Override
+        public <L extends Logger> L getLogger(Class<?> clazz, Class<L> loggerType)
+        {
+            return (L) this;
+        }
+
+        @SuppressWarnings("unchecked")
+        @Override
+        public <L extends Logger> L getLogger(Bundle bundle, String name,
+            Class<L> loggerType)
+        {
+            return (L) this;
+        }
+
+
+        @Override
+        public String getName()
+        {
+            return null;
+        }
+
+        @Override
+        public boolean isTraceEnabled()
+        {
+            return false;
+        }
+
+        @Override
+        public void trace(String message)
+        {
+        }
+
+        @Override
+        public void trace(String format, Object arg)
+        {
+        }
+
+        @Override
+        public void trace(String format, Object arg1, Object arg2)
+        {
+        }
+
+        @Override
+        public void trace(String format, Object... arguments)
+        {
+        }
+
+        @Override
+        public <E extends Exception> void trace(LoggerConsumer<E> consumer) throws E
+        {
+        }
+
+        @Override
+        public boolean isDebugEnabled()
+        {
+            return false;
+        }
+
+        @Override
+        public void debug(String message)
+        {
+        }
+
+        @Override
+        public void debug(String format, Object arg)
+        {
+        }
+
+        @Override
+        public void debug(String format, Object arg1, Object arg2)
+        {
+        }
+
+        @Override
+        public void debug(String format, Object... arguments)
+        {
+        }
+
+        @Override
+        public <E extends Exception> void debug(LoggerConsumer<E> consumer) throws E
+        {
+        }
+
+        @Override
+        public boolean isInfoEnabled()
+        {
+            return false;
+        }
+
+        @Override
+        public void info(String message)
+        {
+        }
+
+        @Override
+        public void info(String format, Object arg)
+        {
+        }
+
+        @Override
+        public void info(String format, Object arg1, Object arg2)
+        {
+        }
+
+        @Override
+        public void info(String format, Object... arguments)
+        {
+        }
+
+        @Override
+        public <E extends Exception> void info(LoggerConsumer<E> consumer) throws E
+        {
+        }
+
+        @Override
+        public boolean isWarnEnabled()
+        {
+            return false;
+        }
+
+        @Override
+        public void warn(String message)
+        {
+        }
+
+        @Override
+        public void warn(String format, Object arg)
+        {
+        }
+
+        @Override
+        public void warn(String format, Object arg1, Object arg2)
+        {
+        }
+
+        @Override
+        public void warn(String format, Object... arguments)
+        {
+        }
+
+        @Override
+        public <E extends Exception> void warn(LoggerConsumer<E> consumer) throws E
+        {
+        }
+
+        @Override
+        public boolean isErrorEnabled()
+        {
+            return false;
+        }
+
+        @Override
+        public void error(String message)
+        {
+        }
+
+        @Override
+        public void error(String format, Object arg)
+        {
+        }
+
+        @Override
+        public void error(String format, Object arg1, Object arg2)
+        {
+        }
+
+        @Override
+        public void error(String format, Object... arguments)
+        {
+        }
+
+        @Override
+        public <E extends Exception> void error(LoggerConsumer<E> consumer) throws E
+        {
+        }
+
+        @Override
+        public void audit(String message)
+        {
+        }
+
+        @Override
+        public void audit(String format, Object arg)
+        {
+        }
+
+        @Override
+        public void audit(String format, Object arg1, Object arg2)
+        {
+        }
+
+        @Override
+        public void audit(String format, Object... arguments)
+        {
         }
     }
 }

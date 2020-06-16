@@ -24,11 +24,11 @@ import java.util.Hashtable;
 
 import org.apache.felix.scr.impl.Activator;
 import org.apache.felix.scr.impl.ComponentCommands;
+import org.apache.felix.scr.impl.logger.InternalLogger.Level;
 import org.apache.felix.scr.impl.manager.ScrConfiguration;
 import org.osgi.framework.BundleContext;
 import org.osgi.framework.Constants;
 import org.osgi.framework.ServiceRegistration;
-import org.osgi.service.log.LogService;
 import org.osgi.service.metatype.MetaTypeProvider;
 
 
@@ -73,7 +73,7 @@ public class ScrConfigurationImpl implements ScrConfiguration
 
     private final Activator activator;
 
-    private int logLevel;
+    private Level logLevel;
 
     private boolean factoryEnabled;
 
@@ -169,7 +169,7 @@ public class ScrConfigurationImpl implements ScrConfiguration
                 {
                     if (this.bundleContext == null)
                     {
-                        logLevel = LogService.LOG_ERROR;
+                        logLevel = Level.ERROR;
                         factoryEnabled = false;
                         keepInstances = false;
                         infoAsService = false;
@@ -230,7 +230,7 @@ public class ScrConfigurationImpl implements ScrConfiguration
      * @return
      */
     @Override
-    public int getLogLevel()
+    public Level getLogLevel()
     {
         return logLevel;
     }
@@ -297,7 +297,7 @@ public class ScrConfigurationImpl implements ScrConfiguration
     }
 
 
-    private int getDefaultLogLevel()
+    private Level getDefaultLogLevel()
     {
         return getLogLevel( bundleContext.getProperty( PROP_LOGLEVEL ) );
     }
@@ -348,19 +348,21 @@ public class ScrConfigurationImpl implements ScrConfiguration
             bundleContext.getProperty(PROP_CACHE_METADATA));
     }
 
-    private int getLogLevel( final Object levelObject )
+    private Level getLogLevel(final Object levelObject)
     {
         if ( levelObject != null )
         {
             if ( levelObject instanceof Number )
             {
-                return ( ( Number ) levelObject ).intValue();
+                int ordinal = ((Number) levelObject).intValue();
+                return Level.values()[ordinal];
             }
 
             String levelString = levelObject.toString();
             try
             {
-                return Integer.parseInt( levelString );
+                int ordinal = Integer.parseInt(levelString);
+                return Level.values()[ordinal];
             }
             catch ( NumberFormatException nfe )
             {
@@ -369,35 +371,35 @@ public class ScrConfigurationImpl implements ScrConfiguration
 
             if ( LOG_LEVEL_DEBUG.equalsIgnoreCase( levelString ) )
             {
-                return LogService.LOG_DEBUG;
+                return Level.DEBUG;
             }
             else if ( LOG_LEVEL_INFO.equalsIgnoreCase( levelString ) )
             {
-                return LogService.LOG_INFO;
+                return Level.INFO;
             }
             else if ( LOG_LEVEL_WARN.equalsIgnoreCase( levelString ) )
             {
-                return LogService.LOG_WARNING;
+                return Level.WARN;
             }
             else if ( LOG_LEVEL_ERROR.equalsIgnoreCase( levelString ) )
             {
-                return LogService.LOG_ERROR;
+                return Level.ERROR;
             }
         }
 
         // check ds.showtrace property
         if ( VALUE_TRUE.equalsIgnoreCase( bundleContext.getProperty( PROP_SHOWTRACE ) ) )
         {
-            return LogService.LOG_DEBUG;
+            return Level.DEBUG;
         }
 
         // next check ds.showerrors property
         if ( "false".equalsIgnoreCase( bundleContext.getProperty( PROP_SHOWERRORS ) ) )
         {
-            return -1; // no logging at all !!
+            return Level.AUDIT; // no logging at all !!
         }
 
         // default log level (errors only)
-        return LogService.LOG_ERROR;
+        return Level.ERROR;
     }
 }

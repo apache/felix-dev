@@ -26,9 +26,9 @@ import java.util.Map.Entry;
 
 import org.apache.felix.scr.impl.inject.RefPair;
 import org.apache.felix.scr.impl.inject.ScrComponentContext;
+import org.apache.felix.scr.impl.logger.InternalLogger.Level;
 import org.osgi.framework.BundleContext;
 import org.osgi.framework.ServiceReference;
-import org.osgi.service.log.LogService;
 
 /**
  * @version $Rev$ $Date$
@@ -85,7 +85,7 @@ public abstract class AbstractPrototypeRefPair<S, T> extends RefPair<S, T>
         {
             markFailed();
             key.getLogger().log(
-                 LogService.LOG_WARNING,
+                Level.WARN,
                  "Could not get service from serviceobjects for ref {0}", null, getRef() );
             return false;
         }

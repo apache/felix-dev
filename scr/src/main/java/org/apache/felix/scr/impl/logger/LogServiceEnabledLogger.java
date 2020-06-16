@@ -18,11 +18,10 @@
  */
 package org.apache.felix.scr.impl.logger;
 
-import org.apache.felix.scr.impl.manager.ScrConfiguration;
-import org.osgi.framework.BundleContext;
-import org.osgi.framework.ServiceReference;
+import org.osgi.framework.Bundle;
+import org.osgi.service.log.Logger;
+import org.osgi.service.log.LoggerFactory;
 import org.osgi.util.tracker.ServiceTracker;
-import org.osgi.util.tracker.ServiceTrackerCustomizer;
 
 /**
  * This abstract class adds support for using a LogService
@@ -30,85 +29,46 @@ import org.osgi.util.tracker.ServiceTrackerCustomizer;
  */
 abstract class LogServiceEnabledLogger extends AbstractLogger
 {
-    // name of the LogService class (this is a string to not create a reference to the class)
-    // With R7, LogService is deprecated but extends the newer LoggerFactory
-    private static final String LOGSERVICE_CLASS = "org.osgi.service.log.LogService";
-
     // the log service to log messages to
-    protected final ServiceTracker<Object, Object> logServiceTracker;
+    protected final ServiceTracker<LoggerFactory, LoggerFactory> loggingFactoryTracker;
+
+    protected final Bundle bundle;
 
     private volatile InternalLogger currentLogger;
 
     protected volatile int trackingCount = -2;
 
-    public LogServiceEnabledLogger(final ScrConfiguration config, final BundleContext bundleContext)
+    public LogServiceEnabledLogger(final Bundle bundle, ServiceTracker<LoggerFactory, LoggerFactory> loggingFactoryTracker)
     {
-        super(config, getBundleIdentifier(bundleContext.getBundle()));
-        // Start a tracker for the log service
-        // we only track a single log service which in reality should be enough
-        logServiceTracker = new ServiceTracker<>( bundleContext, LOGSERVICE_CLASS, new ServiceTrackerCustomizer<Object, Object>()
-        {
-            private volatile boolean hasService = false;
-
-            @Override
-            public Object addingService(final ServiceReference<Object> reference)
-            {
-                if ( !hasService )
-                {
-                    final Object logService = bundleContext.getService(reference);
-                    if ( logService != null )
-                    {
-                        hasService = true;
-                        final LogServiceSupport lsl = new LogServiceSupport(bundleContext.getBundle(), logService);
-                        return lsl;
-                    }
-                }
-                return null;
-            }
-
-            @Override
-            public void modifiedService(final ServiceReference<Object> reference, final Object service)
-            {
-                // nothing to do
-            }
-
-            @Override
-            public void removedService(final ServiceReference<Object> reference, final Object service)
-            {
-                hasService = false;
-                bundleContext.ungetService(reference);
-            }
-        } );
-        logServiceTracker.open();
-    }
-
-    /**
-     * Close the logger
-     */
-    public void close()
-    {
-        // stop the tracker
-        logServiceTracker.close();
+        super(getBundleIdentifier(bundle));
+        this.bundle = bundle;
+        this.loggingFactoryTracker = loggingFactoryTracker;
     }
 
     @Override
     InternalLogger getLogger()
     {
-        if ( this.trackingCount < this.logServiceTracker.getTrackingCount() )
+        if (this.trackingCount < this.loggingFactoryTracker.getTrackingCount())
         {
-            final Object logServiceSupport = this.logServiceTracker.getService();
-            if ( logServiceSupport == null )
+            final LoggerFactory factory = this.loggingFactoryTracker.getService();
+            if (factory == null)
             {
                 this.currentLogger = this.getDefaultLogger();
             }
             else
             {
-                this.currentLogger = ((LogServiceSupport)logServiceSupport).getLogger();
+                this.currentLogger = new OSGiLogger(
+                    factory.getLogger(bundle, null, Logger.class));
             }
-            this.trackingCount = this.logServiceTracker.getTrackingCount();
+            this.trackingCount = this.loggingFactoryTracker.getTrackingCount();
         }
         return currentLogger;
     }
 
     abstract InternalLogger getDefaultLogger();
+
+    ServiceTracker<LoggerFactory, LoggerFactory> getLoggerFactoryTracker()
+    {
+        return loggingFactoryTracker;
+    }
 }

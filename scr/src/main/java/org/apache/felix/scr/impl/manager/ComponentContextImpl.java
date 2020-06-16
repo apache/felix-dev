@@ -32,13 +32,13 @@ import org.apache.felix.scr.impl.helper.ReadOnlyDictionary;
 import org.apache.felix.scr.impl.inject.RefPair;
 import org.apache.felix.scr.impl.inject.ScrComponentContext;
 import org.apache.felix.scr.impl.logger.ComponentLogger;
+import org.apache.felix.scr.impl.logger.InternalLogger.Level;
 import org.apache.felix.scr.impl.metadata.ComponentMetadata;
 import org.osgi.framework.Bundle;
 import org.osgi.framework.BundleContext;
 import org.osgi.framework.ServiceReference;
 import org.osgi.framework.ServiceRegistration;
 import org.osgi.service.component.ComponentInstance;
-import org.osgi.service.log.LogService;
 
 
 /**
@@ -275,7 +275,9 @@ public class ComponentContextImpl<S> implements ScrComponentContext {
             }
             catch ( InterruptedException e1 )
             {
-                m_componentManager.getLogger().log( LogService.LOG_INFO, "Interrupted twice waiting for implementation object to become accessible", e1 );
+                m_componentManager.getLogger().log(Level.INFO,
+                    "Interrupted twice waiting for implementation object to become accessible",
+                    e1);
             }
             Thread.currentThread().interrupt();
             return null;

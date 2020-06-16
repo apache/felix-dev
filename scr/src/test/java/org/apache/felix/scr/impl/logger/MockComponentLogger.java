@@ -18,6 +18,7 @@
  */
 package org.apache.felix.scr.impl.logger;
 
+import org.apache.felix.scr.impl.logger.InternalLogger.Level;
 import org.apache.felix.scr.impl.metadata.ComponentMetadata;
 import org.apache.felix.scr.impl.metadata.DSVersion;
 
@@ -29,14 +30,15 @@ public class MockComponentLogger extends ComponentLogger
     }
 
     @Override
-    public boolean log(final int level, final String pattern, final Throwable ex, final Object... arguments)
+    public boolean log(final Level level, final String pattern, final Throwable ex,
+        final Object... arguments)
     {
         // ignore
         return true;
     }
 
     @Override
-    public boolean log(final int level, final String message, final Throwable ex)
+    public boolean log(final Level level, final String message, final Throwable ex)
     {
         // ignore
         return true;

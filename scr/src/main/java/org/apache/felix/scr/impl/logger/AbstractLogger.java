@@ -20,7 +20,7 @@ package org.apache.felix.scr.impl.logger;
 
 import java.text.MessageFormat;
 
-import org.apache.felix.scr.impl.manager.ScrConfiguration;
+import org.apache.felix.scr.impl.logger.InternalLogger.Level;
 import org.osgi.framework.Bundle;
 
 /**
@@ -29,22 +29,15 @@ import org.osgi.framework.Bundle;
  */
 public abstract class AbstractLogger
 {
-    private final ScrConfiguration config;
 
     /**
      * The prefix put for each log message
      */
     private volatile String prefix;
 
-    AbstractLogger(final ScrConfiguration config, final String prefix)
+    AbstractLogger(final String prefix)
     {
-        this.config = config;
         this.prefix = prefix;
-    }
-
-    ScrConfiguration getConfiguration()
-    {
-        return this.config;
     }
 
     void setPrefix(final String value)
@@ -66,11 +59,10 @@ public abstract class AbstractLogger
     /**
      * Returns {@code true} if logging for the given level is enabled.
      */
-    public boolean isLogEnabled(final int level)
+    public boolean isLogEnabled(final Level level)
     {
         final InternalLogger l = getLogger();
-        return (!l.checkScrConfig() || config.getLogLevel() >= level)
-               && l.isLogEnabled(level);
+        return l.isLogEnabled(level);
     }
 
     /**
@@ -85,7 +77,8 @@ public abstract class AbstractLogger
      * @param arguments The format arguments for the <code>pattern</code>
      *      string.
      */
-    public boolean log(final int level, final String pattern, final Throwable ex, final Object... arguments )
+    public boolean log(final Level level, final String pattern, final Throwable ex,
+        final Object... arguments)
     {
         if ( isLogEnabled( level ) )
         {
@@ -105,7 +98,7 @@ public abstract class AbstractLogger
      * @param message The message to print
      * @param ex The <code>Throwable</code> causing the message to be logged.
      */
-    public boolean log(final int level, final String message, final Throwable ex)
+    public boolean log(final Level level, final String message, final Throwable ex)
     {
         if ( isLogEnabled( level ) )
         {

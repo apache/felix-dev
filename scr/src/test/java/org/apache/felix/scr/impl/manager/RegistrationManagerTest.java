@@ -23,6 +23,7 @@ import static org.junit.Assert.fail;
 import java.util.ArrayList;
 import java.util.concurrent.CountDownLatch;
 
+import org.apache.felix.scr.impl.logger.InternalLogger.Level;
 import org.apache.felix.scr.impl.manager.RegistrationManager.RegState;
 import org.junit.Test;
 
@@ -112,7 +113,7 @@ public class RegistrationManagerTest
         }
 
         @Override
-        void log(int level, String message, Throwable ex, Object... arguments)
+        void log(Level level, String message, Throwable ex, Object... arguments)
         {
             if ( arguments != null && arguments.length == 1 && (arguments[0] instanceof ArrayList))
             {

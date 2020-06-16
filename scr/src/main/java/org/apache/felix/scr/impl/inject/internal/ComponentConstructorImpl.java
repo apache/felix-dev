@@ -34,9 +34,9 @@ import org.apache.felix.scr.impl.inject.ValueUtils;
 import org.apache.felix.scr.impl.inject.ValueUtils.ValueType;
 import org.apache.felix.scr.impl.inject.field.FieldUtils;
 import org.apache.felix.scr.impl.logger.ComponentLogger;
+import org.apache.felix.scr.impl.logger.InternalLogger.Level;
 import org.apache.felix.scr.impl.metadata.ComponentMetadata;
 import org.apache.felix.scr.impl.metadata.ReferenceMetadata;
-import org.osgi.service.log.LogService;
 
 /**
  * This implementation is used to construct a component instance object,
@@ -68,14 +68,14 @@ public class ComponentConstructorImpl<S> implements ComponentConstructor<S>
                 {
                     // if the index (starting at 0) is equal or higher than the number of constructor arguments
                     // we log an error and ignore the reference
-                    logger.log(LogService.LOG_ERROR,
+                    logger.log(Level.ERROR,
                             "Ignoring reference {0} for constructor injection. Parameter index is too high.", null,
                             refMetadata.getName() );
                 }
                 else if ( !refMetadata.isStatic() )
                 {
                     // if the reference is dynamic, we log an error and ignore the reference
-                    logger.log(LogService.LOG_ERROR,
+                    logger.log(Level.ERROR,
                             "Ignoring reference {0} for constructor injection. Reference is dynamic.", null,
                             refMetadata.getName() );
                 }
@@ -101,7 +101,7 @@ public class ComponentConstructorImpl<S> implements ComponentConstructor<S>
             if ( c.getParameterTypes().length == componentMetadata.getNumberOfConstructorParameters() )
             {
                 final Constructor<S> check = (Constructor<S>) c;
-                logger.log(LogService.LOG_DEBUG,
+                logger.log(Level.DEBUG,
                         "Checking constructor {0}", null,
                         check );
                 // check argument types
@@ -119,7 +119,7 @@ public class ComponentConstructorImpl<S> implements ComponentConstructor<S>
                             foundTypes[i] = ValueUtils.getValueType(argTypes[i]);
                             if ( foundTypes[i] == ValueType.ignore )
                             {
-                                logger.log(LogService.LOG_DEBUG,
+                                logger.log(Level.DEBUG,
                                         "Constructor argument type {0} not supported by constructor injection: {1}", null,
                                         i, argTypes[i] );
                             }
@@ -144,7 +144,7 @@ public class ComponentConstructorImpl<S> implements ComponentConstructor<S>
                             {
                                 if ( refs.size() > 1 )
                                 {
-                                    logger.log(LogService.LOG_ERROR,
+                                    logger.log(Level.ERROR,
                                             "Several references for constructor injection of parameter {0}. Only {1} will be used out of: {2}.", null,
                                             i, foundRefs[i].getName(), getNames(refs) );
                                 }
@@ -215,13 +215,13 @@ public class ComponentConstructorImpl<S> implements ComponentConstructor<S>
 
         if ( constructor == null )
         {
-            logger.log(LogService.LOG_ERROR,
+            logger.log(Level.ERROR,
                     "Constructor with {0} arguments not found. Component will fail.", null,
                     componentMetadata.getNumberOfConstructorParameters() );
         }
         else
         {
-            logger.log(LogService.LOG_DEBUG,
+            logger.log(Level.DEBUG,
                     "Found constructor with {0} arguments : {1}", null,
                     componentMetadata.getNumberOfConstructorParameters(), found );
         }

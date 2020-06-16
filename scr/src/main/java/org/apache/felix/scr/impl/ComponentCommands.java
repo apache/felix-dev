@@ -227,7 +227,7 @@ public class ComponentCommands implements ServiceTrackerCustomizer<Object, Servi
     @Descriptor("Show the current SCR configuration")
     public String config() {
         Map<String,String> out = new LinkedHashMap<>();
-        out.put("Log Level", Integer.toString(scrConfig.getLogLevel()));
+        out.put("Log Level", scrConfig.getLogLevel().toString());
         out.put("Obsolete Component Factory with Factory Configuration", Boolean.toString(scrConfig.isFactoryEnabled()));
         out.put("Keep instances with no references", scrConfig.keepInstances() ? "Supported" : "Unsupported");
         out.put("Lock timeout ms", Long.toString(scrConfig.lockTimeout()));

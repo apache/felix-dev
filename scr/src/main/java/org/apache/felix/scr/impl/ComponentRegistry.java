@@ -37,6 +37,7 @@ import java.util.concurrent.atomic.AtomicLong;
 import org.apache.felix.scr.impl.inject.ComponentMethods;
 import org.apache.felix.scr.impl.inject.internal.ComponentMethodsImpl;
 import org.apache.felix.scr.impl.logger.ComponentLogger;
+import org.apache.felix.scr.impl.logger.InternalLogger.Level;
 import org.apache.felix.scr.impl.logger.ScrLogger;
 import org.apache.felix.scr.impl.manager.AbstractComponentManager;
 import org.apache.felix.scr.impl.manager.ComponentActivator;
@@ -54,7 +55,6 @@ import org.osgi.service.cm.ConfigurationAdmin;
 import org.osgi.service.component.ComponentConstants;
 import org.osgi.service.component.ComponentException;
 import org.osgi.service.component.runtime.ServiceComponentRuntime;
-import org.osgi.service.log.LogService;
 
 
 /**
@@ -257,7 +257,7 @@ public class ComponentRegistry
      */
     final void registerComponentHolder( final ComponentRegistryKey key, ComponentHolder<?> componentHolder )
     {
-        m_logger.log(LogService.LOG_DEBUG,
+        m_logger.log(Level.DEBUG,
                 "Registering component with pid {0} for bundle {1}", null,
                 componentHolder.getComponentMetadata().getConfigurationPid(), key.getBundleId());
         synchronized ( m_componentHoldersByName )
@@ -416,7 +416,7 @@ public class ComponentRegistry
         }
 
         if (component != null) {
-            m_logger.log(LogService.LOG_DEBUG,
+            m_logger.log(Level.DEBUG,
                     "Unregistering component with pid {0} for bundle {1}", null,
                     component.getComponentMetadata().getConfigurationPid(), key.getBundleId());
             synchronized (m_componentHoldersByPid)
@@ -490,12 +490,12 @@ public class ComponentRegistry
         List<ServiceReference<?>> info = circularInfos.get();
         if (info.contains(serviceReference))
         {
-            m_logger.log(LogService.LOG_ERROR,
+            m_logger.log(Level.ERROR,
                 "Circular reference detected trying to get service {0}\n stack of references: {1}", new Exception("stack trace"),
                 serviceReference, new Info(info));
             return true;
         }
-        m_logger.log(LogService.LOG_DEBUG,
+        m_logger.log(Level.DEBUG,
             "getService  {0}: stack of references: {1}", null,
             serviceReference, info);
         info.add(serviceReference);
@@ -577,7 +577,7 @@ public class ComponentRegistry
                     {
                         ((DependencyManager<?, T>)entry.getDm()).invokeBindMethodLate( serviceReference, entry.getTrackingCount() );
                     }
-                    m_logger.log(LogService.LOG_DEBUG,
+                    m_logger.log(Level.DEBUG,
                         "Ran {0} asynchronously", null, this);
                 }
 
@@ -588,7 +588,7 @@ public class ComponentRegistry
                 }
 
             } ;
-            m_logger.log(LogService.LOG_DEBUG,
+            m_logger.log(Level.DEBUG,
                 "Scheduling runnable {0} asynchronously", null, runnable);
             actor.schedule( runnable );
         }
@@ -599,7 +599,7 @@ public class ComponentRegistry
         //check that the service reference is from scr
         if ( serviceReference.getProperty( ComponentConstants.COMPONENT_NAME ) == null || serviceReference.getProperty( ComponentConstants.COMPONENT_ID ) == null )
         {
-            m_logger.log(LogService.LOG_DEBUG,
+            m_logger.log(Level.DEBUG,
                 "Missing service {0} for dependency manager {1} is not a DS service, cannot resolve circular dependency", null,
                 serviceReference, dependencyManager);
             return;
@@ -611,7 +611,7 @@ public class ComponentRegistry
             m_missingDependencies.put( serviceReference, dependencyManagers );
         }
         dependencyManagers.add( new Entry<>( dependencyManager, trackingCount ) );
-        m_logger.log(LogService.LOG_DEBUG,
+        m_logger.log(Level.DEBUG,
             "Dependency managers {0} waiting for missing service {1}", null,
             dependencyManagers, serviceReference);
         }
@@ -768,7 +768,7 @@ public class ComponentRegistry
                     }, m_configuration.serviceChangecountTimeout());
             }
             catch (Exception e) {
-                m_logger.log(LogService.LOG_WARNING,
+                m_logger.log(Level.WARN,
                     "Service changecount Timer for {0} had a problem", e,
                     registration.getReference());
             }

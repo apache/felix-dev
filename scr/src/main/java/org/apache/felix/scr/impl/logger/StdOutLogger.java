@@ -20,7 +20,7 @@ package org.apache.felix.scr.impl.logger;
 
 import java.io.PrintStream;
 
-import org.osgi.service.log.LogService;
+import org.apache.felix.scr.impl.manager.ScrConfiguration;
 
 /**
  * This logger logs to std out / err
@@ -28,33 +28,41 @@ import org.osgi.service.log.LogService;
 class StdOutLogger implements InternalLogger
 {
 
-    @Override
-    public boolean checkScrConfig() {
-        return true;
+    private final ScrConfiguration config;
+
+    public StdOutLogger(ScrConfiguration config)
+    {
+        this.config = config;
     }
 
     @Override
-    public void log(final int level, final String message, final Throwable ex)
+    public void log(final Level level, final String message, final Throwable ex)
     {
         if ( isLogEnabled(level) )
         {
             // output depending on level
-            final PrintStream out = ( level == LogService.LOG_ERROR )? System.err: System.out;
+            final PrintStream out = (level == Level.ERROR) ? System.err : System.out;
 
             // level as a string
             final StringBuilder buf = new StringBuilder();
             switch (level)
             {
-                case ( LogService.LOG_DEBUG ):
+                case AUDIT:
+                    buf.append("AUDIT");
+                    break;
+                case TRACE:
+                    buf.append("TRACE");
+                    break;
+                case DEBUG:
                     buf.append( "DEBUG: " );
                     break;
-                case ( LogService.LOG_INFO ):
+                case INFO:
                     buf.append( "INFO : " );
                     break;
-                case ( LogService.LOG_WARNING ):
+                case WARN:
                     buf.append( "WARN : " );
                     break;
-                case ( LogService.LOG_ERROR ):
+                case ERROR:
                     buf.append( "ERROR: " );
                     break;
                 default:
@@ -83,8 +91,9 @@ class StdOutLogger implements InternalLogger
     }
 
     @Override
-    public boolean isLogEnabled(final int level)
+    public boolean isLogEnabled(Level level)
     {
-        return true;
+        return config.getLogLevel().implies(level);
+
     }
 }
