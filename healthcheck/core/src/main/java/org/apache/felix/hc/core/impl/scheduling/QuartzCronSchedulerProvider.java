@@ -28,35 +28,36 @@ import org.slf4j.LoggerFactory;
 @Component(service = QuartzCronSchedulerProvider.class)
 public class QuartzCronSchedulerProvider {
 
-	private static final Logger LOG = LoggerFactory.getLogger(QuartzCronSchedulerProvider.class);
+    private static final Logger LOG = LoggerFactory.getLogger(QuartzCronSchedulerProvider.class);
     private static final String CLASS_FROM_QUARTZ_FRAMEWORK = "org.quartz.CronTrigger";
 
-	private QuartzCronScheduler quartzCronScheduler = null;
-	
+    private QuartzCronScheduler quartzCronScheduler = null;
+
     @Reference
     HealthCheckExecutorThreadPool healthCheckExecutorThreadPool;
-	
-	public synchronized QuartzCronScheduler getQuartzCronScheduler() throws ClassNotFoundException {
+
+    public synchronized QuartzCronScheduler getQuartzCronScheduler() throws ClassNotFoundException {
         if (quartzCronScheduler == null) {
             if (classExists(CLASS_FROM_QUARTZ_FRAMEWORK)) {
                 quartzCronScheduler = new QuartzCronScheduler(healthCheckExecutorThreadPool);
                 LOG.info("Created quartz scheduler health check core bundle");
             } else {
-                throw new ClassNotFoundException("Class " + CLASS_FROM_QUARTZ_FRAMEWORK + " was not found (install quartz library into classpath)");
+                throw new ClassNotFoundException("Class " + CLASS_FROM_QUARTZ_FRAMEWORK
+                        + " was not found (install quartz library into classpath)");
             }
         }
         return quartzCronScheduler;
-	}
-	
-	@Deactivate
-	protected synchronized void deactivate() {
-		if (quartzCronScheduler != null) {
-			quartzCronScheduler.shutdown();
-			quartzCronScheduler = null;
-			LOG.info("QuartzCronScheduler shutdown");
-		}
-	}
-	
+    }
+
+    @Deactivate
+    protected synchronized void deactivate() {
+        if (quartzCronScheduler != null) {
+            quartzCronScheduler.shutdown();
+            quartzCronScheduler = null;
+            LOG.info("QuartzCronScheduler shutdown");
+        }
+    }
+
     private boolean classExists(String className) {
         try {
             Class.forName(className);

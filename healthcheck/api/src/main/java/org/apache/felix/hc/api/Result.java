@@ -22,7 +22,7 @@ import java.util.Iterator;
 /** The result of executing a {@link HealthCheck} */
 public class Result implements Iterable<ResultLog.Entry> {
 
-	/** The status of a {@link Result}. */
+    /** The status of a {@link Result}. */
     public enum Status {
         OK, // system is fully operational
         WARN, // attention required but system is operational 

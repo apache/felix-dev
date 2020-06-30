@@ -116,8 +116,8 @@ public class AsyncQuartzCronJob extends AsyncJob {
 
         @Override
         public void execute(JobExecutionContext context) throws JobExecutionException {
-        	Runnable ayncJob = (Runnable) context.getJobDetail().getJobDataMap().get(JOB_DATA_KEY_JOB);
-        	ayncJob.run();
+            Runnable ayncJob = (Runnable) context.getJobDetail().getJobDataMap().get(JOB_DATA_KEY_JOB);
+            ayncJob.run();
         }
     }
 

@@ -22,12 +22,12 @@ package org.apache.felix.hc.api.condition;
  * Special marker service for tag "systemready" that by convention can be used as follows:
  * 
  * <pre>
- * 	&#64;Reference
- * 	SystemReady systemReady;
+ *  &#64;Reference
+ *  SystemReady systemReady;
  *  
  * 
- * 	&#64;Reference(target="(tag=systemready)")  // same as SystemReady above
- * 	Healthy healthy; 
+ *  &#64;Reference(target="(tag=systemready)")  // same as SystemReady above
+ *  Healthy healthy; 
  * </pre>
  * 
  * Same as for Healthy, the PID {@code org.apache.felix.hc.core.impl.monitor.HealthCheckMonitor} 

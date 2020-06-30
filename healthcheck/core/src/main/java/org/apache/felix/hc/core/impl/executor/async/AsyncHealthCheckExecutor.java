@@ -137,9 +137,9 @@ public class AsyncHealthCheckExecutor implements ServiceListener {
             AsyncJob healthCheckAsyncJob = null;
             
             if (isAsyncCron(descriptor)) {
-            	
+            
                 try {
-    				healthCheckAsyncJob = new AsyncQuartzCronJob(getAsyncJob(descriptor), quartzCronSchedulerProvider, "job-hc-" + descriptor.getServiceId(), "async-healthchecks", descriptor.getAsyncCronExpression());
+                    healthCheckAsyncJob = new AsyncQuartzCronJob(getAsyncJob(descriptor), quartzCronSchedulerProvider, "job-hc-" + descriptor.getServiceId(), "async-healthchecks", descriptor.getAsyncCronExpression());
                 } catch(ClassNotFoundException|NoClassDefFoundError e) {
                     LOG.warn("Can not schedule async health check '{}' with cron expression '{}' since quartz library is not on classpath", descriptor.getName(), descriptor.getAsyncCronExpression());
                     return false;

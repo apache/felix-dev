@@ -25,11 +25,11 @@ package org.apache.felix.hc.api.condition;
  * To activate a component only upon healthiness of a certain tag/name:
  * 
  * <pre>
- * 	&#64;Reference(target="(tag=systemready)")
- * 	Healthy healthy;
+ *  &#64;Reference(target="(tag=systemready)")
+ *  Healthy healthy;
  * 
- * 	&#64;Reference(target="(name=My Health Check)")
- * 	Healthy healthy;
+ *  &#64;Reference(target="(name=My Health Check)")
+ *  Healthy healthy;
  * </pre>
  * 
  * For this to work, the PID {@code org.apache.felix.hc.core.impl.monitor.HealthCheckMonitor} needs to configured 
