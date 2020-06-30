@@ -8,7 +8,7 @@ Bundle-License: Apache License, Version 2.0
 
 Bundle-Vendor: The Apache Software Foundation
 
-Conditional-Package: org.apache.commons.cli.*,org.apache.felix.utils.*
+Conditional-Package: org.apache.commons.cli.*,org.apache.felix.utils.*,org.apache.felix.hc.core.impl.util.lang.*
 
 Export-Package: org.apache.felix.hc.generalchecks.util
 

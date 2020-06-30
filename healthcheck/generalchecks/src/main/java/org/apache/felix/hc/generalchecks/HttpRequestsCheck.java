@@ -33,6 +33,7 @@ import java.net.URI;
 import java.net.URISyntaxException;
 import java.net.URL;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Base64;
 import java.util.HashMap;
 import java.util.List;
@@ -48,12 +49,12 @@ import org.apache.commons.cli.CommandLineParser;
 import org.apache.commons.cli.DefaultParser;
 import org.apache.commons.cli.Options;
 import org.apache.commons.cli.ParseException;
-import org.apache.commons.lang3.StringUtils;
 import org.apache.felix.hc.annotation.HealthCheckService;
 import org.apache.felix.hc.api.FormattingResultLog;
 import org.apache.felix.hc.api.HealthCheck;
 import org.apache.felix.hc.api.Result;
 import org.apache.felix.hc.api.ResultLog;
+import org.apache.felix.hc.core.impl.util.lang.StringUtils;
 import org.apache.felix.hc.generalchecks.util.SimpleConstraintChecker;
 import org.apache.felix.utils.json.JSONParser;
 import org.osgi.framework.BundleContext;
@@ -234,19 +235,28 @@ public class HttpRequestsCheck implements HealthCheck {
             
             String[] responseAssertionArr = responseAssertions.split(" +&& +");
             for(String clause: responseAssertionArr) {
-                if(StringUtils.isNumeric(clause)) {
+                if(isNumeric(clause)) {
                     responseChecks.add(new ResponseCodeCheck(Integer.parseInt(clause)));
-                } else if(StringUtils.startsWithIgnoreCase(clause, ResponseTimeCheck.TIME)) {
+                } else if(clause.toUpperCase().startsWith(ResponseTimeCheck.TIME)) {
                     responseChecks.add(new ResponseTimeCheck(clause.substring(ResponseTimeCheck.TIME.length())));
-                } else if(StringUtils.startsWithIgnoreCase(clause, ResponseEntityRegExCheck.MATCHES)) {
+                } else if(clause.toUpperCase().startsWith(ResponseEntityRegExCheck.MATCHES)) {
                     responseChecks.add(new ResponseEntityRegExCheck(Pattern.compile(clause.substring(ResponseEntityRegExCheck.MATCHES.length()))));
-                } else if(StringUtils.startsWithIgnoreCase(clause, ResponseHeaderCheck.HEADER)) {
+                } else if(clause.toUpperCase().startsWith(ResponseHeaderCheck.HEADER)) {
                     responseChecks.add(new ResponseHeaderCheck(clause.substring(ResponseHeaderCheck.HEADER.length())));
-                } else if(StringUtils.startsWithIgnoreCase(clause, JsonPropertyCheck.JSON)) {
+                } else if(clause.toUpperCase().startsWith(JsonPropertyCheck.JSON)) {
                     responseChecks.add(new JsonPropertyCheck(clause.substring(JsonPropertyCheck.JSON.length())));
                 } else {
                     throw new IllegalArgumentException("Invalid response content assertion clause: '"+clause+"'");
                 }
+            }
+        }
+
+        private boolean isNumeric(String text) {
+            try {
+                Integer.parseInt(text);
+                return true;
+            } catch(NumberFormatException e) {
+                return false;
             }
         }
 
@@ -356,7 +366,7 @@ public class HttpRequestsCheck implements HealthCheck {
                 Result.Status status = hasFailed ? statusForFailedContraint : Result.Status.OK;
                 String timing = showTiming ? " " + msHumanReadable(response.requestDurationInMs) : "";
                 // result of response assertion(s)
-                log.add(new ResultLog.Entry(status, urlWithUser+timing+": "+ StringUtils.join(resultBits,", ")));
+                log.add(new ResultLog.Entry(status, urlWithUser+timing+": "+ String.join(", ", resultBits)));
             }
 
             return log;
@@ -601,13 +611,14 @@ public class HttpRequestsCheck implements HealthCheck {
             Object currentObject = null;
             for (int i=0; i < jsonPropertyPathBits.length; i++) {
                 String jsonPropertyPathBit = jsonPropertyPathBits[i];
+                String propPathForEx = StringUtils.defaultIfBlank(String.join("", Arrays.copyOfRange(jsonPropertyPathBits, 0, i)), "<root>");
                 if(jsonPropertyPathBit.startsWith("[")) {
                     int arrayIndex = Integer.parseInt(jsonPropertyPathBit.substring(1,jsonPropertyPathBit.length()-1));
                     if(currentObject==null) {
                         currentObject = jsonParser.getParsedList();
                     }
                     if(!(currentObject instanceof List)) {
-                        throw new IllegalArgumentException("Path '"+StringUtils.defaultIfEmpty(StringUtils.join(jsonPropertyPathBits, "", 0, i), "<root>")+"' is not a json list");
+                        throw new IllegalArgumentException("Path '"+propPathForEx+"' is not a json list");
                     }
                     currentObject = ((List<?>) currentObject).get(arrayIndex);
                 } else {
@@ -616,12 +627,13 @@ public class HttpRequestsCheck implements HealthCheck {
                         currentObject = jsonParser.getParsed();
                     }
                     if(!(currentObject instanceof Map)) {
-                        throw new IllegalArgumentException("Path '"+StringUtils.defaultIfEmpty(StringUtils.join(jsonPropertyPathBits, "", 0, i), "<root>")+"' is not a json object");
+                        throw new IllegalArgumentException("Path '"+propPathForEx+"' is not a json object");
                     }
                     currentObject = ((Map<?,?>) currentObject).get(propertyName);
                 }
                 if(currentObject==null && /* not last */ i+1 < jsonPropertyPathBits.length) {
-                    throw new IllegalArgumentException("Path "+StringUtils.join(jsonPropertyPathBits, "", 0, i+1)+" is null, cannot evaluate left-over part '"+StringUtils.join(jsonPropertyPathBits, "", i+1, jsonPropertyPathBits.length)+"'");
+                    String unevaluated = String.join("", Arrays.copyOfRange(jsonPropertyPathBits, i+1, jsonPropertyPathBits.length));
+                    throw new IllegalArgumentException("Path "+propPathForEx+" is null, cannot evaluate left-over part '"+unevaluated+"'");
                 }
             }
             return currentObject;

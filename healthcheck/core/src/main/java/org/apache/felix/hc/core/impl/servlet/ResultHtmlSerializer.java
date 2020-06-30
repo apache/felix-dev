@@ -27,11 +27,11 @@ import java.util.Calendar;
 import java.util.Date;
 import java.util.List;
 
-import org.apache.commons.lang3.StringEscapeUtils;
-import org.apache.commons.lang3.StringUtils;
 import org.apache.felix.hc.api.Result;
 import org.apache.felix.hc.api.ResultLog.Entry;
 import org.apache.felix.hc.api.execution.HealthCheckExecutionResult;
+import org.apache.felix.hc.core.impl.servlet.HealthCheckExecutorServlet.Param;
+import org.apache.felix.hc.core.impl.util.lang.StringUtils;
 import org.osgi.service.component.annotations.Activate;
 import org.osgi.service.component.annotations.Component;
 
@@ -46,7 +46,7 @@ public class ResultHtmlSerializer {
         this.styleString = configuration.styleString();
     }
 
-    public String serialize(final Result overallResult, final List<HealthCheckExecutionResult> executionResults, String escapedHelpText,
+    public String serialize(final Result overallResult, final List<HealthCheckExecutionResult> executionResults, List<Param> paramList,
             boolean includeDebug) {
 
         StringWriter stringWriter = new StringWriter();
@@ -70,13 +70,13 @@ public class ResultHtmlSerializer {
             List<String> tags = executionResult.getHealthCheckMetadata().getTags();
             boolean hasTags = tags != null && tags.size() > 0 && StringUtils.isNotBlank(tags.get(0));
             writer.print("<tr class=\"" + getClassForStatus(result.getStatus()) + "\">");
-            writer.print("<td><p title=\"" + StringEscapeUtils.escapeHtml4(executionResult.getHealthCheckMetadata().getName()) + "\">"
-                    + StringEscapeUtils.escapeHtml4(executionResult.getHealthCheckMetadata().getTitle()) + "");
+            writer.print("<td><p title=\"" + escapeHtml(executionResult.getHealthCheckMetadata().getName()) + "\">"
+                    + escapeHtml(executionResult.getHealthCheckMetadata().getTitle()) + "");
             if (hasTags) {
-                writer.println("<br/><span style='color:gray'>" + StringEscapeUtils.escapeHtml4(StringUtils.join(tags, ", ")) + "</span>");
+                writer.println("<br/><span style='color:gray'>" + escapeHtml(String.join(", ", tags)) + "</span>");
             }
             writer.println("</p></td>");
-            writer.println("<td style='font-weight:bold;'>" + StringEscapeUtils.escapeHtml4(result.getStatus().toString()) + "</td>");
+            writer.println("<td style='font-weight:bold;'>" + escapeHtml(result.getStatus().toString()) + "</td>");
             writer.println("<td>");
             boolean isFirst = true;
 
@@ -95,15 +95,15 @@ public class ResultHtmlSerializer {
 
                 boolean showStatus = !isSingleResult && !entry.isDebug() && entry.getStatus() != Result.Status.OK;
 
-                String message = StringEscapeUtils.escapeHtml4(entry.getMessage());
+                String message = escapeHtml(entry.getMessage());
                 if (entry.isDebug()) {
                     message = "<span style='color:gray'/>" + message + "</span>";
                 }
-                writer.println((showStatus ? StringEscapeUtils.escapeHtml4(entry.getStatus().toString()) + " " : "") + message);
+                writer.println((showStatus ? escapeHtml(entry.getStatus().toString()) + " " : "") + message);
 
                 Exception exception = entry.getException();
                 if (exception != null) {
-                    writer.println("<span style='width:20px'/>" + StringEscapeUtils.escapeHtml4(exception.toString()));
+                    writer.println("<span style='width:20px'/>" + escapeHtml(exception.toString()));
                     writer.println("<!--");
                     exception.printStackTrace(writer);
                     writer.println("-->");
@@ -119,7 +119,7 @@ public class ResultHtmlSerializer {
         writer.println("</table>");
 
         writer.println("<div class='helpText'>");
-        writer.println(escapedHelpText);
+        writer.println(getHtmlHelpText(paramList));
         writer.println("</div>");
         writer.println("</body></html>");
 
@@ -150,5 +150,24 @@ public class ResultHtmlSerializer {
                 cal1.get(Calendar.DAY_OF_YEAR) == cal2.get(Calendar.DAY_OF_YEAR);
         return isToday;
 
+    }
+    
+    private String getHtmlHelpText(List<Param> paramList) {
+        final StringBuilder sb = new StringBuilder();
+        sb.append("<h3>Supported URL parameters</h3>\n");
+        for (Param p : paramList) {
+            sb.append("<b>").append(p.name).append("</b>:");
+            sb.append(escapeHtml(p.description));
+            sb.append("<br/>");
+        }
+        return sb.toString();
+    }
+
+    private String escapeHtml(String text) {
+        return text
+                .replace("&", "&amp;")
+                .replace("\"", "&quot;")
+                .replace("<", "&lt;")
+                .replace(">", "&gt;");
     }
 }

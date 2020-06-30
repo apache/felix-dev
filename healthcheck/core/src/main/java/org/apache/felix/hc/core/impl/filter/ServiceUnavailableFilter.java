@@ -40,7 +40,6 @@ import javax.servlet.http.HttpServlet;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 
-import org.apache.commons.lang3.StringUtils;
 import org.apache.felix.hc.api.HealthCheck;
 import org.apache.felix.hc.api.Result;
 import org.apache.felix.hc.api.execution.HealthCheckExecutionOptions;
@@ -49,6 +48,7 @@ import org.apache.felix.hc.api.execution.HealthCheckSelector;
 import org.apache.felix.hc.core.impl.executor.CombinedExecutionResult;
 import org.apache.felix.hc.core.impl.executor.ExtendedHealthCheckExecutor;
 import org.apache.felix.hc.core.impl.servlet.ResultTxtVerboseSerializer;
+import org.apache.felix.hc.core.impl.util.lang.StringUtils;
 import org.osgi.framework.Bundle;
 import org.osgi.framework.BundleContext;
 import org.osgi.framework.BundleEvent;
@@ -189,7 +189,7 @@ public class ServiceUnavailableFilter implements Filter {
         if(StringUtils.isBlank(responseFor503)) {
             responseFor503 = (String) compProperties.get("htmlFor503"); // backwards-compatibility
         }
-        if(StringUtils.startsWith(responseFor503, CLASSPATH_PREFIX)) {
+        if(responseFor503 != null && responseFor503.startsWith(CLASSPATH_PREFIX)) {
             String[] bits = responseFor503.split(":");
             String symbolicName = bits[1];
             String pathInBundle = bits[2];

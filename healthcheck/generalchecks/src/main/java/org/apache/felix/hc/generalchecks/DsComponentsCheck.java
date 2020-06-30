@@ -24,19 +24,18 @@ import java.util.Collection;
 import java.util.LinkedList;
 import java.util.List;
 
-import org.apache.commons.lang3.StringUtils;
 import org.apache.felix.hc.annotation.HealthCheckService;
 import org.apache.felix.hc.api.FormattingResultLog;
 import org.apache.felix.hc.api.HealthCheck;
 import org.apache.felix.hc.api.Result;
 import org.apache.felix.hc.api.ResultLog.Entry;
+import org.apache.felix.hc.core.impl.util.lang.StringUtils;
 import org.apache.felix.hc.generalchecks.scrutil.DsRootCauseAnalyzer;
 import org.osgi.framework.BundleContext;
 import org.osgi.service.component.annotations.Activate;
 import org.osgi.service.component.annotations.Component;
 import org.osgi.service.component.annotations.ConfigurationPolicy;
 import org.osgi.service.component.annotations.Reference;
-import org.osgi.service.component.annotations.ReferenceCardinality;
 import org.osgi.service.component.annotations.ReferencePolicyOption;
 import org.osgi.service.component.runtime.ServiceComponentRuntime;
 import org.osgi.service.component.runtime.dto.ComponentConfigurationDTO;
@@ -128,7 +127,7 @@ public class DsComponentsCheck implements HealthCheck {
                         foundActiveOrSatisfiedConfig = true;
                     }
                 }
-                log.debug(dsComp.name + " (" + StringUtils.join(idStateTuples, ",") + ")");
+                log.debug(dsComp.name + " (" + String.join(",", idStateTuples) + ")");
 
                 if (componentConfigurationDTOs.isEmpty() || foundActiveOrSatisfiedConfig) {
                     countEnabled++;

@@ -82,7 +82,6 @@ public class U {
                         mavenBundle("org.apache.felix", "org.apache.felix.eventadmin", "1.4.10"),
 
                         mavenBundle("org.apache.felix", "org.apache.felix.healthcheck.api").versionAsInProject(),
-                        mavenBundle().groupId("org.apache.commons").artifactId("commons-lang3").versionAsInProject(),
 
                         mavenBundle("org.apache.felix", "org.apache.felix.http.servlet-api", "1.1.2"),
                         mavenBundle("org.apache.felix", "org.apache.felix.http.jetty", "4.0.2"),

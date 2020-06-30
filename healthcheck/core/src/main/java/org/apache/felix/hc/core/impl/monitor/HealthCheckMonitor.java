@@ -27,7 +27,6 @@ import java.util.Hashtable;
 import java.util.List;
 import java.util.Map;
 
-import org.apache.commons.lang3.StringUtils;
 import org.apache.felix.hc.api.Result;
 import org.apache.felix.hc.api.condition.Healthy;
 import org.apache.felix.hc.api.condition.SystemReady;
@@ -41,6 +40,7 @@ import org.apache.felix.hc.core.impl.scheduling.AsyncIntervalJob;
 import org.apache.felix.hc.core.impl.scheduling.AsyncJob;
 import org.apache.felix.hc.core.impl.scheduling.AsyncQuartzCronJob;
 import org.apache.felix.hc.core.impl.scheduling.QuartzCronSchedulerProvider;
+import org.apache.felix.hc.core.impl.util.lang.StringUtils;
 import org.osgi.framework.BundleContext;
 import org.osgi.framework.InvalidSyntaxException;
 import org.osgi.framework.ServiceRegistration;
@@ -288,7 +288,7 @@ public class HealthCheckMonitor implements Runnable {
                 registrationProps.put(propertyName, tagOrName);
                 registrationProps.put("activated", new SimpleDateFormat("yyyy-MM-dd HH:mm:ss").format(new Date()));
 
-                if (StringUtils.equals(tagOrName, TAG_SYSTEMREADY)) {
+                if (TAG_SYSTEMREADY.equals(tagOrName)) {
                     LOG.debug("HealthCheckMonitor: SYSTEM READY");
                     healthyRegistration = bundleContext.registerService(
                             new String[] { SystemReady.class.getName(), Healthy.class.getName() },

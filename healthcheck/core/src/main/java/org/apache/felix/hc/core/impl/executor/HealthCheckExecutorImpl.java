@@ -38,8 +38,6 @@ import java.util.ListIterator;
 import java.util.Map;
 import java.util.Set;
 
-import org.apache.commons.lang3.ArrayUtils;
-import org.apache.commons.lang3.time.StopWatch;
 import org.apache.felix.hc.api.FormattingResultLog;
 import org.apache.felix.hc.api.HealthCheck;
 import org.apache.felix.hc.api.Result;
@@ -174,7 +172,7 @@ public class HealthCheckExecutorImpl implements ExtendedHealthCheckExecutor, Ser
     public List<HealthCheckExecutionResult> execute(HealthCheckSelector selector, HealthCheckExecutionOptions options) {
         logger.debug("Starting executing checks for filter selector {} and execution options {}", selector, options);
 
-        if (ArrayUtils.isEmpty(selector.tags())) {
+        if (selector.tags() == null || selector.tags().length == 0) {
             logger.debug("Using default tags");
             selector.withTags(defaultTags);
         }
@@ -366,8 +364,8 @@ public class HealthCheckExecutorImpl implements ExtendedHealthCheckExecutor, Ser
     /** Wait for the futures until the timeout is reached */
     private void waitForFuturesRespectingTimeout(final List<HealthCheckFuture> futuresForResultOfThisCall,
             HealthCheckExecutionOptions options) {
-        final StopWatch callExcutionTimeStopWatch = new StopWatch();
-        callExcutionTimeStopWatch.start();
+        
+        final long callExcutionStartTime = System.currentTimeMillis();
         boolean allFuturesDone;
 
         long effectiveTimeout = this.timeoutInMs;
@@ -392,7 +390,7 @@ public class HealthCheckExecutorImpl implements ExtendedHealthCheckExecutor, Ser
             for (final HealthCheckFuture healthCheckFuture : futuresForResultOfThisCall) {
                 allFuturesDone &= healthCheckFuture.isDone();
             }
-        } while (!allFuturesDone && callExcutionTimeStopWatch.getTime() < effectiveTimeout);
+        } while (!allFuturesDone && (System.currentTimeMillis() - callExcutionStartTime) < effectiveTimeout);
     }
 
     /** Collect the results from all futures

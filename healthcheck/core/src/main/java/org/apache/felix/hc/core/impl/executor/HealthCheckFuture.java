@@ -19,15 +19,13 @@ package org.apache.felix.hc.core.impl.executor;
 
 import static org.apache.felix.hc.api.FormattingResultLog.msHumanReadable;
 
-import java.lang.reflect.InvocationTargetException;
+import java.lang.reflect.Field;
+import java.lang.reflect.Method;
 import java.util.Date;
 import java.util.List;
 import java.util.concurrent.Callable;
 import java.util.concurrent.FutureTask;
 
-import org.apache.commons.lang3.reflect.FieldUtils;
-import org.apache.commons.lang3.reflect.MethodUtils;
-import org.apache.commons.lang3.time.StopWatch;
 import org.apache.felix.hc.api.FormattingResultLog;
 import org.apache.felix.hc.api.HealthCheck;
 import org.apache.felix.hc.api.Result;
@@ -57,19 +55,18 @@ public class HealthCheckFuture extends FutureTask<ExecutionResult> {
                 Thread.currentThread().setName("HealthCheck " + metadata.getTitle());
                 LOG.debug("Starting check {}", metadata);
 
-                final StopWatch stopWatch = new StopWatch();
-                stopWatch.start();
+                long startTime = System.currentTimeMillis();
                 Result resultFromHealthCheck = null;
                 ExecutionResult executionResult = null;
 
-                Object healthCheck = bundleContext.getService(metadata.getServiceReference());
+                Object healthCheckObject = bundleContext.getService(metadata.getServiceReference());
                 try {
-                    if (healthCheck != null) {
-                        if ((healthCheck instanceof HealthCheck)) {
-                            resultFromHealthCheck = ((HealthCheck) healthCheck).execute();
-                        } else {
-                            resultFromHealthCheck = executeLegacyHc(healthCheck);
-                        }
+                    if (healthCheckObject != null) {
+                        HealthCheck healthCheck = healthCheckObject instanceof HealthCheck 
+                                ? (HealthCheck) healthCheckObject 
+                                : new LegacyHealthCheckWrapper(healthCheckObject);
+                        resultFromHealthCheck = healthCheck.execute();
+
                     } else {
                         throw new IllegalStateException("Service cannot be retrieved - probably activate() failed or there are unsatisfied references");
                     }
@@ -82,8 +79,7 @@ public class HealthCheckFuture extends FutureTask<ExecutionResult> {
                     bundleContext.ungetService(metadata.getServiceReference());
 
                     // update result with information about this run
-                    stopWatch.stop();
-                    long elapsedTime = stopWatch.getTime();
+                    long elapsedTime = (System.currentTimeMillis() - startTime);
                     if (resultFromHealthCheck != null) {
                         // wrap the result in an execution result
                         executionResult = new ExecutionResult(metadata, resultFromHealthCheck, elapsedTime);
@@ -115,31 +111,49 @@ public class HealthCheckFuture extends FutureTask<ExecutionResult> {
         return "[Future for " + this.metadata + ", createdTime=" + this.createdTime + "]";
     }
 
-    @SuppressWarnings("rawtypes")
-    private static Result executeLegacyHc(Object healthCheck) {
-
-        FormattingResultLog log = new FormattingResultLog();
-        log.debug("Running legacy HC {}, please convert to new interface org.apache.felix.hc.api.HealthCheck!",
-                healthCheck.getClass().getName());
-        try {
-            Object result = MethodUtils.invokeMethod(healthCheck, "execute");
-            Object resultLog = FieldUtils.readField(result, "resultLog", true);
-
-            List entries = (List) FieldUtils.readField(resultLog, "entries", true);
-            for (Object object : entries) {
-                String statusLegacy = String.valueOf(FieldUtils.readField(object, "status", true));
-                String message = (String) FieldUtils.readField(object, "message", true);
-                Exception exception = (Exception) FieldUtils.readField(object, "exception", true);
-                if(statusLegacy.equals("DEBUG")) {
-                    log.add(new ResultLog.Entry(message, true, exception));
-                } else {
-                    statusLegacy = statusLegacy.replace("INFO", "OK");
-                    log.add(new ResultLog.Entry(Result.Status.valueOf(statusLegacy), message, exception));
-                }
-            }
-        } catch (NoSuchMethodException | IllegalAccessException | InvocationTargetException e) {
-            log.healthCheckError("Could call and convert Sling HC {} for Felix Runtime", healthCheck.getClass().getName());
+    private static class LegacyHealthCheckWrapper implements HealthCheck {
+        private final Object legacyHealthCheck;
+        private final FormattingResultLog log;
+        
+        public LegacyHealthCheckWrapper(Object legacyHealthCheck) {
+            this.legacyHealthCheck = legacyHealthCheck;
+            this.log = new FormattingResultLog();
         }
-        return new Result(log);
+
+        @Override
+        @SuppressWarnings("rawtypes")
+        public Result execute() {
+            Class<?> hcClass = legacyHealthCheck.getClass();
+            log.debug("Running legacy HC {}, please convert to new interface org.apache.felix.hc.api.HealthCheck!",
+                    hcClass.getName());
+            try {
+                Method executeMethod = hcClass.getMethod("execute");
+                Object result = executeMethod.invoke(legacyHealthCheck);
+                Object resultLog = readPrivateField(result, "resultLog");
+
+                List<?> entries = (List) readPrivateField(resultLog, "entries");
+                for (Object object : entries) {
+                    String statusLegacy = String.valueOf(readPrivateField(object, "status"));
+                    String message = (String) readPrivateField(object, "message");
+                    Exception exception = (Exception) readPrivateField(object, "exception");
+                    if(statusLegacy.equals("DEBUG")) {
+                        log.add(new ResultLog.Entry(message, true, exception));
+                    } else {
+                        statusLegacy = statusLegacy.replace("INFO", Result.Status.OK.name());
+                        log.add(new ResultLog.Entry(Result.Status.valueOf(statusLegacy), message, exception));
+                    }
+                }
+            } catch (ReflectiveOperationException e) {
+                log.healthCheckError("Could call and convert Sling HC {} for Felix Runtime", hcClass.getName());
+            }
+            return new Result(log);
+        }
+        
+        private Object readPrivateField(Object target, String fieldName) throws ReflectiveOperationException {
+            Field field = target.getClass().getDeclaredField(fieldName);
+            field.setAccessible(true);
+            return field.get(target);
+        }
     }
+
 }

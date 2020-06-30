@@ -25,11 +25,11 @@ import java.util.Map;
 import javax.management.MBeanServer;
 import javax.management.ObjectName;
 
-import org.apache.commons.lang3.StringUtils;
 import org.apache.felix.hc.api.FormattingResultLog;
 import org.apache.felix.hc.api.HealthCheck;
 import org.apache.felix.hc.api.Result;
 import org.apache.felix.hc.api.ResultLog;
+import org.apache.felix.hc.core.impl.util.lang.StringUtils;
 import org.apache.felix.hc.generalchecks.util.SimpleConstraintChecker;
 import org.osgi.service.component.annotations.Activate;
 import org.osgi.service.component.annotations.Component;
@@ -176,7 +176,7 @@ public class JmxAttributeCheck implements HealthCheck {
             this.mbeanName = StringUtils.defaultIfBlank(mBeanName, defaultMBeanName);
             this.attributeName = (String) rawConfig.get(propNameAttribute);
             this.attributeValueConstraint = (String) rawConfig.get(PROP_ATTRIBUTE + attributeCounter + SUFFIX_VALUE_CONSTRAINT);
-            if(StringUtils.isAnyBlank(mbeanName, attributeName, attributeValueConstraint)) {
+            if(StringUtils.isBlank(mbeanName) || StringUtils.isBlank(attributeName) || StringUtils.isBlank(attributeValueConstraint)) {
                 throw new IllegalArgumentException("Invalid JmxAttributeCheck config for property "+mbeanName+" -> "+propNameAttribute+": "+toString());
             }
         }

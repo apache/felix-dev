@@ -23,10 +23,10 @@ import java.io.StringWriter;
 import java.text.SimpleDateFormat;
 import java.util.List;
 
-import org.apache.commons.lang3.StringUtils;
 import org.apache.felix.hc.api.Result;
 import org.apache.felix.hc.api.ResultLog;
 import org.apache.felix.hc.api.execution.HealthCheckExecutionResult;
+import org.apache.felix.hc.core.impl.util.lang.StringUtils;
 import org.apache.felix.utils.json.JSONWriter;
 import org.osgi.service.component.annotations.Component;
 import org.slf4j.Logger;

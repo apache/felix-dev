@@ -167,13 +167,6 @@
             <scope>provided</scope>
         </dependency>
 
-        <dependency>
-            <groupId>org.apache.commons</groupId>
-            <artifactId>commons-lang3</artifactId>
-            <version>3.4</version>
-            <scope>provided</scope>
-        </dependency>
-        
         <!--  START provided via ConditionalPackage -->
         <dependency>
             <groupId>commons-cli</groupId>
@@ -185,6 +178,13 @@
             <groupId>org.apache.felix</groupId>
             <artifactId>org.apache.felix.utils</artifactId>
             <version>1.11.0</version>
+            <scope>provided</scope>
+        </dependency>
+        <!-- only to be able to use org.apache.felix.hc.core.impl.util.StringUtils for commons lang replacement -->
+        <dependency>
+            <groupId>org.apache.felix</groupId>
+            <artifactId>org.apache.felix.healthcheck.core</artifactId>
+            <version>2.0.7-SNAPSHOT</version>
             <scope>provided</scope>
         </dependency>
         <!--  END provided via ConditionalPackage -->

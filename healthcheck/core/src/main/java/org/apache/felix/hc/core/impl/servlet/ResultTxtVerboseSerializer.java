@@ -23,11 +23,10 @@ import java.text.DateFormat;
 import java.text.SimpleDateFormat;
 import java.util.List;
 
-import org.apache.commons.lang3.StringUtils;
-import org.apache.commons.lang3.text.WordUtils;
 import org.apache.felix.hc.api.Result;
 import org.apache.felix.hc.api.ResultLog;
 import org.apache.felix.hc.api.execution.HealthCheckExecutionResult;
+import org.apache.felix.hc.core.impl.util.lang.StringUtils;
 import org.osgi.service.component.annotations.Activate;
 import org.osgi.service.component.annotations.Component;
 import org.slf4j.Logger;
@@ -70,11 +69,11 @@ public class ResultTxtVerboseSerializer {
         StringBuilder resultStr = new StringBuilder();
 
         resultStr.append(StringUtils.repeat("-", totalWidth) + NEWLINE);
-        resultStr.append(StringUtils.center("Overall Health Result: " + overallResult.getStatus().toString(), totalWidth) + NEWLINE);
+        resultStr.append(center("Overall Health Result: " + overallResult.getStatus().toString(), totalWidth) + NEWLINE);
         resultStr.append(StringUtils.repeat("-", totalWidth) + NEWLINE);
-        resultStr.append(StringUtils.rightPad("Name", colWidthName));
-        resultStr.append(StringUtils.rightPad("Result", colWidthResult));
-        resultStr.append(StringUtils.rightPad("Timing", colWidthTiming));
+        resultStr.append(rightPad("Name", colWidthName));
+        resultStr.append(rightPad("Result", colWidthResult));
+        resultStr.append(rightPad("Timing", colWidthTiming));
         resultStr.append("Logs" + NEWLINE);
         resultStr.append(StringUtils.repeat("-", totalWidth) + NEWLINE);
 
@@ -92,15 +91,15 @@ public class ResultTxtVerboseSerializer {
     private void appendVerboseTxtForResult(StringBuilder resultStr, HealthCheckExecutionResult healthCheckResult, boolean includeDebug,
             DateFormat dfShort) {
 
-        String wrappedName = WordUtils.wrap(healthCheckResult.getHealthCheckMetadata().getTitle(), colWidthName);
+        String wrappedName = wordWrap(healthCheckResult.getHealthCheckMetadata().getTitle(), colWidthName, "\n");
 
-        String relevantNameStringForPadding = StringUtils.contains(wrappedName, "\n") ? StringUtils.substringAfterLast(wrappedName, "\n")
-                : wrappedName;
+        int lastIndexOfNewline = wrappedName.lastIndexOf("\n");
+        String relevantNameStringForPadding = lastIndexOfNewline >= 0 ? wrappedName.substring(lastIndexOfNewline+1) : wrappedName;
         int paddingSize = colWidthName - relevantNameStringForPadding.length();
 
         resultStr.append(wrappedName + StringUtils.repeat(" ", paddingSize));
-        resultStr.append(StringUtils.rightPad(healthCheckResult.getHealthCheckResult().getStatus().toString(), colWidthResult));
-        resultStr.append(StringUtils.rightPad("[" + dfShort.format(healthCheckResult.getFinishedAt())
+        resultStr.append(rightPad(healthCheckResult.getHealthCheckResult().getStatus().toString(), colWidthResult));
+        resultStr.append(rightPad("[" + dfShort.format(healthCheckResult.getFinishedAt())
                 + "|" + msHumanReadable(healthCheckResult.getElapsedTimeInMs()) + "]", colWidthTiming));
 
         boolean isFirst = true;
@@ -115,7 +114,7 @@ public class ResultTxtVerboseSerializer {
             }
 
             String oneLineMessage = getStatusForTxtLog(logEntry) + logEntry.getMessage();
-            String messageToPrint = WordUtils.wrap(oneLineMessage, colWidthLog, "\n" + StringUtils.repeat(" ", colWidthWithoutLog), true);
+            String messageToPrint = wordWrap(oneLineMessage, colWidthLog, "\n" + StringUtils.repeat(" ", colWidthWithoutLog));
 
             resultStr.append(messageToPrint);
             resultStr.append(NEWLINE);
@@ -136,4 +135,31 @@ public class ResultTxtVerboseSerializer {
         }
     }
 
+    // -- Some simple helpers directly here as commons lang is removed
+
+    String wordWrap(String s, int maxWidth, String newlineDelimiter) {
+        return s.replaceAll("(.{1,"+maxWidth+"})(?: +|$)\\n?|(.{"+maxWidth+"})", "$1$2"+newlineDelimiter).trim();
+    }
+    
+    static String rightPad(String s, int size) {
+        if(s.length() < size) {
+            return s + StringUtils.repeat(" ", size - s.length());
+        } else {
+            return s;
+        }
+    }
+    
+    static String center(String s, int size) {
+        if(s.length() < size) {
+            int padding = size - s.length();
+            int paddingLeft = padding / 2;
+            int paddingRight = padding / 2;
+            if(padding % 2 == 1) {
+                paddingRight++;
+            }
+            return StringUtils.repeat(" ", paddingLeft) + s + StringUtils.repeat(" ", paddingRight);
+        } else {
+            return s;
+        }
+    }
 }

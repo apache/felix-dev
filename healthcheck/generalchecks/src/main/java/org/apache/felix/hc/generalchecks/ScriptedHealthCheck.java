@@ -19,10 +19,10 @@ package org.apache.felix.hc.generalchecks;
 
 import javax.script.ScriptEngine;
 
-import org.apache.commons.lang3.StringUtils;
 import org.apache.felix.hc.api.FormattingResultLog;
 import org.apache.felix.hc.api.HealthCheck;
 import org.apache.felix.hc.api.Result;
+import org.apache.felix.hc.core.impl.util.lang.StringUtils;
 import org.apache.felix.hc.generalchecks.util.ScriptEnginesTracker;
 import org.apache.felix.hc.generalchecks.util.ScriptHelper;
 import org.osgi.framework.BundleContext;

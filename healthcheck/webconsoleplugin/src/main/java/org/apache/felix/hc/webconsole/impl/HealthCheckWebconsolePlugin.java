@@ -17,7 +17,6 @@
  */
 package org.apache.felix.hc.webconsole.impl;
 
-import static org.apache.commons.lang3.StringEscapeUtils.escapeHtml4;
 import static org.apache.felix.hc.api.FormattingResultLog.msHumanReadable;
 
 import java.io.IOException;
@@ -33,7 +32,6 @@ import javax.servlet.http.HttpServlet;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 
-import org.apache.commons.lang3.StringUtils;
 import org.apache.felix.hc.api.Result;
 import org.apache.felix.hc.api.ResultLog;
 import org.apache.felix.hc.api.execution.HealthCheckExecutionOptions;
@@ -126,7 +124,7 @@ public class HealthCheckWebconsolePlugin extends HttpServlet {
                 // override not set in UI
             }
 
-            HealthCheckSelector selector = StringUtils.isNotBlank(tags) ? HealthCheckSelector.tags(tags.split(",")) : HealthCheckSelector.empty();
+            HealthCheckSelector selector = !isBlank(tags) ? HealthCheckSelector.tags(tags.split(",")) : HealthCheckSelector.empty();
             Collection<HealthCheckExecutionResult> results = healthCheckExecutor.execute(selector, options);
 
             pw.println("<table class='content healthcheck' cellpadding='0' cellspacing='0' width='100%'>");
@@ -151,6 +149,10 @@ public class HealthCheckWebconsolePlugin extends HttpServlet {
 
         }
     }
+    
+    private static boolean isBlank(final CharSequence cs) {
+        return cs == null || cs.chars().allMatch(Character::isWhitespace);
+    }
 
     void renderResult(final PrintWriter pw, final HealthCheckExecutionResult exResult, final boolean debug)  throws IOException {
         final Result result = exResult.getHealthCheckResult();
@@ -166,7 +168,7 @@ public class HealthCheckWebconsolePlugin extends HttpServlet {
 
         c.tr();
         c.tdContent();
-        c.writer().print(escapeHtml4(status.toString()));
+        c.writer().print(c.escapeHtml(status.toString()));
         c.writer().print("<br/>Result: <span class='resultOk");
         c.writer().print(result.isOk());
         c.writer().print("'>");
@@ -186,10 +188,10 @@ public class HealthCheckWebconsolePlugin extends HttpServlet {
             c.writer().print("'>");
             c.writer().print(e.getStatus().toString());
             c.writer().print(' ');
-            c.writer().print(escapeHtml4(e.getMessage()));
+            c.writer().print(c.escapeHtml(e.getMessage()));
             if (e.getException() != null) {
                 c.writer().print(" ");
-                c.writer().print(escapeHtml4(e.getException().toString()));
+                c.writer().print(c.escapeHtml(e.getException().toString()));
             }
             c.writer().println("</div>");
         }
@@ -215,7 +217,7 @@ public class HealthCheckWebconsolePlugin extends HttpServlet {
         c.tdContent();
         c.writer().print("<input type='text' name='" + PARAM_TAGS + "' value='");
         if ( tags != null ) {
-            c.writer().print(escapeHtml4(tags));
+            c.writer().print(c.escapeHtml(tags));
         }
         c.writer().println("' class='input' size='80'>");
         c.closeTd();
@@ -270,7 +272,7 @@ public class HealthCheckWebconsolePlugin extends HttpServlet {
         c.tdContent();
         c.writer().print("<input type='text' name='" + PARAM_OVERRIDE_GLOBAL_TIMEOUT + "' value='");
         if (overrideGlobalTimeoutStr != null) {
-            c.writer().print(escapeHtml4(overrideGlobalTimeoutStr));
+            c.writer().print(c.escapeHtml(overrideGlobalTimeoutStr));
         }
         c.writer().println("' class='input' size='80'>");
         c.closeTd();

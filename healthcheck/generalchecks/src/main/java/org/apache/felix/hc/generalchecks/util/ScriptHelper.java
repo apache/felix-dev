@@ -39,10 +39,10 @@ import javax.script.ScriptException;
 import javax.script.SimpleBindings;
 import javax.script.SimpleScriptContext;
 
-import org.apache.commons.lang3.StringUtils;
 import org.apache.felix.hc.api.FormattingResultLog;
 import org.apache.felix.hc.api.Result;
 import org.apache.felix.hc.api.ResultLog;
+import org.apache.felix.hc.core.impl.util.lang.StringUtils;
 import org.osgi.framework.BundleContext;
 import org.osgi.framework.InvalidSyntaxException;
 import org.osgi.framework.ServiceReference;

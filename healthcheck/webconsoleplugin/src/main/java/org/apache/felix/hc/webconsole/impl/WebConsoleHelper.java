@@ -19,8 +19,6 @@ package org.apache.felix.hc.webconsole.impl;
 
 import java.io.PrintWriter;
 
-import static org.apache.commons.lang3.StringEscapeUtils.escapeHtml4;
-
 /** Webconsole plugin helper for writing html. */
 class WebConsoleHelper {
 
@@ -48,7 +46,7 @@ class WebConsoleHelper {
 
     void tdLabel(final String label) {
         pw.print("<td class='content'>");
-        pw.print(escapeHtml4(label));
+        pw.print(escapeHtml(label));
         pw.println("</td>");
     }
 
@@ -59,16 +57,24 @@ class WebConsoleHelper {
     void titleHtml(String title, String description) {
         tr();
         pw.print("<th colspan='3' class='content container'>");
-        pw.print(escapeHtml4(title));
+        pw.print(escapeHtml(title));
         pw.println("</th>");
         closeTr();
 
         if (description != null) {
             tr();
             pw.print("<td colspan='3' class='content'>");
-            pw.print(escapeHtml4(description));
+            pw.print(escapeHtml(description));
             pw.println("</th>");
             closeTr();
         }
+    }
+    
+    String escapeHtml(String text) {
+        return text
+                .replace("&", "&amp;")
+                .replace("\"", "&quot;")
+                .replace("<", "&lt;")
+                .replace(">", "&gt;");
     }
 }

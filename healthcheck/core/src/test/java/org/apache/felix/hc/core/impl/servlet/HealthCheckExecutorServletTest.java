@@ -19,9 +19,7 @@ package org.apache.felix.hc.core.impl.servlet;
 
 import static org.junit.Assert.assertEquals;
 import static org.mockito.ArgumentMatchers.any;
-import static org.mockito.ArgumentMatchers.anyString;
 import static org.mockito.ArgumentMatchers.argThat;
-import static org.mockito.ArgumentMatchers.contains;
 import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.doReturn;
 import static org.mockito.Mockito.never;
@@ -122,7 +120,7 @@ public class HealthCheckExecutorServletTest {
         verifyNoInteractions(verboseTxtSerializer);
         verify(htmlSerializer)
                 .serialize(resultEquals(new Result(Result.Status.CRITICAL, "Overall Status CRITICAL")), eq(executionResults),
-                        contains("Supported URL parameters"), eq(false));
+                        any(List.class), eq(false));
     }
 
     @Test
@@ -146,7 +144,7 @@ public class HealthCheckExecutorServletTest {
         verifyNoInteractions(verboseTxtSerializer);
         verify(htmlSerializer)
                 .serialize(resultEquals(new Result(Result.Status.CRITICAL, "Overall Status CRITICAL")), eq(executionResults),
-                        contains("Supported URL parameters"), eq(false));
+                        any(List.class), eq(false));
     }
 
     @Test

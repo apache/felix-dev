@@ -34,8 +34,6 @@ import javax.management.MBeanInfo;
 import javax.management.MBeanOperationInfo;
 import javax.management.MBeanParameterInfo;
 import javax.management.ReflectionException;
-
-import org.apache.commons.lang3.StringUtils;
 import org.apache.felix.hc.api.HealthCheck;
 import org.apache.felix.hc.api.Result;
 import org.apache.felix.hc.api.Result.Status;
@@ -136,7 +134,7 @@ public class JmxAdjustableStatusHealthCheck {
         public Object getAttribute(final String attribute) throws AttributeNotFoundException, MBeanException, ReflectionException {
 
             if (ATT_TAGS.equals(attribute)) {
-                return StringUtils.join(tags, ",");
+                return String.join(",", tags);
             } else if (ATT_STATUS.equals(attribute)) {
                 return status.toString();
             } else {
@@ -212,9 +210,9 @@ public class JmxAdjustableStatusHealthCheck {
             
             status = newStatus.toString();
             registerDynamicHealthCheck(newStatus, tags.toArray(new String[tags.size()]));
-            LOG.info("Activated JMX-adjustable Health Check with status "+newStatus+" and tags " + StringUtils.join(tags, ","));
+            LOG.info("Activated JMX-adjustable Health Check with status "+newStatus+" and tags " + String.join(",", tags));
             return "Added check with result "+newStatus;
-        
+
         }
 
         @Override

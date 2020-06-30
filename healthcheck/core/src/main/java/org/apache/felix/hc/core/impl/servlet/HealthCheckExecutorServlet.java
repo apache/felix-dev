@@ -31,14 +31,13 @@ import javax.servlet.http.HttpServlet;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 
-import org.apache.commons.lang3.StringEscapeUtils;
-import org.apache.commons.lang3.StringUtils;
 import org.apache.felix.hc.api.Result;
 import org.apache.felix.hc.api.execution.HealthCheckExecutionOptions;
 import org.apache.felix.hc.api.execution.HealthCheckExecutionResult;
 import org.apache.felix.hc.api.execution.HealthCheckExecutor;
 import org.apache.felix.hc.api.execution.HealthCheckSelector;
 import org.apache.felix.hc.core.impl.executor.CombinedExecutionResult;
+import org.apache.felix.hc.core.impl.util.lang.StringUtils;
 import org.osgi.service.component.ComponentContext;
 import org.osgi.service.component.annotations.Activate;
 import org.osgi.service.component.annotations.Component;
@@ -226,11 +225,10 @@ public class HealthCheckExecutorServlet extends HttpServlet {
         this.servletPaths = null;
     }
 
-    protected void doGet(final HttpServletRequest request, final HttpServletResponse response, final String format)
+    protected void doGet(final HttpServletRequest request, final HttpServletResponse response, String pathTokensStr, String format)
             throws ServletException, IOException {
         HealthCheckSelector selector = HealthCheckSelector.empty();
-        String pathInfo = request.getPathInfo();
-        String pathTokensStr = StringUtils.removeStart(splitFormat(pathInfo)[0], "/");
+
 
         List<String> tags = new ArrayList<String>();
         List<String> names = new ArrayList<String>();
@@ -255,7 +253,7 @@ public class HealthCheckExecutorServlet extends HttpServlet {
 
         if (names.size() == 0) {
             // if not provided via path use parameter or default
-            names = Arrays.asList(StringUtils.defaultIfEmpty(request.getParameter(PARAM_NAMES.name), "").split(PARAM_SPLIT_REGEX));
+            names = Arrays.asList(StringUtils.defaultIfBlank(request.getParameter(PARAM_NAMES.name), "").split(PARAM_SPLIT_REGEX));
         }
         selector.withNames(names.toArray(new String[0]));
 
@@ -272,7 +270,7 @@ public class HealthCheckExecutorServlet extends HttpServlet {
         executionOptions.setForceInstantExecution(Boolean.valueOf(request.getParameter(PARAM_FORCE_INSTANT_EXECUTION.name)));
         
         String overrideGlobalTimeoutVal = request.getParameter(PARAM_OVERRIDE_GLOBAL_TIMEOUT.name);
-        if (StringUtils.isNumeric(overrideGlobalTimeoutVal)) {
+        if (StringUtils.isNotBlank(overrideGlobalTimeoutVal)) {
             executionOptions.setOverrideGlobalTimeout(Integer.valueOf(overrideGlobalTimeoutVal));
         } else if(servletDefaultTimeout > -1) {
             executionOptions.setOverrideGlobalTimeout((int) servletDefaultTimeout);
@@ -295,10 +293,10 @@ public class HealthCheckExecutorServlet extends HttpServlet {
         } else if (FORMAT_JSON.equals(format)) {
             sendJsonResponse(overallResult, executionResults, null, response, includeDebug);
         } else if (FORMAT_JSONP.equals(format)) {
-            String jsonpCallback = StringUtils.defaultIfEmpty(request.getParameter(PARAM_JSONP_CALLBACK.name), JSONP_CALLBACK_DEFAULT);
+            String jsonpCallback = StringUtils.defaultIfBlank(request.getParameter(PARAM_JSONP_CALLBACK.name), JSONP_CALLBACK_DEFAULT);
             sendJsonResponse(overallResult, executionResults, jsonpCallback, response, includeDebug);
-        } else if (StringUtils.endsWith(format, FORMAT_TXT)) {
-            sendTxtResponse(overallResult, response, StringUtils.equals(format, FORMAT_VERBOSE_TXT), executionResults, includeDebug);
+        } else if (format != null && format.endsWith(FORMAT_TXT)) {
+            sendTxtResponse(overallResult, response, FORMAT_VERBOSE_TXT.equals(format), executionResults, includeDebug);
         } else {
             response.setContentType("text/plain");
             response.getWriter().println("Invalid format " + format + " - supported formats: html|json|jsonp|txt|verbose.txt");
@@ -308,19 +306,26 @@ public class HealthCheckExecutorServlet extends HttpServlet {
     @Override
     protected void doGet(final HttpServletRequest request, final HttpServletResponse response) throws ServletException, IOException {
         String pathInfo = request.getPathInfo();
-        String format = splitFormat(pathInfo)[1];
+        String[] splitPathInfo = splitFormat(pathInfo);
+        String format = splitPathInfo[1];
         if (StringUtils.isBlank(format)) {
             // if not provided via extension use parameter or default
-            format = StringUtils.defaultIfEmpty(request.getParameter(PARAM_FORMAT.name), defaultFormat);
+            format = StringUtils.defaultIfBlank(request.getParameter(PARAM_FORMAT.name), defaultFormat);
         }
-        doGet(request, response, format);
+        
+        String pathTokensStr = splitPathInfo[0];
+        if(pathTokensStr!=null && pathTokensStr.startsWith("/")) {
+            pathTokensStr = pathTokensStr.substring(1, pathTokensStr.length());
+        }
+
+        doGet(request, response, pathTokensStr, format);
     }
 
-    private String[] splitFormat(String pathInfo) {
+    String[] splitFormat(String pathInfo) {
         for (String format : new String[] { FORMAT_HTML, FORMAT_JSON, FORMAT_JSONP, FORMAT_VERBOSE_TXT, FORMAT_TXT }) {
             String formatWithDot = "." + format;
-            if (StringUtils.endsWith(pathInfo, formatWithDot)) {
-                return new String[] { StringUtils.substringBeforeLast(pathInfo, formatWithDot), format };
+            if (pathInfo != null && pathInfo.endsWith(formatWithDot)) {
+                return new String[] { pathInfo.substring(0, pathInfo.length() - formatWithDot.length()), format };
             }
         }
         return new String[] { pathInfo, null };
@@ -358,7 +363,7 @@ public class HealthCheckExecutorServlet extends HttpServlet {
             throws IOException {
         response.setContentType(CONTENT_TYPE_HTML);
         response.setCharacterEncoding("UTF-8");
-        response.getWriter().append(this.htmlSerializer.serialize(overallResult, executionResults, getHtmlHelpText(), includeDebug));
+        response.getWriter().append(this.htmlSerializer.serialize(overallResult, executionResults, Arrays.asList(PARAM_LIST), includeDebug));
     }
 
     private void sendNoCacheHeaders(final HttpServletResponse response) {
@@ -369,17 +374,6 @@ public class HealthCheckExecutorServlet extends HttpServlet {
         if (StringUtils.isNotBlank(corsAccessControlAllowOrigin)) {
             response.setHeader(CORS_ORIGIN_HEADER_NAME, corsAccessControlAllowOrigin);
         }
-    }
-
-    private String getHtmlHelpText() {
-        final StringBuilder sb = new StringBuilder();
-        sb.append("<h3>Supported URL parameters</h3>\n");
-        for (Param p : PARAM_LIST) {
-            sb.append("<b>").append(p.name).append("</b>:");
-            sb.append(StringEscapeUtils.escapeHtml4(p.description));
-            sb.append("<br/>");
-        }
-        return sb.toString();
     }
 
     Map<Result.Status, Integer> getStatusMapping(String mappingStr) {
@@ -424,7 +418,7 @@ public class HealthCheckExecutorServlet extends HttpServlet {
 
         @Override
         protected void doGet(HttpServletRequest req, HttpServletResponse resp) throws ServletException, IOException {
-            HealthCheckExecutorServlet.this.doGet(req, resp, format);
+            HealthCheckExecutorServlet.this.doGet(req, resp, "", format);
         }
     }
 

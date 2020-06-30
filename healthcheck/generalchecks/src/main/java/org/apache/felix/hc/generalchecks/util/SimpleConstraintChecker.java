@@ -17,9 +17,10 @@
  */
 package org.apache.felix.hc.generalchecks.util;
 
+import java.util.Arrays;
 import java.util.Calendar;
 
-import org.apache.commons.lang3.StringUtils;
+import org.apache.felix.hc.core.impl.util.lang.StringUtils;
 
 /** Simple check of values against expressions like &lt; N, &gt; N, between two values etc. See the SimpleConstraintCheckerTest for
  * examples. */
@@ -73,9 +74,9 @@ public class SimpleConstraintChecker {
             matches = value < Long.valueOf(parts[1]);
 
         } else if (parts[0].equals(EQUALS) && parts.length == 2) {
-            if(StringUtils.isNumeric(stringValue)) {
-                long value = Long.valueOf(stringValue).longValue();
-                matches = value == Long.valueOf(parts[1]).longValue();
+            Long longValue;
+            if((longValue = getLongObject(stringValue)) != null) {
+                matches = longValue.longValue() == Long.valueOf(parts[1]).longValue();
             } else {
                 matches = stringValue.equals(parts[1]);
             }
@@ -86,16 +87,16 @@ public class SimpleConstraintChecker {
             matches = value > lowerBound && value < upperBound;
 
         } else if (parts.length > 1 && CONTAINS.equalsIgnoreCase(parts[0])) {
-            String pattern = StringUtils.join(parts, " ", 1, parts.length);
+            String pattern = String.join(" ", Arrays.copyOfRange(parts, 1, parts.length));
             matches = stringValue.contains(pattern);
         } else if (parts.length > 1 && STARTS_WITH.equalsIgnoreCase(parts[0])) {
-            String pattern = StringUtils.join(parts, " ", 1, parts.length);
+            String pattern = String.join(" ", Arrays.copyOfRange(parts, 1, parts.length));
             matches = stringValue.startsWith(pattern);
         } else if (parts.length > 1 && ENDS_WITH.equalsIgnoreCase(parts[0])) {
-            String pattern = StringUtils.join(parts, " ", 1, parts.length);
+            String pattern = String.join(" ", Arrays.copyOfRange(parts, 1, parts.length));
             matches = stringValue.endsWith(pattern);
         } else if (parts.length > 1 && MATCHES.equalsIgnoreCase(parts[0])) {
-            String pattern = StringUtils.join(parts, " ", 1, parts.length);
+            String pattern = String.join(" ", Arrays.copyOfRange(parts, 1, parts.length));
             matches = stringValue.matches(pattern);
         } else if (parts.length > 1 && OLDER_THAN.equalsIgnoreCase(parts[0]) && parts.length == 3) {
             int unit = stringToUnit(parts[2]);
@@ -109,7 +110,7 @@ public class SimpleConstraintChecker {
             matches = timestamp < compareTimestamp;
 
         } else {
-            matches = StringUtils.join(parts, "").equals(stringValue);
+            matches = String.join("", parts).equals(stringValue);
         }
 
         boolean result = matches ^ inverseResult;
@@ -143,5 +144,16 @@ public class SimpleConstraintChecker {
             throw new IllegalArgumentException("Unexpected unit '"+unitString+"'");
         }
         return unit;
+    }
+    
+    private static Long getLongObject(String strNum) {
+        if (strNum == null) {
+            return null;
+        }
+        try {
+            return Long.valueOf(strNum);
+        } catch (NumberFormatException nfe) {
+            return null;
+        }
     }
 }
