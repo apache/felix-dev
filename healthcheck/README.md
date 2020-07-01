@@ -225,13 +225,9 @@ Property    | Type     | Default | Description
 `temporarilyAvailableGracePeriodInMs` | Long | 60000ms (10min) | After this configured period, health checks continously reporting `TEMPORARILY_UNAVAILABLE` are automatically turned into status `CRITICAL`
 `autoLogging` | Boolean | false | If enabled, will automatically log entries of ResultLog (or FormattingResultLog resp.) using Log4j. The logging category used is the class instantiating ResultLog prefixed with 'healthchecks.', for instance 'healthchecks.com.mycorp.myplatform.mymodule.ModuleCheck'. The prefix allows for easy configuration of a log file containing all health check results.
 
-
 ### JMX access to health checks
-If the `org.apache.felix.hc.jmx` bundle is active, a JMX MBean is created for each `HealthCheck` which has the 
-service property `hc.mbean.name` service property set. All health check MBeans are registered in the 
-domain `org.apache.felix.healthcheck` with a type of `HealthCheck`.
 
-The MBean gives access to the `Result` and the log, as shown on the screenshot below.   
+Health checks that define the service property `hc.mbean.name` will automatically get the JMX bean with that name, the domain `org.apache.felix.healthcheck` and with the type `HealthCheck` registered. The bean provides access to the `Result` (status, logs, etc.)
 
 ### Health Check Servlet
 The health check servlet allows to query the checks via http. It provides
@@ -256,6 +252,16 @@ at `/system/console/healthcheck` allows for executing health checks, optionally 
 based on their tags (positive and negative selection, see the `HealthCheckFilter` mention above).
 
 The DEBUG logs of health checks can optionally be displayed, and an option allows for showing only health checks that have a non-OK status.
+
+### Gogo Console
+
+The Gogo command `hc:exec` that can be used as follows:
+
+    hc:exec [-v] [-a] tag1,tag2
+      -v verbose/debug
+      -a combine tags with and logic (instead of or logic)
+      
+The command is available without installing additional bundles (it is included in the core bundle `org.apache.felix.healthcheck.core`)
 
 ## Monitoring Health Checks
 

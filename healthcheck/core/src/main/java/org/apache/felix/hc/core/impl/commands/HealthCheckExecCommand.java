@@ -18,7 +18,6 @@
  */
 package org.apache.felix.hc.core.impl.commands;
 
-import java.util.Arrays;
 import java.util.List;
 
 import org.apache.felix.hc.api.FormattingResultLog;
