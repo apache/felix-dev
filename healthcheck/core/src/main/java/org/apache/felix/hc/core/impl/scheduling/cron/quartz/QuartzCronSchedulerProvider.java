@@ -15,37 +15,44 @@
  * KIND, either express or implied. See the License for the
  * specific language governing permissions and limitations under the License.
  */
-package org.apache.felix.hc.core.impl.scheduling;
+package org.apache.felix.hc.core.impl.scheduling.cron.quartz;
+
+import static org.apache.felix.hc.core.impl.scheduling.cron.HealthCheckCronScheduler.CRON_TYPE_PROPERTY;
+import static org.apache.felix.hc.core.impl.scheduling.cron.quartz.QuartzCronSchedulerProvider.CRON_TYPE_QUARTZ;
 
 import org.apache.felix.hc.core.impl.executor.HealthCheckExecutorThreadPool;
+import org.apache.felix.hc.core.impl.scheduling.cron.HealthCheckCronScheduler;
+import org.osgi.service.component.annotations.Activate;
 import org.osgi.service.component.annotations.Component;
 import org.osgi.service.component.annotations.Deactivate;
 import org.osgi.service.component.annotations.Reference;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-/** Component without direct quartz imports (can always start) that will provide a QuartzCronScheduler on demand. */
-@Component(service = QuartzCronSchedulerProvider.class)
-public class QuartzCronSchedulerProvider {
+/**
+ * Component without direct quartz imports (can always start) that will provide
+ * a QuartzCronScheduler on demand.
+ */
+@Component(enabled = false, property = CRON_TYPE_PROPERTY + "=" + CRON_TYPE_QUARTZ)
+public class QuartzCronSchedulerProvider implements HealthCheckCronScheduler {
 
+    public static final String CRON_TYPE_QUARTZ = "quartz";
+    
     private static final Logger LOG = LoggerFactory.getLogger(QuartzCronSchedulerProvider.class);
-    private static final String CLASS_FROM_QUARTZ_FRAMEWORK = "org.quartz.CronTrigger";
 
-    private QuartzCronScheduler quartzCronScheduler = null;
+    private QuartzCronScheduler quartzCronScheduler;
 
     @Reference
     HealthCheckExecutorThreadPool healthCheckExecutorThreadPool;
+    
+    @Activate
+    void activate() {
+        quartzCronScheduler = new QuartzCronScheduler(healthCheckExecutorThreadPool);
+        LOG.info("Created quartz scheduler health check core bundle");
+    }
 
-    public synchronized QuartzCronScheduler getQuartzCronScheduler() throws ClassNotFoundException {
-        if (quartzCronScheduler == null) {
-            if (classExists(CLASS_FROM_QUARTZ_FRAMEWORK)) {
-                quartzCronScheduler = new QuartzCronScheduler(healthCheckExecutorThreadPool);
-                LOG.info("Created quartz scheduler health check core bundle");
-            } else {
-                throw new ClassNotFoundException("Class " + CLASS_FROM_QUARTZ_FRAMEWORK
-                        + " was not found (install quartz library into classpath)");
-            }
-        }
+    @Override
+    public QuartzCronScheduler getScheduler() {
         return quartzCronScheduler;
     }
 
@@ -58,12 +65,4 @@ public class QuartzCronSchedulerProvider {
         }
     }
 
-    private boolean classExists(String className) {
-        try {
-            Class.forName(className);
-            return true;
-        } catch (ClassNotFoundException e) {
-            return false;
-        }
-    }
 }

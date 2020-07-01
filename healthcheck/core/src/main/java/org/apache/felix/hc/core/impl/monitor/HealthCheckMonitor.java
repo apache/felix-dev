@@ -38,8 +38,7 @@ import org.apache.felix.hc.core.impl.executor.CombinedExecutionResult;
 import org.apache.felix.hc.core.impl.executor.HealthCheckExecutorThreadPool;
 import org.apache.felix.hc.core.impl.scheduling.AsyncIntervalJob;
 import org.apache.felix.hc.core.impl.scheduling.AsyncJob;
-import org.apache.felix.hc.core.impl.scheduling.AsyncQuartzCronJob;
-import org.apache.felix.hc.core.impl.scheduling.QuartzCronSchedulerProvider;
+import org.apache.felix.hc.core.impl.scheduling.cron.quartz.CronJobFactory;
 import org.apache.felix.hc.core.impl.util.lang.StringUtils;
 import org.osgi.framework.BundleContext;
 import org.osgi.framework.InvalidSyntaxException;
@@ -122,16 +121,16 @@ public class HealthCheckMonitor implements Runnable {
 
     @Reference
     HealthCheckExecutor executor;
-    
+
     @Reference
     HealthCheckExecutorThreadPool healthCheckExecutorThreadPool;
 
     @Reference
-    QuartzCronSchedulerProvider quartzCronSchedulerProvider;
+    CronJobFactory cronJobFactory;
 
     @Reference
     private EventAdmin eventAdmin;
-    
+
     // component state
     AsyncJob monitorJob = null;
     List<String> tags;
@@ -172,14 +171,9 @@ public class HealthCheckMonitor implements Runnable {
         this.intervalInSec = config.intervalInSec();
         this.cronExpression = config.cronExpression();
         if (StringUtils.isNotBlank(cronExpression)) {
-            try {
-                monitorJob = new AsyncQuartzCronJob(this, quartzCronSchedulerProvider,
-                        "job-hc-monitor-" + componentContext.getProperties().get(ComponentConstants.COMPONENT_ID),
-                        "healthcheck-monitor", cronExpression);
-            } catch (ClassNotFoundException e) {
-                throw new IllegalArgumentException("Cannot use cron expression " + cronExpression
-                        + " while class is not available: " + cronExpression);
-            }
+            monitorJob = cronJobFactory.createNewJob(this,
+                    "job-hc-monitor-" + componentContext.getProperties().get(ComponentConstants.COMPONENT_ID),
+                    "healthcheck-monitor", cronExpression);
         } else if (intervalInSec > 0) {
             monitorJob = new AsyncIntervalJob(this, healthCheckExecutorThreadPool, intervalInSec);
         } else {

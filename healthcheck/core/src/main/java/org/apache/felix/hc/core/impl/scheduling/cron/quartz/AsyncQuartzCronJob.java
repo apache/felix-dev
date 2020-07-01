@@ -15,12 +15,14 @@
  * KIND, either express or implied. See the License for the
  * specific language governing permissions and limitations under the License.
  */
-package org.apache.felix.hc.core.impl.scheduling;
+package org.apache.felix.hc.core.impl.scheduling.cron.quartz;
 
 import static org.quartz.CronScheduleBuilder.cronSchedule;
 import static org.quartz.JobBuilder.newJob;
 import static org.quartz.TriggerBuilder.newTrigger;
 
+import org.apache.felix.hc.core.impl.scheduling.AsyncJob;
+import org.apache.felix.hc.core.impl.scheduling.cron.HealthCheckCronScheduler;
 import org.quartz.CronTrigger;
 import org.quartz.Job;
 import org.quartz.JobDataMap;
@@ -47,11 +49,11 @@ public class AsyncQuartzCronJob extends AsyncJob {
     private final String group;
     private final String cronExpression;
 
-    private JobKey jobKey = null;
+    private JobKey jobKey;
 
-    public AsyncQuartzCronJob(Runnable runnable, QuartzCronSchedulerProvider quartzCronSchedulerProvider, String id, String group, String cronExpression) throws ClassNotFoundException {
+    public AsyncQuartzCronJob(Runnable runnable, HealthCheckCronScheduler quartzCronSchedulerProvider, String id, String group, String cronExpression) {
         super(runnable);
-        this.quartzCronScheduler = quartzCronSchedulerProvider.getQuartzCronScheduler();
+        this.quartzCronScheduler = (QuartzCronScheduler) quartzCronSchedulerProvider.getScheduler();
         this.id = id;
         this.group = group;
         this.cronExpression = cronExpression;
@@ -75,7 +77,6 @@ public class AsyncQuartzCronJob extends AsyncJob {
     }
 
     public boolean schedule() {
-
         try {
             Scheduler scheduler = quartzCronScheduler.getScheduler();
 
@@ -90,7 +91,6 @@ public class AsyncQuartzCronJob extends AsyncJob {
             LOG.error("Could not schedule job for " + runnable + ": " + e, e);
             return false;
         }
-
     }
 
     @Override
@@ -108,7 +108,7 @@ public class AsyncQuartzCronJob extends AsyncJob {
 
     @Override
     public String toString() {
-        return "[Async quartz job for " + runnable + "]";
+        return "[Async quartz cron job for " + runnable + "]";
     }
     
     // quartz forces to pass in a class object (and not an instance), hence this helper class is needed
