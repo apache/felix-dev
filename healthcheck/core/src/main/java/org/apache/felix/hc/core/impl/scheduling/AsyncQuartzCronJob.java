@@ -33,7 +33,7 @@ import org.quartz.SchedulerException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-/** Runs health checks that are configured with a cron expression for asynchronous execution. 
+/** Async job to be used by async health checks and async monitor. 
  * 
  * This implementation uses quartz to support the cron syntax (which is not supported by executors from standard java java.util.concurrent
  * package) */
@@ -42,16 +42,17 @@ public class AsyncQuartzCronJob extends AsyncJob {
 
     private static final String JOB_DATA_KEY_JOB = "asyncHcJob";
 
-    protected final QuartzCronScheduler quartzCronScheduler;
     private final String id;
     private final String group;
     private final String cronExpression;
 
+    private final Scheduler quartzScheduler;
+
     private JobKey jobKey = null;
 
-    public AsyncQuartzCronJob(Runnable runnable, QuartzCronSchedulerProvider quartzCronSchedulerProvider, String id, String group, String cronExpression) throws ClassNotFoundException {
+    public AsyncQuartzCronJob(Runnable runnable, Scheduler quartzScheduler, String id, String group, String cronExpression) {
         super(runnable);
-        this.quartzCronScheduler = quartzCronSchedulerProvider.getQuartzCronScheduler();
+        this.quartzScheduler = quartzScheduler;
         this.id = id;
         this.group = group;
         this.cronExpression = cronExpression;
@@ -77,13 +78,12 @@ public class AsyncQuartzCronJob extends AsyncJob {
     public boolean schedule() {
 
         try {
-            Scheduler scheduler = quartzCronScheduler.getScheduler();
 
             JobDetail job = getQuartzJobDetail();
             CronTrigger cronTrigger = newTrigger().withSchedule(cronSchedule(cronExpression)).forJob(job)
                     .build();
 
-            scheduler.scheduleJob(job, cronTrigger);
+            quartzScheduler.scheduleJob(job, cronTrigger);
             LOG.info("Scheduled job {} with trigger {}", job, cronTrigger);
             return true;
         } catch (SchedulerException e) {
@@ -95,10 +95,9 @@ public class AsyncQuartzCronJob extends AsyncJob {
 
     @Override
     public boolean unschedule() {
-        Scheduler scheduler = quartzCronScheduler.getScheduler();
         LOG.debug("Unscheduling job {}", jobKey);
         try {
-            scheduler.deleteJob(jobKey);
+            quartzScheduler.deleteJob(jobKey);
             return true;
         } catch (SchedulerException e) {
             LOG.error("Could not unschedule job for " + jobKey + ": " + e, e);

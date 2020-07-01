@@ -21,40 +21,58 @@ import org.apache.felix.hc.core.impl.executor.HealthCheckExecutorThreadPool;
 import org.osgi.service.component.annotations.Component;
 import org.osgi.service.component.annotations.Deactivate;
 import org.osgi.service.component.annotations.Reference;
+import org.quartz.SchedulerException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 /** Component without direct quartz imports (can always start) that will provide a QuartzCronScheduler on demand. */
-@Component(service = QuartzCronSchedulerProvider.class)
-public class QuartzCronSchedulerProvider {
+@Component(service = CronJobFactory.class)
+public class CronJobFactory {
 
-    private static final Logger LOG = LoggerFactory.getLogger(QuartzCronSchedulerProvider.class);
+    private static final Logger LOG = LoggerFactory.getLogger(CronJobFactory.class);
     private static final String CLASS_FROM_QUARTZ_FRAMEWORK = "org.quartz.CronTrigger";
-
-    private QuartzCronScheduler quartzCronScheduler = null;
 
     @Reference
     HealthCheckExecutorThreadPool healthCheckExecutorThreadPool;
 
-    public synchronized QuartzCronScheduler getQuartzCronScheduler() throws ClassNotFoundException {
-        if (quartzCronScheduler == null) {
-            if (classExists(CLASS_FROM_QUARTZ_FRAMEWORK)) {
-                quartzCronScheduler = new QuartzCronScheduler(healthCheckExecutorThreadPool);
-                LOG.info("Created quartz scheduler health check core bundle");
-            } else {
-                throw new ClassNotFoundException("Class " + CLASS_FROM_QUARTZ_FRAMEWORK
-                        + " was not found (install quartz library into classpath)");
-            }
+    org.quartz.Scheduler quartzScheduler;
+
+    public AsyncJob getAsyncCronJob(Runnable runnable, String id, String group, String cronExpression) {
+
+        if(isQuartzAvailable()) {
+            return new AsyncQuartzCronJob(runnable, getQuartzCronScheduler(), id, group, cronExpression);
+        } else {
+            return new AsyncSimpleCronJob(runnable, cronExpression);
         }
-        return quartzCronScheduler;
+    }
+    
+    private synchronized org.quartz.Scheduler getQuartzCronScheduler() {
+        if (quartzScheduler == null) {
+            QuartzCronSchedulerBuilder quartzCronSchedulerBuilder = new QuartzCronSchedulerBuilder(healthCheckExecutorThreadPool);
+            quartzScheduler = quartzCronSchedulerBuilder.getScheduler();
+            LOG.info("Created quartz scheduler health check core bundle");
+        }
+        return quartzScheduler;
+    }
+
+    
+    public boolean isQuartzAvailable() {
+        return classExists(CLASS_FROM_QUARTZ_FRAMEWORK);
     }
 
     @Deactivate
     protected synchronized void deactivate() {
-        if (quartzCronScheduler != null) {
-            quartzCronScheduler.shutdown();
-            quartzCronScheduler = null;
-            LOG.info("QuartzCronScheduler shutdown");
+        // simpleScheduler follows its own SCR lifecycle
+        
+        if (quartzScheduler != null) { // quartz scheduler needs to be shut down
+            try {
+                quartzScheduler.shutdown();
+                LOG.info("QuartzCronScheduler shutdown");
+            } catch (SchedulerException e) {
+                LOG.info("QuartzCronScheduler shutdown with exception: "+e);
+            } finally {
+               quartzScheduler = null;
+            }
         }
     }
 

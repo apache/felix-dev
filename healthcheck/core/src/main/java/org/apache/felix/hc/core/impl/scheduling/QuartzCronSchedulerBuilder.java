@@ -26,14 +26,14 @@ import org.quartz.spi.ThreadPool;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-public class QuartzCronScheduler {
-    private static final Logger LOG = LoggerFactory.getLogger(QuartzCronScheduler.class);
+public class QuartzCronSchedulerBuilder {
+    private static final Logger LOG = LoggerFactory.getLogger(QuartzCronSchedulerBuilder.class);
 
     private static final String HC_SCHEDULER_NAME = "quartz.hc.scheduler_name";
 
     private Scheduler scheduler;
 
-    public QuartzCronScheduler(HealthCheckExecutorThreadPool healthCheckExecutorThreadPool) {
+    public QuartzCronSchedulerBuilder(HealthCheckExecutorThreadPool healthCheckExecutorThreadPool) {
         try {
             DirectSchedulerFactory schedulerFactory = DirectSchedulerFactory.getInstance();
             ThreadPool threadPool = new QuartzThreadPool(healthCheckExecutorThreadPool);
@@ -43,17 +43,6 @@ public class QuartzCronScheduler {
             LOG.debug("Started quartz scheduler {}", scheduler);
         } catch (SchedulerException e) {
             throw new IllegalStateException("Could not initialise/start quartz scheduler " + HC_SCHEDULER_NAME, e);
-        }
-    }
-
-    public void shutdown() {
-        if (scheduler != null) {
-            try {
-                scheduler.shutdown(false);
-                LOG.debug("Shutdown of quartz scheduler finished: {}", scheduler);
-            } catch (SchedulerException e) {
-                throw new IllegalStateException("Could not shutdown quartz scheduler " + HC_SCHEDULER_NAME, e);
-            }
         }
     }
 
