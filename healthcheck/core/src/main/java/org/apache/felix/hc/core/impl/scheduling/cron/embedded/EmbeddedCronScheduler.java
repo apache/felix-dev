@@ -17,151 +17,61 @@
  */
 package org.apache.felix.hc.core.impl.scheduling.cron.embedded;
 
-import java.util.Collection;
-import java.util.HashMap;
 import java.util.Map;
 import java.util.Map.Entry;
-import java.util.concurrent.ExecutorService;
-import java.util.concurrent.RejectedExecutionException;
+import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.TimeUnit;
-import java.util.concurrent.atomic.AtomicBoolean;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-public final class EmbeddedCronScheduler implements AutoCloseable {
+public final class EmbeddedCronScheduler implements Runnable {
 
-    private final Logger logger = LoggerFactory.getLogger(getClass());
-
-    /* Object used for internal locking/notifications */
-    private final Object monitor = new Object();
+    private static final Logger LOG = LoggerFactory.getLogger(EmbeddedCronScheduler.class);
 
     /* List of managed tasks */
-    private final Map<String, EmbeddedCronSchedulerTask> tasks = new HashMap<>();
+    private final Map<String, AsyncEmbeddedCronJob> tasks = new ConcurrentHashMap<>();
 
-    /* Task executor instance */
-    public final ExecutorService tasksExecutor;
+    /* Task executor service */
+    public final ScheduledExecutorService scheduledExecutorService;
 
-    /* Thread that makes all scheduling job */
-    public final SchedulerThread schedulerThread;
-
-    /* Flag to check if the scheduler is active */
-    private final AtomicBoolean isActive;
-
-    public EmbeddedCronScheduler(final ExecutorService tasksExecutor, final long initialDelay, final long checkInterval,
+    private String schedulerThreadName;
+    
+    public EmbeddedCronScheduler(final ScheduledExecutorService scheduledExecutorService, final long initialDelay, final long checkInterval,
             final TimeUnit timeUnit, final String schedulerThreadName) {
-        schedulerThread = new SchedulerThread(initialDelay, checkInterval, timeUnit, schedulerThreadName);
-        this.tasksExecutor = tasksExecutor;
-        isActive = new AtomicBoolean(true);
-        schedulerThread.start();
+        
+        this.scheduledExecutorService = scheduledExecutorService;
+        scheduledExecutorService.scheduleAtFixedRate(this, initialDelay, checkInterval, timeUnit);
+        
+        this.schedulerThreadName = schedulerThreadName;
     }
 
-    public void schedule(final EmbeddedCronJob cronJob) {
-        synchronized (monitor) {
-            tasks.put(cronJob.name(), new EmbeddedCronSchedulerTask(cronJob, new EmbeddedCronParser(cronJob.cron())));
-        }
+    public void schedule(AsyncEmbeddedCronJob cronJob) {
+        tasks.put(cronJob.getId(), cronJob);
     }
 
-    public void remove(final String name) {
-        synchronized (monitor) {
-            tasks.remove(name);
-        }
+    public void remove(AsyncEmbeddedCronJob cronJob) {
+        tasks.remove(cronJob.getId());
     }
 
     @Override
-    public void close() {
-        shutdown();
-    }
-
-    public void shutdown() {
-        isActive.set(false);
-        synchronized (monitor) {
-            monitor.notify();
-        }
-        schedulerThread.interrupt();
-    }
-
-    public boolean isShutdown() {
-        return !isActive.get();
-    }
-
-    public Collection<EmbeddedCronSchedulerTask> getTasks() {
-        return tasks.values();
-    }
-
-    public class SchedulerThread extends Thread {
-        public final long initialDelay;
-        public final long checkInterval;
-        public final TimeUnit timeUnit;
-
-        private SchedulerThread(final long initialDelay, final long checkInterval, final TimeUnit timeUnit,
-                final String threadName) {
-            if (initialDelay < 0) {
-                throw new IllegalArgumentException("initialDelay < 0. Value: " + initialDelay);
+    public void run() {
+        String threadNameToRestore = Thread.currentThread().getName();
+        try {
+            Thread.currentThread().setName(schedulerThreadName);
+            LOG.trace("tasks: {}", tasks);
+            
+            for (final Entry<String, AsyncEmbeddedCronJob> entry : tasks.entrySet()) {
+                final AsyncEmbeddedCronJob job = entry.getValue();
+                job.checkAndExecute(scheduledExecutorService);
             }
-            if (checkInterval <= 0) {
-                throw new IllegalArgumentException("checkInterval must be > 0. Value: " + checkInterval);
-            }
-            if (timeUnit == null) {
-                throw new IllegalArgumentException("timeUnit is null");
-            }
-            this.initialDelay = initialDelay;
-            this.checkInterval = checkInterval;
-            this.timeUnit = timeUnit;
-            setName(threadName);
-            setDaemon(true);
+        } catch (Exception e) {
+            // TODO: handle exception
+        } finally {
+            Thread.currentThread().setName(threadNameToRestore);
         }
 
-        @Override
-        public void run() {
-            if (initialDelay > 0) {
-                pause(timeUnit.toMillis(initialDelay));
-            }
-            final long checkIntervalMillis = timeUnit.toMillis(checkInterval);
-            while (isActive.get()) {
-                try {
-                    checkAndExecute();
-                    pause(checkIntervalMillis);
-                } catch (final Exception e) {
-                    logger.error("Got internal error that must never happen!", e);
-                }
-            }
-        }
-
-        private void pause(final long checkIntervalMillis) {
-            try {
-                synchronized (monitor) {
-                    monitor.wait(checkIntervalMillis);
-                }
-            } catch (final InterruptedException e) {
-                logger.error("Got unexpected interrupted exception! Ignoring", e);
-                Thread.currentThread().interrupt();
-            }
-        }
-
-        private void checkAndExecute() {
-            synchronized (monitor) {
-                final long currentTime = System.currentTimeMillis();
-                for (final Entry<String, EmbeddedCronSchedulerTask> entry : tasks.entrySet()) {
-                    final EmbeddedCronSchedulerTask task = entry.getValue();
-                    if (task.nextExecutingTime >= currentTime) {
-                        continue;
-                    }
-                    if (task.executing) {
-                        task.nextExecutingTime = task.cronParser.next(currentTime);
-                        continue;
-                    }
-                    try {
-                        task.lastExecutingTime = System.currentTimeMillis();
-                        tasksExecutor.execute(task);
-                        task.executing = true;
-                    } catch (final RejectedExecutionException e) {
-                        logger.error("Failed to start task: {}", task, e);
-                        Thread.currentThread().interrupt();
-                    }
-                }
-            }
-        }
     }
 
 }

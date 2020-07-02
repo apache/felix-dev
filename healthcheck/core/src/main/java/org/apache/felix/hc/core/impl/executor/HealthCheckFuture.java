@@ -20,6 +20,7 @@ package org.apache.felix.hc.core.impl.executor;
 import static org.apache.felix.hc.api.FormattingResultLog.msHumanReadable;
 
 import java.lang.reflect.Field;
+import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
 import java.util.Date;
 import java.util.List;
@@ -126,25 +127,38 @@ public class HealthCheckFuture extends FutureTask<ExecutionResult> {
             Class<?> hcClass = legacyHealthCheck.getClass();
             log.debug("Running legacy HC {}, please convert to new interface org.apache.felix.hc.api.HealthCheck!",
                     hcClass.getName());
+            
+            Object result;
             try {
                 Method executeMethod = hcClass.getMethod("execute");
-                Object result = executeMethod.invoke(legacyHealthCheck);
+                result = executeMethod.invoke(legacyHealthCheck);
+            } catch (InvocationTargetException e) {
+                log.healthCheckError("Exception during execute() of Sling HC {}: {}", hcClass.getName(), String.valueOf(e.getTargetException()), e);
+                return new Result(log);
+            } catch (ReflectiveOperationException e) {
+                log.healthCheckError("Could not call Sling HC {} from Felix Runtime: {}", hcClass.getName(), String.valueOf(e), e);
+                return new Result(log);
+            }
+            
+            try {
                 Object resultLog = readPrivateField(result, "resultLog");
 
                 List<?> entries = (List) readPrivateField(resultLog, "entries");
-                for (Object object : entries) {
-                    String statusLegacy = String.valueOf(readPrivateField(object, "status"));
-                    String message = (String) readPrivateField(object, "message");
-                    Exception exception = (Exception) readPrivateField(object, "exception");
-                    if(statusLegacy.equals("DEBUG")) {
-                        log.add(new ResultLog.Entry(message, true, exception));
-                    } else {
-                        statusLegacy = statusLegacy.replace("INFO", Result.Status.OK.name());
-                        log.add(new ResultLog.Entry(Result.Status.valueOf(statusLegacy), message, exception));
+                if(entries != null) {
+                    for (Object object : entries) {
+                        String statusLegacy = String.valueOf(readPrivateField(object, "status"));
+                        String message = (String) readPrivateField(object, "message");
+                        Exception exception = (Exception) readPrivateField(object, "exception");
+                        if(statusLegacy.equals("DEBUG")) {
+                            log.add(new ResultLog.Entry(message, true, exception));
+                        } else {
+                            statusLegacy = statusLegacy.replace("INFO", Result.Status.OK.name());
+                            log.add(new ResultLog.Entry(Result.Status.valueOf(statusLegacy), message, exception));
+                        }
                     }
                 }
             } catch (ReflectiveOperationException e) {
-                log.healthCheckError("Could call and convert Sling HC {} for Felix Runtime", hcClass.getName());
+                log.healthCheckError("Could convert Sling HC result of {} for Felix Runtime: {}", hcClass.getName(), String.valueOf(e), e);
             }
             return new Result(log);
         }

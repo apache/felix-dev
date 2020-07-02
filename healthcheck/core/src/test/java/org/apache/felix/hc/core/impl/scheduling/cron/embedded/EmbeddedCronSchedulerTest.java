@@ -18,114 +18,130 @@
 package org.apache.felix.hc.core.impl.scheduling.cron.embedded;
 
 import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertTrue;
+import static org.mockito.Mockito.doReturn;
+import static org.mockito.MockitoAnnotations.initMocks;
 
+import java.text.SimpleDateFormat;
+import java.util.ArrayList;
+import java.util.Date;
+import java.util.List;
 import java.util.concurrent.Executors;
+import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicInteger;
 
-import org.apache.felix.hc.core.impl.scheduling.cron.embedded.EmbeddedSampleCronJob1.Callback;
+import org.junit.After;
+import org.junit.Before;
 import org.junit.Test;
+import org.mockito.Spy;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 public class EmbeddedCronSchedulerTest {
+    private static final Logger LOG = LoggerFactory.getLogger(EmbeddedCronScheduler.class);
 
-    private static final Object SYNC_OBJECT = new Object();
-
-    @Test
-    public void checkSchedulerCheckSingleThread() throws InterruptedException {
-        try (final EmbeddedCronScheduler scheduler = new EmbeddedCronScheduler(Executors.newFixedThreadPool(1), 0, 1,
-                TimeUnit.SECONDS, "T1")) {
-            final int nIterations = 3;
-
-            final EmbeddedSampleCronJob1 service = new EmbeddedSampleCronJob2(s -> {
-                if (s.counter == nIterations) {
-                    scheduler.shutdown();
-                    synchronized (SYNC_OBJECT) {
-                        SYNC_OBJECT.notify();
-                    }
-                }
-            });
-            assertEquals(0, service.counter);
-            final long t0 = System.currentTimeMillis();
-            scheduler.schedule(service);
-
-            synchronized (SYNC_OBJECT) {
-                SYNC_OBJECT.wait(5_000L);
-            }
-            final int counter = service.counter;
-            final long totalTime = System.currentTimeMillis() - t0;
-
-            assertEquals(nIterations, counter);
-            assertTrue(scheduler.isShutdown());
-            assertTrue(totalTime < 4_000);
-
-            Thread.sleep(2_000L);
-            assertEquals(counter, service.counter);
-        }
+    @Spy
+    EmbeddedCronSchedulerProvider embeddedCronSchedulerProvider = new EmbeddedCronSchedulerProvider();
+    
+    EmbeddedCronScheduler cronScheduler;
+    
+    ScheduledExecutorService scheduledExecutorService;
+    
+    @Before
+    public void setup() {
+        initMocks(this);
+        
+        scheduledExecutorService = Executors.newScheduledThreadPool(10);
+        cronScheduler = new EmbeddedCronScheduler(scheduledExecutorService, 0, 50, TimeUnit.MILLISECONDS /* for exact fires in JUnit */, "T1");
+        doReturn(cronScheduler).when(embeddedCronSchedulerProvider).getScheduler();
     }
+
+    @After
+    public void teardown() {
+        scheduledExecutorService.shutdown();
+    }
+    
+    public static class SampleCounterJob implements Runnable {
+
+        public volatile int counter = 0;
+        
+        private final String name;
+        
+        public SampleCounterJob(String name) {
+            this.name = name;
+        }
+
+        @Override
+        public void run() {
+            counter++;
+            LOG.info("{}  Name: {} counter: {}", new SimpleDateFormat("HH:mm:ss.SSS").format(new Date()), name, counter);
+        }
+
+    }
+
 
     @Test
     public void checkSchedulerCheckMultipleThreads() throws InterruptedException {
-        try (EmbeddedCronScheduler scheduler = new EmbeddedCronScheduler(Executors.newFixedThreadPool(10), 0, 1,
-                TimeUnit.SECONDS, "T2")) {
-            EmbeddedSampleCronJob1.staticCounter = 0;
-            final int nIterations = 3;
 
-            final Callback c = s -> {
-                try {
-                    Thread.sleep(3000);
-                } catch (final InterruptedException e) {
-                    throw new RuntimeException(e);
-                }
-                if (EmbeddedSampleCronJob1.staticCounter == nIterations) {
-                    synchronized (SYNC_OBJECT) {
-                        SYNC_OBJECT.notify();
-                    }
-                }
-            };
-            synchronized (SYNC_OBJECT) {
-                for (int i = 0; i < 10; i++) {
-                    scheduler.schedule(new EmbeddedSampleCronJob1(c, "abc" + i));
-                }
-                SYNC_OBJECT.wait(5 * 1000L);
-            }
-            scheduler.shutdown();
-            assertTrue("Number of iterations: " + EmbeddedSampleCronJob1.staticCounter + ">=" + nIterations,
-                    EmbeddedSampleCronJob1.staticCounter >= nIterations);
+        List<SampleCounterJob> counterRunnables = new ArrayList<>();
+        for (int i = 1; i <= 5; i++) {
+
+            String name = "abc" + i;
+            SampleCounterJob counterRunnable = new SampleCounterJob(name);
+            AsyncEmbeddedCronJob job = new AsyncEmbeddedCronJob(counterRunnable, embeddedCronSchedulerProvider, name, "* * * * * *");
+            job.schedule();
+            counterRunnables.add(counterRunnable);
         }
+        
+        int waitForSeconds = 3;
+        try {
+            Thread.sleep(waitForSeconds * 1000); 
+        } catch (final InterruptedException e) {
+            throw new RuntimeException(e);
+        }
+        
+        for (SampleCounterJob counterRunnable : counterRunnables) {
+            // expect each to fire waitForSeconds times for cron "* * * * * *"
+            // no matter at what exact milliseconds we are
+            assertEquals(waitForSeconds, counterRunnable.counter);
+        }
+        
+        
+
     }
+
 
     @Test
     public void checkScheduledPeriodsOverlap() throws InterruptedException {
-        final int callCostInSeconds = 3;
+        final int callCostInMs = 1500;
         final AtomicInteger count = new AtomicInteger();
-        try (EmbeddedCronScheduler scheduler = new EmbeddedCronScheduler(Executors.newFixedThreadPool(1), 0, 200,
-                TimeUnit.MILLISECONDS, "T10")) {
-            final EmbeddedCronJob scheduled = new EmbeddedCronJob() {
-                @Override
-                public void run() throws Exception {
-                    count.incrementAndGet();
-                    Thread.sleep(callCostInSeconds * 1000);
-                }
 
-                @Override
-                public String cron() {
-                    return "* * * * * *";
-                }
+        SimpleDateFormat simpleDateFormat = new SimpleDateFormat("HH:mm:ss.SSS");
+        LOG.info("Test Start {}", simpleDateFormat.format(new Date()));
+        
+        Runnable jobRunnable = () -> {
+            count.incrementAndGet();
+            LOG.info("Execution Start {}", simpleDateFormat.format(new Date()));
+            try {
+                Thread.sleep(callCostInMs);
+            } catch (InterruptedException e) {
+                throw new IllegalStateException(e);
+            }
+            LOG.info("Execution End {}", simpleDateFormat.format(new Date()));
+        };
+        
+        AsyncEmbeddedCronJob job = new AsyncEmbeddedCronJob(jobRunnable, embeddedCronSchedulerProvider, "test", "* * * * * *");
+        job.schedule();
+        // it can take up to 1000ms until first fire (depending on start time of JUnit test)
+        // as job runs 1500ms the second fire has to be cancelled
+        // the third fire has to run again 
+        // a potential 4th fire (with 3000ms) has too be cancelled (as third is still running)
+        // => exact two executions
+        Thread.sleep(3000);
+        LOG.info("Test Assert {}", simpleDateFormat.format(new Date()));
+        assertEquals("A job running "+callCostInMs+"ms in one execution fired every second can only be executed twice", 2, count.get());
 
-                @Override
-                public String name() {
-                    return "test";
-                }
-            };
-            scheduler.schedule(scheduled);
-
-            final int nCyclesToCheck = 5;
-            Thread.sleep(nCyclesToCheck * callCostInSeconds * 1000L);
-            final int minCyclesExpected = nCyclesToCheck - 1;
-            assertTrue(
-                    "At least " + minCyclesExpected + " cycles must be started at this point, actual: " + count.get(),
-                    count.get() == nCyclesToCheck || count.get() == nCyclesToCheck - 1);
-        }
     }
+
+
 }

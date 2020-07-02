@@ -26,6 +26,7 @@ import org.quartz.spi.ThreadPool;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+/** Wrapper around org.quartz.Scheduler  */
 public class QuartzCronScheduler {
     private static final Logger LOG = LoggerFactory.getLogger(QuartzCronScheduler.class);
 

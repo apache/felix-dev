@@ -17,42 +17,29 @@
  */
 package org.apache.felix.hc.core.impl.scheduling.cron.quartz;
 
-import static org.apache.felix.hc.core.impl.scheduling.cron.HealthCheckCronScheduler.CRON_TYPE_PROPERTY;
-import static org.apache.felix.hc.core.impl.scheduling.cron.quartz.QuartzCronSchedulerProvider.CRON_TYPE_QUARTZ;
-
 import org.apache.felix.hc.core.impl.executor.HealthCheckExecutorThreadPool;
-import org.apache.felix.hc.core.impl.scheduling.cron.HealthCheckCronScheduler;
-import org.osgi.service.component.annotations.Activate;
 import org.osgi.service.component.annotations.Component;
 import org.osgi.service.component.annotations.Deactivate;
 import org.osgi.service.component.annotations.Reference;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-/**
- * Component without direct quartz imports (can always start) that will provide
- * a QuartzCronScheduler on demand.
- */
-@Component(enabled = false, property = CRON_TYPE_PROPERTY + "=" + CRON_TYPE_QUARTZ)
-public class QuartzCronSchedulerProvider implements HealthCheckCronScheduler {
+/** Component without direct quartz imports (can always start) that will provide a QuartzCronScheduler on demand. */
+@Component(service = QuartzCronSchedulerProvider.class)
+public class QuartzCronSchedulerProvider {
 
-    public static final String CRON_TYPE_QUARTZ = "quartz";
-    
     private static final Logger LOG = LoggerFactory.getLogger(QuartzCronSchedulerProvider.class);
 
-    private QuartzCronScheduler quartzCronScheduler;
+    private QuartzCronScheduler quartzCronScheduler = null;
 
     @Reference
     HealthCheckExecutorThreadPool healthCheckExecutorThreadPool;
-    
-    @Activate
-    void activate() {
-        quartzCronScheduler = new QuartzCronScheduler(healthCheckExecutorThreadPool);
-        LOG.info("Created quartz scheduler health check core bundle");
-    }
 
-    @Override
-    public QuartzCronScheduler getScheduler() {
+    public synchronized QuartzCronScheduler getQuartzCronScheduler()  {
+        if (quartzCronScheduler == null) {
+            quartzCronScheduler = new QuartzCronScheduler(healthCheckExecutorThreadPool);
+            LOG.info("Created QuartzCronScheduler");
+        }
         return quartzCronScheduler;
     }
 
@@ -61,7 +48,7 @@ public class QuartzCronSchedulerProvider implements HealthCheckCronScheduler {
         if (quartzCronScheduler != null) {
             quartzCronScheduler.shutdown();
             quartzCronScheduler = null;
-            LOG.info("QuartzCronScheduler shutdown");
+            LOG.info("Shutdown of QuartzCronScheduler");
         }
     }
 

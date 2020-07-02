@@ -17,50 +17,64 @@
  */
 package org.apache.felix.hc.core.impl.scheduling.cron.embedded;
 
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.RejectedExecutionException;
+
 import org.apache.felix.hc.core.impl.scheduling.AsyncJob;
-import org.apache.felix.hc.core.impl.scheduling.cron.HealthCheckCronScheduler;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 /**
- * Runs health checks that are configured with a cron expression for
+ * Runs health checks/monitors that are configured with a cron expression for
  * asynchronous execution.
  */
 public final class AsyncEmbeddedCronJob extends AsyncJob {
 
-    private final Logger logger = LoggerFactory.getLogger(getClass());
+    private static final Logger LOG = LoggerFactory.getLogger(AsyncEmbeddedCronJob.class);
 
-    private final EmbeddedCronJob cronJob;
+    private final String id;
+    private final String cronExpression;
+    private final EmbeddedCronParser cronParser;
+    
     private final EmbeddedCronScheduler scheduler;
 
-    public AsyncEmbeddedCronJob(final Runnable runnable, final HealthCheckCronScheduler healtchCheckScheduler,
+    private volatile boolean executing = false;
+    private volatile long lastExecutingTime = 0;
+    private volatile long nextExecutingTime = 0;
+
+    public AsyncEmbeddedCronJob(final Runnable runnable, final EmbeddedCronSchedulerProvider embeddedCronSchedulerProvider,
             final String id, final String cronExpression) {
         super(runnable);
-        cronJob = new HealthCheckJob(cronExpression, id);
-        scheduler = (EmbeddedCronScheduler) healtchCheckScheduler.getScheduler();
+        this.id = id;
+
+        this.scheduler = embeddedCronSchedulerProvider.getScheduler();
+        
+        this.cronExpression = cronExpression;
+        this.cronParser= new EmbeddedCronParser(cronExpression);
+        nextExecutingTime = cronParser.next(System.currentTimeMillis());
     }
 
     @Override
     public boolean schedule() {
         try {
-            scheduler.schedule(cronJob);
-            logger.info("Scheduled job {} with trigger {}", cronJob.name(), cronJob.cron());
+            scheduler.schedule(this);
+            LOG.info("Scheduled job {} with trigger {}", id, cronExpression);
             return true;
         } catch (final Exception e) {
-            logger.error("Could not schedule job for {}", runnable, e);
+            LOG.error("Could not schedule job for {}", runnable, e);
             return false;
         }
     }
 
     @Override
     public boolean unschedule() {
-        final String name = cronJob.name();
-        logger.debug("Unscheduling job {}", name);
+
+        LOG.debug("Unscheduling job {}", id);
         try {
-            scheduler.remove(name);
+            scheduler.remove(this);
             return true;
         } catch (final Exception e) {
-            logger.error("Could not unschedule job for {}", name, e);
+            LOG.error("Could not unschedule job for {}", id, e);
             return false;
         }
     }
@@ -70,30 +84,51 @@ public final class AsyncEmbeddedCronJob extends AsyncJob {
         return "[Async embedded cron job for " + runnable + "]";
     }
 
-    private class HealthCheckJob implements EmbeddedCronJob {
-
-        private final String name;
-        private final String cronExpression;
-
-        public HealthCheckJob(final String cronExpression, final String name) {
-            this.name = name;
-            this.cronExpression = cronExpression;
-        }
-
-        @Override
-        public String cron() {
-            return cronExpression;
-        }
-
-        @Override
-        public String name() {
-            return "job-hc-" + name;
-        }
-
-        @Override
-        public void run() throws Exception {
-            runnable.run();
-        }
+    public String getId() {
+        return id;
     }
 
+    public long getLastExecutingTime() {
+        return lastExecutingTime;
+    }
+
+    public long getNextExecutingTime() {
+        return nextExecutingTime;
+    }
+
+    public boolean isExecuting() {
+        return executing;
+    }
+    
+    public void checkAndExecute(ExecutorService tasksExecutor) {
+        final long currentTime = System.currentTimeMillis();
+        if (nextExecutingTime >= currentTime) {
+            return;
+        }
+        if(executing) {
+            nextExecutingTime = cronParser.next(System.currentTimeMillis());
+            LOG.trace("Cron task {} would be fired but is still executing, skipping this execution, next execution: {}", id, nextExecutingTime);
+            return;
+        }
+
+        try {
+            lastExecutingTime = currentTime;
+            executing = true;
+            tasksExecutor.execute(() -> {
+                try {
+                    runnable.run();
+                } catch (final Exception e) {
+                    LOG.error("Exception while executing cron task {}", id, e);
+                } finally {
+                    nextExecutingTime = cronParser.next(System.currentTimeMillis());
+                    executing = false;
+                }
+            });
+            
+        } catch (final RejectedExecutionException e) {
+            executing = false;
+            LOG.error("Failed to start cron task: {}", id, e);
+        }
+    }
+    
 }

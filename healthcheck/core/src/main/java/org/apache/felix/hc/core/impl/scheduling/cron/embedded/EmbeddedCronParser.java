@@ -18,6 +18,7 @@
 package org.apache.felix.hc.core.impl.scheduling.cron.embedded;
 
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.BitSet;
 import java.util.Calendar;
 import java.util.Collections;
@@ -245,7 +246,10 @@ public final class EmbeddedCronParser {
      * Parse the given pattern expression.
      */
     private void parse(final String expression) {
-        final String[] fields = SPACE_SPLITTER.split(expression);
+        String[] fields = SPACE_SPLITTER.split(expression);
+        if (fields.length == 7 && "*".equals(fields[6])) {
+            fields = Arrays.copyOfRange(fields, 0, 6);
+        }
         if (fields.length != 6) {
             throw new IllegalArgumentException(String.format(
                     "Cron expression must consist of 6 fields (found %d in \"%s\")", fields.length, expression));
@@ -391,8 +395,6 @@ public final class EmbeddedCronParser {
             return "0 0 0 * * ?";
         case "@hourly":
             return "0 0 * * * ?";
-        case "@reboot":
-            return "0 0 0 1 1 ? 1900";
         default:
             throw new IllegalArgumentException("Unrecognized @ expression: '" + expression + "'");
         }
@@ -422,4 +424,9 @@ public final class EmbeddedCronParser {
     public String toString() {
         return getClass().getSimpleName() + ": " + expression;
     }
+
+    String getExpression() {
+        return expression;
+    }
+
 }

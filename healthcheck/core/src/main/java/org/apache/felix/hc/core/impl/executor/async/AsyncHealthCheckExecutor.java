@@ -39,7 +39,7 @@ import org.apache.felix.hc.core.impl.executor.HealthCheckFuture.Callback;
 import org.apache.felix.hc.core.impl.executor.HealthCheckResultCache;
 import org.apache.felix.hc.core.impl.scheduling.AsyncIntervalJob;
 import org.apache.felix.hc.core.impl.scheduling.AsyncJob;
-import org.apache.felix.hc.core.impl.scheduling.cron.quartz.CronJobFactory;
+import org.apache.felix.hc.core.impl.scheduling.CronJobFactory;
 import org.apache.felix.hc.core.impl.util.HealthCheckFilter;
 import org.apache.felix.hc.core.impl.util.lang.StringUtils;
 import org.osgi.framework.BundleContext;
@@ -74,6 +74,7 @@ public class AsyncHealthCheckExecutor implements ServiceListener {
 
     @Activate
     protected final void activate(final BundleContext bundleContext) throws InvalidSyntaxException {
+        this.bundleContext = bundleContext;
         this.bundleContext.addServiceListener(this, "(objectclass=" + HealthCheck.class.getName() + ")");
         int count = 0;
         HealthCheckFilter healthCheckFilter = new HealthCheckFilter(bundleContext);
@@ -131,7 +132,7 @@ public class AsyncHealthCheckExecutor implements ServiceListener {
         try {
             AsyncJob healthCheckAsyncJob = null;
             if (isAsyncCron(descriptor)) {
-                healthCheckAsyncJob = cronJobFactory.createNewJob(getAsyncJob(descriptor), "job-hc-" + descriptor.getServiceId(), "async-healthchecks", descriptor.getAsyncCronExpression());
+                healthCheckAsyncJob = cronJobFactory.createAsyncCronJob(getAsyncJob(descriptor), "job-hc-" + descriptor.getTitle().replaceAll("\\s+","-"), "async-healthchecks", descriptor.getAsyncCronExpression());
             } else if (isAsyncInterval(descriptor)) {
                 healthCheckAsyncJob = new AsyncIntervalJob(getAsyncJob(descriptor), healthCheckExecutorThreadPool, descriptor.getAsyncIntervalInSec());
             }
@@ -142,8 +143,9 @@ public class AsyncHealthCheckExecutor implements ServiceListener {
             } else {
                 return false;
             }
+            
         } catch (Exception e) {
-            LOG.warn("Could not schedule job for " + descriptor + ". Exception: " + e, e);
+            LOG.warn("Could not schedule async health check for " + descriptor + ". Exception: " + e, e);
             return false;
         }
     }
@@ -227,7 +229,7 @@ public class AsyncHealthCheckExecutor implements ServiceListener {
             } else {
                 result = new ExecutionResult(healthCheckMetadata,
                         new Result(Result.Status.WARN, "Async Health Check with cron expression '" + healthCheckMetadata.getAsyncCronExpression() + 
-                                "' is never executed because quartz bundle is missing."), 0L);
+                                "' is never executed because of misconfiguration."), 0L);
             }
 
         } else {

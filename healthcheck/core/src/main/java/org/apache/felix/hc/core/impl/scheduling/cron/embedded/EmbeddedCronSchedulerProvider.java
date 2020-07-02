@@ -18,36 +18,31 @@
 package org.apache.felix.hc.core.impl.scheduling.cron.embedded;
 
 import static java.util.concurrent.TimeUnit.SECONDS;
-import static org.apache.felix.hc.core.impl.scheduling.cron.HealthCheckCronScheduler.CRON_TYPE_PROPERTY;
-import static org.apache.felix.hc.core.impl.scheduling.cron.embedded.EmbeddedCronSchedulerProvider.CRON_TYPE_EMBEDDED;
 
 import java.util.concurrent.TimeUnit;
 
 import org.apache.felix.hc.core.impl.executor.HealthCheckExecutorThreadPool;
-import org.apache.felix.hc.core.impl.scheduling.cron.HealthCheckCronScheduler;
 import org.apache.felix.hc.core.impl.scheduling.cron.embedded.EmbeddedCronSchedulerProvider.Configuration;
 import org.osgi.service.component.annotations.Activate;
 import org.osgi.service.component.annotations.Component;
-import org.osgi.service.component.annotations.Deactivate;
 import org.osgi.service.component.annotations.Reference;
 import org.osgi.service.metatype.annotations.AttributeDefinition;
 import org.osgi.service.metatype.annotations.Designate;
 import org.osgi.service.metatype.annotations.ObjectClassDefinition;
 
 @Designate(ocd = Configuration.class)
-@Component(enabled = false, property = CRON_TYPE_PROPERTY + "=" + CRON_TYPE_EMBEDDED)
-public final class EmbeddedCronSchedulerProvider implements HealthCheckCronScheduler {
+@Component(service = EmbeddedCronSchedulerProvider.class)
+public class EmbeddedCronSchedulerProvider {
 
-    public static final String CRON_TYPE_EMBEDDED = "embedded";
     public static final String HC_SCHEDULER_NAME = "felix.hc.embedded.scheduler";
 
-    @ObjectClassDefinition(name = "Embedded Cron Scheduler Configuration")
+    @ObjectClassDefinition(name = "Health Check: Embedded Cron Scheduler")
     @interface Configuration {
-        @AttributeDefinition(name = "Initial Delay", description = "The initial delay before the embedded cron scheduler thread becomes active")
-        long initialDelay() default 10L;
+        @AttributeDefinition(name = "Initial Delay", description = "The initial delay before tasks are scheduled")
+        long initialDelay() default 3L;
 
         @AttributeDefinition(name = "Check Interval Delay", description = "The delay to check for a scheduled task to satisfy the cron expression")
-        long checkInterval() default 3L;
+        long checkInterval() default 1L;
 
         @AttributeDefinition(name = "Time unit", description = "The time unit of the delays as specified in this configuration")
         TimeUnit timeUnit() default SECONDS;
@@ -56,30 +51,37 @@ public final class EmbeddedCronSchedulerProvider implements HealthCheckCronSched
         String schedulerName() default HC_SCHEDULER_NAME;
     }
 
-    private EmbeddedCronScheduler scheduler;
 
     @Reference
     private HealthCheckExecutorThreadPool threadPool;
 
+    private Configuration configuration;
+    
+    private EmbeddedCronScheduler scheduler = null;
+    
     @Activate
     void activate(final Configuration configuration) {
-        scheduler = new EmbeddedCronScheduler( //
-                threadPool.getExecutor(), //
-                configuration.initialDelay(), //
-                configuration.checkInterval(), //
-                configuration.timeUnit(), //
-                configuration.schedulerName());
+        this.configuration = configuration;
     }
 
-    @Deactivate
-    void deactivate() {
-        scheduler.shutdown();
-        scheduler = null;
-    }
-
-    @Override
-    public EmbeddedCronScheduler getScheduler() {
+    public synchronized EmbeddedCronScheduler getScheduler() {
+        if(scheduler == null) {
+            scheduler = new EmbeddedCronScheduler(
+                    threadPool.getExecutor(),
+                    configuration.initialDelay(),
+                    configuration.checkInterval(),
+                    configuration.timeUnit(),
+                    configuration.schedulerName());
+        }
         return scheduler;
+
     }
+
+    
+    // @Deactivate
+    // no shutdown of scheduler needed since HealthCheckExecutorThreadPool is handling the shutdown 
+    // of the full ScheduledThreadPoolExecutor
+
+
 
 }

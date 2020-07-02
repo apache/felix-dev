@@ -17,8 +17,8 @@
  */
 package org.apache.felix.hc.core.impl.executor;
 
-import java.util.concurrent.ExecutorService;
 import java.util.concurrent.RejectedExecutionHandler;
+import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.ScheduledFuture;
 import java.util.concurrent.ScheduledThreadPoolExecutor;
 import java.util.concurrent.ThreadFactory;
@@ -104,7 +104,7 @@ public class HealthCheckExecutorThreadPool {
         }
     }
 
-    public ExecutorService getExecutor() {
+    public ScheduledExecutorService getExecutor() {
         return executor;
     }
 
