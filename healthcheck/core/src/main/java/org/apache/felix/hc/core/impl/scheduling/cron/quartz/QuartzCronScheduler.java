@@ -15,7 +15,7 @@
  * KIND, either express or implied. See the License for the
  * specific language governing permissions and limitations under the License.
  */
-package org.apache.felix.hc.core.impl.scheduling;
+package org.apache.felix.hc.core.impl.scheduling.cron.quartz;
 
 import org.apache.felix.hc.core.impl.executor.HealthCheckExecutorThreadPool;
 import org.quartz.Scheduler;

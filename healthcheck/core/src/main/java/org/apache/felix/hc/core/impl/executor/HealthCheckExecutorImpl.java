@@ -288,9 +288,9 @@ public class HealthCheckExecutorImpl implements ExtendedHealthCheckExecutor, Ser
 
 
     /** Create the health check meta data */
-    private List<HealthCheckMetadata> getHealthCheckMetadata(final ServiceReference... healthCheckReferences) {
+    private List<HealthCheckMetadata> getHealthCheckMetadata(final ServiceReference<?>... healthCheckReferences) {
         final List<HealthCheckMetadata> descriptors = new LinkedList<HealthCheckMetadata>();
-        for (final ServiceReference serviceReference : healthCheckReferences) {
+        for (final ServiceReference<?> serviceReference : healthCheckReferences) {
             final HealthCheckMetadata descriptor = getHealthCheckMetadata(serviceReference);
 
             descriptors.add(descriptor);
@@ -300,7 +300,7 @@ public class HealthCheckExecutorImpl implements ExtendedHealthCheckExecutor, Ser
     }
 
     /** Create the health check meta data */
-    private HealthCheckMetadata getHealthCheckMetadata(final ServiceReference healthCheckReference) {
+    private HealthCheckMetadata getHealthCheckMetadata(final ServiceReference<?> healthCheckReference) {
         final HealthCheckMetadata descriptor = new HealthCheckMetadata(healthCheckReference);
         return descriptor;
     }

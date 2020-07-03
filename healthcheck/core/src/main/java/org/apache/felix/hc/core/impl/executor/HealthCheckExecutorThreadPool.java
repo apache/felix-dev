@@ -17,6 +17,7 @@
  */
 package org.apache.felix.hc.core.impl.executor;
 
+import java.util.concurrent.ExecutorService;
 import java.util.concurrent.RejectedExecutionHandler;
 import java.util.concurrent.ScheduledFuture;
 import java.util.concurrent.ScheduledThreadPoolExecutor;
@@ -101,6 +102,10 @@ public class HealthCheckExecutorThreadPool {
         public void rejectedExecution(Runnable r, ThreadPoolExecutor executor) {
             LOG.warn("Thread Pool {} rejected to run runnable {}", executor, r);
         }
+    }
+
+    public ExecutorService getExecutor() {
+        return executor;
     }
 
 }
