@@ -96,7 +96,7 @@ public class HealthCheckMonitorTest {
 
     @Captor
     private ArgumentCaptor<Event> postedEventsCaptor2;
-    
+        
     @Mock
     private ServiceRegistration<? extends Healthy> healthyRegistration;
     
@@ -192,9 +192,9 @@ public class HealthCheckMonitorTest {
     }
     
     @Test
-    public void testRunSendEvents() throws InvalidSyntaxException {
+    public void testRunSendEventsStatusChanges() throws InvalidSyntaxException {
 
-        when(config.sendEvents()).thenReturn(true);
+        when(config.sendEvents()).thenReturn(HealthCheckMonitor.SendEventsConfig.STATUS_CHANGES);
         when(healthCheckServiceRef.getProperty(ComponentConstants.COMPONENT_NAME)).thenReturn("org.apache.felix.TestHealthCheck");
 
         healthCheckMonitor.activate(bundleContext, config, componentContext);
@@ -208,9 +208,9 @@ public class HealthCheckMonitorTest {
         verify(eventAdmin, times(2)).postEvent(postedEventsCaptor1.capture());
         List<Event> postedEvents = postedEventsCaptor1.getAllValues();
         assertEquals(2, postedEvents.size());
-        assertEquals("org/apache/felix/healthchange/tag/test-tag", postedEvents.get(0).getTopic());
+        assertEquals("org/apache/felix/health/tag/test-tag/STATUS_CHANGED", postedEvents.get(0).getTopic());
         assertEquals(Result.Status.OK, postedEvents.get(0).getProperty(HealthCheckMonitor.EVENT_PROP_STATUS));
-        assertEquals("org/apache/felix/healthchange/component/org/apache/felix/TestHealthCheck", postedEvents.get(1).getTopic());
+        assertEquals("org/apache/felix/health/component/org/apache/felix/TestHealthCheck/STATUS_CHANGED", postedEvents.get(1).getTopic());
 
         reset(eventAdmin);
         // without status change
@@ -225,18 +225,54 @@ public class HealthCheckMonitorTest {
         verify(eventAdmin, times(2)).postEvent(postedEventsCaptor2.capture());
         postedEvents = postedEventsCaptor2.getAllValues();
         assertEquals(2, postedEvents.size());
-        assertEquals("org/apache/felix/healthchange/tag/test-tag", postedEvents.get(0).getTopic());
+        assertEquals("org/apache/felix/health/tag/test-tag/STATUS_CHANGED", postedEvents.get(0).getTopic());
         assertEquals(Result.Status.CRITICAL, postedEvents.get(0).getProperty(HealthCheckMonitor.EVENT_PROP_STATUS));
         assertEquals(Result.Status.OK, postedEvents.get(0).getProperty(HealthCheckMonitor.EVENT_PROP_PREVIOUS_STATUS));
-        assertEquals("org/apache/felix/healthchange/component/org/apache/felix/TestHealthCheck", postedEvents.get(1).getTopic());
+        assertEquals("org/apache/felix/health/component/org/apache/felix/TestHealthCheck/STATUS_CHANGED", postedEvents.get(1).getTopic());
         
         reset(eventAdmin);
         // without status change
         healthCheckMonitor.run();
         // no event
         verifyNoInteractions(eventAdmin);
+
     }
 
+    @Test
+    public void testRunSendEventsAll() throws InvalidSyntaxException {
+
+        when(config.sendEvents()).thenReturn(HealthCheckMonitor.SendEventsConfig.ALL);
+        when(healthCheckServiceRef.getProperty(ComponentConstants.COMPONENT_NAME)).thenReturn("org.apache.felix.TestHealthCheck");
+
+        healthCheckMonitor.activate(bundleContext, config, componentContext);
+
+        setHcResult(Result.Status.OK);
+
+        healthCheckMonitor.run();
+        
+        verify(healthCheckExecutor).execute(HealthCheckSelector.tags(TEST_TAG));
+        
+        verify(eventAdmin, times(2)).postEvent(postedEventsCaptor1.capture());
+        List<Event> postedEvents = postedEventsCaptor1.getAllValues();
+        assertEquals(2, postedEvents.size());
+        assertEquals("org/apache/felix/health/tag/test-tag/STATUS_CHANGED", postedEvents.get(0).getTopic());
+        assertEquals(Result.Status.OK, postedEvents.get(0).getProperty(HealthCheckMonitor.EVENT_PROP_STATUS));
+        assertEquals("org/apache/felix/health/component/org/apache/felix/TestHealthCheck/STATUS_CHANGED", postedEvents.get(1).getTopic());
+
+        reset(eventAdmin);
+        // without status change
+        healthCheckMonitor.run();
+
+        verify(eventAdmin, times(2)).postEvent(postedEventsCaptor2.capture());
+        postedEvents = postedEventsCaptor2.getAllValues();
+        assertEquals(2, postedEvents.size());
+        assertEquals("org/apache/felix/health/tag/test-tag/UPDATED", postedEvents.get(0).getTopic());
+        assertEquals(Result.Status.OK, postedEvents.get(0).getProperty(HealthCheckMonitor.EVENT_PROP_STATUS));
+        assertEquals(Result.Status.OK, postedEvents.get(0).getProperty(HealthCheckMonitor.EVENT_PROP_PREVIOUS_STATUS));
+        assertEquals("org/apache/felix/health/component/org/apache/felix/TestHealthCheck/UPDATED", postedEvents.get(1).getTopic());
+    }
+    
+    
     private void setHcResult(Result.Status status) {
         when(healthCheckExecutor.execute(HealthCheckSelector.tags(TEST_TAG)))
             .thenReturn(Arrays.asList(new ExecutionResult(healthCheckMetadata, new Result(status, status.toString()), 1)));

@@ -247,7 +247,7 @@ By default the HC servlet sends the CORS header `Access-Control-Allow-Origin: *`
 
 ### Webconsole plugin
 
-If the `org.apache.felix.hc.webconsole` bundle is active, a webconsole plugin 
+If the `org.apache.felix.hc.webconsole` bundle is installed, a webconsole plugin 
 at `/system/console/healthcheck` allows for executing health checks, optionally selected
 based on their tags (positive and negative selection, see the `HealthCheckFilter` mention above).
 
@@ -255,7 +255,7 @@ The DEBUG logs of health checks can optionally be displayed, and an option allow
 
 ### Gogo Console
 
-The Gogo command `hc:exec` that can be used as follows:
+The Gogo command `hc:exec` can be used as follows:
 
     hc:exec [-v] [-a] tag1,tag2
       -v verbose/debug
@@ -276,7 +276,7 @@ Property    | Type     | Default | Description
 `registerHealthyMarkerService` | boolean | true | For the case a given tag/name is healthy, will register a service `org.apache.felix.hc.api.condition.Healthy` with property tag=<tagname> (or name=<hc.name>) that other services can depend on. For the special case of the tag `systemready`, the marker service `org.apache.felix.hc.api.condition.SystemReady` is registered
 `registerUnhealthyMarkerService` | boolean | false | For the case a given tag/name is **un**healthy, will register a service `org.apache.felix.hc.api.condition.Unhealthy` with property tag=<tagname> (or name=<hc.name>) that other services can depend on
 `treatWarnAsHealthy` | boolean | true | `WARN` usually means [the system is usable](#semantic-meaning-of-health-check-results), hence WARN is treated as healthy by default. When set to false `WARN` is treated as `Unhealthy`
-`sendEvents` | boolean | false | Whether to send events for health check status changes. See [below](#osgi-events-for-health-check-status-changes) for details.
+`sendEvents` | enum `NONE`, `STATUS_CHANGES` or `ALL` | `STATUS_CHANGES` | Whether to send events for health check status changes. See [below](#osgi-events-for-health-check-status-changes) for details.
 
 ### Marker Service to depend on a health status in SCR Components
 
@@ -305,15 +305,38 @@ It is also possible to depend on a unhealthy state (e.g. for fallback functional
 
 NOTE: This does not support the [RFC 242 Condition Service](https://github.com/osgi/design/blob/master/rfcs/rfc0242/rfc-0242-Condition-Service.pdf) yet - however once final the marker services will also be able to implement the `Condition` interface.
 
-### OSGi events for Health Check status changes
+### OSGi events for Health Check status changes and updates
 
-For tags/names that a `HealthCheckMonitor` is configured for and `sendEvents` is set to true, events are sent whenever a result status for any of the given tags/names has changed. The events are sent for the topic `org/apache/felix/healthchange/*`. The following events are sent:
+OSGi events with topic `org/apache/felix/health/*` are sent for tags/names that a `HealthCheckMonitor` is configured for and if `sendEvents` is set to `STATUS_CHANGES` or `ALL`:
 
-Topic Prefix | Example | Description  
------- | ------- | -----
-`org/apache/felix/healthchange/tag/`  | `org/apache/felix/healthchange/tag/mytag` | Sent whenever the aggregate status for any of the tags as configured in `HealthCheckMonitor` changed
-`org/apache/felix/healthchange/name/`  | `org/apache/felix/healthchange/tag/My_Tag_Name ` (spaces are replaced with underscores to ensure valid topic names) | Sent whenever the status for any of the names as configured in `HealthCheckMonitor` changed
-`org/apache/felix/healthchange/component/`  | `org/apache/felix/healthchange/component/com/mycomp/myproj/MyHealthCheck` (`.` are replaced with slashes to produce valid topic names) | Sent for health checks that are based on SCR components (in addition to the name event)
+* `STATUS_CHANGES` notifies only of status changes with suffix `/STATUS_CHANGED`
+* `ALL` sends events whenever the monitor runs, depending on status will either send the event with suffix `/UPDATED` or `/STATUS_CHANGED`
+
+All events sent generally carry the properties `executionResult`, `status` and `previousStatus`.
+
+| Example | Description  
+------- | -----
+`org/apache/felix/health/tag/mytag/STATUS_CHANGED` | Status for tag `mytag` has changed compared to last execution
+`org/apache/felix/health/tag/My_HC_Name/UPDATED ` (spaces in names are replaced with underscores to ensure valid topic names) | Status for name `My HC Name` has not changed but HC was executed and execution result is available in event property `executionResult`.
+`org/apache/felix/health/component/com/myprj/MyHealthCheck/UPDATED` (`.` are replaced with slashes to produce valid topic names) | HC based on SCR component `com.myprj.MyHealthCheck` was executed without having the status changed. The SCR component event is sent in addition to the name event
+
+Event listener example: 
+
+```
+@Component(property = { EventConstants.EVENT_TOPIC + "=org/apache/felix/health/*"})
+public class HealthEventHandler implements EventHandler {
+    private static final Logger LOG = LoggerFactory.getLogger(HealthEventHandler.class);
+
+    public void handleEvent(Event event) {
+        LOG.info("Received event: "+event.getTopic());
+        LOG.info("    previousStatus:  "+event.getProperty("previousStatus"));
+        LOG.info("    status:  "+event.getProperty("status"));
+        HealthCheckExecutionResult executionResult = (HealthCheckExecutionResult) event.getProperty("executionResult");
+        LOG.info("    executionResult:  "+executionResult);
+        LOG.info("    result:  "+executionResult.getHealthCheckResult());
+    }
+}
+```
 
 ## Servlet Filters
 

@@ -76,7 +76,10 @@ public class HealthCheckMonitor implements Runnable {
 
     public static final String TAG_SYSTEMREADY = "systemready";
 
-    public static final String EVENT_TOPIC_PREFIX = "org/apache/felix/healthchange";
+    public static final String EVENT_TOPIC_PREFIX = "org/apache/felix/health";
+    public static final String EVENT_TOPIC_SUFFIX_STATUS_CHANGED = "STATUS_CHANGED";
+    public static final String EVENT_TOPIC_SUFFIX_STATUS_UPDATED = "UPDATED";
+
     public static final String EVENT_PROP_EXECUTION_RESULT = "executionResult";
     public static final String EVENT_PROP_STATUS = "status";
     public static final String EVENT_PROP_PREVIOUS_STATUS = "previousStatus";
@@ -88,6 +91,10 @@ public class HealthCheckMonitor implements Runnable {
     static final SystemReady MARKER_SERVICE_SYSTEMREADY = new SystemReady() {
     };
 
+    public enum SendEventsConfig {
+        NONE, STATUS_CHANGES, ALL
+    }
+    
     @ObjectClassDefinition(name = "Health Check Monitor", description = "Regularly executes health checks according to given interval/cron expression")
     public @interface Config {
 
@@ -112,8 +119,8 @@ public class HealthCheckMonitor implements Runnable {
         @AttributeDefinition(name = "Treat WARN as Healthy", description = "Whether to treat status WARN as healthy (it normally should because WARN indicates a working system that only possibly might become unavailable if no action is taken")
         boolean treatWarnAsHealthy() default true;
 
-        @AttributeDefinition(name = "Send Events", description = "Whether to send OSGi events for the case a status has changed")
-        boolean sendEvents() default true;
+        @AttributeDefinition(name = "Send Events", description = "Send OSGi events for the case a status has changed or for all executions or for none.")
+        SendEventsConfig sendEvents() default SendEventsConfig.STATUS_CHANGES;
 
         @AttributeDefinition
         String webconsole_configurationFactory_nameHint() default "Health Monitor for '{tags}'/'{names}', {intervalInSec}sec/{cronExpression}, Marker Service Healthy:{registerHealthyMarkerService} Unhealthy:{registerUnhealthyMarkerService}, Send Events {sendEvents}";
@@ -145,7 +152,7 @@ public class HealthCheckMonitor implements Runnable {
 
     private boolean treatWarnAsHealthy;
 
-    private boolean sendEvents;
+    private SendEventsConfig sendEventsConfig;
 
     private BundleContext bundleContext;
     
@@ -168,7 +175,7 @@ public class HealthCheckMonitor implements Runnable {
         this.registerUnhealthyMarkerService = config.registerUnhealthyMarkerService();
 
         this.treatWarnAsHealthy = config.treatWarnAsHealthy();
-        this.sendEvents = config.sendEvents();
+        this.sendEventsConfig = config.sendEvents();
 
         this.intervalInSec = config.intervalInSec();
         this.cronExpression = config.cronExpression();
@@ -272,7 +279,7 @@ public class HealthCheckMonitor implements Runnable {
             LOG.trace("  {}: isHealthy={} statusChanged={}", tagOrName, isHealthy, statusChanged);
 
             registerMarkerServices();
-            sendEvent(executionResult, previousStatus);
+            sendEvents(executionResult, previousStatus);
         }
 
         private void registerMarkerServices() {
@@ -339,26 +346,28 @@ public class HealthCheckMonitor implements Runnable {
             }
         }
 
-        private void sendEvent(HealthCheckExecutionResult executionResult, Result.Status previousStatus) {
-            if (sendEvents && statusChanged) {
+        private void sendEvents(HealthCheckExecutionResult executionResult, Result.Status previousStatus) {
+            if ((sendEventsConfig == SendEventsConfig.STATUS_CHANGES && statusChanged) || sendEventsConfig == SendEventsConfig.ALL) {
+                
+                String eventSuffix = statusChanged ? EVENT_TOPIC_SUFFIX_STATUS_CHANGED : EVENT_TOPIC_SUFFIX_STATUS_UPDATED;
+                String logMsg = "Posted event for topic '{}': " + (statusChanged ? "Status change from {} to {}" : "Result updated (status {})");
+
                 Map<String, Object> properties = new HashMap<>();
                 properties.put(EVENT_PROP_STATUS, status);
                 if (previousStatus != null) {
                     properties.put(EVENT_PROP_PREVIOUS_STATUS, previousStatus);
                 }
                 properties.put(EVENT_PROP_EXECUTION_RESULT, executionResult);
-                String topic = EVENT_TOPIC_PREFIX + "/" + propertyName + "/" + tagOrName.replaceAll("\\s+", "_");
+                String topic = String.join("/", EVENT_TOPIC_PREFIX, propertyName, tagOrName.replaceAll("\\s+", "_"), eventSuffix);
                 eventAdmin.postEvent(new Event(topic, properties));
-                LOG.debug("HealthCheckMonitor: Posted event for topic '{}': Status change from {} to {}", topic,
-                        previousStatus, status);
+                LOG.debug(logMsg, topic, previousStatus, status);
                 if (!(executionResult instanceof CombinedExecutionResult)) {
                     String componentName = (String) executionResult.getHealthCheckMetadata().getServiceReference()
                             .getProperty(ComponentConstants.COMPONENT_NAME);
                     if (StringUtils.isNotBlank(componentName)) {
-                        String topicClass = EVENT_TOPIC_PREFIX + "/component/" + componentName.replace(".", "/");
+                        String topicClass = String.join("/", EVENT_TOPIC_PREFIX, "component", componentName.replace(".", "/"), eventSuffix);
                         eventAdmin.postEvent(new Event(topicClass, properties));
-                        LOG.debug("HealthCheckMonitor: Posted event for topic '{}': Status change from {} to {}",
-                                topicClass, previousStatus, status);
+                        LOG.debug(logMsg, topicClass, previousStatus, status);
                     }
                 }
             }
