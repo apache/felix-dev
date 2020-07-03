@@ -50,8 +50,8 @@ com.my.userinfo:
 
 Properties can also be interpolated in the configuration. The properties values are
 obtained through the `BundleContext.getProperty(key)` API, which will return the framework
-property for the key. If the framework property is not specified, the system property 
-with this key is returned. 
+property for the key. If the framework property is not specified, the system property
+with this key is returned.
 
 Property values are obtained through the `$[prop:my.property]` syntax.
 
@@ -121,3 +121,11 @@ When reading files, for example secrets, the platform default encoding is used. 
 
 * `org.apache.felix.configadmin.plugin.interpolation.file.encoding` : specify the encoding to be used.
 
+## Consuming Configurations with Placeholders
+
+If you are getting a [Configuration](https://docs.osgi.org/javadoc/osgi.cmpn/7.0.0/org/osgi/service/cm/Configuration.html) object directly from [ConfigurationAdmin](https://docs.osgi.org/javadoc/osgi.cmpn/7.0.0/org/osgi/service/cm/ConfigurationAdmin.html) and inspect the properties, you will find the placeholders not being replaced in those values as configuration plugins are not invoked. So for example calling [`getConfiguration`](https://docs.osgi.org/javadoc/osgi.cmpn/7.0.0/org/osgi/service/cm/ConfigurationAdmin.html#getConfiguration-java.lang.String-) or []`listConfigurations`](https://docs.osgi.org/javadoc/osgi.cmpn/7.0.0/org/osgi/service/cm/ConfigurationAdmin.html#listConfigurations-java.lang.String-) and then calling [`getProperties`](https://docs.osgi.org/javadoc/osgi.cmpn/7.0.0/org/osgi/service/cm/Configuration.html#getProperties--) on the returned Configuration object will return the placeholders - not the replaced values.
+
+There are different options on how to get the values replaced:
+* Register a [`ManagedService`](https://docs.osgi.org/javadoc/osgi.cmpn/7.0.0/org/osgi/service/cm/ManagedService.html) or [`ManagedServiceFactory`](https://docs.osgi.org/javadoc/osgi.cmpn/7.0.0/org/osgi/service/cm/ManagedServiceFactory.html). ConfigurationAdmin calls all plugins before delivering configurations to these services.
+* Use [`Declarative Services`](https://docs.osgi.org/specification/osgi.cmpn/7.0.0/service.component.html) - when configuration values are delivered to your component, plugins are called as well.
+* Call [getProcessedProperties](https://docs.osgi.org/javadoc/osgi.cmpn/7.0.0/org/osgi/service/cm/Configuration.html#getProcessedProperties-org.osgi.framework.ServiceReference-) on the Configuration object - instead of just `getProperties`. For this you need a valid service reference.
