@@ -30,6 +30,8 @@ import static org.mockito.Mockito.when;
 
 import java.lang.reflect.Method;
 import java.util.Arrays;
+import java.util.Dictionary;
+import java.util.Hashtable;
 import java.util.List;
 
 import org.apache.felix.hc.api.HealthCheck;
@@ -113,6 +115,10 @@ public class HealthCheckMonitorTest {
         when(config.tags()).thenReturn(new String[] { TEST_TAG });
         
         when(healthCheckMetadata.getServiceReference()).thenReturn(healthCheckServiceRef);
+        
+        Dictionary<String,Object> componentProps = new Hashtable<>();
+        componentProps.put(ComponentConstants.COMPONENT_ID, 7L);
+        when(componentContext.getProperties()).thenReturn(componentProps);
     }
 
     @Test

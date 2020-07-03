@@ -148,6 +148,8 @@ public class HealthCheckMonitor implements Runnable {
     private boolean sendEvents;
 
     private BundleContext bundleContext;
+    
+    private String monitorId;
 
     @Activate
     protected final void activate(BundleContext bundleContext, Config config, ComponentContext componentContext)
@@ -170,10 +172,10 @@ public class HealthCheckMonitor implements Runnable {
 
         this.intervalInSec = config.intervalInSec();
         this.cronExpression = config.cronExpression();
+        
+        this.monitorId = getMonitorId(componentContext.getProperties().get(ComponentConstants.COMPONENT_ID));
         if (StringUtils.isNotBlank(cronExpression)) {
-            monitorJob = cronJobFactory.createAsyncCronJob(this,
-                    "job-hc-monitor-" + componentContext.getProperties().get(ComponentConstants.COMPONENT_ID),
-                    "healthcheck-monitor", cronExpression);
+            monitorJob = cronJobFactory.createAsyncCronJob(this, monitorId, "healthcheck-monitor", cronExpression);
         } else if (intervalInSec > 0) {
             monitorJob = new AsyncIntervalJob(this, healthCheckExecutorThreadPool, intervalInSec);
         } else {
@@ -181,6 +183,10 @@ public class HealthCheckMonitor implements Runnable {
         }
         monitorJob.schedule();
         LOG.info("HealthCheckMonitor active for tags {} and names {}", this.tags, this.names);
+    }
+
+    private String getMonitorId(Object compId) {
+        return "hc-monitor-" + compId + '-' + String.join(",", tags)+(!names.isEmpty()?"-"+names.size()+"_names":"");
     }
 
     @Override
@@ -198,29 +204,40 @@ public class HealthCheckMonitor implements Runnable {
     }
 
     public void run() {
+        String threadNameToRestore = Thread.currentThread().getName();
         try {
+            Thread.currentThread().setName(monitorId);
+            
             // run in tags/names in parallel
-            healthStates.parallelStream().forEach(healthState -> {
-                HealthCheckSelector selector = healthState.isTag ? HealthCheckSelector.tags(healthState.tagOrName)
-                        : HealthCheckSelector.names(healthState.tagOrName);
-
-                List<HealthCheckExecutionResult> executionResults = executor.execute(selector);
-
-                HealthCheckExecutionResult result = executionResults.size() == 1 ? executionResults.get(0)
-                        : new CombinedExecutionResult(executionResults, Result.Status.TEMPORARILY_UNAVAILABLE);
-
-                LOG.trace("Result of '{}' => {}", healthState.tagOrName, result.getHealthCheckResult().getStatus());
-
-                healthState.update(result);
-            });
+            healthStates.parallelStream().forEach(this::runFor);
 
             LOG.trace("HealthCheckMonitor: updated results for tags {} and names {}", this.tags, this.names);
         } catch (Exception e) {
             LOG.error("Exception HealthCheckMonitor run(): " + e, e);
+        } finally {
+            Thread.currentThread().setName(threadNameToRestore);
         }
-
     }
 
+    public void runFor(HealthState healthState) {
+        String threadNameToRestore = Thread.currentThread().getName();
+        try {
+            Thread.currentThread().setName(monitorId);
+            HealthCheckSelector selector = healthState.isTag ? HealthCheckSelector.tags(healthState.tagOrName)
+                    : HealthCheckSelector.names(healthState.tagOrName);
+            List<HealthCheckExecutionResult> executionResults = executor.execute(selector);
+
+            HealthCheckExecutionResult result = executionResults.size() == 1 ? executionResults.get(0)
+                    : new CombinedExecutionResult(executionResults, Result.Status.TEMPORARILY_UNAVAILABLE);
+            LOG.trace("Result of '{}' => {}", healthState.tagOrName, result.getHealthCheckResult().getStatus());
+
+            healthState.update(result);
+        } finally {
+            Thread.currentThread().setName(threadNameToRestore);
+        }
+    }
+
+    
     class HealthState {
 
         private String tagOrName;
