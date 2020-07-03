@@ -23,6 +23,7 @@ import java.io.PrintWriter;
 import java.io.StringWriter;
 import java.text.DateFormat;
 import java.text.SimpleDateFormat;
+import java.util.ArrayList;
 import java.util.Calendar;
 import java.util.Date;
 import java.util.List;
@@ -30,8 +31,12 @@ import java.util.List;
 import org.apache.felix.hc.api.Result;
 import org.apache.felix.hc.api.ResultLog.Entry;
 import org.apache.felix.hc.api.execution.HealthCheckExecutionResult;
+import org.apache.felix.hc.api.execution.HealthCheckMetadata;
 import org.apache.felix.hc.core.impl.servlet.HealthCheckExecutorServlet.Param;
 import org.apache.felix.hc.core.impl.util.lang.StringUtils;
+import org.osgi.framework.Bundle;
+import org.osgi.framework.ServiceReference;
+import org.osgi.service.component.ComponentConstants;
 import org.osgi.service.component.annotations.Activate;
 import org.osgi.service.component.annotations.Component;
 
@@ -70,7 +75,8 @@ public class ResultHtmlSerializer {
             List<String> tags = executionResult.getHealthCheckMetadata().getTags();
             boolean hasTags = tags != null && tags.size() > 0 && StringUtils.isNotBlank(tags.get(0));
             writer.print("<tr class=\"" + getClassForStatus(result.getStatus()) + "\">");
-            writer.print("<td><p title=\"" + escapeHtml(executionResult.getHealthCheckMetadata().getName()) + "\">"
+            String tooltipHint = getTooltipHint(executionResult.getHealthCheckMetadata());
+            writer.print("<td><p title=\"" + escapeHtml(tooltipHint) + "\">"
                     + escapeHtml(executionResult.getHealthCheckMetadata().getTitle()) + "");
             if (hasTags) {
                 writer.println("<br/><span style='color:gray'>" + escapeHtml(String.join(", ", tags)) + "</span>");
@@ -127,6 +133,20 @@ public class ResultHtmlSerializer {
 
     }
 
+    private String getTooltipHint(HealthCheckMetadata healthCheckMetadata) {
+        List<String> hints = new ArrayList<>();
+        ServiceReference<?> serviceReference = healthCheckMetadata.getServiceReference();
+        Object compName = serviceReference.getProperty(ComponentConstants.COMPONENT_NAME);
+        if(compName != null) {
+            hints.add("Component Name: "+compName);
+        }
+        Bundle bundle = serviceReference.getBundle();
+        if(bundle != null) {
+            hints.add("Bundle: "+bundle.getSymbolicName());
+        }
+        return String.join(" ", hints);
+    }
+
     private String getClassForStatus(final Result.Status status) {
         return "status" + status.name();
     }
@@ -164,6 +184,9 @@ public class ResultHtmlSerializer {
     }
 
     private String escapeHtml(String text) {
+        if(text == null) {
+            return null;
+        }
         return text
                 .replace("&", "&amp;")
                 .replace("\"", "&quot;")
