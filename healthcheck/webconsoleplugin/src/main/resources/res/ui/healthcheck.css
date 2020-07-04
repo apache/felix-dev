@@ -44,3 +44,8 @@
     color:red;
     font-weight:bold;
 }
+
+#settingsTable td {
+    padding: 2px;
+}
+}

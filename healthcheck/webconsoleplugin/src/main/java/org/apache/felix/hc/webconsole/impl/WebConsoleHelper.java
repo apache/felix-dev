@@ -71,6 +71,9 @@ class WebConsoleHelper {
     }
     
     String escapeHtml(String text) {
+        if(text==null) {
+            return null;
+        }
         return text
                 .replace("&", "&amp;")
                 .replace("\"", "&quot;")

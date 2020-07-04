@@ -24,7 +24,10 @@ import java.io.InputStream;
 import java.io.OutputStream;
 import java.io.PrintWriter;
 import java.text.SimpleDateFormat;
+import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Collection;
+import java.util.List;
 
 import javax.servlet.Servlet;
 import javax.servlet.ServletException;
@@ -32,12 +35,20 @@ import javax.servlet.http.HttpServlet;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 
+import org.apache.felix.hc.api.HealthCheck;
 import org.apache.felix.hc.api.Result;
 import org.apache.felix.hc.api.ResultLog;
 import org.apache.felix.hc.api.execution.HealthCheckExecutionOptions;
 import org.apache.felix.hc.api.execution.HealthCheckExecutionResult;
 import org.apache.felix.hc.api.execution.HealthCheckExecutor;
+import org.apache.felix.hc.api.execution.HealthCheckMetadata;
 import org.apache.felix.hc.api.execution.HealthCheckSelector;
+import org.osgi.framework.BundleContext;
+import org.osgi.framework.Constants;
+import org.osgi.framework.InvalidSyntaxException;
+import org.osgi.framework.ServiceReference;
+import org.osgi.service.component.ComponentConstants;
+import org.osgi.service.component.annotations.Activate;
 import org.osgi.service.component.annotations.Component;
 import org.osgi.service.component.annotations.Reference;
 
@@ -58,17 +69,28 @@ public class HealthCheckWebconsolePlugin extends HttpServlet {
     public static final String PARAM_TAGS = "tags";
     public static final String PARAM_DEBUG = "debug";
     public static final String PARAM_QUIET = "quiet";
-
+    public static final String PARAM_SHOWLIST = "showList";
+    
+    
     public static final String PARAM_FORCE_INSTANT_EXECUTION = "forceInstantExecution";
     public static final String PARAM_COMBINE_TAGS_WITH_OR = "combineTagsWithOr";
     public static final String PARAM_OVERRIDE_GLOBAL_TIMEOUT = "overrideGlobalTimeout";
 
+    public static final String HC_FILTER_OBJECT_CLASS = "(|(objectClass="+HealthCheck.class.getName()+")(objectClass=org.apache.sling.hc.api.HealthCheck))";
+    
     @Reference
     private HealthCheckExecutor healthCheckExecutor;
 
+    private BundleContext bundleContext;
+    
+    @Activate
+    protected void activate(BundleContext bundleContext) {
+        this.bundleContext = bundleContext;
+    }
+
+    
     /** Serve static resource if applicable, and return true in that case */
-    private boolean getStaticResource(final HttpServletRequest req, final HttpServletResponse resp)
-   throws ServletException, IOException {
+    private boolean getStaticResource(final HttpServletRequest req, final HttpServletResponse resp) throws ServletException, IOException {
         final String pathInfo = req.getPathInfo();
         if (pathInfo!= null && pathInfo.contains("res/ui")) {
             final String prefix = "/" + LABEL;
@@ -97,8 +119,7 @@ public class HealthCheckWebconsolePlugin extends HttpServlet {
     }
 
     @Override
-    protected void doGet(final HttpServletRequest req, final HttpServletResponse resp)
-    throws ServletException, IOException {
+    protected void doGet(final HttpServletRequest req, final HttpServletResponse resp) throws ServletException, IOException {
         if (getStaticResource(req, resp)) {
             return;
         }
@@ -111,6 +132,12 @@ public class HealthCheckWebconsolePlugin extends HttpServlet {
         final String overrideGlobalTimeoutStr = getParam(req, PARAM_OVERRIDE_GLOBAL_TIMEOUT, "");
 
         final PrintWriter pw = resp.getWriter();
+
+        if(Boolean.valueOf(req.getParameter(PARAM_SHOWLIST))) {
+            doHealthCheckList(pw);
+            return;
+        }
+        
         doForm(pw, tags, debug, quiet, combineTagsWithOr, forceInstantExecution, overrideGlobalTimeoutStr);
 
         // Execute health checks only if tags are specified (even if empty)
@@ -145,7 +172,7 @@ public class HealthCheckWebconsolePlugin extends HttpServlet {
             final WebConsoleHelper c = new WebConsoleHelper(resp.getWriter());
             c.titleHtml("Summary", total + " HealthCheck executed, " + failed + " failures");
             pw.println("</table>");
-            pw.println("<a href='configMgr/org.apache.felix.hc.core.impl.executor.HealthCheckExecutorImpl'>Configure executor</a><br/><br/>");
+            pw.println("<br/><br/>");
 
         }
     }
@@ -198,14 +225,92 @@ public class HealthCheckWebconsolePlugin extends HttpServlet {
         c.closeTd();
     }
 
+    private void doHealthCheckList(final PrintWriter pw) throws IOException {
+        
+        try {
+
+            pw.println("<br/>");
+            pw.println("<table id=\"healthCheckList\" class=\"tablesorter nicetable\">");
+            pw.println("<thead><tr><th>Name</th><th>Tags</th><th>Properties</th><th>Links</th><th>Bundle</th></thead><tbody>");
+            
+            ServiceReference<?>[] serviceReferences = bundleContext.getServiceReferences((String) null, HC_FILTER_OBJECT_CLASS);
+            for (ServiceReference<?> serviceReference : serviceReferences) {
+                HealthCheckMetadata metadata = new HealthCheckMetadata(serviceReference);
+                
+                pw.println("<tr>");
+                pw.println("<td>"+metadata.getTitle()+"</td>");
+
+                pw.println("<td>");
+                for(String tag: metadata.getTags()) {
+                    String link = LABEL+"?tags="+tag;
+                    pw.println("<a href=\""+link+"\">"+tag+"</a><br/>");
+                }
+                pw.println("</td>");
+                
+                List<String> links = new ArrayList<>();
+
+                pw.println("<td>");
+                String[] propertyKeys = serviceReference.getPropertyKeys();
+                if(propertyKeys!=null) {
+                    for(String propertyKey: propertyKeys) {
+                        if(propertyKey.equals(HealthCheck.NAME)
+                            || propertyKey.equals(HealthCheck.TAGS)
+                            || propertyKey.equals(Constants.OBJECTCLASS) 
+                            || propertyKey.equals(ComponentConstants.COMPONENT_ID) 
+                            ) {
+                            continue;
+                        }
+                        Object value = serviceReference.getProperty(propertyKey);
+                        if(value.getClass().isArray()) {
+                            value = Arrays.asList((Object[]) value);
+                        }
+                        if(HealthCheck.MBEAN_NAME.equals(propertyKey)) {
+                            String link = "jmx/org.apache.felix.healthcheck%3Aname%3D"+value+"%2Ctype%3DHealthCheck";
+                            links.add("<a href=\""+link+"\">JMX Bean "+value+"</a>");
+                            continue;
+                        }
+                        if(ComponentConstants.COMPONENT_NAME.equals(propertyKey)) {
+                            String link = "components/"+value;
+                            links.add("<a href=\""+link+"\">Component "+value+"</a>");
+                            continue;
+                        }
+                        if(Constants.SERVICE_ID.equals(propertyKey)) {
+                            String link = "services/"+value;
+                            links.add("<a href=\""+link+"\">Service "+value+"</a>");
+                            continue;
+                        } else if(propertyKey.startsWith("service.")) {
+                            continue;
+                        }
+                        pw.println(propertyKey+" = "+value+"<br/>");
+                    }
+                }
+                pw.println("</td>");
+                pw.println("<td>"+String.join("<br/>", links)+"</td>");
+
+                pw.println("<td>");
+                String symbolicBundleName = serviceReference.getBundle().getSymbolicName();
+                String link = "bundles/"+symbolicBundleName;
+                pw.println("<a href=\""+link+"\">"+symbolicBundleName+"</a><br/>");
+                pw.println("</td>");
+
+                pw.println("</tr>");
+            }
+
+            pw.println("</thead></table>");
+
+        } catch (InvalidSyntaxException e) {
+            throw new IllegalStateException("Could not render list of health checks: "+e, e);
+        }
+
+    }
+
     private void doForm(final PrintWriter pw,
             final String tags,
             final boolean debug,
             final boolean quiet,
             final boolean combineTagsWithOr,
             final boolean forceInstantExecution,
-            final String overrideGlobalTimeoutStr)
-    throws IOException {
+            final String overrideGlobalTimeoutStr) throws IOException {
         final WebConsoleHelper c = new WebConsoleHelper(pw);
         pw.print("<form method='get'>");
         pw.println("<table class='content' cellpadding='0' cellspacing='0' width='100%'>");
@@ -213,74 +318,83 @@ public class HealthCheckWebconsolePlugin extends HttpServlet {
                 + " Prefix a tag with a minus sign (-) to omit checks having that tag (can be also used in combination with '*', e.g. '*,-excludedtag').");
 
         c.tr();
-        c.tdLabel("Health Check tags (comma-separated)");
+        c.tdLabel("Health Check Tags (comma-separated)");
         c.tdContent();
         c.writer().print("<input type='text' name='" + PARAM_TAGS + "' value='");
         if ( tags != null ) {
             c.writer().print(c.escapeHtml(tags));
         }
-        c.writer().println("' class='input' size='80'>");
+        c.writer().println("' class='input' size='80'> <a href='"+LABEL+"?"+PARAM_SHOWLIST+"=true'>Show list</a>");
         c.closeTd();
         c.closeTr();
 
+
         c.tr();
-        c.tdLabel("Combine tags with logical 'OR' instead of the default 'AND'");
+        c.tdLabel("");
         c.tdContent();
+        c.writer().print("<table id='settingsTable'>");
+        c.writer().print("<tr>");
+        c.writer().print("<td>");
         c.writer().print("<input type='checkbox' name='" + PARAM_COMBINE_TAGS_WITH_OR + "' class='input' value='true'");
         if (combineTagsWithOr) {
             c.writer().print(" checked=true");
         }
         c.writer().println(">");
-        c.closeTd();
-        c.closeTr();
+        c.writer().print("</td>");
+        c.writer().print("<td>Combine tags with logical 'OR' instead of the default 'AND'</td>");
 
-        c.tr();
-        c.tdLabel("Show DEBUG logs");
-        c.tdContent();
+        c.writer().print("<td>");
         c.writer().print("<input type='checkbox' name='" + PARAM_DEBUG + "' class='input' value='true'");
-        if ( debug ) {
+        if (debug) {
             c.writer().print(" checked=true");
         }
         c.writer().println(">");
-        c.closeTd();
-        c.closeTr();
-
-        c.tr();
-        c.tdLabel("Show failed checks only");
-        c.tdContent();
+        c.writer().print("</td>");
+        c.writer().print("<td>Show DEBUG logs</td>");
+        c.writer().print("</tr>");
+        
+        c.writer().print("<tr>");
+        c.writer().print("<td>");
         c.writer().print("<input type='checkbox' name='" + PARAM_QUIET + "' class='input' value='true'");
-        if ( quiet ) {
+        if (quiet) {
             c.writer().print(" checked=true");
         }
         c.writer().println(">");
-        c.closeTd();
-        c.closeTr();
+        c.writer().print("</td>");
+        c.writer().print("<td>Show failed checks only</td>");
 
-        c.tr();
-        c.tdLabel("Force instant execution (no cache, async checks are executed)");
-        c.tdContent();
+        c.writer().print("<td>");
         c.writer().print("<input type='checkbox' name='" + PARAM_FORCE_INSTANT_EXECUTION + "' class='input' value='true'");
         if (forceInstantExecution) {
             c.writer().print(" checked=true");
         }
         c.writer().println(">");
-        c.closeTd();
-        c.closeTr();
-
-        c.tr();
-        c.tdLabel("Override global timeout");
-        c.tdContent();
+        c.writer().print("</td>");
+        c.writer().print("<td>Force instant execution (no cache, async checks are executed)</td>");
+        c.writer().print("</tr>");
+        
+        
+        c.writer().print("<tr>");
+        c.writer().print("<td colspan='4'>Override global timeout ");
         c.writer().print("<input type='text' name='" + PARAM_OVERRIDE_GLOBAL_TIMEOUT + "' value='");
         if (overrideGlobalTimeoutStr != null) {
             c.writer().print(c.escapeHtml(overrideGlobalTimeoutStr));
         }
-        c.writer().println("' class='input' size='80'>");
+        c.writer().println("' class='input' size='10'> ms");
+        c.writer().print("</td>");
+
+        c.writer().print("</tr>");
+
+        
+        c.writer().print("</table>");
+        
         c.closeTd();
         c.closeTr();
 
         c.tr();
+        c.tdLabel("");
         c.tdContent();
-        c.writer().println("<input type='submit' value='Execute selected health checks'/>");
+        c.writer().println("<input type='submit' value=' Execute '/>  <a href='configMgr/org.apache.felix.hc.core.impl.executor.HealthCheckExecutorImpl'>Configure executor</a>");
         c.closeTd();
         c.closeTr();
 
