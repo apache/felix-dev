@@ -67,8 +67,8 @@ public class HealthCheckExecutorThreadPool {
     }
 
     // used for interval execution (asynchronous checks)
-    public ScheduledFuture<?> scheduleAtFixedRate(final Runnable job, long intervalInSec) {
-        ScheduledFuture<?> scheduleFuture = executor.scheduleAtFixedRate(job, 0, intervalInSec, TimeUnit.SECONDS);
+    public ScheduledFuture<?> scheduleAtFixedRate(final Runnable job, long intervalInSec, long initialDelay) {
+        ScheduledFuture<?> scheduleFuture = executor.scheduleAtFixedRate(job, initialDelay, intervalInSec, TimeUnit.SECONDS);
         return scheduleFuture;
     }
 

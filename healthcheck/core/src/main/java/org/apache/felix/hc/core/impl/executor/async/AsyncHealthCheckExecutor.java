@@ -134,7 +134,7 @@ public class AsyncHealthCheckExecutor implements ServiceListener {
             if (isAsyncCron(descriptor)) {
                 healthCheckAsyncJob = cronJobFactory.createAsyncCronJob(getAsyncJob(descriptor), "job-hc-" + descriptor.getTitle().replaceAll("\\s+","-"), "async-healthchecks", descriptor.getAsyncCronExpression());
             } else if (isAsyncInterval(descriptor)) {
-                healthCheckAsyncJob = new AsyncIntervalJob(getAsyncJob(descriptor), healthCheckExecutorThreadPool, descriptor.getAsyncIntervalInSec());
+                healthCheckAsyncJob = new AsyncIntervalJob(getAsyncJob(descriptor), healthCheckExecutorThreadPool, descriptor.getAsyncIntervalInSec(), descriptor.getAsyncInitialDelayForIntervalInSec());
             }
             if (healthCheckAsyncJob != null) {
                 healthCheckAsyncJob.schedule();

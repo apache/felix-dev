@@ -29,17 +29,19 @@ public class AsyncIntervalJob extends AsyncJob {
 
     private final HealthCheckExecutorThreadPool healthCheckExecutorThreadPool;
     private final Long asyncIntervalInSec;
+    private final Long asyncInitialDelayForIntervalInSec;
     
-    private ScheduledFuture<?> scheduleFuture = null;
+    private ScheduledFuture<?> scheduleFuture;
 
-    public AsyncIntervalJob(Runnable runnable, HealthCheckExecutorThreadPool healthCheckExecutorThreadPool, Long asyncIntervalInSec) {
+    public AsyncIntervalJob(Runnable runnable, HealthCheckExecutorThreadPool healthCheckExecutorThreadPool, Long asyncIntervalInSec, Long asyncInitialDelayForIntervalInSec) {
         super(runnable);
         this.healthCheckExecutorThreadPool = healthCheckExecutorThreadPool;
         this.asyncIntervalInSec = asyncIntervalInSec;
+        this.asyncInitialDelayForIntervalInSec = asyncInitialDelayForIntervalInSec;
     }
 
     public boolean schedule() {
-        scheduleFuture = healthCheckExecutorThreadPool.scheduleAtFixedRate(runnable, asyncIntervalInSec);
+        scheduleFuture = healthCheckExecutorThreadPool.scheduleAtFixedRate(runnable, asyncIntervalInSec, asyncInitialDelayForIntervalInSec);
         LOG.info("Scheduled job {} for execution every {}sec", this, asyncIntervalInSec);
         return true;
     }

@@ -45,8 +45,9 @@ public class HealthCheckMetadata {
 
     private final String asyncCronExpression;
     private final Long asyncIntervalInSec;
+    private final Long asyncInitialDelayForIntervalInSec;
 
-    private final ServiceReference serviceReference;
+    private final ServiceReference<?> serviceReference;
 
     private final Long resultCacheTtlInMs;
     
@@ -62,7 +63,7 @@ public class HealthCheckMetadata {
      * 
      * @param ref the ServiceReference for the HC service
      */
-    public HealthCheckMetadata(final ServiceReference ref) {
+    public HealthCheckMetadata(final ServiceReference<?> ref) {
         this.serviceId = (Long) ref.getProperty(Constants.SERVICE_ID);
         this.name = (String) ref.getProperty(HealthCheck.NAME);
         this.mbeanName = (String) ref.getProperty(HealthCheck.MBEAN_NAME);
@@ -71,6 +72,7 @@ public class HealthCheckMetadata {
 
         this.asyncCronExpression = (String) ref.getProperty(HealthCheck.ASYNC_CRON_EXPRESSION);
         this.asyncIntervalInSec = toLong(ref.getProperty(HealthCheck.ASYNC_INTERVAL_IN_SEC));
+        this.asyncInitialDelayForIntervalInSec = toLong(ref.getProperty(HealthCheck.ASYNC_INTERVAL_INITIAL_DELAY_IN_SEC));
 
         this.resultCacheTtlInMs = (Long) ref.getProperty(HealthCheck.RESULT_CACHE_TTL_IN_MS);
         
@@ -130,6 +132,12 @@ public class HealthCheckMetadata {
     public Long getAsyncIntervalInSec() {
         return asyncIntervalInSec;
     }
+    
+    /** Return the initial delay for interval in sec used for asynchronous execution.
+     * @return the initial delay for the async interval (or <code>null</code> if not set)  */
+    public Long getAsyncInitialDelayForIntervalInSec() {
+        return asyncInitialDelayForIntervalInSec;
+    }
 
     /** Return the service id.
      * @return the service id (never <code>null</code>)  */
@@ -182,7 +190,7 @@ public class HealthCheckMetadata {
         return "HealthCheck '" + title + "'";
     }
 
-    private String getHealthCheckTitle(final ServiceReference ref) {
+    private String getHealthCheckTitle(final ServiceReference<?> ref) {
         String name = (String) ref.getProperty(HealthCheck.NAME);
         if (name == null || name.isEmpty()) {
             final Object val = ref.getProperty(Constants.SERVICE_DESCRIPTION);

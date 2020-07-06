@@ -106,6 +106,9 @@ public class HealthCheckMonitor implements Runnable {
 
         @AttributeDefinition(name = "Interval (Sec)", description = "Will execute the checks for give tags every n seconds (either use intervalInSec or cronExpression )")
         long intervalInSec() default 0;
+        
+        @AttributeDefinition(name = "Initial Delay for Interval (Sec)", description = "Initial delay for the asynchronous interval in seconds")
+        long initialDelayForIntervalInSec() default 0;
 
         @AttributeDefinition(name = "Interval (Cron Expresson)", description = "Will execute the checks for give tags according to cron expression")
         String cronExpression() default "";
@@ -145,6 +148,8 @@ public class HealthCheckMonitor implements Runnable {
     List<HealthState> healthStates = new ArrayList<>();
 
     private long intervalInSec;
+    private long initialDelayForIntervalInSec;
+    
     private String cronExpression;
 
     private boolean registerHealthyMarkerService;
@@ -178,13 +183,14 @@ public class HealthCheckMonitor implements Runnable {
         this.sendEventsConfig = config.sendEvents();
 
         this.intervalInSec = config.intervalInSec();
+        this.initialDelayForIntervalInSec = config.initialDelayForIntervalInSec();
         this.cronExpression = config.cronExpression();
         
         this.monitorId = getMonitorId(componentContext.getProperties().get(ComponentConstants.COMPONENT_ID));
         if (StringUtils.isNotBlank(cronExpression)) {
             monitorJob = cronJobFactory.createAsyncCronJob(this, monitorId, "healthcheck-monitor", cronExpression);
         } else if (intervalInSec > 0) {
-            monitorJob = new AsyncIntervalJob(this, healthCheckExecutorThreadPool, intervalInSec);
+            monitorJob = new AsyncIntervalJob(this, healthCheckExecutorThreadPool, intervalInSec, initialDelayForIntervalInSec);
         } else {
             throw new IllegalArgumentException("Either cronExpression or intervalInSec needs to be set");
         }

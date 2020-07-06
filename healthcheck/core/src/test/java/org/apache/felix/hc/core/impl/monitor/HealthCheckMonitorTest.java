@@ -129,7 +129,7 @@ public class HealthCheckMonitorTest {
 
         assertTrue(healthCheckMonitor.monitorJob instanceof AsyncIntervalJob);
 
-        verify(healthCheckExecutorThreadPool).scheduleAtFixedRate(any(Runnable.class), eq(1000L));
+        verify(healthCheckExecutorThreadPool).scheduleAtFixedRate(any(Runnable.class), eq(1000L), 0L);
 
         assertEquals("[HealthCheckMonitor tags=[test-tag]/names=[], intervalInSec=1000/cron=]", healthCheckMonitor.toString());
 

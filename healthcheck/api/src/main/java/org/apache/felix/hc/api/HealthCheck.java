@@ -50,6 +50,9 @@ public interface HealthCheck {
 
     /** Optional service property: If this property is set the health check will be executed asynchronously every n seconds */
     String ASYNC_INTERVAL_IN_SEC = "hc.async.intervalInSec";
+    
+    /** Optional service property: If this property is set the health check will be executed asynchronously every n seconds with the specific initial delay*/
+    String ASYNC_INTERVAL_INITIAL_DELAY_IN_SEC = "hc.async.initialDelayForIntervalInSec";
 
     /** Optional service property: TTL for health check {@link Result}. The value of this property must be of type {@link Long} and is
      * specified in ms. */

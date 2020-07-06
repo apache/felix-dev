@@ -28,4 +28,6 @@ public @interface Async {
 
     long intervalInSec() default -1;
 
+    long initialDelayForIntervalInSec() default 0;
+
 }
