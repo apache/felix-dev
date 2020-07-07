@@ -288,11 +288,12 @@ public class ConfigurationAdapter implements Configuration
     public Dictionary<String, Object> getProcessedProperties(ServiceReference<?> sr)
     {
         final Dictionary<String, Object> props = this.getProperties();
-
-        this.delegatee.getConfigurationManager().callPlugins(props, sr,
-                (String)props.get(Constants.SERVICE_PID),
-                (String)props.get(ConfigurationAdmin.SERVICE_FACTORYPID));
-
+        if ( props != null )
+        {
+            this.delegatee.getConfigurationManager().callPlugins(props, sr,
+                    (String)props.get(Constants.SERVICE_PID),
+                    (String)props.get(ConfigurationAdmin.SERVICE_FACTORYPID));
+        }
         return props;
     }
 
