@@ -121,7 +121,7 @@ public class ServiceUnavailableFilter implements Filter {
         boolean autoDisableFilter() default false;
 
         @AttributeDefinition(name = "Avoid 404", description = "If true, will automatically register a dummy servlet to ensure this filter becomes effective. Useful for server startup scenarios.")
-        boolean avoid404DuringStartup() default false;
+        boolean avoid404DuringStartup() default true;
 
         @AttributeDefinition(name = "Filter Service Ranking", description = "The service.ranking for the filter as respected by http whiteboard.")
         int service_ranking() default Integer.MAX_VALUE;
