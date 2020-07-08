@@ -18,7 +18,6 @@
 package org.apache.felix.hc.core.impl.scheduling.cron.embedded;
 
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.BitSet;
 import java.util.Calendar;
 import java.util.Collections;
@@ -58,6 +57,9 @@ public final class EmbeddedCronParser {
 
     private final String expression;
     private final TimeZone timeZone;
+
+    private int yearMin;
+    private int yearMax;
 
     private final BitSet months = new BitSet(12);
     private final BitSet daysOfMonth = new BitSet(31);
@@ -123,24 +125,24 @@ public final class EmbeddedCronParser {
         // First, just reset the milliseconds and try to calculate from there...
         calendar.set(Calendar.MILLISECOND, 0);
         final long originalTimestamp = calendar.getTimeInMillis();
-        doNext(calendar, calendar.get(Calendar.YEAR));
+        int currentYear = calendar.get(Calendar.YEAR);
+        doNext(calendar, currentYear);
 
         if (calendar.getTimeInMillis() == originalTimestamp) {
             // We arrived at the original timestamp - round up to the next whole second and
             // try again...
             calendar.add(Calendar.SECOND, 1);
-            doNext(calendar, calendar.get(Calendar.YEAR));
+            doNext(calendar, currentYear);
         }
 
         return calendar.getTimeInMillis();
     }
 
-    private void doNext(final Calendar calendar, final int dot) {
+    private void doNext(final Calendar calendar, final int yearOfInputDate) {
         final List<Integer> resets = new ArrayList<>();
 
         final int second = calendar.get(Calendar.SECOND);
-        final List<Integer> emptyList = Collections.emptyList();
-        final int updateSecond = findNext(seconds, second, calendar, Calendar.SECOND, Calendar.MINUTE, emptyList);
+        final int updateSecond = findNext(seconds, second, calendar, Calendar.SECOND, Calendar.MINUTE, Collections.emptyList());
         if (second == updateSecond) {
             resets.add(Calendar.SECOND);
         }
@@ -150,7 +152,7 @@ public final class EmbeddedCronParser {
         if (minute == updateMinute) {
             resets.add(Calendar.MINUTE);
         } else {
-            doNext(calendar, dot);
+            doNext(calendar, yearOfInputDate);
         }
 
         final int hour = calendar.get(Calendar.HOUR_OF_DAY);
@@ -158,7 +160,7 @@ public final class EmbeddedCronParser {
         if (hour == updateHour) {
             resets.add(Calendar.HOUR_OF_DAY);
         } else {
-            doNext(calendar, dot);
+            doNext(calendar, yearOfInputDate);
         }
 
         final int dayOfWeek = calendar.get(Calendar.DAY_OF_WEEK);
@@ -167,19 +169,43 @@ public final class EmbeddedCronParser {
         if (dayOfMonth == updateDayOfMonth) {
             resets.add(Calendar.DAY_OF_MONTH);
         } else {
-            doNext(calendar, dot);
+            doNext(calendar, yearOfInputDate);
         }
 
         final int month = calendar.get(Calendar.MONTH);
         final int updateMonth = findNext(months, month, calendar, Calendar.MONTH, Calendar.YEAR, resets);
-        if (month != updateMonth) {
-            if (calendar.get(Calendar.YEAR) - dot > 4) {
+        if (month == updateMonth) {
+            resets.add(Calendar.MONTH);
+        } else {
+            if (calendar.get(Calendar.YEAR) - yearOfInputDate > 4) {
                 throw new IllegalArgumentException(
                         "Invalid cron expression \"" + expression + "\" led to runaway search for next trigger");
             }
-            doNext(calendar, dot);
+            doNext(calendar, yearOfInputDate);
         }
 
+        final int year = calendar.get(Calendar.YEAR);
+        final int updateYear = findNextYear(yearMin, yearMax, year, calendar, yearOfInputDate, resets);
+        if (year == updateYear) {
+            resets.add(Calendar.YEAR);
+        } else {
+            doNext(calendar, yearOfInputDate);
+        }
+    }
+
+    private int findNextYear(int yearMin, int yearMax, int year, Calendar calendar, int yearOfInputDate, List<Integer> lowerOrders) {
+
+        int nextYearVal = year;
+        if(year < yearMin) {
+            nextYearVal = yearMin;
+        } else if(year > yearMax) {
+            nextYearVal = calendar.getMaximum(Calendar.YEAR);
+        }
+        if(nextYearVal != year) {
+            calendar.set(Calendar.YEAR, nextYearVal);
+            reset(calendar, lowerOrders);
+        }
+        return nextYearVal;
     }
 
     private int findNextDay(final Calendar calendar, final BitSet daysOfMonth, int dayOfMonth, final BitSet daysOfWeek,
@@ -247,13 +273,8 @@ public final class EmbeddedCronParser {
      */
     private void parse(final String expression) {
         String[] fields = SPACE_SPLITTER.split(expression);
-        if (fields.length == 7 && "*".equals(fields[6])) {
-            fields = Arrays.copyOfRange(fields, 0, 6);
-        }
-        if (fields.length != 6) {
-            throw new IllegalArgumentException(String.format(
-                    "Cron expression must consist of 6 fields (found %d in \"%s\")", fields.length, expression));
-        }
+
+        setYears(expression, fields);
         setNumberHits(seconds, fields[0], 0, 60);
         setNumberHits(minutes, fields[1], 0, 60);
         setNumberHits(hours, fields[2], 0, 24);
@@ -264,6 +285,33 @@ public final class EmbeddedCronParser {
             // Sunday can be represented as 0 or 7
             daysOfWeek.set(0);
             daysOfWeek.clear(7);
+        }
+    }
+
+    private void setYears(final String expression, String[] fields) {
+        if (fields.length == 7) {
+            String yearField = fields[6];
+            if("*".equals(yearField)) {
+                yearMin = 0;
+                yearMax = Integer.MAX_VALUE;
+            } else {
+                String[] yearParts = yearField.split("-");
+                if(yearParts.length == 1) {
+                    yearMin = yearMax = Integer.parseInt(yearParts[0]);
+                } else if(yearParts.length == 2) {
+                    yearMin = Integer.parseInt(yearParts[0]);
+                    yearMax = Integer.parseInt(yearParts[1]);
+                } else {
+                    throw new IllegalArgumentException(String.format("Invalid year field '%s' in expression '%s'", yearField, expression)) ;
+                }
+
+            }
+        } else if (fields.length == 6) {
+            yearMin = 0;
+            yearMax = Integer.MAX_VALUE;
+        } else {
+            throw new IllegalArgumentException(String.format(
+                    "Cron expression must consist of 6 or 7 fields (found %d in \"%s\")", fields.length, expression));
         }
     }
 

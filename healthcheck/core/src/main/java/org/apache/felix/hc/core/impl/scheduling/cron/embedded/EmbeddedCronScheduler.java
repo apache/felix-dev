@@ -66,8 +66,6 @@ public final class EmbeddedCronScheduler implements Runnable {
                 final AsyncEmbeddedCronJob job = entry.getValue();
                 job.checkAndExecute(scheduledExecutorService);
             }
-        } catch (Exception e) {
-            // TODO: handle exception
         } finally {
             Thread.currentThread().setName(threadNameToRestore);
         }
