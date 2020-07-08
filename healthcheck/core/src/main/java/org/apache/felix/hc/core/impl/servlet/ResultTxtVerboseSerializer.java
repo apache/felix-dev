@@ -141,7 +141,7 @@ public class ResultTxtVerboseSerializer {
         return s.replaceAll("(.{1,"+maxWidth+"})(?: +|$)\\n?|(.{"+maxWidth+"})", "$1$2"+newlineDelimiter).trim();
     }
     
-    static String rightPad(String s, int size) {
+    public static String rightPad(String s, int size) {
         if(s.length() < size) {
             return s + StringUtils.repeat(" ", size - s.length());
         } else {
