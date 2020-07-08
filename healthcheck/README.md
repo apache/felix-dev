@@ -107,19 +107,17 @@ HEALTH\_CHECK\_ERROR | no | **Actual status unknown** <br>There was an error in 
 
 `HealthCheck` services are created via OSGi configurations. Generic health check service properties are interpreted by the health check executor service. Custom health check service properties can be used by the health check implementation itself to configure its behaviour.
 
-The following generic Health Check properties may be used for all checks:
+The following generic Health Check properties may be used for all checks (**all service properties are optional**):
 
 Property    | Type     | Description  
 ----------- | -------- | ------------
 hc.name     | String   | The name of the health check as shown in UI
 hc.tags     | String[] | List of tags: Both Felix Console Plugin and Health Check servlet support selecting relevant checks by providing a list of tags
 hc.mbean.name | String | Makes the HC result available via given MBean name. If not provided no MBean is created for that `HealthCheck`
-hc.async.cronExpression | String | Used to schedule the execution of a `HealthCheck` at regular intervals, using a cron expression as supported by the [Quartz Cron Trigger](http://www.quartz-scheduler.org/api/previous_versions/1.8.5/org/quartz/CronTrigger.html) module. 
-hc.async.intervalInSec | Long | Used to schedule the execution of a `HealthCheck` at regular intervals, specifying a period in seconds
+hc.async.cronExpression | String | Executes the health check asynchronously using the cron expression provided. Use this for **long running health checks** to avoid execution every time the tag/name is queried. Prefer configuring a HealthCheckMonitor if you only want to regularly execute a HC. 
+hc.async.intervalInSec | Long | Async execution like `hc.async.cronExpression` but using an interval
 hc.resultCacheTtlInMs | Long | Overrides the global default TTL as configured in health check executor for health check responses
 hc.keepNonOkResultsStickyForSec | Long | If given, non-ok results from past executions will be taken into account as well for the given seconds (use Long.MAX_VALUE for indefinitely). Useful for unhealthy system states that disappear but might leave the system at an inconsistent state (e.g. an event queue overflow where somebody needs to intervene manually) or for checks that should only go back to OK with a delay (can be useful for load balancers).
-
-All service properties are optional.
 
 ### Annotations to simplify configuration of custom Health Checks
 
