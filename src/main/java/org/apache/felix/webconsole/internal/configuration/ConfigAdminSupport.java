@@ -189,16 +189,16 @@ class ConfigAdminSupport
         {
             config = getConfiguration( pid, factoryPid );
 
-            Dictionary props = config.getProperties();
+            Dictionary<String, Object> props = config.getProperties();
             if ( props == null )
             {
-                props = new Hashtable();
+                props = new Hashtable<>();
             }
 
             final MetaTypeServiceSupport mtss = getMetaTypeSupport();
-            final Map adMap = ( mtss != null ) ? mtss.getAttributeDefinitionMap( config, null ) : new HashMap();
+            final Map<String, MetatypePropertyDescriptor> adMap = ( mtss != null ) ? mtss.getAttributeDefinitionMap( config, null ) : new HashMap<>();
             final StringTokenizer propTokens = new StringTokenizer( propertyList, "," ); //$NON-NLS-1$
-            final List propsToKeep = new ArrayList();
+            final List<String> propsToKeep = new ArrayList<>();
             while ( propTokens.hasMoreTokens() )
             {
                 String propName = propTokens.nextToken();
@@ -209,7 +209,7 @@ class ConfigAdminSupport
                         ? '$' + propName : propName;
                 propsToKeep.add(propName);
 
-                PropertyDescriptor ad = (PropertyDescriptor) adMap.get( propName );
+                PropertyDescriptor ad = adMap.get( propName );
 
                 // try to derive from current value
                 if (ad == null) {
@@ -248,7 +248,7 @@ class ConfigAdminSupport
                 else
                 {
                     // array or vector of any type
-                    Vector vec = new Vector();
+                    Vector<Object> vec = new Vector<>();
 
                     String[] properties = request.getParameterValues( paramName );
                     if ( properties != null )
@@ -302,10 +302,10 @@ class ConfigAdminSupport
             }
 
             // remove the properties that are not specified in the request
-            final Dictionary updateProps = new Hashtable(props.size());
-            for ( Enumeration e = props.keys(); e.hasMoreElements(); )
+            final Dictionary<String, Object> updateProps = new Hashtable<>(props.size());
+            for ( Enumeration<String> e = props.keys(); e.hasMoreElements(); )
             {
-                final Object key = e.nextElement();
+                final String key = e.nextElement();
                 if ( propsToKeep.contains(key) )
                 {
                     updateProps.put(key, props.get(key));
@@ -379,14 +379,14 @@ class ConfigAdminSupport
             json.value( pidFilter );
         }
 
-        Dictionary props = null;
+        Dictionary<String, Object> props = null;
         if ( config != null )
         {
-            props = config.getProperties(); // unchecked
+            props = config.getProperties();
         }
         if ( props == null )
         {
-            props = new Hashtable();
+            props = new Hashtable<>();
         }
 
         boolean doSimpleMerge = true;
@@ -418,9 +418,9 @@ class ConfigAdminSupport
                     + "of the OSGi Metatype Service or the absence of a MetaType descriptor for this configuration." );
 
             json.key( "properties" ).object(); //$NON-NLS-1$
-            for ( Enumeration pe = props.keys(); pe.hasMoreElements(); )
+            for ( Enumeration<String> pe = props.keys(); pe.hasMoreElements(); )
             {
-                final String id = ( String ) pe.nextElement();
+                final String id = pe.nextElement();
 
                 // ignore well known special properties
                 if ( !id.equals( Constants.SERVICE_PID ) && !id.equals( Constants.SERVICE_DESCRIPTION )
@@ -476,8 +476,8 @@ class ConfigAdminSupport
             }
             else
             {
-                Dictionary headers = bundle.getHeaders( locale );
-                String name = ( String ) headers.get( Constants.BUNDLE_NAME );
+                Dictionary<String, String> headers = bundle.getHeaders( locale );
+                String name = headers.get( Constants.BUNDLE_NAME );
                 if ( name == null )
                 {
                     location = bundle.getSymbolicName();
@@ -487,7 +487,7 @@ class ConfigAdminSupport
                     location = name + " (" + bundle.getSymbolicName() + ')'; //$NON-NLS-1$
                 }
 
-                Version v = Version.parseVersion( ( String ) headers.get( Constants.BUNDLE_VERSION ) );
+                Version v = Version.parseVersion( headers.get( Constants.BUNDLE_VERSION ) );
                 location += ", Version " + v.toString();
             }
         }
@@ -498,7 +498,7 @@ class ConfigAdminSupport
         String serviceLocation = ""; //$NON-NLS-1$
         try
         {
-            final ServiceReference[] refs = getBundleContext().getServiceReferences(
+            final ServiceReference<?>[] refs = getBundleContext().getServiceReferences(
                     (String)null,
                     "(&(" + Constants.OBJECTCLASS + '=' + ManagedService.class.getName() //$NON-NLS-1$
                     + ")(" + Constants.SERVICE_PID + '=' + pid + "))"); //$NON-NLS-1$ //$NON-NLS-2$
@@ -542,7 +542,7 @@ class ConfigAdminSupport
         try
         {
             // start with ManagedService instances
-            Map optionsPlain = getServices(ManagedService.class.getName(), pidFilter,
+            Map<String, String> optionsPlain = getServices(ManagedService.class.getName(), pidFilter,
                     locale, true);
 
             // next are the MetaType informations without ManagedService
@@ -592,9 +592,9 @@ class ConfigAdminSupport
 
             jw.key("pids");//$NON-NLS-1$
             jw.array();
-            for ( Iterator ii = optionsPlain.keySet().iterator(); ii.hasNext(); )
+            for ( Iterator<String> ii = optionsPlain.keySet().iterator(); ii.hasNext(); )
             {
-                String id = ( String ) ii.next();
+                String id = ii.next();
                 Object name = optionsPlain.get( id );
 
                 final Configuration config = this.getConfiguration( id );
@@ -644,8 +644,8 @@ class ConfigAdminSupport
      */
     private static final String getConfigurationFactoryNameHint(Configuration config, MetaTypeServiceSupport mtss)
     {
-        Dictionary props = config.getProperties();
-        Map adMap = (mtss != null) ? mtss.getAttributeDefinitionMap(config, null) : null;
+        Dictionary<String, Object> props = config.getProperties();
+        Map<String, MetatypePropertyDescriptor> adMap = (mtss != null) ? mtss.getAttributeDefinitionMap(config, null) : null;
         if (null == adMap)
         {
             return null;
@@ -689,7 +689,7 @@ class ConfigAdminSupport
      * @param adMap Attribute definitions map
      * @return Value or null if none found
      */
-    private static String getConfigurationPropertyValueOrDefault(String propertyName, Dictionary props, Map adMap) {
+    private static String getConfigurationPropertyValueOrDefault(String propertyName, Dictionary<String, Object> props, Map<String, MetatypePropertyDescriptor> adMap) {
         // get configured property value
         Object value = props.get(propertyName);
 
@@ -717,7 +717,7 @@ class ConfigAdminSupport
         else
         {
             // if not set try to get default value
-            PropertyDescriptor ad = (PropertyDescriptor)adMap.get(propertyName);
+            PropertyDescriptor ad = adMap.get(propertyName);
             if (ad != null && ad.getDefaultValue() != null && ad.getDefaultValue().length == 1)
             {
                 return ad.getDefaultValue()[0];
@@ -750,7 +750,7 @@ class ConfigAdminSupport
     {
         try
         {
-            final Map optionsFactory = getServices(ManagedServiceFactory.class.getName(),
+            final Map<String, String> optionsFactory = getServices(ManagedServiceFactory.class.getName(),
                     pidFilter, locale, true);
             final MetaTypeServiceSupport mtss = getMetaTypeSupport();
             if ( mtss != null )
@@ -760,9 +760,9 @@ class ConfigAdminSupport
             }
             jw.key("fpids");
             jw.array();
-            for ( Iterator ii = optionsFactory.keySet().iterator(); ii.hasNext(); )
+            for ( Iterator<String> ii = optionsFactory.keySet().iterator(); ii.hasNext(); )
             {
-                String id = ( String ) ii.next();
+                String id = ii.next();
                 Object name = optionsFactory.get( id );
                 jw.object();
                 jw.key("id").value(id ); //$NON-NLS-1$
@@ -777,14 +777,14 @@ class ConfigAdminSupport
         }
     }
 
-    SortedMap getServices( String serviceClass, String serviceFilter, String locale,
+    SortedMap<String, String> getServices( String serviceClass, String serviceFilter, String locale,
             boolean ocdRequired ) throws InvalidSyntaxException
     {
         // sorted map of options
-        SortedMap optionsFactory = new TreeMap( String.CASE_INSENSITIVE_ORDER );
+        SortedMap<String, String> optionsFactory = new TreeMap<>( String.CASE_INSENSITIVE_ORDER );
 
         // find all ManagedServiceFactories to get the factoryPIDs
-        ServiceReference[] refs = this.getBundleContext().getServiceReferences( serviceClass, serviceFilter );
+        ServiceReference<?>[] refs = this.getBundleContext().getServiceReferences( serviceClass, serviceFilter );
         for ( int i = 0; refs != null && i < refs.length; i++ )
         {
             Object pidObject = refs[i].getProperty( Constants.SERVICE_PID );
@@ -815,7 +815,7 @@ class ConfigAdminSupport
         return optionsFactory;
     }
 
-    private void addMetaTypeNames( final Map pidMap, final Map ocdCollection, final String filterSpec, final String type )
+    private void addMetaTypeNames( final Map<String, String> pidMap, final Map<String, ObjectClassDefinition> ocdCollection, final String filterSpec, final String type )
     {
         Filter filter = null;
         if ( filterSpec != null )
@@ -830,18 +830,18 @@ class ConfigAdminSupport
             }
         }
 
-        for ( Iterator ei = ocdCollection.entrySet().iterator(); ei.hasNext(); )
+        for ( Iterator<Map.Entry<String, ObjectClassDefinition>> ei = ocdCollection.entrySet().iterator(); ei.hasNext(); )
         {
-            Entry ociEntry = ( Entry ) ei.next();
-            final String pid = ( String ) ociEntry.getKey();
-            final ObjectClassDefinition ocd = ( ObjectClassDefinition ) ociEntry.getValue();
+            Entry<String, ObjectClassDefinition> ociEntry = ei.next();
+            final String pid = ociEntry.getKey();
+            final ObjectClassDefinition ocd = ociEntry.getValue();
             if ( filter == null )
             {
                 pidMap.put( pid, ocd.getName() );
             }
             else
             {
-                final Dictionary props = new Hashtable();
+                final Dictionary<String, Object> props = new Hashtable<>();
                 props.put( type, pid );
                 if ( filter.match( props ) )
                 {
@@ -893,7 +893,7 @@ class ConfigAdminSupport
 
 
         @Override
-        public Dictionary getProperties()
+        public Dictionary<String, Object> getProperties()
         {
             // dummy configuration has no properties
             return null;
@@ -908,7 +908,7 @@ class ConfigAdminSupport
 
 
         @Override
-        public void update( Dictionary properties )
+        public void update( Dictionary<String, ?> properties )
         {
             // dummy configuration cannot be updated
         }
