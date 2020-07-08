@@ -61,21 +61,32 @@ public class MultiReleaseContent implements Content
         }
         if (javaVersion > 8)
         {
+            InputStream manifestStream = null;
+
             try
             {
-                try (InputStream manifestStream = content.getEntryAsStream("META-INF/MANIFEST.MF"))
+                manifestStream = content.getEntryAsStream("META-INF/MANIFEST.MF");
+                if (manifestStream != null)
                 {
-                    if (manifestStream != null)
+                    if ("true".equals(new Manifest(manifestStream).getMainAttributes().getValue("Multi-Release")))
                     {
-                        if ("true".equals(new Manifest(manifestStream).getMainAttributes().getValue("Multi-Release")))
-                        {
-                            content = new MultiReleaseContent(javaVersion, content);
-                        }
+                        content = new MultiReleaseContent(javaVersion, content);
                     }
                 }
             }
             catch (Exception ex)
             {
+            }
+            finally
+            {
+                if (manifestStream != null)
+                {
+                    try
+                    {
+                        manifestStream.close();
+                    }
+                    catch (Exception ex){}
+                }
             }
         }
         return content;
