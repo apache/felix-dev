@@ -29,6 +29,7 @@ import java.util.TreeSet;
 
 import org.apache.felix.webconsole.internal.AbstractConfigurationPrinter;
 import org.apache.felix.webconsole.internal.misc.ConfigurationRender;
+import org.osgi.framework.Constants;
 import org.osgi.framework.ServiceReference;
 import org.osgi.service.cm.Configuration;
 import org.osgi.service.cm.ConfigurationAdmin;
@@ -57,23 +58,22 @@ public class ConfigurationAdminConfigurationPrinter extends AbstractConfiguratio
     @Override
     public void printConfiguration(PrintWriter pw)
     {
-        ServiceReference sr = getBundleContext().getServiceReference( ConfigManager.CONFIGURATION_ADMIN_NAME );
-        if (sr == null)
+        final ServiceReference<ConfigurationAdmin> sr = getBundleContext().getServiceReference( ConfigurationAdmin.class );
+        try
         {
-            pw.println("Status: Configuration Admin Service not available");
-        }
-        else
-        {
-
-            ConfigurationAdmin ca = (ConfigurationAdmin) getBundleContext().getService(sr);
-            try
+            final ConfigurationAdmin ca = (sr == null ? null : getBundleContext().getService(sr));
+            if (ca == null)
             {
-                Configuration[] configs = ca.listConfigurations(null);
+                pw.println("Status: Configuration Admin Service not available");
+            }
+            else
+            {
+                final Configuration[] configs = ca.listConfigurations(null);
 
                 if (configs != null && configs.length > 0)
                 {
-                    Set factories = new HashSet();
-                    SortedMap sm = new TreeMap();
+                    final Set<String> factories = new HashSet<>();
+                    final SortedMap<String, Configuration> sm = new TreeMap<>();
                     for (int i = 0; i < configs.length; i++)
                     {
                         sm.put(configs[i].getPid(), configs[i]);
@@ -95,9 +95,9 @@ public class ConfigurationAdminConfigurationPrinter extends AbstractConfiguratio
                     }
                     pw.println();
 
-                    for (Iterator mi = sm.values().iterator(); mi.hasNext();)
+                    for (Iterator<Configuration> mi = sm.values().iterator(); mi.hasNext();)
                     {
-                        this.printConfiguration(pw, (Configuration) mi.next());
+                        this.printConfiguration(pw, mi.next());
                     }
                 }
                 else
@@ -105,11 +105,14 @@ public class ConfigurationAdminConfigurationPrinter extends AbstractConfiguratio
                     pw.println("Status: No Configurations available");
                 }
             }
-            catch (Exception e)
-            {
-                pw.println("Status: Configuration Admin Service not accessible");
-            }
-            finally
+        }
+        catch (Exception e)
+        {
+            pw.println("Status: Configuration Admin Service not accessible");
+        }
+        finally
+        {
+            if ( sr != null )
             {
                 getBundleContext().ungetService(sr);
             }
@@ -125,22 +128,30 @@ public class ConfigurationAdminConfigurationPrinter extends AbstractConfiguratio
             ConfigurationRender.infoLine(pw, "  ", "Factory PID", config.getFactoryPid());
         }
 
-        String loc = (config.getBundleLocation() != null) ? config.getBundleLocation()
-            : "Unbound";
-        ConfigurationRender.infoLine(pw, "  ", "BundleLocation", loc);
+        if ( config.getBundleLocation() != null )
+        {
+            ConfigurationRender.infoLine(pw, "  ", "BundleLocation", config.getBundleLocation());
+        }
 
-        Dictionary props = config.getProperties();
+        Dictionary<String, Object> props = config.getProperties();
         if (props != null)
         {
-            SortedSet keys = new TreeSet();
-            for (Enumeration ke = props.keys(); ke.hasMoreElements();)
+            SortedSet<String> keys = new TreeSet<>();
+            for (Enumeration<String> ke = props.keys(); ke.hasMoreElements();)
             {
                 keys.add(ke.nextElement());
             }
 
-            for (Iterator ki = keys.iterator(); ki.hasNext();)
+            for (Iterator<String> ki = keys.iterator(); ki.hasNext();)
             {
-                String key = (String) ki.next();
+                String key = ki.next();
+                // pid, factory pid and bundle location are already printed
+                if ( Constants.SERVICE_PID.equals(key)
+                     || ConfigurationAdmin.SERVICE_FACTORYPID.equals(key)
+                     || ConfigurationAdmin.SERVICE_BUNDLELOCATION.equals(key) )
+                {
+                         continue;
+                }
                 ConfigurationRender.infoLine(pw, "  ", key, props.get(key));
             }
         }

@@ -70,6 +70,7 @@ class MetaTypeSupport
     }
 
 
+    @SuppressWarnings("rawtypes")
     static void attributeToJson( final JSONWriter json, final PropertyDescriptor ad, final Object propValue )
             throws IOException
     {

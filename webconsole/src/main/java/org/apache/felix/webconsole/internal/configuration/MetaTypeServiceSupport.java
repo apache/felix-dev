@@ -84,7 +84,7 @@ class MetaTypeServiceSupport extends MetaTypeSupport
      * @param locale The name of the locale to get the meta data for.
      * @return see the method description
      */
-    Map getPidObjectClasses( final String locale )
+    Map<String, ObjectClassDefinition> getPidObjectClasses( final String locale )
     {
         return getObjectClassDefinitions( PID_GETTER, locale );
     }
@@ -99,7 +99,7 @@ class MetaTypeServiceSupport extends MetaTypeSupport
      * @param locale The name of the locale to get the meta data for.
      * @return see the method description
      */
-    Map getFactoryPidObjectClasses( final String locale )
+    Map<String, ObjectClassDefinition> getFactoryPidObjectClasses( final String locale )
     {
         return getObjectClassDefinitions( FACTORY_PID_GETTER, locale );
     }
@@ -118,9 +118,9 @@ class MetaTypeServiceSupport extends MetaTypeSupport
      * @return Map of <code>ObjectClassDefinition</code> objects indexed by the
      *      PID (or factory PID) to which they pertain
      */
-    private Map getObjectClassDefinitions( final IdGetter idGetter, final String locale )
+    private Map<String, ObjectClassDefinition> getObjectClassDefinitions( final IdGetter idGetter, final String locale )
     {
-        final Map objectClassesDefinitions = new HashMap();
+        final Map<String, ObjectClassDefinition> objectClassesDefinitions = new HashMap<>();
         final MetaTypeService mts = this.getMetaTypeService();
         if ( mts != null )
         {
@@ -245,9 +245,9 @@ class MetaTypeServiceSupport extends MetaTypeSupport
     }
 
 
-    Map getAttributeDefinitionMap( Configuration config, String locale )
+    Map<String, MetatypePropertyDescriptor> getAttributeDefinitionMap( Configuration config, String locale )
     {
-        Map adMap = new HashMap();
+        Map<String, MetatypePropertyDescriptor> adMap = new HashMap<>();
         ObjectClassDefinition ocd = this.getObjectClassDefinition( config, locale );
         if ( ocd != null )
         {
@@ -264,7 +264,7 @@ class MetaTypeServiceSupport extends MetaTypeSupport
     }
 
 
-    void mergeWithMetaType( Dictionary props, ObjectClassDefinition ocd, JSONWriter json, Set ignoreAttrIds )
+    void mergeWithMetaType( Dictionary<String, Object> props, ObjectClassDefinition ocd, JSONWriter json, Set<String> ignoreAttrIds )
             throws IOException
     {
         json.key( "title" ).value( ocd.getName() ); //$NON-NLS-1$
@@ -276,8 +276,8 @@ class MetaTypeServiceSupport extends MetaTypeSupport
 
         AttributeDefinition[] ad = ocd.getAttributeDefinitions( ObjectClassDefinition.ALL );
         AttributeDefinition[] optionalArray = ocd.getAttributeDefinitions( ObjectClassDefinition.OPTIONAL );
-        List/*<AttributeDefinition>*/ optional = optionalArray == null ? Collections.EMPTY_LIST : Arrays.asList( optionalArray );
-        final Set metatypeAttributes = new HashSet(ignoreAttrIds);
+        List<AttributeDefinition>optional = optionalArray == null ? Collections.emptyList() : Arrays.asList( optionalArray );
+        final Set<String> metatypeAttributes = new HashSet<>(ignoreAttrIds);
         if ( ad != null )
         {
             json.key( "properties" ).object(); //$NON-NLS-1$
@@ -295,10 +295,10 @@ class MetaTypeServiceSupport extends MetaTypeSupport
             json.endObject();
         }
         final StringBuffer sb = new StringBuffer();
-        final Enumeration e = props.keys();
+        final Enumeration<String> e = props.keys();
         while ( e.hasMoreElements() )
         {
-            String key = (String)e.nextElement();
+            String key = e.nextElement();
             if ( !metatypeAttributes.contains(key) ) {
                 if ( sb.length() > 0 )
                 {
@@ -337,6 +337,7 @@ class MetaTypeServiceSupport extends MetaTypeSupport
      */
     private static final IdGetter PID_GETTER = new IdGetter()
     {
+        @Override
         public String[] getIds( MetaTypeInformation metaTypeInformation )
         {
             return metaTypeInformation.getPids();
@@ -351,6 +352,7 @@ class MetaTypeServiceSupport extends MetaTypeSupport
      */
     private static final IdGetter FACTORY_PID_GETTER = new IdGetter()
     {
+        @Override
         public String[] getIds( MetaTypeInformation metaTypeInformation )
         {
             return metaTypeInformation.getFactoryPids();
