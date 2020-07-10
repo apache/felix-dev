@@ -117,11 +117,11 @@ public class ServiceUnavailableFilter implements Filter {
         @AttributeDefinition(name = "503 Response Text", description = "Response text for 503 responses. Value can be either the content directly or in the format '"+CLASSPATH_PREFIX+"<symbolic-bundle-id>:/path/to/file.html'. The response content type is auto-detected to either text/html or text/plain.")
         String responseTextFor503() default RESPONSE_TEXT_DEFAULT;
 
-        @AttributeDefinition(name = "Auto-disable filter", description = "If true, will automatically disable the filter once the filter continued the filter chain without 503 for the first time. Useful for server startup scenarios.")
-        boolean autoDisableFilter() default false;
-
         @AttributeDefinition(name = "Avoid 404", description = "If true, will automatically register a dummy servlet to ensure this filter becomes effective. Useful for server startup scenarios.")
         boolean avoid404DuringStartup() default true;
+
+        @AttributeDefinition(name = "Auto-disable filter", description = "If true, will automatically disable the filter once the filter continued the filter chain without 503 for the first time. Useful for server startup scenarios. Becomes automatically active if avoid404DuringStartup is configured to true.")
+        boolean autoDisableFilter() default false;
 
         @AttributeDefinition(name = "Filter Service Ranking", description = "The service.ranking for the filter as respected by http whiteboard.")
         int service_ranking() default Integer.MAX_VALUE;
@@ -166,6 +166,10 @@ public class ServiceUnavailableFilter implements Filter {
         this.includeExecutionResultInResponse = config.includeExecutionResult();
         this.autoDisableFilter = config.autoDisableFilter();
         this.avoid404DuringStartup = config.avoid404DuringStartup();
+        if(avoid404DuringStartup && !autoDisableFilter) {
+            LOG.debug("For avoid404DuringStartup set to true, avoid404DuringStartup is forced to true as well");
+            autoDisableFilter = true;
+        }
         
         registerHealthCheckServiceListener();
 
@@ -376,7 +380,7 @@ public class ServiceUnavailableFilter implements Filter {
 
             @Override
             protected void service(HttpServletRequest req, HttpServletResponse resp) throws ServletException, IOException {
-                send503((HttpServletResponse) resp, "Response from dynamic startup servlet");
+                send503((HttpServletResponse) resp, "Starting...");
             }
             
         }, servletProps);
