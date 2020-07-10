@@ -26,7 +26,6 @@ import java.util.LinkedHashSet;
 import org.apache.maven.artifact.Artifact;
 import org.apache.maven.plugin.MojoExecutionException;
 import org.apache.maven.plugin.logging.Log;
-import org.apache.maven.shared.dependency.graph.DependencyNode;
 import org.codehaus.plexus.util.StringUtils;
 
 import aQute.bnd.osgi.Analyzer;
