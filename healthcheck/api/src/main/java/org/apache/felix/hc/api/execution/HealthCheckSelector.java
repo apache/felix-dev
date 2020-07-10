@@ -91,8 +91,8 @@ public final class HealthCheckSelector {
     @Override
     public String toString() {
         return "HealthCheckSelector{" +
-                "tags=" + (tags == null ? "*" : Arrays.toString(tags)) +
-                ", names=" + (names == null ? "*" : Arrays.toString(names)) +
+                "tags=" + (tags == null ? "<any>" : Arrays.toString(tags)) +
+                ", names=" + (names == null ? "<any>" : Arrays.toString(names)) +
                 '}';
     }
 
