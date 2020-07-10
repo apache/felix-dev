@@ -29,9 +29,6 @@ import org.apache.maven.plugin.MojoFailureException;
 import org.apache.maven.plugins.annotations.Mojo;
 import org.apache.maven.plugins.annotations.ResolutionScope;
 
-import aQute.bnd.osgi.Jar;
-import org.apache.maven.shared.dependency.graph.DependencyNode;
-
 
 /**
  * Generate BND instructions for this project

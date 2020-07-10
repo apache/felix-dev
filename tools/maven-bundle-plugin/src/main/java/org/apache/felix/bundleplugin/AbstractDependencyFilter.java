@@ -22,7 +22,6 @@ package org.apache.felix.bundleplugin;
 import java.util.Collection;
 import java.util.Iterator;
 import java.util.LinkedHashSet;
-import java.util.List;
 import java.util.Map;
 import java.util.regex.Pattern;
 
