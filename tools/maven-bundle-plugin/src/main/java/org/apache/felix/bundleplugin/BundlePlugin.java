@@ -399,7 +399,7 @@ public class BundlePlugin extends AbstractMojo
                 value = value.replaceAll( "\\p{Blank}*[\r\n]\\p{Blank}*", "" );
             }
 
-            if ( Analyzer.WAB.equals( key ) && value.length() == 0 )
+            if ( Analyzer.WAB.equals( key ) && value.isEmpty() )
             {
                 // provide useful default
                 value = "src/main/webapp/";
@@ -1693,7 +1693,7 @@ public class BundlePlugin extends AbstractMojo
 
     private Collection<Artifact> getSelectedDependencies(Collection<Artifact> artifacts) throws MojoExecutionException
     {
-        if ( null == excludeDependencies || excludeDependencies.length() == 0 )
+        if ( null == excludeDependencies || excludeDependencies.isEmpty() )
         {
             return artifacts;
         }
