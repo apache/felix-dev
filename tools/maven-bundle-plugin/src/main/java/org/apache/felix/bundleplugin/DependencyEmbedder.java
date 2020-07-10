@@ -137,7 +137,7 @@ public final class DependencyEmbedder extends AbstractDependencyFilter
         File path = dependency.getFile();
         if ( null != path && path.exists() )
         {
-            if ( "true".equalsIgnoreCase( inline ) || inline.length() == 0 )
+            if ( "true".equalsIgnoreCase( inline ) || inline.isEmpty() )
             {
                 inlinedPaths.add( path.getPath() );
             }
@@ -268,7 +268,7 @@ public final class DependencyEmbedder extends AbstractDependencyFilter
             {
                 // if there are no embeddded dependencies, we do a special treatment and replace
                 // every occurance of MAVEN_DEPENDENCIES and a following comma with an empty string
-                if ( mavenDependencies.length() == 0 )
+                if ( mavenDependencies.isEmpty() )
                 {
                     String cleanInstruction = BundlePlugin.removeTagFromInstruction( instruction, MAVEN_DEPENDENCIES );
                     analyzer.setProperty( directiveName, cleanInstruction );
