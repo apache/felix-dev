@@ -297,7 +297,7 @@ public class BundlePlugin extends AbstractMojo
      * {@code <_consumer-policy>$${range;[===,+)}<code>}<code>{@code </_consumer-policy> }
      */
     @Parameter
-    private Map<String, String> instructions = new LinkedHashMap<String, String>();
+    private Map<String, String> instructions = new LinkedHashMap<>();
 
     /**
      * Use locally patched version for now.
@@ -380,7 +380,7 @@ public class BundlePlugin extends AbstractMojo
     /* transform directives from their XML form to the expected BND syntax (eg. _include becomes -include) */
     protected static Map<String, String> transformDirectives( Map<String, String> originalInstructions )
     {
-        Map<String, String> transformedInstructions = new LinkedHashMap<String, String>();
+        Map<String, String> transformedInstructions = new LinkedHashMap<>();
         for ( Map.Entry<String, String> e : originalInstructions.entrySet() )
         {
             String key = e.getKey();
@@ -704,7 +704,7 @@ public class BundlePlugin extends AbstractMojo
         Collection<Artifact> embeddedArtifacts = dependencyEmbedder.getEmbeddedArtifacts();
         if ( !embeddedArtifacts.isEmpty() && createDependencyReducedPom )
         {
-            Set<String> embeddedIds = new HashSet<String>();
+            Set<String> embeddedIds = new HashSet<>();
             for ( Artifact artifact : embeddedArtifacts )
             {
                 embeddedIds.add( getId( artifact ) );
@@ -746,11 +746,11 @@ public class BundlePlugin extends AbstractMojo
     private void createDependencyReducedPom( Set<String> artifactsToRemove )
             throws IOException, ProjectBuildingException, DependencyGraphBuilderException {
         Model model = project.getOriginalModel();
-        List<Dependency> dependencies = new ArrayList<Dependency>();
+        List<Dependency> dependencies = new ArrayList<>();
 
         boolean modified = false;
 
-        List<Dependency> transitiveDeps = new ArrayList<Dependency>();
+        List<Dependency> transitiveDeps = new ArrayList<>();
 
         for ( Artifact artifact : project.getArtifacts() )
         {
@@ -1272,13 +1272,13 @@ public class BundlePlugin extends AbstractMojo
      */
     private static Attributes filterAttributes(Instructions instructions, Attributes source, Set<Instruction> nomatch) {
         Attributes result = new Attributes();
-        Map<String, Object> keys = new TreeMap<String, Object>();
+        Map<String, Object> keys = new TreeMap<>();
         for ( Object key : source.keySet() )
         {
             keys.put( key.toString(), key );
         }
 
-        List<Instruction> filters = new ArrayList<Instruction>( instructions.keySet() );
+        List<Instruction> filters = new ArrayList<>( instructions.keySet() );
         if (nomatch == null)
         {
             nomatch = Create.set();
@@ -1413,7 +1413,7 @@ public class BundlePlugin extends AbstractMojo
 
     protected Set<String> getOptionalPackages(MavenProject currentProject) throws IOException, MojoExecutionException
     {
-        ArrayList<Artifact> inscope = new ArrayList<Artifact>();
+        ArrayList<Artifact> inscope = new ArrayList<>();
         final Collection<Artifact> artifacts = getSelectedDependencies(currentProject.getArtifacts() );
         for ( Iterator<Artifact> it = artifacts.iterator(); it.hasNext(); )
         {
@@ -1424,7 +1424,7 @@ public class BundlePlugin extends AbstractMojo
             }
         }
 
-        HashSet<String> optionalArtifactIds = new HashSet<String>();
+        HashSet<String> optionalArtifactIds = new HashSet<>();
         for ( Iterator<Artifact> it = inscope.iterator(); it.hasNext(); )
         {
             Artifact artifact = it.next();
@@ -1441,8 +1441,8 @@ public class BundlePlugin extends AbstractMojo
 
         }
 
-        HashSet<String> required = new HashSet<String>();
-        HashSet<String> optional = new HashSet<String>();
+        HashSet<String> required = new HashSet<>();
+        HashSet<String> optional = new HashSet<>();
         for ( Iterator<Artifact> it = inscope.iterator(); it.hasNext(); )
         {
             Artifact artifact = it.next();
@@ -1545,7 +1545,7 @@ public class BundlePlugin extends AbstractMojo
 
     private static Map<String, String> getProperties( Model projectModel, String prefix )
     {
-        Map<String, String> properties = new LinkedHashMap<String, String>();
+        Map<String, String> properties = new LinkedHashMap<>();
         Method methods[] = Model.class.getDeclaredMethods();
         for ( int i = 0; i < methods.length; i++ )
         {
@@ -1659,7 +1659,7 @@ public class BundlePlugin extends AbstractMojo
 
     protected ClassPathItem[] getClasspath(MavenProject currentProject) throws IOException, MojoExecutionException
     {
-        List<ClassPathItem> list = new ArrayList<ClassPathItem>( currentProject.getArtifacts().size() + 1 );
+        List<ClassPathItem> list = new ArrayList<>( currentProject.getArtifacts().size() + 1 );
 
         String d = currentProject.getBuild() != null ? currentProject.getBuild().getOutputDirectory() : null;
         if ( d != null )
@@ -1702,7 +1702,7 @@ public class BundlePlugin extends AbstractMojo
             return Collections.emptyList();
         }
 
-        Collection<Artifact> selectedDependencies = new LinkedHashSet<Artifact>( artifacts );
+        Collection<Artifact> selectedDependencies = new LinkedHashSet<>( artifacts );
         DependencyExcluder excluder = new DependencyExcluder(artifacts );
         excluder.processHeaders( excludeDependencies );
         selectedDependencies.removeAll( excluder.getExcludedArtifacts() );
@@ -2009,7 +2009,7 @@ public class BundlePlugin extends AbstractMojo
 
     private static List<Resource> getMavenResources( MavenProject currentProject, boolean test )
     {
-        List<Resource> resources = new ArrayList<Resource>( test ? currentProject.getTestResources() : currentProject.getResources() );
+        List<Resource> resources = new ArrayList<>( test ? currentProject.getTestResources() : currentProject.getResources() );
 
         if ( currentProject.getCompileSourceRoots() != null )
         {
@@ -2033,7 +2033,7 @@ public class BundlePlugin extends AbstractMojo
     {
         final String basePath = currentProject.getBasedir().getAbsolutePath();
 
-        Set<String> pathSet = new LinkedHashSet<String>();
+        Set<String> pathSet = new LinkedHashSet<>();
         for ( Iterator<Resource> i = getMavenResources( currentProject, test ).iterator(); i.hasNext(); )
         {
             Resource resource = i.next();
@@ -2150,7 +2150,7 @@ public class BundlePlugin extends AbstractMojo
         // pass maven source paths onto BND analyzer
         StringBuilder mavenSourcePaths = new StringBuilder();
         StringBuilder mavenTestSourcePaths = new StringBuilder();
-        Map<StringBuilder, List<String>> map = new HashMap<StringBuilder, List<String>>(2);
+        Map<StringBuilder, List<String>> map = new HashMap<>(2);
         map.put(mavenSourcePaths, currentProject.getCompileSourceRoots() );
         map.put(mavenTestSourcePaths, currentProject.getTestCompileSourceRoots() );
         for ( Map.Entry<StringBuilder, List<String>> entry : map.entrySet() )

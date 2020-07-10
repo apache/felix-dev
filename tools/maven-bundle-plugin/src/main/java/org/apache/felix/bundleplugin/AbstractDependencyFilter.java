@@ -97,14 +97,14 @@ public abstract class AbstractDependencyFilter
     {
         Map<String,Attrs> instructions = OSGiHeader.parseHeader( MISSING_KEY_PATTERN.matcher( header ).replaceAll( "$1$2*;$3" ) );
 
-        Collection<Artifact> availableDependencies = new LinkedHashSet<Artifact>( m_dependencyArtifacts );
+        Collection<Artifact> availableDependencies = new LinkedHashSet<>( m_dependencyArtifacts );
 
         for ( Iterator<Map.Entry<String,Attrs>> clauseIterator = instructions.entrySet().iterator(); clauseIterator.hasNext(); )
         {
             String inline = "false";
 
             // always start with a fresh *modifiable* collection for each unique clause
-            Collection<Artifact> filteredDependencies = new LinkedHashSet<Artifact>( availableDependencies );
+            Collection<Artifact> filteredDependencies = new LinkedHashSet<>( availableDependencies );
 
             // CLAUSE: REGEXP --> { ATTRIBUTE MAP }
             Map.Entry<String,Attrs> clause = clauseIterator.next();

@@ -43,7 +43,7 @@ public class VersionCleanerPlugin extends AbstractMojo
      * The BND instructions for the bundle.
      */
     @Parameter
-    private Map<String, String> versions = new LinkedHashMap<String, String>();
+    private Map<String, String> versions = new LinkedHashMap<>();
 
     /**
      * The Maven project.

@@ -195,9 +195,9 @@ public class BundleAllPlugin extends ManifestPlugin
 
         getLog().debug( "Will bundle the following dependency tree" + LS + dependencyTree );
 
-        Deque<DependencyNode> stack = new ArrayDeque<DependencyNode>();
+        Deque<DependencyNode> stack = new ArrayDeque<>();
         stack.push(dependencyTree);
-        Set<DependencyNode> visited = new HashSet<DependencyNode>();
+        Set<DependencyNode> visited = new HashSet<>();
         while (!stack.isEmpty())
         {
             DependencyNode node = stack.pop();

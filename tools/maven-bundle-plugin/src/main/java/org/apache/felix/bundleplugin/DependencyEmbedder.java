@@ -67,8 +67,8 @@ public final class DependencyEmbedder extends AbstractDependencyFilter
     {
         super( dependencyArtifacts );
 
-        m_inlinedPaths = new LinkedHashSet<String>();
-        m_embeddedArtifacts = new LinkedHashSet<Artifact>();
+        m_inlinedPaths = new LinkedHashSet<>();
+        m_embeddedArtifacts = new LinkedHashSet<>();
     }
 
     public void processHeaders( Analyzer analyzer ) throws MojoExecutionException
