@@ -21,7 +21,7 @@ package org.apache.felix.bundleplugin.baseline;
 final class DiffMessage
 {
 
-    public enum Type { error, warning, info };
+    public enum Type { error, warning, info }
 
     private final String message;
 
