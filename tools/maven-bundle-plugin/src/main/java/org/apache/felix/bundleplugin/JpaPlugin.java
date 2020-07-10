@@ -134,7 +134,7 @@ System.err.println("Output: " + set.toString());
 
     public Set<String> analyze( InputStream in ) throws Exception
     {
-        Set<String> refers = new LinkedHashSet<String>();
+        Set<String> refers = new LinkedHashSet<>();
         ByteArrayOutputStream bout = new ByteArrayOutputStream();
         javax.xml.transform.Result r = new StreamResult( bout );
         javax.xml.transform.Source s = new StreamSource( in );

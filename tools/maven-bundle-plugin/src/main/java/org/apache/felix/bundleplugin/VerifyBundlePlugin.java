@@ -117,7 +117,7 @@ public final class VerifyBundlePlugin
     private Set<String> checkPackages()
         throws MojoExecutionException
     {
-        Set<String> packagesNotFound = new TreeSet<String>();
+        Set<String> packagesNotFound = new TreeSet<>();
 
         File bundle = project.getArtifact().getFile();
         JarInputStream input = null;

@@ -96,7 +96,7 @@ public final class ObrIndex extends AbstractMojo
             log.info( "OBR xml:      " + repositoryXml );
             log.info( "URL template: " + urlTemplate );
 
-            List<File> files = new ArrayList<File>();
+            List<File> files = new ArrayList<>();
             findAllJars( new File( repo ), files );
 
             DataModelHelperImpl dmh = new DataModelHelperImpl();
@@ -242,7 +242,7 @@ public final class ObrIndex extends AbstractMojo
 
     private void findAllJars( File mainRoot, List<File> files )
     {
-        List<File> roots = new ArrayList<File>();
+        List<File> roots = new ArrayList<>();
         roots.add( mainRoot );
         while ( !roots.isEmpty() )
         {

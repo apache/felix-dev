@@ -60,7 +60,7 @@ public class ManifestWriter {
             '\r', '\n', ' '
     };
 
-    static Set<String> NICE_HEADERS = new HashSet<String>(
+    static Set<String> NICE_HEADERS = new HashSet<>(
             Arrays.asList(
                     Constants.IMPORT_PACKAGE,
                     Constants.DYNAMICIMPORT_PACKAGE,
@@ -86,7 +86,7 @@ public class ManifestWriter {
         writeEntry(out, "Manifest-Version", "1.0", nice);
         attributes(manifest.getMainAttributes(), out, nice);
 
-        TreeSet<String> keys = new TreeSet<String>();
+        TreeSet<String> keys = new TreeSet<>();
         for (Object o : manifest.getEntries().keySet())
             keys.add(o.toString());
 
@@ -184,7 +184,7 @@ public class ManifestWriter {
      *             when something fails
      */
     private static void attributes(Attributes value, OutputStream out, boolean nice) throws IOException {
-        TreeMap<String,String> map = new TreeMap<String,String>(String.CASE_INSENSITIVE_ORDER);
+        TreeMap<String,String> map = new TreeMap<>(String.CASE_INSENSITIVE_ORDER);
         for (Map.Entry<Object,Object> entry : value.entrySet()) {
             map.put(entry.getKey().toString(), entry.getValue().toString());
         }

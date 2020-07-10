@@ -43,7 +43,7 @@ public final class DependencyExcluder extends AbstractDependencyFilter
     {
         super( dependencyArtifacts );
 
-        m_excludedArtifacts = new HashSet<Artifact>();
+        m_excludedArtifacts = new HashSet<>();
     }
 
 
