@@ -66,8 +66,7 @@ public final class ObrDeployFile extends AbstractFileMojo
      * Project types which this plugin supports.
      */
     @Parameter
-    private List supportedProjectTypes = Arrays.asList( new String[]
-        { "jar", "bundle" } );
+    private List supportedProjectTypes = Arrays.asList("jar", "bundle");
 
     /**
      * Remote repository id, used to lookup authentication settings.
