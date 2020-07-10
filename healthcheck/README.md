@@ -275,6 +275,8 @@ Property    | Type     | Default | Description
 `registerUnhealthyMarkerService` | boolean | false | For the case a given tag/name is **un**healthy, will register a service `org.apache.felix.hc.api.condition.Unhealthy` with property tag=<tagname> (or name=<hc.name>) that other services can depend on
 `treatWarnAsHealthy` | boolean | true | `WARN` usually means [the system is usable](#semantic-meaning-of-health-check-results), hence WARN is treated as healthy by default. When set to false `WARN` is treated as `Unhealthy`
 `sendEvents` | enum `NONE`, `STATUS_CHANGES` or `ALL` | `STATUS_CHANGES` | Whether to send events for health check status changes. See [below](#osgi-events-for-health-check-status-changes) for details.
+`logResults` | enum `NONE`, `STATUS_CHANGES` or `ALL` | `NONE ` | Whether to log the result of the monitor to the regular log file
+`isDynamic` | boolean | false | In dynamic mode all checks for names/tags are monitored individually (this means events are sent/services registered for name only, never for given tags). This mode allows to use `*` in tags to query for all health checks in system. It is also possible to query for all except certain tags by using `-`, e.g. by configuring the values `*`, `-tag1` and `-tag2` for `tags`.
 
 ### Marker Service to depend on a health status in SCR Components
 
