@@ -464,17 +464,13 @@ public class BundleAllPlugin extends ManifestPlugin
             {
                 buildDirectory.mkdirs();
             }
-            File[] files = buildDirectory.listFiles( new FilenameFilter()
-            {
-                public boolean accept( File dir, String name )
-                {
-                    if ( dir.equals( buildDirectory ) && snapshotMatch( artifact, name ) )
-                    {
-                        return true;
-                    }
-                    return false;
-                }
-            } );
+            File[] files = buildDirectory.listFiles( (FilenameFilter) (dir, name) -> {
+			    if ( dir.equals( buildDirectory ) && snapshotMatch( artifact, name ) )
+			    {
+			        return true;
+			    }
+			    return false;
+			} );
             if ( files.length > 1 )
             {
                 throw new RuntimeException( "More than one previously built bundle matches for artifact " + artifact

@@ -231,13 +231,7 @@ public final class ObrIndex extends AbstractMojo
     }
 
 
-    private final FileFilter filter = new FileFilter()
-    {
-        public boolean accept( File pathname )
-        {
-            return pathname.getName().endsWith( "ar" );
-        }
-    };
+    private final FileFilter filter = pathname -> pathname.getName().endsWith( "ar" );
 
 
     private void findAllJars( File mainRoot, List<File> files )
