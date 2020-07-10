@@ -28,7 +28,7 @@
     </parent>
 
     <artifactId>org.apache.felix.healthcheck.api</artifactId>
-    <version>2.0.4</version>
+    <version>2.0.5-SNAPSHOT</version>
 
     <name>Apache Felix Health Check API</name>
     <inceptionYear>2013</inceptionYear>
@@ -41,7 +41,7 @@
         <connection>scm:git:https://github.com/apache/felix-dev.git</connection>
         <developerConnection>scm:git:https://github.com/apache/felix-dev.git</developerConnection>
         <url>https://gitbox.apache.org/repos/asf?p=felix-dev.git</url>
-      <tag>org.apache.felix.healthcheck.api-2.0.4</tag>
+      <tag>HEAD</tag>
   </scm>
 
 
