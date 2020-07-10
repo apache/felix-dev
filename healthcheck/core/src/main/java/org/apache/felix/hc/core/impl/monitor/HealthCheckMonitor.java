@@ -186,7 +186,7 @@ public class HealthCheckMonitor implements Runnable {
             throw new IllegalArgumentException("Either cronExpression or intervalInSec needs to be set");
         }
         monitorJob.schedule();
-        LOG.info("HealthCheckMonitor active for tags {} and names {} (isDynamic={})", this.tags, this.names, this.isDynamic);
+        LOG.info("Monitor active for tags {} and names {} (isDynamic={})", this.tags, this.names, this.isDynamic);
     }
     
     private void initHealthStates() throws InvalidSyntaxException {
@@ -226,7 +226,7 @@ public class HealthCheckMonitor implements Runnable {
         healthStates.values().stream().forEach(HealthState::cleanUp);
         healthStates.clear();
         monitorJob.unschedule();
-        LOG.info("HealthCheckMonitor deactivated for tags {} and names {}", this.tags, this.names);
+        LOG.info("Monitor deactivated for tags {} and names {}", this.tags, this.names);
     }
 
     public void updateHealthStatesMap() {
@@ -270,9 +270,9 @@ public class HealthCheckMonitor implements Runnable {
                 }
                 
 
-                LOG.trace("HealthCheckMonitor: updated {} health states for tags {} and names {}", healthStates.size(), this.tags, this.names);
+                LOG.debug("Updated {} health states for tags {} and names {}", healthStates.size(), this.tags, this.names);
             } catch (Exception e) {
-                LOG.error("Exception HealthCheckMonitor run(): " + e, e);
+                LOG.error("Exception during execution of checks in HealthCheckMonitor: " + e, e);
             } 
         });
     }
