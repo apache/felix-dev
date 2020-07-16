@@ -15,3 +15,5 @@ maven-eclipse.xml
 *~
 dependency-reduced-pom.xml
 .DS_Store
+/.metadata/
+/workspace/
