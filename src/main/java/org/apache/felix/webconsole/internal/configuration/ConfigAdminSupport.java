@@ -241,7 +241,8 @@ class ConfigAdminSupport
                         }
                         catch ( NumberFormatException nfe )
                         {
-                            // don't care
+                            // the value is put as a string, for example this could be a placeholder etc
+                            props.put( propName, prop);
                         }
                     }
                 }
@@ -249,6 +250,7 @@ class ConfigAdminSupport
                 {
                     // array or vector of any type
                     Vector<Object> vec = new Vector<>();
+                    boolean formatError = false;
 
                     String[] properties = request.getParameterValues( paramName );
                     if ( properties != null )
@@ -267,10 +269,23 @@ class ConfigAdminSupport
                                 }
                                 catch ( NumberFormatException nfe )
                                 {
-                                    // don't care
+                                    // the value is put as a string, for example this could be a placeholder etc
+                                    vec.add( properties[i] );
+                                    formatError = true;
                                 }
                             }
                         }
+                    }
+
+                    // if a format error occurred revert to String!
+                    if ( formatError )
+                    {
+                        Vector<Object> newVec = new Vector<Object>();
+                        for(final Object v : vec)
+                        {
+                            newVec.add(v.toString());
+                        }
+                        vec = newVec;
                     }
 
                     // but ensure size (check for positive value since
@@ -296,7 +311,7 @@ class ConfigAdminSupport
                     else
                     {
                         // convert to an array
-                        props.put( propName, MetaTypeSupport.toArray( attributeType, vec ) );
+                        props.put( propName, MetaTypeSupport.toArray( formatError ? AttributeDefinition.STRING : attributeType, vec ) );
                     }
                 }
             }
