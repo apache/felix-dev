@@ -334,7 +334,7 @@ class MetaTypeSupport
     }
 
 
-    static final Object toArray( int type, Vector values )
+    static final Object toArray( int type, Vector<Object> values )
     {
         int size = values.size();
 
