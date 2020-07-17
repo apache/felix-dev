@@ -32,10 +32,10 @@
 
 	<properties>
 	    <felix.java.version>8</felix.java.version>
-		<pax.exam.version>4.11.0</pax.exam.version>
+		<pax.exam.version>4.13.1</pax.exam.version>
 		<pax.url.aether.version>2.6.2</pax.url.aether.version>
 		<http.servlet.api.version>1.1.2</http.servlet.api.version>
-		<http.jetty.version>4.0.17-SNAPSHOT</http.jetty.version>
+		<http.jetty.version>4.0.19-SNAPSHOT</http.jetty.version>
 	</properties>
 
     <build>
@@ -52,11 +52,11 @@
             </plugin>  
         </plugins>
     </build>
-	<dependencies>
-		<dependency>
-			<groupId>org.osgi</groupId>
-			<artifactId>osgi.core</artifactId>
-		</dependency>
+        <dependencies>
+            <dependency>
+            <groupId>org.osgi</groupId>
+            <artifactId>osgi.core</artifactId>
+        </dependency>
         <dependency>
             <groupId>org.osgi</groupId>
             <artifactId>org.osgi.service.cm</artifactId>
@@ -87,11 +87,11 @@
             <version>1.0.0</version>
             <scope>provided</scope>
         </dependency>
-		<dependency>
-			<groupId>org.apache.felix</groupId>
-			<artifactId>org.apache.felix.http.servlet-api</artifactId>
-			<version>${http.servlet.api.version}</version>
-		</dependency>
+        <dependency>
+            <groupId>org.apache.felix</groupId>
+            <artifactId>org.apache.felix.http.servlet-api</artifactId>
+            <version>${http.servlet.api.version}</version>
+        </dependency>
         <dependency>
             <groupId>org.osgi</groupId>
             <artifactId>org.osgi.service.http</artifactId>
@@ -104,11 +104,11 @@
             <version>1.1.0</version>
             <scope>provided</scope>
         </dependency>
-		<dependency>
-			<groupId>org.apache.felix</groupId>
-			<artifactId>org.apache.felix.http.jetty</artifactId>
-			<version>${http.jetty.version}</version>
-		</dependency>
+        <dependency>
+            <groupId>org.apache.felix</groupId>
+            <artifactId>org.apache.felix.http.jetty</artifactId>
+            <version>${http.jetty.version}</version>
+        </dependency>
         <dependency>
             <groupId>org.ops4j.pax.exam</groupId>
             <artifactId>pax-exam-container-forked</artifactId>
@@ -140,17 +140,17 @@
             <version>${pax.url.aether.version}</version>
             <scope>test</scope>
         </dependency>
-		<dependency>
-			<groupId>javax.inject</groupId>
-			<artifactId>javax.inject</artifactId>
-			<version>1</version>
-			<scope>test</scope>
-		</dependency>
-		<dependency>
-			<groupId>org.apache.felix</groupId>
-			<artifactId>org.apache.felix.framework</artifactId>
-			<version>5.6.4</version>
-			<scope>test</scope>
-		</dependency>
-	</dependencies>
+        <dependency>
+            <groupId>javax.inject</groupId>
+            <artifactId>javax.inject</artifactId>
+            <version>1</version>
+            <scope>test</scope>
+        </dependency>
+        <dependency>
+            <groupId>org.apache.felix</groupId>
+            <artifactId>org.apache.felix.framework</artifactId>
+            <version>6.0.3</version>
+            <scope>test</scope>
+        </dependency>
+    </dependencies>
 </project>
