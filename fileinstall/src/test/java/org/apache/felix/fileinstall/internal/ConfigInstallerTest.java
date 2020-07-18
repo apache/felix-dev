@@ -359,7 +359,7 @@ public class ConfigInstallerTest extends TestCase {
                 .andReturn(cachingPersistenceConfiguration)
                 .anyTimes();
 
-        EasyMock.expect(mockConfigurationAdmin.getConfiguration(pid))
+        EasyMock.expect(mockConfigurationAdmin.getConfiguration(pid, null))
                 .andReturn(cachingPersistenceConfiguration)
                 .anyTimes();
 
