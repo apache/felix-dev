@@ -33,13 +33,14 @@
     <description>
         Implementation of the OSGi Configurator Service Specification 1.0
     </description>
-    <version>1.0.11-SNAPSHOT</version>
+    <version>1.0.12</version>
 
     <scm>
         <connection>scm:git:https://github.com/apache/felix-dev.git</connection>
         <developerConnection>scm:git:https://github.com/apache/felix-dev.git</developerConnection>
         <url>https://gitbox.apache.org/repos/asf?p=felix-dev.git</url>
-    </scm>
+      <tag>org.apache.felix.configurator-1.0.12</tag>
+  </scm>
 
     <properties>
         <felix.java.version>8</felix.java.version>
