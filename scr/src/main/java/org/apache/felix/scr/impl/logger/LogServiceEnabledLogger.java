@@ -58,7 +58,7 @@ abstract class LogServiceEnabledLogger extends AbstractLogger
             else
             {
                 this.currentLogger = new OSGiLogger(
-                    factory.getLogger(bundle, null, Logger.class));
+                    factory.getLogger(bundle, Logger.ROOT_LOGGER_NAME, Logger.class));
             }
             this.trackingCount = this.loggingFactoryTracker.getTrackingCount();
         }
