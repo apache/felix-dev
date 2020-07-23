@@ -199,7 +199,7 @@ public class BundleComponentActivator implements ComponentActivator
     throws ComponentException
     {
         // create a logger on behalf of the bundle
-        this.logger = new BundleLogger(context.getBundle(), scrLogger);
+        this.logger = scrLogger.bundle(context.getBundle());
         // keep the parameters for later
         m_componentRegistry = componentRegistry;
         m_componentActor = componentActor;
@@ -432,7 +432,7 @@ public class BundleComponentActivator implements ComponentActivator
 
     void validateAndRegister(ComponentMetadata metadata)
     {
-        final ComponentLogger componentLogger = new ComponentLogger(metadata, logger);
+        final ComponentLogger componentLogger = logger.component(m_bundle, metadata.getImplementationClassName(), metadata.getName());
         ComponentRegistryKey key = null;
         try
         {

@@ -18,83 +18,14 @@
  */
 package org.apache.felix.scr.impl.logger;
 
-import org.apache.felix.scr.impl.logger.InternalLogger.Level;
 import org.osgi.framework.Bundle;
-import org.osgi.service.log.Logger;
-import org.osgi.service.log.LoggerFactory;
 
 /**
  * The {@code BundleLogger} defines a simple API to enable some logging on behalf of
  * an extended bundle. This avoids that all clients doing logging on behalf of
  * a component bundle need to pass in things like {@code BundleContext}.
  */
-public class BundleLogger extends LogServiceEnabledLogger
-{
-    private final ScrLogger parent;
+public interface BundleLogger  extends InternalLogger  {
 
-    public BundleLogger(final Bundle bundle, final ScrLogger parent)
-    {
-        super(bundle, parent.getLoggerFactoryTracker());
-        this.parent = parent;
-    }
-
-    @Override
-    InternalLogger getDefaultLogger()
-    {
-        return new InternalLogger()
-        {
-
-            @Override
-            public void log(final Level level, final String message,
-                final Throwable ex)
-            {
-                parent.getLogger().log(level, message, ex);
-            }
-
-            @Override
-            public boolean isLogEnabled(final Level level)
-            {
-                return parent.getLogger().isLogEnabled(level);
-            }
-        };
-    }
-
-    int getTrackingCount()
-    {
-        return trackingCount;
-    }
-
-    InternalLogger getLogger(final String className)
-    {
-        if ( className != null )
-        {
-            final LoggerFactory factory = this.loggingFactoryTracker.getService();
-            if (factory != null)
-            {
-                return new OSGiLogger(factory.getLogger(bundle, className, Logger.class));
-            }
-        }
-        return this.getLogger();
-    }
-
-    @Override
-    public boolean log(final Level level, final String pattern, final Throwable ex,
-        final Object... arguments)
-    {
-        // delegate to parent if not logging
-        if ( !super.log(level, pattern, ex, arguments) ) {
-            return this.parent.log(level, pattern, ex, arguments);
-        }
-        return false;
-    }
-
-    @Override
-    public boolean log(final Level level, final String message, final Throwable ex)
-    {
-        // delegate to parent if not logging
-        if ( !super.log(level, message, ex) ) {
-            return this.parent.log(level, message, ex);
-        }
-        return false;
-    }
+	ComponentLogger component(Bundle m_bundle, String implementationClassName, String name);
 }

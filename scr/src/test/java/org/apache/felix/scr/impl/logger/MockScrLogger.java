@@ -18,72 +18,31 @@
  */
 package org.apache.felix.scr.impl.logger;
 
+import org.osgi.framework.Bundle;
 
-import org.apache.felix.scr.impl.MockBundle;
-import org.apache.felix.scr.impl.MockBundleContext;
-import org.apache.felix.scr.impl.logger.InternalLogger.Level;
-import org.apache.felix.scr.impl.manager.ScrConfiguration;
-
-
-public class MockScrLogger extends ScrLogger
+public class MockScrLogger implements ScrLogger
 {
-    public MockScrLogger()
-    {
-        super(new ScrConfiguration()
-        {
+	@Override
+	public void log(Level level, String message, Throwable ex) {		
+	}
 
-            @Override
-            public long stopTimeout()
-            {
-                return 0;
-            }
+	@Override
+	public void log(Level level, String message, Throwable ex, Object... args) {
+		
+	}
 
-            @Override
-            public long lockTimeout()
-            {
-                return 0;
-            }
+	@Override
+	public boolean isLogEnabled(Level level) {
+		return true;
+	}
 
-            @Override
-            public boolean keepInstances()
-            {
-                return false;
-            }
+	@Override
+	public BundleLogger bundle(Bundle bundle) {
+		return new MockBundleLogger();
+	}
 
-            @Override
-            public boolean isFactoryEnabled()
-            {
-                return false;
-            }
+	@Override
+	public void close() {
+	}
 
-            @Override
-            public boolean infoAsService()
-            {
-                return false;
-            }
-
-            @Override
-            public long serviceChangecountTimeout()
-            {
-                return 0;
-            }
-
-            @Override
-            public Level getLogLevel()
-            {
-                return Level.ERROR;
-            }
-
-            @Override
-            public boolean globalExtender() {
-                return false;
-            }
-
-            @Override
-            public boolean cacheMetadata()
-            {
-                return false;
-            }
-        }, new MockBundleContext(new MockBundle()));
-    }
 }

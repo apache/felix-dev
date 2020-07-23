@@ -43,6 +43,7 @@ import java.util.concurrent.locks.ReentrantLock;
 import org.apache.felix.scr.impl.config.ScrConfigurationImpl;
 import org.apache.felix.scr.impl.inject.internal.ClassUtils;
 import org.apache.felix.scr.impl.logger.InternalLogger.Level;
+import org.apache.felix.scr.impl.logger.ScrLogManager;
 import org.apache.felix.scr.impl.logger.ScrLogger;
 import org.apache.felix.scr.impl.manager.ComponentHolder;
 import org.apache.felix.scr.impl.metadata.ComponentMetadata;
@@ -115,7 +116,7 @@ public class Activator extends AbstractExtender
         m_context = context;
         m_bundle = context.getBundle();
         // require the log service
-        logger = new ScrLogger(m_configuration, m_context);
+        logger = ScrLogManager.scr(context, m_configuration);
         // set bundle context for PackageAdmin tracker
         ClassUtils.setBundleContext( context );
         // get the configuration
@@ -208,7 +209,7 @@ public class Activator extends AbstractExtender
         super.stop( context );
         m_configuration.stop();
         store(m_componentMetadataStore, context, logger, m_configuration.cacheMetadata());
-        logger.closeTracker();
+        logger.close();
     }
 
     @Override
