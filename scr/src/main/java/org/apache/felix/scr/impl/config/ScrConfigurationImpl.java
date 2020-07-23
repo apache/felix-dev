@@ -82,6 +82,7 @@ public class ScrConfigurationImpl implements ScrConfiguration
     private boolean infoAsService;
 
     private boolean cacheMetadata;
+    private boolean logExtension;
 
     private long lockTimeout = DEFAULT_LOCK_TIMEOUT_MILLISECONDS;
 
@@ -178,6 +179,7 @@ public class ScrConfigurationImpl implements ScrConfiguration
                         serviceChangecountTimeout = DEFAULT_SERVICE_CHANGECOUNT_TIMEOUT_MILLISECONDS;
                         newGlobalExtender = false;
                         cacheMetadata = false;
+                        logExtension = false;
                     }
                     else
                     {
@@ -190,6 +192,7 @@ public class ScrConfigurationImpl implements ScrConfiguration
                         serviceChangecountTimeout = getServiceChangecountTimeout();
                         newGlobalExtender = getDefaultGlobalExtender();
                         cacheMetadata = getDefaultCacheMetadata();
+                        logExtension = getDefaultLogExtension();
                     }
                 }
                 else
@@ -224,7 +227,7 @@ public class ScrConfigurationImpl implements ScrConfiguration
         }
     }
 
-    /**
+	/**
      * Returns the current log level.
      * Note that this log level is not used with an R7 LogService implementation.
      * @return
@@ -249,7 +252,8 @@ public class ScrConfigurationImpl implements ScrConfiguration
         return keepInstances;
     }
 
-    @Override
+    @SuppressWarnings("deprecation")
+	@Override
     public boolean infoAsService()
     {
         return infoAsService;
@@ -402,4 +406,14 @@ public class ScrConfigurationImpl implements ScrConfiguration
         // default log level (errors only)
         return Level.ERROR;
     }
+
+	@Override
+	public boolean isLogExtension() {
+		return logExtension;
+	}
+
+    private boolean getDefaultLogExtension() {
+        return VALUE_TRUE.equalsIgnoreCase( bundleContext.getProperty( PROP_LOG_EXTENSION) );
+	}
+
 }

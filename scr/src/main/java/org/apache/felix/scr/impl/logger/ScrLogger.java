@@ -16,43 +16,23 @@
  * specific language governing permissions and limitations
  * under the License.
  */
+
 package org.apache.felix.scr.impl.logger;
 
-import org.apache.felix.scr.impl.manager.ScrConfiguration;
-import org.osgi.framework.BundleContext;
-import org.osgi.service.log.LoggerFactory;
-import org.osgi.util.tracker.ServiceTracker;
+import org.osgi.framework.Bundle;
 
 /**
- * This is the "global" logger used by the implementation for all logging
- * not directly related to an extended bundle (and its components)
+ * Logger used by SCR main code
  */
-public class ScrLogger extends LogServiceEnabledLogger
-{
-    private final ScrConfiguration config;
-    public ScrLogger(final ScrConfiguration config, BundleContext context)
-    {
-        super(context.getBundle(), getTracker(context));
-        this.config = config;
-    }
+public interface ScrLogger extends InternalLogger {
 
-    @Override
-    InternalLogger getDefaultLogger()
-    {
-        return new StdOutLogger(config);
-    }
+	/**
+	 * Create a bundle logger
+	 */
+	BundleLogger bundle(Bundle bundle);
 
-    private static ServiceTracker<LoggerFactory, LoggerFactory> getTracker(
-        BundleContext context)
-    {
-        ServiceTracker<LoggerFactory, LoggerFactory> tracker = new ServiceTracker<>(
-            context, "org.osgi.service.log.LoggerFactory", null);
-        tracker.open();
-        return tracker;
-    }
-
-    public void closeTracker()
-    {
-        getLoggerFactoryTracker().close();
-    }
+	/**
+	 * Close the log manager
+	 */
+	void close();
 }

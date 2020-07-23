@@ -21,18 +21,11 @@ package org.apache.felix.scr.impl.logger;
 
 import java.text.MessageFormat;
 
-import org.apache.felix.scr.impl.MockBundle;
-import org.apache.felix.scr.impl.logger.InternalLogger.Level;
+import org.osgi.framework.Bundle;
 
 
-public class MockBundleLogger extends BundleLogger
+public class MockBundleLogger implements BundleLogger
 {
-    public MockBundleLogger()
-    {
-        super(new MockBundle(), new MockScrLogger());
-    }
-
-
     private String lastMessage;
 
 
@@ -43,22 +36,20 @@ public class MockBundleLogger extends BundleLogger
     }
 
     @Override
-    public boolean log(final Level level, final String pattern, final Throwable ex,
+    public void log(final Level level, final String pattern, final Throwable ex,
         final Object... arguments)
     {
         if ( isLogEnabled( level ) )
         {
             log( level,  MessageFormat.format( pattern, arguments ), ex );
         }
-        return true;
     }
 
 
     @Override
-    public boolean log(final Level level, final String message, final Throwable ex)
+    public void log(final Level level, final String message, final Throwable ex)
     {
         lastMessage = message;
-        return true;
     }
 
 
@@ -66,4 +57,10 @@ public class MockBundleLogger extends BundleLogger
     {
         return lastMessage != null && lastMessage.indexOf( value ) >= 0;
     }
+
+	@Override
+	public ComponentLogger component(Bundle m_bundle, String implementationClassName, String name) {
+		return new MockComponentLogger();
+	}
+
 }

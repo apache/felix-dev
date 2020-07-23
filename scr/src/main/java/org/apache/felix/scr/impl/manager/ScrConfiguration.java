@@ -64,12 +64,17 @@ public interface ScrConfiguration
     long DEFAULT_STOP_TIMEOUT_MILLISECONDS = 60000;
 
     String PROP_LOGLEVEL = "ds.loglevel";
+    /**
+     * See {@link #isLogExtension()}
+     */
+    String PROP_LOG_EXTENSION = "ds.log.extension";
 
     String PROP_GLOBAL_EXTENDER="ds.global.extender";
 
     String PROP_SERVICE_CHANGECOUNT_TIMEOUT = "ds.service.changecount.timeout";
 
     String PROP_CACHE_METADATA = "ds.cache.metadata";
+    
 
     /**
      * Returns the current log level.
@@ -101,5 +106,12 @@ public interface ScrConfiguration
     long serviceChangecountTimeout();
 
     boolean cacheMetadata();
+
+
+    /**
+     * If true, use a logging extension. The extension can be incompatible with the OSGi specification.
+     * @return true if extension allowed
+     */
+	boolean isLogExtension();
 
 }
