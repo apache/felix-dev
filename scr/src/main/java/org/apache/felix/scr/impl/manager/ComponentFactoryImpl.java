@@ -311,12 +311,6 @@ public int hashCode()
     }
 
     @Override
-    boolean hasInstance()
-    {
-        return false;
-    }
-
-    @Override
     protected boolean collectDependencies(ComponentContextImpl<S> componentContext)
     {
         return true;

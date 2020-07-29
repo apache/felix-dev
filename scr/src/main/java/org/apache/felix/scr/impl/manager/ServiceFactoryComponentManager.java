@@ -86,7 +86,10 @@ public class ServiceFactoryComponentManager<S> extends SingleComponentManager<S>
                 "Unset implementation object for component in deleteComponent for reason {0}",
                     null, REASONS[ reason ] );
         }
-        serviceContexts.clear();
+        synchronized (serviceContexts)
+        {
+            serviceContexts.clear();
+        }
         clearServiceProperties();
     }
 
@@ -170,15 +173,19 @@ public class ServiceFactoryComponentManager<S> extends SingleComponentManager<S>
         {
             serviceContext = serviceContexts.get( service );
         }
-        disposeImplementationObject( serviceContext, ComponentConstants.DEACTIVATION_REASON_DISPOSED );
-        synchronized ( serviceContexts )
-        {
-            serviceContexts.remove( service );
-            // if this was the last use of the component, go back to REGISTERED state
-            State previousState;
-            if ( serviceContexts.isEmpty() && (previousState = getState()) == State.active )
+        if (serviceContext != null) {
+            disposeImplementationObject( serviceContext, ComponentConstants.DEACTIVATION_REASON_DISPOSED );
+            synchronized ( serviceContexts )
             {
-                setState(previousState, State.satisfied);
+                if (serviceContexts.remove( service ) != null) {
+                    // if this was the last use of the component, go back to REGISTERED state
+                    State previousState;
+                    if (serviceContexts.isEmpty()
+                        && (previousState = getState()) == State.active)
+                    {
+                        setState(previousState, State.satisfied);
+                    }
+                }
             }
         }
     }
@@ -238,12 +245,6 @@ public class ServiceFactoryComponentManager<S> extends SingleComponentManager<S>
 
         }
         return result;
-    }
-
-    @Override
-    boolean hasInstance()
-    {
-        return !serviceContexts.isEmpty();
     }
 
     //---------- Component interface

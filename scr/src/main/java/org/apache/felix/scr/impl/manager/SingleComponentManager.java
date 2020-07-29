@@ -434,12 +434,6 @@ public class SingleComponentManager<S> extends AbstractComponentManager<S> imple
     }
 
     @Override
-    boolean hasInstance()
-    {
-        return m_componentContext != null;
-    }
-
-    @Override
     <T> void invokeBindMethod( DependencyManager<S, T> dependencyManager, RefPair<S, T> refPair, int trackingCount )
     {
         ComponentContextImpl<S> componentContext = m_componentContext;
