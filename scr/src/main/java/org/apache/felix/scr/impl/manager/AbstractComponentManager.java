@@ -1467,8 +1467,6 @@ public abstract class AbstractComponentManager<S> implements ComponentManager<S>
 
     }
 
-    abstract boolean hasInstance();
-
     public void setServiceProperties(MethodResult methodResult, Integer trackingCount)
     {
         if (methodResult.hasResult())
