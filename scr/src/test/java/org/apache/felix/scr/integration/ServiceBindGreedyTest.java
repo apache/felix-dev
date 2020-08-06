@@ -19,7 +19,13 @@
 package org.apache.felix.scr.integration;
 
 
+import java.util.Collection;
+import java.util.Collections;
+import java.util.HashSet;
 import java.util.Hashtable;
+import java.util.LinkedList;
+import java.util.List;
+import java.util.concurrent.atomic.AtomicReference;
 
 import org.apache.felix.scr.integration.components.SimpleComponent;
 import org.apache.felix.scr.integration.components.SimpleComponent2;
@@ -165,6 +171,97 @@ public class ServiceBindGreedyTest extends ComponentTestBase
         TestCase.assertTrue( comp32.m_multiRef.isEmpty() );
     }
 
+    @Test
+    public void test_optional_single_dynamic_multi_thread() throws Exception
+    {
+        final int numRanks = 1000;
+        final int ranksPerThread = 100;
+        final SimpleServiceImpl srv1 = SimpleServiceImpl.create(bundleContext, "srv1",
+            numRanks / 4);
+
+        String name = "test_optional_single_dynamic";
+        getDisabledConfigurationAndEnable(name, ComponentConfigurationDTO.ACTIVE);
+        final SimpleComponent comp = SimpleComponent.INSTANCE;
+        TestCase.assertNotNull(comp);
+        TestCase.assertEquals(srv1, comp.m_singleRef);
+        TestCase.assertTrue(comp.m_multiRef.isEmpty());
+
+        final List<Integer> ranks = Collections.synchronizedList(
+            new LinkedList<Integer>());
+        for (int i = 0; i < numRanks; i++)
+        {
+            ranks.add(i);
+        }
+        Collections.shuffle(ranks);
+
+        Collection<Thread> threads = new HashSet<>();
+        final List<SimpleServiceImpl> registrations = Collections.synchronizedList(
+            new LinkedList<SimpleServiceImpl>());
+        final AtomicReference<SimpleServiceImpl> highest = new AtomicReference<>();
+        for (int i = 0; i < numRanks; i = i + ranksPerThread)
+        {
+            final int start = i;
+            threads.add(new Thread(new Runnable()
+            {
+                public void run()
+                {
+                    for (int j = start; j < start + ranksPerThread; j++)
+                    {
+                        int rank = ranks.remove(0);
+                        SimpleServiceImpl srv = SimpleServiceImpl.create(bundleContext,
+                            "srv" + rank, rank);
+                        registrations.add(srv);
+                        if (rank == numRanks - 1)
+                        {
+                            highest.set(srv);
+                        }
+                    }
+                };
+            }));
+        }
+        for (Thread t : threads)
+        {
+            t.start();
+        }
+        for (Thread t : threads)
+        {
+            t.join();
+        }
+
+        TestCase.assertNotNull(highest.get());
+        TestCase.assertEquals(highest.get(), comp.m_singleRef);
+        TestCase.assertTrue(comp.m_multiRef.isEmpty());
+
+        threads.clear();
+        for (int i = 0; i < numRanks; i = i + ranksPerThread)
+        {
+            final int start = i;
+            threads.add(new Thread(new Runnable()
+            {
+                public void run()
+                {
+                    for (int j = start; j < start + ranksPerThread; j++)
+                    {
+                        registrations.remove(0).drop();
+                    }
+                };
+            }));
+        }
+        for (Thread t : threads)
+        {
+            t.start();
+        }
+        for (Thread t : threads)
+        {
+            t.join();
+        }
+        TestCase.assertEquals(srv1, comp.m_singleRef);
+        TestCase.assertTrue(comp.m_multiRef.isEmpty());
+
+        srv1.drop();
+        TestCase.assertEquals(null, comp.m_singleRef);
+        TestCase.assertTrue(comp.m_multiRef.isEmpty());
+    }
 
     @Test
     public void test_required_single_dynamic() throws Exception
