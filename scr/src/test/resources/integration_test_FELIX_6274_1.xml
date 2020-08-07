@@ -20,7 +20,7 @@
 <components xmlns:scr="http://www.osgi.org/xmlns/scr/v1.4.0">
 
     <scr:component name="R7LoggerComponent">
-        <implementation class="org.apache.felix.scr.integration.components.felix6274.Component" />
+        <implementation class="org.apache.felix.scr.integration.components.felix6274_1.Component" />
         <reference name="LOG" interface="org.osgi.service.log.LoggerFactory" field="logger"/>
     </scr:component>
         

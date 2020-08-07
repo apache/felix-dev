@@ -50,16 +50,16 @@ public class Felix6274Test extends ComponentTestBase
         // This test creates its own component bundles
         descriptorFile = null;
         DS_LOGLEVEL = "debug";
-        // paxRunnerVmOption = DEBUG_VM_OPTION;
+        //paxRunnerVmOption = DEBUG_VM_OPTION;
     }
 
     private final List<Bundle> installedBundles = new ArrayList<>();
-    private Bundle log_1_4_bundle;
-    private Bundle log_1_3_bundle;
+    private Bundle log_bundle1;
+    private Bundle log_bundle2;
     
     @Before
     public void installBundles() throws BundleException {
-        String log101 = mavenBundle( "org.apache.felix", "org.apache.felix.log", "1.0.1" ).getURL();
+        String log101 = mavenBundle( "org.apache.felix", "org.apache.felix.log", "1.2.2" ).getURL();
 
         // install and start the resolver hook first
         Bundle hookBundle = bundleContext.installBundle("integration.test.6274_hook", createHookBundle());
@@ -70,13 +70,13 @@ public class Felix6274Test extends ComponentTestBase
         installedBundles.add( bundleContext.installBundle( log101 ) );
 
         
-        log_1_4_bundle = bundleContext.installBundle( "integration.test.6274", 
-                createStream( "6274", "[1.4,1.5)" ) );
-        installedBundles.add( log_1_4_bundle );
+        log_bundle1 = bundleContext.installBundle("integration.test.6274_1",
+            createStream("6274_1", "[1.4,1.5)"));
+        installedBundles.add( log_bundle1 );
 
-        log_1_3_bundle = bundleContext.installBundle( "integration.test.6274_2", 
-                createStream( "6274_2", "[1.3,1.4)" ) );
-        installedBundles.add( log_1_3_bundle );
+        log_bundle2 = bundleContext.installBundle( "integration.test.6274_2", 
+            createStream("6274_2", "[1.4,1.5)"));
+        installedBundles.add( log_bundle2 );
 
         for( Bundle b : installedBundles ) {
             b.start();
@@ -134,10 +134,10 @@ public class Felix6274Test extends ComponentTestBase
 
         // Locate the components
         ComponentDescriptionDTO log_1_4_dto = scrTracker.getService().getComponentDescriptionDTO(
-                log_1_4_bundle, "R7LoggerComponent" );
+                log_bundle1, "R7LoggerComponent" );
 
         ComponentDescriptionDTO log_1_3_dto = scrTracker.getService().getComponentDescriptionDTO(
-                log_1_3_bundle, "LogServiceComponent" );
+                log_bundle2, "LogServiceComponent" );
 
         assertNotNull( "No Log 1.4 Component DTO", log_1_4_dto );
         assertNotNull( "No Log 1.3 Component DTO", log_1_3_dto );
