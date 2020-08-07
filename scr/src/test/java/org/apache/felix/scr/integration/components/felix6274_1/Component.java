@@ -16,7 +16,7 @@
  * specific language governing permissions and limitations
  * under the License.
  */
-package org.apache.felix.scr.integration.components.felix6274;
+package org.apache.felix.scr.integration.components.felix6274_1;
 
 import org.osgi.service.log.Logger;
 
