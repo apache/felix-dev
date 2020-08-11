@@ -115,13 +115,12 @@ public class Activator extends AbstractExtender
     {
         m_context = context;
         m_bundle = context.getBundle();
-        // require the log service
-        logger = ScrLogManager.scr(context, m_configuration);
         // set bundle context for PackageAdmin tracker
         ClassUtils.setBundleContext( context );
         // get the configuration
         m_configuration.start( m_context ); //this will call restart, which calls super.start.
     }
+
 
     public void restart(boolean globalExtender)
     {
@@ -651,5 +650,16 @@ public class Activator extends AbstractExtender
                 logger.log(Level.WARN, msg, t);
             }
         }
+    }
+
+    public void resetLogger()
+    {
+        // reset existing logger
+        ScrLogger existingLogger = logger;
+        if (existingLogger != null)
+        {
+            existingLogger.close();
+        }
+        logger = ScrLogManager.scr(m_context, m_configuration);
     }
 }

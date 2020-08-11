@@ -64,7 +64,7 @@ class ExtLogManager extends ScrLogManager {
 		assert componentName != null;
 
 		String loggerName = SCR_LOGGER_PREFIX.concat(bundle.getSymbolicName()).concat(".").concat(componentName);
-		ScrLoggerFacade logger = getLogger(this.bundle, loggerName, ScrLoggerFacade.class);
+		ScrLoggerFacade logger = getLogger(bundle, loggerName, ScrLoggerFacade.class);
 		logger.setPrefix("["+componentName+"]");
 		return logger;
 	}
