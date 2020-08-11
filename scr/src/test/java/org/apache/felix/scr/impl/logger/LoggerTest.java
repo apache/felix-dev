@@ -184,6 +184,7 @@ public class LoggerTest {
 		l.register();
 
 		ScrConfiguration config = mock(ScrConfiguration.class);
+		when(config.getLogLevel()).thenReturn(Level.DEBUG);
 		when(config.isLogExtension()).thenReturn(true);
 		ScrLogger logger = ScrLogManager.scr(scr.getBundleContext(), config);
 		BundleLogger bundle = logger.bundle(component);
@@ -200,6 +201,8 @@ public class LoggerTest {
 
 		ScrConfiguration config = mock(ScrConfiguration.class);
 		when(config.isLogExtension()).thenReturn(false);
+		when(config.getLogLevel()).thenReturn(Level.DEBUG);
+
 		ScrLogger logger = ScrLogManager.scr(scr.getBundleContext(), config);
 		BundleLogger bundle = logger.bundle(component);
 		bundle.log(Level.ERROR, "Ext", null);
@@ -212,17 +215,18 @@ public class LoggerTest {
 	public void testExtensionLogLevelNotLoggingWhenRootSetToInfoAndLevelIsDebug() {
 		ScrConfiguration config = mock(ScrConfiguration.class);
 		when(config.isLogExtension()).thenReturn(true);
+		when(config.getLogLevel()).thenReturn(Level.DEBUG);
 
 		LogService l = new LogService(log.getBundleContext());
 		l.register();
 		l.levels.put(Logger.ROOT_LOGGER_NAME, LogLevel.INFO);
 		l.defaultLogLevel = LogLevel.TRACE;
-		
+
 		ScrLogger lscr = ScrLogManager.scr(scr.getBundleContext(), config);
 
 		assertThat(lscr.isLogEnabled(Level.DEBUG)).isFalse();
 		assertThat(lscr.isLogEnabled(Level.INFO)).isTrue();
-		
+
 		lscr.log(Level.DEBUG, "I should not be reported", null);
 
 		assertThat(l.entries).isEmpty();
@@ -232,6 +236,7 @@ public class LoggerTest {
 	public void testExtensionLogLevelNotLoggingWhenPartialNameSetToInfoAndLevelIsDebug() {
 		ScrConfiguration config = mock(ScrConfiguration.class);
 		when(config.isLogExtension()).thenReturn(true);
+		when(config.getLogLevel()).thenReturn(Level.DEBUG);
 
 		LogService l = new LogService(log.getBundleContext());
 		l.defaultLogLevel = LogLevel.TRACE;
@@ -242,17 +247,17 @@ public class LoggerTest {
 
 		assertThat(lscr.isLogEnabled(Level.DEBUG)).isFalse();
 		assertThat(lscr.isLogEnabled(Level.INFO)).isTrue();
-		
+
 		lscr.log(Level.DEBUG, "I should not be reported", null);
 
 		assertThat(l.entries).isEmpty();
 	}
 
-
 	@Test
 	public void testExtensionLogManager() {
 		ScrConfiguration config = mock(ScrConfiguration.class);
 		when(config.isLogExtension()).thenReturn(true);
+		when(config.getLogLevel()).thenReturn(Level.DEBUG);
 
 		LogService l = new LogService(log.getBundleContext());
 		l.register();
@@ -307,6 +312,7 @@ public class LoggerTest {
 	public void testBackwardCompatibilityOutput() {
 		ScrConfiguration config = mock(ScrConfiguration.class);
 		when(config.isLogExtension()).thenReturn(false);
+		when(config.getLogLevel()).thenReturn(Level.DEBUG);
 
 		LogService l = new LogService(log.getBundleContext());
 		l.register();
@@ -389,6 +395,33 @@ public class LoggerTest {
 	}
 
 	@Test
+	public void testPrioritiesLogService() {
+
+		LogManager lm = new LogManager(scr.getBundleContext());
+		LoggerFacade facade = lm.getLogger(scr, "lifecycle", LoggerFacade.class);
+		assertThat(facade.logger).isNull();
+
+		LogService la = new LogService(log.getBundleContext());
+		la.register();
+		Logger loggera = facade.getLogger();
+		assertThat(loggera).isNotNull();
+		assertThat(facade.logger).isEqualTo(loggera);
+		assertThat(la.loggers.get(scr)).hasSize(1);
+
+		LogService higherRanking = new LogService(log.getBundleContext()).ranking(10).register();
+
+		assertThat(facade.logger).isNull();
+
+		Logger loggerb = facade.getLogger();
+		assertThat(loggerb).isNotNull();
+		assertThat(higherRanking.loggers.get(scr)).hasSize(1);
+
+		LogService lowerRanking = new LogService(log.getBundleContext()).ranking(-10).register();
+		assertThat(facade.logger).isNotNull();
+		assertThat(lowerRanking.loggers.get(scr)).isNull();
+	}
+
+	@Test
 	public void testLifeCycleOfComponentBundle() throws BundleException, InterruptedException {
 
 		ScrConfiguration config = mock(ScrConfiguration.class);
@@ -399,11 +432,11 @@ public class LoggerTest {
 		ScrLogManager lm = new ScrLogManager(scr.getBundleContext(), config);
 		lm.component(component, "implementation.class", "component");
 
-		assertThat(lm.domains).hasSize(1);
+		assertThat(lm.lock.domains).hasSize(1);
 		component.stop();
 
 		for (int i = 0; i < 100; i++) {
-			if (lm.domains.isEmpty())
+			if (lm.lock.domains.isEmpty())
 				return;
 			Thread.sleep(10);
 		}

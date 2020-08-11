@@ -29,6 +29,7 @@ import org.osgi.framework.Bundle;
 import org.osgi.framework.BundleContext;
 import org.osgi.framework.BundleEvent;
 import org.osgi.framework.BundleListener;
+import org.osgi.framework.Constants;
 import org.osgi.framework.ServiceReference;
 import org.osgi.service.log.Logger;
 import org.osgi.service.log.LoggerFactory;
@@ -44,24 +45,21 @@ import org.osgi.util.tracker.ServiceTracker;
  * The LogDomain represents every bundle. Per LogDomain, we keep the facades. If the factory goes,
  * we reset the facades.
  */
-class LogManager extends ServiceTracker<LoggerFactory, LoggerFactory> {
+class LogManager extends ServiceTracker<LoggerFactory, LoggerFactory> implements BundleListener {
 
-	// Guard is itself. Don't replace it with a ConcurrentHashMap since the
-	// LogDomain value is not stateless.
+	final BundleContext	scrContext;
+	final AtomicBoolean	closed	= new AtomicBoolean(false);
 
-	final Map<Bundle, LogDomain>	domains	= new HashMap<>();
-	final BundleContext				scrContext;
-	final AtomicBoolean				closed	= new AtomicBoolean(false);
-	volatile int					trackingCount;
-	volatile LoggerFactory			factory;
+	/*
+	 * Locks access to guarded fields
+	 */
+	class Lock {
+		final Map<Bundle, LogDomain>	domains	= new HashMap<>();
+		int								trackingCount;
+		LoggerFactory					factory;
+		int								ranking=0;
 
-	LogManager(BundleContext context) {
-		super(context, LoggerFactory.class, null);
-		this.scrContext = context;
-	}
-
-	private LogDomain getLogDomain(Bundle bundle) {
-		synchronized (domains) {
+		synchronized LogDomain getLogDomain(Bundle bundle) {
 			LogDomain domain = domains.get(bundle);
 			if (domain == null) {
 				domain = new LogDomain(bundle);
@@ -69,72 +67,115 @@ class LogManager extends ServiceTracker<LoggerFactory, LoggerFactory> {
 			}
 			return domain;
 		}
+
+		synchronized void removedFactory(LoggerFactory service) {
+			if (this.factory == service) {
+				this.factory = null;
+				reset();
+			}
+		}
+
+		synchronized void setFactory(int ranking, LoggerFactory service) {
+			if (this.factory == null) {
+				this.factory = service;
+				this.ranking = ranking;
+			} else if (this.ranking < ranking) {
+				this.factory = service;
+				this.ranking = ranking;
+				reset();
+			}
+		}
+
+		synchronized void reset() {
+			for (LogDomain domain : domains.values()) {
+				domain.reset();
+			}
+		}
+
+		synchronized Logger getLogger(LoggerFacade facade, Bundle bundle, String name) {
+			if (factory == null)
+				return facade.logger = null;
+			else
+				return facade.logger = factory.getLogger(bundle, name, Logger.class);
+		}
+
+		synchronized LogDomain remove(Bundle bundle) {
+			return domains.remove(bundle);
+		}
+
+		synchronized void close() {
+			reset();
+			domains.clear();
+		}
+
+	}
+
+	final Lock lock = new Lock();
+
+	LogManager(BundleContext context) {
+		super(context, LoggerFactory.class, null);
+		this.scrContext = context;
+		scrContext.addBundleListener(this);
+	}
+
+	@Override
+	public LoggerFactory addingService(ServiceReference<LoggerFactory> reference) {
+		LoggerFactory service = super.addingService(reference);
+		Integer ranking = (Integer) reference.getProperty(Constants.SERVICE_RANKING);
+		if (ranking == null)
+			ranking = 0;
+		lock.setFactory(ranking, service);
+		return service;
 	}
 
 	@Override
 	public void removedService(ServiceReference<LoggerFactory> reference, LoggerFactory service) {
-		if (!closed.get()) {
-			reset();
-		}
-	}
-
-	private void reset() {
-		for (LogDomain domain : domains.values()) {
-			domain.reset();
-		}
+		super.removedService(reference, service);
+		lock.removedFactory(service);
 	}
 
 	<T> T getLogger(Bundle bundle, String name, Class<T> type) {
-		return type.cast(getLogDomain(bundle).getLogger(name));
+		return type.cast(lock.getLogDomain(bundle).getLogger(name));
 	}
 
-	LoggerFactory getLoggerFactory() {
-		int trackingCount = getTrackingCount();
-		if (this.trackingCount < trackingCount) {
-			this.trackingCount = trackingCount;
-			factory = getService();
+	@SuppressWarnings("resource")
+	@Override
+	public void bundleChanged(BundleEvent event) {
+		if (event.getType() == BundleEvent.STOPPED && !closed.get()) {
+			LogDomain domain = lock.remove(event.getBundle());
+			if (domain != null) {
+				domain.close();
+			}
 		}
-		return factory;
 	}
 
 	/*
 	 * Tracks a bundle's LoggerFactory service
 	 */
 	class LogDomain
-			implements Closeable, BundleListener {
+			implements Closeable {
 
 		private final Bundle			bundle;
 		private final Set<LoggerFacade>	facades	= new HashSet<>();
 
 		LogDomain(Bundle bundle) {
 			this.bundle = bundle;
-			scrContext.addBundleListener(this);
 			open();
 		}
 
-		void reset() {
-			for (LoggerFacade facade : facades) {
-				facade.reset();
-			}
-		}
-
-		@SuppressWarnings("resource")
-		@Override
-		public void bundleChanged(BundleEvent event) {
-			if (event.getBundle() == bundle && event.getType() == BundleEvent.STOPPED && !closed.get()) {
-				scrContext.removeBundleListener(this);
-				LogDomain remove;
-				synchronized (domains) {
-					remove = domains.remove(bundle);
+		private void reset() {
+			synchronized (facades) {
+				for (LoggerFacade facade : facades) {
+					facade.reset();
 				}
-				if (remove != null)
-					remove.close();
 			}
 		}
 
 		LoggerFacade getLogger(String name) {
 			LoggerFacade facade = createLoggerFacade(this, name);
-			facades.add(facade);
+			synchronized (facades) {
+				facades.add(facade);
+			}
 			return facade;
 		}
 
@@ -163,11 +204,7 @@ class LogManager extends ServiceTracker<LoggerFactory, LoggerFactory> {
 		Logger getLogger() {
 			Logger l = this.logger;
 			if (l == null) {
-				LoggerFactory lf = getLoggerFactory();
-				if (lf == null)
-					return null;
-
-				l = this.logger = lf.getLogger(domain.bundle, name, Logger.class);
+				l = lock.getLogger(this, domain.bundle, name);
 			}
 			return l;
 		}
@@ -184,14 +221,9 @@ class LogManager extends ServiceTracker<LoggerFactory, LoggerFactory> {
 
 	public void close() {
 		if (closed.compareAndSet(false, true)) {
-			Set<LogDomain> domains;
-			synchronized (this.domains) {
-				domains = new HashSet<>(this.domains.values());
-				this.domains.clear();
-			}
-			for (LogDomain domain : domains) {
-				domain.close();
-			}
+			lock.close();
+			super.close();
+			this.context.removeBundleListener(this);
 		}
 	}
 

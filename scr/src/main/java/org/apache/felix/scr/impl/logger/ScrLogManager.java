@@ -101,7 +101,8 @@ public class ScrLogManager extends LogManager {
 	public ComponentLogger component(Bundle bundle, String implementationClass, String name) {
 
 		// assert bundle != null;
-		// assert bundle.getSymbolicName() != null : "scr requires recent bundles";
+		// assert bundle.getSymbolicName() != null : "scr requires recent
+		// bundles";
 		// assert implementationClass != null;
 		// assert name != null;
 
@@ -148,75 +149,79 @@ public class ScrLogManager extends LogManager {
 
 		@Override
 		public void log(Level level, String format, Throwable ex, Object... arguments) {
-			log(level, format(format, arguments), ex);
+			if (isLogEnabled(level))
+				log0(level, format(format, arguments), ex);
 		}
 
 		@Override
 		public void log(Level level, String message, Throwable ex) {
+			if (isLogEnabled(level))
+				log0(level, message, ex);
+		}
+
+		void log0(Level level, String message, Throwable ex) {
 			if (prefix != null && prefix.length() > 0) {
 				message = prefix.concat(" ").concat(message);
 			}
-			if (isLogEnabled(level)) {
-				Logger logger = getLogger();
-				if (logger != null) {
-					if (ex == null) {
-						switch (level) {
-						case AUDIT:
-							logger.audit(message);
-							break;
-						case ERROR:
-							logger.error(message);
-							break;
-						case WARN:
-							logger.warn(message);
-							break;
-						case INFO:
-							logger.info(message);
-							break;
-						case TRACE:
-							logger.trace(message);
-							break;
-						case DEBUG:
-						default:
-							logger.debug(message);
-						}
-					} else {
-						switch (level) {
-						case AUDIT:
-							logger.audit(message, ex);
-							break;
-						case ERROR:
-							logger.error(message, ex);
-							break;
-						case WARN:
-							logger.warn(message, ex);
-							break;
-						case INFO:
-							logger.info(message, ex);
-							break;
-						case TRACE:
-							logger.trace(message, ex);
-							break;
-						case DEBUG:
-						default:
-							logger.debug(message, ex);
-						}
+			Logger logger = getLogger();
+			if (logger != null) {
+				if (ex == null) {
+					switch (level) {
+					case AUDIT:
+						logger.audit(message);
+						break;
+					case ERROR:
+						logger.error(message);
+						break;
+					case WARN:
+						logger.warn(message);
+						break;
+					case INFO:
+						logger.info(message);
+						break;
+					case TRACE:
+						logger.trace(message);
+						break;
+					case DEBUG:
+					default:
+						logger.debug(message);
 					}
 				} else {
-					StringWriter buf = new StringWriter();
-					String l = String.format("%-5s", level);
-					buf.append(l).append(" : ").append(message);
-					if (ex != null) {
-						try (PrintWriter pw = new PrintWriter(buf)) {
-							pw.println();
-							ex.printStackTrace(pw);
-						}
+					switch (level) {
+					case AUDIT:
+						logger.audit(message, ex);
+						break;
+					case ERROR:
+						logger.error(message, ex);
+						break;
+					case WARN:
+						logger.warn(message, ex);
+						break;
+					case INFO:
+						logger.info(message, ex);
+						break;
+					case TRACE:
+						logger.trace(message, ex);
+						break;
+					case DEBUG:
+					default:
+						logger.debug(message, ex);
 					}
-
-					@SuppressWarnings("resource")
-					PrintStream out = level.err() ? System.err : System.out;
-					out.println(buf);
 				}
+			} else {
+				StringWriter buf = new StringWriter();
+				String l = String.format("%-5s", level);
+				buf.append(l).append(" : ").append(message);
+				if (ex != null) {
+					try (PrintWriter pw = new PrintWriter(buf)) {
+						pw.println();
+						ex.printStackTrace(pw);
+					}
+				}
+
+				@SuppressWarnings("resource")
+				PrintStream out = level.err() ? System.err : System.out;
+				out.println(buf);
 			}
 		}
 
