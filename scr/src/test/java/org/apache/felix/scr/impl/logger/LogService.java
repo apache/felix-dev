@@ -21,11 +21,13 @@ package org.apache.felix.scr.impl.logger;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.HashMap;
+import java.util.Hashtable;
 import java.util.List;
 import java.util.Map;
 
 import org.osgi.framework.Bundle;
 import org.osgi.framework.BundleContext;
+import org.osgi.framework.Constants;
 import org.osgi.framework.ServiceFactory;
 import org.osgi.framework.ServiceRegistration;
 import org.osgi.service.log.LogLevel;
@@ -44,6 +46,7 @@ public class LogService implements ServiceFactory<LoggerFactory> {
 	public MultiMap<Bundle, Logger>				loggers			= new MultiMap<>();
 
 	public ServiceRegistration<LoggerFactory>	registration;
+	private int ranking;
 
 	public static class LogEntry {
 
@@ -69,8 +72,11 @@ public class LogService implements ServiceFactory<LoggerFactory> {
 
 	}
 
-	public void register() {
-		registration = context.registerService(LoggerFactory.class, this, null);
+	public LogService register() {
+		Hashtable<String,Object> properties = new Hashtable<>();
+		properties.put( Constants.SERVICE_RANKING, ranking);
+		registration = context.registerService(LoggerFactory.class, this, properties);
+		return this;
 	}
 
 	public void unregister() {
@@ -332,5 +338,10 @@ public class LogService implements ServiceFactory<LoggerFactory> {
 		entries.clear();
 		factories.clear();
 		levels.clear();
+	}
+
+	public LogService ranking(int ranking) {
+		this.ranking = ranking;
+		return this;
 	}
 }
