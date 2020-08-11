@@ -230,7 +230,7 @@ public class ScrLogManager extends LogManager {
 		}
 
 		@Override
-		public ComponentLogger component(Bundle m_bundle, String implementationClassName, String name) {
+		public ComponentLogger component(Bundle bundle, String implementationClassName, String name) {
 			// assert !closed.get();
 			return ScrLogManager.this.component(bundle, implementationClassName, name);
 		}

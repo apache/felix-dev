@@ -213,6 +213,7 @@ public class ScrConfigurationImpl implements ScrConfiguration
                 newGlobalExtender = VALUE_TRUE.equalsIgnoreCase( String.valueOf( config.get( PROP_GLOBAL_EXTENDER) ) );
                 cacheMetadata = VALUE_TRUE.equalsIgnoreCase(
                     String.valueOf(config.get(PROP_CACHE_METADATA)));
+                logExtension = VALUE_TRUE.equalsIgnoreCase(String.valueOf(config.get(PROP_LOG_EXTENSION)));
             }
             if ( scrCommand != null )
             {
@@ -221,6 +222,7 @@ public class ScrConfigurationImpl implements ScrConfiguration
             oldGlobalExtender = this.globalExtender;
             this.globalExtender = newGlobalExtender;
         }
+        activator.resetLogger();
         if ( newGlobalExtender != oldGlobalExtender )
         {
             activator.restart( newGlobalExtender );
