@@ -293,7 +293,7 @@ public class LoggerTest {
 			assertThat(l.entries).hasSize(1);
 			LogEntry le = l.entries.get(0);
 			assertThat(le.format).isEqualTo("[name] Component");
-			assertThat(le.bundle).isEqualTo(scr);
+			assertThat(le.bundle).isEqualTo(component);
 			assertThat(le.loggername).isEqualTo(ExtLogManager.SCR_LOGGER_PREFIX + "component.name");
 
 			l.entries.clear();
