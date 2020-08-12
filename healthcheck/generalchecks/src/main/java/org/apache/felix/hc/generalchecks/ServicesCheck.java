@@ -116,7 +116,7 @@ public class ServicesCheck implements HealthCheck {
 
         for (String missingServiceName : missingServiceNames) {
             if (!missingServiceName.startsWith("(")) {
-                analyzer.logMissingService(log, missingServiceName, statusForMissing);
+                analyzer.logMissingService(log, missingServiceName);
             } else {
                 log.info("Service '{}' is missing", missingServiceName);
             }

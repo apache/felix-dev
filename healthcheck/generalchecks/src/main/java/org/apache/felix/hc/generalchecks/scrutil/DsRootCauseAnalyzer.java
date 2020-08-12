@@ -53,15 +53,19 @@ public class DsRootCauseAnalyzer {
         }
     }
 
-    public void logMissingService(FormattingResultLog log, String missingServiceName, Status status) {
+    public void logMissingService(FormattingResultLog log, String missingServiceName) {
         if (dsRootCauseAdapter != null) {
-            dsRootCauseAdapter.logMissingService(log, missingServiceName, status);
+            dsRootCauseAdapter.logMissingService(log, missingServiceName);
+        } else {
+            log.info("Service '{}' is missing", missingServiceName);
         }
     }
 
-    public void logNotEnabledComponent(FormattingResultLog log, ComponentDescriptionDTO desc, Status status) {
+    public void logNotEnabledComponent(FormattingResultLog log, ComponentDescriptionDTO desc) {
         if (dsRootCauseAdapter != null) {
-            dsRootCauseAdapter.logNotEnabledComponent(log, desc, status);
+            dsRootCauseAdapter.logNotEnabledComponent(log, desc);
+        } else {
+            log.info("Component '{}' is missing", desc.name);
         }
     }
 }

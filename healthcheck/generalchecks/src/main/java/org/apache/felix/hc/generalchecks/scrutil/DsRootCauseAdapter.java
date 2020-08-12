@@ -39,28 +39,25 @@ public class DsRootCauseAdapter {
         this.analyzer = new DSRootCause(scr);
     }
 
-    public void logMissingService(FormattingResultLog log, String missingServiceName, Status status) {
+    public void logMissingService(FormattingResultLog log, String missingServiceName) {
         Optional<DSComp> rootCauseOptional = analyzer.getRootCause(missingServiceName);
         if (rootCauseOptional.isPresent()) {
-            logRootCause(log, rootCauseOptional.get(), status);
+            logRootCause(log, rootCauseOptional.get());
         } else {
-            log.add(new Entry(status, "Missing service without matching DS component: " + missingServiceName));
+            log.info("Missing service without matching DS component: " + missingServiceName);
         }
     }
 
-    public void logNotEnabledComponent(FormattingResultLog log, ComponentDescriptionDTO desc, Status status) {
+    public void logNotEnabledComponent(FormattingResultLog log, ComponentDescriptionDTO desc) {
         DSComp component = analyzer.getRootCause(desc);
-        logRootCause(log, component, status);
+        logRootCause(log, component);
     }
 
-    private void logRootCause(FormattingResultLog log, DSComp component, Status status) {
+    private void logRootCause(FormattingResultLog log, DSComp component) {
         new RootCausePrinter(new Consumer<String>() {
-            private boolean firstLineLogged = false;
-
             @Override
             public void accept(String str) {
-                log.add(new Entry(!firstLineLogged ? status : Status.OK, str.replaceFirst("    ", "-- ").replaceFirst("  ", "- ")));
-                firstLineLogged = true;
+                log.add(new Entry(Status.OK, str.replaceFirst("    ", "-- ").replaceFirst("  ", "- ")));
             }
         }).print(component);
     }

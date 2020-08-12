@@ -29,7 +29,6 @@ import org.apache.felix.hc.api.FormattingResultLog;
 import org.apache.felix.hc.api.HealthCheck;
 import org.apache.felix.hc.api.Result;
 import org.apache.felix.hc.api.ResultLog.Entry;
-import org.apache.felix.hc.core.impl.util.lang.StringUtils;
 import org.apache.felix.hc.generalchecks.scrutil.DsRootCauseAnalyzer;
 import org.osgi.framework.BundleContext;
 import org.osgi.service.component.annotations.Activate;
@@ -94,10 +93,10 @@ public class DsComponentsCheck implements HealthCheck {
 
     @Override
     public Result execute() {
+        FormattingResultLog log = new FormattingResultLog();
 
         Collection<ComponentDescriptionDTO> componentDescriptionDTOs = scr.getComponentDescriptionDTOs();
         List<ComponentDescriptionDTO> watchedComps = new LinkedList<ComponentDescriptionDTO>();
-        FormattingResultLog log = new FormattingResultLog();
         List<String> missingComponents = new LinkedList<String>(componentsList);
         for (ComponentDescriptionDTO desc : componentDescriptionDTOs) {
             if (componentsList.contains(desc.name)) {
@@ -106,7 +105,7 @@ public class DsComponentsCheck implements HealthCheck {
             }
         }
         for (String missingComp : missingComponents) {
-            log.temporarilyUnavailable("Not found {}", missingComp);
+            log.info("No component with name {} is registered in SCR runtime", missingComp);
         }
 
         int countEnabled = 0;
@@ -143,17 +142,15 @@ public class DsComponentsCheck implements HealthCheck {
             }
 
             if (!isActive) {
-                if (analyzer != null) {
-                    analyzer.logNotEnabledComponent(log, dsComp, statusForMissing);
-                } else {
-                    log.add(new Entry(statusForMissing, "Not active: " + dsComp.name));
-                }
+                analyzer.logNotEnabledComponent(log, dsComp);
             }
-
         }
 
+        if (!missingComponents.isEmpty()) {
+            log.add(new Entry(statusForMissing, missingComponents.size() + " required components are missing in SCR runtime"));
+        }
         if (countDisabled > 0) {
-            log.temporarilyUnavailable("{} required components are not active", countDisabled);
+            log.add(new Entry(statusForMissing, countDisabled + " required components are not active"));
         }
         log.info("{} required components are active", countEnabled);
 
