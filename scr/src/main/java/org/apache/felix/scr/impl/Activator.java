@@ -652,14 +652,16 @@ public class Activator extends AbstractExtender
         }
     }
 
-    public void resetLogger()
+    public void setLogger()
     {
-        // reset existing logger
-        ScrLogger existingLogger = logger;
-        if (existingLogger != null)
+        // TODO we only set the logger once
+        // If the need arises to be able to dynamically set the logger type
+        // then more work is needed to do that switch
+        // for now we only can configure ds.log.extension with context properties
+        if (logger == null)
         {
-            existingLogger.close();
+            logger = ScrLogManager.scr(m_context, m_configuration);
         }
-        logger = ScrLogManager.scr(m_context, m_configuration);
+
     }
 }

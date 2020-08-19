@@ -160,7 +160,6 @@ class LogManager extends ServiceTracker<LoggerFactory, LoggerFactory> implements
 
 		LogDomain(Bundle bundle) {
 			this.bundle = bundle;
-			open();
 		}
 
 		private void reset() {

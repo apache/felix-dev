@@ -222,7 +222,7 @@ public class ScrConfigurationImpl implements ScrConfiguration
             oldGlobalExtender = this.globalExtender;
             this.globalExtender = newGlobalExtender;
         }
-        activator.resetLogger();
+        activator.setLogger();
         if ( newGlobalExtender != oldGlobalExtender )
         {
             activator.restart( newGlobalExtender );
