@@ -52,7 +52,7 @@ class ExtLogManager extends ScrLogManager {
 
 	@Override
 	public BundleLogger bundle(Bundle bundle) {
-		return getLogger(this.bundle, SCR_LOGGER_PREFIX.concat(bundle.getSymbolicName()), ScrLoggerFacade.class);
+		return getLogger(bundle, SCR_LOGGER_PREFIX.concat(bundle.getSymbolicName()), ScrLoggerFacade.class);
 	}
 
 	@Override

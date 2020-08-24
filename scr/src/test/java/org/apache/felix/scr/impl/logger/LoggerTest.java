@@ -118,6 +118,7 @@ public class LoggerTest {
 		ScrConfiguration config = mock(ScrConfiguration.class);
 		when(config.getLogLevel()).thenReturn(Level.DEBUG);
 		ExtLogManager elm = new ExtLogManager(scr.getBundleContext(), config);
+        elm.open();
 
 		ComponentLogger clog = elm.component(component, "i.c", "c");
 
@@ -131,6 +132,7 @@ public class LoggerTest {
 		ScrConfiguration config = mock(ScrConfiguration.class);
 		when(config.getLogLevel()).thenReturn(Level.DEBUG);
 		ExtLogManager elm = new ExtLogManager(scr.getBundleContext(), config);
+        elm.open();
 		try (Buf out = new Buf(System.out);
 				Buf err = new Buf(System.err);) {
 			try {
@@ -191,7 +193,7 @@ public class LoggerTest {
 		bundle.log(Level.ERROR, "Ext", null);
 		assertThat(l.entries).hasSize(1);
 		LogEntry le = l.entries.get(0);
-		assertThat(le.bundle).isEqualTo(scr);
+        assertThat(le.bundle).isEqualTo(component);
 	}
 
 	@Test
@@ -263,6 +265,7 @@ public class LoggerTest {
 		l.register();
 
 		ScrLogManager lm = new ExtLogManager(scr.getBundleContext(), config);
+        lm.open();
 
 		{
 			l.entries.clear();
@@ -282,7 +285,7 @@ public class LoggerTest {
 			assertThat(l.entries).hasSize(1);
 			LogEntry le = l.entries.get(0);
 			assertThat(le.format).isEqualTo("Bundle");
-			assertThat(le.bundle).isEqualTo(scr);
+            assertThat(le.bundle).isEqualTo(component);
 			assertThat(le.loggername).isEqualTo(ExtLogManager.SCR_LOGGER_PREFIX + "component");
 		}
 
@@ -318,6 +321,7 @@ public class LoggerTest {
 		l.register();
 
 		ScrLogManager lm = new ScrLogManager(scr.getBundleContext(), config);
+        lm.open();
 
 		{
 			l.entries.clear();
@@ -363,6 +367,7 @@ public class LoggerTest {
 	public void testLifeCycle() {
 
 		LogManager lm = new LogManager(scr.getBundleContext());
+        lm.open();
 		LoggerFacade facade = lm.getLogger(scr, "lifecycle", LoggerFacade.class);
 		assertThat(facade.logger).isNull();
 
@@ -398,6 +403,7 @@ public class LoggerTest {
 	public void testPrioritiesLogService() {
 
 		LogManager lm = new LogManager(scr.getBundleContext());
+        lm.open();
 		LoggerFacade facade = lm.getLogger(scr, "lifecycle", LoggerFacade.class);
 		assertThat(facade.logger).isNull();
 
@@ -430,6 +436,7 @@ public class LoggerTest {
 		l.register();
 
 		ScrLogManager lm = new ScrLogManager(scr.getBundleContext(), config);
+        lm.open();
 		lm.component(component, "implementation.class", "component");
 
 		assertThat(lm.lock.domains).hasSize(1);
@@ -457,6 +464,7 @@ public class LoggerTest {
 		l.register();
 
 		ScrLogManager lm = new ScrLogManager(scr.getBundleContext(), config);
+        lm.open();
 		ScrLogger facade = lm.scr();
 
 		assert LogLevel.values().length == Level.values().length;

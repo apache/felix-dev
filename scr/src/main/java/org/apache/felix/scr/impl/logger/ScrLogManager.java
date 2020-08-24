@@ -52,10 +52,13 @@ public class ScrLogManager extends LogManager {
 	 */
 
 	public static ScrLogger scr(BundleContext context, ScrConfiguration config) {
+        ScrLogManager manager;
 		if (config.isLogExtension())
-			return new ExtLogManager(context, config).scr();
+            manager = new ExtLogManager(context, config);
 		else
-			return new ScrLogManager(context, config).scr();
+            manager = new ScrLogManager(context, config);
+        manager.open();
+        return manager.scr();
 	}
 
 	ScrLogManager(BundleContext context, ScrConfiguration config) {
