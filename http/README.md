@@ -19,9 +19,40 @@ The Apache Felix HTTP Service project includes several bundles.
   * `org.apache.felix.http.cometd` - Adds Comet/Ajax Push functionality to the HTTP Service implementation.
   * `org.apache.felix.http.proxy` - Proxy that is needed inside WAR when deployed inside an application server.
 
-Note that as of version **3.x**, the Serlvet APIs are **no longer** packaged with the implementation bundles! If you are migrating from lower versions, be sure to add the
+Note that as of version **3.x**, the Servlet APIs are **no longer** packaged with the implementation bundles! If you are migrating from lower versions, be sure to add the
 `org.apache.felix.http.servlet-api` (or any other compatible Serlvet API bundle) to your
 classpath and deployment!
+
+## Installing additional bundles for the optional HTTP/2 support with jetty
+
+The jetty implementation uses the OSGi ServiceLoader mediator technique to find certain pluggable components that are required for HTTP/2 support.  Your OSGi runtime must first have the bundles needed for OSGi ServiceLoader support deployed. Background information about the OSGi ServiceLoader integration is discussed [here](https://blog.osgi.org/2013/02/javautilserviceloader-in-osgi.html)
+
+Deploying the following set of bundles would be one way to enable the ServiceLoader mediator support:
+
+  * `org.apache.aries.spifly:org.apache.aries.spifly.dynamic.bundle:1.3.0`
+  * `org.apache.aries:org.apache.aries.util:1.1.3`
+  * `org.ow2.asm:asm:8.0.1`
+  * `org.ow2.asm:asm-analysis:8.0.1`
+  * `org.ow2.asm:asm-commons:8.0.1`
+  * `org.ow2.asm:asm-tree:8.0.1`
+  * `org.ow2.asm:asm-util:8.0.1`
+
+Next, depending on your server environment you must choose only one of the following sets
+of additional bundles to deploy [as described in the jetty documentation](https://www.eclipse.org/jetty/documentation/current/alpn-chapter.html)
+
+1. For java 9 or later:
+    * `org.eclipse.jetty.alpn:alpn-api:1.1.3.v20160715`
+    * `org.eclipse.jetty:jetty-alpn-java-server:${jetty.version}`
+
+2. For java 8:
+    * `org.eclipse.jetty:jetty-alpn-openjdk8-server:${jetty.version}`
+
+    * For java 8 versions earlier than 1.8.0_252 download and add -Xbootclasspath/p:/path_to_file_here/alpn-boot-8.1.13.v20181017.jar as an argument to the java process and then deploy the following bundle:
+        * `org.eclipse.jetty.osgi:jetty-osgi-alpn:${jetty.version}`
+
+    * For java 8 version 1.8.0_252 or later skip the bootclasspath argument and deploy the following bundle instead:
+        * `org.eclipse.jetty.alpn:alpn-api:1.1.3.v20160715`
+
 
 ## Using the OSGi Http Whiteboard
 
@@ -342,6 +373,12 @@ properties can be used (some legacy property names still exist but are not docum
 | `org.apache.felix.jetty.gzip.excludedPaths` | The additional path specs to exclude. Inclusion takes precedence over exclusion. Default is none. |
 | `org.apache.felix.jetty.gzip.includedMimeTypes` | The included mime types. Inclusion takes precedence over exclusion. Default is none. |
 | `org.apache.felix.jetty.gzip.excludedMimeTypes` | The excluded mime types. Inclusion takes precedence over exclusion. Default is none. |
+| `org.apache.felix.http2.enable` | Whether to enable HTTP/2. Default is false.  |
+| `org.apache.felix.jetty.http2.maxConcurrentStreams` | The max number of concurrent streams per connection. Default is 128. |
+| `org.apache.felix.jetty.http2.initialStreamRecvWindow` | The initial stream receive window (client to server). Default is 524288. |
+| `org.apache.felix.jetty.http2.initialSessionRecvWindow` | The initial session receive window (client to server). Default is 1048576. |
+| `org.apache.felix.jetty.alpn.protocols` | The ALPN protocols to consider. Default is h2, http/1.1. |
+| `org.apache.felix.jetty.alpn.defaultProtocol` | The default protocol when negotiation fails. Default is http/1.1. |
 
 ### All-in-one-bundle configuration properties
 
