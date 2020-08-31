@@ -29,7 +29,7 @@
   <description>
     A simple implementation of the OSGi R7 Log service.
   </description>
-  <version>1.2.3-SNAPSHOT</version>
+  <version>1.2.4</version>
   <artifactId>org.apache.felix.log</artifactId>
 
   <properties>
@@ -41,6 +41,7 @@
     <connection>scm:git:https://github.com/apache/felix-dev.git</connection>
     <developerConnection>scm:git:https://github.com/apache/felix-dev.git</developerConnection>
     <url>https://gitbox.apache.org/repos/asf?p=felix-dev.git</url>
+    <tag>org.apache.felix.log-1.2.4</tag>
   </scm>
 
   <dependencies>
