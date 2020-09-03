@@ -1,0 +1,2 @@
+Import-Package: org.slf4j;resolution:=optional, *
+DynamicImport-Package: org.slf4j
