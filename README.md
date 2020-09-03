@@ -49,6 +49,7 @@ Several projects provide extra features to an OSGi runtime.
 - **ipojo** `/ipojo` - A *service component runtime* aiming to simplify OSGi application development.
 - **jaas support** `/jaas` - Bundle to simplify JAAS usage within OSGi environment.
 - **logback** `/logback` - A simple integration of the OSGi R7 Log (1.4) service to Logback backend.
+- **OSGi metrics** `/metrics/osgi` - Collecting and publishing metrics related to OSGi applications
 - **rootcause** `/rootcause` - Finding the root cause of problems with OSGi declarative services components.
 - **utils** `/utils` - Utility classes for OSGi (intended for embedding within other bundles.)
 - **webconsole** `/webconsole*` - Web Based Management Console for OSGi Frameworks.
