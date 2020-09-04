@@ -128,8 +128,9 @@ public class ScrLogManager extends LogManager {
 
 			// assert !closed.get();
 
-			Logger logger = getLogger();
-			if (logger != null) {
+			Object checkLogger = getLogger();
+			if (checkLogger != null) {
+			    Logger logger = (Logger) checkLogger;
 				switch (level) {
 				case AUDIT:
 					return true;
@@ -166,8 +167,9 @@ public class ScrLogManager extends LogManager {
 			if (prefix != null && prefix.length() > 0) {
 				message = prefix.concat(" ").concat(message);
 			}
-			Logger logger = getLogger();
-			if (logger != null) {
+			Object checkLogger = getLogger();
+			if (checkLogger != null) {
+			    Logger logger = (Logger) checkLogger;
 				if (ex == null) {
 					switch (level) {
 					case AUDIT:

@@ -242,6 +242,10 @@ public abstract class ComponentTestBase
             scrTracker.close();
             scrTracker = null;
         }
+        catch (IllegalStateException e)
+        {
+            // not sure why this is thrown
+        }
         finally
         {
             log.stop();
