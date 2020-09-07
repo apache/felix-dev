@@ -101,13 +101,11 @@ public class ResourceLoadingTest extends TestCase
         assertNotNull(testBundle.getResource(name));
         assertNotNull(testBundle.getEntry(name));
 
-        try (BufferedReader reader = new BufferedReader(new InputStreamReader(testBundle.getResource(name).openStream()))) {
-            assertEquals("This is a Test", reader.readLine());
-        }
-        try (BufferedReader reader = new BufferedReader(new InputStreamReader(testBundle.getEntry(name).openStream()))) {
-            assertEquals("This is a Test", reader.readLine());
-        }
+        BufferedReader reader = new BufferedReader(new InputStreamReader(testBundle.getResource(name).openStream()));
+        assertEquals("This is a Test", reader.readLine());
 
+        reader = new BufferedReader(new InputStreamReader(testBundle.getEntry(name).openStream()));
+        assertEquals("This is a Test", reader.readLine());
     }
 
     private static void deleteDir(File root) throws IOException
