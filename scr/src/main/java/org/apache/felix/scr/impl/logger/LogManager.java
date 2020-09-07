@@ -45,7 +45,9 @@ import org.osgi.util.tracker.ServiceTracker;
  * The LogDomain represents every bundle. Per LogDomain, we keep the facades. If the factory goes,
  * we reset the facades.
  */
-class LogManager extends ServiceTracker<LoggerFactory, LoggerFactory> implements BundleListener {
+class LogManager extends ServiceTracker<Object, Object> implements BundleListener {
+
+    private static final String LOGGER_FACTORY_CLASS_NAME = "org.osgi.service.log.LoggerFactory";
 
 	final BundleContext	scrContext;
 	final AtomicBoolean	closed	= new AtomicBoolean(false);
@@ -56,7 +58,7 @@ class LogManager extends ServiceTracker<LoggerFactory, LoggerFactory> implements
 	class Lock {
 		final Map<Bundle, LogDomain>	domains	= new HashMap<>();
 		int								trackingCount;
-		LoggerFactory					factory;
+		Object					factory;
 		int								ranking=0;
 
 		synchronized LogDomain getLogDomain(Bundle bundle) {
@@ -68,14 +70,14 @@ class LogManager extends ServiceTracker<LoggerFactory, LoggerFactory> implements
 			return domain;
 		}
 
-		synchronized void removedFactory(LoggerFactory service) {
+		synchronized void removedFactory(Object service) {
 			if (this.factory == service) {
 				this.factory = null;
 				reset();
 			}
 		}
 
-		synchronized void setFactory(int ranking, LoggerFactory service) {
+		synchronized void setFactory(int ranking, Object service) {
 			if (this.factory == null) {
 				this.factory = service;
 				this.ranking = ranking;
@@ -92,11 +94,11 @@ class LogManager extends ServiceTracker<LoggerFactory, LoggerFactory> implements
 			}
 		}
 
-		synchronized Logger getLogger(LoggerFacade facade, Bundle bundle, String name) {
+		synchronized Object getLogger(LoggerFacade facade, Bundle bundle, String name) {
 			if (factory == null)
 				return facade.logger = null;
 			else
-				return facade.logger = factory.getLogger(bundle, name, Logger.class);
+				return facade.logger = ((LoggerFactory) factory).getLogger(bundle, name, Logger.class);
 		}
 
 		synchronized LogDomain remove(Bundle bundle) {
@@ -113,14 +115,14 @@ class LogManager extends ServiceTracker<LoggerFactory, LoggerFactory> implements
 	final Lock lock = new Lock();
 
 	LogManager(BundleContext context) {
-		super(context, LoggerFactory.class, null);
+		super(context, LOGGER_FACTORY_CLASS_NAME, null);
 		this.scrContext = context;
 		scrContext.addBundleListener(this);
 	}
 
 	@Override
-	public LoggerFactory addingService(ServiceReference<LoggerFactory> reference) {
-		LoggerFactory service = super.addingService(reference);
+	public Object addingService(ServiceReference<Object> reference) {
+		Object service = super.addingService(reference);
 		Integer ranking = (Integer) reference.getProperty(Constants.SERVICE_RANKING);
 		if (ranking == null)
 			ranking = 0;
@@ -129,7 +131,7 @@ class LogManager extends ServiceTracker<LoggerFactory, LoggerFactory> implements
 	}
 
 	@Override
-	public void removedService(ServiceReference<LoggerFactory> reference, LoggerFactory service) {
+	public void removedService(ServiceReference<Object> reference, Object service) {
 		super.removedService(reference, service);
 		lock.removedFactory(service);
 	}
@@ -188,7 +190,7 @@ class LogManager extends ServiceTracker<LoggerFactory, LoggerFactory> implements
 	class LoggerFacade {
 		private final String	name;
 		private final LogDomain	domain;
-		volatile Logger			logger;
+		volatile Object			logger;
 		volatile String			prefix;
 
 		LoggerFacade(LogDomain logDomain, String name) {
@@ -200,8 +202,8 @@ class LogManager extends ServiceTracker<LoggerFactory, LoggerFactory> implements
 			logger = null;
 		}
 
-		Logger getLogger() {
-			Logger l = this.logger;
+		Object getLogger() {
+			Object l = this.logger;
 			if (l == null) {
 				l = lock.getLogger(this, domain.bundle, name);
 			}

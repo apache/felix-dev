@@ -375,7 +375,7 @@ public class LoggerTest {
 		l.register();
 		assertThat(l.loggers.get(scr)).isNull();
 
-		Logger logger = facade.getLogger();
+        Logger logger = (Logger) facade.getLogger();
 
 		assertThat(logger).isNotNull();
 		assertThat(facade.logger).isEqualTo(logger);
@@ -383,7 +383,7 @@ public class LoggerTest {
 
 		assertThat(logger.getName()).isEqualTo("lifecycle");
 
-		Logger logger2 = facade.getLogger();
+        Logger logger2 = (Logger) facade.getLogger();
 		assertThat(logger2).isEqualTo(logger);
 		assertThat(l.loggers.get(scr)).hasSize(1);
 
@@ -391,7 +391,7 @@ public class LoggerTest {
 		l.register();
 
 		assertThat(facade.logger).isNull();
-		logger = facade.getLogger();
+        logger = (Logger) facade.getLogger();
 		assertThat(l.loggers.get(scr)).hasSize(2);
 
 		assertThat(facade.logger).isNotNull();
@@ -409,7 +409,7 @@ public class LoggerTest {
 
 		LogService la = new LogService(log.getBundleContext());
 		la.register();
-		Logger loggera = facade.getLogger();
+        Logger loggera = (Logger) facade.getLogger();
 		assertThat(loggera).isNotNull();
 		assertThat(facade.logger).isEqualTo(loggera);
 		assertThat(la.loggers.get(scr)).hasSize(1);
@@ -418,7 +418,7 @@ public class LoggerTest {
 
 		assertThat(facade.logger).isNull();
 
-		Logger loggerb = facade.getLogger();
+        Logger loggerb = (Logger) facade.getLogger();
 		assertThat(loggerb).isNotNull();
 		assertThat(higherRanking.loggers.get(scr)).hasSize(1);
 
