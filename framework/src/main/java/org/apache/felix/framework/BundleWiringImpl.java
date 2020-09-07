@@ -38,8 +38,6 @@ import org.osgi.framework.Constants;
 import org.osgi.framework.FrameworkEvent;
 import org.osgi.framework.PackagePermission;
 import org.osgi.framework.ServiceReference;
-import org.osgi.framework.connect.ConnectContent;
-import org.osgi.framework.connect.ConnectModule;
 import org.osgi.framework.hooks.weaving.WeavingException;
 import org.osgi.framework.hooks.weaving.WeavingHook;
 import org.osgi.framework.hooks.weaving.WovenClass;
@@ -57,7 +55,6 @@ import org.osgi.service.resolver.ResolutionException;
 
 import java.io.IOException;
 import java.lang.reflect.Constructor;
-import java.net.MalformedURLException;
 import java.net.URL;
 import java.security.AccessController;
 import java.security.PrivilegedAction;
@@ -1090,37 +1087,6 @@ public class BundleWiringImpl implements BundleWiring
     public BundleImpl getBundle()
     {
         return m_revision.getBundle();
-    }
-
-    //
-    // Class loader implementation methods.
-    //
-
-    private URL createURL(int port, String path)
-    {
-        // Add a slash if there is one already, otherwise
-        // the is no slash separating the host from the file
-        // in the resulting URL.
-        if (!path.startsWith("/"))
-        {
-            path = "/" + path;
-        }
-
-        try
-        {
-            return BundleRevisionImpl.getSecureAction().createURL(null,
-                    FelixConstants.BUNDLE_URL_PROTOCOL + "://" +
-                    getBundle().getFramework()._getProperty(Constants.FRAMEWORK_UUID) + "_" + m_revision.getId() + ":" + port + path,
-                    getBundle().getFramework().getBundleStreamHandler());
-        }
-        catch (MalformedURLException ex)
-        {
-            m_logger.log(m_revision.getBundle(),
-                    Logger.LOG_ERROR,
-                    "Unable to create resource URL.",
-                    ex);
-        }
-        return null;
     }
 
     public Enumeration getResourcesByDelegation(String name)

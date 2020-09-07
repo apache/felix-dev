@@ -20,6 +20,8 @@ package org.apache.felix.framework;
 
 import java.io.IOException;
 import java.io.InputStream;
+import java.net.URI;
+import java.net.URISyntaxException;
 import java.net.URL;
 import java.net.URLConnection;
 import java.security.Permission;
@@ -39,6 +41,7 @@ class URLHandlersBundleURLConnection extends URLConnection
     private long m_contentTime;
     private String m_contentType;
     private InputStream m_is;
+    private final String m_path;
 
     public URLHandlersBundleURLConnection(URL url, Felix framework)
         throws IOException
@@ -49,8 +52,16 @@ class URLHandlersBundleURLConnection extends URLConnection
         // the bundle, then throw an exception since this isn't possible.
         // We only allow "/" as a valid URL so it can be used as context
         // for creating other URLs.
-        String path = url.getPath();
-        if ((path == null) || (path.length() == 0) || path.equals("/"))
+        try
+        {
+            m_path = new URI(url.getProtocol() + "://felix" + url.getPath()).getPath();
+        }
+        catch (URISyntaxException e)
+        {
+            throw new IOException(e);
+        }
+
+        if ((m_path == null) || (m_path.length() == 0) || m_path.equals("/"))
         {
             throw new IOException("Resource does not exist: " + url);
         }
@@ -120,11 +131,11 @@ class URLHandlersBundleURLConnection extends URLConnection
             m_classPathIdx = 0;
         }
         if (!((BundleRevisionImpl) m_targetRevision)
-            .hasInputStream(m_classPathIdx, url.getPath()))
+            .hasInputStream(m_classPathIdx, m_path))
         {
             BundleWiring wiring = m_targetRevision.getWiring();
             ClassLoader cl = (wiring != null) ? wiring.getClassLoader() : null;
-            URL newurl = (cl != null) ? cl.getResource(url.getPath()) : null;
+            URL newurl = (cl != null) ? cl.getResource(m_path) : null;
             if (newurl == null)
             {
                 throw new IOException("Resource does not exist: " + url);
@@ -142,10 +153,10 @@ class URLHandlersBundleURLConnection extends URLConnection
                 throw new IOException("Resource does not exist: " + url);
             }
             m_is = ((BundleRevisionImpl)
-                m_targetRevision).getInputStream(m_classPathIdx, url.getPath());
+                m_targetRevision).getInputStream(m_classPathIdx, m_path);
             m_contentLength = (m_is == null) ? 0 : m_is.available();
-            m_contentTime = ((BundleRevisionImpl) m_targetRevision).getContentTime(m_classPathIdx, url.getPath());
-            m_contentType = URLConnection.guessContentTypeFromName(url.getFile());
+            m_contentTime = ((BundleRevisionImpl) m_targetRevision).getContentTime(m_classPathIdx, m_path);
+            m_contentType = URLConnection.guessContentTypeFromName(m_path);
             connected = true;
         }
     }
@@ -234,6 +245,6 @@ class URLHandlersBundleURLConnection extends URLConnection
             return url;
         }
         return ((BundleRevisionImpl)
-            m_targetRevision).getLocalURL(m_classPathIdx, url.getPath());
+            m_targetRevision).getLocalURL(m_classPathIdx, m_path);
     }
 }
