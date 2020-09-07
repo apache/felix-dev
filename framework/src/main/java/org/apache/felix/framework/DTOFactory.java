@@ -61,6 +61,7 @@ import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
+import javax.xml.ws.Service;
 
 /**
  * Creates various DTOs provided by the core framework.
@@ -118,6 +119,10 @@ public class DTOFactory
             return type.cast(createFrameworkWiringDTO((Felix) bundle));
         }
         return null;
+    }
+
+    static ServiceReferenceDTO createDTO(ServiceReference ref) {
+        return createServiceReferenceDTO(ref);
     }
 
     private static BundleDTO createBundleDTO(Bundle bundle)

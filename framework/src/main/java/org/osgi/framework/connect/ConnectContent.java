@@ -1,5 +1,5 @@
 /*
- * Copyright (c) OSGi Alliance (2019). All Rights Reserved.
+ * Copyright (c) OSGi Alliance (2019, 2020). All Rights Reserved.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -21,138 +21,156 @@ import java.io.InputStream;
 import java.util.Map;
 import java.util.Optional;
 
+import org.osgi.annotation.versioning.ConsumerType;
 import org.osgi.framework.Bundle;
 import org.osgi.framework.launch.Framework;
 import org.osgi.framework.namespace.IdentityNamespace;
 import org.osgi.framework.wiring.BundleRevisions;
 
 /**
- * A connect content provides a {@link Framework framework} access to the
- * content of a connect {@link ConnectModule module}. A framework may
- * {@link #open() open} and {@link #close() close} the content for a connect
- * module multiple times while the connect content is in use by the framework
- * instance. The framework must close the connect content once the connect
- * content is no longer used as the content of a current bundle revision or an
- * in use bundle revision.
+ * A {@code ConnectContent} provides a {@link Framework} instance access to the
+ * content of a {@link ConnectModule}.
  * <p>
- * An entry in a connect content is identified by a path name that is a
- * '{@code /}'-separated path. A connect content may treat directories as
- * entries. A directory entry path name will end with a slash ('/'). A directory
- * entry may be located using a path name that drops the trailing slash.
+ * A framework may {@link #open() open} and {@link #close() close} the content
+ * for a {@link ConnectModule} multiple times while the {@code ConnectContent}
+ * is in use by the framework. The framework must close the
+ * {@code ConnectContent} once the {@code ConnectContent} is no longer used as
+ * the content of a current bundle revision or an in use bundle revision.
+ * <p>
+ * An entry in a {@code ConnectContent} is identified by a path name that is a
+ * solidus (<code>'/' \u002F</code>) separated path. A {@code ConnectContent}
+ * may treat directories as entries. A directory entry path name will end with a
+ * solidus. A directory entry may be located using a path name that omits the
+ * trailing solidus.
  * 
  * @see BundleRevisions
  * @ThreadSafe
- * @author $Id: 44ec66031f9460c48453c7113e4871472a7c475c $
+ * @author $Id: 9e455f9d467f0e38daea0ea52a59a5ccb8c81257 $
  */
+@ConsumerType
 public interface ConnectContent {
 	/**
 	 * The {@code osgi.identity}
 	 * {@link IdentityNamespace#CAPABILITY_TAGS_ATTRIBUTE tags} attribute value
 	 * used by the framework to tag connect bundle revisions.
 	 */
-	public static final String TAG_OSGI_CONNECT = "osgi.connect";
+	String TAG_OSGI_CONNECT = "osgi.connect";
 
 	/**
-	 * Returns this connect content Manifest headers and values. The
-	 * {@link Optional#empty() empty} value is returned if the framework should
-	 * handle parsing the Manifest of the content itself.
+	 * Returns the Manifest headers and values of this {@code ConnectContent}.
 	 * 
-	 * @return This connect content Manifest headers and values.
-	 * @throws IllegalStateException if the connect content has been closed
+	 * @return An {@code Optional} containing the Manifest headers and values
+	 *         for this {@code ConnectContent}, or an empty {@code Optional} if
+	 *         the framework should handle parsing the Manifest of the content
+	 *         itself.
+	 * @throws IllegalStateException If this {@code ConnectContent} has been
+	 *             closed.
 	 */
 	Optional<Map<String,String>> getHeaders();
 
 	/**
-	 * Returns an iterable with all the entry names available in this
-	 * ConnectContent
+	 * Returns the entry names available in this {@code ConnectContent}.
 	 * 
-	 * @return the entry names
-	 * @throws IOException if an error occurs reading the ConnectContent
-	 * @throws IllegalStateException if the connect content has been closed
+	 * @return An {@code Iterable} which can supply the available entry names.
+	 * @throws IOException If an error occurs reading this
+	 *             {@code ConnectContent}.
+	 * @throws IllegalStateException If this {@code ConnectContent} has been
+	 *             closed.
 	 */
 	Iterable<String> getEntries() throws IOException;
 
 	/**
-	 * Returns the connect entry for the specified path name in this content.
+	 * Returns the {@link ConnectEntry} for the specified path name in this
+	 * content.
+	 * <p>
 	 * The {@link Optional#empty() empty} value is returned if an entry with the
 	 * specified path name does not exist. The path must not start with a
 	 * &quot;/&quot; and is relative to the root of this content. A connect
 	 * entry for a directory will have a path name that ends with a slash ('/').
 	 * 
-	 * @param path the path name of the entry
-	 * @return the connect entry, or {@link Optional#empty() empty} if not
-	 *         found.
-	 * @throws IllegalStateException if the connect content has been closed
+	 * @param path The path name of the entry.
+	 * @return An {@code Optional} containing the {@link ConnectEntry} for the
+	 *         specified path, or an empty {@code Optional} if no entry for
+	 *         specified path can be found.
+	 * @throws IllegalStateException If this {@code ConnectContent} has been
+	 *             closed.
 	 */
 	Optional<ConnectEntry> getEntry(String path);
 
 	/**
-	 * Returns a class loader for this connect content. The
-	 * {@link Optional#empty() empty} value is returned if the framework should
-	 * handle creating a class loader for the bundle revision associated with
-	 * this connect content.
+	 * Returns a class loader for this {@code ConnectContent}.
 	 * <p>
 	 * This method is called by the framework for {@link Bundle#RESOLVED
 	 * resolved} bundles only and will be called at most once while a bundle is
-	 * resolved. If a bundle associated with a connect module is refreshed and
-	 * resolved again the framework will ask the content for the class loader
-	 * again. This allows for a connect content to reuse or create a new class
-	 * loader each time the bundle revision is resolved.
+	 * resolved. If a bundle associated with a {@link ConnectModule} is
+	 * refreshed and resolved again, the framework will ask the
+	 * {@code ConnectContent} for the class loader again. This allows for a
+	 * {@code ConnectContent} to reuse or create a new class loader each time
+	 * the bundle revision is resolved.
 	 * 
-	 * @return a class loader for the module.
+	 * @return An {@code Optional} containing the class loader for this
+	 *         {@code ConnectContent}, or an empty {@code Optional} if framework
+	 *         should handle creating a class loader for the bundle revision
+	 *         associated with this {@code ConnectContent}.
+	 * @throws IllegalStateException If this {@code ConnectContent} has been
+	 *             closed.
 	 */
 	Optional<ClassLoader> getClassLoader();
 
 	/**
-	 * Opens this connect content. The framework will open the content when it
-	 * needs to access the content for a bundle revision associated with the
-	 * connect content. The framework may lazily postpone to open the content
-	 * until right before requests to access the bundle revision content are
-	 * made.
+	 * Opens this {@code ConnectContent}.
+	 * <p>
+	 * The framework will open the content when it needs to access the content
+	 * for a bundle revision associated with this {@code ConnectContent}. The
+	 * framework may defer calling this method until requests to access the
+	 * bundle revision content are made.
 	 * 
-	 * @throws IOException if an error occurred opening the content
+	 * @throws IOException If an error occurred opening this
+	 *             {@code ConnectContent}.
 	 */
 	void open() throws IOException;
 
 	/**
-	 * Closes this connect content.
+	 * Closes this {@code ConnectContent}.
 	 * 
-	 * @throws IOException if an error occurred closing the connect content
+	 * @throws IOException If an error occurred closing this
+	 *             {@code ConnectContent}.
 	 */
 	void close() throws IOException;
 
 	/**
-	 * Represents the entry of a connect module
+	 * Represents the entry of a {@code ConnectContent}.
 	 */
+	@ConsumerType
 	public interface ConnectEntry {
 		/**
-		 * Returns the path name of the entry
+		 * Returns the path name of this entry.
 		 * 
-		 * @return the path name of the entry
+		 * @return The path name of this entry.
 		 */
 		String getName();
 
 		/**
-		 * Returns the size of the entry. The value {@code -1} is returned if
-		 * the content length is not known.
+		 * Returns the content length of this entry.
 		 * 
-		 * @return the size of the entry, or {@code -1} if the content length is
-		 *         not known.
+		 * @return The content length of the entry, or {@code -1} if the content
+		 *         length is not known.
 		 */
 		public long getContentLength();
 
 		/**
-		 * Returns the last modification time of the entry
+		 * Returns the last modification time of this entry.
 		 * 
-		 * @return the last modification time of the entry
+		 * @return The last modification time of this entry measured in
+		 *         milliseconds since the epoch (00:00:00 GMT, January 1, 1970).
 		 */
 		public long getLastModified();
 
 		/**
-		 * Returns the content of the entry as a byte array.
+		 * Returns the content of this entry.
 		 * 
-		 * @return the content bytes
-		 * @throws IOException if an error occurs reading the content
+		 * @return The content of this entry.
+		 * @throws IOException If an error occurs reading the content.
 		 */
 		default byte[] getBytes() throws IOException {
 			long longLength = getContentLength();
@@ -190,10 +208,10 @@ public interface ConnectContent {
 		}
 
 		/**
-		 * Returns the content of the entry as an input stream.
+		 * Returns an input stream for the content of this entry.
 		 * 
-		 * @return the content input stream
-		 * @throws IOException if an error occurs reading the content
+		 * @return An input stream for the content of this entry.
+		 * @throws IOException If an error occurs reading the content.
 		 */
 		InputStream getInputStream() throws IOException;
 	}

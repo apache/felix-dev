@@ -34,12 +34,16 @@ import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Iterator;
 import java.util.Map;
+import java.util.PropertyPermission;
 
 import org.apache.felix.framework.util.SecureAction;
 import org.osgi.framework.AdminPermission;
 import org.osgi.framework.Bundle;
 import org.osgi.framework.BundleContext;
+import org.osgi.framework.CapabilityPermission;
 import org.osgi.framework.InvalidSyntaxException;
+import org.osgi.framework.PackagePermission;
+import org.osgi.framework.ServicePermission;
 import org.osgi.framework.ServiceReference;
 import org.osgi.service.packageadmin.ExportedPackage;
 import org.osgi.service.packageadmin.PackageAdmin;
@@ -107,12 +111,15 @@ public final class Permissions
     {
         return new PermissionInfo[] {
             IMPLICIT[0],
-            new PermissionInfo(AdminPermission.class.getName(), "(id="
-                + bundle.getBundleId() + ")", AdminPermission.METADATA),
-            new PermissionInfo(AdminPermission.class.getName(), "(id="
-                + bundle.getBundleId() + ")", AdminPermission.RESOURCE),
-            new PermissionInfo(AdminPermission.class.getName(), "(id="
-                + bundle.getBundleId() + ")", AdminPermission.CONTEXT) };
+            new PermissionInfo(PropertyPermission.class.getName(), "org.osgi.framework.*", "read"),
+            new PermissionInfo(
+                AdminPermission.class.getName(),
+                "(id=" + bundle.getBundleId() + ")",
+                AdminPermission.CLASS + "," + AdminPermission.METADATA + "," + AdminPermission.RESOURCE + "," + AdminPermission.CONTEXT),
+            new PermissionInfo(CapabilityPermission.class.getName(), "(|(capability.namespace=osgi.ee)(capability.namespace=osgi.native))", CapabilityPermission.REQUIRE),
+            new PermissionInfo(PackagePermission.class.getName(),"(package.name=java.*)",PackagePermission.IMPORT),
+            new PermissionInfo(ServicePermission.class.getName(),"org.osgi.service.condition.Condition", ServicePermission.GET)
+        };
     }
 
     public Permissions getPermissions(PermissionInfo[] permissionInfos)

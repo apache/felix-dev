@@ -1,5 +1,5 @@
 /*
- * Copyright (c) OSGi Alliance (2019). All Rights Reserved.
+ * Copyright (c) OSGi Alliance (2019, 2020). All Rights Reserved.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -18,24 +18,29 @@ package org.osgi.framework.connect;
 
 import java.util.Optional;
 
+import org.osgi.annotation.versioning.ConsumerType;
 import org.osgi.framework.Bundle;
 import org.osgi.framework.FrameworkUtil;
 
 /**
- * A helper for the {@link FrameworkUtil} class. This helper provides
- * alternative implementations for methods on {@link FrameworkUtil}.
+ * A helper for the {@link FrameworkUtil} class.
+ * <p>
+ * This helper provides alternative implementations for methods on
+ * {@link FrameworkUtil}.
  */
+@ConsumerType
 public interface FrameworkUtilHelper {
 	/**
-	 * Return a {@code Bundle} associated with the specified class.
+	 * Returns the {@link Bundle} associated with the specified class.
 	 * <p>
 	 * This helper method is called by {@link FrameworkUtil#getBundle(Class)} if
-	 * the standard implementation of {@code FrameworkUtil} cannot find the
-	 * bundle.
+	 * the standard implementation of {@link FrameworkUtil} is unable to find
+	 * the bundle.
 	 * 
-	 * @param classFromBundle A class associated with a bundle
-	 * @return An Optional containing a {@code Bundle} for the specified class
-	 *         or an empty Optional if the specified class is not from a bundle.
+	 * @param classFromBundle A class associated with a bundle.
+	 * @return An {@code Optional} containing the {@link Bundle} for the
+	 *         specified class, or an empty {@code Optional} if the specified
+	 *         class is not from a bundle.
 	 */
 	default Optional<Bundle> getBundle(Class< ? > classFromBundle) {
 		return Optional.empty();

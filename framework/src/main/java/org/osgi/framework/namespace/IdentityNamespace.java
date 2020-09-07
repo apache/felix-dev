@@ -1,5 +1,5 @@
 /*
- * Copyright (c) OSGi Alliance (2012, 2019). All Rights Reserved.
+ * Copyright (c) OSGi Alliance (2012, 2020). All Rights Reserved.
  * 
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -41,7 +41,7 @@ import org.osgi.resource.Namespace;
  * capability.
  * 
  * @Immutable
- * @author $Id: 27ae5d1c50d9fffcd7089d0fb225d8e793c4677a $
+ * @author $Id: d2357fa05b1e68f952710e07a2fab46bf4ea3cec $
  */
 public final class IdentityNamespace extends Namespace {
 

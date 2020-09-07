@@ -60,7 +60,8 @@
                 org.osgi.service.url;-split-package:=first,
                 org.osgi.service.resolver,
                 org.osgi.util.tracker;-split-package:=first,
-                org.osgi.dto;-split-package:=first
+                org.osgi.dto;-split-package:=first,
+                org.osgi.service.condition;-split-package:=first
             </Export-Package>
             <Private-Package>org.apache.felix.framework.*, org.apache.felix.resolver.*</Private-Package>
             <Import-Package>!*</Import-Package>

@@ -73,7 +73,7 @@
  * Import-Package: org.osgi.framework.startlevel; version=&quot;[1.0,2.0)&quot;
  * </pre>
  * 
- * @author $Id: package-info.java 1614569 2014-07-30 07:22:32Z cziegeler $
+ * @author $Id: 27d775bbe53df5e1dd5d7fe6f5e1c95b294c2301 $
  */
 
 @Version("1.0")

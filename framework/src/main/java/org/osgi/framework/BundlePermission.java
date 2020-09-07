@@ -1,5 +1,5 @@
 /*
- * Copyright (c) OSGi Alliance (2004, 2016). All Rights Reserved.
+ * Copyright (c) OSGi Alliance (2004, 2019). All Rights Reserved.
  * 
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -58,7 +58,7 @@ import java.util.Map;
  * 
  * @since 1.3
  * @ThreadSafe
- * @author $Id: 7b0816059dc9b3e37f0375039bebbe5f0b18d998 $
+ * @author $Id: 7a45b1cb579ff9cfd1582f82436dd755ff805fba $
  */
 
 public final class BundlePermission extends BasicPermission {
@@ -543,7 +543,7 @@ final class BundlePermissionCollection extends PermissionCollection {
 			// work our way up the tree...
 			int last;
 			int offset = requestedName.length() - 1;
-			while ((last = requestedName.lastIndexOf(".", offset)) != -1) {
+			while ((last = requestedName.lastIndexOf('.', offset)) != -1) {
 				requestedName = requestedName.substring(0, last + 1) + "*";
 				bp = pc.get(requestedName);
 				if (bp != null) {

@@ -1,5 +1,5 @@
 /*
- * Copyright (c) OSGi Alliance (2019). All Rights Reserved.
+ * Copyright (c) OSGi Alliance (2019, 2020). All Rights Reserved.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -24,7 +24,7 @@ import org.osgi.framework.launch.Framework;
 /**
  * A factory for creating {@link Framework} instances.
  * <p>
- * If a framework supports {@link ModuleConnector} then the implementation jar
+ * If a framework supports {@link ModuleConnector}, then the implementation jar
  * must contain the following resource:
  * 
  * <pre>
@@ -45,7 +45,7 @@ import org.osgi.framework.launch.Framework;
  * ConnectFrameworkFactory instance from the resource.
  * 
  * @ThreadSafe
- * @author $Id: c1193dbc989c5cc0840f0b6a66a229b95d6fbc4e $
+ * @author $Id: fee4e88754bbaa4a88bcee0c0eaefa54893df6a1 $
  */
 @ProviderType
 public interface ConnectFrameworkFactory {
@@ -73,7 +73,6 @@ public interface ConnectFrameworkFactory {
 	 *             {@code AllPermission}, and the Java Runtime Environment
 	 *             supports permissions.
 	 * @see ModuleConnector
-	 * @since 1.3
 	 */
 	Framework newFramework(Map<String,String> configuration,
 			ModuleConnector moduleConnector);

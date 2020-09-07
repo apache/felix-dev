@@ -28,7 +28,7 @@ import org.osgi.resource.dto.ResourceDTO;
  * in use revisions of the Bundle can be obtained by adapting the bundle to
  * {@code BundleRevisionDTO[]}.
  * 
- * @author $Id: BundleRevisionDTO.java 1614569 2014-07-30 07:22:32Z cziegeler $
+ * @author $Id: 43d74167b8b59468b148ceb9dcde4509b68c2a90 $
  * @NotThreadSafe
  */
 public class BundleRevisionDTO extends ResourceDTO {

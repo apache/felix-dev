@@ -5140,11 +5140,16 @@ public class Felix extends BundleImpl implements Framework
 
     class SystemBundleActivator implements BundleActivator
     {
+        private volatile ServiceRegistration<org.osgi.service.condition.Condition> m_reg;
         @Override
         public void start(BundleContext context) throws Exception
         {
             // Add the bundle activator for the url handler service.
             m_activatorList.add(0, new URLHandlersActivator(m_configMap, Felix.this));
+
+
+            m_reg = context.registerService(org.osgi.service.condition.Condition.class, org.osgi.service.condition.Condition.INSTANCE,
+                FrameworkUtil.asDictionary(Collections.singletonMap(org.osgi.service.condition.Condition.CONDITION_ID, org.osgi.service.condition.Condition.CONDITION_ID_TRUE)));
 
             // Start all activators.
             for (Iterator<BundleActivator> iter = m_activatorList.iterator(); iter.hasNext(); )
@@ -5166,6 +5171,7 @@ public class Felix extends BundleImpl implements Framework
                         throwable);
                 }
             }
+
         }
 
         @Override
@@ -5259,6 +5265,7 @@ public class Felix extends BundleImpl implements Framework
                         throwable);
                 }
             }
+            m_reg.unregister();
             m_activatorList.clear();
             if (m_securityManager != null)
             {

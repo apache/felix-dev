@@ -30,7 +30,7 @@ import org.osgi.resource.dto.WiringDTO;
  * wirings of the Bundle can be obtained by adapting the bundle to
  * {@code BundleWiringDTO[]}.
  * 
- * @author $Id: BundleWiringDTO.java 1614569 2014-07-30 07:22:32Z cziegeler $
+ * @author $Id: e23e80fcf8a14cbc9f565ec146821a4f22f2731b $
  * @NotThreadSafe
  */
 public class BundleWiringDTO extends DTO {

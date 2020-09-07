@@ -1,5 +1,5 @@
 /*
- * Copyright (c) OSGi Alliance (2012, 2014). All Rights Reserved.
+ * Copyright (c) OSGi Alliance (2020). All Rights Reserved.
  * 
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -15,28 +15,25 @@
  */
 
 /**
- * OSGi Data Transfer Object Framework Package Version 1.8.
- * 
+ * Condition Service Package Version 1.0.
  * <p>
  * Bundles wishing to use this package must list the package in the
  * Import-Package header of the bundle's manifest. This package has two types of
  * users: the consumers that use the API in this package and the providers that
  * implement the API in this package.
- * 
  * <p>
  * Example import for consumers using the API in this package:
  * <p>
- * {@code  Import-Package: org.osgi.framework.dto; version="[1.8,2.0)"}
+ * {@code  Import-Package: org.osgi.service.condition; version="[1.0,2.0)"}
  * <p>
  * Example import for providers implementing the API in this package:
  * <p>
- * {@code  Import-Package: org.osgi.framework.dto; version="[1.8,1.9)"}
+ * {@code  Import-Package: org.osgi.service.condition; version="[1.0,1.1)"}
  * 
- * @author $Id: 2acfb6f1633e18f1ceedd27c04e70131cae4f293 $
+ * @author $Id: 52df94eac922bd9d4f2f680cdd98e6d405844958 $
  */
 
-@Version("1.8")
-package org.osgi.framework.dto;
+@Version("1.0")
+package org.osgi.service.condition;
 
 import org.osgi.annotation.versioning.Version;
-

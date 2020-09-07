@@ -30,7 +30,7 @@ import org.osgi.framework.BundleContext;
  * framework will contain only the launch properties of the framework. These
  * properties will not include the System properties.
  * 
- * @author $Id: FrameworkDTO.java 1614569 2014-07-30 07:22:32Z cziegeler $
+ * @author $Id: 7c525727cbe877e888b460cd14d8f9054f99ee0c $
  * @NotThreadSafe
  */
 public class FrameworkDTO extends DTO {

@@ -30,7 +30,7 @@
  * <p>
  * {@code  Import-Package: org.osgi.framework.wiring.dto; version="[1.3,1.4)"}
  * 
- * @author $Id: package-info.java 1825132 2018-02-23 15:11:00Z pauls $
+ * @author $Id: 47eb1eed801ba77d58d8807aa85e9e000bca00d0 $
  */
 
 @Version("1.3")

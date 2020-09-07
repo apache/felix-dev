@@ -26,7 +26,7 @@
  * <p>
  * {@code  Import-Package: org.osgi.framework.hooks.service; version="[1.1,2.0)"}
  * 
- * @author $Id: package-info.java 1614569 2014-07-30 07:22:32Z cziegeler $
+ * @author $Id: 74f0c41d5ebf20181942ee393965d885deb3889c $
  */
 
 @Version("1.1")

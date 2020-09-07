@@ -1,5 +1,5 @@
 /*
- * Copyright (c) OSGi Alliance (2010, 2019). All Rights Reserved.
+ * Copyright (c) OSGi Alliance (2019, 2020). All Rights Reserved.
  * 
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -24,11 +24,10 @@
  * <p>
  * {@code  Import-Package: org.osgi.framework.connect; version="[1.0,2.0)"}
  * 
- * @author $Id: a196dc76c5b8d5acb472bd10a4ab382ed58d92d1 $
+ * @author $Id: b7344ca62c5cef84330e009ce4a0704e4d83b6c0 $
  */
 
 @Version("1.0")
 package org.osgi.framework.connect;
 
 import org.osgi.annotation.versioning.Version;
-
