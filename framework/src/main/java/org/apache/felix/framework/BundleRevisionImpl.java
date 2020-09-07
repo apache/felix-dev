@@ -38,7 +38,7 @@ import org.osgi.resource.Resource;
 
 import java.io.IOException;
 import java.io.InputStream;
-import java.net.MalformedURLException;
+import java.net.URI;
 import java.net.URL;
 import java.security.ProtectionDomain;
 import java.util.ArrayList;
@@ -642,12 +642,20 @@ public class BundleRevisionImpl implements BundleRevision, Resource
 
         try
         {
+            path = new URI(FelixConstants.BUNDLE_URL_PROTOCOL,
+                null,
+                m_bundle.getFramework()._getProperty(Constants.FRAMEWORK_UUID),
+                port,
+                path,
+                null,
+                null).getRawPath();
+
             return m_secureAction.createURL(null,
                 FelixConstants.BUNDLE_URL_PROTOCOL + "://" +
                 m_bundle.getFramework()._getProperty(Constants.FRAMEWORK_UUID) + "_" + m_id + ":" + port + path,
                 getBundle().getFramework().getBundleStreamHandler());
         }
-        catch (MalformedURLException ex)
+        catch (Exception ex)
         {
             m_bundle.getFramework().getLogger().log(
                 m_bundle,
