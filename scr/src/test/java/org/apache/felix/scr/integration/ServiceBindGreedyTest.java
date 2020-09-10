@@ -25,6 +25,7 @@ import java.util.HashSet;
 import java.util.Hashtable;
 import java.util.LinkedList;
 import java.util.List;
+import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.atomic.AtomicReference;
 
 import org.apache.felix.scr.integration.components.SimpleComponent;
@@ -52,7 +53,7 @@ public class ServiceBindGreedyTest extends ComponentTestBase
     static
     {
         // uncomment to enable debugging of this test class
-        // paxRunnerVmOption = DEBUG_VM_OPTION;
+        //paxRunnerVmOption = DEBUG_VM_OPTION;
 
         descriptorFile = "/integration_test_simple_components_service_binding_greedy.xml";
     }
@@ -172,18 +173,35 @@ public class ServiceBindGreedyTest extends ComponentTestBase
     }
 
     @Test
-    public void test_optional_single_dynamic_multi_thread() throws Exception
+    public void test_optional_single_dynamic_multi_thread1() throws Exception
     {
+        do_test_optional_single_dynamic_multi_thread(false);
+    }
+
+    @Test
+    public void test_optional_single_dynamic_multi_thread2() throws Throwable
+    {
+        do_test_optional_single_dynamic_multi_thread(true);
+    }
+
+    AtomicBoolean enabledConfig = new AtomicBoolean();
+    private void do_test_optional_single_dynamic_multi_thread(
+        Boolean unregPreExistingFirst)
+        throws Exception
+    {
+        String name = "test_optional_single_dynamic";
         final int numRanks = 1000;
         final int ranksPerThread = 100;
-        final SimpleServiceImpl srv1 = SimpleServiceImpl.create(bundleContext, "srv1",
-            numRanks / 4);
+        final SimpleServiceImpl preExistingServ = SimpleServiceImpl.create(bundleContext,
+            "preExistingServ", numRanks / 4);
 
-        String name = "test_optional_single_dynamic";
-        getDisabledConfigurationAndEnable(name, ComponentConfigurationDTO.ACTIVE);
+        if (enabledConfig.compareAndSet(false, true))
+        {
+            getDisabledConfigurationAndEnable(name, ComponentConfigurationDTO.ACTIVE);
+        }
         final SimpleComponent comp = SimpleComponent.INSTANCE;
         TestCase.assertNotNull(comp);
-        TestCase.assertEquals(srv1, comp.m_singleRef);
+        TestCase.assertEquals(preExistingServ, comp.m_singleRef);
         TestCase.assertTrue(comp.m_multiRef.isEmpty());
 
         final List<Integer> ranks = Collections.synchronizedList(
@@ -200,12 +218,11 @@ public class ServiceBindGreedyTest extends ComponentTestBase
         final AtomicReference<SimpleServiceImpl> highest = new AtomicReference<>();
         for (int i = 0; i < numRanks; i = i + ranksPerThread)
         {
-            final int start = i;
             threads.add(new Thread(new Runnable()
             {
                 public void run()
                 {
-                    for (int j = start; j < start + ranksPerThread; j++)
+                    for (int j = 0; j < ranksPerThread; j++)
                     {
                         int rank = ranks.remove(0);
                         SimpleServiceImpl srv = SimpleServiceImpl.create(bundleContext,
@@ -235,17 +252,20 @@ public class ServiceBindGreedyTest extends ComponentTestBase
         threads.clear();
         for (int i = 0; i < numRanks; i = i + ranksPerThread)
         {
-            final int start = i;
             threads.add(new Thread(new Runnable()
             {
                 public void run()
                 {
-                    for (int j = start; j < start + ranksPerThread; j++)
+                    for (int j = 0; j < ranksPerThread; j++)
                     {
                         registrations.remove(0).drop();
                     }
                 };
             }));
+        }
+        if (unregPreExistingFirst)
+        {
+            preExistingServ.drop();
         }
         for (Thread t : threads)
         {
@@ -255,11 +275,15 @@ public class ServiceBindGreedyTest extends ComponentTestBase
         {
             t.join();
         }
-        TestCase.assertEquals(srv1, comp.m_singleRef);
-        TestCase.assertTrue(comp.m_multiRef.isEmpty());
+        if (!unregPreExistingFirst)
+        {
+            TestCase.assertEquals(preExistingServ, comp.m_singleRef);
+            TestCase.assertTrue(comp.m_multiRef.isEmpty());
+            preExistingServ.drop();
+        }
 
-        srv1.drop();
-        TestCase.assertEquals(null, comp.m_singleRef);
+        TestCase.assertEquals("Found bound reference: " + comp.m_singleRefBind + '-'
+            + comp.m_singleRefUnbind, null, comp.m_singleRef);
         TestCase.assertTrue(comp.m_multiRef.isEmpty());
     }
 
