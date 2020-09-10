@@ -18,6 +18,16 @@
  */
 package org.apache.felix.framework;
 
+import java.io.IOException;
+import java.io.InputStream;
+import java.net.URL;
+import java.security.ProtectionDomain;
+import java.util.ArrayList;
+import java.util.Collections;
+import java.util.Enumeration;
+import java.util.List;
+import java.util.Map;
+
 import org.apache.felix.framework.cache.ConnectContentContent;
 import org.apache.felix.framework.cache.Content;
 import org.apache.felix.framework.util.FelixConstants;
@@ -36,17 +46,6 @@ import org.osgi.framework.wiring.BundleWiring;
 import org.osgi.resource.Capability;
 import org.osgi.resource.Requirement;
 import org.osgi.resource.Resource;
-
-import java.io.IOException;
-import java.io.InputStream;
-import java.net.URI;
-import java.net.URL;
-import java.security.ProtectionDomain;
-import java.util.ArrayList;
-import java.util.Collections;
-import java.util.Enumeration;
-import java.util.List;
-import java.util.Map;
 
 public class BundleRevisionImpl implements BundleRevision, Resource
 {
@@ -675,14 +674,6 @@ public class BundleRevisionImpl implements BundleRevision, Resource
 
         try
         {
-            path = new URI(FelixConstants.BUNDLE_URL_PROTOCOL,
-                null,
-                m_bundle.getFramework()._getProperty(Constants.FRAMEWORK_UUID),
-                port,
-                path,
-                null,
-                null).getRawPath();
-
             return m_secureAction.createURL(null,
                 FelixConstants.BUNDLE_URL_PROTOCOL + "://" +
                 m_bundle.getFramework()._getProperty(Constants.FRAMEWORK_UUID) + "_" + m_id + ":" + port + path,
