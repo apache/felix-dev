@@ -20,8 +20,6 @@ package org.apache.felix.framework;
 
 import java.io.IOException;
 import java.io.InputStream;
-import java.net.URI;
-import java.net.URISyntaxException;
 import java.net.URL;
 import java.net.URLConnection;
 import java.security.Permission;
@@ -48,19 +46,14 @@ class URLHandlersBundleURLConnection extends URLConnection
     {
         super(url);
 
+        String urlString = url.toExternalForm();
+
+        m_path = urlString.substring(urlString.indexOf(url.getPath()));
+
         // If this is an attempt to create a connection to the root of
         // the bundle, then throw an exception since this isn't possible.
         // We only allow "/" as a valid URL so it can be used as context
         // for creating other URLs.
-        try
-        {
-            m_path = new URI(url.getProtocol() + "://felix" + url.getPath()).getPath();
-        }
-        catch (URISyntaxException e)
-        {
-            throw new IOException(e);
-        }
-
         if ((m_path == null) || (m_path.length() == 0) || m_path.equals("/"))
         {
             throw new IOException("Resource does not exist: " + url);
