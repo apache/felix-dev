@@ -37,7 +37,7 @@ public class EventInfo {
     public final long received;
 
     /** Properties. */
-    public final Map properties;
+    public final Map<String, Object> properties;
 
     /** The event class. */
     public final String category;
@@ -51,7 +51,7 @@ public class EventInfo {
         this.category = category;
     }
 
-    public EventInfo( final String topic, final String info, final String category, final Map props )
+    public EventInfo( final String topic, final String info, final String category, final Map<String, Object> props )
     {
         this.topic = topic;
         this.info = info;
