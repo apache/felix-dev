@@ -26,7 +26,7 @@ import org.osgi.service.event.EventHandler;
 
 public class Listener implements EventHandler {
 
-    private final ServiceRegistration reg;
+    private final ServiceRegistration<EventHandler> reg;
 
     private final Object payload;
 
@@ -44,7 +44,7 @@ public class Listener implements EventHandler {
             props.put("event.topics", "*");
         }
         this.test = test;
-        this.reg = ctx.registerService(EventHandler.class.getName(), this, props);
+        this.reg = ctx.registerService(EventHandler.class, this, props);
         this.payload = payload;
     }
 
