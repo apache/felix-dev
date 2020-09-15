@@ -61,12 +61,12 @@ import org.osgi.service.metatype.MetaTypeProvider;
  * </p>
  * <p>
  * <p>
- *      <tt>org.apache.felix.eventadmin.Timeout</tt> - The black-listing timeout in
+ *      <tt>org.apache.felix.eventadmin.Timeout</tt> - The deny-listing timeout in
  *          milliseconds
  * </p>
  * The default value is 5000. Increase or decrease at own discretion. A value of less
  * then 100 turns timeouts off. Any other value is the time in milliseconds granted
- * to each <tt>EventHandler</tt> before it gets blacklisted.
+ * to each <tt>EventHandler</tt> before it gets put on the denylist.
  * </p>
  * <p>
  * <p>
@@ -288,7 +288,7 @@ public class Configuration
 
             // The timeout in milliseconds - A value of less then 100 turns timeouts off.
             // Any other value is the time in milliseconds granted to each EventHandler
-            // before it gets blacklisted.
+            // before it gets denied.
             m_timeout = getIntProperty(PROP_TIMEOUT,
                     m_bundleContext.getProperty(PROP_TIMEOUT), 5000, Integer.MIN_VALUE);
 

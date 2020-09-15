@@ -234,21 +234,21 @@ public class EventHandlerTracker extends ServiceTracker<EventHandler, EventHandl
         final Set<EventHandlerProxy> handlers = new HashSet<>();
 
         for(final EventHandlerProxy p : this.matchingAllEvents) {
-            if ( p.isBlacklisted() ) {
+            if ( p.isDenied() ) {
                 handlers.add(p);
             }
         }
 
         for(final List<EventHandlerProxy> l : this.matchingPrefixTopic.values()) {
             for(final EventHandlerProxy p :l) {
-                if ( p.isBlacklisted() ) {
+                if ( p.isDenied() ) {
                     handlers.add(p);
                 }
             }
         }
         for(final List<EventHandlerProxy> l : this.matchingTopic.values()) {
             for(final EventHandlerProxy p :l) {
-                if ( p.isBlacklisted() ) {
+                if ( p.isDenied() ) {
                     handlers.add(p);
                 }
             }

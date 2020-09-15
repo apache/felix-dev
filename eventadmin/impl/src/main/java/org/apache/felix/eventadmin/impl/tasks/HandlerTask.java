@@ -33,7 +33,7 @@ public class HandlerTask implements Runnable
 
 	private final long timeout;
 
-	private final BlacklistLatch handlerLatch;
+	private final DenylistLatch handlerLatch;
 
 	private volatile long startTime;
 
@@ -44,10 +44,10 @@ public class HandlerTask implements Runnable
 	 *
 	 * @param task Proxy to the event handler
 	 * @param event The event to send to the handler
-	 * @param timeout Timeout for handler blacklisting
+	 * @param timeout Timeout for handler denying
 	 * @param handlerLatch The latch used to ensure events fire in proper order
 	 */
-	public HandlerTask(final EventHandlerProxy task, final Event event, final long timeout, final BlacklistLatch handlerLatch)
+	public HandlerTask(final EventHandlerProxy task, final Event event, final long timeout, final DenylistLatch handlerLatch)
 	{
 		this.task = task;
 		this.event = event;
@@ -69,7 +69,7 @@ public class HandlerTask implements Runnable
             // execute the task
             task.sendEvent(event);
             endTime = System.currentTimeMillis();
-            checkForBlacklist();
+            checkForDenylist();
         }
         finally
         {
@@ -77,7 +77,7 @@ public class HandlerTask implements Runnable
         }
     }
 
-    public void runWithoutBlacklistTiming()
+    public void runWithoutDenylistTiming()
     {
     	task.sendEvent(event);
     	handlerLatch.countDown();
@@ -98,14 +98,14 @@ public class HandlerTask implements Runnable
     }
 
     /**
-     * Check to see if we need to blacklist this handler
+     * Check to see if we need to deny this handler
      *
      */
-    public void checkForBlacklist()
+    public void checkForDenylist()
     {
     	if (useTimeout() && getTaskTime() > this.timeout)
 		{
-			task.blackListHandler();
+			task.denyEventHandler();
 		}
     }
 

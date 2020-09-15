@@ -91,7 +91,7 @@ public class SyncDeliverTasks
         final SyncThread syncThread = sleepingThread instanceof SyncThread ? (SyncThread)sleepingThread : null;
 
         final Iterator<EventHandlerProxy> i = tasks.iterator();
-        final BlacklistLatch handlerLatch = new BlacklistLatch(tasks.size(), this.timeout/2);
+        final DenylistLatch handlerLatch = new DenylistLatch(tasks.size(), this.timeout/2);
 
         while ( i.hasNext() )
         {
@@ -101,7 +101,7 @@ public class SyncDeliverTasks
 //            {
                 if( !handlerTask.useTimeout() )
                 {
-                	handlerTask.runWithoutBlacklistTiming();
+                	handlerTask.runWithoutDenylistTiming();
                 }
             	else if ( syncThread != null  )
                 {
@@ -112,7 +112,7 @@ public class SyncDeliverTasks
                 else
                 {
 
-                	handlerLatch.addToBlacklistCheck(handlerTask);
+                	handlerLatch.addToDenylistCheck(handlerTask);
                     if ( !this.pool.executeTask(handlerTask) )
                     {
                         // scheduling failed: last resort, call directly
@@ -122,7 +122,7 @@ public class SyncDeliverTasks
 
 //            }
         }
-        handlerLatch.awaitAndBlacklistCheck();
+        handlerLatch.awaitAndDenylistCheck();
 
     }
 }

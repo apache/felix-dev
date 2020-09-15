@@ -25,7 +25,7 @@ import org.osgi.framework.BundleContext;
 /**
  * The activator of the EventAdmin bundle. This class registers an implementation of
  * the OSGi R4 <tt>EventAdmin</tt> service (see the Compendium 113) with the
- * framework. It features timeout-based blacklisting of event-handlers for both,
+ * framework. It features timeout-based denying of event-handlers for both,
  * asynchronous and synchronous event-dispatching (as a spec conform optional
  * extension).
  *
@@ -51,6 +51,7 @@ public class Activator implements BundleActivator
      *
      * @see org.osgi.framework.BundleActivator#start(org.osgi.framework.BundleContext)
      */
+    @Override
     public void start(final BundleContext context)
     {
         // init the LogWrapper. Subsequently, the static methods of the LogWrapper
@@ -76,6 +77,7 @@ public class Activator implements BundleActivator
      *
      * @see org.osgi.framework.BundleActivator#stop(org.osgi.framework.BundleContext)
      */
+    @Override
     public void stop(final BundleContext context)
     {
         if ( m_config != null )
