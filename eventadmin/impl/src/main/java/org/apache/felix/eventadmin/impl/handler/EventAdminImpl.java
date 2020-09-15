@@ -18,6 +18,9 @@
  */
 package org.apache.felix.eventadmin.impl.handler;
 
+import java.util.ArrayList;
+import java.util.List;
+
 import org.apache.felix.eventadmin.impl.tasks.AsyncDeliverTasks;
 import org.apache.felix.eventadmin.impl.tasks.DefaultThreadPool;
 import org.apache.felix.eventadmin.impl.tasks.SyncDeliverTasks;
@@ -183,5 +186,25 @@ public class EventAdminImpl implements EventAdmin
         {
             throw new NullPointerException(name + " may not be null");
         }
+    }
+
+    public interface EventHandlerMBean {
+
+        String[] getDeniedEventHandlers();
+    }
+
+    public Object getHandlerInfoMBean() {
+        return new EventHandlerMBean() {
+
+            @Override
+            public String[] getDeniedEventHandlers() {
+                final List<String> names = new ArrayList<>();
+                for(final EventHandlerProxy p : tracker.getDeniedHandlers()) {
+                    names.add(p.getInfo());
+                }
+
+                return names.toArray(new String[names.size()]);
+            }
+        };
     }
 }

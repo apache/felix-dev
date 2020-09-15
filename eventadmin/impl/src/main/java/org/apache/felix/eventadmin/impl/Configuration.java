@@ -167,12 +167,15 @@ public class Configuration
     private volatile EventAdminImpl m_admin;
 
     // The registration of the security decorator factory (i.e., the service)
-    private volatile ServiceRegistration m_registration;
+    private volatile ServiceRegistration<EventAdmin> m_registration;
+
+    // The registration of the mbean
+    private volatile ServiceRegistration<Object> m_mbeanreg;
 
     // all adapters
     private AbstractAdapter[] m_adapters;
 
-    private ServiceRegistration m_managedServiceReg;
+    private ServiceRegistration<?> m_managedServiceReg;
 
     // the access control context
     private final AccessControlContext acc;
@@ -434,8 +437,13 @@ public class Configuration
             // register the admin wrapped in a service factory (SecureEventAdminFactory)
             // that hands-out the m_admin object wrapped in a decorator that checks
             // appropriated permissions of each calling bundle
-            m_registration = m_bundleContext.registerService(EventAdmin.class.getName(),
+            m_registration = m_bundleContext.registerService(EventAdmin.class,
                     new SecureEventAdminFactory(m_admin), null);
+
+            final Dictionary<String, Object> mbeanProps = new Hashtable<>();
+            mbeanProps.put("jmx.objectname", "org.apache.felix.eventadmin:type=handlerinfo,name=EventAdmin");
+
+            m_mbeanreg = m_bundleContext.registerService(Object.class, m_admin.getHandlerInfoMBean(), mbeanProps);
         }
         else
         {
@@ -469,6 +477,10 @@ public class Configuration
                 m_managedServiceReg = null;
             }
             // We need to unregister manually
+            if ( m_mbeanreg != null ) {
+                m_mbeanreg.unregister();
+                m_mbeanreg = null;
+            }
             if ( m_registration != null )
             {
                 m_registration.unregister();

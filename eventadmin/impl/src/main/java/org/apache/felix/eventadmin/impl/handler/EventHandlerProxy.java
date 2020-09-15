@@ -268,6 +268,13 @@ public class EventHandlerProxy {
     }
 
     /**
+     * Get some info about the event handler
+     */
+    public String getInfo() {
+        return this.reference.toString() + " [Bundle " + this.reference.getBundle() + "]";
+    }
+
+    /**
      * Dispose the proxy and release the handler
      */
     public void dispose()
@@ -441,5 +448,9 @@ public class EventHandlerProxy {
 	        // we can free the handler now.
 	        this.release();
     	}
+    }
+
+    public boolean isBlacklisted() {
+        return this.blacklisted;
     }
 }
