@@ -710,7 +710,7 @@ public class BundleWiringImpl implements BundleWiring
     private ClassLoader getClassLoaderInternal()
     {
         ClassLoader classLoader = m_classLoader;
-        if (m_classLoader != null)
+        if (classLoader != null)
         {
             return classLoader;
         }
