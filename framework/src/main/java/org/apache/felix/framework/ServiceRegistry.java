@@ -490,11 +490,11 @@ public class ServiceRegistry
 
                     if (svc != null)
                     {
-                        // Check the count again to ensure that nobody else has just
-                        // obtained the service again
-                        if (usage.m_count.get() <= 0)
+                        if (usage.m_svcHolderRef.compareAndSet(holder, null))
                         {
-                            if (usage.m_svcHolderRef.compareAndSet(holder, null))
+                            // Check the count again to ensure that nobody else has just
+                            // obtained the service again
+                            if (usage.m_count.get() <= 0)
                             {
                                 // Temporarily increase the usage again so that the 
                                 // service factory still sees the usage in the unget
@@ -509,7 +509,6 @@ public class ServiceRegistry
                                     // now we can decrease the usage again
                                     usage.m_count.decrementAndGet();
                                 }
-
                             }
                         }
                     }
