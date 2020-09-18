@@ -1616,6 +1616,27 @@ public class SecureAction
         }
     }
 
+    public long getLastModified(File file)
+    {
+        if (System.getSecurityManager() != null)
+        {
+            Actions actions = (Actions) m_actions.get();
+            actions.set(Actions.LAST_MODIFIED, file);
+            try
+            {
+                return (Long) AccessController.doPrivileged(actions, m_acc);
+            }
+            catch (PrivilegedActionException e)
+            {
+                throw (RuntimeException) e.getException();
+            }
+        }
+        else
+        {
+            return file.lastModified();
+        }
+    }
+
     private static class Actions implements PrivilegedExceptionAction
     {
         public static final int INITIALIZE_CONTEXT_ACTION = 0;
@@ -1677,6 +1698,7 @@ public class SecureAction
         public static final int INVOKE_WOVEN_CLASS_LISTENER = 56;
         public static final int GET_CANONICAL_PATH = 57;
         public static final int CREATE_PROXY = 58;
+        public static final int LAST_MODIFIED = 59;
 
         private int m_action = -1;
         private Object m_arg1 = null;
@@ -1940,6 +1962,8 @@ public class SecureAction
                 case CREATE_PROXY:
                     return Proxy.newProxyInstance((ClassLoader)arg1, (Class<?>[])arg2,
                             (InvocationHandler) arg3);
+                case LAST_MODIFIED:
+                    return ((File) arg1).lastModified();
             }
 
             return null;

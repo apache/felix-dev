@@ -121,4 +121,6 @@ public interface Content
      *           or null if not possible.
      */
     URL getEntryAsURL(String name);
+
+    long getContentTime(String urlPath);
 }

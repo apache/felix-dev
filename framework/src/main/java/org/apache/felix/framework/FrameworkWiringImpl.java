@@ -63,9 +63,6 @@ class FrameworkWiringImpl implements FrameworkWiring, Runnable
      * thread explicitly is required in the embedded case, where Felix may be
      * stopped without the Java VM being stopped. In this case the
      * FelixFrameworkWiring thread must be stopped explicitly.
-     * <p>
-     * This method is called by the
-     * {@link PackageAdminActivator#stop(BundleContext)} method.
      */
     void stop()
     {

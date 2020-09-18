@@ -2071,7 +2071,7 @@ public class BundleWiringImpl implements BundleWiring
                         catch (Error e)
                         {
                             // Mark the woven class as incomplete.
-                            wci.complete(null, null, null);
+                            wci.complete();
                             wci.setState(WovenClass.TRANSFORMING_FAILED);
                             callWovenClassListeners(felix, wovenClassListeners, wci);
                             throw e;

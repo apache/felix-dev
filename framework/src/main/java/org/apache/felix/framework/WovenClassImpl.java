@@ -52,12 +52,10 @@ class WovenClassImpl implements WovenClass, List<String>
         m_state = TRANSFORMING;
     }
 
-    synchronized void complete(Class definedClass, byte[] bytes,
-            List<String> imports)
+    synchronized void complete()
     {
-        completeDefine(definedClass);
-        m_bytes = (bytes == null) ? m_bytes : bytes;
-        completeImports(imports);
+        completeDefine(null);
+        completeImports(null);
     }
 
     synchronized void completeImports(List<String> imports)
@@ -66,7 +64,7 @@ class WovenClassImpl implements WovenClass, List<String>
                 : Util.newImmutableList(imports);
     }
 
-    synchronized void completeDefine(Class definedClass)
+    synchronized void completeDefine(Class<?> definedClass)
     {
         m_definedClass = definedClass;
     }
@@ -191,14 +189,12 @@ class WovenClassImpl implements WovenClass, List<String>
         {
             try
             {
-                List<BundleRequirement> reqs = ManifestParser
+                ManifestParser
                         .parseDynamicImportHeader(null, null, s);
             } catch (Exception ex)
             {
-                RuntimeException re = new IllegalArgumentException(
-                        "Unable to parse dynamic import.");
-                re.initCause(ex);
-                throw re;
+                throw new IllegalArgumentException(
+                        "Unable to parse dynamic import.", ex);
             }
             checkImport(s);
             return m_imports.add(s);
@@ -244,14 +240,12 @@ class WovenClassImpl implements WovenClass, List<String>
         {
             try
             {
-                List<BundleRequirement> reqs = ManifestParser
+                ManifestParser
                         .parseDynamicImportHeader(null, null, s);
             } catch (Exception ex)
             {
-                RuntimeException re = new IllegalArgumentException(
-                        "Unable to parse dynamic import.");
-                re.initCause(ex);
-                throw re;
+                throw new IllegalArgumentException(
+                        "Unable to parse dynamic import.", ex);
             }
             checkImport(s);
         }
@@ -271,14 +265,12 @@ class WovenClassImpl implements WovenClass, List<String>
         {
             try
             {
-                List<BundleRequirement> reqs = ManifestParser
+                ManifestParser
                         .parseDynamicImportHeader(null, null, s);
             } catch (Exception ex)
             {
-                RuntimeException re = new IllegalArgumentException(
-                        "Unable to parse dynamic import.");
-                re.initCause(ex);
-                throw re;
+                throw new IllegalArgumentException(
+                        "Unable to parse dynamic import.", ex);
             }
             checkImport(s);
         }
@@ -333,14 +325,12 @@ class WovenClassImpl implements WovenClass, List<String>
         }
         try
         {
-            List<BundleRequirement> reqs = ManifestParser
+            ManifestParser
                     .parseDynamicImportHeader(null, null, s);
         } catch (Exception ex)
         {
-            RuntimeException re = new IllegalArgumentException(
-                    "Unable to parse dynamic import.");
-            re.initCause(ex);
-            throw re;
+            throw new IllegalArgumentException(
+                    "Unable to parse dynamic import.", ex);
         }
         checkImport(s);
         return m_imports.set(i, s);
@@ -356,14 +346,13 @@ class WovenClassImpl implements WovenClass, List<String>
         }
         try
         {
-            List<BundleRequirement> reqs = ManifestParser
+            ManifestParser
                     .parseDynamicImportHeader(null, null, s);
-        } catch (Exception ex)
+        }
+        catch (Exception ex)
         {
-            RuntimeException re = new IllegalArgumentException(
-                    "Unable to parse dynamic import.");
-            re.initCause(ex);
-            throw re;
+            throw new IllegalArgumentException(
+                    "Unable to parse dynamic import.", ex);
         }
         checkImport(s);
         m_imports.add(i, s);

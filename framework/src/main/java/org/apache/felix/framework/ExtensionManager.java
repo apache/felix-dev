@@ -897,6 +897,12 @@ class ExtensionManager implements Content
         return null;
     }
 
+    @Override
+    public long getContentTime(String name)
+    {
+        return -1L;
+    }
+
     //
     // Utility methods.
     //

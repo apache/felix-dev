@@ -112,9 +112,6 @@ public class JarContent implements Content
         {
             return false;
         }
-        finally
-        {
-        }
     }
 
     public Enumeration<String> getEntries()
@@ -192,6 +189,20 @@ public class JarContent implements Content
         else
         {
             return null;
+        }
+    }
+
+    @Override
+    public long getContentTime(String urlPath)
+    {
+        try
+        {
+            ZipEntry ze = m_zipFile.getEntry(urlPath);
+            return ze.getTime();
+        }
+        catch (Exception ex)
+        {
+            return -1L;
         }
     }
 

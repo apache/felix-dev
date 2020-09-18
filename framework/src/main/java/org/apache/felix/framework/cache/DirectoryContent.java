@@ -72,10 +72,7 @@ public class DirectoryContent implements Content
 
     public boolean hasEntry(String name) throws IllegalStateException
     {
-        if ((name.length() > 0) && (name.charAt(0) == '/'))
-        {
-            name = name.substring(1);
-        }
+        name = getName(name);
 
         // Return true if the file associated with the entry exists,
         // unless the entry name ends with "/", in which case only
@@ -97,10 +94,7 @@ public class DirectoryContent implements Content
 
     public byte[] getEntryAsBytes(String name) throws IllegalStateException
     {
-        if ((name.length() > 0) && (name.charAt(0) == '/'))
-        {
-            name = name.substring(1);
-        }
+        name = getName(name);
 
         // Get the embedded resource.
 
@@ -122,10 +116,7 @@ public class DirectoryContent implements Content
     public InputStream getEntryAsStream(String name)
         throws IllegalStateException, IOException
     {
-        if ((name.length() > 0) && (name.charAt(0) == '/'))
-        {
-            name = name.substring(1);
-        }
+        name = getName(name);
 
         File file = new File(m_dir, name);
         try
@@ -141,12 +132,17 @@ public class DirectoryContent implements Content
         }
     }
 
-    public URL getEntryAsURL(String name)
+    private String getName(String name)
     {
-        if ((name.length() > 0) && (name.charAt(0) == '/'))
-        {
+        if ((name.length() > 0) && (name.charAt(0) == '/')) {
             name = name.substring(1);
         }
+        return name;
+    }
+
+    public URL getEntryAsURL(String name)
+    {
+        name = getName(name);
 
         if (hasEntry(name))
         {
@@ -163,6 +159,16 @@ public class DirectoryContent implements Content
         {
             return null;
         }
+    }
+
+    @Override
+    public long getContentTime(String name)
+    {
+        name = getName(name);
+
+        File file = new File(m_dir, name);
+
+        return BundleCache.getSecureAction().getLastModified(file);
     }
 
     public Content getEntryAsContent(String entryName)

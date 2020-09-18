@@ -28,7 +28,6 @@ import java.util.Enumeration;
 import java.util.List;
 import java.util.Map;
 
-import org.apache.felix.framework.cache.ConnectContentContent;
 import org.apache.felix.framework.cache.Content;
 import org.apache.felix.framework.util.FelixConstants;
 import org.apache.felix.framework.util.MultiReleaseContent;
@@ -641,12 +640,8 @@ public class BundleRevisionImpl implements BundleRevision, Resource
         else {
             content = getContentPath().get(index - 1);
         }
-        if (content instanceof ConnectContentContent) {
-            return ((ConnectContentContent) content).getContentTime(urlPath);
-        }
-        else {
-            return m_bundle.getLastModified();
-        }
+        long result = content.getContentTime(urlPath);
+        return result > 0 ? result : m_bundle.getLastModified();
     }
 
     public URL getLocalURL(int index, String urlPath)

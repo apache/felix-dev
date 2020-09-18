@@ -164,6 +164,12 @@ public class MultiReleaseContent implements Content
         return m_content.getEntryAsURL(findPath(name));
     }
 
+    @Override
+    public long getContentTime(String name)
+    {
+        return m_content.getContentTime(findPath(name));
+    }
+
     private String findPath(String path)
     {
         String internalPath = path;

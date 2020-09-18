@@ -208,6 +208,7 @@ public class ConnectContentContent implements Content
         return null;
     }
 
+    @Override
     public long getContentTime(String urlPath)
     {
         return m_content.getEntry(urlPath).flatMap(entry -> Optional.of(entry.getLastModified())).orElse(-1L);

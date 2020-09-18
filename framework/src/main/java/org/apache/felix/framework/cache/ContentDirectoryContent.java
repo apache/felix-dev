@@ -47,10 +47,7 @@ public class ContentDirectoryContent implements Content
 
     public boolean hasEntry(String name) throws IllegalStateException
     {
-        if ((name.length() > 0) && (name.charAt(0) == '/'))
-        {
-            name = name.substring(1);
-        }
+        name = getName(name);
 
         return m_content.hasEntry(m_rootPath + name);
     }
@@ -63,10 +60,7 @@ public class ContentDirectoryContent implements Content
 
     public byte[] getEntryAsBytes(String name) throws IllegalStateException
     {
-        if ((name.length() > 0) && (name.charAt(0) == '/'))
-        {
-            name = name.substring(1);
-        }
+        name = getName(name);
 
         return m_content.getEntryAsBytes(m_rootPath + name);
     }
@@ -74,12 +68,17 @@ public class ContentDirectoryContent implements Content
     public InputStream getEntryAsStream(String name)
         throws IllegalStateException, IOException
     {
-        if ((name.length() > 0) && (name.charAt(0) == '/'))
-        {
-            name = name.substring(1);
-        }
+        name = getName(name);
 
         return m_content.getEntryAsStream(m_rootPath + name);
+    }
+
+    private String getName(String name)
+    {
+        if ((name.length() > 0) && (name.charAt(0) == '/')) {
+            name = name.substring(1);
+        }
+        return name;
     }
 
     public URL getEntryAsURL(String name)
@@ -87,22 +86,24 @@ public class ContentDirectoryContent implements Content
         return m_content.getEntryAsURL(m_rootPath + name);
     }
 
+    @Override
+    public long getContentTime(String name)
+    {
+        name = getName(name);
+
+        return m_content.getContentTime(m_rootPath + name);
+    }
+
     public Content getEntryAsContent(String name)
     {
-        if ((name.length() > 0) && (name.charAt(0) == '/'))
-        {
-            name = name.substring(1);
-        }
+        name = getName(name);
 
         return m_content.getEntryAsContent(m_rootPath + name);
     }
 
     public String getEntryAsNativeLibrary(String name)
     {
-        if ((name.length() > 0) && (name.charAt(0) == '/'))
-        {
-            name = name.substring(1);
-        }
+        name = getName(name);
 
         return m_content.getEntryAsNativeLibrary(m_rootPath + name);
     }
