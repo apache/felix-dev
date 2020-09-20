@@ -207,6 +207,12 @@ public class AD extends OptionalAttributes
      */
     public void setOptions(Map options)
     {
+        if (options.size() == 0) {
+            optionLabels = null;
+            optionValues = null;
+            return;
+        }
+
         optionLabels = new String[options.size()];
         optionValues = new String[options.size()];
         int i = 0;
