@@ -75,9 +75,7 @@ import org.osgi.service.resolver.ResolutionException;
 import java.io.BufferedReader;
 import java.io.BufferedWriter;
 import java.io.File;
-import java.io.FileInputStream;
 import java.io.FileNotFoundException;
-import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.InputStreamReader;
@@ -1006,7 +1004,7 @@ public class Felix extends BundleImpl implements Framework
             BufferedReader input = null;
             try
             {
-                input = new BufferedReader(new InputStreamReader(new FileInputStream(dataFile), "UTF-8"));
+                input = new BufferedReader(new InputStreamReader(m_secureAction.getInputStream(dataFile), "UTF-8"));
                 lastVersion = Version.parseVersion(input.readLine()).getMajor();
             }
             catch (Exception ignore)
@@ -1039,7 +1037,7 @@ public class Felix extends BundleImpl implements Framework
         try
         {
             output = new PrintWriter(new OutputStreamWriter(
-                new FileOutputStream(getDataFile(this, "last.java.version")), "UTF-8"));
+                m_secureAction.getOutputStream(getDataFile(this, "last.java.version")), "UTF-8"));
             output.println(Integer.toString(currentVersion));
             output.flush();
         }
@@ -5044,7 +5042,7 @@ public class Felix extends BundleImpl implements Framework
             try
             {
                 File file = m_cache.getSystemBundleDataFile("bundle.id");
-                is = m_secureAction.getFileInputStream(file);
+                is = m_secureAction.getInputStream(file);
                 br = new BufferedReader(new InputStreamReader(is));
                 return Long.parseLong(br.readLine());
             }
@@ -5097,7 +5095,7 @@ public class Felix extends BundleImpl implements Framework
             try
             {
                 File file = m_cache.getSystemBundleDataFile("bundle.id");
-                os = m_secureAction.getFileOutputStream(file);
+                os = m_secureAction.getOutputStream(file);
                 bw = new BufferedWriter(new OutputStreamWriter(os));
                 String s = Long.toString(m_nextId);
                 bw.write(s, 0, s.length());

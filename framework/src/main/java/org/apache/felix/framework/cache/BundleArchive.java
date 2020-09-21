@@ -21,13 +21,11 @@ package org.apache.felix.framework.cache;
 import java.io.*;
 
 import java.util.Map;
-import java.util.Optional;
 import java.util.SortedMap;
 import java.util.TreeMap;
 import org.apache.felix.framework.Logger;
 import org.apache.felix.framework.util.WeakZipFileFactory;
 import org.osgi.framework.Bundle;
-import org.osgi.framework.BundleException;
 import org.osgi.framework.Constants;
 import org.osgi.framework.connect.ModuleConnector;
 import org.osgi.framework.connect.ConnectModule;
@@ -193,7 +191,7 @@ public class BundleArchive
         for (File child : children)
         {
             if (child.getName().startsWith(REVISION_DIRECTORY)
-                && child.isDirectory())
+                && BundleCache.getSecureAction().isFileDirectory(child))
             {
                 // Determine the revision number and add it to the revision map.
                 int idx = child.getName().lastIndexOf('.');
@@ -555,7 +553,7 @@ public class BundleArchive
         BufferedReader br = null;
         try
         {
-            is = BundleCache.getSecureAction().getFileInputStream(new File(
+            is = BundleCache.getSecureAction().getInputStream(new File(
                 new File(m_archiveRootDir, REVISION_DIRECTORY +
                 getRefreshCount() + "." + revNum.toString()), REVISION_LOCATION_FILE));
 
@@ -578,7 +576,7 @@ public class BundleArchive
         try
         {
             os = BundleCache.getSecureAction()
-                .getFileOutputStream(new File(
+                .getOutputStream(new File(
                     new File(m_archiveRootDir, REVISION_DIRECTORY +
                     getRefreshCount() + "." + revNum.toString()), REVISION_LOCATION_FILE));
             bw = new BufferedWriter(new OutputStreamWriter(os));
@@ -892,7 +890,7 @@ public class BundleArchive
         try
         {
             is = BundleCache.getSecureAction()
-                .getFileInputStream(infoFile);
+                .getInputStream(infoFile);
             br = new BufferedReader(new InputStreamReader(is));
 
             // Read id.
@@ -923,7 +921,7 @@ public class BundleArchive
         try
         {
             os = BundleCache.getSecureAction()
-                .getFileOutputStream(new File(m_archiveRootDir, BUNDLE_INFO_FILE));
+                .getOutputStream(new File(m_archiveRootDir, BUNDLE_INFO_FILE));
             bw = new BufferedWriter(new OutputStreamWriter(os));
 
             // Write id.

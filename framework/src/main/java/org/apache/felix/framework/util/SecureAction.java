@@ -22,16 +22,16 @@ import java.io.*;
 import java.lang.reflect.*;
 import java.lang.reflect.Proxy;
 import java.net.*;
+import java.nio.channels.FileChannel;
+import java.nio.file.Files;
+import java.nio.file.StandardOpenOption;
 import java.security.*;
-import java.util.Arrays;
 import java.util.Collection;
 import java.util.HashMap;
 import java.util.Hashtable;
 import java.util.Map;
-import java.util.concurrent.ConcurrentHashMap;
 import java.util.function.Consumer;
 import java.util.jar.JarFile;
-import java.util.stream.Stream;
 import java.util.zip.ZipFile;
 
 import org.osgi.framework.Bundle;
@@ -62,7 +62,8 @@ public class SecureAction
 {
     private static final byte[] accessor;
 
-    static {
+    static
+    {
         byte[] result;
 
         try (ByteArrayOutputStream output = new ByteArrayOutputStream();
@@ -349,6 +350,28 @@ public class SecureAction
         }
     }
 
+    public boolean isFile(File file)
+    {
+        if (System.getSecurityManager() != null)
+        {
+            try
+            {
+                Actions actions = (Actions) m_actions.get();
+                actions.set(Actions.FILE_IS_FILE_ACTION, file);
+                return ((Boolean) AccessController.doPrivileged(actions, m_acc))
+                        .booleanValue();
+            }
+            catch (PrivilegedActionException ex)
+            {
+                throw (RuntimeException) ex.getException();
+            }
+        }
+        else
+        {
+            return file.isFile();
+        }
+    }
+
     public boolean isFileDirectory(File file)
     {
         if (System.getSecurityManager() != null)
@@ -458,6 +481,56 @@ public class SecureAction
         }
     }
 
+    public InputStream getInputStream(File file) throws IOException
+    {
+        if (System.getSecurityManager() != null)
+        {
+            try
+            {
+                Actions actions = (Actions) m_actions.get();
+                actions.set(Actions.GET_INPUT_ACTION, file);
+                return (InputStream) AccessController.doPrivileged(actions, m_acc);
+            }
+            catch (PrivilegedActionException ex)
+            {
+                if (ex.getException() instanceof IOException)
+                {
+                    throw (IOException) ex.getException();
+                }
+                throw (RuntimeException) ex.getException();
+            }
+        }
+        else
+        {
+            return Files.newInputStream(file.toPath());
+        }
+    }
+
+    public OutputStream getOutputStream(File file) throws IOException
+    {
+        if (System.getSecurityManager() != null)
+        {
+            try
+            {
+                Actions actions = (Actions) m_actions.get();
+                actions.set(Actions.GET_OUTPUT_ACTION, file);
+                return (OutputStream) AccessController.doPrivileged(actions, m_acc);
+            }
+            catch (PrivilegedActionException ex)
+            {
+                if (ex.getException() instanceof IOException)
+                {
+                    throw (IOException) ex.getException();
+                }
+                throw (RuntimeException) ex.getException();
+            }
+        }
+        else
+        {
+            return Files.newOutputStream(file.toPath());
+        }
+    }
+
     public FileInputStream getFileInputStream(File file) throws IOException
     {
         if (System.getSecurityManager() != null)
@@ -505,6 +578,31 @@ public class SecureAction
         else
         {
             return new FileOutputStream(file);
+        }
+    }
+
+    public FileChannel getFileChannel(File file) throws IOException
+    {
+        if (System.getSecurityManager() != null)
+        {
+            try
+            {
+                Actions actions = (Actions) m_actions.get();
+                actions.set(Actions.GET_FILE_CHANNEL_ACTION, file);
+                return (FileChannel) AccessController.doPrivileged(actions, m_acc);
+            }
+            catch (PrivilegedActionException ex)
+            {
+                if (ex.getException() instanceof IOException)
+                {
+                    throw (IOException) ex.getException();
+                }
+                throw (RuntimeException) ex.getException();
+            }
+        }
+        else
+        {
+            return FileChannel.open(file.toPath(), StandardOpenOption.CREATE, StandardOpenOption.WRITE);
         }
     }
 
@@ -1699,6 +1797,10 @@ public class SecureAction
         public static final int GET_CANONICAL_PATH = 57;
         public static final int CREATE_PROXY = 58;
         public static final int LAST_MODIFIED = 59;
+        public static final int FILE_IS_FILE_ACTION = 60;
+        public static final int GET_FILE_CHANNEL_ACTION = 61;
+        private static final int GET_INPUT_ACTION = 62;
+        private static final int GET_OUTPUT_ACTION = 63;
 
         private int m_action = -1;
         private Object m_arg1 = null;
@@ -1964,6 +2066,14 @@ public class SecureAction
                             (InvocationHandler) arg3);
                 case LAST_MODIFIED:
                     return ((File) arg1).lastModified();
+                case FILE_IS_FILE_ACTION:
+                    return ((File) arg1).isFile() ? Boolean.TRUE : Boolean.FALSE;
+                case GET_FILE_CHANNEL_ACTION:
+                    return FileChannel.open(((File) arg1).toPath(), StandardOpenOption.CREATE, StandardOpenOption.WRITE);
+                case GET_INPUT_ACTION:
+                    return Files.newInputStream(((File) arg1).toPath());
+                case GET_OUTPUT_ACTION:
+                    return Files.newOutputStream(((File) arg1).toPath());
             }
 
             return null;

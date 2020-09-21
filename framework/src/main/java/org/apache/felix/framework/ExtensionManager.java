@@ -54,8 +54,6 @@ import org.osgi.framework.wiring.BundleWire;
 import org.osgi.framework.wiring.BundleWiring;
 
 import java.io.File;
-import java.io.FileInputStream;
-import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.InputStreamReader;
@@ -287,11 +285,11 @@ class ExtensionManager implements Content
                         {
                             Properties cachedProps = new Properties();
                             File modulesDir = felix.getDataFile(felix, "modules");
-                            modulesDir.mkdirs();
+                            Felix.m_secureAction.mkdirs(modulesDir);
                             File cached = new File(modulesDir, moduleKey + ".properties");
-                            if (cached.isFile())
+                            if (Felix.m_secureAction.isFile(cached))
                             {
-                                FileInputStream input = new FileInputStream(cached);
+                                InputStream input = Felix.m_secureAction.getInputStream(cached);
                                 cachedProps.load(new InputStreamReader(input, "UTF-8"));
                                 input.close();
                                 for (Enumeration<?> keys = cachedProps.propertyNames(); keys.hasMoreElements();)
@@ -313,7 +311,7 @@ class ExtensionManager implements Content
                                         cachedProps.setProperty(pkg, String.join(",", uses));
                                     }
                                 }
-                                OutputStream output = new FileOutputStream(cached);
+                                OutputStream output = Felix.m_secureAction.getOutputStream(cached);
                                 cachedProps.store(new OutputStreamWriter(output, "UTF-8"), null);
                                 output.close();
                             }

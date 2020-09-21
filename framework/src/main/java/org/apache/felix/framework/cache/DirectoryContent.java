@@ -102,7 +102,7 @@ public class DirectoryContent implements Content
         try
         {
 
-            return BundleCache.getSecureAction().fileExists(file) ? BundleCache.read(BundleCache.getSecureAction().getFileInputStream(file), file.length()) : null;
+            return BundleCache.getSecureAction().fileExists(file) ? BundleCache.read(BundleCache.getSecureAction().getInputStream(file), file.length()) : null;
         }
         catch (Exception ex)
         {
@@ -121,7 +121,7 @@ public class DirectoryContent implements Content
         File file = new File(m_dir, name);
         try
         {
-            return BundleCache.getSecureAction().fileExists(file) ? BundleCache.getSecureAction().getFileInputStream(file) : null;
+            return BundleCache.getSecureAction().fileExists(file) ? BundleCache.getSecureAction().getInputStream(file) : null;
         }
         catch (Exception ex)
         {
@@ -284,7 +284,7 @@ public class DirectoryContent implements Content
 
                         try
                         {
-                            is = BundleCache.getSecureAction().getFileInputStream(entryFile);
+                            is = BundleCache.getSecureAction().getInputStream(entryFile);
 
                             // Create the file.
                             BundleCache.copyStreamToFile(is, libFile);
