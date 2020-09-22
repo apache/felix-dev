@@ -364,9 +364,12 @@ class ServiceRegistrationImpl implements ServiceRegistration
                 {
                     if (clazz == null)
                     {
-                        throw new ServiceException(
-                            "Service cannot be cast due to missing class: " + m_classes[i],
-                            ServiceException.FACTORY_ERROR);
+                        if (!Util.checkImplementsWithName(svcObj.getClass(), m_classes[i]))
+                        {
+                            throw new ServiceException(
+                                    "Service cannot be cast due to missing class: " + m_classes[i],
+                                    ServiceException.FACTORY_ERROR);
+                        }
                     }
                     else
                     {

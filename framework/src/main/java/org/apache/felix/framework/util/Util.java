@@ -459,6 +459,31 @@ public class Util
         return null;
     }
 
+    public static boolean checkImplementsWithName(Class<?> clazz, String name)
+    {
+        while (clazz != null)
+        {
+            if (clazz.getName().equals(name))
+            {
+                return true;
+            }
+            // Try to see if
+            // one of the class's implemented interface
+            // is the name.
+            Class[] ifcs = clazz.getInterfaces();
+            for (int i = 0; i < ifcs.length; i++)
+            {
+                if (checkImplementsWithName(ifcs[i], name)) {
+                    return true;
+                }
+            }
+
+            // Try the super class class loader.
+            clazz = clazz.getSuperclass();
+        }
+        return false;
+    }
+
     /**
      * This method determines if the requesting bundle is able to cast
      * the specified service reference based on class visibility rules

@@ -90,7 +90,7 @@
               <excludes>
                   <exclude>src/main/appended-resources/**</exclude>
                   <exclude>src/**/packageinfo</exclude>
-                  <exclude>src/main/resources/META-INF/services/*</exclude>
+                  <exclude>src/main/resources/META-INF/**</exclude>
                   <exclude>src/main/resources/org/apache/felix/framework/Felix.properties</exclude>
               </excludes>
             </configuration>

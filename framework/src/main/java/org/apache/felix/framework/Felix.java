@@ -3777,8 +3777,11 @@ public class Felix extends BundleImpl implements Framework
                 Class clazz = Util.loadClassUsingClass(svcObj.getClass(), classNames[i], m_secureAction);
                 if (clazz == null)
                 {
-                    throw new IllegalArgumentException(
-                        "Cannot cast service: " + classNames[i]);
+                    if (!Util.checkImplementsWithName(svcObj.getClass(), classNames[i]))
+                    {
+                        throw new IllegalArgumentException(
+                                "Cannot cast service: " + classNames[i]);
+                    }
                 }
                 else if (!clazz.isAssignableFrom(svcObj.getClass()))
                 {
