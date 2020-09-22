@@ -98,13 +98,19 @@ public class ServiceTracker<S, T, U extends ServiceEvent> {
      */
     private boolean active;
 
-	/**
-	 * Accessor method for the current Tracked object. This method is only
-	 * intended to be used by the unsynchronized methods which do not modify the
-	 * tracked field.
-	 * 
-	 * @return The current Tracked object.
-	 */
+    /**
+     * Reference to be tracked. If this field is set, then we are tracking a
+     * single ServiceReference.
+     */
+    private final ServiceReference<S> trackReference;
+
+    /**
+     * Accessor method for the current Tracked object. This method is only
+     * intended to be used by the unsynchronized methods which do not modify the
+     * tracked field.
+     * 
+     * @return The current Tracked object.
+     */
 	public Tracked tracked() {
 		return tracked;
 	}
@@ -134,7 +140,8 @@ public class ServiceTracker<S, T, U extends ServiceEvent> {
 	    final ServiceTrackerCustomizer<S, T, U> customizer,
 	    boolean initialActive,
 	    ExtendedServiceListenerContext<U> bundleComponentActivator,
-	    final String initialReferenceFilterString) {
+        final String initialReferenceFilterString, final ServiceReference<S> initialReference)
+    {
         if ((context == null)) {
             /*
              * we throw a NPE here to be consistent with the other constructors
@@ -142,6 +149,7 @@ public class ServiceTracker<S, T, U extends ServiceEvent> {
             throw new NullPointerException( "BundleContext");
         }
 		this.context = context;
+        this.trackReference = initialReference;
 		this.initialReferenceFilterString = initialReferenceFilterString;
 		this.customizer = customizer;
 		this.active = initialActive;
@@ -196,7 +204,22 @@ public class ServiceTracker<S, T, U extends ServiceEvent> {
 			synchronized (t) {
 				try {
 					extendedServiceListenerContext.addServiceListener(initialReferenceFilterString, t);
-					ServiceReference<S>[] references = getInitialReferences(null, initialReferenceFilterString);
+                    ServiceReference<S>[] references = null;
+                    if (trackReference != null)
+                    {
+                        if (trackReference.getBundle() != null)
+                        {
+                            @SuppressWarnings("unchecked")
+                            ServiceReference<S>[] single = new ServiceReference[] {
+                                    trackReference };
+                            references = single;
+                        }
+                    }
+                    else
+                    {
+                        references = getInitialReferences(null,
+                            initialReferenceFilterString);
+                    }
 					/* set tracked with the initial references */
 					t.setInitial(references);
 				} catch (InvalidSyntaxException e) {

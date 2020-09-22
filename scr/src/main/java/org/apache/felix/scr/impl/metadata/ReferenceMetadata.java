@@ -97,6 +97,13 @@ public class ReferenceMetadata
     // set of valid field value type settings
     private static final Set<String> FIELD_VALUE_TYPE_VALID;
 
+    public static final String CONDITION_SERVICE_CLASS = "org.osgi.service.condition.Condition";
+
+    public static final String CONDITION_TRUE_FILTER = "(osgi.condition.id=true)";
+
+    // TODO this constant will be defined in the R8 Declarative Services spec
+    public static final String REFERENCE_NAME_SATISFYING_CONDITION = "osgi.ds.satisfying.condition";
+
     // Name for the reference (required)
     private String m_name;
 
@@ -153,6 +160,7 @@ public class ReferenceMetadata
 
     // Flag that is set once the component is verified (its properties cannot be changed)
     private boolean m_validated = false;
+
 
     static
     {

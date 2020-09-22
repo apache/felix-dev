@@ -31,16 +31,18 @@ import javax.xml.parsers.SAXParserFactory;
 
 import org.apache.felix.scr.impl.logger.MockBundleLogger;
 import org.apache.felix.scr.impl.metadata.ComponentMetadata;
+import org.apache.felix.scr.impl.metadata.ReferenceMetadata;
 import org.junit.Test;
 import org.mockito.Mockito;
 import org.osgi.framework.Bundle;
+import org.osgi.framework.ServiceReference;
 
 public class XmlHandlerTest {
 
     @Test
     public void testPropertiesWithoutValue() throws Exception {
-        final URL url = this.getClass().getClassLoader().getResource("parsertest-nopropvalue.xml");
-        final List<ComponentMetadata> components = parse(url);
+        final URL url = getClass().getResource("/parsertest-nopropvalue.xml");
+        final List<ComponentMetadata> components = parse(url, null);
         assertEquals(1, components.size());
 
         final ComponentMetadata cm = components.get(0);
@@ -52,7 +54,66 @@ public class XmlHandlerTest {
         assertNotNull(cm.getProperties().get("jmx.objectname"));
     }
 
-    private List<ComponentMetadata> parse(final URL descriptorURL) throws Exception {
+    @Test
+    public void testNoTrueCondition() throws Exception
+    {
+        final URL url = getClass().getResource("/parsertest-nopropvalue.xml");
+        final List<ComponentMetadata> components = parse(url, null);
+        assertEquals(1, components.size());
+
+        final ComponentMetadata cm = components.get(0);
+        cm.validate();
+        List<ReferenceMetadata> dependencies = cm.getDependencies();
+        assertEquals("Wrong number of dependencies.", 4, dependencies.size());
+    }
+
+    @Test
+    public void testAvailableTrueCondition() throws Exception
+    {
+        final URL url = getClass().getResource("/parsertest-nopropvalue.xml");
+        final List<ComponentMetadata> components = parse(url,
+            Mockito.mock(ServiceReference.class));
+        assertEquals(1, components.size());
+
+        final ComponentMetadata cm = components.get(0);
+        cm.validate();
+        List<ReferenceMetadata> dependencies = cm.getDependencies();
+        assertEquals("Wrong number of dependencies.", 5, dependencies.size());
+        ReferenceMetadata trueDependency = dependencies.get(dependencies.size() - 1);
+        assertEquals("Wrong name.", "osgi.ds.satisfying.condition",
+            trueDependency.getName());
+        assertEquals("Wrong interface.", "org.osgi.service.condition.Condition",
+            trueDependency.getInterface());
+        assertEquals("Wrong policy.", "dynamic", trueDependency.getPolicy());
+        assertEquals("Wrong target.", "(osgi.condition.id=true)",
+            trueDependency.getTarget());
+    }
+
+    @Test
+    public void testSatisfyingConditionSpecified() throws Exception
+    {
+        final URL url = getClass().getResource("/satisfying-condition-specified.xml");
+        final List<ComponentMetadata> components = parse(url,
+            Mockito.mock(ServiceReference.class));
+        assertEquals(1, components.size());
+
+        final ComponentMetadata cm = components.get(0);
+        cm.validate();
+        List<ReferenceMetadata> dependencies = cm.getDependencies();
+        assertEquals("Wrong number of dependencies.", 1, dependencies.size());
+        ReferenceMetadata trueDependency = dependencies.get(dependencies.size() - 1);
+        assertEquals("Wrong name.", "osgi.ds.satisfying.condition",
+            trueDependency.getName());
+        assertEquals("Wrong interface.", "org.osgi.service.condition.Condition",
+            trueDependency.getInterface());
+        assertEquals("Wrong policy.", "dynamic", trueDependency.getPolicy());
+        assertEquals("Wrong target.", "(foo=bar)",
+            trueDependency.getTarget());
+    }
+
+    private List<ComponentMetadata> parse(final URL descriptorURL,
+        ServiceReference<?> trueCondition) throws Exception
+    {
         final Bundle bundle = Mockito.mock(Bundle.class);
         Mockito.when(bundle.getLocation()).thenReturn("bundle");
 
@@ -60,7 +121,8 @@ public class XmlHandlerTest {
         try {
             stream = descriptorURL.openStream();
 
-            XmlHandler handler = new XmlHandler(bundle, new MockBundleLogger(), false, false);
+            XmlHandler handler = new XmlHandler(bundle, new MockBundleLogger(), false,
+                false, trueCondition);
             final SAXParserFactory factory = SAXParserFactory.newInstance();
             factory.setNamespaceAware(true);
             final SAXParser parser = factory.newSAXParser();

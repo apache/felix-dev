@@ -49,11 +49,14 @@ import org.apache.felix.scr.impl.manager.ComponentHolder;
 import org.apache.felix.scr.impl.metadata.ComponentMetadata;
 import org.apache.felix.scr.impl.metadata.MetadataStoreHelper.MetaDataReader;
 import org.apache.felix.scr.impl.metadata.MetadataStoreHelper.MetaDataWriter;
+import org.apache.felix.scr.impl.metadata.ReferenceMetadata;
 import org.apache.felix.scr.impl.runtime.ServiceComponentRuntimeImpl;
 import org.osgi.framework.Bundle;
 import org.osgi.framework.BundleContext;
 import org.osgi.framework.BundleEvent;
 import org.osgi.framework.Constants;
+import org.osgi.framework.InvalidSyntaxException;
+import org.osgi.framework.ServiceReference;
 import org.osgi.framework.ServiceRegistration;
 import org.osgi.framework.wiring.BundleRevision;
 import org.osgi.framework.wiring.BundleWire;
@@ -76,6 +79,8 @@ public class Activator extends AbstractExtender
 
     //Either this bundle's context or the framework bundle context, depending on the globalExtender setting.
     private BundleContext m_globalContext;
+
+    private ServiceReference<?> m_trueCondition;
 
     // this bundle
     private Bundle m_bundle;
@@ -115,12 +120,40 @@ public class Activator extends AbstractExtender
     {
         m_context = context;
         m_bundle = context.getBundle();
+        m_trueCondition = findTrueCondition(context);
         // set bundle context for PackageAdmin tracker
         ClassUtils.setBundleContext( context );
         // get the configuration
         m_configuration.start( m_context ); //this will call restart, which calls super.start.
     }
 
+
+    private ServiceReference<?> findTrueCondition(BundleContext context)
+    {
+        try
+        {
+            ServiceReference<?>[] foundTrue = context.getServiceReferences(
+                ReferenceMetadata.CONDITION_SERVICE_CLASS, ReferenceMetadata.CONDITION_TRUE_FILTER);
+            if (foundTrue == null || foundTrue.length == 0)
+            {
+                return null;
+            }
+            for (ServiceReference<?> ref : foundTrue)
+            {
+                Bundle b = ref.getBundle();
+                if (b != null && b.getBundleId() == 0)
+                {
+                    return ref;
+                }
+            }
+            return null;
+        }
+        catch (InvalidSyntaxException e)
+        {
+            // should never happen; blow up if it does
+            throw new RuntimeException(e);
+        }
+    }
 
     public void restart(boolean globalExtender)
     {
@@ -209,6 +242,11 @@ public class Activator extends AbstractExtender
         m_configuration.stop();
         store(m_componentMetadataStore, context, logger, m_configuration.cacheMetadata());
         logger.close();
+    }
+
+    public ServiceReference<?> getTrueCondition()
+    {
+        return m_trueCondition;
     }
 
     @Override
@@ -550,7 +588,7 @@ public class Activator extends AbstractExtender
         try
         {
             BundleComponentActivator ga = new BundleComponentActivator( this.logger, m_componentRegistry, m_componentActor,
-                context, m_configuration, cached);
+                context, m_configuration, cached, getTrueCondition());
             ga.initialEnable();
             if (cached == null)
             {

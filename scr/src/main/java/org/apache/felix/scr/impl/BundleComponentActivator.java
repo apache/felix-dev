@@ -95,6 +95,8 @@ public class BundleComponentActivator implements ComponentActivator
 
     private final BundleLogger logger;
 
+    private final ServiceReference<?> m_trueCondition;
+
     private static class ListenerInfo implements ServiceListener
     {
         List<ExtendedServiceListener<ExtendedServiceEvent>> listeners = new ArrayList<>();
@@ -187,6 +189,7 @@ public class BundleComponentActivator implements ComponentActivator
      *      register components with to ensure uniqueness of component names
      *      and to ensure configuration updates.
      * @param   context  The bundle context owning the components
+     * @param serviceReference 
      *
      * @throws ComponentException if any error occurrs initializing this class
      */
@@ -195,7 +198,8 @@ public class BundleComponentActivator implements ComponentActivator
             final ComponentActorThread componentActor,
             final BundleContext context,
             final ScrConfiguration configuration,
-            final List<ComponentMetadata> cachedComponentMetadata)
+            final List<ComponentMetadata> cachedComponentMetadata, 
+            final ServiceReference<?> trueConditiion)
     throws ComponentException
     {
         // create a logger on behalf of the bundle
@@ -207,6 +211,7 @@ public class BundleComponentActivator implements ComponentActivator
         m_bundle = context.getBundle();
 
         m_configuration = configuration;
+        m_trueCondition = trueConditiion;
 
         logger.log(Level.DEBUG, "BundleComponentActivator : Bundle active", null);
 
@@ -388,7 +393,7 @@ public class BundleComponentActivator implements ComponentActivator
             stream = descriptorURL.openStream();
 
             XmlHandler handler = new XmlHandler( m_bundle, this.logger, getConfiguration().isFactoryEnabled(),
-                getConfiguration().keepInstances() );
+                getConfiguration().keepInstances(), m_trueCondition);
             final SAXParserFactory factory = SAXParserFactory.newInstance();
             factory.setNamespaceAware(true);
             final SAXParser parser = factory.newSAXParser();
@@ -759,5 +764,11 @@ public class BundleComponentActivator implements ComponentActivator
     @Override
     public void updateChangeCount() {
         this.m_componentRegistry.updateChangeCount();
+    }
+
+    @Override
+    public ServiceReference<?> getTrueCondition()
+    {
+        return this.m_trueCondition;
     }
 }

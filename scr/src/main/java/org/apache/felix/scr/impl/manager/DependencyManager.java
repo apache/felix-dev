@@ -67,7 +67,7 @@ public class DependencyManager<S, T> implements ReferenceManager<S, T>
 
     private final int m_index;
 
-    private volatile Customizer<S, T> m_customizer;
+    private final Customizer<S, T> m_customizer;
 
     //only set once, but it's not clear there is enough other synchronization to get the correct object before it's used.
     private volatile ReferenceMethods m_bindMethods;
@@ -2316,6 +2316,7 @@ public class DependencyManager<S, T> implements ReferenceManager<S, T>
         if (minimumCardinality != null && (minimumCardinality < defaultMinimumCardinality(m_dependencyMetadata)
             || (!m_dependencyMetadata.isMultiple() && minimumCardinality > 1)))
         {
+            // TODO no warning logged here?  Seem we should at least have a debug message.
             minimumCardinality = null;
         }
         if (minimumCardinality == null)
@@ -2435,9 +2436,10 @@ public class DependencyManager<S, T> implements ReferenceManager<S, T>
             "New service tracker for {0}, initial active: {1}, previous references: {2}, classFilter: {3}, initialReferenceFilter {4}",
             null, getName(), initialActive, refMap, classFilterString,
                     initialReferenceFilterString );
+        ServiceReference<T> trueReference = getTrueConditionRef();
         ServiceTracker<T, RefPair<S, T>, ExtendedServiceEvent> tracker = new ServiceTracker<>(
             bundleContext, m_customizer, initialActive, m_componentManager.getActivator(),
-            initialReferenceFilterString);
+            initialReferenceFilterString, trueReference);
         m_customizer.setTracker(tracker);
         //set minimum cardinality
         m_minCardinality = minimumCardinality;
@@ -2451,6 +2453,30 @@ public class DependencyManager<S, T> implements ReferenceManager<S, T>
         m_componentManager.getLogger().log(Level.DEBUG,
             "registering service listener for dependency {0}",
                 null, getName());
+    }
+
+    @SuppressWarnings("unchecked")
+    private ServiceReference<T> getTrueConditionRef()
+    {
+        if (m_dependencyMetadata.getScope() == ReferenceScope.prototype_required)
+        {
+            return null;
+        }
+        if (ReferenceMetadata.REFERENCE_NAME_SATISFYING_CONDITION.equals(
+            m_dependencyMetadata.getName()) == false)
+        {
+            return null;
+        }
+        if (ReferenceMetadata.CONDITION_TRUE_FILTER.equals(m_target) == false)
+        {
+            return null;
+        }
+        if (ReferenceMetadata.CONDITION_SERVICE_CLASS.equals(
+            m_dependencyMetadata.getInterface()) == false)
+        {
+            return null;
+        }
+        return (ServiceReference<T>) m_componentManager.getActivator().getTrueCondition();
     }
 
     private Customizer<S, T> newCustomizer()

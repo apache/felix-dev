@@ -26,6 +26,8 @@ import java.util.List;
 import java.util.Map;
 import java.util.Properties;
 
+import javax.xml.XMLConstants;
+
 import org.apache.felix.scr.impl.logger.BundleLogger;
 import org.apache.felix.scr.impl.logger.InternalLogger.Level;
 import org.apache.felix.scr.impl.metadata.ComponentMetadata;
@@ -34,6 +36,7 @@ import org.apache.felix.scr.impl.metadata.PropertyMetadata;
 import org.apache.felix.scr.impl.metadata.ReferenceMetadata;
 import org.apache.felix.scr.impl.metadata.ServiceMetadata;
 import org.osgi.framework.Bundle;
+import org.osgi.framework.ServiceReference;
 import org.xml.sax.Attributes;
 import org.xml.sax.SAXException;
 import org.xml.sax.helpers.DefaultHandler;
@@ -52,6 +55,8 @@ public class XmlHandler extends DefaultHandler
     private final boolean m_globalObsoleteFactoryComponentFactory;
 
     private final boolean m_globalDelayedKeepInstances;
+
+    private final ServiceReference<?> m_trueCondition;
 
     // A reference to the current component
     private ComponentMetadata m_currentComponent;
@@ -81,12 +86,13 @@ public class XmlHandler extends DefaultHandler
 
     // creates an instance with the bundle owning the component descriptor
     // file parsed by this instance
-    public XmlHandler( Bundle bundle, BundleLogger logger, boolean globalObsoleteFactoryComponentFactory, boolean globalDelayedKeepInstances )
+    public XmlHandler(Bundle bundle, BundleLogger logger, boolean globalObsoleteFactoryComponentFactory, boolean globalDelayedKeepInstances, ServiceReference<?> trueCondition)
     {
         m_bundle = bundle;
         m_logger = logger;
         m_globalObsoleteFactoryComponentFactory = globalObsoleteFactoryComponentFactory;
         m_globalDelayedKeepInstances = globalDelayedKeepInstances;
+        m_trueCondition = trueCondition;
     }
 
 
@@ -477,6 +483,29 @@ public class XmlHandler extends DefaultHandler
                     m_currentComponent.addFactoryProperty( m_pendingFactoryProperty );
                 }
                 m_pendingFactoryProperty = null;
+            }
+        }
+        if (m_trueCondition != null && localName.equals(XmlConstants.EL_COMPONENT))
+        {
+            boolean missingSatisfyingConditionRef = true;
+            for (ReferenceMetadata ref : m_currentComponent.getDependencies())
+            {
+                if (ReferenceMetadata.REFERENCE_NAME_SATISFYING_CONDITION.equals(
+                    ref.getName()))
+                {
+                    missingSatisfyingConditionRef = false;
+                    break;
+                }
+            }
+            if (missingSatisfyingConditionRef)
+            {
+                ReferenceMetadata trueReference = new ReferenceMetadata();
+                trueReference.setName(
+                    ReferenceMetadata.REFERENCE_NAME_SATISFYING_CONDITION);
+                trueReference.setTarget(ReferenceMetadata.CONDITION_TRUE_FILTER);
+                trueReference.setInterface(ReferenceMetadata.CONDITION_SERVICE_CLASS);
+                trueReference.setPolicy(ReferenceMetadata.POLICY_DYNAMIC);
+                m_currentComponent.addDependency(trueReference);
             }
         }
     }

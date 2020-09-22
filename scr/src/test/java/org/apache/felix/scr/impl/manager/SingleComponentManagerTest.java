@@ -170,6 +170,13 @@ public class SingleComponentManagerTest
         public BundleLogger getLogger() {
             return bundleLogger;
         }
+
+        @Override
+        public ServiceReference<?> getTrueCondition()
+        {
+            // TODO Auto-generated method stub
+            return null;
+        }
     };
 
     @Test

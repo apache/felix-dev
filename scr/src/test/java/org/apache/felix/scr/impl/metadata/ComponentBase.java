@@ -18,13 +18,9 @@
  */
 package org.apache.felix.scr.impl.metadata;
 
-import java.io.BufferedReader;
 import java.io.ByteArrayInputStream;
 import java.io.IOException;
 import java.io.InputStream;
-import java.io.InputStreamReader;
-import java.io.Reader;
-import java.io.StringReader;
 import java.util.Iterator;
 import java.util.List;
 
@@ -58,7 +54,7 @@ public class ComponentBase extends TestCase
         factory.setNamespaceAware(true);
         final SAXParser parser = factory.newSAXParser();
 
-        XmlHandler handler = new XmlHandler(new MockBundle(), logger, false, false);
+        XmlHandler handler = new XmlHandler(new MockBundle(), logger, false, false, null);
         parser.parse(in, handler);
 
         return handler.getComponentMetadataList();
