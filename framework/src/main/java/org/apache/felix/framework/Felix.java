@@ -901,7 +901,6 @@ public class Felix extends BundleImpl implements Framework
                 }
                 catch (Throwable ex)
                 {
-                    m_dispatcher.stopDispatching();
                     m_logger.log(Logger.LOG_ERROR, "Unable to start system bundle.", ex);
                     throw new RuntimeException("Unable to start system bundle.");
                 }
@@ -964,6 +963,17 @@ public class Felix extends BundleImpl implements Framework
                     m_systemBundleClassCache.clear();
                 }
             }
+        }
+        catch (Throwable t)
+        {
+            stopBundle(this, false);
+            if (m_cache != null)
+            {
+                m_cache.release();
+                m_cache = null;
+            }
+            __setState(Bundle.INSTALLED);
+            throw t;
         }
         finally
         {
@@ -5194,6 +5204,8 @@ public class Felix extends BundleImpl implements Framework
             m_fwkWiring.stop();
             // Stop framework start level thread.
             m_fwkStartLevel.stop();
+
+            m_resolver.stop();
 
             // Shutdown event dispatching queue.
             m_dispatcher.stopDispatching();
