@@ -39,6 +39,10 @@
       <tag>HEAD</tag>
   </scm>
 
+    <properties>
+        <felix.java.version>8</felix.java.version>
+    </properties>
+
     <build>
         <plugins>
             <plugin>
@@ -137,7 +141,7 @@
         <dependency>
             <groupId>org.apache.felix</groupId>
             <artifactId>org.apache.felix.http.base</artifactId>
-            <version>4.0.10</version>
+            <version>4.0.11-SNAPSHOT</version>
         </dependency>
     </dependencies>
 
