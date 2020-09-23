@@ -25,11 +25,11 @@ import org.apache.felix.http.base.internal.context.ExtServletContext;
 import org.apache.felix.http.base.internal.registry.HandlerRegistry;
 import org.apache.felix.http.base.internal.registry.PerContextHandlerRegistry;
 import org.apache.felix.http.base.internal.runtime.ServletContextHelperInfo;
+import org.apache.felix.http.base.internal.util.ServiceUtils;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 import org.osgi.framework.Bundle;
 import org.osgi.framework.BundleContext;
-import org.osgi.framework.ServiceObjects;
 import org.osgi.service.http.context.ServletContextHelper;
 
 /**
@@ -135,21 +135,17 @@ public class WhiteboardContextHandler implements Comparable<WhiteboardContextHan
             ContextHolder holder = this.perBundleContextMap.get(key);
             if ( holder == null )
             {
-                final BundleContext ctx = bundle.getBundleContext();
-                final ServiceObjects<ServletContextHelper> so = (ctx == null ? null : ctx.getServiceObjects(this.info.getServiceReference()));
-                if ( so != null )
+
+                final ServletContextHelper service = ServiceUtils.safeGetServiceObjects(bundle.getBundleContext(), this.info.getServiceReference());
+                if ( service != null )
                 {
-                    final ServletContextHelper service = so.getService();
-                    if ( service != null )
-                    {
-                        holder = new ContextHolder();
-                        holder.servletContextHelper = service;
-                        holder.servletContext = new PerBundleServletContextImpl(bundle,
-                                this.sharedContext,
-                                service,
-                                this.registry);
-                        this.perBundleContextMap.put(key, holder);
-                    }
+                    holder = new ContextHolder();
+                    holder.servletContextHelper = service;
+                    holder.servletContext = new PerBundleServletContextImpl(bundle,
+                            this.sharedContext,
+                            service,
+                            this.registry);
+                    this.perBundleContextMap.put(key, holder);
                 }
             }
             if ( holder != null )
@@ -177,11 +173,7 @@ public class WhiteboardContextHandler implements Comparable<WhiteboardContextHan
                     if ( holder.servletContextHelper != null )
                     {
                         final BundleContext ctx = bundle.getBundleContext();
-                        final ServiceObjects<ServletContextHelper> so = (ctx == null ? null : ctx.getServiceObjects(this.info.getServiceReference()));
-                        if ( so != null )
-                        {
-                            so.ungetService(holder.servletContextHelper);
-                        }
+                        ServiceUtils.safeUngetServiceObjects(ctx, this.info.getServiceReference(), holder.servletContextHelper);
                     }
                 }
             }

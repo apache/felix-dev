@@ -18,6 +18,7 @@
  */
 package org.apache.felix.http.base.internal.logger;
 
+import org.apache.felix.http.base.internal.util.ServiceUtils;
 import org.osgi.framework.BundleContext;
 import org.osgi.framework.ServiceReference;
 import org.osgi.util.tracker.ServiceTracker;
@@ -66,7 +67,7 @@ public class LogServiceEnabledLogger
             {
                 if ( !hasService )
                 {
-                    final Object logService = bundleContext.getService(reference);
+                    final Object logService = ServiceUtils.safeGetService(bundleContext, reference);
                     if ( logService != null )
                     {
                         hasService = true;
@@ -87,7 +88,7 @@ public class LogServiceEnabledLogger
             public void removedService(final ServiceReference<Object> reference, final Object service)
             {
                 hasService = false;
-                bundleContext.ungetService(reference);
+                ServiceUtils.safeUngetService(bundleContext, reference);
             }
         } );
         logServiceTracker.open();

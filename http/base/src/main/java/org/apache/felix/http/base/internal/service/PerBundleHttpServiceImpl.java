@@ -107,7 +107,7 @@ public final class PerBundleHttpServiceImpl implements HttpService
      * @see org.osgi.service.http.HttpService#registerServlet(java.lang.String, javax.servlet.Servlet, java.util.Dictionary, org.osgi.service.http.HttpContext)
      */
     @Override
-    public void registerServlet(String alias, Servlet servlet, Dictionary initParams, HttpContext context) throws ServletException, NamespaceException
+    public void registerServlet(String alias, Servlet servlet, @SuppressWarnings("rawtypes") Dictionary initParams, HttpContext context) throws ServletException, NamespaceException
     {
         if (servlet == null)
         {
@@ -121,6 +121,7 @@ public final class PerBundleHttpServiceImpl implements HttpService
         final Map<String, String> paramMap = new HashMap<>();
         if (initParams != null && initParams.size() > 0)
         {
+            @SuppressWarnings("rawtypes")
             Enumeration e = initParams.keys();
             while (e.hasMoreElements())
             {

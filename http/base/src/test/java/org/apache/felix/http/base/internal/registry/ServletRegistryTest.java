@@ -40,7 +40,7 @@ import org.apache.felix.http.base.internal.handler.ServletHandler;
 import org.apache.felix.http.base.internal.runtime.ServletInfo;
 import org.apache.felix.http.base.internal.runtime.dto.FailedDTOHolder;
 import org.junit.Test;
-import org.mockito.Matchers;
+import org.mockito.ArgumentMatchers;
 import org.osgi.framework.Bundle;
 import org.osgi.framework.BundleContext;
 import org.osgi.framework.Constants;
@@ -83,7 +83,7 @@ public class ServletRegistryTest {
         final ServletHandler h1 = createServletHandler(1L, 0, "/foo");
         reg.addServlet(h1);
 
-        verify(h1.getServlet()).init(Matchers.any(ServletConfig.class));
+        verify(h1.getServlet()).init(ArgumentMatchers.any(ServletConfig.class));
 
         // one entry in reg
         // check DTO
@@ -120,11 +120,11 @@ public class ServletRegistryTest {
         // register servlets
         final ServletHandler h1 = createServletHandler(1L, 10, "/foo");
         reg.addServlet(h1);
-        verify(h1.getServlet()).init(Matchers.any(ServletConfig.class));
+        verify(h1.getServlet()).init(ArgumentMatchers.any(ServletConfig.class));
 
         final ServletHandler h2 = createServletHandler(2L, 0, "/foo");
         reg.addServlet(h2);
-        verify(h2.getServlet(), never()).init(Matchers.any(ServletConfig.class));
+        verify(h2.getServlet(), never()).init(ArgumentMatchers.any(ServletConfig.class));
         verify(h1.getServlet(), never()).destroy();
 
         // two entries in reg
@@ -150,7 +150,7 @@ public class ServletRegistryTest {
         final Servlet s1 = h1.getServlet();
         reg.removeServlet(h1.getServletInfo(), true);
         verify(s1).destroy();
-        verify(h2.getServlet()).init(Matchers.any(ServletConfig.class));
+        verify(h2.getServlet()).init(ArgumentMatchers.any(ServletConfig.class));
 
         // h2 is active
         clear(dto, holder);
@@ -243,10 +243,11 @@ public class ServletRegistryTest {
     private static ServletInfo createServletInfo(final long id, final int ranking, final String... paths) throws InvalidSyntaxException
     {
         final BundleContext bCtx = mock(BundleContext.class);
-        when(bCtx.createFilter(Matchers.anyString())).thenReturn(null);
+        when(bCtx.createFilter(ArgumentMatchers.anyString())).thenReturn(null);
         final Bundle bundle = mock(Bundle.class);
         when(bundle.getBundleContext()).thenReturn(bCtx);
 
+        @SuppressWarnings("unchecked")
         final ServiceReference<Servlet> ref = mock(ServiceReference.class);
         when(ref.getBundle()).thenReturn(bundle);
         when(ref.getProperty(Constants.SERVICE_ID)).thenReturn(id);

@@ -26,6 +26,7 @@ import javax.servlet.ServletResponse;
 
 import org.apache.felix.http.base.internal.logger.SystemLogger;
 import org.apache.felix.http.base.internal.runtime.PreprocessorInfo;
+import org.apache.felix.http.base.internal.util.ServiceUtils;
 import org.jetbrains.annotations.NotNull;
 import org.osgi.framework.BundleContext;
 import org.osgi.framework.ServiceReference;
@@ -74,7 +75,7 @@ public class PreprocessorHandler implements Comparable<PreprocessorHandler>
     public int init()
     {
         final ServiceReference<Preprocessor> serviceReference = this.info.getServiceReference();
-        this.preprocessor = this.bundleContext.getService(serviceReference);
+        this.preprocessor = ServiceUtils.safeGetService(this.bundleContext, serviceReference);
 
         if (this.preprocessor == null)
         {
@@ -94,7 +95,7 @@ public class PreprocessorHandler implements Comparable<PreprocessorHandler>
                     e);
 
             this.preprocessor = null;
-            this.bundleContext.ungetService(serviceReference);
+            ServiceUtils.safeUngetService(this.bundleContext, serviceReference);
 
             return DTOConstants.FAILURE_REASON_EXCEPTION_ON_INIT;
         }
@@ -121,7 +122,7 @@ public class PreprocessorHandler implements Comparable<PreprocessorHandler>
                     ignore);
         }
         this.preprocessor = null;
-        this.bundleContext.ungetService(this.info.getServiceReference());
+        ServiceUtils.safeUngetService(this.bundleContext, this.info.getServiceReference());
 
         return true;
     }

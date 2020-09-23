@@ -16,13 +16,15 @@
  */
 package org.apache.felix.http.base.internal.handler;
 
-import org.junit.Before;
+import java.util.Enumeration;
+import java.util.HashMap;
+
+import javax.servlet.ServletContext;
+
 import org.junit.Assert;
+import org.junit.Before;
 import org.junit.Test;
 import org.mockito.Mockito;
-import javax.servlet.ServletContext;
-import java.util.HashMap;
-import java.util.Enumeration;
 
 public class ServletConfigImplTest
 {
@@ -61,7 +63,7 @@ public class ServletConfigImplTest
     @Test
     public void testGetInitParameterNames()
     {
-        Enumeration e = this.config.getInitParameterNames();
+        Enumeration<String> e = this.config.getInitParameterNames();
         Assert.assertNotNull(e);
         Assert.assertTrue(e.hasMoreElements());
         Assert.assertEquals("key1", e.nextElement());

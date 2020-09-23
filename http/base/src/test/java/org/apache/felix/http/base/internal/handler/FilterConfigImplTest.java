@@ -16,13 +16,15 @@
  */
 package org.apache.felix.http.base.internal.handler;
 
-import org.junit.Before;
+import java.util.Enumeration;
+import java.util.HashMap;
+
+import javax.servlet.ServletContext;
+
 import org.junit.Assert;
+import org.junit.Before;
 import org.junit.Test;
 import org.mockito.Mockito;
-import javax.servlet.ServletContext;
-import java.util.HashMap;
-import java.util.Enumeration;
 
 public class FilterConfigImplTest
 {
@@ -34,7 +36,7 @@ public class FilterConfigImplTest
     {
         HashMap<String, String> params = new HashMap<String, String>();
         params.put("key1", "value1");
-        
+
         this.context = Mockito.mock(ServletContext.class);
         this.config = new FilterConfigImpl("myfilter", this.context, params);
     }
@@ -61,7 +63,7 @@ public class FilterConfigImplTest
     @Test
     public void testGetInitParameterNames()
     {
-        Enumeration e = this.config.getInitParameterNames();
+        Enumeration<String> e = this.config.getInitParameterNames();
         Assert.assertNotNull(e);
         Assert.assertTrue(e.hasMoreElements());
         Assert.assertEquals("key1", e.nextElement());

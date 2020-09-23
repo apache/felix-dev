@@ -16,16 +16,22 @@
  */
 package org.apache.felix.http.jetty.internal;
 
-import org.apache.felix.http.base.internal.logger.SystemLogger;
-import org.eclipse.jetty.server.Request;
-import org.eclipse.jetty.server.RequestLog;
-import org.eclipse.jetty.server.Response;
-import org.osgi.framework.*;
-import org.osgi.util.tracker.ServiceTracker;
-
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ConcurrentMap;
+
+import org.apache.felix.http.base.internal.logger.SystemLogger;
+import org.apache.felix.http.base.internal.util.ServiceUtils;
+import org.eclipse.jetty.server.Request;
+import org.eclipse.jetty.server.RequestLog;
+import org.eclipse.jetty.server.Response;
+import org.osgi.framework.BundleContext;
+import org.osgi.framework.Constants;
+import org.osgi.framework.Filter;
+import org.osgi.framework.FrameworkUtil;
+import org.osgi.framework.InvalidSyntaxException;
+import org.osgi.framework.ServiceReference;
+import org.osgi.util.tracker.ServiceTracker;
 
 /**
  * An instance of Jetty's RequestLog that dispatches to registered RequestLog services in the service registry. A filter
@@ -62,8 +68,10 @@ class RequestLogTracker extends ServiceTracker<RequestLog, RequestLog>  implemen
 
     @Override
     public RequestLog addingService(ServiceReference<RequestLog> reference) {
-        RequestLog logSvc = context.getService(reference);
-        logSvcs.put(reference, logSvc);
+        RequestLog logSvc = ServiceUtils.safeGetService(context, reference);
+        if ( logSvc != null ) {
+            logSvcs.put(reference, logSvc);
+        }
         return logSvc;
     }
 
@@ -71,7 +79,7 @@ class RequestLogTracker extends ServiceTracker<RequestLog, RequestLog>  implemen
     public void removedService(ServiceReference<RequestLog> reference, RequestLog logSvc) {
         logSvcs.remove(reference);
         naughtyStep.remove(reference);
-        context.ungetService(reference);
+        ServiceUtils.safeUngetService(context, reference);
     }
 
     @Override

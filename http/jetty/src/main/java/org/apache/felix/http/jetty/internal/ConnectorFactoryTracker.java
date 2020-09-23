@@ -19,6 +19,7 @@
 package org.apache.felix.http.jetty.internal;
 
 import org.apache.felix.http.base.internal.logger.SystemLogger;
+import org.apache.felix.http.base.internal.util.ServiceUtils;
 import org.apache.felix.http.jetty.ConnectorFactory;
 import org.eclipse.jetty.server.Connector;
 import org.eclipse.jetty.server.Server;
@@ -50,7 +51,7 @@ public class ConnectorFactoryTracker extends ServiceTracker<ConnectorFactory, Co
     @Override
     public Connector addingService(ServiceReference<ConnectorFactory> reference)
     {
-        ConnectorFactory factory = context.getService(reference);
+        ConnectorFactory factory = ServiceUtils.safeGetService(context, reference);
         if (factory != null) {
             Connector connector = null;
             try {
@@ -62,7 +63,7 @@ public class ConnectorFactoryTracker extends ServiceTracker<ConnectorFactory, Co
                 SystemLogger.error("Failed starting connector '" + connector + "' provided by " + reference, e);
             }
             // connector failed to start, don't continue tracking
-            context.ungetService(reference);
+            ServiceUtils.safeUngetService(context, reference);
         }
         return null;
     }
@@ -83,6 +84,6 @@ public class ConnectorFactoryTracker extends ServiceTracker<ConnectorFactory, Co
             }
         }
         this.server.removeConnector(connector);
-        context.ungetService(reference);
+        ServiceUtils.safeUngetService(context, reference);
     }
 }
