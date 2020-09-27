@@ -5055,9 +5055,12 @@ public class Felix extends BundleImpl implements Framework
             try
             {
                 File file = m_cache.getSystemBundleDataFile("bundle.id");
-                is = m_secureAction.getInputStream(file);
-                br = new BufferedReader(new InputStreamReader(is));
-                return Long.parseLong(br.readLine());
+                if (m_secureAction.isFile(file))
+                {
+                    is = m_secureAction.getInputStream(file);
+                    br = new BufferedReader(new InputStreamReader(is));
+                    return Long.parseLong(br.readLine());
+                }
             }
             catch (FileNotFoundException ex)
             {
