@@ -34,6 +34,12 @@ public class HttpConfig {
 
     private volatile boolean invalidateContainerSession;
 
+    public static final String PROP_CONTAINER_ADDED_ATTRIBUTE = "org.apache.felix.http.session.container.attribute";
+
+    public static final String DEFAULT_CONTAINER_ADDED_ATTRIBUTE = "org.eclipse.jetty.security.sessionCreatedSecure";
+
+    private volatile String containerAddedAttribue ;
+
     public boolean isUniqueSessionId() {
         return uniqueSessionId;
     }
@@ -50,9 +56,15 @@ public class HttpConfig {
         this.invalidateContainerSession = invalidateContainerSession;
     }
 
+    public String getContainerAddedAttribue() { return containerAddedAttribue; }
+
+    public void setContainerAddedAttribue(String containerAddedAttribue) { this.containerAddedAttribue = containerAddedAttribue; }
+
+
     public void configure(@NotNull final Dictionary<String, Object> props) {
         this.setUniqueSessionId(this.getBooleanProperty(props, PROP_UNIQUE_SESSION_ID, DEFAULT_UNIQUE_SESSION_ID));
         this.setInvalidateContainerSession(this.getBooleanProperty(props, PROP_INVALIDATE_SESSION, DEFAULT_INVALIDATE_SESSION));
+        this.setContainerAddedAttribue(this.getStringProperty(props, PROP_CONTAINER_ADDED_ATTRIBUTE, DEFAULT_CONTAINER_ADDED_ATTRIBUTE));
     }
 
 
@@ -65,6 +77,16 @@ public class HttpConfig {
             return "true".equalsIgnoreCase(value) || "yes".equalsIgnoreCase(value);
         }
 
+        return defValue;
+    }
+
+    private String getStringProperty(final Dictionary<String, Object> props,String name, String defValue) {
+        Object value = props.get(name);
+
+        if (value !=null && value instanceof String) {
+            final String stringVal = ((String) value).trim();
+            return stringVal ;
+        }
         return defValue;
     }
 }

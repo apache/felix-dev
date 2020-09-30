@@ -423,6 +423,11 @@ class ConfigMetaTypeProvider implements MetaTypeProvider
                 "If this property is set, the container session is automatically validated.",
                 HttpConfig.DEFAULT_INVALIDATE_SESSION,
                 bundle.getBundleContext().getProperty(HttpConfig.PROP_INVALIDATE_SESSION)));
+        adList.add(new AttributeDefinitionImpl(HttpConfig.PROP_CONTAINER_ADDED_ATTRIBUTE,
+                "Attributes added by server.",
+                "The atrrtibutes added by underlying session.Use this to invalidate session.",
+                HttpConfig.DEFAULT_CONTAINER_ADDED_ATTRIBUTE,
+                bundle.getBundleContext().getProperty(HttpConfig.PROP_CONTAINER_ADDED_ATTRIBUTE)));
         adList.add(new AttributeDefinitionImpl(HttpConfig.PROP_UNIQUE_SESSION_ID,
                 "Unique Session Id",
                 "If this property is set, each http context gets a unique session id (derived from the container session).",
