@@ -78,10 +78,7 @@ public class HttpSessionWrapperTest
         String attrMaxInactive = String.format("org.apache.felix.http.session.context.maxinactive.%s", sessionName);
 
         HttpSession session = mock(HttpSession.class);
-        when(session.getAttributeNames())
-                .thenReturn(
-                Collections.enumeration(Arrays.asList(attrLastAccessed))
-        );
+        when(session.getAttributeNames()).thenReturn(Collections.enumeration(Arrays.asList(attrLastAccessed)));
         when(session.getAttribute(eq(attrLastAccessed))).thenReturn(lastAccessed);
         when(session.getAttribute(eq(attrMaxInactive))).thenReturn(maxInactive);
 
@@ -153,7 +150,7 @@ public class HttpSessionWrapperTest
     {
         // create container session
         final ConcurrentHashMap<String, Object> attributes = new ConcurrentHashMap<>();
-        //attributes.put("org.eclipse.jetty.security.sessionCreatedSecure",true);
+        attributes.put("org.eclipse.jetty.security.sessionCreatedSecure",true);
         final HttpSession containerSession = mock(HttpSession.class);
         when(containerSession.getAttributeNames()).thenAnswer(new Answer<Object>() {
             @Override

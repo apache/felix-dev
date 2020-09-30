@@ -484,10 +484,6 @@ public class HttpSessionWrapper implements HttpSession
         }
     }
 
-    public void setAttributeToContainerSession(String attName,Object value){
-        this.delegate.setAttribute(attName, value);
-    }
-
     @Override
     public int hashCode()
     {
