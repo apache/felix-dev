@@ -346,13 +346,29 @@ public class HttpSessionWrapper implements HttpSession
         {
             // if the session is empty we can invalidate
             final Enumeration<String> remainingNames = this.delegate.getAttributeNames();
-            if ( !remainingNames.hasMoreElements() )
+            if ( (!remainingNames.hasMoreElements()) || (isRemainingAttributeAddedByContainer(remainingNames)))
             {
                 this.delegate.invalidate();
             }
         }
-
         this.isInvalid = true;
+    }
+
+    private boolean isRemainingAttributeAddedByContainer(Enumeration<String> names){
+        final String attributeAddedByContainer = this.config.getContainerAddedAttribue() ;
+
+        if(attributeAddedByContainer != null ) {
+
+            while (names.hasMoreElements()) {
+
+                final String name = names.nextElement();
+                if (name == null || !name.trim().equals(attributeAddedByContainer.trim())) {
+                    return false;
+                }
+            }
+            return true ;
+        }
+        return false ;
     }
 
     @Override
@@ -466,6 +482,10 @@ public class HttpSessionWrapper implements HttpSession
         {
             return listener;
         }
+    }
+
+    public void setAttributeToContainerSession(String attName,Object value){
+        this.delegate.setAttribute(attName, value);
     }
 
     @Override

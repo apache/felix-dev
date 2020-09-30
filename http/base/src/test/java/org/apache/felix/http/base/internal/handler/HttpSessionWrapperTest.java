@@ -30,6 +30,7 @@ import java.util.Collections;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.Set;
+import java.util.concurrent.ConcurrentHashMap;
 
 import javax.servlet.http.HttpSession;
 import javax.servlet.http.HttpSessionListener;
@@ -77,7 +78,10 @@ public class HttpSessionWrapperTest
         String attrMaxInactive = String.format("org.apache.felix.http.session.context.maxinactive.%s", sessionName);
 
         HttpSession session = mock(HttpSession.class);
-        when(session.getAttributeNames()).thenReturn(Collections.enumeration(Arrays.asList(attrLastAccessed)));
+        when(session.getAttributeNames())
+                .thenReturn(
+                Collections.enumeration(Arrays.asList(attrLastAccessed))
+        );
         when(session.getAttribute(eq(attrLastAccessed))).thenReturn(lastAccessed);
         when(session.getAttribute(eq(attrMaxInactive))).thenReturn(maxInactive);
 
@@ -141,6 +145,69 @@ public class HttpSessionWrapperTest
         // invalidate context session and verify that invalidate is called on the container session
         newSession.invalidate();
         assertTrue(attributes.isEmpty());
+        Mockito.verify(containerSession).invalidate();
+    }
+
+    @Test
+    public void testContainerSessionInvalidationWithContainerAddedAttribute()
+    {
+        // create container session
+        final ConcurrentHashMap<String, Object> attributes = new ConcurrentHashMap<>();
+        //attributes.put("org.eclipse.jetty.security.sessionCreatedSecure",true);
+        final HttpSession containerSession = mock(HttpSession.class);
+        when(containerSession.getAttributeNames()).thenAnswer(new Answer<Object>() {
+            @Override
+            public Object answer(InvocationOnMock invocation) throws Throwable {
+                Map<String, Object> clonedAttributes = new ConcurrentHashMap<>(attributes);
+                return Collections.enumeration(clonedAttributes.keySet());
+            }
+        });
+        when(containerSession.getAttribute(Mockito.anyString())).thenAnswer(new Answer<Object>() {
+            @Override
+            public Object answer(InvocationOnMock invocation) throws Throwable {
+                return attributes.get(invocation.getArgument(0));
+            }
+        });
+        when(containerSession.getAttribute(Mockito.anyString())).thenAnswer(new Answer<Object>() {
+            @Override
+            public Object answer(InvocationOnMock invocation) throws Throwable {
+                return attributes.get(invocation.getArgument(0));
+            }
+        });
+        Mockito.doAnswer(new Answer<Object>() {
+            @Override
+            public Object answer(InvocationOnMock invocation) throws Throwable {
+                attributes.put((String)invocation.getArgument(0), invocation.getArgument(1));
+                return null;
+            }
+        }).when(containerSession).setAttribute(Mockito.anyString(), Mockito.any());
+        Mockito.doAnswer(new Answer<Object>() {
+            @Override
+            public Object answer(InvocationOnMock invocation) throws Throwable {
+                attributes.remove(invocation.getArgument(0));
+                return null;
+            }
+        }).when(containerSession).removeAttribute(Mockito.anyString());
+
+        final HttpSessionListener listener = mock(HttpSessionListener.class);
+
+        // create context session
+        final ExtServletContext context = mock(ExtServletContext.class);
+        when(context.getServletContextName()).thenReturn("default");
+        when(context.getHttpSessionListener()).thenReturn(listener);
+
+        final HttpConfig config = new HttpConfig();
+        config.setInvalidateContainerSession(false);
+        config.setContainerAddedAttribue("org.eclipse.jetty.security.sessionCreatedSecure");
+        final HttpSession contextSession = new HttpSessionWrapper(containerSession, context, config, false);
+        // invalidate context session and verify that invalidate is not called on the container session
+        contextSession.invalidate();
+        Mockito.verify(containerSession, Mockito.never()).invalidate();
+
+        config.setInvalidateContainerSession(true);
+        final HttpSession newSession = new HttpSessionWrapper(containerSession, context, config, false);
+        // invalidate context session and verify that invalidate is called on the container session
+        newSession.invalidate();
         Mockito.verify(containerSession).invalidate();
     }
 
