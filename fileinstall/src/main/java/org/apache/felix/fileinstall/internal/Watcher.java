@@ -176,7 +176,11 @@ public abstract class Watcher implements Closeable {
 
                 // Context for directory entry event is the file name of entry
                 Path name = ev.context();
-                Path child = dir.resolve(name);
+                Path child = null;
+
+                if(name!=null){
+                    child = dir.resolve(name);
+                }
 
                 debug("Processing event %s on path %s", kind, child);
 
