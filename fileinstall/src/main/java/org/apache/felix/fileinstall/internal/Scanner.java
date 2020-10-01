@@ -155,7 +155,7 @@ public class Scanner implements Closeable {
                 }
             }
             else {
-                if (!filter.accept(file.getParentFile(),file.getName())){
+                if (filter != null && !filter.accept(file.getParentFile(),file.getName())){
                     continue;
                 }
             }
