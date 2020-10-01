@@ -23,8 +23,12 @@ import java.net.URL;
 import java.util.HashMap;
 import java.util.Hashtable;
 import java.util.Iterator;
+import java.util.Locale;
 import java.util.Map;
+import java.util.ResourceBundle;
 
+import org.apache.felix.webconsole.i18n.LocalizationHelper;
+import org.osgi.framework.Bundle;
 import org.osgi.framework.BundleContext;
 import org.osgi.framework.ServiceRegistration;
 import org.osgi.util.tracker.ServiceTracker;
@@ -60,6 +64,8 @@ public abstract class SimpleWebConsolePlugin extends AbstractWebConsolePlugin
     // used to obtain services. Structure is: service name -> ServiceTracker
     private final Map services = new HashMap();
 
+    // localized title as servlet name
+    private String servletName;
 
     /**
      * Creates new Simple Web Console Plugin with the default category
@@ -108,6 +114,41 @@ public abstract class SimpleWebConsolePlugin extends AbstractWebConsolePlugin
         this.labelResLen = labelRes.length() - 1;
     }
 
+
+    /* (non-Javadoc)
+     * @see org.apache.felix.webconsole.AbstractWebConsolePlugin#activate(org.osgi.framework.BundleContext)
+     */
+    @Override
+    public void activate(BundleContext bundleContext) {
+        super.activate(bundleContext);
+
+        // FELIX-6341 - dig out the localized title for use in log messages
+        Bundle bundle = bundleContext.getBundle();
+        if (bundle != null) {
+            LocalizationHelper localization = new LocalizationHelper( bundle );
+            ResourceBundle rb = localization.getResourceBundle(Locale.getDefault());
+            if (rb != null) {
+                if ( this.title != null && this.title.startsWith( "%" ) ) { //$NON-NLS-1$
+                    String key = this.title.substring(1);
+                    if (rb.containsKey(key)) {
+                        this.servletName = rb.getString(key);
+                    }
+                }
+            }
+        }
+    }
+
+    /* (non-Javadoc)
+     * @see org.apache.felix.webconsole.AbstractWebConsolePlugin#getServletName()
+     */
+    @Override
+    public String getServletName() {
+        // use the localized title if we have one
+        if (servletName != null) {
+            return servletName;
+        }
+        return super.getServletName();
+    }
 
     /**
      * @see org.apache.felix.webconsole.AbstractWebConsolePlugin#getLabel()
