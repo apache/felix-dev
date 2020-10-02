@@ -355,14 +355,14 @@ public class HttpSessionWrapper implements HttpSession
     }
 
     private boolean isRemainingAttributeAddedByContainer(Enumeration<String> names){
-        final String attributeAddedByContainer = this.config.getContainerAddedAttribue() ;
+        final Set<String> attributeAddedByContainerSet = this.config.getContainerAddedAttribueSet() ;
 
-        if(attributeAddedByContainer != null ) {
+        if(attributeAddedByContainerSet != null && !attributeAddedByContainerSet.isEmpty()) {
 
             while (names.hasMoreElements()) {
 
                 final String name = names.nextElement();
-                if (name == null || !name.trim().equals(attributeAddedByContainer.trim())) {
+                if (name == null || !attributeAddedByContainerSet.contains(name.trim())) {
                     return false;
                 }
             }

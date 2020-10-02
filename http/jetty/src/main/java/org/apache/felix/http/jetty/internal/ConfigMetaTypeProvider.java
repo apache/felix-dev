@@ -426,8 +426,11 @@ class ConfigMetaTypeProvider implements MetaTypeProvider
         adList.add(new AttributeDefinitionImpl(HttpConfig.PROP_CONTAINER_ADDED_ATTRIBUTE,
                 "Attributes added by server.",
                 "The atrrtibutes added by underlying session.Use this to invalidate session.",
-                HttpConfig.DEFAULT_CONTAINER_ADDED_ATTRIBUTE,
-                bundle.getBundleContext().getProperty(HttpConfig.PROP_CONTAINER_ADDED_ATTRIBUTE)));
+                AttributeDefinition.STRING,
+                null,
+                2147483647,
+                null, null,
+                getStringArray(bundle.getBundleContext().getProperty(HttpConfig.PROP_CONTAINER_ADDED_ATTRIBUTE))));
         adList.add(new AttributeDefinitionImpl(HttpConfig.PROP_UNIQUE_SESSION_ID,
                 "Unique Session Id",
                 "If this property is set, each http context gets a unique session id (derived from the container session).",

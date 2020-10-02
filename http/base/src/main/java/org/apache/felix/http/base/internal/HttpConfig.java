@@ -16,7 +16,14 @@
  */
 package org.apache.felix.http.base.internal;
 
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.Collection;
 import java.util.Dictionary;
+import java.util.HashSet;
+import java.util.Iterator;
+import java.util.List;
+import java.util.Set;
 
 import org.jetbrains.annotations.NotNull;
 
@@ -36,9 +43,7 @@ public class HttpConfig {
 
     public static final String PROP_CONTAINER_ADDED_ATTRIBUTE = "org.apache.felix.http.session.container.attribute";
 
-    public static final String DEFAULT_CONTAINER_ADDED_ATTRIBUTE = "org.eclipse.jetty.security.sessionCreatedSecure";
-
-    private volatile String containerAddedAttribue ;
+    private volatile Set<String> containerAddedAttribueSet = null;
 
     public boolean isUniqueSessionId() {
         return uniqueSessionId;
@@ -56,15 +61,15 @@ public class HttpConfig {
         this.invalidateContainerSession = invalidateContainerSession;
     }
 
-    public String getContainerAddedAttribue() { return containerAddedAttribue; }
+    public Set<String> getContainerAddedAttribueSet() { return containerAddedAttribueSet; }
 
-    public void setContainerAddedAttribue(String containerAddedAttribue) { this.containerAddedAttribue = containerAddedAttribue; }
+    public void setContainerAddedAttribueSet(Set<String> containerAddedAttribueSet) { this.containerAddedAttribueSet = containerAddedAttribueSet; }
 
 
     public void configure(@NotNull final Dictionary<String, Object> props) {
         this.setUniqueSessionId(this.getBooleanProperty(props, PROP_UNIQUE_SESSION_ID, DEFAULT_UNIQUE_SESSION_ID));
         this.setInvalidateContainerSession(this.getBooleanProperty(props, PROP_INVALIDATE_SESSION, DEFAULT_INVALIDATE_SESSION));
-        this.setContainerAddedAttribue(this.getStringProperty(props, PROP_CONTAINER_ADDED_ATTRIBUTE, DEFAULT_CONTAINER_ADDED_ATTRIBUTE));
+        this.setContainerAddedAttribueSet(this.getStringSetProperty(props, PROP_CONTAINER_ADDED_ATTRIBUTE));
     }
 
 
@@ -80,13 +85,77 @@ public class HttpConfig {
         return defValue;
     }
 
-    private String getStringProperty(final Dictionary<String, Object> props,String name, String defValue) {
-        Object value = props.get(name);
 
-        if (value !=null && value instanceof String) {
+    /**
+     * Get the property value as a string array.
+     * Empty values are filtered out - if the resulting array is empty
+     * the default value is returned.
+     */
+    private String[] getStringArrayProperty(final Dictionary<String, Object> props,String name, String[] defValue)
+    {
+        Object value = props.get(name);;
+        if (value instanceof String)
+        {
             final String stringVal = ((String) value).trim();
-            return stringVal ;
+            if (stringVal.length() > 0)
+            {
+                return stringVal.split(",");
+            }
+        }
+        else if (value instanceof String[])
+        {
+            final String[] stringArr = (String[]) value;
+            final List<String> list = new ArrayList<>();
+            for (final String stringVal : stringArr)
+            {
+                if (stringVal.trim().length() > 0)
+                {
+                    list.add(stringVal.trim());
+                }
+            }
+            if (list.size() > 0)
+            {
+                return list.toArray(new String[list.size()]);
+            }
+        }
+        else if (value instanceof Collection)
+        {
+            final ArrayList<String> conv = new ArrayList<>();
+            for (Iterator<?> vi = ((Collection<?>) value).iterator(); vi.hasNext();)
+            {
+                Object object = vi.next();
+                if (object != null)
+                {
+                    conv.add(String.valueOf(object));
+                }
+            }
+            if (conv.size() > 0)
+            {
+                return conv.toArray(new String[conv.size()]);
+            }
         }
         return defValue;
+    }
+
+    /**
+     * get Property values in set format,so that it can directly compare with remaining
+     * attributes of session.using set, as it will take O(1) time for searching.
+     * @param props
+     * @param name
+     * @return
+     */
+    private Set<String> getStringSetProperty(final Dictionary<String, Object> props,String name) {
+
+        String array[] = getStringArrayProperty(props,name,new String[0]) ;
+        Set<String> propertySet = new HashSet<>();
+
+        for(String property : array){
+
+            if(property != null && !"".equals(property.trim())){
+                propertySet.add(property);
+            }
+        }
+
+        return  propertySet;
     }
 }

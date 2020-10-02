@@ -28,6 +28,7 @@ import static org.mockito.Mockito.when;
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.Map;
 import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
@@ -195,7 +196,9 @@ public class HttpSessionWrapperTest
 
         final HttpConfig config = new HttpConfig();
         config.setInvalidateContainerSession(false);
-        config.setContainerAddedAttribue("org.eclipse.jetty.security.sessionCreatedSecure");
+        Set<String> continerAddedAttributesset = new HashSet<>();
+        continerAddedAttributesset.add("org.eclipse.jetty.security.sessionCreatedSecure") ;
+        config.setContainerAddedAttribueSet(continerAddedAttributesset);
         final HttpSession contextSession = new HttpSessionWrapper(containerSession, context, config, false);
         // invalidate context session and verify that invalidate is not called on the container session
         contextSession.invalidate();
