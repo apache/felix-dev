@@ -17,7 +17,6 @@
 package org.apache.felix.http.base.internal;
 
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.Collection;
 import java.util.Dictionary;
 import java.util.HashSet;
@@ -43,7 +42,7 @@ public class HttpConfig {
 
     public static final String PROP_CONTAINER_ADDED_ATTRIBUTE = "org.apache.felix.http.session.container.attribute";
 
-    private volatile Set<String> containerAddedAttribueSet = null;
+    private volatile Set<String> containerAddedAttribueSet;
 
     public boolean isUniqueSessionId() {
         return uniqueSessionId;
@@ -61,9 +60,13 @@ public class HttpConfig {
         this.invalidateContainerSession = invalidateContainerSession;
     }
 
-    public Set<String> getContainerAddedAttribueSet() { return containerAddedAttribueSet; }
+    public Set<String> getContainerAddedAttribueSet() {
+        return containerAddedAttribueSet;
+    }
 
-    public void setContainerAddedAttribueSet(Set<String> containerAddedAttribueSet) { this.containerAddedAttribueSet = containerAddedAttribueSet; }
+    public void setContainerAddedAttribueSet(Set<String> containerAddedAttribueSet) {
+        this.containerAddedAttribueSet = containerAddedAttribueSet;
+    }
 
 
     public void configure(@NotNull final Dictionary<String, Object> props) {
@@ -93,7 +96,7 @@ public class HttpConfig {
      */
     private String[] getStringArrayProperty(final Dictionary<String, Object> props,String name, String[] defValue)
     {
-        Object value = props.get(name);;
+        Object value = props.get(name);
         if (value instanceof String)
         {
             final String stringVal = ((String) value).trim();

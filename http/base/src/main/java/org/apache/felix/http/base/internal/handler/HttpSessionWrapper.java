@@ -362,7 +362,7 @@ public class HttpSessionWrapper implements HttpSession
             while (names.hasMoreElements()) {
 
                 final String name = names.nextElement();
-                if (name == null || !attributeAddedByContainerSet.contains(name.trim())) {
+                if (name == null || !attributeAddedByContainerSet.contains(name)) {
                     return false;
                 }
             }

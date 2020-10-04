@@ -263,7 +263,7 @@ public final class JettyConfig
 
     /** Felix specific property to specify the excluded mime types. */
     public static final String FELIX_JETTY_GZIP_EXCLUDED_MIME_TYPES = "org.apache.felix.jetty.gzip.excludedMimeTypes";
-    
+
     /** Felix specific property to specify the stop timeout of the jetty server */
     public static final String FELIX_JETTY_STOP_TIMEOUT = "org.apache.felix.jetty.stopTimeout";
 
@@ -736,7 +736,7 @@ public final class JettyConfig
         props.put(HttpConfig.PROP_UNIQUE_SESSION_ID, getBooleanProperty(HttpConfig.PROP_UNIQUE_SESSION_ID,
                 HttpConfig.DEFAULT_UNIQUE_SESSION_ID));
         props.put(HttpConfig.PROP_CONTAINER_ADDED_ATTRIBUTE, getStringArrayProperty(HttpConfig.PROP_CONTAINER_ADDED_ATTRIBUTE,
-                new String[0]));
+                new String[] {"org.eclipse.jetty.security.sessionCreatedSecure"}));
 
         addCustomServiceProperties(props);
     }

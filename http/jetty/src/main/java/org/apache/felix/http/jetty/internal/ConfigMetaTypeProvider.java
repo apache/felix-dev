@@ -425,9 +425,9 @@ class ConfigMetaTypeProvider implements MetaTypeProvider
                 bundle.getBundleContext().getProperty(HttpConfig.PROP_INVALIDATE_SESSION)));
         adList.add(new AttributeDefinitionImpl(HttpConfig.PROP_CONTAINER_ADDED_ATTRIBUTE,
                 "Attributes added by server.",
-                "The atrrtibutes added by underlying session.Use this to invalidate session.",
+                "The attributes added by underlying session. Use this to invalidate session.",
                 AttributeDefinition.STRING,
-                null,
+                new String[] {"org.eclipse.jetty.security.sessionCreatedSecure"},
                 2147483647,
                 null, null,
                 getStringArray(bundle.getBundleContext().getProperty(HttpConfig.PROP_CONTAINER_ADDED_ATTRIBUTE))));
