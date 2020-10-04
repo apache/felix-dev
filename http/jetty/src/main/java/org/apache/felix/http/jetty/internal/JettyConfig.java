@@ -735,6 +735,8 @@ public final class JettyConfig
                 HttpConfig.DEFAULT_INVALIDATE_SESSION));
         props.put(HttpConfig.PROP_UNIQUE_SESSION_ID, getBooleanProperty(HttpConfig.PROP_UNIQUE_SESSION_ID,
                 HttpConfig.DEFAULT_UNIQUE_SESSION_ID));
+        props.put(HttpConfig.PROP_CONTAINER_ADDED_ATTRIBUTE, getStringArrayProperty(HttpConfig.PROP_CONTAINER_ADDED_ATTRIBUTE,
+                new String[0]));
 
         addCustomServiceProperties(props);
     }
