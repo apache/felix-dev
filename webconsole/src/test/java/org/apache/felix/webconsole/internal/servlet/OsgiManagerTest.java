@@ -25,11 +25,14 @@ import static org.junit.Assert.assertSame;
 import static org.junit.Assert.assertTrue;
 
 import java.lang.reflect.Field;
+import java.net.URL;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.Dictionary;
+import java.util.Enumeration;
 import java.util.HashSet;
+import java.util.Hashtable;
 import java.util.List;
 import java.util.Set;
 
@@ -399,6 +402,17 @@ public class OsgiManagerTest {
                 String fs = invocation.getArgument(0, String.class);
                 return FrameworkUtil.createFilter(fs);
             }
+        });
+        // FELIX-6341 - mock the getHeaders to avoid a NPE during ResourceBundleCache#getResourceBundleEntries
+        final Dictionary<String, String> headers = new Hashtable<>();
+        Mockito.when(bundle.getHeaders()).thenReturn(headers);
+        // FELIX-6341 - mock bundle#findEntries so ResourceBundleCache#getResourceBundleEntries will function
+        URL rbUrl = getClass().getResource("/OSGI-INF/l10n/bundle.properties");
+        Mockito.when(bundle.findEntries("OSGI-INF/l10n", "bundle*.properties", false)).thenAnswer(new Answer<Enumeration<URL>>() {
+			@Override
+			public Enumeration<URL> answer(InvocationOnMock invocation) throws Throwable {
+				return Collections.enumeration(Collections.singleton(rbUrl));
+			}
         });
         return bc;
     }
