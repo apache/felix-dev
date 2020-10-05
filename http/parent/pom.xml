@@ -29,7 +29,7 @@
 
     <name>Apache Felix Http Parent POM</name>
     <artifactId>org.apache.felix.http.parent</artifactId>
-    <version>13</version>
+    <version>14-SNAPSHOT</version>
     <packaging>pom</packaging>
 
 
@@ -41,7 +41,7 @@
         <connection>scm:git:https://github.com/apache/felix-dev.git</connection>
         <developerConnection>scm:git:https://github.com/apache/felix-dev.git</developerConnection>
         <url>https://gitbox.apache.org/repos/asf?p=felix-dev.git</url>
-      <tag>org.apache.felix.http.parent-13</tag>
+      <tag>HEAD</tag>
   </scm>
 
     <build>
