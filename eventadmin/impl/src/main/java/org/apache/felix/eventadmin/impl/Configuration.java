@@ -61,12 +61,12 @@ import org.osgi.service.metatype.MetaTypeProvider;
  * </p>
  * <p>
  * <p>
- *      <tt>org.apache.felix.eventadmin.Timeout</tt> - The black-listing timeout in
+ *      <tt>org.apache.felix.eventadmin.Timeout</tt> - The deny-listing timeout in
  *          milliseconds
  * </p>
  * The default value is 5000. Increase or decrease at own discretion. A value of less
  * then 100 turns timeouts off. Any other value is the time in milliseconds granted
- * to each <tt>EventHandler</tt> before it gets blacklisted.
+ * to each <tt>EventHandler</tt> before it gets put on the denylist.
  * </p>
  * <p>
  * <p>
@@ -167,12 +167,15 @@ public class Configuration
     private volatile EventAdminImpl m_admin;
 
     // The registration of the security decorator factory (i.e., the service)
-    private volatile ServiceRegistration m_registration;
+    private volatile ServiceRegistration<EventAdmin> m_registration;
+
+    // The registration of the mbean
+    private volatile ServiceRegistration<Object> m_mbeanreg;
 
     // all adapters
     private AbstractAdapter[] m_adapters;
 
-    private ServiceRegistration m_managedServiceReg;
+    private ServiceRegistration<?> m_managedServiceReg;
 
     // the access control context
     private final AccessControlContext acc;
@@ -285,7 +288,7 @@ public class Configuration
 
             // The timeout in milliseconds - A value of less then 100 turns timeouts off.
             // Any other value is the time in milliseconds granted to each EventHandler
-            // before it gets blacklisted.
+            // before it gets denied.
             m_timeout = getIntProperty(PROP_TIMEOUT,
                     m_bundleContext.getProperty(PROP_TIMEOUT), 5000, Integer.MIN_VALUE);
 
@@ -434,8 +437,13 @@ public class Configuration
             // register the admin wrapped in a service factory (SecureEventAdminFactory)
             // that hands-out the m_admin object wrapped in a decorator that checks
             // appropriated permissions of each calling bundle
-            m_registration = m_bundleContext.registerService(EventAdmin.class.getName(),
+            m_registration = m_bundleContext.registerService(EventAdmin.class,
                     new SecureEventAdminFactory(m_admin), null);
+
+            final Dictionary<String, Object> mbeanProps = new Hashtable<>();
+            mbeanProps.put("jmx.objectname", "org.apache.felix.eventadmin:type=handlerinfo,name=EventAdmin");
+
+            m_mbeanreg = m_bundleContext.registerService(Object.class, m_admin.getHandlerInfoMBean(), mbeanProps);
         }
         else
         {
@@ -469,6 +477,10 @@ public class Configuration
                 m_managedServiceReg = null;
             }
             // We need to unregister manually
+            if ( m_mbeanreg != null ) {
+                m_mbeanreg.unregister();
+                m_mbeanreg = null;
+            }
             if ( m_registration != null )
             {
                 m_registration.unregister();

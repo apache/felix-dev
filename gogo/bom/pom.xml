@@ -32,37 +32,38 @@
     <name>Apache Felix Gogo BOM</name>
     <description>Apache Felix Gogo Bill Of Materials</description>
     <artifactId>org.apache.felix.gogo.bom</artifactId>
-    <version>1.0.3-SNAPSHOT</version>
+    <version>1.0.5-SNAPSHOT</version>
     <url>http://felix.apache.org/</url>
     <scm>
         <connection>scm:git:https://github.com/apache/felix-dev.git</connection>
         <developerConnection>scm:git:https://github.com/apache/felix-dev.git</developerConnection>
         <url>https://gitbox.apache.org/repos/asf?p=felix-dev.git</url>
-    </scm>
+      <tag>HEAD</tag>
+  </scm>
 
     <dependencyManagement>
         <dependencies>
             <dependency>
                 <groupId>org.apache.felix</groupId>
                 <artifactId>org.apache.felix.gogo.command</artifactId>
-                <version>1.1.0</version>
+                <version>1.1.2</version>
                 <scope>runtime</scope>
             </dependency>
             <dependency>
                 <groupId>org.apache.felix</groupId>
                 <artifactId>org.apache.felix.gogo.jline</artifactId>
-                <version>1.1.2</version>
+                <version>1.1.6</version>
                 <scope>runtime</scope>
             </dependency>
             <dependency>
                 <groupId>org.apache.felix</groupId>
                 <artifactId>org.apache.felix.gogo.runtime</artifactId>
-                <version>1.1.2</version>
+                <version>1.1.4</version>
             </dependency>
             <dependency>
                 <groupId>org.apache.felix</groupId>
                 <artifactId>org.apache.felix.gogo.shell</artifactId>
-                <version>1.1.2</version>
+                <version>1.1.4</version>
                 <scope>runtime</scope>
             </dependency>
         </dependencies>

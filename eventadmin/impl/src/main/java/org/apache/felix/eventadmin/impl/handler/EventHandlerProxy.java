@@ -36,7 +36,7 @@ import org.osgi.service.event.EventHandler;
  * on demand and prepares some information for faster processing.
  *
  * It checks the timeout handling for the implementation as well as
- * blacklisting the handler.
+ * putting the handler on the deny list.
  *
  * @author <a href="mailto:dev@felix.apache.org">Felix Project Team</a>
  */
@@ -57,8 +57,8 @@ public class EventHandlerProxy {
     /** Lazy fetched event handler. */
     private volatile EventHandler handler;
 
-    /** Is this handler blacklisted? */
-    private volatile boolean blacklisted;
+    /** Is this handler denied? */
+    private volatile boolean denied;
 
     /** Use timeout. */
     private boolean useTimeout;
@@ -85,7 +85,7 @@ public class EventHandlerProxy {
      */
     public boolean update()
     {
-        this.blacklisted = false;
+        this.denied = false;
         boolean valid = true;
         // First check, topic
         final Object topicObj = reference.getProperty(EventConstants.EVENT_TOPIC);
@@ -268,6 +268,13 @@ public class EventHandlerProxy {
     }
 
     /**
+     * Get some info about the event handler
+     */
+    public String getInfo() {
+        return this.reference.toString() + " [Bundle " + this.reference.getBundle() + "]";
+    }
+
+    /**
      * Dispose the proxy and release the handler
      */
     public void dispose()
@@ -327,13 +334,13 @@ public class EventHandlerProxy {
 
     /**
      * Check if this handler is allowed to receive the event
-     * - blacklisted
+     * - denied
      * - check filter
      * - check permission
      */
     public boolean canDeliver(final Event event)
     {
-        if ( this.blacklisted )
+        if ( this.denied )
         {
             return false;
         }
@@ -427,19 +434,23 @@ public class EventHandlerProxy {
     }
 
     /**
-     * Blacklist the handler.
+     * Deny the handler.
      */
-    public void blackListHandler()
+    public void denyEventHandler()
     {
-    	if(!this.blacklisted)
+    	if(!this.denied)
     	{
 	        LogWrapper.getLogger().log(
 	                        LogWrapper.LOG_WARNING,
-	                        "Blacklisting ServiceReference [" + this.reference + " | Bundle("
+	                        "Denying event handler from ServiceReference [" + this.reference + " | Bundle("
 	                                        + this.reference.getBundle() + ")] due to timeout!");
-	        this.blacklisted = true;
+	        this.denied = true;
 	        // we can free the handler now.
 	        this.release();
     	}
+    }
+
+    public boolean isDenied() {
+        return this.denied;
     }
 }

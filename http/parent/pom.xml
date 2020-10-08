@@ -23,13 +23,13 @@
     <parent>
         <groupId>org.apache.felix</groupId>
         <artifactId>felix-parent</artifactId>
-        <version>6</version>
+        <version>7</version>
         <relativePath>../../pom/pom.xml</relativePath>
     </parent>
 
     <name>Apache Felix Http Parent POM</name>
     <artifactId>org.apache.felix.http.parent</artifactId>
-    <version>13-SNAPSHOT</version>
+    <version>14-SNAPSHOT</version>
     <packaging>pom</packaging>
 
 
@@ -41,7 +41,8 @@
         <connection>scm:git:https://github.com/apache/felix-dev.git</connection>
         <developerConnection>scm:git:https://github.com/apache/felix-dev.git</developerConnection>
         <url>https://gitbox.apache.org/repos/asf?p=felix-dev.git</url>
-    </scm>
+      <tag>HEAD</tag>
+  </scm>
 
     <build>
         <pluginManagement>
@@ -92,7 +93,7 @@
             <artifactId>junit</artifactId>
         </dependency>
         <dependency>
-	        <groupId>org.mockito</groupId>
+            <groupId>org.mockito</groupId>
             <artifactId>mockito-core</artifactId>
         </dependency>
     </dependencies>
@@ -130,13 +131,13 @@
             <dependency>
                 <groupId>junit</groupId>
                 <artifactId>junit</artifactId>
-                <version>4.12</version>
+                <version>4.13</version>
                 <scope>test</scope>
             </dependency>
             <dependency>
                 <groupId>org.mockito</groupId>
                 <artifactId>mockito-core</artifactId>
-                <version>2.17.0</version>
+                <version>3.5.13</version>
                 <scope>test</scope>
             </dependency>
         </dependencies>

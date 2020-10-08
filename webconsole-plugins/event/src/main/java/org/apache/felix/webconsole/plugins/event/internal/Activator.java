@@ -32,7 +32,7 @@ import org.osgi.framework.ServiceRegistration;
 public class Activator implements BundleActivator
 {
     /** Registration for the plugin. */
-    private ServiceRegistration pluginRegistration;
+    private ServiceRegistration<Servlet> pluginRegistration;
 
     /** Listener */
     private EventListener eventListener;
@@ -46,6 +46,7 @@ public class Activator implements BundleActivator
     /**
      * @see org.osgi.framework.BundleActivator#start(org.osgi.framework.BundleContext)
      */
+    @Override
     public void start(final BundleContext context) throws Exception
     {
         // we start with the plugin
@@ -58,14 +59,14 @@ public class Activator implements BundleActivator
         this.featuresHandler = new OptionalFeaturesHandler(this.plugin, context);
 
         // finally we register the plugin
-        final Dictionary props = new Hashtable();
+        final Dictionary<String, Object> props = new Hashtable<>();
         props.put( Constants.SERVICE_DESCRIPTION, "Event Plugin for the Apache Felix Web Console" );
         props.put( Constants.SERVICE_VENDOR, "The Apache Software Foundation" );
         props.put( "felix.webconsole.label", "events");
         props.put( "felix.webconsole.title", "%plugin.events.title");
         props.put( "felix.webconsole.css", "/events/res/ui/events.css");
         props.put( "felix.webconsole.category", "OSGi");
-        this.pluginRegistration = context.registerService(Servlet.class.getName(),
+        this.pluginRegistration = context.registerService(Servlet.class,
                                 plugin,
                                 props);
     }
@@ -73,6 +74,7 @@ public class Activator implements BundleActivator
     /**
      * @see org.osgi.framework.BundleActivator#stop(org.osgi.framework.BundleContext)
      */
+    @Override
     public void stop(final BundleContext context) throws Exception
     {
         if ( this.pluginRegistration != null )

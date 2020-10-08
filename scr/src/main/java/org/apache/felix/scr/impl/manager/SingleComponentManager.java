@@ -1034,7 +1034,8 @@ public class SingleComponentManager<S> extends AbstractComponentManager<S> imple
             // unget the service instance if no bundle is using it
             // any longer unless delayed component instances have to
             // be kept (FELIX-3039)
-            if (  m_useCount.decrementAndGet() == 0 && !isImmediate() && !keepInstances() )
+            if ( m_useCount.decrementAndGet() == 0 && !isImmediate()
+                    && !getComponentMetadata().isFactory() && !keepInstances() )
             {
                 final State previousState = getState();
                 deleteComponent( ComponentConstants.DEACTIVATION_REASON_UNSPECIFIED );

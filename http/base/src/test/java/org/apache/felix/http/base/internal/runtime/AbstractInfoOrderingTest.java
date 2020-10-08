@@ -19,9 +19,9 @@
 package org.apache.felix.http.base.internal.runtime;
 
 import static java.lang.Integer.signum;
-import static junit.framework.Assert.assertEquals;
-import static junit.framework.Assert.fail;
+import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertTrue;
+import static org.junit.Assert.fail;
 
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -88,7 +88,7 @@ public class AbstractInfoOrderingTest
         assertEquals(expected, signum(testInfo.compareTo(other)));
         if ( expected != 0 )
         {
-            final List<AbstractInfo> list = new ArrayList<AbstractInfo>();
+            final List<AbstractInfo<TestInfo>> list = new ArrayList<>();
             list.add(testInfo);
             list.add(other);
             Collections.sort(list);

@@ -28,10 +28,10 @@ import org.apache.felix.eventadmin.impl.util.LogWrapper;
 
 /**
  *
- * A latch that checks handlers for blacklisting on an interval.
+ * A latch that checks handlers for denying on an interval.
  *
  */
-public class BlacklistLatch {
+public class DenylistLatch {
 
 	private final Semaphore internalSemaphore;
 
@@ -43,15 +43,15 @@ public class BlacklistLatch {
 
 	/**
 	 * @param count Number of handlers that must call countdown
-	 * @param timeout Timeout in Milliseconds to check for blacklisting handlers
+	 * @param timeout Timeout in Milliseconds to check for denying handlers
 	 */
-	public BlacklistLatch(final int count, final long timeout)
+	public DenylistLatch(final int count, final long timeout)
 	{
 		this.handlerTasks = new ArrayList<HandlerTask>(count);
 		this.count = count;
 		this.timeout = timeout;
-		internalSemaphore = new Semaphore(count);
-		internalSemaphore.drainPermits();
+		this.internalSemaphore = new Semaphore(count);
+		this.internalSemaphore.drainPermits();
 	}
 
 	/**
@@ -66,11 +66,11 @@ public class BlacklistLatch {
 
 	/**
 	 *
-	 * Adds a handler task to the timeout based blackout checking.
+	 * Adds a handler task to the timeout based deny list checking.
 	 *
 	 * @param task
 	 */
-	public void addToBlacklistCheck(final HandlerTask task)
+	public void addToDenylistCheck(final HandlerTask task)
 	{
 		this.handlerTasks.add(task);
 	}
@@ -78,10 +78,10 @@ public class BlacklistLatch {
 	/**
 	 *
 	 * Causes current thread to wait until each handler has called countDown.
-	 * Checks on timeout interval to determine if a handler needs blacklisting.
+	 * Checks on timeout interval to determine if a handler needs deny listing.
 	 *
 	 */
-	public void awaitAndBlacklistCheck()
+	public void awaitAndDenylistCheck()
 	{
 		try
         {
@@ -91,7 +91,7 @@ public class BlacklistLatch {
             	while(handlerTaskIt.hasNext())
             	{
             		HandlerTask currentTask = handlerTaskIt.next();
-            		currentTask.checkForBlacklist();
+            		currentTask.checkForDenylist();
             	}
             }
         }

@@ -288,6 +288,7 @@ public class ServletContextImplTest
             return null;
         }
 
+        @SuppressWarnings({ "unchecked", "rawtypes" })
         @Override
         public Enumeration getInitParameterNames()
         {
@@ -373,7 +374,7 @@ public class ServletContextImplTest
             return null;
         }
 
-        @SuppressWarnings("deprecation")
+        @SuppressWarnings({ "rawtypes", "unchecked" })
         @Deprecated
         @Override
         public Enumeration getServletNames()
@@ -393,7 +394,7 @@ public class ServletContextImplTest
             return null;
         }
 
-        @SuppressWarnings("deprecation")
+        @SuppressWarnings({ "rawtypes", "unchecked" })
         @Deprecated
         @Override
         public Enumeration getServlets()
@@ -407,7 +408,6 @@ public class ServletContextImplTest
             return null;
         }
 
-        @SuppressWarnings("deprecation")
         @Deprecated
         @Override
         public void log(Exception exception, String msg)

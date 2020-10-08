@@ -1,3 +1,10 @@
+Changes in 4.5.6
+----------------
+** Bug
+    * [FELIX-6341] - ConfigAdmin - deleting a configuration logs a string that should be translated
+    * [FELIX-6328] - Web Console (All In One) imports javax.portlet via fileupload
+
+
 Changes in 4.5.4
 ----------------
 ** Bug

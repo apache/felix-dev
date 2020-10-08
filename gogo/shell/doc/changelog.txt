@@ -1,3 +1,11 @@
+Changes from 1.1.2 to 1.1.4
+----------------------------
+Improvement
+    [FELIX-6038] - pull Java 7 support back in for gogo runtime,shell and console
+
+Bug
+    [FELIX-6046] - fix gogo shell thread interrupt.
+
 Changes from 1.1.0 to 1.1.2
 ----------------------------
 Improvement

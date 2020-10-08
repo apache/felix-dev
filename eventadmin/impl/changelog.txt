@@ -1,3 +1,12 @@
+Changes in 1.6.0
+----------------
+** Improvement
+    * [FELIX-4678] - Make list of denied event handlers available via JMX
+** Task
+    * [FELIX-6329] - Update event admin to Java 8
+    * [FELIX-6330] - Use term deny list for event handlers hitting the timeout
+
+
 Changes in 1.5.0
 ----------------
 ** Task

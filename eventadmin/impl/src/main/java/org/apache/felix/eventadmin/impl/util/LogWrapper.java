@@ -85,7 +85,7 @@ public class LogWrapper
     public static final int LOG_DEBUG = 4;
 
     // A set containing the currently available LogServices. Furthermore used as lock
-    private final Set<ServiceReference> m_loggerRefs = new HashSet<ServiceReference>();
+    private final Set<ServiceReference<?>> m_loggerRefs = new HashSet<>();
 
     // Only null while not set and m_loggerRefs is empty hence, only needs to be
     // checked in case m_loggerRefs is empty otherwise it will not be null.
@@ -173,7 +173,7 @@ public class LogWrapper
                 logWrapper.m_logServiceListener = listener;
 
                 // Add all available LogService references to the singleton.
-                final ServiceReference[] refs = context.getServiceReferences( "org.osgi.service.log.LogService", null );
+                final ServiceReference<?>[] refs = context.getServiceReferences( "org.osgi.service.log.LogService", null );
 
                 if ( null != refs )
                 {
@@ -213,7 +213,7 @@ public class LogWrapper
     /*
      * Add a reference to a newly available LogService
      */
-    void addLoggerRef( final ServiceReference ref )
+    void addLoggerRef( final ServiceReference<?> ref )
     {
         synchronized (m_loggerRefs)
         {
@@ -255,9 +255,9 @@ public class LogWrapper
             {
                 // There is at least one LogService available hence, we can use the
                 // class as well.
-                for (Iterator<ServiceReference> iter = m_loggerRefs.iterator(); iter.hasNext();)
+                for (Iterator<ServiceReference<?>> iter = m_loggerRefs.iterator(); iter.hasNext();)
                 {
-                    final ServiceReference next = iter.next();
+                    final ServiceReference<?> next = iter.next();
 
                     org.osgi.service.log.LogService logger =
                         (org.osgi.service.log.LogService) m_context.getService(next);
@@ -307,9 +307,9 @@ public class LogWrapper
             {
                 // There is at least one LogService available hence, we can use the
                 // class as well.
-                for (Iterator<ServiceReference> iter = m_loggerRefs.iterator(); iter.hasNext();)
+                for (Iterator<ServiceReference<?>> iter = m_loggerRefs.iterator(); iter.hasNext();)
                 {
-                    final ServiceReference next = iter.next();
+                    final ServiceReference<?> next = iter.next();
 
                     org.osgi.service.log.LogService logger =
                         (org.osgi.service.log.LogService) m_context.getService(next);
@@ -343,7 +343,7 @@ public class LogWrapper
      * @param level The log level with which to log the msg.
      * @param msg The message to log.
      */
-    public void log(final ServiceReference sr, final int level, final String msg)
+    public void log(final ServiceReference<?> sr, final int level, final String msg)
     {
         // The method will remove any unregistered service reference as well.
         synchronized(m_loggerRefs)
@@ -359,9 +359,9 @@ public class LogWrapper
             {
                 // There is at least one LogService available hence, we can use the
                 // class as well.
-                for (Iterator<ServiceReference> iter = m_loggerRefs.iterator(); iter.hasNext();)
+                for (Iterator<ServiceReference<?>> iter = m_loggerRefs.iterator(); iter.hasNext();)
                 {
-                    final ServiceReference next = iter.next();
+                    final ServiceReference<?> next = iter.next();
 
                     org.osgi.service.log.LogService logger =
                         (org.osgi.service.log.LogService) m_context.getService(next);
@@ -396,7 +396,7 @@ public class LogWrapper
      * @param msg The message to log.
      * @param ex The exception associated with the message.
      */
-    public void log(final ServiceReference sr, final int level, final String msg,
+    public void log(final ServiceReference<?> sr, final int level, final String msg,
         final Throwable ex)
     {
         // The method will remove any unregistered service reference as well.
@@ -413,9 +413,9 @@ public class LogWrapper
             {
                 // There is at least one LogService available hence, we can use the
                 // class as well.
-                for (Iterator<ServiceReference> iter = m_loggerRefs.iterator(); iter.hasNext();)
+                for (Iterator<ServiceReference<?>> iter = m_loggerRefs.iterator(); iter.hasNext();)
                 {
-                       final ServiceReference next = iter.next();
+                       final ServiceReference<?> next = iter.next();
 
                     org.osgi.service.log.LogService logger =
                         (org.osgi.service.log.LogService) m_context.getService(next);
@@ -445,7 +445,7 @@ public class LogWrapper
      * Log the message to standard output. This appends the level to the message.
      * null values are handled appropriate.
      */
-    private void _log(final ServiceReference sr, final int level, final String msg,
+    private void _log(final ServiceReference<?> sr, final int level, final String msg,
         Throwable ex)
     {
         String s = (sr == null) ? null : "SvcRef " + sr;

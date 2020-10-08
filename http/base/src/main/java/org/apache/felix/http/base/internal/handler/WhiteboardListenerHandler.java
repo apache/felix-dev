@@ -20,8 +20,8 @@ import java.util.EventListener;
 
 import org.apache.felix.http.base.internal.context.ExtServletContext;
 import org.apache.felix.http.base.internal.runtime.ListenerInfo;
+import org.apache.felix.http.base.internal.util.ServiceUtils;
 import org.osgi.framework.BundleContext;
-import org.osgi.framework.ServiceObjects;
 import org.osgi.framework.ServiceReference;
 
 /**
@@ -50,17 +50,12 @@ public final class WhiteboardListenerHandler extends ListenerHandler
         }
 
         final ServiceReference<EventListener> serviceReference = getListenerInfo().getServiceReference();
-        final ServiceObjects<EventListener> so = this.bundleContext.getServiceObjects(serviceReference);
-
-        this.setListener((so == null ? null : so.getService()));
+        this.setListener(ServiceUtils.safeGetServiceObjects(this.bundleContext, serviceReference));
 
         final int reason = super.init();
         if ( reason != -1 )
         {
-            if ( so != null )
-            {
-                so.ungetService(this.getListener());
-            }
+            ServiceUtils.safeUngetServiceObjects(this.bundleContext, serviceReference, this.getListener());
             this.setListener(null);
         }
         return reason;
@@ -69,17 +64,14 @@ public final class WhiteboardListenerHandler extends ListenerHandler
     @Override
     public boolean destroy()
     {
-        final EventListener s = this.getListener();
-        if ( s != null )
+        final EventListener l = this.getListener();
+        if ( l != null )
         {
             if ( super.destroy() )
             {
+                ServiceUtils.safeUngetServiceObjects(this.bundleContext,
+                        getListenerInfo().getServiceReference(), l);
 
-                final ServiceObjects<EventListener> so = this.bundleContext.getServiceObjects(getListenerInfo().getServiceReference());
-                if (so != null)
-                {
-                    so.ungetService(s);
-                }
                 return true;
             }
         }

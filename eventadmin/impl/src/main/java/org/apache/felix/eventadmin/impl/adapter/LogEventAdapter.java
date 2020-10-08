@@ -21,7 +21,6 @@ package org.apache.felix.eventadmin.impl.adapter;
 import java.util.Dictionary;
 import java.util.Hashtable;
 
-import org.apache.felix.eventadmin.impl.util.LogWrapper;
 import org.osgi.framework.Bundle;
 import org.osgi.framework.BundleContext;
 import org.osgi.framework.Constants;
@@ -75,7 +74,7 @@ public class LogEventAdapter extends AbstractAdapter implements ServiceListener
             m_context.addServiceListener(this, "(" + Constants.OBJECTCLASS
                 + "=org.osgi.service.log.LogReaderService)");
 
-            final ServiceReference[] refs;
+            final ServiceReference<?>[] refs;
 
             refs = m_context.getServiceReferences(
                 "org.osgi.service.log.LogReaderService", null);
@@ -161,11 +160,9 @@ public class LogEventAdapter extends AbstractAdapter implements ServiceListener
 
                     if (null != bundle)
                     {
-                        properties.put("bundle.id", new Long(bundle
-                            .getBundleId()));
+                        properties.put("bundle.id", bundle.getBundleId());
 
                         final String symbolicName = bundle.getSymbolicName();
-
                         if (null != symbolicName)
                         {
                             properties.put(EventConstants.BUNDLE_SYMBOLICNAME,
@@ -175,13 +172,12 @@ public class LogEventAdapter extends AbstractAdapter implements ServiceListener
                         properties.put("bundle", bundle);
                     }
 
-                    properties.put("log.level", new Integer(entry.getLevel()));
+                    properties.put("log.level", entry.getLevel());
 
-		    properties.put(EventConstants.MESSAGE,
-				   (entry.getMessage()) != null ? entry.getMessage() : "" );
+		            properties.put(EventConstants.MESSAGE,
+				        (entry.getMessage()) != null ? entry.getMessage() : "" );
 
-                    properties.put(EventConstants.TIMESTAMP, new Long(
-                        entry.getTime()));
+                    properties.put(EventConstants.TIMESTAMP, entry.getTime());
 
                     properties.put("log.entry", entry);
 
@@ -203,62 +199,25 @@ public class LogEventAdapter extends AbstractAdapter implements ServiceListener
                         properties.put(EventConstants.EXCEPTION, exception);
                     }
 
-                    final ServiceReference service = entry
-                        .getServiceReference();
+                    final ServiceReference<?> service = entry.getServiceReference();
 
                     if (null != service)
                     {
                         properties.put(EventConstants.SERVICE, service);
+                        properties.put(EventConstants.SERVICE_ID, service.getProperty(EventConstants.SERVICE_ID));
+                        properties.put(
+                                EventConstants.SERVICE_OBJECTCLASS,
+                                service.getProperty(Constants.OBJECTCLASS));
 
-                        final Object id = service
-                            .getProperty(EventConstants.SERVICE_ID);
-
-                        if (null != id)
-                        {
-                            try
-                            {
-                                properties.put(EventConstants.SERVICE_ID,
-                                    new Long(id.toString()));
-                            } catch (NumberFormatException ne)
-                            {
-                                // LOG and IGNORE
-                                LogWrapper.getLogger().log(
-                                    entry.getServiceReference(),
-                                    LogWrapper.LOG_WARNING, "Exception parsing " +
-                                    EventConstants.SERVICE_ID + "=" + id, ne);
-                            }
-                        }
-
-                        final Object pid = service.getProperty(
-                            EventConstants.SERVICE_PID);
-
+                        final Object pid = service.getProperty(EventConstants.SERVICE_PID);
                         if (null != pid)
                         {
-                            properties.put(EventConstants.SERVICE_PID,
-                                pid.toString());
+                            properties.put(EventConstants.SERVICE_PID, pid);
                         }
 
-                        final Object objectClass = service.getProperty(
-                            Constants.OBJECTCLASS);
-
-                        if (null != objectClass)
-                        {
-                            if (objectClass instanceof String[])
-                            {
-                                properties.put(
-                                    EventConstants.SERVICE_OBJECTCLASS,
-                                    objectClass);
-                            }
-                            else
-                            {
-                                properties.put(
-                                    EventConstants.SERVICE_OBJECTCLASS,
-                                    new String[] { objectClass.toString() });
-                            }
-                        }
                     }
 
-                    final StringBuffer topic = new StringBuffer(
+                    final StringBuilder topic = new StringBuilder(
                         org.osgi.service.log.LogEntry.class.getName().replace(
                             '.', '/')).append('/');
 

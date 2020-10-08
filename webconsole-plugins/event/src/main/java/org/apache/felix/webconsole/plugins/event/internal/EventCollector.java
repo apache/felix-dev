@@ -16,7 +16,9 @@
  */
 package org.apache.felix.webconsole.plugins.event.internal;
 
-import java.util.*;
+import java.util.ArrayList;
+import java.util.Dictionary;
+import java.util.List;
 
 /**
  * This class collects events
@@ -27,16 +29,16 @@ public class EventCollector
     private static final String PROPERTY_MAX_SIZE = "max.size";
     private static final int DEFAULT_MAX_SIZE = 250;
 
-    private List eventInfos;
+    private List<EventInfo> eventInfos;
 
     private long startTime;
 
     private int maxSize;
 
-    public EventCollector(final Dictionary props)
+    public EventCollector()
     {
         this.clear();
-        this.updateConfiguration(props);
+        this.updateConfiguration(null);
     }
 
     public void add(final EventInfo info)
@@ -62,7 +64,7 @@ public class EventCollector
     {
         synchronized ( this )
         {
-            this.eventInfos = new ArrayList();
+            this.eventInfos = new ArrayList<>();
             this.startTime = System.currentTimeMillis();
         }
     }
@@ -70,15 +72,15 @@ public class EventCollector
     /**
      * Return a copy of the current event list
      */
-    public List getEvents()
+    public List<EventInfo> getEvents()
     {
         synchronized ( this )
         {
-            return new ArrayList(eventInfos);
+            return new ArrayList<>(eventInfos);
         }
     }
 
-    public void updateConfiguration( final Dictionary props)
+    public void updateConfiguration( final Dictionary<String, ?> props)
     {
         this.maxSize = OsgiUtil.toInteger(props, PROPERTY_MAX_SIZE, DEFAULT_MAX_SIZE);
         synchronized ( this )

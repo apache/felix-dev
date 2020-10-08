@@ -35,7 +35,7 @@ import org.apache.felix.http.base.internal.handler.HttpServiceFilterHandler;
 import org.apache.felix.http.base.internal.runtime.FilterInfo;
 import org.apache.felix.http.base.internal.runtime.dto.FailedDTOHolder;
 import org.junit.Test;
-import org.mockito.Matchers;
+import org.mockito.ArgumentMatchers;
 import org.osgi.framework.Bundle;
 import org.osgi.framework.BundleContext;
 import org.osgi.framework.Constants;
@@ -73,7 +73,7 @@ public class EventListenerRegistryTest {
         final FilterHandler h1 = createFilterHandler(1L, 0, "/foo");
         reg.addFilter(h1);
 
-        verify(h1.getFilter()).init(Matchers.any(FilterConfig.class));
+        verify(h1.getFilter()).init(ArgumentMatchers.any(FilterConfig.class));
 
         // one entry in DTO
         clear(dto, holder);
@@ -126,10 +126,11 @@ public class EventListenerRegistryTest {
     private static FilterInfo createFilterInfo(final long id, final int ranking, final String... paths) throws InvalidSyntaxException
     {
         final BundleContext bCtx = mock(BundleContext.class);
-        when(bCtx.createFilter(Matchers.anyString())).thenReturn(null);
+        when(bCtx.createFilter(ArgumentMatchers.anyString())).thenReturn(null);
         final Bundle bundle = mock(Bundle.class);
         when(bundle.getBundleContext()).thenReturn(bCtx);
 
+        @SuppressWarnings("unchecked")
         final ServiceReference<Filter> ref = mock(ServiceReference.class);
         when(ref.getBundle()).thenReturn(bundle);
         when(ref.getProperty(Constants.SERVICE_ID)).thenReturn(id);

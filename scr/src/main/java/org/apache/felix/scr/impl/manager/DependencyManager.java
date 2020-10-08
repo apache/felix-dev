@@ -22,6 +22,7 @@ import java.security.Permission;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
+import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 import java.util.SortedMap;
@@ -840,10 +841,7 @@ public class DependencyManager<S, T> implements ReferenceManager<S, T>
                     Object monitor = tracker == null ? null : tracker.tracked();
                     if (monitor != null)
                     {
-                        RefPair<S, T> next = refPair;
-                        while ((next = tryinvokeBind(tracker, monitor, next, trackingCount)) != null)
-                        {
-                        }
+                        tryInvokeBind(tracker, monitor, refPair, trackingCount);
                     }
                 }
                 else if (isTrackerOpened() && cardinalityJustSatisfied(serviceCount))
@@ -863,7 +861,67 @@ public class DependencyManager<S, T> implements ReferenceManager<S, T>
             }
         }
 
-        private RefPair<S, T> tryinvokeBind(
+        private void tryInvokeBind(
+            ServiceTracker<T, RefPair<S, T>, ExtendedServiceEvent> tracker,
+            Object monitor, RefPair<S, T> next, int trackingCount)
+        {
+            boolean checkQueue = false;
+            do
+            {
+                try
+                {
+                    while ((next = tryInvokeBind0(tracker, monitor, next,
+                        trackingCount)) != null)
+                    {
+                    }
+                }
+                finally
+                {
+                    // be sure to clean up the bindingThread state
+                    synchronized (monitor)
+                    {
+                        if (bindingThread != null
+                            && bindingThread.equals(Thread.currentThread()))
+                        {
+                            // check that another thread didn't give us more work to do since
+                            // the time we gave up the lock in tryInvokeBind0
+                            if (queuedRefPairs.isEmpty())
+                            {
+                                // working thread is done, make sure state is cleared
+                                bindingRefPair = null;
+                                bindingThread = null;
+                            }
+                            else
+                            {
+                                next = getBestFromQueue();
+                                // NOTE - getBestFromQueue cannot return null at this point
+                                // because queuedRefPairs is not empty; always loop
+                                // around to tryInvokeBind again in this case
+                                checkQueue = true;
+                            }
+                        }
+                    }
+                }
+            }
+            while (checkQueue);
+        }
+
+        private RefPair<S, T> getBestFromQueue()
+        {
+            RefPair<S, T> currentBest = null;
+            for (RefPair<S, T> betterCandidate : queuedRefPairs)
+            {
+                if (currentBest == null
+                    || betterCandidate.getRef().compareTo(currentBest.getRef()) > 0)
+                {
+                    currentBest = betterCandidate;
+                }
+            }
+            queuedRefPairs.clear();
+            return currentBest;
+        }
+
+        private RefPair<S, T> tryInvokeBind0(
             ServiceTracker<T, RefPair<S, T>, ExtendedServiceEvent> tracker,
             Object monitor, RefPair<S, T> refPair , int trackingCount)
         {
@@ -894,6 +952,7 @@ public class DependencyManager<S, T> implements ReferenceManager<S, T>
 
             if (invokeBind)
             {
+                boolean invokedUnbind = false;
                 m_componentManager.invokeBindMethod(DependencyManager.this,
                     bindingRefPair, trackingCount);
                 if (!bindingRefPair.isFailed())
@@ -901,33 +960,30 @@ public class DependencyManager<S, T> implements ReferenceManager<S, T>
                     if (current != null)
                     {
                         m_componentManager.invokeUnbindMethod(DependencyManager.this,
-                            current,
-                            trackingCount);
+                            current, trackingCount);
+                        invokedUnbind = true;
                         ungetService(current);
                     }
                 }
                 else if (cardinalitySatisfied(0))
                 {
-                    m_componentManager.registerMissingDependency(DependencyManager.this, bindingRefPair.getRef(),
-                        trackingCount);
+                    m_componentManager.registerMissingDependency(DependencyManager.this,
+                        bindingRefPair.getRef(), trackingCount);
                 }
                 RefPair<S, T> next = null;
-                synchronized (monitor) {
+                synchronized (monitor)
+                {
                     if (!queuedRefPairs.isEmpty())
                     {
                         // One of more threads offered better options
                         // Find the best option
-                        for (RefPair<S, T> betterCandidate : queuedRefPairs)
-                        {
-                            if (next == null
-                                || betterCandidate.getRef().compareTo(next.getRef()) > 0)
-                            {
-                                next = betterCandidate;
-                            }
-                        }
-                        queuedRefPairs.clear();
+                        next = getBestFromQueue();
                         this.bindingRefPair = next;
-                        this.currentRefPair = null;
+                        if (invokedUnbind)
+                        {
+                            // unbind was invoked clear the current RefPair
+                            this.currentRefPair = null;
+                        }
                     }
                     else
                     {
@@ -935,13 +991,19 @@ public class DependencyManager<S, T> implements ReferenceManager<S, T>
                         {
                             // what we just bound got unregistered
                             // look for next best service
-                            next = getTracker().getTracked(null,
-                                new AtomicInteger()).values().iterator().next();
+                            Iterator<RefPair<S, T>> iNext = getTracker().getTracked(null,
+                                new AtomicInteger()).values().iterator();
+                            next = iNext.hasNext() ? iNext.next() : null;
                             this.bindingRefPair = next;
-                            this.currentRefPair = null;
+                            if (invokedUnbind)
+                            {
+                                // unbind was invoked clear the current RefPair
+                                this.currentRefPair = null;
+                            }
                         }
                         else
                         {
+                            // all done; set the current to the ref bound
                             this.currentRefPair = bindingRefPair;
                             this.bindingRefPair = null;
                             this.bindingThread = null;
@@ -1032,10 +1094,7 @@ public class DependencyManager<S, T> implements ReferenceManager<S, T>
             }
             if (nextRefPair != null)
             {
-                RefPair<S, T> next = nextRefPair;
-                while ((next = tryinvokeBind(tracker, monitor, next, trackingCount)) != null)
-                {
-                }
+                tryInvokeBind(tracker, monitor, nextRefPair, trackingCount);
             }
 
             if (oldRefPair != null)

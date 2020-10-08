@@ -34,7 +34,7 @@ import org.apache.felix.http.base.internal.handler.WhiteboardListenerHandler;
 import org.apache.felix.http.base.internal.runtime.ListenerInfo;
 import org.apache.felix.http.base.internal.runtime.dto.FailedDTOHolder;
 import org.junit.Test;
-import org.mockito.Matchers;
+import org.mockito.ArgumentMatchers;
 import org.osgi.framework.Bundle;
 import org.osgi.framework.BundleContext;
 import org.osgi.framework.Constants;
@@ -96,10 +96,11 @@ public class FilterRegistryTest {
         typeNames[index++] = type.getName();
 
         final BundleContext bCtx = mock(BundleContext.class);
-        when(bCtx.createFilter(Matchers.anyString())).thenReturn(null);
+        when(bCtx.createFilter(ArgumentMatchers.anyString())).thenReturn(null);
         final Bundle bundle = mock(Bundle.class);
         when(bundle.getBundleContext()).thenReturn(bCtx);
 
+        @SuppressWarnings("unchecked")
         final ServiceReference<EventListener> ref = mock(ServiceReference.class);
         when(ref.getBundle()).thenReturn(bundle);
         when(ref.getProperty(Constants.SERVICE_ID)).thenReturn(id);
@@ -108,6 +109,7 @@ public class FilterRegistryTest {
         when(ref.getPropertyKeys()).thenReturn(new String[0]);
 
         final EventListener listener = mock(type);
+        @SuppressWarnings("unchecked")
         final ServiceObjects<EventListener> so = mock(ServiceObjects.class);
         when(bCtx.getServiceObjects(ref)).thenReturn(so);
         when(so.getService()).thenReturn(listener);

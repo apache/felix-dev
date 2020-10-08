@@ -66,7 +66,7 @@ public class FrameworkEventAdapter extends AbstractAdapter implements FrameworkL
     @Override
     public void frameworkEvent(final FrameworkEvent event)
     {
-        final Dictionary<String, Object> properties = new Hashtable<String, Object>();
+        final Dictionary<String, Object> properties = new Hashtable<>();
 
         properties.put(EventConstants.EVENT, event);
 
@@ -74,7 +74,7 @@ public class FrameworkEventAdapter extends AbstractAdapter implements FrameworkL
 
         if (null != bundle)
         {
-            properties.put("bundle.id", new Long(bundle.getBundleId()));
+            properties.put("bundle.id", bundle.getBundleId());
 
             final String symbolicName = bundle.getSymbolicName();
 
@@ -105,7 +105,7 @@ public class FrameworkEventAdapter extends AbstractAdapter implements FrameworkL
             properties.put(EventConstants.EXCEPTION, thrown);
         }
 
-        final StringBuffer topic = new StringBuffer(
+        final StringBuilder topic = new StringBuilder(
             FrameworkEvent.class.getName().replace('.', '/'))
             .append('/');
 

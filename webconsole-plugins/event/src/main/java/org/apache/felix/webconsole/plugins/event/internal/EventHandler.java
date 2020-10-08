@@ -20,7 +20,9 @@ package org.apache.felix.webconsole.plugins.event.internal;
 import java.util.HashMap;
 import java.util.Map;
 
-import org.apache.felix.webconsole.plugins.event.internal.converter.*;
+import org.apache.felix.webconsole.plugins.event.internal.converter.BundleEventConverter;
+import org.apache.felix.webconsole.plugins.event.internal.converter.FrameworkEventConverter;
+import org.apache.felix.webconsole.plugins.event.internal.converter.ServiceEventConverter;
 import org.osgi.service.event.Event;
 
 /**
@@ -49,6 +51,7 @@ public class EventHandler implements org.osgi.service.event.EventHandler
     /**
      * @see org.osgi.service.event.EventHandler#handleEvent(org.osgi.service.event.Event)
      */
+    @Override
     public void handleEvent( Event event )
     {
         boolean include = true;
@@ -62,11 +65,11 @@ public class EventHandler implements org.osgi.service.event.EventHandler
         }
         if ( include )
         {
-            Map props = null;
+            Map<String, Object> props = null;
             final String[] names = event.getPropertyNames();
             if ( names != null && names.length > 0 )
             {
-                props = new HashMap();
+                props = new HashMap<>();
                 for ( int i = 0; i < names.length; i++ )
                 {
                     props.put(names[i], event.getProperty(names[i]));

@@ -22,14 +22,14 @@
     <parent>
         <groupId>org.apache.felix</groupId>
         <artifactId>org.apache.felix.http.parent</artifactId>
-        <version>12</version>
+        <version>13</version>
         <relativePath>../parent/pom.xml</relativePath>
     </parent>
 
     <name>Apache Felix Http Bridge</name>
     <description>This is an implementation of the OSGi Http Service and the OSGi Http Whiteboard Specification used when run as a web application</description>
     <artifactId>org.apache.felix.http.bridge</artifactId>
-    <version>4.0.13-SNAPSHOT</version>
+    <version>4.1.3-SNAPSHOT</version>
     <packaging>bundle</packaging>
 
     <scm>
@@ -38,6 +38,10 @@
         <url>https://gitbox.apache.org/repos/asf?p=felix-dev.git</url>
       <tag>HEAD</tag>
   </scm>
+
+    <properties>
+        <felix.java.version>8</felix.java.version>
+    </properties>
 
     <build>
         <plugins>
@@ -137,7 +141,7 @@
         <dependency>
             <groupId>org.apache.felix</groupId>
             <artifactId>org.apache.felix.http.base</artifactId>
-            <version>4.0.10</version>
+            <version>4.1.2</version>
         </dependency>
     </dependencies>
 

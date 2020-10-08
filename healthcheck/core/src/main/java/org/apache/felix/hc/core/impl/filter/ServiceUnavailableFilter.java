@@ -380,7 +380,7 @@ public class ServiceUnavailableFilter implements Filter {
 
             @Override
             protected void service(HttpServletRequest req, HttpServletResponse resp) throws ServletException, IOException {
-                send503((HttpServletResponse) resp, "Starting...");
+                send503((HttpServletResponse) resp, "Service Unavailable");
             }
             
         }, servletProps);

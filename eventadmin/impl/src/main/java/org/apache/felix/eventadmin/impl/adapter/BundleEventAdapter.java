@@ -68,8 +68,7 @@ public class BundleEventAdapter extends AbstractAdapter implements BundleListene
 
         properties.put(EventConstants.EVENT, event);
 
-        properties.put("bundle.id", new Long(event.getBundle()
-            .getBundleId()));
+        properties.put("bundle.id", event.getBundle().getBundleId());
 
         final String symbolicName = event.getBundle().getSymbolicName();
 
@@ -81,7 +80,7 @@ public class BundleEventAdapter extends AbstractAdapter implements BundleListene
 
         properties.put("bundle", event.getBundle());
 
-        final StringBuffer topic = new StringBuffer(BundleEvent.class
+        final StringBuilder topic = new StringBuilder(BundleEvent.class
             .getName().replace('.', '/')).append('/');
 
         switch (event.getType())

@@ -1,3 +1,9 @@
+Changes from 1.1.2 to 1.1.4
+---------------------------
+Improvement
+    [FELIX-5963] - Gogo runtime should use named executor threads
+    [FELIX-6038] - pull Java 7 support back in for gogo runtime,shell and console
+
 Changes 1.1.0 to 1.1.2
 ----------------------
 Improvement

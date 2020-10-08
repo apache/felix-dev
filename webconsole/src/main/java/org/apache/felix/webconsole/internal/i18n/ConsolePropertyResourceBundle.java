@@ -62,7 +62,13 @@ class ConsolePropertyResourceBundle extends ResourceBundle
 
     public Enumeration getKeys()
     {
-        return new CombinedEnumeration( props.keys(), parent.getKeys() );
+        Enumeration keysEnum = null;
+        if (parent == null) {
+            keysEnum = props.keys();
+        } else {
+            keysEnum = new CombinedEnumeration( props.keys(), parent.getKeys() );
+        }
+        return keysEnum;
     }
 
 

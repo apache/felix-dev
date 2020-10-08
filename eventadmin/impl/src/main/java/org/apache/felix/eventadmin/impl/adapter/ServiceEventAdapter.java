@@ -21,7 +21,6 @@ package org.apache.felix.eventadmin.impl.adapter;
 import java.util.Dictionary;
 import java.util.Hashtable;
 
-import org.apache.felix.eventadmin.impl.util.LogWrapper;
 import org.osgi.framework.BundleContext;
 import org.osgi.framework.Constants;
 import org.osgi.framework.ServiceEvent;
@@ -71,53 +70,22 @@ public class ServiceEventAdapter extends AbstractAdapter implements ServiceListe
 
         properties.put(EventConstants.EVENT, event);
 
-        properties.put(EventConstants.SERVICE, event
-            .getServiceReference());
+        properties.put(EventConstants.SERVICE, event.getServiceReference());
 
-        final Object id = event.getServiceReference().getProperty(
-            EventConstants.SERVICE_ID);
+        properties.put(EventConstants.SERVICE_ID,
+                event.getServiceReference().getProperty(EventConstants.SERVICE_ID));
 
-        if (null != id)
-        {
-            try
-            {
-                properties.put(EventConstants.SERVICE_ID, new Long(id
-                    .toString()));
-            } catch (NumberFormatException ne)
-            {
-                // LOG and IGNORE
-                LogWrapper.getLogger().log(event.getServiceReference(),
-                    LogWrapper.LOG_WARNING, "Exception parsing " +
-                    EventConstants.SERVICE_ID + "=" + id, ne);
-            }
-        }
+        properties.put(EventConstants.SERVICE_OBJECTCLASS,
+                event.getServiceReference().getProperty(Constants.OBJECTCLASS));
 
         final Object pid = event.getServiceReference().getProperty(
-            EventConstants.SERVICE_PID);
-
+                EventConstants.SERVICE_PID);
         if (null != pid)
         {
-            properties.put(EventConstants.SERVICE_PID, pid.toString());
+            properties.put(EventConstants.SERVICE_PID, pid);
         }
 
-        final Object objectClass = event.getServiceReference()
-            .getProperty(Constants.OBJECTCLASS);
-
-        if (null != objectClass)
-        {
-            if (objectClass instanceof String[])
-            {
-                properties.put(EventConstants.SERVICE_OBJECTCLASS,
-                    objectClass);
-            }
-            else
-            {
-                properties.put(EventConstants.SERVICE_OBJECTCLASS,
-                    new String[] { objectClass.toString() });
-            }
-        }
-
-        final StringBuffer topic = new StringBuffer(ServiceEvent.class
+        final StringBuilder topic = new StringBuilder(ServiceEvent.class
             .getName().replace('.', '/')).append('/');
 
         switch (event.getType())

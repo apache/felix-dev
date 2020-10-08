@@ -44,6 +44,7 @@ public class ListenerInfoTest
         Bundle b = mock(Bundle.class);
         BundleContext bc = mock(BundleContext.class);
 
+        @SuppressWarnings("unchecked")
         ServiceReference<EventListener> ref = mock(ServiceReference.class);
         when(ref.getProperty(Constants.SERVICE_ID)).thenReturn(1L);
         when(ref.getProperty(Constants.OBJECTCLASS))

@@ -20,7 +20,13 @@ package org.apache.felix.webconsole.plugins.event.internal;
 import java.util.Dictionary;
 import java.util.Hashtable;
 
-import org.osgi.framework.*;
+import org.osgi.framework.BundleContext;
+import org.osgi.framework.Constants;
+import org.osgi.framework.InvalidSyntaxException;
+import org.osgi.framework.ServiceEvent;
+import org.osgi.framework.ServiceListener;
+import org.osgi.framework.ServiceReference;
+import org.osgi.framework.ServiceRegistration;
 import org.osgi.service.event.EventAdmin;
 
 /**
@@ -40,16 +46,16 @@ public class OptionalFeaturesHandler
 
     /** Event admin service id */
     //private Long eventAdminServiceId;
-    private ServiceReference eventAdminServiceRef;
+    private ServiceReference<?> eventAdminServiceRef;
 
     /** Registration for the event handler. */
-    private ServiceRegistration eventHandlerRegistration;
+    private ServiceRegistration<?> eventHandlerRegistration;
 
     /** Configuration admin service id */
     private Long configAdminServiceId;
 
     /** Registration for the configuration listener. */
-    private ServiceRegistration configListenerRegistration;
+    private ServiceRegistration<?> configListenerRegistration;
 
     /** Bundle context. */
     private final BundleContext bundleContext;
@@ -62,7 +68,7 @@ public class OptionalFeaturesHandler
         this.plugin = plugin;
         this.bundleContext = context;
         // check if event admin is already available
-        final ServiceReference ref = this.bundleContext.getServiceReference(EVENT_ADMIN_CLASS_NAME);
+        final ServiceReference<?> ref = this.bundleContext.getServiceReference(EVENT_ADMIN_CLASS_NAME);
         if ( ref != null )
         {
             bindEventAdmin(ref);
@@ -70,7 +76,7 @@ public class OptionalFeaturesHandler
 
         // check if config admin is already available
         this.configAdminServiceId = null;
-        final ServiceReference cfaRef = this.bundleContext.getServiceReference(CONFIGURATION_ADMIN_CLASS_NAME);
+        final ServiceReference<?> cfaRef = this.bundleContext.getServiceReference(CONFIGURATION_ADMIN_CLASS_NAME);
         if ( cfaRef != null )
         {
             final Long id = (Long)cfaRef.getProperty(Constants.SERVICE_ID);
@@ -98,9 +104,10 @@ public class OptionalFeaturesHandler
     /**
      * @see org.osgi.framework.ServiceListener#serviceChanged(org.osgi.framework.ServiceEvent)
      */
+    @Override
     public void serviceChanged(final ServiceEvent event)
     {
-        final ServiceReference ref = event.getServiceReference();
+        final ServiceReference<?> ref = event.getServiceReference();
         final String[] objectClasses =  (String[])ref.getProperty(Constants.OBJECTCLASS);
         if ( objectClasses != null)
         {
@@ -112,6 +119,7 @@ public class OptionalFeaturesHandler
                     {
                         new Thread()
                         {
+                            @Override
                             public void run()
                             {
                                 try {
@@ -125,6 +133,7 @@ public class OptionalFeaturesHandler
                     {
                         new Thread()
                         {
+                            @Override
                             public void run()
                             {
                                 try {
@@ -142,6 +151,7 @@ public class OptionalFeaturesHandler
                     {
                         new Thread()
                         {
+                            @Override
                             public void run()
                             {
                                 try {
@@ -155,6 +165,7 @@ public class OptionalFeaturesHandler
                     {
                         new Thread()
                         {
+                            @Override
                             public void run()
                             {
                                 try {
@@ -169,14 +180,14 @@ public class OptionalFeaturesHandler
         }
     }
 
-    synchronized void bindEventAdmin(ServiceReference ref)
+    synchronized void bindEventAdmin(ServiceReference<?> ref)
     {
         if ( this.eventAdminServiceRef != null)
         {
             this.unbindEventAdmin(this.eventAdminServiceRef);
         }
         this.eventAdminServiceRef = ref;
-        final Dictionary props = new Hashtable();
+        final Dictionary<String, Object> props = new Hashtable<>();
         props.put( Constants.SERVICE_DESCRIPTION, "Event handler for the Apache Felix Web Console" );
         props.put( Constants.SERVICE_VENDOR, "The Apache Software Foundation" );
         props.put( "event.topics", "*"); //$NON-NLS-1$ //$NON-NLS-2$
@@ -186,7 +197,7 @@ public class OptionalFeaturesHandler
                 new EventHandler(this.plugin.getCollector()), props);
     }
 
-    synchronized void unbindEventAdmin(ServiceReference ref)
+    synchronized void unbindEventAdmin(ServiceReference<?> ref)
     {
         if ( this.eventAdminServiceRef != null && this.eventAdminServiceRef.equals(ref) )
         {

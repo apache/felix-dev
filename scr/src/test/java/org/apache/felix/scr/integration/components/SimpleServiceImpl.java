@@ -21,14 +21,13 @@ package org.apache.felix.scr.integration.components;
 
 import java.util.Dictionary;
 import java.util.Hashtable;
-import java.util.Properties;
 
 import org.osgi.framework.BundleContext;
 import org.osgi.framework.Constants;
 import org.osgi.framework.ServiceRegistration;
 
 
-public class SimpleServiceImpl implements SimpleService
+public class SimpleServiceImpl implements SimpleService, Comparable<SimpleServiceImpl>
 {
 
     private String m_value;
@@ -37,7 +36,7 @@ public class SimpleServiceImpl implements SimpleService
 
     private String m_filterProp;
 
-    private ServiceRegistration m_registration;
+    private ServiceRegistration<SimpleService> m_registration;
 
 
     public static SimpleServiceImpl create( BundleContext bundleContext, String value )
@@ -50,7 +49,8 @@ public class SimpleServiceImpl implements SimpleService
     {
         SimpleServiceImpl instance = new SimpleServiceImpl( value, ranking );
         Dictionary<String,?> props = instance.getProperties();
-        instance.setRegistration( bundleContext.registerService( SimpleService.class.getName(), instance, props ) );
+        instance.setRegistration(
+            bundleContext.registerService(SimpleService.class, instance, props));
         return instance;
     }
 
@@ -104,7 +104,7 @@ public class SimpleServiceImpl implements SimpleService
 
     public SimpleServiceImpl drop()
     {
-        ServiceRegistration sr = getRegistration();
+        ServiceRegistration<SimpleService> sr = getRegistration();
         if ( sr != null )
         {
             setRegistration( null );
@@ -120,14 +120,15 @@ public class SimpleServiceImpl implements SimpleService
     }
 
 
-    public SimpleServiceImpl setRegistration( ServiceRegistration registration )
+    public SimpleServiceImpl setRegistration(
+        ServiceRegistration<SimpleService> registration)
     {
         m_registration = registration;
         return this;
     }
 
 
-    public ServiceRegistration getRegistration()
+    public ServiceRegistration<SimpleService> getRegistration()
     {
         return m_registration;
     }
@@ -136,6 +137,13 @@ public class SimpleServiceImpl implements SimpleService
     @Override
     public String toString()
     {
-        return getClass().getSimpleName() + ": value=" + getValue() + ", filterprop=" + m_filterProp;
+        return getClass().getSimpleName() + ": value=" + getValue() + ", filterprop="
+            + m_filterProp + ", m_registration=" + m_registration;
+    }
+
+    @Override
+    public int compareTo(SimpleServiceImpl o)
+    {
+        return Integer.compare(this.m_ranking, o.m_ranking);
     }
 }

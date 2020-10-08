@@ -346,13 +346,29 @@ public class HttpSessionWrapper implements HttpSession
         {
             // if the session is empty we can invalidate
             final Enumeration<String> remainingNames = this.delegate.getAttributeNames();
-            if ( !remainingNames.hasMoreElements() )
+            if ( (!remainingNames.hasMoreElements()) || (isRemainingAttributeAddedByContainer(remainingNames)))
             {
                 this.delegate.invalidate();
             }
         }
-
         this.isInvalid = true;
+    }
+
+    private boolean isRemainingAttributeAddedByContainer(Enumeration<String> names){
+        final Set<String> attributeAddedByContainerSet = this.config.getContainerAddedAttribueSet() ;
+
+        if(attributeAddedByContainerSet != null && !attributeAddedByContainerSet.isEmpty()) {
+
+            while (names.hasMoreElements()) {
+
+                final String name = names.nextElement();
+                if (name == null || !attributeAddedByContainerSet.contains(name)) {
+                    return false;
+                }
+            }
+            return true ;
+        }
+        return false ;
     }
 
     @Override

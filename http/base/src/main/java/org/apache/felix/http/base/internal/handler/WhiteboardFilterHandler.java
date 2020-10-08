@@ -20,8 +20,8 @@ import javax.servlet.Filter;
 
 import org.apache.felix.http.base.internal.context.ExtServletContext;
 import org.apache.felix.http.base.internal.runtime.FilterInfo;
+import org.apache.felix.http.base.internal.util.ServiceUtils;
 import org.osgi.framework.BundleContext;
-import org.osgi.framework.ServiceObjects;
 import org.osgi.framework.ServiceReference;
 
 /**
@@ -50,17 +50,12 @@ public final class WhiteboardFilterHandler extends FilterHandler
         }
 
         final ServiceReference<Filter> serviceReference = getFilterInfo().getServiceReference();
-        final ServiceObjects<Filter> so = this.bundleContext.getServiceObjects(serviceReference);
-
-        this.setFilter((so == null ? null : so.getService()));
+        this.setFilter(ServiceUtils.safeGetServiceObjects(this.bundleContext, serviceReference));
 
         final int reason = super.init();
         if ( reason != -1 )
         {
-            if ( so != null )
-            {
-                so.ungetService(this.getFilter());
-            }
+            ServiceUtils.safeUngetServiceObjects(this.bundleContext, serviceReference, this.getFilter());
             this.setFilter(null);
         }
         return reason;
@@ -69,17 +64,14 @@ public final class WhiteboardFilterHandler extends FilterHandler
     @Override
     public boolean destroy()
     {
-        final Filter s = this.getFilter();
-        if ( s != null )
+        final Filter f = this.getFilter();
+        if ( f != null )
         {
             if ( super.destroy() )
             {
+                ServiceUtils.safeUngetServiceObjects(this.bundleContext,
+                        getFilterInfo().getServiceReference(), f);
 
-                final ServiceObjects<Filter> so = this.bundleContext.getServiceObjects(getFilterInfo().getServiceReference());
-                if (so != null)
-                {
-                    so.ungetService(s);
-                }
                 return true;
             }
         }
