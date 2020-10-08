@@ -47,11 +47,10 @@ public class HealthCheckFuture extends FutureTask<ExecutionResult> {
     private final static Logger LOG = LoggerFactory.getLogger(HealthCheckFuture.class);
 
     private static Result createResult(final HealthCheckMetadata metadata, Exception e) {
-		return new Result(Result.Status.HEALTH_CHECK_ERROR,
-		        "Exception during execution of '" + metadata.getName() + "'", e);
-	}
+        return new Result(Result.Status.HEALTH_CHECK_ERROR, "Exception during execution of '" + metadata.getName() + "'", e);
+    }
 
-	private final HealthCheckMetadata metadata;
+    private final HealthCheckMetadata metadata;
     private final Date createdTime;
 
     public HealthCheckFuture(final HealthCheckMetadata metadata, final BundleContext bundleContext, final Callback callback) {
