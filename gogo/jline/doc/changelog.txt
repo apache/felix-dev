@@ -1,3 +1,8 @@
+Changes from 1.1.6 to 1.1.8
+----------------------------
+Bug
+    [FELIX-6058] -  Added Bundle-Activator back
+
 Changes from 1.1.0 to 1.1.2
 ----------------------------
 Improvement
