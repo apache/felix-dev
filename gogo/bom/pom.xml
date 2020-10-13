@@ -32,13 +32,13 @@
     <name>Apache Felix Gogo BOM</name>
     <description>Apache Felix Gogo Bill Of Materials</description>
     <artifactId>org.apache.felix.gogo.bom</artifactId>
-    <version>1.0.5-SNAPSHOT</version>
+    <version>1.0.6</version>
     <url>http://felix.apache.org/</url>
     <scm>
         <connection>scm:git:https://github.com/apache/felix-dev.git</connection>
         <developerConnection>scm:git:https://github.com/apache/felix-dev.git</developerConnection>
         <url>https://gitbox.apache.org/repos/asf?p=felix-dev.git</url>
-      <tag>HEAD</tag>
+      <tag>org.apache.felix.gogo.bom-1.0.6</tag>
   </scm>
 
     <dependencyManagement>
