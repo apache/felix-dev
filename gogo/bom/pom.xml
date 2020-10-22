@@ -32,7 +32,7 @@
     <name>Apache Felix Gogo BOM</name>
     <description>Apache Felix Gogo Bill Of Materials</description>
     <artifactId>org.apache.felix.gogo.bom</artifactId>
-    <version>1.0.5-SNAPSHOT</version>
+    <version>1.0.7-SNAPSHOT</version>
     <url>http://felix.apache.org/</url>
     <scm>
         <connection>scm:git:https://github.com/apache/felix-dev.git</connection>
@@ -52,7 +52,7 @@
             <dependency>
                 <groupId>org.apache.felix</groupId>
                 <artifactId>org.apache.felix.gogo.jline</artifactId>
-                <version>1.1.6</version>
+                <version>1.1.8</version>
                 <scope>runtime</scope>
             </dependency>
             <dependency>
