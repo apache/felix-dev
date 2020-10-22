@@ -1288,11 +1288,14 @@ public class DependencyManager<S, T> implements ReferenceManager<S, T>
             m_componentManager.getLogger().log(Level.DEBUG,
                 "dm {0} tracking {1} SingleStatic modified {2} (enter)",
                     null, getName(), trackingCount, serviceReference );
-            boolean invokeUpdated;
-            final Object sync = getTracker().tracked();
-            synchronized (sync)
+            boolean invokeUpdated = false;
+            final Object monitor = getTracker().tracked();
+            if (monitor != null)
             {
-                invokeUpdated = isActive() && refPair == this.refPair;
+                synchronized (monitor)
+                {
+                    invokeUpdated = isActive() && refPair == this.refPair;
+                }
             }
             boolean reactivate = false;
             if (invokeUpdated)
@@ -1304,7 +1307,7 @@ public class DependencyManager<S, T> implements ReferenceManager<S, T>
             if (reactivate)
             {
                 deactivateComponentManager();
-                synchronized (sync)
+                synchronized (monitor)
                 {
                     if (refPair == this.refPair)
                     {
@@ -1369,32 +1372,34 @@ public class DependencyManager<S, T> implements ReferenceManager<S, T>
         @Override
         public boolean prebind(ComponentContextImpl<S> key)
         {
+            RefPair<S, T> refPair = null;
             boolean success = cardinalitySatisfied(0);
+            AtomicInteger trackingCount = new AtomicInteger();
             ServiceTracker<T, RefPair<S, T>, ExtendedServiceEvent> tracker = getTracker();
             Object monitor = tracker == null ? null : tracker.tracked();
-            if (success || (tracker != null && !tracker.isEmpty()))
+            if (monitor != null)
             {
-                RefPair<S, T> refPair = null;
-                AtomicInteger trackingCount = new AtomicInteger();
                 synchronized (monitor)
                 {
-                    SortedMap<ServiceReference<T>, RefPair<S, T>> tracked = tracker.getTracked(
-                        true,
-                        trackingCount);
-                    if (!tracked.isEmpty())
+                    if (success || !tracker.isEmpty())
                     {
-                        refPair = tracked.values().iterator().next();
-                        this.refPair = refPair;
+                        SortedMap<ServiceReference<T>, RefPair<S, T>> tracked = tracker.getTracked(
+                            true, trackingCount);
+                        if (!tracked.isEmpty())
+                        {
+                            refPair = tracked.values().iterator().next();
+                            this.refPair = refPair;
+                        }
                     }
                 }
-                if (refPair != null)
+            }
+            if (refPair != null)
+            {
+                success |= getServiceObject(key, m_bindMethods.getBind(), refPair);
+                if (refPair.isFailed())
                 {
-                    success |= getServiceObject(key, m_bindMethods.getBind(), refPair);
-                    if (refPair.isFailed())
-                    {
-                        m_componentManager.registerMissingDependency(DependencyManager.this, refPair.getRef(),
-                            trackingCount.get());
-                    }
+                    m_componentManager.registerMissingDependency(DependencyManager.this,
+                        refPair.getRef(), trackingCount.get());
                 }
             }
             return success;
@@ -2035,7 +2040,13 @@ public class DependencyManager<S, T> implements ReferenceManager<S, T>
         // null. This is valid for both immediate and delayed components
         if (componentContext.getImplementationObject(false) != null)
         {
-            synchronized (m_tracker.tracked())
+            Object monitor = m_tracker.tracked();
+            if (monitor == null)
+            {
+                // ignore event; tracker is down
+                return true;
+            }
+            synchronized (monitor)
             {
                 if (info.outOfRange(trackingCount))
                 {
