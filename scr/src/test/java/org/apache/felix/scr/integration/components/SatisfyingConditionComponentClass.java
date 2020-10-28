@@ -16,12 +16,12 @@
  * specific language governing permissions and limitations
  * under the License.
  */
-package org.apache.felix.scr.impl.truecondition;
+package org.apache.felix.scr.integration.components;
 
 import org.apache.felix.scr.impl.metadata.ReferenceMetadata;
 import org.osgi.service.component.ComponentContext;
 
-public class ComponentTestClass
+public class SatisfyingConditionComponentClass
 {
 
     void activate(ComponentContext cc)
