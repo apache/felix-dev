@@ -55,6 +55,9 @@ public abstract class XmlConstants
     // Namespace URI of DS 1.4
     public static final String NAMESPACE_URI_1_4 = "http://www.osgi.org/xmlns/scr/v1.4.0";
 
+    // Namespace URI of DS 1.5
+    public static final String NAMESPACE_URI_1_5 = "http://www.osgi.org/xmlns/scr/v1.5.0";
+
     // Elements
     public static final String EL_COMPONENT = "component";
     public static final String EL_COMPONENTS = "components";
@@ -113,5 +116,6 @@ public abstract class XmlConstants
         NAMESPACE_CODE_MAP.put( NAMESPACE_URI_1_2_FELIX, DSVersion.DS12Felix );
         NAMESPACE_CODE_MAP.put( NAMESPACE_URI_1_3, DSVersion.DS13 );
         NAMESPACE_CODE_MAP.put( NAMESPACE_URI_1_4, DSVersion.DS14 );
+        NAMESPACE_CODE_MAP.put( NAMESPACE_URI_1_5, DSVersion.DS15 );
     }
 }
