@@ -250,7 +250,7 @@ public class ServiceFactoryComponentManager<S> extends SingleComponentManager<S>
     //---------- Component interface
 
     @Override
-    public ComponentInstance getComponentInstance()
+    public ComponentInstance<S> getComponentInstance()
     {
         // TODO: should return the component instance corresponding to the
         // bundle owning ScrService

@@ -132,6 +132,7 @@ public class ServiceBindTest extends ComponentTestBase
         delay();
 
         // two services with service ranking (srv6 > srv5)
+        @SuppressWarnings("unused")
         final SimpleServiceImpl srv5 = SimpleServiceImpl.create( bundleContext, "srv5", 10 );
         final SimpleServiceImpl srv6 = SimpleServiceImpl.create( bundleContext, "srv6", 20 );
 
@@ -247,6 +248,7 @@ public class ServiceBindTest extends ComponentTestBase
         delay();
 
         // two services with service ranking (srv6 > srv5)
+        @SuppressWarnings("unused")
         final SimpleServiceImpl srv5 = SimpleServiceImpl.create( bundleContext, "srv5", 10 );
         final SimpleServiceImpl srv6 = SimpleServiceImpl.create( bundleContext, "srv6", 20 );
 
@@ -566,16 +568,18 @@ public class ServiceBindTest extends ComponentTestBase
         //        TestCase.assertEquals( Component.STATE_FACTORY, component.getState() );
 
         // create a component instance
-        final ServiceReference[] refs = bundleContext.getServiceReferences( ComponentFactory.class.getName(), "("
+        final ServiceReference<?>[] refs = bundleContext.getServiceReferences(
+            ComponentFactory.class.getName(), "("
                 + ComponentConstants.COMPONENT_FACTORY + "=" + factoryPid + ")" );
         TestCase.assertNotNull( refs );
         TestCase.assertEquals( 1, refs.length );
-        final ComponentFactory factory = ( ComponentFactory ) bundleContext.getService( refs[0] );
+        final ComponentFactory<?> factory = (ComponentFactory<?>) bundleContext.getService(
+            refs[0]);
         TestCase.assertNotNull( factory );
 
         Hashtable<String, String> props = new Hashtable<String, String>();
         props.put( PROP_NAME_FACTORY, PROP_NAME_FACTORY );
-        final ComponentInstance instance = factory.newInstance( props );
+        final ComponentInstance<?> instance = factory.newInstance(props);
         TestCase.assertNotNull( instance );
         TestCase.assertNotNull( instance.getInstance() );
         TestCase.assertEquals( SimpleComponent.INSTANCE, instance.getInstance() );
@@ -658,6 +662,7 @@ public class ServiceBindTest extends ComponentTestBase
         //        }
 
         // registeranother service, factory must come back, instance not
+        @SuppressWarnings("unused")
         final SimpleServiceImpl srv2 = SimpleServiceImpl.create( bundleContext, "srv2" );
         delay();
 
@@ -779,6 +784,7 @@ public class ServiceBindTest extends ComponentTestBase
         delay();
 
         // two services with service ranking (srv6 > srv5)
+        @SuppressWarnings("unused")
         final SimpleServiceImpl srv5 = SimpleServiceImpl.create( bundleContext, "srv5", 10 );
         final SimpleServiceImpl srv6 = SimpleServiceImpl.create( bundleContext, "srv6", 20 );
 
@@ -907,6 +913,7 @@ public class ServiceBindTest extends ComponentTestBase
         delay();
 
         // two services with service ranking (srv6 > srv5)
+        @SuppressWarnings("unused")
         final SimpleServiceImpl srv5 = SimpleServiceImpl.create( bundleContext, "srv5", 10 );
         final SimpleServiceImpl srv6 = SimpleServiceImpl.create( bundleContext, "srv6", 20 );
 

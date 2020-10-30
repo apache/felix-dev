@@ -1589,7 +1589,7 @@ public class DependencyManager<S, T> implements ReferenceManager<S, T>
         return m_tracker.getTracked(null, trackingCount).size();
     }
 
-    private ServiceReference<T>[] getFrameworkServiceReferences(String targetFilter)
+    private ServiceReference<?>[] getFrameworkServiceReferences(String targetFilter)
     {
         if (hasGetPermission())
         {
@@ -1602,7 +1602,7 @@ public class DependencyManager<S, T> implements ReferenceManager<S, T>
 
             try
             {
-                return (ServiceReference<T>[]) bc.getServiceReferences(m_dependencyMetadata.getInterface(),
+                return bc.getServiceReferences(m_dependencyMetadata.getInterface(),
                     targetFilter);
             }
             catch (IllegalStateException ise)
@@ -1666,7 +1666,7 @@ public class DependencyManager<S, T> implements ReferenceManager<S, T>
      * after this method returns.
      * @param key TODO
      */
-    T[] getServices(ComponentContextImpl<S> key)
+    Object[] getServices(ComponentContextImpl<S> key)
     {
         Collection<RefPair<S, T>> refs = m_customizer.getRefs(new AtomicInteger());
         List<T> services = new ArrayList<>(refs.size());
@@ -1678,7 +1678,7 @@ public class DependencyManager<S, T> implements ReferenceManager<S, T>
                 services.add(service);
             }
         }
-        return services.isEmpty() ? null : (T[]) services.toArray(new Object[services.size()]);
+        return services.isEmpty() ? null : services.toArray(new Object[services.size()]);
     }
 
     //---------- bound services maintenance -----------------------------------
@@ -2285,7 +2285,7 @@ public class DependencyManager<S, T> implements ReferenceManager<S, T>
         // invariant: target filter change + mandatory + dynamic policy
 
         // 4. check target services matching the new filter
-        ServiceReference<T>[] refs = getFrameworkServiceReferences(newTarget);
+        ServiceReference<?>[] refs = getFrameworkServiceReferences(newTarget);
         if (refs != null)
         {
             // Return whether there are enough target services

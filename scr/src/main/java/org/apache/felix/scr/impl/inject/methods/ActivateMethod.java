@@ -25,7 +25,6 @@ import java.util.ArrayList;
 import java.util.Collections;
 import java.util.Comparator;
 import java.util.List;
-import java.util.Map;
 
 import org.apache.felix.scr.impl.inject.ActivatorParameter;
 import org.apache.felix.scr.impl.inject.LifecycleMethod;
@@ -281,7 +280,7 @@ public class ActivateMethod extends BaseMethod<ActivatorParameter, Object> imple
             else
             {
                 param[i] = Annotations.toObject(parameterTypes[i],
-                    (Map<String, Object>) ap.getComponentContext().getProperties(),
+                    ap.getComponentContext().getPropertiesMap(),
                     ap.getComponentContext().getBundleContext().getBundle(), m_supportsInterfaces);
             }
         }

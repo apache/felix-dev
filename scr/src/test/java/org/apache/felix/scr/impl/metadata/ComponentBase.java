@@ -47,7 +47,7 @@ public class ComponentBase extends TestCase
         logger = new MockBundleLogger();
     }
 
-    private List readMetadata(InputStream in)
+    private List<ComponentMetadata> readMetadata(InputStream in)
         throws IOException, ComponentException, SAXException, Exception
     {
         final SAXParserFactory factory = SAXParserFactory.newInstance();
@@ -60,7 +60,7 @@ public class ComponentBase extends TestCase
         return handler.getComponentMetadataList();
     }
 
-    protected List readMetadata(String filename)
+    protected List<ComponentMetadata> readMetadata(String filename)
         throws IOException, ComponentException, SAXException, Exception
     {
         try (InputStream in = getClass().getResourceAsStream(filename))
@@ -69,7 +69,7 @@ public class ComponentBase extends TestCase
         }
     }
 
-    protected List readMetadataFromString(final String source)
+    protected List<ComponentMetadata> readMetadataFromString(final String source)
         throws IOException, ComponentException, SAXException, Exception
     {
         return readMetadata(new ByteArrayInputStream(source.getBytes()));
@@ -78,10 +78,10 @@ public class ComponentBase extends TestCase
     protected ReferenceMetadata getReference(final ComponentMetadata cm,
         final String name)
     {
-        List rmlist = cm.getDependencies();
-        for (Iterator rmi = rmlist.iterator(); rmi.hasNext();)
+        List<ReferenceMetadata> rmlist = cm.getDependencies();
+        for (Iterator<ReferenceMetadata> rmi = rmlist.iterator(); rmi.hasNext();)
         {
-            ReferenceMetadata rm = (ReferenceMetadata) rmi.next();
+            ReferenceMetadata rm = rmi.next();
             if (name.equals(rm.getName()))
             {
                 return rm;
@@ -95,10 +95,10 @@ public class ComponentBase extends TestCase
     protected PropertyMetadata getPropertyMetadata(final ComponentMetadata cm,
         final String name)
     {
-        List pmlist = cm.getPropertyMetaData();
-        for (Iterator pmi = pmlist.iterator(); pmi.hasNext();)
+        List<PropertyMetadata> pmlist = cm.getPropertyMetaData();
+        for (Iterator<PropertyMetadata> pmi = pmlist.iterator(); pmi.hasNext();)
         {
-            PropertyMetadata pm = (PropertyMetadata) pmi.next();
+            PropertyMetadata pm = pmi.next();
             if (name.equals(pm.getName()))
             {
                 return pm;

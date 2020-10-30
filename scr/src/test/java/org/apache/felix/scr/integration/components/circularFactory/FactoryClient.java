@@ -26,13 +26,13 @@ public class FactoryClient
 {
     
     
-    protected void setFactory(ComponentFactory cf)
+    protected void setFactory(ComponentFactory<?> cf)
     {
         cf.newInstance(new Hashtable<String, Object>());
         
     }
     
-    protected void unsetFactory(ComponentFactory cf)
+    protected void unsetFactory(ComponentFactory<?> cf)
     {
         
     }

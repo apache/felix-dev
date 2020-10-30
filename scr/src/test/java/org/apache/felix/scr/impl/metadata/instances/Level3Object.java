@@ -28,7 +28,8 @@ import org.osgi.service.component.ComponentContext;
 public class Level3Object extends Level2Object
 {
 
-    private void activate_comp_map( ComponentContext ctx, Map map )
+    @SuppressWarnings("unused")
+    private void activate_comp_map(ComponentContext ctx, Map<?, ?> map)
     {
         setCalledMethod("activate_comp_map");
     }
@@ -36,13 +37,15 @@ public class Level3Object extends Level2Object
 
     // this method should not be found, since the method taking a
     // Map has higher precedence
+    @Override
     public void activate_collision()
     {
         setCalledMethod("not_expected_to_be_found");
     }
 
 
-    public void activate_collision( Map map )
+    @Override
+    public void activate_collision(Map<?, ?> map)
     {
         setCalledMethod("activate_collision");
     }

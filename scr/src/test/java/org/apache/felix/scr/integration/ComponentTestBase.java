@@ -39,7 +39,6 @@ import java.io.PrintWriter;
 import java.io.StringWriter;
 import java.lang.reflect.Field;
 import java.lang.reflect.InvocationTargetException;
-import java.lang.reflect.Method;
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Collection;
@@ -58,6 +57,7 @@ import org.apache.felix.scr.impl.ComponentCommands;
 import org.apache.felix.scr.integration.components.SimpleComponent;
 import org.apache.felix.service.command.Converter;
 import org.junit.After;
+import org.junit.Assert;
 import org.junit.Before;
 import org.ops4j.pax.exam.Configuration;
 import org.ops4j.pax.exam.CoreOptions;
@@ -87,7 +87,6 @@ import org.osgi.service.log.LoggerConsumer;
 import org.osgi.service.log.LoggerFactory;
 import org.osgi.util.tracker.ServiceTracker;
 
-import junit.framework.Assert;
 import junit.framework.TestCase;
 
 public abstract class ComponentTestBase
@@ -601,13 +600,16 @@ public abstract class ComponentTestBase
     }
 
     //component factory test helper methods
-    protected ComponentFactory getComponentFactory(final String componentfactory) throws InvalidSyntaxException
+    protected ComponentFactory<?> getComponentFactory(final String componentfactory)
+        throws InvalidSyntaxException
     {
-        final ServiceReference[] refs = bundleContext.getServiceReferences( ComponentFactory.class.getName(),
+        final ServiceReference<?>[] refs = bundleContext.getServiceReferences(
+            ComponentFactory.class.getName(),
                 "(" + ComponentConstants.COMPONENT_FACTORY + "=" + componentfactory + ")" );
         TestCase.assertNotNull( refs );
         TestCase.assertEquals( 1, refs.length );
-        final ComponentFactory factory = (ComponentFactory) bundleContext.getService( refs[0] );
+        final ComponentFactory<?> factory = (ComponentFactory<?>) bundleContext.getService(
+            refs[0]);
         TestCase.assertNotNull( factory );
         return factory;
     }
@@ -615,7 +617,8 @@ public abstract class ComponentTestBase
     protected void checkFactory(final String componentfactory, boolean expectFactoryPresent)
             throws InvalidSyntaxException
     {
-        ServiceReference[] refs = bundleContext.getServiceReferences( ComponentFactory.class.getName(),
+        ServiceReference<?>[] refs = bundleContext.getServiceReferences(
+            ComponentFactory.class.getName(),
                 "(" + ComponentConstants.COMPONENT_FACTORY + "=" + componentfactory + ")" );
         if ( expectFactoryPresent )
         {
@@ -629,7 +632,8 @@ public abstract class ComponentTestBase
         }
     }
 
-    protected ComponentInstance createFactoryComponentInstance(final String componentfactory)
+    protected ComponentInstance<?> createFactoryComponentInstance(
+        final String componentfactory)
             throws InvalidSyntaxException
     {
         Hashtable<String, String> props = new Hashtable<>();
@@ -638,12 +642,13 @@ public abstract class ComponentTestBase
         return createFactoryComponentInstance( componentfactory, props );
     }
 
-    protected ComponentInstance createFactoryComponentInstance(final String componentfactory,
+    protected ComponentInstance<?> createFactoryComponentInstance(
+        final String componentfactory,
             Hashtable<String, String> props) throws InvalidSyntaxException
     {
-        final ComponentFactory factory = getComponentFactory( componentfactory );
+        final ComponentFactory<?> factory = getComponentFactory(componentfactory);
 
-        final ComponentInstance instance = factory.newInstance( props );
+        final ComponentInstance<?> instance = factory.newInstance(props);
         TestCase.assertNotNull( instance );
 
         TestCase.assertNotNull( instance.getInstance() );
@@ -784,7 +789,7 @@ public abstract class ComponentTestBase
     {
         try
         {
-            Method m = org.osgi.service.cm.Configuration.class.getDeclaredMethod( "getChangeCount" );
+            org.osgi.service.cm.Configuration.class.getDeclaredMethod("getChangeCount");
             return true;
         }
         catch ( SecurityException e )
@@ -1016,6 +1021,7 @@ public abstract class ComponentTestBase
         {
             int eventType = event.getType();
             String msg = getFrameworkEventMessage( eventType );
+            @SuppressWarnings("deprecation")
             int level = ( eventType == FrameworkEvent.ERROR )? LogService.LOG_ERROR: LogService.LOG_WARNING;
             log( level, msg, event.getThrowable() );
             if ( event.getThrowable() != null && firstFrameworkThrowable == null )
@@ -1043,13 +1049,14 @@ public abstract class ComponentTestBase
         }
 
         @Override
-        public void log(ServiceReference sr, int osgiLevel, String message)
+        public void log(ServiceReference<?> sr, int osgiLevel, String message)
         {
             log( sr, osgiLevel, message, null );
         }
 
         @Override
-        public void log(ServiceReference sr, int level, String msg, Throwable exception)
+        public void log(ServiceReference<?> sr, int level, String msg,
+            Throwable exception)
         {
             if ( sr != null )
             {
@@ -1068,6 +1075,7 @@ public abstract class ComponentTestBase
             }
         }
 
+        @SuppressWarnings("deprecation")
         private int getEnabledLogLevel()
         {
             if ( DS_LOGLEVEL.regionMatches( true, 0, "err", 0, "err".length() ) )
@@ -1109,6 +1117,7 @@ public abstract class ComponentTestBase
             }
         }
 
+        @SuppressWarnings("unchecked")
         @Override
         public <L extends Logger> L getLogger(String name, Class<L> loggerType)
         {
@@ -1127,6 +1136,7 @@ public abstract class ComponentTestBase
             return this;
         }
 
+        @SuppressWarnings("unchecked")
         @Override
         public <L extends Logger> L getLogger(Class<?> clazz, Class<L> loggerType)
         {

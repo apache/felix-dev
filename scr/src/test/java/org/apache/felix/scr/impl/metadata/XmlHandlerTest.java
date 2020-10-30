@@ -72,59 +72,66 @@ public class XmlHandlerTest extends ComponentBase
 
     public void test_namespace_1_0_0() throws Exception
     {
-        final List metadataList = readMetadataFromString( "<scr:component xmlns:scr=\"http://www.osgi.org/xmlns/scr/v1.0.0\" name=\"n\" ><implementation class=\"n\"/></scr:component>" );
+        final List<ComponentMetadata> metadataList = readMetadataFromString(
+            "<scr:component xmlns:scr=\"http://www.osgi.org/xmlns/scr/v1.0.0\" name=\"n\" ><implementation class=\"n\"/></scr:component>");
         assertEquals( "1 Descriptor expected", 1, metadataList.size() );
-        final ComponentMetadata metadata = ( ComponentMetadata ) metadataList.get( 0 );
+        final ComponentMetadata metadata = metadataList.get(0);
         assertEquals( "Expect NS 1.0.0", DSVersion.DS10, metadata.getDSVersion() );
     }
 
 
     public void test_namespace_1_1_0() throws Exception
     {
-        final List metadataList = readMetadataFromString( "<scr:component xmlns:scr=\"http://www.osgi.org/xmlns/scr/v1.1.0\" name=\"n\" ><implementation class=\"n\"/></scr:component>" );
+        final List<ComponentMetadata> metadataList = readMetadataFromString(
+            "<scr:component xmlns:scr=\"http://www.osgi.org/xmlns/scr/v1.1.0\" name=\"n\" ><implementation class=\"n\"/></scr:component>");
         assertEquals( "1 Descriptor expected", 1, metadataList.size() );
-        final ComponentMetadata metadata = ( ComponentMetadata ) metadataList.get( 0 );
+        final ComponentMetadata metadata = metadataList.get(0);
         assertEquals( "Expect NS 1.1.0", DSVersion.DS11, metadata.getDSVersion() );
     }
 
 
     public void test_namespace_1_1_0_felix() throws Exception
     {
-        final List metadataList = readMetadataFromString( "<scr:component xmlns:scr=\"http://felix.apache.org/xmlns/scr/v1.1.0-felix\" name=\"n\" ><implementation class=\"n\"/></scr:component>" );
+        final List<ComponentMetadata> metadataList = readMetadataFromString(
+            "<scr:component xmlns:scr=\"http://felix.apache.org/xmlns/scr/v1.1.0-felix\" name=\"n\" ><implementation class=\"n\"/></scr:component>");
         assertEquals( "1 Descriptor expected", 1, metadataList.size() );
-        final ComponentMetadata metadata = ( ComponentMetadata ) metadataList.get( 0 );
+        final ComponentMetadata metadata = metadataList.get(0);
         assertEquals( "Expect NS 1.1.0-felix", DSVersion.DS11Felix, metadata.getDSVersion() );
     }
 
 
     public void test_namespace_1_2_0() throws Exception
     {
-        final List metadataList = readMetadataFromString( "<scr:component xmlns:scr=\"http://www.osgi.org/xmlns/scr/v1.2.0\" name=\"n\" ><implementation class=\"n\"/></scr:component>" );
+        final List<ComponentMetadata> metadataList = readMetadataFromString(
+            "<scr:component xmlns:scr=\"http://www.osgi.org/xmlns/scr/v1.2.0\" name=\"n\" ><implementation class=\"n\"/></scr:component>");
         assertEquals( "1 Descriptor expected", 1, metadataList.size() );
-        final ComponentMetadata metadata = ( ComponentMetadata ) metadataList.get( 0 );
+        final ComponentMetadata metadata = metadataList.get(0);
         assertEquals( "Expect NS 1.2.0", DSVersion.DS12, metadata.getDSVersion() );
     }
 
 
     public void test_namespace_1_2_0_felix() throws Exception
     {
-        final List metadataList = readMetadataFromString( "<scr:component xmlns:scr=\"http://felix.apache.org/xmlns/scr/v1.2.0-felix\" name=\"n\" ><implementation class=\"n\"/></scr:component>" );
+        final List<ComponentMetadata> metadataList = readMetadataFromString(
+            "<scr:component xmlns:scr=\"http://felix.apache.org/xmlns/scr/v1.2.0-felix\" name=\"n\" ><implementation class=\"n\"/></scr:component>");
         assertEquals( "1 Descriptor expected", 1, metadataList.size() );
-        final ComponentMetadata metadata = ( ComponentMetadata ) metadataList.get( 0 );
+        final ComponentMetadata metadata = metadataList.get(0);
         assertEquals( "Expect NS 1.2.0-felix", DSVersion.DS12Felix, metadata.getDSVersion() );
     }
 
 
     public void test_namespace_unknown() throws Exception
     {
-        final List metadataList = readMetadataFromString( "<components xmlns:scr=\"http://www.osgi.org/xmlns/scr/v1.1.0-felix\"><scr:component name=\"n\" ><implementation class=\"n\"/></scr:component></components>" );
+        final List<ComponentMetadata> metadataList = readMetadataFromString(
+            "<components xmlns:scr=\"http://www.osgi.org/xmlns/scr/v1.1.0-felix\"><scr:component name=\"n\" ><implementation class=\"n\"/></scr:component></components>");
         assertTrue( "No Descriptor expected", metadataList.isEmpty() );
     }
 
 
     public void test_no_namespace() throws Exception
     {
-        final List metadataList = readMetadata( "/components_no_namespace.xml" );
+        final List<ComponentMetadata> metadataList = readMetadata(
+            "/components_no_namespace.xml");
         assertEquals( "1 Descriptor expected", 1, metadataList.size() );
 
         final ComponentMetadata metadata = ( ComponentMetadata ) metadataList.get( 0 );
@@ -134,17 +141,19 @@ public class XmlHandlerTest extends ComponentBase
 
     public void test_component_attributes_11() throws Exception
     {
-        final List metadataList10 = readMetadata( "/components_activate_10.xml" );
+        final List<ComponentMetadata> metadataList10 = readMetadata(
+            "/components_activate_10.xml");
         assertEquals( "Component Descriptors", 4, metadataList10.size() );
-        ComponentMetadataTest.failDS10Validation( ( ComponentMetadata ) metadataList10.get( 0 ), "activate" );
-        ComponentMetadataTest.failDS10Validation( ( ComponentMetadata ) metadataList10.get( 1 ), "deactivate" );
-        ComponentMetadataTest.failDS10Validation( ( ComponentMetadata ) metadataList10.get( 2 ), "modified" );
-        ComponentMetadataTest.failDS10Validation( ( ComponentMetadata ) metadataList10.get( 3 ),
+        ComponentMetadataTest.failDS10Validation(metadataList10.get(0), "activate");
+        ComponentMetadataTest.failDS10Validation(metadataList10.get(1), "deactivate");
+        ComponentMetadataTest.failDS10Validation(metadataList10.get(2), "modified");
+        ComponentMetadataTest.failDS10Validation(metadataList10.get(3),
             "configuration-policy" );
 
-        final List metadataList11 = readMetadata( "/components_activate_11.xml" );
+        final List<ComponentMetadata> metadataList11 = readMetadata(
+            "/components_activate_11.xml");
         assertEquals( "Component Descriptors", 1, metadataList11.size() );
-        final ComponentMetadata cm11 = ( ComponentMetadata ) metadataList11.get( 0 );
+        final ComponentMetadata cm11 = metadataList11.get(0);
         cm11.validate( );
         assertEquals( "DS Version 1.1", DSVersion.DS11, cm11.getDSVersion() );
         assertEquals( "Expected Activate Method set", "myactivate", cm11.getActivate() );
@@ -159,9 +168,10 @@ public class XmlHandlerTest extends ComponentBase
 
     public void test_component_no_name() throws Exception
     {
-        final List metadataList10 = readMetadata( "/components_anonymous_10.xml" );
+        final List<ComponentMetadata> metadataList10 = readMetadata(
+            "/components_anonymous_10.xml");
         assertEquals( "Component Descriptors", 1, metadataList10.size() );
-        final ComponentMetadata cm10 = ( ComponentMetadata ) metadataList10.get( 0 );
+        final ComponentMetadata cm10 = metadataList10.get(0);
         try
         {
             cm10.validate( );
@@ -172,9 +182,10 @@ public class XmlHandlerTest extends ComponentBase
             // expected !!
         }
 
-        final List metadataList11 = readMetadata( "/components_anonymous_11.xml" );
+        final List<ComponentMetadata> metadataList11 = readMetadata(
+            "/components_anonymous_11.xml");
         assertEquals( "Component Descriptors", 1, metadataList11.size() );
-        final ComponentMetadata cm11 = ( ComponentMetadata ) metadataList11.get( 0 );
+        final ComponentMetadata cm11 = metadataList11.get(0);
         cm11.validate( );
         assertEquals( "Expected name equals class", cm11.getImplementationClassName(), cm11.getName() );
     }
@@ -182,9 +193,10 @@ public class XmlHandlerTest extends ComponentBase
 
     public void test_reference_no_name() throws Exception
     {
-        final List metadataList10 = readMetadata( "/components_anonymous_10.xml" );
+        final List<ComponentMetadata> metadataList10 = readMetadata(
+            "/components_anonymous_10.xml");
         assertEquals( "Component Descriptors", 1, metadataList10.size() );
-        final ComponentMetadata cm10 = ( ComponentMetadata ) metadataList10.get( 0 );
+        final ComponentMetadata cm10 = metadataList10.get(0);
         try
         {
             cm10.validate( );
@@ -195,9 +207,10 @@ public class XmlHandlerTest extends ComponentBase
             // expected !!
         }
 
-        final List metadataList11 = readMetadata( "/components_anonymous_11.xml" );
+        final List<ComponentMetadata> metadataList11 = readMetadata(
+            "/components_anonymous_11.xml");
         assertEquals( "Component Descriptors", 1, metadataList11.size() );
-        final ComponentMetadata cm11 = ( ComponentMetadata ) metadataList11.get( 0 );
+        final ComponentMetadata cm11 = metadataList11.get(0);
         cm11.validate( );
         assertEquals( "Expected name equals class", cm11.getImplementationClassName(), cm11.getName() );
     }
@@ -205,9 +218,10 @@ public class XmlHandlerTest extends ComponentBase
 
     public void test_all_elements_10() throws Exception
     {
-        final List metadataList10 = readMetadata( "/components_all_elements_10.xml" );
+        final List<ComponentMetadata> metadataList10 = readMetadata(
+            "/components_all_elements_10.xml");
         assertEquals( "Component Descriptors", 1, metadataList10.size() );
-        final ComponentMetadata cm10 = ( ComponentMetadata ) metadataList10.get( 0 );
+        final ComponentMetadata cm10 = metadataList10.get(0);
 
         // dont validate this, we test the raw reading
 
@@ -284,9 +298,10 @@ public class XmlHandlerTest extends ComponentBase
 
     public void test_duplicate_implementation_class_10() throws Exception
     {
-        final List metadataList10 = readMetadata( "/components_duplicate_implementation_10.xml" );
+        final List<ComponentMetadata> metadataList10 = readMetadata(
+            "/components_duplicate_implementation_10.xml");
         assertEquals( "Component Descriptors", 1, metadataList10.size() );
-        final ComponentMetadata cm10 = ( ComponentMetadata ) metadataList10.get( 0 );
+        final ComponentMetadata cm10 = metadataList10.get(0);
         try
         {
             cm10.validate( );
@@ -301,9 +316,10 @@ public class XmlHandlerTest extends ComponentBase
 
     public void test_duplicate_implementation_class_11() throws Exception
     {
-        final List metadataList11 = readMetadata( "/components_duplicate_implementation_11.xml" );
+        final List<ComponentMetadata> metadataList11 = readMetadata(
+            "/components_duplicate_implementation_11.xml");
         assertEquals( "Component Descriptors", 1, metadataList11.size() );
-        final ComponentMetadata cm11 = ( ComponentMetadata ) metadataList11.get( 0 );
+        final ComponentMetadata cm11 = metadataList11.get(0);
         try
         {
             cm11.validate( );
@@ -318,9 +334,10 @@ public class XmlHandlerTest extends ComponentBase
 
     public void test_duplicate_service_10() throws Exception
     {
-        final List metadataList10 = readMetadata( "/components_duplicate_service_10.xml" );
+        final List<ComponentMetadata> metadataList10 = readMetadata(
+            "/components_duplicate_service_10.xml");
         assertEquals( "Component Descriptors", 1, metadataList10.size() );
-        final ComponentMetadata cm10 = ( ComponentMetadata ) metadataList10.get( 0 );
+        final ComponentMetadata cm10 = metadataList10.get(0);
         try
         {
             cm10.validate( );
@@ -335,9 +352,10 @@ public class XmlHandlerTest extends ComponentBase
 
     public void test_duplicate_service_11() throws Exception
     {
-        final List metadataList11 = readMetadata( "/components_duplicate_service_11.xml" );
+        final List<ComponentMetadata> metadataList11 = readMetadata(
+            "/components_duplicate_service_11.xml");
         assertEquals( "Component Descriptors", 1, metadataList11.size() );
-        final ComponentMetadata cm11 = ( ComponentMetadata ) metadataList11.get( 0 );
+        final ComponentMetadata cm11 = metadataList11.get(0);
         try
         {
             cm11.validate( );
@@ -351,9 +369,10 @@ public class XmlHandlerTest extends ComponentBase
 
     public void test_properties_11() throws Exception
     {
-        final List metadataList11 = readMetadata( "/components_properties_11.xml" );
+        final List<ComponentMetadata> metadataList11 = readMetadata(
+            "/components_properties_11.xml");
         assertEquals( "Component Descriptors", 1, metadataList11.size() );
-        final ComponentMetadata cm11 = ( ComponentMetadata ) metadataList11.get( 0 );
+        final ComponentMetadata cm11 = metadataList11.get(0);
 
         // dont validate this, we test the raw reading
 

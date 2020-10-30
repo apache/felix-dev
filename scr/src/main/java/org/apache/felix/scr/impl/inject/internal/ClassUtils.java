@@ -36,6 +36,7 @@ import org.osgi.util.tracker.ServiceTracker;
 /**
  * Utility methods for class handling used by method and field references.
  */
+@SuppressWarnings("deprecation")
 public class ClassUtils
 {
 
@@ -193,7 +194,7 @@ public class ClassUtils
             {
                 if (m_packageAdmin == null)
                 {
-                    m_packageAdmin = new ServiceTracker(m_context, PACKAGEADMIN_CLASS,
+                    m_packageAdmin = new ServiceTracker<>(m_context, PACKAGEADMIN_CLASS,
                         null);
                     m_packageAdmin.open();
                 }

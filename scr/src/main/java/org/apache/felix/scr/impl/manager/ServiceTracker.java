@@ -244,7 +244,9 @@ public class ServiceTracker<S, T, U extends ServiceEvent> {
 	 *         invalid syntax.
 	 */
 	private ServiceReference<S>[] getInitialReferences(String className, String filterString) throws InvalidSyntaxException {
-		ServiceReference<S>[] result = (ServiceReference<S>[]) context.getServiceReferences(className, filterString);
+        @SuppressWarnings("unchecked")
+        ServiceReference<S>[] result = (ServiceReference<S>[]) context.getServiceReferences(
+            className, filterString);
 		return result;
 	}
 
@@ -344,7 +346,9 @@ public class ServiceTracker<S, T, U extends ServiceEvent> {
 	 * @see ServiceTrackerCustomizer#addingService(org.osgi.framework.ServiceReference
 	 */
 	public T addingService(ServiceReference<S> reference, int trackingCount) {
-		T result = (T) context.getService(reference);
+        @SuppressWarnings("unchecked")
+        // TODO this seems wrong; why not cast to S?
+        T result = (T) context.getService(reference);
 		return result;
 	}
 
@@ -409,7 +413,8 @@ public class ServiceTracker<S, T, U extends ServiceEvent> {
 			if (length == 0) {
 				return null;
 			}
-			ServiceReference<S>[] result = new ServiceReference[length];
+            @SuppressWarnings("unchecked")
+            ServiceReference<S>[] result = new ServiceReference[length];
 			return t.copyKeys(result);
 		}
 	}
@@ -645,7 +650,9 @@ public class ServiceTracker<S, T, U extends ServiceEvent> {
 	 *         to hold the result, a new array is created and returned.
 	 * @since 1.5
 	 */
-	public T[] getServices(T[] array) {
+    @SuppressWarnings("unchecked")
+    public T[] getServices(T[] array)
+    {
 		final Tracked t = tracked();
 		if (t == null) { /* if ServiceTracker is not open */
 			if (array.length > 0) {
@@ -690,7 +697,8 @@ public class ServiceTracker<S, T, U extends ServiceEvent> {
      * @version $Id: 16340086b98d308c2d12f13bcd87fc6467a5a367 $
      * @since 1.4
      */
-    abstract class AbstractTracked<S, T, R> {
+    static abstract class AbstractTracked<S, T, R>
+    {
         /* set this to true to compile in debug messages */
         static final boolean		DEBUG	= false;
 
@@ -1164,7 +1172,8 @@ public class ServiceTracker<S, T, U extends ServiceEvent> {
 			if (closed) {
 				return;
 			}
-			final ServiceReference<S> reference = (ServiceReference<S>) event.getServiceReference();
+            @SuppressWarnings("unchecked")
+            final ServiceReference<S> reference = (ServiceReference<S>) event.getServiceReference();
 			if (DEBUG) {
 				System.out.println("ServiceTracker.Tracked.serviceChanged[" + event.getType() + "]: " + reference);
 			}

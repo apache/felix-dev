@@ -29,13 +29,15 @@ import org.osgi.framework.ServiceReference;
 
 public class T2 extends T1
 {
+    @SuppressWarnings("unused")
     private void privateT2()
     {
         callPerformed = "privateT2";
     }
 
 
-    private void privateT2SR( ServiceReference sr )
+    @SuppressWarnings("unused")
+    private void privateT2SR(ServiceReference<?> sr)
     {
         if ( sr != null )
         {
@@ -48,6 +50,7 @@ public class T2 extends T1
     }
 
 
+    @SuppressWarnings("unused")
     private void privateT2SI( FakeService si )
     {
         if ( si != null )
@@ -61,7 +64,8 @@ public class T2 extends T1
     }
 
 
-    private void privateT2SIMap( FakeService si, Map props )
+    @SuppressWarnings("unused")
+    private void privateT2SIMap(FakeService si, Map<?, ?> props)
     {
         if ( si != null && props != null && props.size() > 0 )
         {
@@ -82,6 +86,7 @@ public class T2 extends T1
     }
 
 
+    @SuppressWarnings("unused")
     private void privateT2SSI( SuperFakeService si )
     {
         if ( si != null )
@@ -95,7 +100,8 @@ public class T2 extends T1
     }
 
 
-    private void privateT2SSIMap( SuperFakeService si, Map props )
+    @SuppressWarnings("unused")
+    private void privateT2SSIMap(SuperFakeService si, Map<?, ?> props)
     {
         if ( si != null && props != null && props.size() > 0 )
         {
@@ -122,7 +128,7 @@ public class T2 extends T1
     }
 
 
-    void packageT2SR( ServiceReference sr )
+    void packageT2SR(ServiceReference<?> sr)
     {
         if ( sr != null )
         {
@@ -148,7 +154,7 @@ public class T2 extends T1
     }
 
 
-    void packageT2SIMap( FakeService si, Map props )
+    void packageT2SIMap(FakeService si, Map<?, ?> props)
     {
         if ( si != null && props != null && props.size() > 0 )
         {
@@ -182,7 +188,7 @@ public class T2 extends T1
     }
 
 
-    void packageT2SSIMap( SuperFakeService si, Map props )
+    void packageT2SSIMap(SuperFakeService si, Map<?, ?> props)
     {
         if ( si != null && props != null && props.size() > 0 )
         {
@@ -204,6 +210,7 @@ public class T2 extends T1
 
 
     // this method must hide the T1#suitable method !
+    @SuppressWarnings("unused")
     private void suitable( FakeService si )
     {
         callPerformed = "suitableT2";

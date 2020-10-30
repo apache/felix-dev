@@ -27,17 +27,17 @@ import org.osgi.service.log.LogService;
 /**
  * @version $Rev: 1350816 $ $Date: 2012-06-15 23:37:30 +0200 (Fri, 15 Jun 2012) $
  */
+
+@SuppressWarnings("unused")
 public class A
 {
 
     private List<B> bs = new ArrayList<B>();
-    private List<Exception> bsStackTraces = new ArrayList();
+    private List<Exception> bsStackTraces = new ArrayList<>();
 
-    private boolean activated;
 
     private void activate(ComponentContext cc)
     {
-        activated = true;
     }
 
     private void setB(B b)
@@ -57,6 +57,7 @@ public class A
         return bs;
     }
 
+    @SuppressWarnings("deprecation")
     public void dumpStackTracesWhenBWasBound(LogService log) {
         log.log(LogService.LOG_WARNING, "Stack traces when B was bound:");
         for (Exception e : bsStackTraces) {

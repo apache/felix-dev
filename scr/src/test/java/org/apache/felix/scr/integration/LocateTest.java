@@ -50,7 +50,7 @@ public class LocateTest extends ComponentTestBase
 
         final String pid = "TestComponent";
         Configuration config = getConfigurationAdmin().getConfiguration( pid, null );
-        final Hashtable props = new Hashtable();
+        final Hashtable<String, String> props = new Hashtable<>();
         //wrong target property, will not bind
         props.put( "target", "bar" );
         config.update(props);

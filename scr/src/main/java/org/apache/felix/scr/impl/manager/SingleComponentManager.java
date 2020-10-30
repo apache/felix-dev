@@ -225,7 +225,7 @@ public class SingleComponentManager<S> extends AbstractComponentManager<S> imple
     }
 
 
-    @SuppressWarnings("unchecked")
+    @SuppressWarnings({ "unchecked", "rawtypes" })
     protected S createImplementationObject( Bundle usingBundle, SetImplementationObject<S> setter, ComponentContextImpl<S> componentContext )
     {
         S implementationObject = null;
@@ -518,7 +518,9 @@ public class SingleComponentManager<S> extends AbstractComponentManager<S> imple
                     final Object configPropServicePids = m_configurationProperties.get(Constants.SERVICE_PID);
                     if ( configPropServicePids instanceof List )
                     {
-                        servicePids.addAll((List)configPropServicePids);
+                        @SuppressWarnings("unchecked")
+                        List<String> l = (List<String>) configPropServicePids;
+                        servicePids.addAll(l);
                     }
                     else
                     {

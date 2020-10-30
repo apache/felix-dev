@@ -14,10 +14,11 @@ import org.osgi.service.component.ComponentFactory;
 import org.osgi.service.component.ComponentInstance;
 
 public class CFactory implements Runnable {
-    private ComponentFactory _cFactory;
+    private ComponentFactory<?> _cFactory;
     private Thread[] _threads = new Thread[2];
     
-    public void bindCFactory(ComponentFactory cFactory) {
+    public void bindCFactory(ComponentFactory<?> cFactory)
+    {
       _cFactory = cFactory;
     }
     
@@ -40,10 +41,11 @@ public class CFactory implements Runnable {
       }
     }
     
+    @Override
     public void run() {
       while (true) {
         try {
-          ComponentInstance ci = _cFactory.newInstance(null);
+            ComponentInstance<?> ci = _cFactory.newInstance(null);
           ci.dispose();
           if (Thread.currentThread().isInterrupted()) {
             return;

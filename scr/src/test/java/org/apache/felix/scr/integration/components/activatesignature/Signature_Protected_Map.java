@@ -25,8 +25,7 @@ import java.util.Map;
 public class Signature_Protected_Map extends AbstractActivateSignatureTestComponent
 {
 
-    @SuppressWarnings({ "unchecked" })
-    protected void activate( Map config )
+    protected void activate(Map<?, ?> config)
     {
         setMethodCalled( config );
     }

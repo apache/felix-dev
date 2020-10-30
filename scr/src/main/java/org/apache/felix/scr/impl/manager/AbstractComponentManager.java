@@ -1020,10 +1020,14 @@ public abstract class AbstractComponentManager<S> implements ComponentManager<S>
                 null);
             throw new IllegalStateException("bundle shut down while trying to load implementation object class");
         }
-        Class<S> implementationObjectClass;
+
         try
         {
-            implementationObjectClass = (Class<S>) bundle.loadClass(getComponentMetadata().getImplementationClassName());
+            @SuppressWarnings("unchecked")
+            Class<S> implementationObjectClass = (Class<S>) bundle.loadClass(
+                getComponentMetadata().getImplementationClassName());
+            m_componentMethods.initComponentMethods(getComponentMetadata(),
+                implementationObjectClass, componentContext.getLogger());
         }
         catch (ClassNotFoundException e)
         {
@@ -1033,7 +1037,6 @@ public abstract class AbstractComponentManager<S> implements ComponentManager<S>
             throw new IllegalStateException(
                     "Could not load implementation object class " + getComponentMetadata().getImplementationClassName());
         }
-        m_componentMethods.initComponentMethods(getComponentMetadata(), implementationObjectClass, componentContext.getLogger());
 
         for (DependencyManager<S, ?> dependencyManager : m_dependencyManagers)
         {

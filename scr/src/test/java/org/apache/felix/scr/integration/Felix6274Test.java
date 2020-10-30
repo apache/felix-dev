@@ -127,6 +127,7 @@ public class Felix6274Test extends ComponentTestBase
     }
 
     @Test
+    @SuppressWarnings("deprecation")
     public void test_incompatible_log_service_version() throws Exception
     {
         

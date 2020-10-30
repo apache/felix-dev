@@ -36,4 +36,6 @@ public interface ScrComponentContext extends ExtComponentContext {
     ComponentServiceObjectsHelper getComponentServiceObjectsHelper();
 
     Map<RefPair<?, ?>, Object> getBoundValues(final String key);
+
+    Map<String, Object> getPropertiesMap();
 }

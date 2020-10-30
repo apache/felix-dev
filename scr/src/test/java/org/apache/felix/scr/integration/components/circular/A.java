@@ -33,18 +33,22 @@ public class A
 
     private List<B> bs = new ArrayList<B>();
 
+    @SuppressWarnings("unused")
     private boolean activated;
 
+    @SuppressWarnings("unused")
     private void activate(ComponentContext cc)
     {
         activated = true;
     }
 
+    @SuppressWarnings("unused")
     private void setB(B b)
     {
         bs.add( b );
     }
 
+    @SuppressWarnings("unused")
     private void unsetB(B b)
     {
         bs.remove( b );

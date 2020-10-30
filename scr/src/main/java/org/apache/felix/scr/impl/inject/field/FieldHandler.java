@@ -42,7 +42,6 @@ import org.apache.felix.scr.impl.logger.ComponentLogger;
 import org.apache.felix.scr.impl.logger.InternalLogger.Level;
 import org.apache.felix.scr.impl.metadata.ReferenceMetadata;
 import org.osgi.framework.BundleContext;
-import org.osgi.service.log.LogLevel;
 
 /**
  * Handler for field references

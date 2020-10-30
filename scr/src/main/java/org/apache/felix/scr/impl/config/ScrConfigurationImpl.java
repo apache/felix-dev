@@ -254,7 +254,6 @@ public class ScrConfigurationImpl implements ScrConfiguration
         return keepInstances;
     }
 
-    @SuppressWarnings("deprecation")
 	@Override
     public boolean infoAsService()
     {
