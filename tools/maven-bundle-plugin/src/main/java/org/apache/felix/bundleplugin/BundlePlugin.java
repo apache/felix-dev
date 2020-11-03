@@ -1223,6 +1223,17 @@ public class BundlePlugin extends AbstractMojo
                 Map<String, String> newAttrs = new TreeMap<>(
                             Comparator.<String, Boolean>comparing( s -> !s.endsWith( ":" ) ).thenComparing( s -> s ) );
                 newAttrs.putAll( attrs );
+
+                // OSGiHeader.parseHeader() is cutting off List<String>
+                if (name.equals(Constants.PROVIDE_CAPABILITY)) {
+                    String objectClassValue = attrs.get("objectClass");
+                    if (objectClassValue.contains(",")) {
+                        String newKey = "objectClass:List<String>";
+                        newAttrs.remove("objectClass");
+                        newAttrs.put(newKey, objectClassValue);
+                    }
+                }
+
                 sorted.put( key, newAttrs );
             }
             String nh = new Parameters( sorted ).toString();
