@@ -17,8 +17,16 @@
 package org.apache.felix.webconsole.internal.core;
 
 
+import java.util.Dictionary;
+import java.util.Enumeration;
+
+import org.apache.felix.webconsole.internal.servlet.OsgiManager;
 import org.osgi.framework.BundleContext;
 import org.osgi.framework.Constants;
+import org.osgi.framework.ServiceReference;
+import org.osgi.service.cm.Configuration;
+import org.osgi.service.cm.ConfigurationAdmin;
+import org.osgi.service.cm.ConfigurationException;
 
 
 /**
@@ -52,5 +60,38 @@ public class BundleContextUtil
             return bc.getBundle(Constants.SYSTEM_BUNDLE_LOCATION).getBundleContext();
         }
         return bc;
+    }
+
+    /**
+     * Get bundle configuration properties
+     * @throws ConfigurationException
+     */
+    public static String getBundleConfigurationProperties(final BundleContext bc, String name, String def) throws ConfigurationException {
+        final ServiceReference serviceRefrence = bc.getServiceReference( ConfigurationAdmin.class.getName() );
+        if(serviceRefrence != null) {
+            final ConfigurationAdmin ca = ( ConfigurationAdmin ) bc.getService( serviceRefrence );
+            if(ca != null) {
+                try
+                {
+                    Configuration cfg = ca.getConfiguration( OsgiManager.getConfigurationPid() );
+                    Dictionary<String,Object> bundleProperties = cfg.getProperties();
+                    return (String) bundleProperties.get(name);
+                } catch (Exception e) {
+                    throw new ConfigurationException(name, "Cannot get bundle property ", e);
+                } finally {
+                    bc.ungetService( serviceRefrence );
+                }
+            }
+        }
+        return def;
+    }
+
+    public static int getBundleConfigurationProperties(final BundleContext bc, String name, int def) throws ConfigurationException {
+        String defaultVal = Integer.toString(def);
+        String value = getBundleConfigurationProperties(bc,name,defaultVal);
+        if(value == null)
+            return def;
+        else
+            return Integer.valueOf(value);
     }
 }

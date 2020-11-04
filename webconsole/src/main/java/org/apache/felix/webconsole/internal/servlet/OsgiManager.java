@@ -150,6 +150,10 @@ public class OsgiManager extends GenericServlet
 
     static final String PROP_DEFAULT_RENDER = "default.render"; //$NON-NLS-1$
 
+    public static final String PROP_SHUTDOWN_TIMEOUT = "shutdown.timeout"; //$NON-NLS-1$
+
+    public static final String PROP_RELOAD_TIMEOUT = "reload.timeout"; //$NON-NLS-1$
+
     static final String PROP_REALM = "realm"; //$NON-NLS-1$
 
     static final String PROP_USER_NAME = "username"; //$NON-NLS-1$
@@ -181,6 +185,10 @@ public class OsgiManager extends GenericServlet
     static final String DEFAULT_CATEGORY = "Main"; //$NON-NLS-1$
 
     static final String DEFAULT_HTTP_SERVICE_SELECTOR = ""; //$NON-NLS-1$
+
+    public static final int DEFAULT_SHUTDOWN_TIMEOUT = 10; //$NON-NLS-1$
+
+    public static final int DEFAULT_RELOAD_TIMEOUT = 30; //$NON-NLS-1$
 
     /** Default value for secret heuristics */
     public static final boolean DEFAULT_ENABLE_SECRET_HEURISTIC = false;
@@ -757,9 +765,9 @@ public class OsgiManager extends GenericServlet
      * Returns the Service PID used to retrieve configuration and to describe
      * the configuration properties.
      */
-    String getConfigurationPid()
+    public static String getConfigurationPid()
     {
-        return getClass().getName();
+        return OsgiManager.class.getName();
     }
 
 

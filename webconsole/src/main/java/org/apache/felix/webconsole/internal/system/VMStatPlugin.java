@@ -24,6 +24,10 @@ import java.io.StringWriter;
 import java.text.DateFormat;
 import java.text.MessageFormat;
 import java.util.Date;
+import java.util.Dictionary;
+import java.util.Enumeration;
+import java.util.HashMap;
+import java.util.Map;
 
 import javax.servlet.ServletException;
 import javax.servlet.http.HttpServletRequest;
@@ -34,8 +38,16 @@ import org.apache.felix.webconsole.DefaultVariableResolver;
 import org.apache.felix.webconsole.SimpleWebConsolePlugin;
 import org.apache.felix.webconsole.WebConsoleUtil;
 import org.apache.felix.webconsole.internal.OsgiManagerPlugin;
+import org.apache.felix.webconsole.internal.core.BundleContextUtil;
+import org.apache.felix.webconsole.internal.servlet.ConfigurationUtil;
+import org.apache.felix.webconsole.internal.servlet.OsgiManager;
 import org.osgi.framework.Bundle;
+import org.osgi.framework.BundleContext;
 import org.osgi.framework.BundleException;
+import org.osgi.framework.ServiceReference;
+import org.osgi.service.cm.Configuration;
+import org.osgi.service.cm.ConfigurationAdmin;
+import org.osgi.service.cm.ConfigurationException;
 import org.osgi.service.startlevel.StartLevel;
 
 
@@ -177,6 +189,22 @@ public class VMStatPlugin extends SimpleWebConsolePlugin implements OsgiManagerP
             Object restart = request.getAttribute( PARAM_SHUTDOWN_TYPE );
             if ( ( restart instanceof Boolean ) && ( ( Boolean ) restart ).booleanValue() )
             {
+                StringWriter json = new StringWriter();
+
+                try {
+                    int reloadTimeout = BundleContextUtil.getBundleConfigurationProperties(getBundleContext(), OsgiManager.PROP_RELOAD_TIMEOUT, OsgiManager.DEFAULT_RELOAD_TIMEOUT);
+                    JSONWriter jw = new JSONWriter(json);
+                    jw.object();
+                    jw.key( "reloadTimeout").value( reloadTimeout );
+                    jw.endObject();
+                    jw.flush();
+                } catch (ConfigurationException configurationException) {
+                    log(configurationException.getMessage());
+                }
+
+                DefaultVariableResolver vars = ( ( DefaultVariableResolver ) WebConsoleUtil.getVariableResolver( request ) );
+                vars.put( "data", json.toString() );
+
                 body = TPL_VM_RESTART;
             }
             else
@@ -219,6 +247,13 @@ public class VMStatPlugin extends SimpleWebConsolePlugin implements OsgiManagerP
         jw.key( "mem_free").value(freeMem );
         jw.key( "mem_used").value(usedMem );
         jw.key( "shutdownType").value(shutdownType );
+
+        try {
+            int shutdownTimeout = BundleContextUtil.getBundleConfigurationProperties(getBundleContext(), OsgiManager.PROP_SHUTDOWN_TIMEOUT, OsgiManager.DEFAULT_SHUTDOWN_TIMEOUT);
+            jw.key( "shutdownTimeout").value(shutdownTimeout );
+        } catch (ConfigurationException configurationException) {
+            log(configurationException.getMessage());
+        }
 
         // only add the processors if the number is available
         final int processors = getAvailableProcessors();
