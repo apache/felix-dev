@@ -120,7 +120,7 @@ public class ConstructorComponent
         }
         if ( ((List)ref).size() != 3)
         {
-            return "ref has wrong size: " + ((List)ref).size();
+            return "ref has size: " + ((List) ref).size();
         }
         final List<String> names = new ArrayList<>(Arrays.asList("a", "b", "c"));
         for(final Object obj : (List)ref)

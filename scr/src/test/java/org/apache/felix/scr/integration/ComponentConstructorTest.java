@@ -20,7 +20,9 @@ package org.apache.felix.scr.integration;
 
 
 import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertNull;
+import static org.junit.Assert.assertTrue;
 
 import java.util.Collection;
 
@@ -49,6 +51,10 @@ public class ComponentConstructorTest extends ComponentTestBase
         // paxRunnerVmOption = DEBUG_VM_OPTION;
     }
 
+    static final String SINGLE_REFERENCE = "SingleReference";
+    static final String MULTI_REFERENCE_A = "MultiReferenceA";
+    static final String MULTI_REFERENCE_B = "MultiReferenceB";
+    static final String MULTI_REFERENCE_C = "MultiReferenceC";
 
     @Test
     public void test_constructor_success() throws Exception
@@ -101,9 +107,16 @@ public class ComponentConstructorTest extends ComponentTestBase
     {
         final String componentname = "ConstructorComponent.refsingle";
 
-        ComponentConfigurationDTO cc = getDisabledConfigurationAndEnable(componentname, ComponentConfigurationDTO.SATISFIED);
+        ComponentConfigurationDTO cc = getDisabledConfigurationAndEnable(componentname,
+            ComponentConfigurationDTO.UNSATISFIED_REFERENCE);
         assertEquals(1, cc.description.init);
 
+        getDisabledConfigurationAndEnable(SINGLE_REFERENCE,
+            ComponentConfigurationDTO.SATISFIED);
+
+        cc = findComponentConfigurationByName(componentname,
+            ComponentConfigurationDTO.SATISFIED);
+        assertEquals(1, cc.description.init);
         ConstructorComponent cmp = this.getServiceFromConfiguration(cc, ConstructorComponent.class);
 
         final String msg = cmp.test();
@@ -112,17 +125,126 @@ public class ComponentConstructorTest extends ComponentTestBase
     }
 
     @Test
+    public void test_constructor_singleRefOptional() throws Exception
+    {
+
+        final String componentname = "ConstructorComponent.refsingleoptional";
+        ComponentConfigurationDTO cc = getDisabledConfigurationAndEnable(componentname,
+            ComponentConfigurationDTO.SATISFIED);
+        assertEquals(1, cc.description.init);
+
+        ConstructorComponent cmp1 = this.getServiceFromConfiguration(cc,
+            ConstructorComponent.class);
+        final String msg1 = cmp1.test();
+        assertEquals("Wrong activate message.", "ref is null", msg1);
+
+        getDisabledConfigurationAndEnable(SINGLE_REFERENCE,
+            ComponentConfigurationDTO.SATISFIED);
+
+        cc = findComponentConfigurationByName(componentname,
+            ComponentConfigurationDTO.SATISFIED);
+        assertEquals(1, cc.description.init);
+
+        ConstructorComponent cmp2 = this.getServiceFromConfiguration(cc,
+            ConstructorComponent.class);
+
+        final String msg2 = cmp2.test();
+        assertNull(msg2);
+        disableAndCheck(cc);
+    }
+
+    @Test
     public void test_constructor_multiRef() throws Exception
     {
         final String componentname = "ConstructorComponent.refmulti";
 
-        ComponentConfigurationDTO cc = getDisabledConfigurationAndEnable(componentname, ComponentConfigurationDTO.SATISFIED);
+        ComponentConfigurationDTO cc = getDisabledConfigurationAndEnable(componentname,
+            ComponentConfigurationDTO.UNSATISFIED_REFERENCE);
         assertEquals(1, cc.description.init);
 
-        ConstructorComponent cmp = this.getServiceFromConfiguration(cc, ConstructorComponent.class);
+        // disable in order to get all the refs enabled
+        disableAndCheck(cc);
+        getDisabledConfigurationAndEnable(MULTI_REFERENCE_A,
+            ComponentConfigurationDTO.SATISFIED);
+        getDisabledConfigurationAndEnable(MULTI_REFERENCE_B,
+            ComponentConfigurationDTO.SATISFIED);
+        getDisabledConfigurationAndEnable(MULTI_REFERENCE_C,
+            ComponentConfigurationDTO.SATISFIED);
+
+        cc = getDisabledConfigurationAndEnable(componentname,
+            ComponentConfigurationDTO.SATISFIED);
+        assertEquals(1, cc.description.init);
+
+        ConstructorComponent cmp = this.getServiceFromConfiguration(cc,
+            ConstructorComponent.class);
 
         final String msg = cmp.test();
         assertNull(msg);
         disableAndCheck( cc );
+    }
+
+    @Test
+    public void test_constructor_multiRefOptional() throws Exception
+    {
+        final String componentname = "ConstructorComponent.refmultioptional";
+        ComponentConfigurationDTO cc = getDisabledConfigurationAndEnable(componentname,
+            ComponentConfigurationDTO.SATISFIED);
+        assertEquals(1, cc.description.init);
+
+        ConstructorComponent cmp1 = this.getServiceFromConfiguration(cc,
+            ConstructorComponent.class);
+
+        final String msg1 = cmp1.test();
+        assertEquals("Wrong refs size.", "ref has size: 0", msg1);
+
+        getDisabledConfigurationAndEnable(MULTI_REFERENCE_A,
+            ComponentConfigurationDTO.SATISFIED);
+        getDisabledConfigurationAndEnable(MULTI_REFERENCE_B,
+            ComponentConfigurationDTO.SATISFIED);
+        getDisabledConfigurationAndEnable(MULTI_REFERENCE_C,
+            ComponentConfigurationDTO.SATISFIED);
+
+        ConstructorComponent cmp2 = this.getServiceFromConfiguration(cc,
+            ConstructorComponent.class);
+        assertTrue("Different component instances.", cmp1 == cmp2);
+
+        // not greedy so the collection of refs does not get updated.
+        final String msg2 = cmp2.test();
+        assertEquals("Wrong refs size.", "ref has size: 0", msg2);
+
+        disableAndCheck(cc);
+    }
+
+    @Test
+    public void test_constructor_multiRefOptionalGreedy() throws Exception
+    {
+        final String componentname = "ConstructorComponent.refmultioptionalgreedy";
+        ComponentConfigurationDTO cc = getDisabledConfigurationAndEnable(componentname,
+            ComponentConfigurationDTO.SATISFIED);
+        assertEquals(1, cc.description.init);
+
+        ConstructorComponent cmp1 = this.getServiceFromConfiguration(cc,
+            ConstructorComponent.class);
+
+        final String msg1 = cmp1.test();
+        assertEquals("Wrong refs size.", "ref has size: 0", msg1);
+
+        getDisabledConfigurationAndEnable(MULTI_REFERENCE_A,
+            ComponentConfigurationDTO.SATISFIED);
+        getDisabledConfigurationAndEnable(MULTI_REFERENCE_B,
+            ComponentConfigurationDTO.SATISFIED);
+        getDisabledConfigurationAndEnable(MULTI_REFERENCE_C,
+            ComponentConfigurationDTO.SATISFIED);
+
+        ConstructorComponent cmp2 = this.getServiceFromConfiguration(cc,
+            ConstructorComponent.class);
+
+        assertFalse("Same component instances.", cmp1 == cmp2);
+
+        // greedy so the collection of refs does should be updated.
+        final String msg2 = cmp2.test();
+        assertNull(msg2);
+
+        disableAndCheck(cc);
     }
 }
