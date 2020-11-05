@@ -1,3 +1,11 @@
+Changes in 1.9.20
+-----------------
+** Bug
+    * [FELIX-6354] : IllegalStateException on shutdown
+    * [FELIX-6308] : Bad File Descriptor while persisting service configuration
+    * [FELIX-5690] : ConfigurationHandler should support ignoring whitespace between property key/equal sign & equal sign/property value
+
+
 Changes in 1.9.18
 -----------------
 ** Improvement

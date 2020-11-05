@@ -296,7 +296,7 @@ public class ComponentConstructorImpl<S> implements ComponentConstructor<S>
                     }
                     if ( !refMetadata.isMultiple())
                     {
-                        if ( ref == null )
+                        if (ref == null && !refMetadata.isOptional())
                         {
                             throw new InstantiationException("Unable to get service for reference " + refMetadata.getName());
                         }
@@ -304,6 +304,10 @@ public class ComponentConstructorImpl<S> implements ComponentConstructor<S>
                     }
                     else
                     {
+                        if (refs.isEmpty() && !refMetadata.isOptional())
+                        {
+                            throw new InstantiationException("Unable to get service for reference " + refMetadata.getName());
+                        }
                         args[i] = refs;
                     }
                 }

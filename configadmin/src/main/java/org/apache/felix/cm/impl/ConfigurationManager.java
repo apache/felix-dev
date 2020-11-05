@@ -253,7 +253,14 @@ public class ConfigurationManager implements BundleListener
         isActive = false;
 
         // stop listening for events
-        bundleContext.removeBundleListener( this );
+        try 
+        {
+            bundleContext.removeBundleListener( this );
+        }
+        catch ( final IllegalStateException ise ) 
+        {
+            // might happen on shutdown - we can ignore this
+        }
 
         if ( configurationListenerTracker != null )
         {

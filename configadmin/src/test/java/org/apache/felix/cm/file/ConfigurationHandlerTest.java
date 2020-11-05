@@ -147,7 +147,7 @@ public class ConfigurationHandlerTest {
     public void test_writeByte() throws IOException {
         OutputStream out = new ByteArrayOutputStream();
         Dictionary< String, Byte> properties = new Hashtable<>();
-        properties.put(SERVICE_PID, new Byte("10"));
+        properties.put(SERVICE_PID, Byte.parseByte("10"));
         ConfigurationHandler.write(out, properties);
         String entry = new String(((ByteArrayOutputStream)out).toByteArray(),"UTF-8");
         Assert.assertEquals("service.pid=X\"10\"\r\n", entry);
@@ -343,6 +343,36 @@ public class ConfigurationHandlerTest {
                 Assert.assertEquals(VALUE, read.get("key"));
             }
         }
+    }
+
+    @Test
+    public void test_readElementWithWhitespaceBeforeEQ() throws IOException {
+        String entry = "service.pid  =\n\"com.adobe.granite.foo.Bar\"\r\n";
+        InputStream stream = new ByteArrayInputStream(entry.getBytes(StandardCharsets.UTF_8));
+        @SuppressWarnings("unchecked")
+        Dictionary<String, Object> dictionary = ConfigurationHandler.read(stream);
+        Assert.assertEquals(1, dictionary.size());
+        Assert.assertEquals( "com.adobe.granite.foo.Bar", dictionary.get(SERVICE_PID));
+    }
+
+    @Test
+    public void test_readElementWithWhitespaceAfterEQ() throws IOException {
+        String entry = "service.pid=  \"com.adobe.granite.foo.Bar\"\r\n";
+        InputStream stream = new ByteArrayInputStream(entry.getBytes(StandardCharsets.UTF_8));
+        @SuppressWarnings("unchecked")
+        Dictionary<String, Object> dictionary = ConfigurationHandler.read(stream);
+        Assert.assertEquals(1, dictionary.size());
+        Assert.assertEquals("com.adobe.granite.foo.Bar", dictionary.get(SERVICE_PID));
+    }
+
+    @Test
+    public void test_readElementWithWhitespaceBeforeKey() throws IOException {
+        String entry = "  service.pid=\"com.adobe.granite.foo.Bar\"\r\n";
+        InputStream stream = new ByteArrayInputStream(entry.getBytes(StandardCharsets.UTF_8));
+        @SuppressWarnings("unchecked")
+        Dictionary<String, Object> dictionary = ConfigurationHandler.read(stream);
+        Assert.assertEquals(1, dictionary.size());
+        Assert.assertEquals("com.adobe.granite.foo.Bar", dictionary.get(SERVICE_PID));
     }
 }
 
