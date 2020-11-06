@@ -27,12 +27,18 @@ import static org.junit.Assert.assertTrue;
 import java.util.Collection;
 
 import org.apache.felix.scr.integration.components.ConstructorComponent;
+import org.apache.felix.scr.integration.components.ConstructorMultiReference;
+import org.apache.felix.scr.integration.components.ConstructorSingleReference;
 import org.junit.Assert;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.ops4j.pax.exam.junit.PaxExam;
+import org.osgi.framework.Bundle;
 import org.osgi.framework.InvalidSyntaxException;
+import org.osgi.framework.ServiceException;
+import org.osgi.framework.ServiceFactory;
 import org.osgi.framework.ServiceReference;
+import org.osgi.framework.ServiceRegistration;
 import org.osgi.service.component.runtime.dto.ComponentConfigurationDTO;
 
 import junit.framework.TestCase;
@@ -82,6 +88,8 @@ public class ComponentConstructorTest extends ComponentTestBase
             Assert.assertEquals( "Nothing for filter: " + filter, 1, srs.size() );
             ServiceReference<S> sr = srs.iterator().next();
             assertNull(bundleContext.getService( sr ));
+            findComponentConfigurationByName(dto.description.name,
+                ComponentConfigurationDTO.FAILED_ACTIVATION);
         }
         catch ( InvalidSyntaxException e )
         {
@@ -246,5 +254,65 @@ public class ComponentConstructorTest extends ComponentTestBase
         assertNull(msg2);
 
         disableAndCheck(cc);
+    }
+
+    @SuppressWarnings("unchecked")
+    @Test
+    public void test_constructor_failGetService() throws Exception
+    {
+        ServiceFactory<?> failFactory = new ServiceFactory<Object>()
+        {
+            @Override
+            public Object getService(Bundle bundle,
+                ServiceRegistration<Object> registration)
+            {
+                throw new ServiceException("Testing failed get service.");
+            }
+
+            @Override
+            public void ungetService(Bundle bundle,
+                ServiceRegistration<Object> registration, Object service)
+            {
+                // nothing to do
+            }
+        };
+
+        bundleContext.registerService(ConstructorSingleReference.class,
+            (ServiceFactory<ConstructorSingleReference>) failFactory, null);
+        bundleContext.registerService(ConstructorMultiReference.class,
+            (ServiceFactory<ConstructorMultiReference>) failFactory, null);
+
+        // try mandatory components first
+        doTestMandatoryFailGetService("ConstructorComponent.refsingle");
+        doTestMandatoryFailGetService("ConstructorComponent.refmulti");
+
+        // try the optional components second
+        doTestOptionalFailGetService("ConstructorComponent.refsingleoptional",
+            "ref is null");
+        doTestOptionalFailGetService("ConstructorComponent.refmultioptional",
+            "ref has size: 0");
+    }
+
+    private void doTestOptionalFailGetService(String componentName, String expectedMsg)
+        throws Exception
+    {
+        ComponentConfigurationDTO cc = getDisabledConfigurationAndEnable(componentName,
+            ComponentConfigurationDTO.SATISFIED);
+        assertEquals(1, cc.description.init);
+
+        ConstructorComponent cmp1 = this.getServiceFromConfiguration(cc,
+            ConstructorComponent.class);
+
+        final String msg1 = cmp1.test();
+        assertEquals("Wrong refs size.", expectedMsg, msg1);
+    }
+
+    private void doTestMandatoryFailGetService(String componentName)
+        throws Exception
+    {
+        ComponentConfigurationDTO cc = getDisabledConfigurationAndEnable(componentName,
+            ComponentConfigurationDTO.SATISFIED);
+        assertEquals(1, cc.description.init);
+        failGetServiceFromConfiguration(cc, ConstructorComponent.class);
     }
 }
