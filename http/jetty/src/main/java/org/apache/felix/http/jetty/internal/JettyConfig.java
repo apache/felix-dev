@@ -771,18 +771,49 @@ public final class JettyConfig
         this.httpPort = null;
         this.httpsPort = null;
 
-        // FELIX-4312 Check whether there's something changed in our configuration...
+        // FELIX-4312
+        //
+        // Check whether there's something changed in our configuration...
         Dictionary<String, ?> currentConfig = this.config;
+
         if (currentConfig == null || !props.equals(currentConfig))
         {
-            this.config = props;
-
+            updateConfig(currentConfig,props);
             return true;
         }
 
         return false;
     }
+    private void updateConfig( Dictionary<String, ?> currentConfig,Dictionary<String, ?> props)
+    {
+            Dictionary<String, Object> newConfig = new Hashtable<>() ;
 
+            if (currentConfig != null && props != null && !currentConfig.isEmpty() && !props.isEmpty())
+            {
+
+                Enumeration<String> enumerationCurrent = currentConfig.keys();
+
+                while (enumerationCurrent.hasMoreElements())
+                {
+                    String key = enumerationCurrent.nextElement();
+                    newConfig.put(key, currentConfig.get(key));
+                }
+
+                Enumeration<String> enumeration = props.keys();
+
+                while (enumeration.hasMoreElements())
+                {
+                    String key = enumeration.nextElement();
+                    newConfig.put(key, props.get(key));
+                }
+
+                this.config = newConfig;
+            } else
+            {
+                this.config = props;
+            }
+    }
+    
     private void closeSilently(ServerSocket resource)
     {
         if (resource != null)
