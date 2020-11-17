@@ -771,9 +771,7 @@ public final class JettyConfig
         this.httpPort = null;
         this.httpsPort = null;
 
-        // FELIX-4312
-        //
-        // Check whether there's something changed in our configuration...
+        // FELIX-4312 Check whether there's something changed in our configuration...
         Dictionary<String, ?> currentConfig = this.config;
 
         if (currentConfig == null || !props.equals(currentConfig))
@@ -808,12 +806,13 @@ public final class JettyConfig
                 }
 
                 this.config = newConfig;
-            } else
+            }
+            else
             {
                 this.config = props;
             }
     }
-    
+
     private void closeSilently(ServerSocket resource)
     {
         if (resource != null)
