@@ -782,7 +782,7 @@ public final class JettyConfig
 
         return false;
     }
-    private void updateConfig( Dictionary<String, ?> currentConfig,Dictionary<String, ?> props)
+    private void updateConfig(Dictionary<String, ?> currentConfig,Dictionary<String, ?> props)
     {
             Dictionary<String, Object> newConfig = new Hashtable<>() ;
 
