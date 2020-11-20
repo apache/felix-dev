@@ -109,10 +109,24 @@ class LogManager extends ServiceTracker<Object, Object> implements BundleListene
         synchronized Object getLogger(LoggerFacade facade, Bundle bundle, String name)
         {
             if (factory == null)
+            {
                 return facade.logger = null;
+            }
             else
-                return facade.logger = ((LoggerFactory) factory).getLogger(bundle, name,
-                    Logger.class);
+            {
+                try
+                {
+                    return facade.logger = ((LoggerFactory) factory).getLogger(bundle,
+                        name, Logger.class);
+                }
+                catch (IllegalArgumentException e)
+                {
+                    // The bundle probably got uninstalled or somehow unresolved,
+                    // fallback to the SCR bundle's logger
+                    return ((LoggerFactory) factory).getLogger(context.getBundle(), name,
+                        Logger.class);
+                }
+            }
         }
 
         synchronized LogDomain remove(Bundle bundle)
