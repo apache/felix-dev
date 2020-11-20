@@ -25,7 +25,9 @@ import org.osgi.framework.Bundle;
  * an extended bundle. This avoids that all clients doing logging on behalf of
  * a component bundle need to pass in things like {@code BundleContext}.
  */
-public interface BundleLogger  extends InternalLogger  {
+public interface BundleLogger extends InternalLogger
+{
 
-	ComponentLogger component(Bundle m_bundle, String implementationClassName, String name);
+    ComponentLogger component(Bundle m_bundle, String implementationClassName,
+        String name);
 }

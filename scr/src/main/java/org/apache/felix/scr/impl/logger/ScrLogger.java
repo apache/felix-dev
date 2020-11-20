@@ -24,15 +24,16 @@ import org.osgi.framework.Bundle;
 /**
  * Logger used by SCR main code
  */
-public interface ScrLogger extends InternalLogger {
+public interface ScrLogger extends InternalLogger
+{
 
-	/**
-	 * Create a bundle logger
-	 */
-	BundleLogger bundle(Bundle bundle);
+    /**
+     * Create a bundle logger
+     */
+    BundleLogger bundle(Bundle bundle);
 
-	/**
-	 * Close the log manager
-	 */
-	void close();
+    /**
+     * Close the log manager
+     */
+    void close();
 }
