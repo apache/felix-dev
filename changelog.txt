@@ -1,5 +1,7 @@
 Changes in 4.5.6
 ----------------
+** Improvement
+    * [FELIX-6363] - Simplify updating of OSGi configurations through REST API
 ** Bug
     * [FELIX-6341] - ConfigAdmin - deleting a configuration logs a string that should be translated
     * [FELIX-6328] - Web Console (All In One) imports javax.portlet via fileupload
