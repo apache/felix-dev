@@ -162,7 +162,7 @@ class ConfigAdminSupport
         return ConfigManager.PLACEHOLDER_PID;
     }
 
-    String applyConfiguration( HttpServletRequest request, String pid )
+    String applyConfiguration( final HttpServletRequest request, final String pid, final boolean isUpdate )
             throws IOException
     {
         if ( request.getParameter( ConfigManager.ACTION_DELETE ) != null ) //$NON-NLS-1$
@@ -177,7 +177,7 @@ class ConfigAdminSupport
             return null; // return request.getHeader( "Referer" );
         }
 
-        String factoryPid = request.getParameter( ConfigManager.FACTORY_PID );
+        final String factoryPid = request.getParameter( ConfigManager.FACTORY_PID );
         Configuration config = null;
 
         String propertyList = request.getParameter( ConfigManager.PROPERTY_LIST ); //$NON-NLS-1$
@@ -316,16 +316,20 @@ class ConfigAdminSupport
                 }
             }
 
-            // remove the properties that are not specified in the request
-            final Dictionary<String, Object> updateProps = new Hashtable<>(props.size());
-            for ( Enumeration<String> e = props.keys(); e.hasMoreElements(); )
-            {
-                final String key = e.nextElement();
-                if ( propsToKeep.contains(key) )
+            if ( !isUpdate ) {
+                // remove the properties that are not specified in the request
+                final Dictionary<String, Object> updateProps = new Hashtable<>(props.size());
+                for ( Enumeration<String> e = props.keys(); e.hasMoreElements(); )
                 {
-                    updateProps.put(key, props.get(key));
+                    final String key = e.nextElement();
+                    if ( propsToKeep.contains(key) )
+                    {
+                        updateProps.put(key, props.get(key));
+                    }
                 }
+                props = updateProps;
             }
+
 
             final String location = request.getParameter(ConfigManager.LOCATION);
             if ( location == null || location.trim().length() == 0 || ConfigManager.UNBOUND_LOCATION.equals(location) )
@@ -350,7 +354,7 @@ class ConfigAdminSupport
                     config.setBundleLocation(location);
                 }
             }
-            config.update( updateProps );
+            config.update( props );
         }
 
         // redirect to the new configuration (if existing)
