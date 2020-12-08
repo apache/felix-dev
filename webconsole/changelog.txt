@@ -1,6 +1,7 @@
 Changes in 4.5.6
 ----------------
 ** Improvement
+    * [FELIX-6366] - Update to jQuery 3.5.1 and jQuery migrate 3.3.0
     * [FELIX-6363] - Simplify updating of OSGi configurations through REST API
 ** Bug
     * [FELIX-6341] - ConfigAdmin - deleting a configuration logs a string that should be translated
