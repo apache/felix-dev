@@ -33,9 +33,10 @@
     <felix.java.version>8</felix.java.version>
   </properties>
   <scm>
-      <connection>scm:svn:http://svn.apache.org/repos/asf/felix/trunk/framework</connection>
-      <developerConnection>scm:svn:https://svn.apache.org/repos/asf/felix/trunk/framework</developerConnection>
-      <url>http://svn.apache.org/repos/asf/felix/framework</url>
+    <connection>scm:git:https://github.com/apache/felix-dev.git</connection>
+    <developerConnection>scm:git:https://github.com/apache/felix-dev.git</developerConnection>
+    <url>https://gitbox.apache.org/repos/asf?p=felix-dev.git</url>
+    <tag>HEAD</tag>
   </scm>
 
   <build>
@@ -49,7 +50,7 @@
           <instructions>
             <Bundle-SymbolicName>org.apache.felix.framework.connect</Bundle-SymbolicName>
             <Bundle-Name>Apache Felix Framework Connect</Bundle-Name>
-            <Bundle-Description>OSGi R7 framework connect implementation.</Bundle-Description>
+            <Bundle-Description>OSGi R8 framework connect implementation.</Bundle-Description>
             <Bundle-Vendor>The Apache Software Foundation</Bundle-Vendor>
             <Export-Package>
                 org.osgi.framework.*;-split-package:=first,
