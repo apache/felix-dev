@@ -72,6 +72,7 @@ public class NativeLibraryClause
     private static final String OS_WINDOWS_SERVER_2008 = "windowsserver2008";
     private static final String OS_WINDOWS_SERVER_2012 = "windowsserver2012";
     private static final String OS_WINDOWS_SERVER_2016 = "windowsserver2016";
+    private static final String OS_WINDOWS_SERVER_2019 = "windowsserver2019";
     private static final String OS_WINDOWS_VISTA = "windowsvista";
     private static final String OS_WINDOWS_XP = "windowsxp";
     private static final String OS_WIN_32 = "win32";
@@ -578,6 +579,10 @@ public class NativeLibraryClause
             else if (value.indexOf("2016") >= 0)
             {
                 os = OS_WINDOWS_SERVER_2016;
+            }
+            else if (value.indexOf("2019") >= 0)
+            {
+                os = OS_WINDOWS_SERVER_2019;
             }
             else if (value.indexOf("xp") >= 0)
             {
