@@ -1,3 +1,13 @@
+Changes from 6.0.3 to 6.0.4
+---------------------------
+
+** Improvement
+    * Update to latest framework version 6.0.4
+    * Update to latest gogo runtime 1.1.4
+    * Update to latest gogo.jline 1.1.8
+    * Update to latest jline 3.13.2
+    * Update to latest jansi 1.18
+
 Changes from 6.0.2 to 6.0.3
 ---------------------------
 
