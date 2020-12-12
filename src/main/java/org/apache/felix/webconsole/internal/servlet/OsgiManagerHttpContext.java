@@ -23,6 +23,7 @@ import java.net.URL;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 
+import org.apache.felix.webconsole.User;
 import org.apache.felix.webconsole.WebConsoleSecurityProvider;
 import org.apache.felix.webconsole.WebConsoleSecurityProvider2;
 import org.osgi.framework.BundleContext;
@@ -44,7 +45,7 @@ final class OsgiManagerHttpContext implements HttpContext
 
     private final HttpContext base;
 
-    private final ServiceTracker tracker;
+    private final ServiceTracker<WebConsoleSecurityProvider, WebConsoleSecurityProvider> tracker;
 
     private final String username;
 
@@ -54,7 +55,7 @@ final class OsgiManagerHttpContext implements HttpContext
 
 
     OsgiManagerHttpContext(final BundleContext bundleContext,
-        final HttpService httpService, final ServiceTracker tracker, final String username,
+        final HttpService httpService, final ServiceTracker<WebConsoleSecurityProvider, WebConsoleSecurityProvider> tracker, final String username,
         final String password, final String realm )
     {
         this.bundleContext = bundleContext;
@@ -95,19 +96,52 @@ final class OsgiManagerHttpContext implements HttpContext
      *            <code>Authorization</code> header.
      * @param response The HTTP response used to send the authentication request
      *            if authentication is required but not satisfied.
-     * @return <code>true</code> if authentication is required and not
-     *         satisfied by the request.
+     * @return {@code} true if authentication is required and not satisfied by the request.
      */
-    public boolean handleSecurity( HttpServletRequest request, HttpServletResponse response )
-    {
-        Object provider = tracker.getService();
+    public boolean handleSecurity( final HttpServletRequest request, final HttpServletResponse response ) {
+        final WebConsoleSecurityProvider provider = tracker.getService();
 
         // check whether the security provider can fully handle the request
-        if ( provider instanceof WebConsoleSecurityProvider2 )
-        {
-            return ( ( WebConsoleSecurityProvider2 ) provider ).authenticate( request, response );
+        final boolean result;
+        if ( provider instanceof WebConsoleSecurityProvider2 ) {
+            result = ( ( WebConsoleSecurityProvider2 ) provider ).authenticate( request, response );
+        } else {
+            result = handleSecurity(provider, request, response);
         }
 
+        if ( result ) {
+            request.setAttribute(User.USER_ATTRIBUTE, new User(){
+
+				@Override
+				public boolean authorize(String role) {
+                    final Object user = this.getUserObject();
+                    if ( user == null ) {
+                        // no user object in request, deny
+                        return false;
+                    }
+					if ( provider == null ) {
+                        // no provider, allow (compatibility)
+                        return true;
+                    }
+					return provider.authorize(this.getUserObject(), role);
+				}
+
+				@Override
+				public Object getUserObject() {
+					return request.getAttribute(WebConsoleSecurityProvider2.USER_ATTRIBUTE);
+				}
+                
+            });
+        }
+        return result;
+    }
+
+    /**
+     * Handle security with an optional web console security provider
+     */
+    private boolean handleSecurity( final WebConsoleSecurityProvider provider, 
+        final HttpServletRequest request,
+        final HttpServletResponse response) {
         // Return immediately if the header is missing
         String authHeader = request.getHeader( HEADER_AUTHORIZATION );
         if ( authHeader != null && authHeader.length() > 0 )
@@ -170,27 +204,6 @@ final class OsgiManagerHttpContext implements HttpContext
         return false;
     }
 
-
-    public boolean authorize( final HttpServletRequest request, String role )
-    {
-        Object user = request.getAttribute( WebConsoleSecurityProvider2.USER_ATTRIBUTE );
-        if ( user != null )
-        {
-            WebConsoleSecurityProvider provider = ( WebConsoleSecurityProvider ) tracker.getService();
-            if ( provider != null )
-            {
-                return provider.authorize( user, role );
-            }
-
-            // no provider, grant access (backwards compatibility)
-            return true;
-        }
-
-        // missing user in the request, deny access
-        return false;
-    }
-
-
     private static byte[][] base64Decode( String srcString )
     {
         byte[] transformed = Base64.decodeBase64( srcString );
@@ -225,11 +238,11 @@ final class OsgiManagerHttpContext implements HttpContext
     }
 
 
-    private boolean authenticate( Object provider, String username, byte[] password )
+    private boolean authenticate( WebConsoleSecurityProvider provider, String username, byte[] password )
     {
         if ( provider != null )
         {
-            return ( ( WebConsoleSecurityProvider ) provider ).authenticate( username, toString( password ) ) != null;
+            return provider.authenticate( username, toString( password ) ) != null;
         }
         if ( this.username.equals( username ) && this.password.matches( password ) )
         {
@@ -240,5 +253,4 @@ final class OsgiManagerHttpContext implements HttpContext
         }
         return false;
     }
-
 }

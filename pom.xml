@@ -39,9 +39,9 @@
     
     <properties>
         <webconsole.exports>
-            org.apache.felix.webconsole;version=3.3.0;provide:=true,
-            org.apache.felix.webconsole.bundleinfo;version=1.0.0;provide:=true,
-            org.apache.felix.webconsole.i18n;version=1.0.0;provide:=true
+            org.apache.felix.webconsole;provide:=true,
+            org.apache.felix.webconsole.bundleinfo;provide:=true,
+            org.apache.felix.webconsole.i18n;provide:=true
         </webconsole.exports>
     </properties>
 
@@ -145,6 +145,14 @@
                         </_removeheaders>
                     </instructions>
                 </configuration>
+                <executions>
+                    <execution>
+                        <id>baseline</id>
+                        <goals>
+                            <goal>baseline</goal>
+                        </goals>
+                    </execution>
+                </executions>
             </plugin>
             <plugin>
                 <artifactId>maven-javadoc-plugin</artifactId>
@@ -330,6 +338,13 @@
     </profiles>
 
     <dependencies>
+        <dependency>
+            <groupId>org.osgi</groupId>
+            <artifactId>org.osgi.annotation.versioning</artifactId>
+            <version>1.1.0</version>
+            <scope>provided</scope>
+        </dependency>
+
         <dependency>
             <groupId>javax.servlet</groupId>
             <artifactId>servlet-api</artifactId>
