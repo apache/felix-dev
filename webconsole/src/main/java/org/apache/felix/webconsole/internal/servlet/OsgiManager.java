@@ -278,8 +278,8 @@ public class OsgiManager extends GenericServlet
 
             try
             {
-                Class<?> pluginClass = classLoader.loadClass(pluginClassName);
-                Object plugin = pluginClass.getDeclaredConstructor(null).newInstance(null);
+                final Class<?> pluginClass = classLoader.loadClass(pluginClassName);
+                final Object plugin = pluginClass.getDeclaredConstructor().newInstance();
 
                 if (plugin instanceof OsgiManagerPlugin)
                 {
