@@ -36,7 +36,7 @@ public class OsgiManagerHttpContextTest {
         OsgiManagerHttpContext ctx = new OsgiManagerHttpContext(bc, svc, null, "foo", "bar", "blah");
 
         Method authenticateMethod = OsgiManagerHttpContext.class.getDeclaredMethod(
-                "authenticate", new Class [] {Object.class, String.class, byte[].class});
+                "authenticate", new Class [] {WebConsoleSecurityProvider.class, String.class, byte[].class});
         authenticateMethod.setAccessible(true);
 
         assertEquals(true, authenticateMethod.invoke(ctx, null, "foo", "bar".getBytes()));
@@ -57,7 +57,7 @@ public class OsgiManagerHttpContextTest {
         OsgiManagerHttpContext ctx = new OsgiManagerHttpContext(bc, svc, null, "foo", "bar", "blah");
 
         Method authenticateMethod = OsgiManagerHttpContext.class.getDeclaredMethod(
-                "authenticate", new Class [] {Object.class, String.class, byte[].class});
+                "authenticate", new Class [] {WebConsoleSecurityProvider.class, String.class, byte[].class});
         authenticateMethod.setAccessible(true);
 
         assertEquals("A required security provider is configured, logging in using "

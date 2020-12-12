@@ -44,7 +44,7 @@ public interface WebConsoleSecurityProvider
 
 
     /**
-     * Checks whether bthe authenticated user has the given role permission.
+     * Checks whether the authenticated user has the given role permission.
      *
      * @param user The object referring to the authenticated user. This is the
      *      object returned from the {@link #authenticate(String, String)}
