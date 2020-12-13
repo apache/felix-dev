@@ -28,6 +28,9 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
+import org.apache.felix.framework.BundleRevisionImpl;
+import org.apache.felix.framework.cache.ConnectContentContent;
+import org.apache.felix.framework.cache.Content;
 import org.apache.felix.framework.util.FelixConstants;
 import org.osgi.framework.BundleException;
 import org.osgi.framework.Constants;
@@ -35,6 +38,7 @@ import org.osgi.framework.Filter;
 import org.osgi.framework.FrameworkUtil;
 import org.osgi.framework.InvalidSyntaxException;
 import org.osgi.framework.Version;
+import org.osgi.framework.connect.ConnectContent;
 import org.osgi.framework.namespace.IdentityNamespace;
 import org.osgi.framework.namespace.NativeNamespace;
 import org.osgi.framework.wiring.BundleCapability;
@@ -62,7 +66,7 @@ public class ManifestParserTest extends TestCase
     {
         Map<String, Object> headers = new HashMap<String, Object>();
         headers.put(Constants.BUNDLE_MANIFESTVERSION, "2");
-        headers.put(Constants.BUNDLE_SYMBOLICNAME, "abc;singleton:=true");
+        headers.put(Constants.BUNDLE_SYMBOLICNAME, "abc;singleton:=true;foo=bar;" + IdentityNamespace.CAPABILITY_TAGS_ATTRIBUTE + "=test");
         headers.put(Constants.BUNDLE_VERSION, "1.2.3.something");
         String copyright = "(c) 2013 Apache Software Foundation";
         headers.put(Constants.BUNDLE_COPYRIGHT, copyright);
@@ -72,7 +76,13 @@ public class ManifestParserTest extends TestCase
         headers.put(Constants.BUNDLE_DOCURL, docurl);
         String license = "http://www.apache.org/licenses/LICENSE-2.0";
         headers.put("Bundle-License", license);
-        ManifestParser mp = new ManifestParser(null, null, null, headers);
+
+        BundleRevisionImpl mockBundleRevision = mock(BundleRevisionImpl.class);
+
+        Content connectContent = mock(ConnectContentContent.class);
+        when(mockBundleRevision.getContent()).thenReturn(connectContent);
+
+        ManifestParser mp = new ManifestParser(null, null, mockBundleRevision, headers);
 
         BundleCapability ic = findCapability(mp.getCapabilities(), IdentityNamespace.IDENTITY_NAMESPACE);
         assertEquals("abc", ic.getAttributes().get(IdentityNamespace.IDENTITY_NAMESPACE));
@@ -82,6 +92,8 @@ public class ManifestParserTest extends TestCase
         assertEquals(description, ic.getAttributes().get(IdentityNamespace.CAPABILITY_DESCRIPTION_ATTRIBUTE));
         assertEquals(docurl, ic.getAttributes().get(IdentityNamespace.CAPABILITY_DOCUMENTATION_ATTRIBUTE));
         assertEquals(license, ic.getAttributes().get(IdentityNamespace.CAPABILITY_LICENSE_ATTRIBUTE));
+        assertEquals(Arrays.asList("test", ConnectContent.TAG_OSGI_CONNECT), ic.getAttributes().get(IdentityNamespace.CAPABILITY_TAGS_ATTRIBUTE));
+        assertEquals("bar", ic.getAttributes().get("foo"));
 
         assertEquals(1, ic.getDirectives().size());
         assertEquals("true", ic.getDirectives().get(IdentityNamespace.CAPABILITY_SINGLETON_DIRECTIVE));
@@ -97,7 +109,10 @@ public class ManifestParserTest extends TestCase
         		"osgi.native.osversion:Version=\"7.0\";"+
         		"osgi.native.processor:List<String>=\"x86-64,amd64,em64t,x86_64\";"+
         		"osgi.native.language=\"en\"");
-        BundleRevision mockBundleRevision = mock(BundleRevision.class);
+
+        BundleRevisionImpl mockBundleRevision = mock(BundleRevisionImpl.class);
+
+        when(mockBundleRevision.getContent()).thenReturn(null);
         when(mockBundleRevision.getSymbolicName()).thenReturn(FelixConstants.SYSTEM_BUNDLE_SYMBOLICNAME);
     	
         ManifestParser mp = new ManifestParser(null, null, mockBundleRevision, headers);
@@ -123,7 +138,9 @@ public class ManifestParserTest extends TestCase
         headers.put(Constants.REQUIRE_CAPABILITY,
                 "com.example.other;theList:List<String>=\"one,two,three\";theLong:Long=999");
 
-        BundleRevision mockBundleRevision = mock(BundleRevision.class);
+        BundleRevisionImpl mockBundleRevision = mock(BundleRevisionImpl.class);
+
+        when(mockBundleRevision.getContent()).thenReturn(null);
 
         when(mockBundleRevision.getSymbolicName()).thenReturn("com.example.test.sample");
 
@@ -154,7 +171,10 @@ public class ManifestParserTest extends TestCase
         String[] languages = {"en", "se"};
         String selectionFilter = "(com.acme.windowing=win32)";
         NativeLibraryClause clause = new NativeLibraryClause(libraryFiles, osNames, processors, osVersions, languages, selectionFilter);
-        BundleRevision owner = mock(BundleRevision.class);
+
+        BundleRevisionImpl owner = mock(BundleRevisionImpl.class);
+
+        when(owner.getContent()).thenReturn(null);
         nativeLibraryClauses.add(clause);
         
         List<BundleRequirement> nativeBundleReq = ManifestParser.convertNativeCode(owner, nativeLibraryClauses, false);

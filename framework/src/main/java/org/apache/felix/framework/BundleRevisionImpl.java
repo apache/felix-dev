@@ -319,6 +319,15 @@ public class BundleRevisionImpl implements BundleRevision, Resource
         }
     }
 
+    synchronized void disposeContentPath()
+    {
+        for (int i = 0; (m_contentPath != null) && (i < m_contentPath.size()); i++)
+        {
+            m_contentPath.get(i).close();
+        }
+        m_contentPath = null;
+    }
+
     public void setProtectionDomain(ProtectionDomain pd)
     {
         m_protectionDomain = pd;
@@ -614,6 +623,25 @@ public class BundleRevisionImpl implements BundleRevision, Resource
             return getContent().getEntryAsStream(urlPath);
         }
         return getContentPath().get(index - 1).getEntryAsStream(urlPath);
+    }
+
+
+    public long getContentTime(int index, String urlPath)
+    {
+        if (urlPath.startsWith("/"))
+        {
+            urlPath = urlPath.substring(1);
+        }
+        Content content;
+        if (index == 0)
+        {
+            content = getContent();
+        }
+        else {
+            content = getContentPath().get(index - 1);
+        }
+        long result = content.getContentTime(urlPath);
+        return result > 0 ? result : m_bundle.getLastModified();
     }
 
     public URL getLocalURL(int index, String urlPath)

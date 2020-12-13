@@ -65,7 +65,7 @@ import org.osgi.annotation.versioning.ConsumerType;
  * @see ServiceObjects
  * @ThreadSafe
  * @since 1.8
- * @author $Id$
+ * @author $Id: 864506fa15679676e52eee91982a6fd5c1e9768f $
  */
 @ConsumerType
 public interface PrototypeServiceFactory<S> extends ServiceFactory<S> {

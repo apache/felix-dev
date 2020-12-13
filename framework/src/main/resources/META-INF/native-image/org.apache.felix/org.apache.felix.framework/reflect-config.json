@@ -1,0 +1,27 @@
+[
+  {
+    "name":"org.osgi.framework.Version",
+    "allPublicConstructors" : true,
+    "allPublicMethods" : true
+  },
+  {
+    "name":"org.osgi.framework.VersionRange",
+    "allPublicConstructors" : true,
+    "allPublicMethods" : true
+  },
+  {
+    "name" : "java.net.URL",
+    "allPublicConstructors" : true,
+    "allPublicMethods" : true,
+    "allDeclaredMethods" : true,
+    "allPublicFields" : true,
+    "allDeclaredFields" : true
+  },
+  {
+    "name" : "java.net.URLStreamHandler",
+    "allPublicMethods" : true,
+    "allDeclaredMethods" : true,
+    "allPublicFields" : true,
+    "allDeclaredFields" : true
+  }
+]

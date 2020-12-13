@@ -21,7 +21,7 @@ import org.osgi.dto.DTO;
 /**
  * Data Transfer Object for a reference to a Requirement.
  * 
- * @author $Id$
+ * @author $Id: RequirementRefDTO.java 1614569 2014-07-30 07:22:32Z cziegeler $
  * @NotThreadSafe
  */
 public class RequirementRefDTO extends DTO {

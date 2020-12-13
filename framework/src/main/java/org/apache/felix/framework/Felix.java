@@ -58,6 +58,7 @@ import org.osgi.framework.ServicePermission;
 import org.osgi.framework.ServiceReference;
 import org.osgi.framework.ServiceRegistration;
 import org.osgi.framework.Version;
+import org.osgi.framework.connect.ModuleConnector;
 import org.osgi.framework.launch.Framework;
 import org.osgi.framework.namespace.HostNamespace;
 import org.osgi.framework.startlevel.FrameworkStartLevel;
@@ -74,9 +75,7 @@ import org.osgi.service.resolver.ResolutionException;
 import java.io.BufferedReader;
 import java.io.BufferedWriter;
 import java.io.File;
-import java.io.FileInputStream;
 import java.io.FileNotFoundException;
-import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.InputStreamReader;
@@ -212,6 +211,8 @@ public class Felix extends BundleImpl implements Framework
 
     // Do we need to consult the default java security policy if no security provider is present?
     private volatile boolean m_securityDefaultPolicy;
+
+    private final ModuleConnector m_connectFramework;
 
     /**
      * <p>
@@ -351,6 +352,11 @@ public class Felix extends BundleImpl implements Framework
     **/
     public Felix(Map configMap)
     {
+        this(configMap, null);
+    }
+
+    public Felix(Map configMap, ModuleConnector connectFramework)
+    {
         super();
         // Copy the configuration properties; convert keys to strings.
         m_configMutableMap = new StringMap();
@@ -460,6 +466,8 @@ public class Felix extends BundleImpl implements Framework
         m_fwkWiring = new FrameworkWiringImpl(this, m_registry);
         // Create framework start level object.
         m_fwkStartLevel = new FrameworkStartLevelImpl(this, m_registry);
+
+        m_connectFramework = connectFramework;
     }
 
     Logger getLogger()
@@ -634,12 +642,12 @@ public class Felix extends BundleImpl implements Framework
         return true;
     }
 
-
     @Override
     public void init() throws BundleException
     {
-        init((FrameworkListener[]) null);
+        init(null);
     }
+
     /**
      * @see org.osgi.framework.launch.Framework#init(org.osgi.framework.FrameworkListener[])
      */
@@ -726,6 +734,10 @@ public class Felix extends BundleImpl implements Framework
                             throw new BundleException("Unable to flush bundle cache.", ex);
                         }
                     }
+                    if (m_connectFramework != null)
+                    {
+                        m_connectFramework.initialize(m_cache.getCacheDir(), (Map) m_configMap);
+                    }
                 }
 
                 // Initialize installed bundle data structures.
@@ -774,7 +786,6 @@ public class Felix extends BundleImpl implements Framework
                         "Unresolved constraint in System Bundle:"
                         + ex.getUnresolvedRequirements());
                 }
-
                 // Reload the cached bundles before creating and starting the
                 // system bundle, since we want all cached bundles to be reloaded
                 // when we activate the system bundle and any subsequent system
@@ -784,7 +795,7 @@ public class Felix extends BundleImpl implements Framework
                 // First get cached bundle identifiers.
                 try
                 {
-                    archives = m_cache.getArchives();
+                    archives = m_cache.getArchives(m_connectFramework);
                 }
                 catch (Exception ex)
                 {
@@ -850,6 +861,12 @@ public class Felix extends BundleImpl implements Framework
                     m_extensionManager.startExtensionBundle(this, (BundleImpl) extension);
                 }
 
+
+                if (m_connectFramework != null)
+                {
+                    m_connectFramework.newBundleActivator().ifPresent(m_activatorList::add);
+                }
+
                 // Now that we have loaded all cached bundles and have determined the
                 // max bundle ID of cached bundles, we need to try to load the next
                 // bundle ID from persistent storage. In case of failure, we should
@@ -884,7 +901,6 @@ public class Felix extends BundleImpl implements Framework
                 }
                 catch (Throwable ex)
                 {
-                    m_dispatcher.stopDispatching();
                     m_logger.log(Logger.LOG_ERROR, "Unable to start system bundle.", ex);
                     throw new RuntimeException("Unable to start system bundle.");
                 }
@@ -948,6 +964,17 @@ public class Felix extends BundleImpl implements Framework
                 }
             }
         }
+        catch (Throwable t)
+        {
+            stopBundle(this, false);
+            if (m_cache != null)
+            {
+                m_cache.release();
+                m_cache = null;
+            }
+            __setState(Bundle.INSTALLED);
+            throw t;
+        }
         finally
         {
             releaseBundleLock(this);
@@ -987,7 +1014,7 @@ public class Felix extends BundleImpl implements Framework
             BufferedReader input = null;
             try
             {
-                input = new BufferedReader(new InputStreamReader(new FileInputStream(dataFile), "UTF-8"));
+                input = new BufferedReader(new InputStreamReader(m_secureAction.getInputStream(dataFile), "UTF-8"));
                 lastVersion = Version.parseVersion(input.readLine()).getMajor();
             }
             catch (Exception ignore)
@@ -1020,7 +1047,7 @@ public class Felix extends BundleImpl implements Framework
         try
         {
             output = new PrintWriter(new OutputStreamWriter(
-                new FileOutputStream(getDataFile(this, "last.java.version")), "UTF-8"));
+                m_secureAction.getOutputStream(getDataFile(this, "last.java.version")), "UTF-8"));
             output.println(Integer.toString(currentVersion));
             output.flush();
         }
@@ -3224,7 +3251,7 @@ public class Felix extends BundleImpl implements Framework
                 try
                 {
                     // Add the bundle to the cache.
-                    ba = m_cache.create(id, getInitialBundleStartLevel(), location, is);
+                    ba = m_cache.create(id, getInitialBundleStartLevel(), location, is, m_connectFramework);
                 }
                 catch (Exception ex)
                 {
@@ -3760,8 +3787,11 @@ public class Felix extends BundleImpl implements Framework
                 Class clazz = Util.loadClassUsingClass(svcObj.getClass(), classNames[i], m_secureAction);
                 if (clazz == null)
                 {
-                    throw new IllegalArgumentException(
-                        "Cannot cast service: " + classNames[i]);
+                    if (!Util.checkImplementsWithName(svcObj.getClass(), classNames[i]))
+                    {
+                        throw new IllegalArgumentException(
+                                "Cannot cast service: " + classNames[i]);
+                    }
                 }
                 else if (!clazz.isAssignableFrom(svcObj.getClass()))
                 {
@@ -5025,9 +5055,12 @@ public class Felix extends BundleImpl implements Framework
             try
             {
                 File file = m_cache.getSystemBundleDataFile("bundle.id");
-                is = m_secureAction.getFileInputStream(file);
-                br = new BufferedReader(new InputStreamReader(is));
-                return Long.parseLong(br.readLine());
+                if (m_secureAction.isFile(file))
+                {
+                    is = m_secureAction.getInputStream(file);
+                    br = new BufferedReader(new InputStreamReader(is));
+                    return Long.parseLong(br.readLine());
+                }
             }
             catch (FileNotFoundException ex)
             {
@@ -5078,7 +5111,7 @@ public class Felix extends BundleImpl implements Framework
             try
             {
                 File file = m_cache.getSystemBundleDataFile("bundle.id");
-                os = m_secureAction.getFileOutputStream(file);
+                os = m_secureAction.getOutputStream(file);
                 bw = new BufferedWriter(new OutputStreamWriter(os));
                 String s = Long.toString(m_nextId);
                 bw.write(s, 0, s.length());
@@ -5110,17 +5143,27 @@ public class Felix extends BundleImpl implements Framework
         }
     }
 
+    public boolean hasConnectFramework()
+    {
+        return m_connectFramework != null;
+    }
+
     //
     // Miscellaneous inner classes.
     //
 
     class SystemBundleActivator implements BundleActivator
     {
+        private volatile ServiceRegistration<org.osgi.service.condition.Condition> m_reg;
         @Override
         public void start(BundleContext context) throws Exception
         {
             // Add the bundle activator for the url handler service.
             m_activatorList.add(0, new URLHandlersActivator(m_configMap, Felix.this));
+
+
+            m_reg = context.registerService(org.osgi.service.condition.Condition.class, org.osgi.service.condition.Condition.INSTANCE,
+                FrameworkUtil.asDictionary(Collections.singletonMap(org.osgi.service.condition.Condition.CONDITION_ID, org.osgi.service.condition.Condition.CONDITION_ID_TRUE)));
 
             // Start all activators.
             for (Iterator<BundleActivator> iter = m_activatorList.iterator(); iter.hasNext(); )
@@ -5132,6 +5175,7 @@ public class Felix extends BundleImpl implements Framework
                 }
                 catch (Throwable throwable)
                 {
+                    throwable.printStackTrace();
                     iter.remove();
                     fireFrameworkEvent(FrameworkEvent.ERROR, context.getBundle(),
                             new BundleException("Unable to start Bundle", throwable));
@@ -5141,6 +5185,7 @@ public class Felix extends BundleImpl implements Framework
                         throwable);
                 }
             }
+
         }
 
         @Override
@@ -5162,6 +5207,8 @@ public class Felix extends BundleImpl implements Framework
             m_fwkWiring.stop();
             // Stop framework start level thread.
             m_fwkStartLevel.stop();
+
+            m_resolver.stop();
 
             // Shutdown event dispatching queue.
             m_dispatcher.stopDispatching();
@@ -5234,6 +5281,8 @@ public class Felix extends BundleImpl implements Framework
                         throwable);
                 }
             }
+            m_reg.unregister();
+            m_activatorList.clear();
             if (m_securityManager != null)
             {
                 System.setSecurityManager(null);

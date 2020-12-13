@@ -23,7 +23,7 @@ import org.osgi.resource.Resource;
 /**
  * Data Transfer Object for a Resource.
  * 
- * @author $Id$
+ * @author $Id: ResourceDTO.java 1614569 2014-07-30 07:22:32Z cziegeler $
  * @NotThreadSafe
  */
 public class ResourceDTO extends DTO {

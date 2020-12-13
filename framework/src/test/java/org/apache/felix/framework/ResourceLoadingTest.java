@@ -35,7 +35,6 @@ import junit.framework.TestCase;
 import org.osgi.framework.Bundle;
 import org.osgi.framework.Constants;
 import org.osgi.framework.launch.Framework;
-import org.osgi.framework.wiring.BundleRevision;
 import org.osgi.framework.wiring.BundleWiring;
 
 public class ResourceLoadingTest extends TestCase
@@ -104,24 +103,33 @@ public class ResourceLoadingTest extends TestCase
         assertNotNull(testBundle.getResource(name));
         assertNotNull(testBundle.getEntry(name));
 
-        BufferedReader reader = new BufferedReader(new InputStreamReader(testBundle.getResource(name).openStream()));
-        assertEquals("This is a Test", reader.readLine());
+        try (BufferedReader reader = new BufferedReader(new InputStreamReader(testBundle.getResource(name).openStream())))
+        {
+            assertEquals("This is a Test", reader.readLine());
+        }
+        try (BufferedReader reader = new BufferedReader(new InputStreamReader(testBundle.getEntry(name).openStream())))
+        {
+            assertEquals("This is a Test", reader.readLine());
+        }
 
-        reader = new BufferedReader(new InputStreamReader(testBundle.getEntry(name).openStream()));
-        assertEquals("This is a Test", reader.readLine());
+        try (BufferedReader reader = new BufferedReader(new InputStreamReader(testBundle.adapt(BundleWiring.class).getClassLoader().getResourceAsStream(name))))
+        {
+            assertEquals("This is a Test", reader.readLine());
+        }
 
-        reader = new BufferedReader(new InputStreamReader(testBundle.adapt(BundleWiring.class).getClassLoader().getResourceAsStream(name)));
-        assertEquals("This is a Test", reader.readLine());
-
-        reader = new BufferedReader(new InputStreamReader(testBundle.adapt(BundleWiring.class).getClassLoader().getResource(name).openStream()));
-        assertEquals("This is a Test", reader.readLine());
+        try (BufferedReader reader = new BufferedReader(new InputStreamReader(testBundle.adapt(BundleWiring.class).getClassLoader().getResource(name).openStream())))
+        {
+            assertEquals("This is a Test", reader.readLine());
+        }
 
         URL url = testBundle.adapt(BundleWiring.class).getClassLoader().getResource(name);
 
         URL testURL = new URL(url.getProtocol() + "://" +  url.getHost() + ":" +  url.getPort() + "/" + name);
 
-        reader = new BufferedReader(new InputStreamReader(testURL.openStream()));
-        assertEquals("This is a Test", reader.readLine());
+        try (BufferedReader reader = new BufferedReader(new InputStreamReader(testURL.openStream())))
+        {
+            assertEquals("This is a Test", reader.readLine());
+        }
     }
 
     private static void deleteDir(File root) throws IOException

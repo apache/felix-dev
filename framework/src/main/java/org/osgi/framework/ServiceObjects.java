@@ -41,7 +41,7 @@ import org.osgi.annotation.versioning.ProviderType;
  * @see PrototypeServiceFactory
  * @ThreadSafe
  * @since 1.8
- * @author $Id$
+ * @author $Id: 84901895b763946d9f0e3819e47ecbf0ffa60f04 $
  */
 @ProviderType
 public interface ServiceObjects<S> {

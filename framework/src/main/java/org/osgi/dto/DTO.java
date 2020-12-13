@@ -35,7 +35,7 @@ import java.util.Set;
  * The object graph from a Data Transfer Object must be a tree to simplify
  * serialization and deserialization.
  * 
- * @author $Id$
+ * @author $Id: DTO.java 1825132 2018-02-23 15:11:00Z pauls $
  * @NotThreadSafe
  */
 public abstract class DTO {
