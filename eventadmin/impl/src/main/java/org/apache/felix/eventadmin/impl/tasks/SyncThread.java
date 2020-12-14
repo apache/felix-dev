@@ -30,6 +30,7 @@ public class SyncThread extends Thread
 
     /**
      * Constructor used by the thread pool.
+     * @param target The target
      */
     public SyncThread(Runnable target)
     {

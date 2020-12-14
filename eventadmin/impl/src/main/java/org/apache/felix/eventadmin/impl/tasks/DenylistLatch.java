@@ -68,7 +68,7 @@ public class DenylistLatch {
 	 *
 	 * Adds a handler task to the timeout based deny list checking.
 	 *
-	 * @param task
+	 * @param task The handler task
 	 */
 	public void addToDenylistCheck(final HandlerTask task)
 	{

@@ -269,6 +269,7 @@ public class EventHandlerProxy {
 
     /**
      * Get some info about the event handler
+     * @return Handler info
      */
     public String getInfo() {
         return this.reference.toString() + " [Bundle " + this.reference.getBundle() + "]";
@@ -284,6 +285,7 @@ public class EventHandlerProxy {
 
     /**
      * Get the event handler.
+     * @return The event handler or {@code null}
      */
     private synchronized EventHandler obtain() {
         if (this.handler == null)
@@ -325,7 +327,8 @@ public class EventHandlerProxy {
 
     /**
      * Get the topics of this handler.
-     * If this handler matches all topics <code>null</code> is returned
+     * If this handler matches all topics {@code null} is returned
+     * @return The topics of this handler or {@code null}
      */
     public String[] getTopics()
     {
@@ -337,6 +340,8 @@ public class EventHandlerProxy {
      * - denied
      * - check filter
      * - check permission
+     * @param event The event
+     * @return {@code true} if the event can be delivered
      */
     public boolean canDeliver(final Event event)
     {
@@ -370,6 +375,7 @@ public class EventHandlerProxy {
 
     /**
      * Should a timeout be used for this handler?
+     * @return {@code true} if a timeout should be used
      */
     public boolean useTimeout()
     {
@@ -378,6 +384,7 @@ public class EventHandlerProxy {
 
     /**
      * Should async events be delivered in order?
+     * @return {@code true} if async events should be delivered in order
      */
     public boolean isAsyncOrderedDelivery()
     {
@@ -386,6 +393,7 @@ public class EventHandlerProxy {
 
     /**
      * Check the timeout configuration for this handler.
+     * @param className Handler name
      */
     private void checkTimeout(final String className)
     {
@@ -408,6 +416,7 @@ public class EventHandlerProxy {
 
     /**
      * Send the event.
+     * @param event The event
      */
     public void sendEvent(final Event event)
     {

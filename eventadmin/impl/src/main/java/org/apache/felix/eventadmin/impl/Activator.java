@@ -24,7 +24,7 @@ import org.osgi.framework.BundleContext;
 
 /**
  * The activator of the EventAdmin bundle. This class registers an implementation of
- * the OSGi R4 <tt>EventAdmin</tt> service (see the Compendium 113) with the
+ * the OSGi R4 {@code EventAdmin} service (see the Compendium 113) with the
  * framework. It features timeout-based denying of event-handlers for both,
  * asynchronous and synchronous event-dispatching (as a spec conform optional
  * extension).
