@@ -36,6 +36,7 @@ import java.util.Hashtable;
 import java.util.List;
 import java.util.Set;
 
+import org.apache.felix.webconsole.WebConsoleSecurityProvider;
 import org.junit.Test;
 import org.mockito.Mockito;
 import org.mockito.invocation.InvocationOnMock;
@@ -134,13 +135,13 @@ public class OsgiManagerTest {
         final List<String> invocations = new ArrayList<String>();
         ServiceTrackerCustomizer stc = mgr.new UpdateDependenciesStateCustomizer() {
             @Override
-            public Object addingService(ServiceReference reference) {
+            public WebConsoleSecurityProvider addingService(ServiceReference<WebConsoleSecurityProvider> reference) {
                 invocations.add("added:" + reference);
                 return null;
             }
 
             @Override
-            public void removedService(ServiceReference reference, Object service) {
+            public void removedService(ServiceReference<WebConsoleSecurityProvider> reference, WebConsoleSecurityProvider service) {
                 invocations.add("removed:" + reference);
             }
         };

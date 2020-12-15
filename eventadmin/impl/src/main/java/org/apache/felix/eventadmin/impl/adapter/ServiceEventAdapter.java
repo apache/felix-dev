@@ -39,11 +39,11 @@ public class ServiceEventAdapter extends AbstractAdapter implements ServiceListe
 {
     /**
      * The constructor of the adapter. This will register the adapter with the
-     * given context as a <tt>ServiceListener</tt> and subsequently, will
+     * given context as a {@code ServiceListener} and subsequently, will
      * post received events via the given EventAdmin.
      *
      * @param context The bundle context with which to register as a listener.
-     * @param admin The <tt>EventAdmin</tt> to use for posting events.
+     * @param admin The {@code EventAdmin} to use for posting events.
      */
     public ServiceEventAdapter(final BundleContext context, final EventAdmin admin)
     {
@@ -59,7 +59,7 @@ public class ServiceEventAdapter extends AbstractAdapter implements ServiceListe
 
     /**
      * Once a Service event is received this method assembles and posts an event
-     * via the <tt>EventAdmin</tt> as specified in 113.6.5 OSGi R4 compendium.
+     * via the {@code EventAdmin} as specified in 113.6.5 OSGi R4 compendium.
      *
      * @param event The event to adapt.
      */

@@ -28,7 +28,7 @@
 
     <artifactId>org.apache.felix.webconsole</artifactId>
     <packaging>bundle</packaging>
-    <version>4.5.5-SNAPSHOT</version>
+    <version>4.6.1-SNAPSHOT</version>
 
     <name>Apache Felix Web Management Console</name>
     <description>
@@ -39,9 +39,9 @@
     
     <properties>
         <webconsole.exports>
-            org.apache.felix.webconsole;version=3.3.0;provide:=true,
-            org.apache.felix.webconsole.bundleinfo;version=1.0.0;provide:=true,
-            org.apache.felix.webconsole.i18n;version=1.0.0;provide:=true
+            org.apache.felix.webconsole;provide:=true,
+            org.apache.felix.webconsole.bundleinfo;provide:=true,
+            org.apache.felix.webconsole.i18n;provide:=true
         </webconsole.exports>
     </properties>
 
@@ -145,6 +145,14 @@
                         </_removeheaders>
                     </instructions>
                 </configuration>
+                <executions>
+                    <execution>
+                        <id>baseline</id>
+                        <goals>
+                            <goal>baseline</goal>
+                        </goals>
+                    </execution>
+                </executions>
             </plugin>
             <plugin>
                 <artifactId>maven-javadoc-plugin</artifactId>
@@ -163,8 +171,8 @@
                     </includes>
                     <excludes>
                         <exclude>src/main/appended-resources/**</exclude>
-                        <exclude>src/main/resources/res/lib/jquery-3.4.1.js</exclude>
-                        <exclude>src/main/resources/res/lib/jquery-migrate-3.1.0.js</exclude>
+                        <exclude>src/main/resources/res/lib/jquery-3.5.1.js</exclude>
+                        <exclude>src/main/resources/res/lib/jquery-migrate-3.3.0.js</exclude>
                         <exclude>src/main/resources/res/lib/jquery-ui-1.12.1.js</exclude>
                         <exclude>src/main/resources/res/lib/jquery-ui-i18n-1.12.1.js</exclude>
                         <exclude>src/main/resources/res/lib/autosize.min.js</exclude>
@@ -330,6 +338,13 @@
     </profiles>
 
     <dependencies>
+        <dependency>
+            <groupId>org.osgi</groupId>
+            <artifactId>org.osgi.annotation.versioning</artifactId>
+            <version>1.1.0</version>
+            <scope>provided</scope>
+        </dependency>
+
         <dependency>
             <groupId>javax.servlet</groupId>
             <artifactId>servlet-api</artifactId>

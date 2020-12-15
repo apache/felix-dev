@@ -16,24 +16,6 @@
  * specific language governing permissions and limitations
  * under the License.
  */
+@org.osgi.annotation.versioning.Version("1.0.0")
+package org.apache.felix.webconsole.i18n;
 
-package org.apache.felix.scr.impl.logger;
-
-import org.osgi.framework.Bundle;
-
-/**
- * Logger used by SCR main code
- */
-public interface ScrLogger extends InternalLogger
-{
-
-    /**
-     * Create a bundle logger
-     */
-    BundleLogger bundle(Bundle bundle);
-
-    /**
-     * Close the log manager
-     */
-    void close();
-}

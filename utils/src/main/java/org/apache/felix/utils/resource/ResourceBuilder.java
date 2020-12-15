@@ -309,17 +309,14 @@ public final class ResourceBuilder {
                 clause.attrs.put(Constants.BUNDLE_VERSION_ATTRIBUTE, VersionRange.parseVersionRange(v.toString()));
             }
 
-            // Verify java.* is not imported, nor any duplicate imports.
+            // Verify no duplicate imports, nor '.' or empty packages.
             for (String pkgName : clause.paths) {
                 if (!dupeSet.contains(pkgName)) {
-                    // Verify that java.* packages are not imported.
-                    if (pkgName.startsWith("java.")) {
-                        throw new BundleException("Importing java.* packages not allowed: " + pkgName);
                     // The character "." has no meaning in the OSGi spec except
                     // when placed on the bundle class path. Some people, however,
                     // mistakenly think it means the default package when imported
                     // or exported. This is not correct. It is invalid.
-                    } else if (pkgName.equals(".")) {
+                    if (pkgName.equals(".")) {
                         throw new BundleException("Importing '.' is invalid.");
                     // Make sure a package name was specified.
                     } else if (pkgName.length() == 0) {

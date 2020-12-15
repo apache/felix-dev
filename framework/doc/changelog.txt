@@ -1,3 +1,14 @@
+Changes from 6.0.3 to 6.0.4
+---------------------------
+
+** Bug
+    * [FELIX-6178] - org.osgi.framework.Bundle#getServicesInUse returns services with usage count = 0
+    * [FELIX-6222] - Support for os.name Capability is missing for Windows Server 2019
+    * [FELIX-6297] - unclosed InputStream on Bundle.start
+    * [FELIX-6318] - Tiny thread-safety bug in BundleWiringImpl
+    * [FELIX-6326] - Cannot read bundled resources with hash in the filename
+    * [FELIX-6331] - Race condition in unget service from service factory
+
 Changes from 6.0.2 to 6.0.3
 ---------------------------
 

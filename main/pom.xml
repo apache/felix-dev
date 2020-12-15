@@ -32,7 +32,8 @@
       <connection>scm:git:https://github.com/apache/felix-dev.git</connection>
       <developerConnection>scm:git:https://github.com/apache/felix-dev.git</developerConnection>
       <url>https://gitbox.apache.org/repos/asf?p=felix-dev.git</url>
-    </scm>
+      <tag>HEAD</tag>
+  </scm>
   <dependencies>
     <dependency>
       <groupId>${project.groupId}</groupId>
@@ -43,12 +44,12 @@
   <properties>
     <log.level>4</log.level>
     <dollar>$</dollar>
-    <gogo.runtime.version>1.1.0</gogo.runtime.version>
-    <gogo.jline.shell.version>1.1.0</gogo.jline.shell.version>
-    <gogo.command.version>1.0.2</gogo.command.version>
-    <jline.version>3.7.0</jline.version>
+    <gogo.runtime.version>1.1.4</gogo.runtime.version>
+    <gogo.jline.shell.version>1.1.8</gogo.jline.shell.version>
+    <gogo.command.version>1.1.2</gogo.command.version>
+    <jline.version>3.13.2</jline.version>
     <obr.version>2.0.10</obr.version>
-    <jansi.version>1.17.1</jansi.version>
+    <jansi.version>1.18</jansi.version>
   </properties>
   <profiles>
     <profile>

@@ -24,11 +24,11 @@ import org.osgi.framework.ServiceRegistration;
 import org.osgi.service.event.EventAdmin;
 
 /**
- * This class is a factory that secures a given <tt>EventAdmin</tt> service by
- * wrapping it with a new instance of an <tt>EventAdminSecurityDecorator</tt> on
- * any call to its <tt>getService()</tt> method. The decorator will determine the
+ * This class is a factory that secures a given {@code EventAdmin} service by
+ * wrapping it with a new instance of an {@code EventAdminSecurityDecorator} on
+ * any call to its {@code getService()} method. The decorator will determine the
  * appropriate permissions by using the given permission factory and the bundle
- * parameter passed to the <tt>getService()</tt> method.
+ * parameter passed to the {@code getService()} method.
  *
  * @author <a href="mailto:dev@felix.apache.org">Felix Project Team</a>
  */
@@ -39,10 +39,10 @@ public class SecureEventAdminFactory implements ServiceFactory<EventAdmin>
 
     /**
      * The constructor of the factory. The factory will use the given event admin and
-     * permission factory to create a new <tt>EventAdminSecurityDecorator</tt>
-     * on any call to <tt>getService()</tt>.
+     * permission factory to create a new {@code EventAdminSecurityDecorator}
+     * on any call to {@code getService()}.
      *
-     * @param admin The <tt>EventAdmin</tt> service to secure.
+     * @param admin The {@code EventAdmin} service to secure.
      */
     public SecureEventAdminFactory(final EventAdmin admin)
     {
@@ -52,14 +52,14 @@ public class SecureEventAdminFactory implements ServiceFactory<EventAdmin>
     }
 
     /**
-     * Returns a new <tt>EventAdminSecurityDecorator</tt> initialized with the
-     * given <tt>EventAdmin</tt>. That in turn will check any call to post or
+     * Returns a new {@code EventAdminSecurityDecorator} initialized with the
+     * given {@code EventAdmin}. That in turn will check any call to post or
      * send for the appropriate permissions based on the bundle parameter.
      *
      * @param bundle The bundle used to determine the permissions of the caller
      * @param registration The ServiceRegistration that is not used
      *
-     * @return The given service instance wrapped by an <tt>EventAdminSecuriryDecorator</tt>
+     * @return The given service instance wrapped by an {@code EventAdminSecuriryDecorator}
      *
      * @see org.osgi.framework.ServiceFactory#getService(org.osgi.framework.Bundle,
      *      org.osgi.framework.ServiceRegistration)
@@ -91,7 +91,7 @@ public class SecureEventAdminFactory implements ServiceFactory<EventAdmin>
     }
 
     /*
-     * This is a utility method that will throw a <tt>NullPointerException</tt>
+     * This is a utility method that will throw a {@code NullPointerException}
      * in case that the given object is null. The message will be of the form name +
      * may not be null.
      */

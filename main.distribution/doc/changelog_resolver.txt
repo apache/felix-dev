@@ -1,3 +1,10 @@
+2.0.2
+-----
+
+** Bug
+    * [FELIX-6140] - possible deadlock in ResolverImpl.EnhancedExecutor.await()
+    * [FELIX-6212] - Issues with uses capability checking with split packages and reexport
+
 2.0.0
 -----
 

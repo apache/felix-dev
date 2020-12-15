@@ -31,17 +31,17 @@ import org.osgi.framework.ServiceListener;
 import org.osgi.framework.ServiceReference;
 
 /**
- * This class mimics the standard OSGi <tt>LogService</tt> interface. An
+ * This class mimics the standard OSGi {@code LogService} interface. An
  * instance of this class will be used by the EventAdmin for all logging. The
  * implementation of this class sends log messages to standard output, if no
- * <tt>LogService</tt> is present; it uses a log service if one is
+ * {@code LogService} is present; it uses a log service if one is
  * installed in the framework. To do that without creating a hard dependency on the
  * package it uses fully qualified class names and registers a listener with the
- * framework hence, it does not need access to the <tt>LogService</tt> class but will
+ * framework hence, it does not need access to the {@code LogService} class but will
  * use it if the listener is informed about an available service. By using a
  * DynamicImport-Package dependency we don't need the package but
  * use it if present. Additionally, all log methods prefix the log message with
- * <tt>EventAdmin: </tt>.
+ * {@code EventAdmin: }.
  *
  * There is one difference in behavior from the standard OSGi LogService.
  * This logger has a {@link #m_logLevel} property which decides what messages
@@ -122,7 +122,7 @@ public class LogWrapper
     }
 
     /**
-     * Set the <tt>BundleContext</tt> of the bundle. This method registers a service
+     * Set the {@code BundleContext} of the bundle. This method registers a service
      * listener for LogServices with the framework that are subsequently used to
      * log messages.
      * <p>
@@ -234,7 +234,7 @@ public class LogWrapper
 
     /**
      * Log a message with the given log level. Note that this will prefix the message
-     * with <tt>EventAdmin: </tt>.
+     * with {@code EventAdmin: }.
      *
      * @param level The log level with which to log the msg.
      * @param msg The message to log.
@@ -285,7 +285,7 @@ public class LogWrapper
 
     /**
      * Log a message with the given log level and the associated exception. Note that
-     * this will prefix the message with <tt>EventAdmin: </tt>.
+     * this will prefix the message with {@code EventAdmin: }.
      *
      * @param level The log level with which to log the msg.
      * @param msg The message to log.
@@ -337,7 +337,7 @@ public class LogWrapper
 
     /**
      * Log a message with the given log level together with the associated service
-     * reference. Note that this will prefix the message with <tt>EventAdmin: </tt>.
+     * reference. Note that this will prefix the message with {@code EventAdmin: }.
      *
      * @param sr The reference of the service associated with this message.
      * @param level The log level with which to log the msg.
@@ -389,7 +389,7 @@ public class LogWrapper
 
     /**
      * Log a message with the given log level, the associated service reference and
-     * exception. Note that this will prefix the message with <tt>EventAdmin: </tt>.
+     * exception. Note that this will prefix the message with {@code EventAdmin: }.
      *
      * @param sr The reference of the service associated with this message.
      * @param level The log level with which to log the msg.

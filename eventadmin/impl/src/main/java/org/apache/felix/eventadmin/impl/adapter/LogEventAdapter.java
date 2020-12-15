@@ -33,9 +33,9 @@ import org.osgi.service.event.EventAdmin;
 import org.osgi.service.event.EventConstants;
 
 /**
- * This class registers itself as a listener for <tt>LogReaderService</tt> services
- * with the framework and subsequently, a <tt>LogListener</tt> callback with any
- * currently available <tt>LogReaderService</tt>. Any received log event is then
+ * This class registers itself as a listener for {@code LogReaderService} services
+ * with the framework and subsequently, a {@code LogListener} callback with any
+ * currently available {@code LogReaderService}. Any received log event is then
  * posted via the EventAdmin as specified in 113.6.6 OSGi R4 compendium.
  * Note that this class does not create a hard dependency on the org.osgi.service.log
  * packages. The adaption only takes place if it is present or once it becomes
@@ -56,13 +56,13 @@ public class LogEventAdapter extends AbstractAdapter implements ServiceListener
 
     /**
      * The constructor of the adapter. This will register the adapter with the
-     * given context as a listener for <tt>LogReaderService</tt> services and
-     * subsequently, a <tt>LogListener</tt> callback with any currently available
-     * <tt>LogReaderService</tt>. Any received log event is then posted via the given
+     * given context as a listener for {@code LogReaderService} services and
+     * subsequently, a {@code LogListener} callback with any currently available
+     * {@code LogReaderService}. Any received log event is then posted via the given
      * EventAdmin.
      *
      * @param context The bundle context with which to register as a listener.
-     * @param admin The <tt>EventAdmin</tt> to use for posting events.
+     * @param admin The {@code EventAdmin} to use for posting events.
      */
     public LogEventAdapter(final BundleContext context, final EventAdmin admin)
     {
@@ -106,9 +106,9 @@ public class LogEventAdapter extends AbstractAdapter implements ServiceListener
     }
 
     /**
-     * Once a <tt>LogReaderService</tt> register event is received this method
-     * registers a <tt>LogListener</tt> with the received service that assembles
-     * and posts any log event via the <tt>EventAdmin</tt> as specified in
+     * Once a {@code LogReaderService} register event is received this method
+     * registers a {@code LogListener} with the received service that assembles
+     * and posts any log event via the {@code EventAdmin} as specified in
      * 113.6.6 OSGi R4 compendium.
      *
      * @param event The event to adapt.

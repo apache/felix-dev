@@ -23,6 +23,7 @@ package org.apache.felix.scr.impl.logger;
  * This avoids avoids that all clients doing logging on behalf of a component need to
  * pass in things like {@code ComponentMetadata} or the component Id.
  */
-public interface ComponentLogger extends InternalLogger {
-	void setComponentId(long m_componentId);
+public interface ComponentLogger extends InternalLogger
+{
+    void setComponentId(long m_componentId);
 }

@@ -86,6 +86,7 @@ public class HandlerTask implements Runnable
     /**
      * This method defines if a timeout handling should be used for the
      * task.
+     * @return Use timeout?
      */
     public boolean useTimeout()
     {

@@ -728,17 +728,17 @@ public class FilePersistenceManager implements PersistenceManager
             File cfgDir = cfgFile.getParentFile();
             cfgDir.mkdirs();
 
+            // write the configuration to a temporary file
+            tmpFile = File.createTempFile( cfgFile.getName(), TMP_EXT, cfgDir );
+            try(OutputStream out = new FileOutputStream( tmpFile )) {
+                ConfigurationHandler.write( out, props );
+            }
+
             // after writing the file, rename it but ensure, that no other
             // might at the same time open the new file
             // see load(File)
             synchronized ( this )
             {
-                // write the configuration to a temporary file
-                tmpFile = File.createTempFile( cfgFile.getName(), TMP_EXT, cfgDir );
-                try(OutputStream out = new FileOutputStream( tmpFile )) {
-                    ConfigurationHandler.write( out, props );
-                }
-
                 // make sure the cfg file does not exists (just for sanity)
                 if ( cfgFile.exists() )
                 {

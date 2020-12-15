@@ -36,6 +36,7 @@
       <connection>scm:git:https://github.com/apache/felix-dev.git</connection>
       <developerConnection>scm:git:https://github.com/apache/felix-dev.git</developerConnection>
       <url>https://gitbox.apache.org/repos/asf?p=felix-dev.git</url>
+    <tag>HEAD</tag>
   </scm>
 
   <build>

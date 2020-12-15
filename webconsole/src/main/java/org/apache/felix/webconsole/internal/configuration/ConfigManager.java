@@ -61,6 +61,7 @@ public class ConfigManager extends SimpleWebConsolePlugin implements OsgiManager
     static final String ACTION_CREATE = "create"; //$NON-NLS-1$
     static final String ACTION_DELETE = "delete"; //$NON-NLS-1$
     static final String ACTION_APPLY = "apply"; //$NON-NLS-1$
+    static final String ACTION_UPDATE = "update"; //$NON-NLS-1$
     static final String ACTION_UNBIND = "unbind"; //$NON-NLS-1$
     static final String PROPERTY_LIST = "propertylist"; //$NON-NLS-1$
     static final String LOCATION = "$location"; //$NON-NLS-1$
@@ -160,7 +161,7 @@ public class ConfigManager extends SimpleWebConsolePlugin implements OsgiManager
         }
         else if ( request.getParameter( ACTION_APPLY ) != null )
         {
-            String redirect = cas.applyConfiguration( request, pid );
+            String redirect = cas.applyConfiguration( request, pid, ACTION_UPDATE.equals(request.getParameter(ACTION_APPLY)) );
             if ( redirect != null )
             {
                 if (pidFilter != null) {
