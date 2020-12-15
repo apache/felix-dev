@@ -83,6 +83,18 @@ public class DirectoryContent implements Content
                 ? BundleCache.getSecureAction().isFileDirectory(file) : true);
     }
 
+    @Override
+    public boolean isDirectory(String name)
+    {
+        name = getName(name);
+
+        // Return true if the file associated with the entry exists,
+        // unless the entry name ends with "/", in which case only
+        // return true if the file is really a directory.
+        File file = new File(m_dir, name);
+        return BundleCache.getSecureAction().isFileDirectory(file);
+    }
+
     public Enumeration<String> getEntries()
     {
         // Wrap entries enumeration to filter non-matching entries.

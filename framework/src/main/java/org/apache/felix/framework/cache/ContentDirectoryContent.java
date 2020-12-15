@@ -52,6 +52,14 @@ public class ContentDirectoryContent implements Content
         return m_content.hasEntry(m_rootPath + name);
     }
 
+    @Override
+    public boolean isDirectory(String name)
+    {
+        name = getName(name);
+
+        return m_content.isDirectory(m_rootPath + name);
+    }
+
     public Enumeration<String> getEntries()
     {
         Enumeration<String> result = new EntriesEnumeration(m_content.getEntries(), m_rootPath);

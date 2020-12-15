@@ -869,7 +869,14 @@ class ExtensionManager implements Content
         };
     }
 
-    public boolean hasEntry(String name) {
+    public boolean hasEntry(String name)
+    {
+        return false;
+    }
+
+    @Override
+    public boolean isDirectory(String name)
+    {
         return false;
     }
 

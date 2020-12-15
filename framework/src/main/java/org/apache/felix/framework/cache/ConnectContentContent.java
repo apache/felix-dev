@@ -68,6 +68,12 @@ public class ConnectContentContent implements Content
     }
 
     @Override
+    public boolean isDirectory(String name)
+    {
+        return m_content.getEntry(name).map(entry -> entry.getName().endsWith("/")).orElse(false);
+    }
+
+    @Override
     public Enumeration<String> getEntries()
     {
         try

@@ -514,6 +514,10 @@ public class BundleRevisionImpl implements BundleRevision, Resource
         {
             if (contentPath.get(i).hasEntry(name))
             {
+                if (!name.endsWith("/") && contentPath.get(i).isDirectory(name))
+                {
+                    name += "/";
+                }
                 url = createURL(i + 1, name);
             }
         }
@@ -552,6 +556,10 @@ public class BundleRevisionImpl implements BundleRevision, Resource
             {
                 if (contentPath.get(i).hasEntry(name))
                 {
+                    if (!name.endsWith("/") && contentPath.get(i).isDirectory(name))
+                    {
+                        name += "/";
+                    }
                     // Use the class path index + 1 for creating the path so
                     // that we can differentiate between module content URLs
                     // (where the path will start with 0) and module class
@@ -588,6 +596,10 @@ public class BundleRevisionImpl implements BundleRevision, Resource
             // Check the module content.
             if (getContent().hasEntry(name))
             {
+                if (!name.endsWith("/") && getContent().isDirectory(name))
+                {
+                    name += "/";
+                }
                 // Module content URLs start with 0, whereas module
                 // class path URLs start with the index into the class
                 // path + 1.
