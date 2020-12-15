@@ -88,6 +88,12 @@ public class MultiReleaseContent implements Content
     }
 
     @Override
+    public boolean isDirectory(String name)
+    {
+        return m_content.isDirectory(findPath(name));
+    }
+
+    @Override
     public Enumeration<String> getEntries()
     {
         Enumeration<String> entries = m_content.getEntries();

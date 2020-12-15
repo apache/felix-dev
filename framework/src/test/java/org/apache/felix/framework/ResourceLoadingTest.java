@@ -79,7 +79,8 @@ public class ResourceLoadingTest extends TestCase
         cacheDir = null;
     }
 
-    public void testResourceLoadingWithHash() throws Exception {
+    public void testResourceLoadingWithHash() throws Exception
+    {
         String bmf = "Bundle-SymbolicName: cap.bundle\n"
             + "Bundle-Version: 1.2.3.Blah\n"
             + "Bundle-ManifestVersion: 2\n"
@@ -130,6 +131,47 @@ public class ResourceLoadingTest extends TestCase
         {
             assertEquals("This is a Test", reader.readLine());
         }
+    }
+
+    public void testResourceLoadingWithDirectory() throws Exception
+    {
+        String bmf = "Bundle-SymbolicName: cap.bundle\n"
+                + "Bundle-Version: 1.2.3.Blah\n"
+                + "Bundle-ManifestVersion: 2\n"
+                + "Import-Package: org.osgi.framework\n";
+        File bundleFile = File.createTempFile("felix-bundle", ".jar", tempDir);
+
+        Manifest mf = new Manifest(new ByteArrayInputStream(bmf.getBytes("utf-8")));
+        mf.getMainAttributes().putValue("Manifest-Version", "1.0");
+        JarOutputStream os = new JarOutputStream(new FileOutputStream(bundleFile), mf);
+
+        String name = "bla/bli/blub";
+        os.putNextEntry(new ZipEntry("bla/"));
+        os.putNextEntry(new ZipEntry("bla/bli/"));
+        os.putNextEntry(new ZipEntry(name));
+        os.write("This is a Test".getBytes());
+        os.close();
+
+        Bundle testBundle = felix.getBundleContext().installBundle(bundleFile.toURI().toASCIIString());
+
+        testBundle.start();
+
+        assertEquals(Bundle.ACTIVE, testBundle.getState());
+        assertTrue(testBundle.getResource("bla").toExternalForm().endsWith("/"));
+        assertTrue(testBundle.getEntry("bla").toExternalForm().endsWith("/"));
+        assertTrue(testBundle.adapt(BundleWiring.class).getClassLoader().getResource("bla").toExternalForm().endsWith("/"));
+        assertTrue(testBundle.getResource("bla/").toExternalForm().endsWith("/"));
+        assertTrue(testBundle.getEntry("bla/").toExternalForm().endsWith("/"));
+        assertTrue(testBundle.adapt(BundleWiring.class).getClassLoader().getResource("bla/").toExternalForm().endsWith("/"));
+        assertTrue(testBundle.getResource("bla/bli").toExternalForm().endsWith("/"));
+        assertTrue(testBundle.getEntry("bla/bli").toExternalForm().endsWith("/"));
+        assertTrue(testBundle.adapt(BundleWiring.class).getClassLoader().getResource("bla/bli").toExternalForm().endsWith("/"));
+        assertTrue(testBundle.getResource("bla/bli/").toExternalForm().endsWith("/"));
+        assertTrue(testBundle.getEntry("bla/bli/").toExternalForm().endsWith("/"));
+        assertTrue(testBundle.adapt(BundleWiring.class).getClassLoader().getResource("bla/bli/").toExternalForm().endsWith("/"));
+        assertTrue(testBundle.getResource("bla/bli/blub").toExternalForm().endsWith("/blub"));
+        assertTrue(testBundle.getEntry("bla/bli/blub").toExternalForm().endsWith("/blub"));
+        assertTrue(testBundle.adapt(BundleWiring.class).getClassLoader().getResource("bla/bli/blub").toExternalForm().endsWith("/blub"));
     }
 
     private static void deleteDir(File root) throws IOException

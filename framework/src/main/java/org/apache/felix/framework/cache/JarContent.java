@@ -101,12 +101,26 @@ public class JarContent implements Content
         }
     }
 
-    public boolean hasEntry(String name) throws IllegalStateException
+    public boolean hasEntry(String name)
     {
         try
         {
             ZipEntry ze = m_zipFile.getEntry(name);
             return ze != null;
+        }
+        catch (Exception ex)
+        {
+            return false;
+        }
+    }
+
+    @Override
+    public boolean isDirectory(String name)
+    {
+        try
+        {
+            ZipEntry ze = m_zipFile.getEntry(name);
+            return ze != null && ze.isDirectory();
         }
         catch (Exception ex)
         {
