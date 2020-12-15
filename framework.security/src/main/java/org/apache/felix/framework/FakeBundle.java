@@ -185,11 +185,6 @@ public class FakeBundle extends BundleImpl implements Bundle
         return System.identityHashCode(this);
     }
 
-    public int compareTo(Bundle o) {
-        // TODO Auto-generated method stub
-        return 0;
-    }
-
     public Object adapt(Class arg0) {
         // TODO Auto-generated method stub
         return null;
@@ -198,10 +193,5 @@ public class FakeBundle extends BundleImpl implements Bundle
     public File getDataFile(String arg0) {
         // TODO Auto-generated method stub
         return null;
-    }
-
-    public int compareTo(Object t)
-    {
-        throw new UnsupportedOperationException("Not supported yet.");
     }
 }

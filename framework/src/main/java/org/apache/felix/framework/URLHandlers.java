@@ -117,23 +117,34 @@ class URLHandlers implements URLStreamHandlerFactory, ContentHandlerFactory
             ? DEFAULT_STREAM_HANDLER_PACKAGE
             : pkgs + "|" + DEFAULT_STREAM_HANDLER_PACKAGE;
         m_loaded = (null != URLHandlersStreamHandlerProxy.class) &&
-            (null != URLHandlersContentHandlerProxy.class) && (null != URLStreamHandlerService.class);
+            (null != URLHandlersContentHandlerProxy.class) && (null != URLStreamHandlerService.class) && new URLHandlersStreamHandlerProxy(null, null) != null;
     }
 
     private void init(String protocol, URLStreamHandlerFactory factory)
     {
         try
         {
-            URLStreamHandler handler = getBuiltInStreamHandler(protocol, factory);
-            if (handler != null)
-            {
-                URL url = new URL(protocol, null, -1, "", handler);
-                addToCache(m_protocolToURL, protocol, url);
-            }
+            // Try to get it directly from the URL class to if possible
+            Method getURLStreamHandler = m_secureAction.getDeclaredMethod(URL.class,"getURLStreamHandler", new Class[]{String.class});
+            URLStreamHandler handler = (URLStreamHandler) m_secureAction.invoke(getURLStreamHandler, null, new Object[]{protocol});
+            addToCache(m_builtIn, protocol, handler);
         }
         catch (Throwable ex)
         {
-            // Ignore, this is a best effort (maybe log it or something).
+            // Ignore, this is a best effort
+            try
+            {
+                URLStreamHandler handler = getBuiltInStreamHandler(protocol, factory);
+                if (handler != null)
+                {
+                    URL url = new URL(protocol, null, -1, "", handler);
+                    addToCache(m_protocolToURL, protocol, url);
+                }
+            }
+            catch (Throwable ex2)
+            {
+                // Ignore, this is a best effort (maybe log it or something).
+            }
         }
     }
 
@@ -165,14 +176,7 @@ class URLHandlers implements URLStreamHandlerFactory, ContentHandlerFactory
             init("ftp", currentFactory);
             init("http", currentFactory);
             init("https", currentFactory);
-            try
-            {
-                getBuiltInStreamHandler("jar", currentFactory);
-            }
-            catch (Throwable ex)
-            {
-                // Ignore, this is a best effort (maybe log it or something)
-            }
+
 
             // Try to preload the jrt handler as we need it from the jvm on java > 8
             if (getFromCache(m_builtIn, "jrt") == null)
@@ -194,6 +198,30 @@ class URLHandlers implements URLStreamHandlerFactory, ContentHandlerFactory
                     catch (Throwable ex2)
                     {
                         // Ignore, this is a best efforts
+                    }
+                }
+            }
+
+            // Try to preload the jrt handler as we need it from the jvm on java > 8
+            if (getFromCache(m_builtIn, "jar") == null)
+            {
+                try
+                {
+                    // Try to get it directly from the URL class to if possible
+                    Method getURLStreamHandler = m_secureAction.getDeclaredMethod(URL.class,"getURLStreamHandler", new Class[]{String.class});
+                    URLStreamHandler handler = (URLStreamHandler) m_secureAction.invoke(getURLStreamHandler, null, new Object[]{"jar"});
+                    addToCache(m_builtIn, "jar", handler);
+                }
+                catch (Throwable ex)
+                {
+                    // Ignore, this is a best effort
+                    try
+                    {
+                        getBuiltInStreamHandler("jar", currentFactory);
+                    }
+                    catch (Throwable ex2)
+                    {
+                        // Ignore, this is a best effort (maybe log it or something)
                     }
                 }
             }

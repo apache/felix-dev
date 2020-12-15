@@ -22,7 +22,6 @@ import java.io.IOException;
 import java.lang.reflect.InvocationHandler;
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
-import java.lang.reflect.Proxy;
 import java.net.InetAddress;
 import java.net.MalformedURLException;
 import java.net.URL;
@@ -138,7 +137,7 @@ public class URLHandlersStreamHandlerProxy extends URLStreamHandler
         m_builtInURL = builtInURL;
     }
 
-    private URLHandlersStreamHandlerProxy(Object service, SecureAction action)
+    URLHandlersStreamHandlerProxy(Object service, SecureAction action)
     {
         m_protocol = null;
         m_service = service;

@@ -1,5 +1,5 @@
 /*
- * Copyright (c) OSGi Alliance (2004, 2016). All Rights Reserved.
+ * Copyright (c) OSGi Alliance (2004, 2020). All Rights Reserved.
  * 
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -34,7 +34,7 @@ import org.osgi.framework.wiring.FrameworkWiring;
  * 
  * @Immutable
  * @see FrameworkListener
- * @author $Id: b3072b2d058e70389a52e342ed5f8647b930b8f1 $
+ * @author $Id: bcff0614c20b454723977355f99486ca01ee89ea $
  */
 
 public class FrameworkEvent extends EventObject {
@@ -148,13 +148,13 @@ public class FrameworkEvent extends EventObject {
 
 	/**
 	 * The Framework has stopped and the boot class path has changed.
-	 * 
 	 * <p>
 	 * This event is fired when the Framework has been stopped because of a stop
 	 * operation on the system bundle and a bootclasspath extension bundle has
 	 * been installed or updated. The source of this event is the System Bundle.
 	 * 
 	 * @since 1.5
+	 * @deprecated As of 1.10.
 	 */
 	public final static int	STOPPED_BOOTCLASSPATH_MODIFIED	= 0x00000100;
 
@@ -173,9 +173,9 @@ public class FrameworkEvent extends EventObject {
 	 * The Framework has stopped and the framework requires a new class loader
 	 * to restart.
 	 * <p>
-	 * This event is fired when the Framework has been stopped because of a stop
-	 * operation on the system bundle and the framework requires a new class
-	 * loader to be used to restart. For example, if a framework extension
+	 * This event is fired when the Framework has been stopped because of a
+	 * refresh operation on the system bundle and the framework requires a new
+	 * class loader to be used to restart. For example, if a framework extension
 	 * bundle has been refreshed. The source of this event is the System Bundle.
 	 * 
 	 * @since 1.9
@@ -244,7 +244,6 @@ public class FrameworkEvent extends EventObject {
 	 * <li>{@link #PACKAGES_REFRESHED}</li>
 	 * <li>{@link #STARTLEVEL_CHANGED}</li>
 	 * <li>{@link #STOPPED}</li>
-	 * <li>{@link #STOPPED_BOOTCLASSPATH_MODIFIED}</li>
 	 * <li>{@link #STOPPED_UPDATE}</li>
 	 * <li>{@link #WAIT_TIMEDOUT}</li>
 	 * </ul>

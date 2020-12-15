@@ -21,7 +21,7 @@
     <groupId>org.apache.felix</groupId>
     <artifactId>felix-parent</artifactId>
     <version>6</version>
-    <relativePath>../../pom/pom.xml</relativePath>
+    <relativePath>../pom/pom.xml</relativePath>
   </parent>
   <modelVersion>4.0.0</modelVersion>
   <packaging>bundle</packaging>
@@ -30,12 +30,12 @@
   <version>6.1.0-SNAPSHOT</version>
   <properties>
     <dollar>$</dollar>
-    <felix.java.version>6</felix.java.version>
+    <felix.java.version>8</felix.java.version>
   </properties>
   <scm>
-      <connection>scm:git:https://github.com/apache/felix-dev.git</connection>
-      <developerConnection>scm:git:https://github.com/apache/felix-dev.git</developerConnection>
-      <url>https://gitbox.apache.org/repos/asf?p=felix-dev.git</url>
+    <connection>scm:git:https://github.com/apache/felix-dev.git</connection>
+    <developerConnection>scm:git:https://github.com/apache/felix-dev.git</developerConnection>
+    <url>https://gitbox.apache.org/repos/asf?p=felix-dev.git</url>
     <tag>HEAD</tag>
   </scm>
 
@@ -44,13 +44,13 @@
       <plugin>
         <groupId>org.apache.felix</groupId>
         <artifactId>maven-bundle-plugin</artifactId>
-        <version>4.1.0</version>
+        <version>5.1.1</version>
         <extensions>true</extensions>
         <configuration>
           <instructions>
             <Bundle-SymbolicName>org.apache.felix.framework</Bundle-SymbolicName>
             <Bundle-Name>Apache Felix Framework</Bundle-Name>
-            <Bundle-Description>OSGi R7 framework implementation.</Bundle-Description>
+            <Bundle-Description>OSGi R8 framework implementation.</Bundle-Description>
             <Bundle-Vendor>The Apache Software Foundation</Bundle-Vendor>
             <Export-Package>
                 org.osgi.framework.*;-split-package:=first,
@@ -61,7 +61,8 @@
                 org.osgi.service.url;-split-package:=first,
                 org.osgi.service.resolver,
                 org.osgi.util.tracker;-split-package:=first,
-                org.osgi.dto;-split-package:=first
+                org.osgi.dto;-split-package:=first,
+                org.osgi.service.condition;-split-package:=first
             </Export-Package>
             <Private-Package>org.apache.felix.framework.*, org.apache.felix.resolver.*</Private-Package>
             <Import-Package>!*</Import-Package>
@@ -90,7 +91,7 @@
               <excludes>
                   <exclude>src/main/appended-resources/**</exclude>
                   <exclude>src/**/packageinfo</exclude>
-                  <exclude>src/main/resources/META-INF/services/org.osgi.framework.launch.FrameworkFactory</exclude>
+                  <exclude>src/main/resources/META-INF/**</exclude>
                   <exclude>src/main/resources/org/apache/felix/framework/Felix.properties</exclude>
               </excludes>
             </configuration>
@@ -119,18 +120,19 @@
       <resource>
         <directory>src/main/resources</directory>
         <filtering>true</filtering>
+        <excludes>
+        <exclude>**/*.bytes</exclude>
+        </excludes>
+      </resource>
+      <resource>
+        <directory>src/main/resources</directory>
+        <filtering>false</filtering>
+        <includes>
+          <include>**/*.bytes</include>
+        </includes>
       </resource>
     </resources>
   </build>
-  <dependencyManagement>
-      <dependencies>
-          <dependency>
-              <groupId>org.hamcrest</groupId>
-              <artifactId>hamcrest-core</artifactId>
-              <version>1.3</version>
-          </dependency>
-      </dependencies>
-  </dependencyManagement>
   <dependencies>
     <dependency>
        <groupId>org.osgi</groupId>
@@ -153,7 +155,7 @@
     <dependency>
         <groupId>org.ow2.asm</groupId>
         <artifactId>asm-all</artifactId>
-        <version>4.2</version>
+        <version>5.2</version>
         <scope>test</scope>
     </dependency>
     <dependency>
@@ -164,7 +166,7 @@
     </dependency>
     <dependency>
         <groupId>org.mockito</groupId>
-        <artifactId>mockito-core</artifactId>
+        <artifactId>mockito-all</artifactId>
         <version>1.10.19</version>
         <scope>test</scope>
     </dependency>

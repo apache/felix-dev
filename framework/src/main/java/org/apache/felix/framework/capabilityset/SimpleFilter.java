@@ -18,7 +18,6 @@
  */
 package org.apache.felix.framework.capabilityset;
 
-import org.osgi.framework.Version;
 import org.osgi.framework.VersionRange;
 
 import java.util.ArrayList;

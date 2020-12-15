@@ -120,6 +120,11 @@ public class DTOFactory
         return null;
     }
 
+    static ServiceReferenceDTO createDTO(ServiceReference ref)
+    {
+        return createServiceReferenceDTO(ref);
+    }
+
     private static BundleDTO createBundleDTO(Bundle bundle)
     {
         BundleDTO dto = new BundleDTO();

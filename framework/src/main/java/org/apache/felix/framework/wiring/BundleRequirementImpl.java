@@ -61,7 +61,7 @@ public class BundleRequirementImpl implements BundleRequirement
         BundleRevision revision, String namespace,
         Map<String, String> dirs, Map<String, Object> attrs)
     {
-        this(revision, namespace, dirs, Collections.EMPTY_MAP, SimpleFilter.convert(attrs));
+        this(revision, namespace, dirs, Collections.emptyMap(), SimpleFilter.convert(attrs));
     }
 
     public String getNamespace()
@@ -91,7 +91,7 @@ public class BundleRequirementImpl implements BundleRequirement
 
     public boolean matches(BundleCapability cap)
     {
-        return CapabilitySet.matches((BundleCapabilityImpl) cap, getFilter());
+        return CapabilitySet.matches(cap, getFilter());
     }
 
     public boolean isOptional()

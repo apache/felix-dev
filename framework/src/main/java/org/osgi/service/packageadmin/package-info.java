@@ -31,7 +31,7 @@
  * <p>
  * {@code  Import-Package: org.osgi.service.packageadmin; version="[1.2,2.0)"}
  * 
- * @author $Id$
+ * @author $Id: package-info.java 1825132 2018-02-23 15:11:00Z pauls $
  */
 
 @Version("1.2")
