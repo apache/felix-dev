@@ -1,3 +1,16 @@
+Changes from 6.0.4 to 7.0.0
+---------------------------
+
+** Improvement
+    * [FELIX-6369] - Implement R8 core spec
+    * [FELIX-6175] - default.properties resource file would conflict with other libraries
+
+** Bug
+    * [FELIX-5975] - URLHandlersStreamHandlerProxy - OPEN_CONNECTION_PROXY null
+    * [FELIX-6163] - ServiceTracker should not use System.currentTimeMillis() to check timeouts
+    * [FELIX-6184] - NoClassDefFoundError: jdk/internal/reflect/ConstructorAccessorImpl with Oracle JDK 11.0.3
+    * [FELIX-6294] - Missing trailing slash with Bundle.getResource() for directory entry
+
 Changes from 6.0.3 to 6.0.4
 ---------------------------
 
