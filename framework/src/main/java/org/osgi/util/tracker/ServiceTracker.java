@@ -20,6 +20,7 @@ import java.lang.reflect.Array;
 import java.util.Collections;
 import java.util.SortedMap;
 import java.util.TreeMap;
+import java.util.concurrent.TimeUnit;
 
 import org.osgi.annotation.versioning.ConsumerType;
 import org.osgi.framework.AllServiceListener;
@@ -493,7 +494,7 @@ public class ServiceTracker<S, T> implements ServiceTrackerCustomizer<S, T> {
 			return object;
 		}
 
-		final long endTime = (timeout == 0) ? 0 : (System.currentTimeMillis() + timeout);
+		final long endTime = (timeout == 0) ? 0 : (TimeUnit.NANOSECONDS.toMillis(System.nanoTime()) + timeout);
 		do {
 			final Tracked t = tracked();
 			if (t == null) { /* if ServiceTracker is not open */
@@ -506,7 +507,7 @@ public class ServiceTracker<S, T> implements ServiceTrackerCustomizer<S, T> {
 			}
 			object = getService();
 			if (endTime > 0) { // if we have a timeout
-				timeout = endTime - System.currentTimeMillis();
+				timeout = endTime - TimeUnit.NANOSECONDS.toMillis(System.nanoTime());
 				if (timeout <= 0) { // that has expired
 					break;
 				}

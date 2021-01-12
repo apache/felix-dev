@@ -30,7 +30,7 @@
  * <p>
  * {@code  Import-Package: org.osgi.dto; version="[1.1,1.2)"}
  *
- * @author $Id$
+ * @author $Id: package-info.java 1825132 2018-02-23 15:11:00Z pauls $
  */
 
 @Version("1.1")

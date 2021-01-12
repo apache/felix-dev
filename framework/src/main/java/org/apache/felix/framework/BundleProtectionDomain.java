@@ -21,13 +21,10 @@ package org.apache.felix.framework;
 import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
 import java.io.File;
-import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
 import java.lang.ref.WeakReference;
-import java.lang.reflect.InvocationTargetException;
-import java.net.JarURLConnection;
 import java.net.MalformedURLException;
 import java.net.URL;
 import java.net.URLConnection;
@@ -45,15 +42,11 @@ import java.util.Collections;
 import java.util.Enumeration;
 import java.util.List;
 import java.util.jar.JarEntry;
-import java.util.jar.JarFile;
 import java.util.jar.JarOutputStream;
 import org.apache.felix.framework.cache.Content;
 import org.apache.felix.framework.cache.JarContent;
 import org.apache.felix.framework.util.FelixConstants;
-import org.osgi.framework.Bundle;
 import org.osgi.framework.PackagePermission;
-
-import org.osgi.framework.wiring.BundleRevision;
 
 public class BundleProtectionDomain extends ProtectionDomain
 {
@@ -76,7 +69,7 @@ public class BundleProtectionDomain extends ProtectionDomain
 
             int count = 0;
             String manifest = null;
-            for (Enumeration e = m_root.getEntries(); e.hasMoreElements();)
+            for (Enumeration e = m_root.getEntries(); e != null && e.hasMoreElements();)
             {
                 String entry = (String) e.nextElement();
                 if (entry.endsWith("/"))
@@ -264,12 +257,12 @@ public class BundleProtectionDomain extends ProtectionDomain
                 {
                     target = Felix.m_secureAction.createTempFile("jar", null, null);
                     Felix.m_secureAction.deleteFileOnExit(target);
-                    FileOutputStream output = null;
+                    OutputStream output = null;
                     InputStream input = null;
                     IOException rethrow = null;
                     try
                     {
-                        output = new FileOutputStream(target);
+                        output = Felix.m_secureAction.getOutputStream(target);
                         input = new BundleInputStream(content);
                         byte[] buffer = new byte[64 * 1024];
                         for (int i = input.read(buffer);i != -1; i = input.read(buffer))

@@ -72,10 +72,7 @@ public class DirectoryContent implements Content
 
     public boolean hasEntry(String name) throws IllegalStateException
     {
-        if ((name.length() > 0) && (name.charAt(0) == '/'))
-        {
-            name = name.substring(1);
-        }
+        name = getName(name);
 
         // Return true if the file associated with the entry exists,
         // unless the entry name ends with "/", in which case only
@@ -84,6 +81,18 @@ public class DirectoryContent implements Content
         return BundleCache.getSecureAction().fileExists(file)
             && (name.endsWith("/")
                 ? BundleCache.getSecureAction().isFileDirectory(file) : true);
+    }
+
+    @Override
+    public boolean isDirectory(String name)
+    {
+        name = getName(name);
+
+        // Return true if the file associated with the entry exists,
+        // unless the entry name ends with "/", in which case only
+        // return true if the file is really a directory.
+        File file = new File(m_dir, name);
+        return BundleCache.getSecureAction().isFileDirectory(file);
     }
 
     public Enumeration<String> getEntries()
@@ -97,10 +106,7 @@ public class DirectoryContent implements Content
 
     public byte[] getEntryAsBytes(String name) throws IllegalStateException
     {
-        if ((name.length() > 0) && (name.charAt(0) == '/'))
-        {
-            name = name.substring(1);
-        }
+        name = getName(name);
 
         // Get the embedded resource.
 
@@ -108,7 +114,7 @@ public class DirectoryContent implements Content
         try
         {
 
-            return BundleCache.getSecureAction().fileExists(file) ? BundleCache.read(BundleCache.getSecureAction().getFileInputStream(file), file.length()) : null;
+            return BundleCache.getSecureAction().fileExists(file) ? BundleCache.read(BundleCache.getSecureAction().getInputStream(file), file.length()) : null;
         }
         catch (Exception ex)
         {
@@ -122,15 +128,12 @@ public class DirectoryContent implements Content
     public InputStream getEntryAsStream(String name)
         throws IllegalStateException, IOException
     {
-        if ((name.length() > 0) && (name.charAt(0) == '/'))
-        {
-            name = name.substring(1);
-        }
+        name = getName(name);
 
         File file = new File(m_dir, name);
         try
         {
-            return BundleCache.getSecureAction().fileExists(file) ? BundleCache.getSecureAction().getFileInputStream(file) : null;
+            return BundleCache.getSecureAction().fileExists(file) ? BundleCache.getSecureAction().getInputStream(file) : null;
         }
         catch (Exception ex)
         {
@@ -141,12 +144,17 @@ public class DirectoryContent implements Content
         }
     }
 
-    public URL getEntryAsURL(String name)
+    private String getName(String name)
     {
-        if ((name.length() > 0) && (name.charAt(0) == '/'))
-        {
+        if ((name.length() > 0) && (name.charAt(0) == '/')) {
             name = name.substring(1);
         }
+        return name;
+    }
+
+    public URL getEntryAsURL(String name)
+    {
+        name = getName(name);
 
         if (hasEntry(name))
         {
@@ -163,6 +171,16 @@ public class DirectoryContent implements Content
         {
             return null;
         }
+    }
+
+    @Override
+    public long getContentTime(String name)
+    {
+        name = getName(name);
+
+        File file = new File(m_dir, name);
+
+        return BundleCache.getSecureAction().getLastModified(file);
     }
 
     public Content getEntryAsContent(String entryName)
@@ -278,7 +296,7 @@ public class DirectoryContent implements Content
 
                         try
                         {
-                            is = BundleCache.getSecureAction().getFileInputStream(entryFile);
+                            is = BundleCache.getSecureAction().getInputStream(entryFile);
 
                             // Create the file.
                             BundleCache.copyStreamToFile(is, libFile);

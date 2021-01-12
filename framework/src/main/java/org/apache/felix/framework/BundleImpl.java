@@ -67,6 +67,7 @@ class BundleImpl implements Bundle, BundleRevisions
 
     private final BundleArchive m_archive;
     private final List<BundleRevisionImpl> m_revisions = new ArrayList<BundleRevisionImpl>(0);
+    private volatile BundleRevisionImpl m_currentRevision = null;
     private volatile int m_state;
     private boolean m_useDeclaredActivationPolicy;
     private BundleActivator m_activator = null;
@@ -188,16 +189,24 @@ class BundleImpl implements Bundle, BundleRevisions
         {
             // Get current revision, since we can reuse it.
             BundleRevisionImpl current = adapt(BundleRevisionImpl.class);
-            // Close all existing revisions.
-            closeRevisions();
-            // Clear all revisions.
+
+            if (isRemovalPending()) {
+                closeRevisions();
+                // Purge all old archive revisions, only keeping the newest one.
+                m_archive.purge();
+
+                current.resetContent(m_archive.getCurrentRevision().getContent());
+            }
+            else {
+                // Remove the revision from the resolver state.
+                getFramework().getResolver().removeRevision(current);
+                current.resolve(null);
+                current.disposeContentPath();
+            }
+
             m_revisions.clear();
+            m_currentRevision = null;
 
-            // Purge all old archive revisions, only keeping the newest one.
-            m_archive.purge();
-
-            // Reset the content of the current bundle revision.
-            current.resetContent(m_archive.getCurrentRevision().getContent());
             // Re-add the revision to the bundle.
             addRevision(current);
 
@@ -1091,7 +1100,7 @@ class BundleImpl implements Bundle, BundleRevisions
     }
 
     @Override
-    public synchronized <A> A adapt(Class<A> type)
+    public <A> A adapt(Class<A> type)
     {
         checkAdapt(type);
         if (type == BundleContext.class)
@@ -1109,14 +1118,14 @@ class BundleImpl implements Bundle, BundleRevisions
             {
                 return null;
             }
-            return (A) m_revisions.get(0);
+            return (A) m_currentRevision;
         }
         // We need some way to get the current revision even if
         // the associated bundle is uninstalled, so we use the
         // impl revision class for this purpose.
         else if (type == BundleRevisionImpl.class)
         {
-            return (A) m_revisions.get(0);
+            return (A) m_currentRevision;
         }
         else if (type == BundleRevisions.class)
         {
@@ -1128,7 +1137,9 @@ class BundleImpl implements Bundle, BundleRevisions
             {
                 return null;
             }
-            return (A) m_revisions.get(0).getWiring();
+            BundleRevisionImpl revision = m_currentRevision;
+
+            return (A) (revision != null ? revision.getWiring() : null);
         }
         else if ( type == AccessControlContext.class)
         {
@@ -1229,6 +1240,8 @@ class BundleImpl implements Bundle, BundleRevisions
     synchronized boolean rollbackRevise() throws Exception
     {
         BundleRevision br = m_revisions.remove(0);
+        m_currentRevision = !m_revisions.isEmpty() ? m_revisions.get(0) : null;
+
         // Since revising a bundle adds a revision to the global
         // state, we must remove it from the global state on rollback.
         getFramework().getResolver().removeRevision(br);
@@ -1242,7 +1255,9 @@ class BundleImpl implements Bundle, BundleRevisions
     // which is the normal case.
     synchronized void addRevision(BundleRevisionImpl revision) throws Exception
     {
+        BundleRevisionImpl previous = m_currentRevision;
         m_revisions.add(0, revision);
+        m_currentRevision = revision;
 
         try
         {
@@ -1251,6 +1266,7 @@ class BundleImpl implements Bundle, BundleRevisions
         catch (Exception ex)
         {
             m_revisions.remove(0);
+            m_currentRevision = previous;
             throw ex;
         }
 
@@ -1332,7 +1348,7 @@ class BundleImpl implements Bundle, BundleRevisions
                     }
                 }
             }
-            if (!collisionCanditates.isEmpty())
+            if (!collisionCanditates.isEmpty() && m_installingBundle != null)
             {
                 throw new BundleException(
                     "Bundle symbolic name and version are not unique: "
@@ -1347,7 +1363,7 @@ class BundleImpl implements Bundle, BundleRevisions
     {
         ProtectionDomain pd = null;
 
-        for (int i = m_revisions.size() - 1; (i >= 0) && (pd == null); i--)
+        for (int i = 0; (i < m_revisions.size()) && (pd == null); i++)
         {
             pd = m_revisions.get(i).getProtectionDomain();
         }

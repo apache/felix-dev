@@ -101,7 +101,7 @@ public class JarContent implements Content
         }
     }
 
-    public boolean hasEntry(String name) throws IllegalStateException
+    public boolean hasEntry(String name)
     {
         try
         {
@@ -112,8 +112,19 @@ public class JarContent implements Content
         {
             return false;
         }
-        finally
+    }
+
+    @Override
+    public boolean isDirectory(String name)
+    {
+        try
         {
+            ZipEntry ze = m_zipFile.getEntry(name);
+            return ze != null && ze.isDirectory();
+        }
+        catch (Exception ex)
+        {
+            return false;
         }
     }
 
@@ -192,6 +203,20 @@ public class JarContent implements Content
         else
         {
             return null;
+        }
+    }
+
+    @Override
+    public long getContentTime(String urlPath)
+    {
+        try
+        {
+            ZipEntry ze = m_zipFile.getEntry(urlPath);
+            return ze.getTime();
+        }
+        catch (Exception ex)
+        {
+            return -1L;
         }
     }
 
@@ -398,7 +423,7 @@ public class JarContent implements Content
         return m_file;
     }
 
-    private static class DevNullRunnable implements Runnable
+    static class DevNullRunnable implements Runnable
     {
         private final InputStream m_in;
 

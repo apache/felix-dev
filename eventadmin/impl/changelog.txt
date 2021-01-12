@@ -1,3 +1,9 @@
+Changes in 1.6.2
+----------------
+** Bug
+    * [FELIX-6373] - Wrong provide capability header
+
+
 Changes in 1.6.0
 ----------------
 ** Improvement

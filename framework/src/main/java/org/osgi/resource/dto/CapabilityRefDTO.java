@@ -21,7 +21,7 @@ import org.osgi.dto.DTO;
 /**
  * Data Transfer Object for a reference to a Capability.
  * 
- * @author $Id$
+ * @author $Id: CapabilityRefDTO.java 1614569 2014-07-30 07:22:32Z cziegeler $
  * @NotThreadSafe
  */
 public class CapabilityRefDTO extends DTO {

@@ -18,23 +18,15 @@
  */
 package org.apache.felix.framework.util;
 
+import org.apache.felix.framework.cache.BundleCache;
 import org.apache.felix.framework.cache.Content;
 import org.osgi.framework.Version;
 
+import java.io.ByteArrayInputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.net.URL;
-import java.util.ArrayList;
-import java.util.Collections;
-import java.util.Enumeration;
-import java.util.HashSet;
-import java.util.Iterator;
-import java.util.LinkedHashSet;
-import java.util.List;
-import java.util.Map;
-import java.util.Set;
-import java.util.jar.Attributes;
-import java.util.jar.Manifest;
+import java.util.*;
 
 public class MultiReleaseContent implements Content
 {
@@ -61,14 +53,16 @@ public class MultiReleaseContent implements Content
         }
         if (javaVersion > 8)
         {
-            InputStream manifestStream = null;
-
             try
             {
-                manifestStream = content.getEntryAsStream("META-INF/MANIFEST.MF");
-                if (manifestStream != null)
+                byte[] versionManifestInput = content.getEntryAsBytes("META-INF/MANIFEST.MF");
+
+                if (versionManifestInput != null)
                 {
-                    if ("true".equals(new Manifest(manifestStream).getMainAttributes().getValue("Multi-Release")))
+                    Map<String, Object> versionManifest = BundleCache.getMainAttributes(
+                            new StringMap(), new ByteArrayInputStream(versionManifestInput), versionManifestInput.length);
+
+                    if ("true".equals(versionManifest.get("Multi-Release")))
                     {
                         content = new MultiReleaseContent(javaVersion, content);
                     }
@@ -76,17 +70,6 @@ public class MultiReleaseContent implements Content
             }
             catch (Exception ex)
             {
-            }
-            finally
-            {
-                if (manifestStream != null)
-                {
-                    try
-                    {
-                        manifestStream.close();
-                    }
-                    catch (Exception ex){}
-                }
             }
         }
         return content;
@@ -102,6 +85,12 @@ public class MultiReleaseContent implements Content
     public boolean hasEntry(String name)
     {
         return m_content.hasEntry(findPath(name));
+    }
+
+    @Override
+    public boolean isDirectory(String name)
+    {
+        return m_content.isDirectory(findPath(name));
     }
 
     @Override
@@ -173,6 +162,12 @@ public class MultiReleaseContent implements Content
     public URL getEntryAsURL(String name)
     {
         return m_content.getEntryAsURL(findPath(name));
+    }
+
+    @Override
+    public long getContentTime(String name)
+    {
+        return m_content.getContentTime(findPath(name));
     }
 
     private String findPath(String path)

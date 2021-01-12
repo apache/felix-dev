@@ -35,7 +35,6 @@ import junit.framework.TestCase;
 import org.osgi.framework.Bundle;
 import org.osgi.framework.Constants;
 import org.osgi.framework.launch.Framework;
-import org.osgi.framework.wiring.BundleRevision;
 import org.osgi.framework.wiring.BundleWiring;
 
 public class ResourceLoadingTest extends TestCase
@@ -80,7 +79,8 @@ public class ResourceLoadingTest extends TestCase
         cacheDir = null;
     }
 
-    public void testResourceLoadingWithHash() throws Exception {
+    public void testResourceLoadingWithHash() throws Exception
+    {
         String bmf = "Bundle-SymbolicName: cap.bundle\n"
             + "Bundle-Version: 1.2.3.Blah\n"
             + "Bundle-ManifestVersion: 2\n"
@@ -104,24 +104,74 @@ public class ResourceLoadingTest extends TestCase
         assertNotNull(testBundle.getResource(name));
         assertNotNull(testBundle.getEntry(name));
 
-        BufferedReader reader = new BufferedReader(new InputStreamReader(testBundle.getResource(name).openStream()));
-        assertEquals("This is a Test", reader.readLine());
+        try (BufferedReader reader = new BufferedReader(new InputStreamReader(testBundle.getResource(name).openStream())))
+        {
+            assertEquals("This is a Test", reader.readLine());
+        }
+        try (BufferedReader reader = new BufferedReader(new InputStreamReader(testBundle.getEntry(name).openStream())))
+        {
+            assertEquals("This is a Test", reader.readLine());
+        }
 
-        reader = new BufferedReader(new InputStreamReader(testBundle.getEntry(name).openStream()));
-        assertEquals("This is a Test", reader.readLine());
+        try (BufferedReader reader = new BufferedReader(new InputStreamReader(testBundle.adapt(BundleWiring.class).getClassLoader().getResourceAsStream(name))))
+        {
+            assertEquals("This is a Test", reader.readLine());
+        }
 
-        reader = new BufferedReader(new InputStreamReader(testBundle.adapt(BundleWiring.class).getClassLoader().getResourceAsStream(name)));
-        assertEquals("This is a Test", reader.readLine());
-
-        reader = new BufferedReader(new InputStreamReader(testBundle.adapt(BundleWiring.class).getClassLoader().getResource(name).openStream()));
-        assertEquals("This is a Test", reader.readLine());
+        try (BufferedReader reader = new BufferedReader(new InputStreamReader(testBundle.adapt(BundleWiring.class).getClassLoader().getResource(name).openStream())))
+        {
+            assertEquals("This is a Test", reader.readLine());
+        }
 
         URL url = testBundle.adapt(BundleWiring.class).getClassLoader().getResource(name);
 
         URL testURL = new URL(url.getProtocol() + "://" +  url.getHost() + ":" +  url.getPort() + "/" + name);
 
-        reader = new BufferedReader(new InputStreamReader(testURL.openStream()));
-        assertEquals("This is a Test", reader.readLine());
+        try (BufferedReader reader = new BufferedReader(new InputStreamReader(testURL.openStream())))
+        {
+            assertEquals("This is a Test", reader.readLine());
+        }
+    }
+
+    public void testResourceLoadingWithDirectory() throws Exception
+    {
+        String bmf = "Bundle-SymbolicName: cap.bundle\n"
+                + "Bundle-Version: 1.2.3.Blah\n"
+                + "Bundle-ManifestVersion: 2\n"
+                + "Import-Package: org.osgi.framework\n";
+        File bundleFile = File.createTempFile("felix-bundle", ".jar", tempDir);
+
+        Manifest mf = new Manifest(new ByteArrayInputStream(bmf.getBytes("utf-8")));
+        mf.getMainAttributes().putValue("Manifest-Version", "1.0");
+        JarOutputStream os = new JarOutputStream(new FileOutputStream(bundleFile), mf);
+
+        String name = "bla/bli/blub";
+        os.putNextEntry(new ZipEntry("bla/"));
+        os.putNextEntry(new ZipEntry("bla/bli/"));
+        os.putNextEntry(new ZipEntry(name));
+        os.write("This is a Test".getBytes());
+        os.close();
+
+        Bundle testBundle = felix.getBundleContext().installBundle(bundleFile.toURI().toASCIIString());
+
+        testBundle.start();
+
+        assertEquals(Bundle.ACTIVE, testBundle.getState());
+        assertTrue(testBundle.getResource("bla").toExternalForm().endsWith("/"));
+        assertTrue(testBundle.getEntry("bla").toExternalForm().endsWith("/"));
+        assertTrue(testBundle.adapt(BundleWiring.class).getClassLoader().getResource("bla").toExternalForm().endsWith("/"));
+        assertTrue(testBundle.getResource("bla/").toExternalForm().endsWith("/"));
+        assertTrue(testBundle.getEntry("bla/").toExternalForm().endsWith("/"));
+        assertTrue(testBundle.adapt(BundleWiring.class).getClassLoader().getResource("bla/").toExternalForm().endsWith("/"));
+        assertTrue(testBundle.getResource("bla/bli").toExternalForm().endsWith("/"));
+        assertTrue(testBundle.getEntry("bla/bli").toExternalForm().endsWith("/"));
+        assertTrue(testBundle.adapt(BundleWiring.class).getClassLoader().getResource("bla/bli").toExternalForm().endsWith("/"));
+        assertTrue(testBundle.getResource("bla/bli/").toExternalForm().endsWith("/"));
+        assertTrue(testBundle.getEntry("bla/bli/").toExternalForm().endsWith("/"));
+        assertTrue(testBundle.adapt(BundleWiring.class).getClassLoader().getResource("bla/bli/").toExternalForm().endsWith("/"));
+        assertTrue(testBundle.getResource("bla/bli/blub").toExternalForm().endsWith("/blub"));
+        assertTrue(testBundle.getEntry("bla/bli/blub").toExternalForm().endsWith("/blub"));
+        assertTrue(testBundle.adapt(BundleWiring.class).getClassLoader().getResource("bla/bli/blub").toExternalForm().endsWith("/blub"));
     }
 
     private static void deleteDir(File root) throws IOException

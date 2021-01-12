@@ -22,9 +22,9 @@ import org.apache.felix.framework.Logger;
 import org.apache.felix.framework.util.SecureAction;
 import org.apache.felix.framework.util.WeakZipFileFactory;
 import org.osgi.framework.Constants;
+import org.osgi.framework.connect.ModuleConnector;
 
 import java.io.File;
-import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
@@ -144,25 +144,14 @@ public class BundleCache
         {
             File lockFile = new File(cacheDir, CACHE_LOCK_NAME);
             FileChannel fc = null;
-            FileOutputStream fos = null;
             try
             {
-                if (!getSecureAction().fileExists(lockFile))
-                {
-                    fos = getSecureAction().getFileOutputStream(lockFile);
-                    fc = fos.getChannel();
-                }
-                else
-                {
-                    fos = getSecureAction().getFileOutputStream(lockFile);
-                    fc = fos.getChannel();
-                }
+                fc = getSecureAction().getFileChannel(lockFile);
             }
             catch (Exception ex)
             {
                 try
                 {
-                    if (fos != null) fos.close();
                     if (fc != null) fc.close();
                 }
                 catch (Exception ex2)
@@ -386,6 +375,11 @@ public class BundleCache
         }
     }
 
+    public File getCacheDir()
+    {
+        return determineCacheDir(m_configMap);
+    }
+
     /* package */ static SecureAction getSecureAction()
     {
         return m_secureAction;
@@ -398,7 +392,7 @@ public class BundleCache
         deleteDirectoryTree(cacheDir);
     }
 
-    public BundleArchive[] getArchives()
+    public BundleArchive[] getArchives(ModuleConnector connectFactory)
         throws Exception
     {
         // Get buffer size value.
@@ -431,7 +425,7 @@ public class BundleCache
                 {
                     archiveList.add(
                         new BundleArchive(
-                            m_logger, m_configMap, m_zipFactory, children[i]));
+                            m_logger, m_configMap, m_zipFactory, connectFactory, children[i]));
                 }
                 catch (Exception ex)
                 {
@@ -447,7 +441,7 @@ public class BundleCache
             archiveList.toArray(new BundleArchive[archiveList.size()]);
     }
 
-    public BundleArchive create(long id, int startLevel, String location, InputStream is)
+    public BundleArchive create(long id, int startLevel, String location, InputStream is, ModuleConnector connectFactory)
         throws Exception
     {
         File cacheDir = determineCacheDir(m_configMap);
@@ -461,7 +455,7 @@ public class BundleCache
             // Create the archive and add it to the list of archives.
             BundleArchive ba =
                 new BundleArchive(
-                    m_logger, m_configMap, m_zipFactory, archiveRootDir,
+                    m_logger, m_configMap, m_zipFactory, connectFactory, archiveRootDir,
                     id, startLevel, location, is);
             return ba;
         }
@@ -548,7 +542,7 @@ public class BundleCache
 
         try
         {
-            os = getSecureAction().getFileOutputStream(outputFile);
+            os = getSecureAction().getOutputStream(outputFile);
             for (int i = is.read(bytes);i != -1; i = is.read(bytes))
             {
                 os.write(bytes, 0, i);

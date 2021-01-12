@@ -1,5 +1,5 @@
 /*
- * Copyright (c) OSGi Alliance (2012, 2014). All Rights Reserved.
+ * Copyright (c) OSGi Alliance (2012, 2020). All Rights Reserved.
  * 
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -54,19 +54,19 @@ import org.osgi.resource.Namespace;
  * </ul>
  * 
  * <p>
- * A non-fragment resource with the with the
- * {@link IdentityNamespace#TYPE_BUNDLE osgi.bundle} type
- * {@link IdentityNamespace#CAPABILITY_TYPE_ATTRIBUTE identity} provides zero or
- * one<sup>&#8224;</sup> host capabilities. A fragment resource with the
- * {@link IdentityNamespace#TYPE_FRAGMENT osgi.fragment} type
- * {@link IdentityNamespace#CAPABILITY_TYPE_ATTRIBUTE identity} must not declare
- * a host capability and must declare exactly one host requirement.
+ * A non-fragment resource with the {@link IdentityNamespace#TYPE_BUNDLE
+ * osgi.bundle} type {@link IdentityNamespace#CAPABILITY_TYPE_ATTRIBUTE
+ * identity} provides zero or one<sup>&#8224;</sup> host capabilities. A
+ * fragment resource with the {@link IdentityNamespace#TYPE_FRAGMENT
+ * osgi.fragment} type {@link IdentityNamespace#CAPABILITY_TYPE_ATTRIBUTE
+ * identity} must not declare a host capability and must declare exactly one
+ * host requirement.
  * <p>
  * &#8224; A resource with no bundle symbolic name must not provide a host
  * capability.
  * 
  * @Immutable
- * @author $Id: 9f789ca25dafcf9d5e9a4f45d377f943d62b134a $
+ * @author $Id: 79484b4d0c372d8cebf7c767ec12e134b60b8411 $
  */
 public final class HostNamespace extends AbstractWiringNamespace {
 
@@ -135,7 +135,6 @@ public final class HostNamespace extends AbstractWiringNamespace {
 	 * fragment. The default value is {@link #EXTENSION_FRAMEWORK framework}.
 	 * 
 	 * @see #EXTENSION_FRAMEWORK
-	 * @see #EXTENSION_BOOTCLASSPATH
 	 */
 	public final static String	REQUIREMENT_EXTENSION_DIRECTIVE				= "extension";
 
@@ -153,6 +152,7 @@ public final class HostNamespace extends AbstractWiringNamespace {
 	 * loaded by the boot class loader.
 	 * 
 	 * @see #REQUIREMENT_EXTENSION_DIRECTIVE
+	 * @deprecated As of 1.2.
 	 */
 	public final static String	EXTENSION_BOOTCLASSPATH						= "bootclasspath";
 

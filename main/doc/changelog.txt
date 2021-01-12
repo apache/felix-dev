@@ -1,3 +1,9 @@
+Changes from 6.0.4 to 7.0.0
+---------------------------
+
+** Improvement
+    * Update to latest framework version 7.0.0
+
 Changes from 6.0.3 to 6.0.4
 ---------------------------
 
