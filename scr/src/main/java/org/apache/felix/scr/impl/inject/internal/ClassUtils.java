@@ -21,6 +21,7 @@ package org.apache.felix.scr.impl.inject.internal;
 import java.util.Collection;
 import java.util.List;
 import java.util.Map;
+import java.util.Optional;
 
 import org.apache.felix.scr.impl.logger.ComponentLogger;
 import org.apache.felix.scr.impl.logger.InternalLogger.Level;
@@ -54,6 +55,8 @@ public class ClassUtils
 
     public static final Class<?> COLLECTION_CLASS = Collection.class;
     public static final Class<?> LIST_CLASS = List.class;
+
+    public static final Class<?> OPTIONAL_CLASS = Optional.class;
 
     public static final Class<?> COMPONENT_CONTEXT_CLASS = ComponentContext.class;
     public static final Class<?> BUNDLE_CONTEXT_CLASS = BundleContext.class;

@@ -24,6 +24,7 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Optional;
 import java.util.concurrent.atomic.AtomicInteger;
 
 import org.apache.felix.scr.impl.inject.ComponentConstructor;
@@ -279,7 +280,8 @@ public class ComponentConstructorImpl<S> implements ComponentConstructor<S>
                                     && (constructorArgTypes[i] == ValueType.ref_serviceType
                                     || constructorArgTypes[i] == ValueType.ref_tuple
                                     || constructorArgTypes[i] == ValueType.ref_logger
-                                    || constructorArgTypes[i] == ValueType.ref_formatterLogger) )
+                                    || constructorArgTypes[i] == ValueType.ref_formatterLogger
+                                    || constructorArgTypes[i] == ValueType.ref_optional))
                             {
                                 refPair.getServiceObject(componentContext, componentContext.getBundleContext());
                             }
@@ -294,6 +296,12 @@ public class ComponentConstructorImpl<S> implements ComponentConstructor<S>
                             }
                         }
                     }
+                    // check for optional ref type; if null then use empty Optional
+                    if (ref == null && constructorArgTypes[i] == ValueType.ref_optional)
+                    {
+                        ref = Optional.empty();
+                    }
+
                     if ( !refMetadata.isMultiple())
                     {
                         if (ref == null && !refMetadata.isOptional())

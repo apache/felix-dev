@@ -23,6 +23,7 @@ import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
 import java.lang.reflect.Modifier;
 import java.util.Map;
+import java.util.Optional;
 
 import org.apache.felix.scr.impl.helper.ReadOnlyDictionary;
 import org.apache.felix.scr.impl.inject.internal.Annotations;
@@ -54,7 +55,8 @@ public class ValueUtils {
         ref_serviceObjects,     // reference (field, constructor, method)
         ref_serviceType,        // reference (field, constructor, method)
         ref_map,                // reference (field, constructor, method)
-        ref_tuple               // reference (field, constructor ??) // TDODO
+        ref_tuple, // reference (field, constructor ??) // TDODO
+        ref_optional // reference (field, constructor, XX)
     }
 
     /** Empty array. */
@@ -147,6 +149,14 @@ public class ValueUtils {
             else if ( typeClass.getName().equals(ClassUtils.FORMATTER_LOGGER_CLASS) && metadata.getInterface().equals(ClassUtils.LOGGER_FACTORY_CLASS) )
             {
                 return ValueType.ref_formatterLogger;
+            }
+            // 1.5 Optional
+            else if (typeClass == ClassUtils.OPTIONAL_CLASS)
+            {
+                // Note that the first check for "typeClass.isAssignableFrom(referenceType)"
+                // will handle case where they want an actual Optional service type.
+
+                valueType = ValueType.ref_optional;
             }
             else
             {
@@ -319,6 +329,8 @@ public class ValueUtils {
                                           break;
             case ref_logger             :
             case ref_formatterLogger    : value = getLogger(componentType, targetType, componentContext, refPair);
+                                          break;
+            case ref_optional           : value = Optional.ofNullable(refPair.getServiceObject(componentContext));
                                           break;
             default: value = null;
         }
