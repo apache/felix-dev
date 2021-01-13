@@ -238,7 +238,19 @@
                                            commons-fileupload;inline=true,
                                            commons-io;inline=true
                                        </Embed-Dependency>
-                                       <Import-Package>!javax.portlet,*</Import-Package>                            
+                                       <Import-Package>
+                                           javax.servlet.*;version="[2.4,4)",
+                                           !javax.portlet,
+                                           !org.apache.felix.bundlerepository,
+                                           !org.osgi.service.obr,
+                                           !org.osgi.service.cm,
+                                           !org.osgi.service.condpermadmin,
+                                           !org.osgi.service.log,
+                                           !org.osgi.service.metatype,
+                                           !org.osgi.service.permissionadmin,
+                                           !org.osgi.service.prefs,
+                                           !org.osgi.service.wireadmin,
+                                       </Import-Package>                            
                                        <_removeheaders>
                                            Embed-Dependency,Private-Package,Include-Resource
                                        </_removeheaders>
