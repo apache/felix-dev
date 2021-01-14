@@ -21,12 +21,11 @@ package org.apache.felix.inventory.impl.helper;
 import java.io.StringWriter;
 
 import org.junit.Assert;
+import org.junit.Test;
 
-import junit.framework.TestCase;
+public class JSONConfigurationWriterTest {
 
-public class JSONConfigurationWriterTest extends TestCase {
-
-    public void test_escaping() {
+    @Test public void test_escaping() {
         final StringWriter out = new StringWriter();
         final JSONConfigurationWriter w = new JSONConfigurationWriter(out);
         w.startJSONWrapper();

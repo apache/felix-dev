@@ -22,7 +22,7 @@
     <parent>
         <groupId>org.apache.felix</groupId>
         <artifactId>felix-parent</artifactId>
-        <version>4</version>
+        <version>7</version>
         <relativePath>../pom/pom.xml</relativePath>
     </parent>
 
@@ -45,14 +45,14 @@
                 <artifactId>maven-javadoc-plugin</artifactId>
                 <configuration>
                     <excludePackageNames>
-                        *.impl
+                        org.apache.felix.inventory.impl:org.apache.felix.inventory.impl.helper:org.apache.felix.inventory.impl.webconsole
                     </excludePackageNames>
                 </configuration>
             </plugin>
             <plugin>
                 <groupId>org.apache.felix</groupId>
                 <artifactId>maven-bundle-plugin</artifactId>
-                <version>3.3.0</version>
+                <version>5.1.1</version>
                 <extensions>true</extensions>
                     <configuration>
                     <instructions>
@@ -68,9 +68,6 @@
                             javax.servlet.http;resolution:=optional,
                             *
                         </Import-Package>
-                        <Export-Package>
-                            org.apache.felix.inventory
-                        </Export-Package>
                         <DynamicImport-Package>
                             javax.servlet, javax.servlet.http
                         </DynamicImport-Package>
@@ -108,6 +105,8 @@
         <dependency>
             <groupId>junit</groupId>
             <artifactId>junit</artifactId>
+            <version>4.13.1</version>
+            <scope>test</scope>
         </dependency>
     </dependencies>
 </project>
