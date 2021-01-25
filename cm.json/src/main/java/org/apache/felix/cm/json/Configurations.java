@@ -72,7 +72,7 @@ public class Configurations {
 
     /**
      * Create a new map for configuration properties The returned map keeps the
-     * order of properties added.
+     * order of properties added and is using case-insensitive keys.
      *
      * @return A new map
      */

@@ -106,4 +106,13 @@ public class ConfigurationReaderImplTest {
             assertTrue(ioe.getCause() instanceof JsonException);
         }
     }
+
+    @Test(expected = IOException.class)
+    public void testReadSingleConfigurationDuplicateKeys() throws IOException {
+        final ConfigurationReaderImpl cfgReader = new ConfigurationReaderImpl();
+        try (final InputStream jsonStream = this.getClass().getResourceAsStream("/configs/single-duplicatekeys.json");
+                final Reader jsonReader = new InputStreamReader(jsonStream, StandardCharsets.UTF_8)) {
+            cfgReader.build(jsonReader).readConfiguration();
+        }
+    }
 }

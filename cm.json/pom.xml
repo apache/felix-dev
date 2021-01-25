@@ -60,6 +60,14 @@
                         </Bundle-SymbolicName>
                     </instructions>
                 </configuration>
+                <executions>
+		    <execution>
+		        <id>baseline</id>
+		        <goals>
+		            <goal>baseline</goal>
+		        </goals>
+		    </execution>
+		</executions>
             </plugin>
             <plugin>
                 <groupId>org.apache.rat</groupId>

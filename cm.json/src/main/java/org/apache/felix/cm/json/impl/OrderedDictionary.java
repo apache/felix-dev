@@ -19,6 +19,7 @@
 package org.apache.felix.cm.json.impl;
 
 import java.io.Serializable;
+import java.util.AbstractSet;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.Enumeration;
@@ -26,6 +27,7 @@ import java.util.Hashtable;
 import java.util.Iterator;
 import java.util.LinkedHashMap;
 import java.util.Map;
+import java.util.Objects;
 import java.util.Set;
 
 /**
@@ -38,10 +40,10 @@ public class OrderedDictionary extends Hashtable<String, Object> implements Seri
 
     private static final long serialVersionUID = -525111601546803041L;
 
-    private static class EnumarationImpl<E> implements Enumeration<E> {
-        private final Iterator<E> iterator;
+    private static class EnumarationImpl implements Enumeration<String> {
+        private final Iterator<CaseInsensitiveKey> iterator;
 
-        public EnumarationImpl(Iterator<E> iterator) {
+        public EnumarationImpl(final Iterator<CaseInsensitiveKey> iterator) {
             this.iterator = iterator;
         }
 
@@ -51,12 +53,12 @@ public class OrderedDictionary extends Hashtable<String, Object> implements Seri
         }
 
         @Override
-        public E nextElement() {
-            return iterator.next();
+        public String nextElement() {
+            return iterator.next().value;
         }
     }
 
-    private Map<String, Object> map = Collections.synchronizedMap(new LinkedHashMap<String, Object>());
+    private Map<CaseInsensitiveKey, Object> map = Collections.synchronizedMap(new LinkedHashMap<>());
 
     @Override
     public int size() {
@@ -69,48 +71,58 @@ public class OrderedDictionary extends Hashtable<String, Object> implements Seri
     }
 
     @Override
-    public boolean containsKey(Object key) {
-        return map.containsKey(key);
+    public boolean containsKey(final Object key) {
+        if ( key == null ) {
+            return false;
+        }
+        return map.containsKey(new CaseInsensitiveKey(key.toString()));
     }
 
     @Override
-    public boolean containsValue(Object value) {
+    public boolean containsValue(final Object value) {
         return map.containsValue(value);
     }
 
     @Override
     public Enumeration<String> keys() {
-        return new EnumarationImpl<>(map.keySet().iterator());
+        return new EnumarationImpl(map.keySet().iterator());
     }
 
     @Override
     public Enumeration<Object> elements() {
-        return new EnumarationImpl<>(map.values().iterator());
+        return Collections.enumeration(map.values());
     }
 
     @Override
-    public Object get(Object key) {
-        return map.get(key);
+    public Object get(final Object key) {
+        if ( key == null ) {
+            return null;
+        }
+        return map.get(new CaseInsensitiveKey(key.toString()));
     }
 
     @Override
-    public Object put(String key, Object value) {
+    public Object put(final String key, final Object value) {
         // Make sure the value is not null
         if (value == null) {
             throw new NullPointerException();
         }
-
-        return map.put(key, value);
+        final CaseInsensitiveKey k = new CaseInsensitiveKey(key);
+        final Object oldValue = this.map.remove(k);
+        this.map.put(k, value);
+        return oldValue;
     }
 
     @Override
-    public Object remove(Object key) {
-        return map.remove(key);
+    public Object remove(final Object key) {
+        return map.remove(new CaseInsensitiveKey(key.toString()));
     }
 
     @Override
-    public void putAll(Map<? extends String, ? extends Object> m) {
-        map.putAll(m);
+    public void putAll(final Map<? extends String, ? extends Object> m) {
+        for(final Map.Entry<? extends String, ? extends Object> e : m.entrySet()) {
+            this.put(e.getKey(), e.getValue());
+        }
     }
 
     @Override
@@ -120,21 +132,21 @@ public class OrderedDictionary extends Hashtable<String, Object> implements Seri
 
     @Override
     public Set<String> keySet() {
-        return map.keySet();
+        return new KeySet();
     }
 
     @Override
     public Collection<Object> values() {
-        return map.values();
+        return this.map.values();
     }
 
     @Override
     public Set<java.util.Map.Entry<String, Object>> entrySet() {
-        return map.entrySet();
+        return new EntrySet();
     }
 
     @Override
-    public boolean equals(Object o) {
+    public boolean equals(final Object o) {
         return map.equals(o);
     }
 
@@ -142,4 +154,182 @@ public class OrderedDictionary extends Hashtable<String, Object> implements Seri
     public int hashCode() {
         return map.hashCode();
     }
+
+    private static final class CaseInsensitiveKey {
+
+        private final String value;
+
+        private final int hashCode;
+
+        public CaseInsensitiveKey(final String v) {
+            this.value = v;
+            this.hashCode = v.toUpperCase().hashCode();
+        }
+
+		@Override
+		public int hashCode() {
+			return this.hashCode;
+		}
+
+		@Override
+		public boolean equals(final Object obj) {
+			if (this == obj) {
+                return true;
+            }
+			if (!(obj instanceof CaseInsensitiveKey)) {
+				return false;
+            }
+            final CaseInsensitiveKey other = (CaseInsensitiveKey) obj;
+            if ( value == null ) {
+                if ( other.value == null ) {
+                    return true;
+                }
+                return false;
+            }
+            if ( other.value == null ) {
+                return false;
+            }
+            return value.equalsIgnoreCase(other.value);
+		}
+    }
+
+    private final class KeySet extends AbstractSet<String> {
+
+		@Override
+		public int size() {
+			return OrderedDictionary.this.size();
+		}
+
+		@Override
+		public boolean isEmpty() {
+			return OrderedDictionary.this.isEmpty();
+		}
+
+		@Override
+		public boolean contains(final Object o) {
+			return OrderedDictionary.this.containsKey(o);
+		}
+
+		@Override
+		public Iterator<String> iterator() {
+			return new KeyIterator(OrderedDictionary.this.map.keySet());
+		}
+
+		@Override
+		public boolean remove(final Object o) {
+			return OrderedDictionary.this.remove(o) != null;
+		}
+
+		@Override
+		public void clear() {
+			OrderedDictionary.this.clear();
+		}
+	}
+
+	private static final class KeyIterator implements Iterator<String> {
+		private final Iterator<CaseInsensitiveKey> i;
+
+		KeyIterator(final Collection<CaseInsensitiveKey> c) {
+			this.i = c.iterator();
+		}
+
+		@Override
+		public boolean hasNext() {
+			return i.hasNext();
+		}
+
+		@Override
+		public String next() {
+			final CaseInsensitiveKey k = i.next();
+			return k.value;
+		}
+
+		@Override
+		public void remove() {
+			i.remove();
+		}
+	}
+
+	private final class EntrySet extends AbstractSet<Entry<String, Object>> {
+
+		@Override
+		public int size() {
+			return OrderedDictionary.this.size();
+		}
+
+		@Override
+		public boolean isEmpty() {
+			return OrderedDictionary.this.isEmpty();
+		}
+
+		@Override
+		public Iterator<Entry<String, Object>> iterator() {
+			return new EntryIterator(OrderedDictionary.this.map.entrySet());
+		}
+
+		@Override
+		public void clear() {
+			OrderedDictionary.this.clear();
+		}
+	}
+
+	private static final class EntryIterator implements Iterator<Entry<String, Object>> {
+		private final Iterator<Entry<CaseInsensitiveKey, Object>> i;
+
+		EntryIterator(final Collection<Entry<CaseInsensitiveKey, Object>> c) {
+			this.i = c.iterator();
+		}
+
+		@Override
+		public boolean hasNext() {
+			return i.hasNext();
+		}
+
+		@Override
+		public Entry<String, Object> next() {
+			return new CaseInsentiveEntry(i.next());
+		}
+
+		@Override
+		public void remove() {
+			i.remove();
+		}
+	}
+
+	private static final class CaseInsentiveEntry implements Entry<String, Object> {
+		private final Entry<CaseInsensitiveKey, Object> entry;
+
+		CaseInsentiveEntry(final Entry<CaseInsensitiveKey, Object> entry) {
+			this.entry = entry;
+		}
+
+		@Override
+		public String getKey() {
+			return entry.getKey().value;
+		}
+
+		@Override
+		public Object getValue() {
+			return entry.getValue();
+		}
+
+		@Override
+		public Object setValue(final Object value) {
+			return entry.setValue(value);
+		}
+
+		@Override
+		public int hashCode() {
+            return entry.hashCode();
+		}
+
+		@Override
+		public boolean equals(final Object obj) {
+			if (obj instanceof CaseInsentiveEntry) {
+                final CaseInsentiveEntry other = (CaseInsentiveEntry) obj;
+                return Objects.equals(other.entry.getKey(), this.entry.getKey()) && Objects.equals(other.entry.getValue(), this.entry.getValue());
+			}
+			return false;
+		}
+	}
 }
