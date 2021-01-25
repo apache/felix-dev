@@ -82,7 +82,7 @@ Start a vote on the dev@felix.apache.org list, for example (be sure to replace r
 To: "Felix Developers List" <dev@felix.apache.org>
 Subject: [VOTE] Release of Apache Felix Dependency Manager release r<n>
 
-Hi,
+I would like to call for a vote on the Dependency Manager top level release r<n>
 
 We solved N issues in this release:
 http://issues.apache.org/jira/...
@@ -94,16 +94,23 @@ Staging repository:
 https://dist.apache.org/repos/dist/dev/felix/apache-felix-dependencymanager-r<n>/
 
 You can use this UNIX script to download the release and verify the signatures:
+
 https://github.com/apache/felix-dev/blob/master/dependencymanager/release/check_staged_release.sh
 
 Usage:
-sh check_staged_release.sh r<n> /tmp/felix-staging
 
-This script, unlike the original Felix check_stage_release.sh, will download staging from https://dist.apache.org/repos/dist/dev/felix instead of 
-http://repository.apache.org/content/repositories.
+      sh check_staged_release.sh r<n> /tmp/felix-staging
 
+This script, unlike the original Felix check_stage_release.sh, is specific
+to the Dependency Manager release process (see FELIX-4818) and will
+download staging from https://dist.apache.org/repos/dist/dev/felix instead
+of http://repository.apache.org/content/repositories.
 
-Please vote to approve this release:
+To rebuild the DM binaries from the source, jdk8 must be used, and you can refer to:
+
+https://github.com/apache/felix-dev/blob/master/dependencymanager/release/resources/src/README.src
+
+Please cast your votes to approve this release:
 
 [ ] +1 Approve the release
 [ ] -1 Veto the release (please provide specific comments)
