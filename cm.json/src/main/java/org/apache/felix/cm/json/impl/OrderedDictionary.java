@@ -40,24 +40,6 @@ public class OrderedDictionary extends Hashtable<String, Object> implements Seri
 
     private static final long serialVersionUID = -525111601546803041L;
 
-    private static class EnumarationImpl implements Enumeration<String> {
-        private final Iterator<CaseInsensitiveKey> iterator;
-
-        public EnumarationImpl(final Iterator<CaseInsensitiveKey> iterator) {
-            this.iterator = iterator;
-        }
-
-        @Override
-        public boolean hasMoreElements() {
-            return iterator.hasNext();
-        }
-
-        @Override
-        public String nextElement() {
-            return iterator.next().value;
-        }
-    }
-
     private Map<CaseInsensitiveKey, Object> map = Collections.synchronizedMap(new LinkedHashMap<>());
 
     @Override
@@ -85,7 +67,7 @@ public class OrderedDictionary extends Hashtable<String, Object> implements Seri
 
     @Override
     public Enumeration<String> keys() {
-        return new EnumarationImpl(map.keySet().iterator());
+        return new KeyEnumeration(map.keySet().iterator());
     }
 
     @Override
@@ -161,7 +143,7 @@ public class OrderedDictionary extends Hashtable<String, Object> implements Seri
 
         private final int hashCode;
 
-        public CaseInsensitiveKey(final String v) {
+        CaseInsensitiveKey(final String v) {
             this.value = v;
             this.hashCode = v.toUpperCase().hashCode();
         }
@@ -192,6 +174,26 @@ public class OrderedDictionary extends Hashtable<String, Object> implements Seri
             return value.equalsIgnoreCase(other.value);
 		}
     }
+
+    private static class KeyEnumeration implements Enumeration<String> {
+
+        private final Iterator<CaseInsensitiveKey> iterator;
+
+        KeyEnumeration(final Iterator<CaseInsensitiveKey> iterator) {
+            this.iterator = iterator;
+        }
+
+        @Override
+        public boolean hasMoreElements() {
+            return iterator.hasNext();
+        }
+
+        @Override
+        public String nextElement() {
+            return iterator.next().value;
+        }
+    }
+
 
     private final class KeySet extends AbstractSet<String> {
 
@@ -227,7 +229,8 @@ public class OrderedDictionary extends Hashtable<String, Object> implements Seri
 	}
 
 	private static final class KeyIterator implements Iterator<String> {
-		private final Iterator<CaseInsensitiveKey> i;
+
+        private final Iterator<CaseInsensitiveKey> i;
 
 		KeyIterator(final Collection<CaseInsensitiveKey> c) {
 			this.i = c.iterator();
@@ -250,7 +253,7 @@ public class OrderedDictionary extends Hashtable<String, Object> implements Seri
 		}
 	}
 
-	private final class EntrySet extends AbstractSet<Entry<String, Object>> {
+	private final class EntrySet extends AbstractSet<Map.Entry<String, Object>> {
 
 		@Override
 		public int size() {
@@ -263,7 +266,7 @@ public class OrderedDictionary extends Hashtable<String, Object> implements Seri
 		}
 
 		@Override
-		public Iterator<Entry<String, Object>> iterator() {
+		public Iterator<Map.Entry<String, Object>> iterator() {
 			return new EntryIterator(OrderedDictionary.this.map.entrySet());
 		}
 
@@ -273,10 +276,11 @@ public class OrderedDictionary extends Hashtable<String, Object> implements Seri
 		}
 	}
 
-	private static final class EntryIterator implements Iterator<Entry<String, Object>> {
-		private final Iterator<Entry<CaseInsensitiveKey, Object>> i;
+	private static final class EntryIterator implements Iterator<Map.Entry<String, Object>> {
+        
+        private final Iterator<Map.Entry<CaseInsensitiveKey, Object>> i;
 
-		EntryIterator(final Collection<Entry<CaseInsensitiveKey, Object>> c) {
+		EntryIterator(final Collection<Map.Entry<CaseInsensitiveKey, Object>> c) {
 			this.i = c.iterator();
 		}
 
@@ -286,7 +290,7 @@ public class OrderedDictionary extends Hashtable<String, Object> implements Seri
 		}
 
 		@Override
-		public Entry<String, Object> next() {
+		public Map.Entry<String, Object> next() {
 			return new CaseInsentiveEntry(i.next());
 		}
 
@@ -296,10 +300,11 @@ public class OrderedDictionary extends Hashtable<String, Object> implements Seri
 		}
 	}
 
-	private static final class CaseInsentiveEntry implements Entry<String, Object> {
-		private final Entry<CaseInsensitiveKey, Object> entry;
+	private static final class CaseInsentiveEntry implements Map.Entry<String, Object> {
+        
+        private final Map.Entry<CaseInsensitiveKey, Object> entry;
 
-		CaseInsentiveEntry(final Entry<CaseInsensitiveKey, Object> entry) {
+		CaseInsentiveEntry(final Map.Entry<CaseInsensitiveKey, Object> entry) {
 			this.entry = entry;
 		}
 
@@ -328,7 +333,10 @@ public class OrderedDictionary extends Hashtable<String, Object> implements Seri
 			if (obj instanceof CaseInsentiveEntry) {
                 final CaseInsentiveEntry other = (CaseInsentiveEntry) obj;
                 return Objects.equals(other.entry.getKey(), this.entry.getKey()) && Objects.equals(other.entry.getValue(), this.entry.getValue());
-			}
+			} else if ( obj instanceof Map.Entry ) {
+                final Map.Entry<?, ?> other = (Map.Entry<?, ?>) obj;
+                return Objects.equals(other.getKey(), this.entry.getKey()) && Objects.equals(other.getValue(), this.entry.getValue());
+            }
 			return false;
 		}
 	}
