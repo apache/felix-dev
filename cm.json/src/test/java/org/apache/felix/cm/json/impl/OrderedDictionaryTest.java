@@ -21,6 +21,13 @@ import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertNull;
 import static org.junit.Assert.assertTrue;
 
+import java.io.File;
+import java.io.FileInputStream;
+import java.io.FileOutputStream;
+import java.io.IOException;
+import java.io.ObjectInputStream;
+import java.io.ObjectOutputStream;
+import java.nio.file.Files;
 import java.util.HashSet;
 import java.util.Map;
 import java.util.Set;
@@ -96,6 +103,32 @@ public class OrderedDictionaryTest {
 
         assertTrue(map.containsValue("helloV"));
         assertFalse(map.containsValue("heLLoV"));
-        assertFalse(map.containsValue("hello"));    
+        assertFalse(map.containsValue("hello"));
+    }
+
+    @Test public void testSerialization() throws IOException, ClassNotFoundException {
+        final Map<String, Object> map = new OrderedDictionary();
+        map.put("hello", "helloV");
+
+        // write to file
+        final File f = Files.createTempFile("dictionary", "ser").toFile();
+        try {
+
+            try (final ObjectOutputStream oos = new ObjectOutputStream(new FileOutputStream(f)) ) {
+                oos.writeObject(map);
+            }
+
+            // read from file
+            try(final ObjectInputStream ois = new ObjectInputStream(new FileInputStream(f))) {
+                @SuppressWarnings("unchecked")
+                final Map<String, Object> readMap = (Map<String, Object>) ois.readObject();
+                assertEquals(1, readMap.size());
+                assertEquals("helloV", readMap.get("hello"));
+            }
+        } finally {
+            if ( f.exists() ) {
+                f.delete();
+            }
+        }
     }
 }
