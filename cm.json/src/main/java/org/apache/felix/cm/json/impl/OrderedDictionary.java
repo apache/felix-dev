@@ -137,7 +137,9 @@ public class OrderedDictionary extends Hashtable<String, Object> implements Seri
         return map.hashCode();
     }
 
-    private static final class CaseInsensitiveKey {
+    private static final class CaseInsensitiveKey implements Serializable {
+
+        private static final long serialVersionUID = 7040882564605268453L;
 
         private final String value;
 
@@ -277,7 +279,7 @@ public class OrderedDictionary extends Hashtable<String, Object> implements Seri
 	}
 
 	private static final class EntryIterator implements Iterator<Map.Entry<String, Object>> {
-        
+
         private final Iterator<Map.Entry<CaseInsensitiveKey, Object>> i;
 
 		EntryIterator(final Collection<Map.Entry<CaseInsensitiveKey, Object>> c) {
@@ -301,7 +303,7 @@ public class OrderedDictionary extends Hashtable<String, Object> implements Seri
 	}
 
 	private static final class CaseInsentiveEntry implements Map.Entry<String, Object> {
-        
+
         private final Map.Entry<CaseInsensitiveKey, Object> entry;
 
 		CaseInsentiveEntry(final Map.Entry<CaseInsensitiveKey, Object> entry) {
