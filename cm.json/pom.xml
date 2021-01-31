@@ -33,7 +33,7 @@
     <description>
         Support for OSGi configurations specified in JSON documents.
     </description>
-    <version>1.0.6</version>
+    <version>1.0.7-SNAPSHOT</version>
 
     <scm>
         <connection>scm:git:https://github.com/apache/felix-dev.git</connection>
