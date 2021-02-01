@@ -104,6 +104,16 @@ public class ConfigurationHandlerTest {
     }
 
     @Test
+    public void test_writeStringWithSpaces() throws IOException {
+        OutputStream out = new ByteArrayOutputStream();
+        Dictionary< String, String> properties = new Hashtable<>();
+        properties.put("prop", "Hello World");
+        ConfigurationHandler.write(out, properties);
+        String entry = new String(((ByteArrayOutputStream)out).toByteArray(),"UTF-8");
+        Assert.assertEquals("prop=\"Hello\\ World\"\r\n", entry);
+    }
+
+    @Test
     public void test_writeInteger() throws IOException {
         OutputStream out = new ByteArrayOutputStream();
         Dictionary< String, Integer> properties = new Hashtable<>();
@@ -234,6 +244,16 @@ public class ConfigurationHandlerTest {
         Dictionary<String, Object> dictionary = ConfigurationHandler.read(stream);
         Assert.assertEquals(1, dictionary.size());
         Assert.assertEquals( "com.adobe.granite.foo.Bar", dictionary.get(SERVICE_PID));
+    }
+
+    @Test
+    public void test_readStringWithSpaces() throws IOException {
+        String entry = "prop=\"Hello\\ World\"\r\n";
+        InputStream stream = new ByteArrayInputStream(entry.getBytes(StandardCharsets.UTF_8));
+        @SuppressWarnings("unchecked")
+        Dictionary<String, Object> dictionary = ConfigurationHandler.read(stream);
+        Assert.assertEquals(1, dictionary.size());
+        Assert.assertEquals( "Hello World", dictionary.get("prop"));
     }
 
     @Test
