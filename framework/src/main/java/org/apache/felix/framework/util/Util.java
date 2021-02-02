@@ -185,8 +185,9 @@ public class Util
             Class<?> c_Exports = Felix.class.getClassLoader().loadClass("java.lang.module.ModuleDescriptor$Exports");
             Method m_getLayer = c_Module.getMethod("getLayer");
             Method m_getModule = Class.class.getMethod("getModule");
-            Method m_canRead = c_Module.getMethod("canRead", c_Module);
             Method m_getName = c_Module.getMethod("getName");
+            Method isAutomatic = c_Descriptor.getMethod("isAutomatic");
+            Method packagesMethod = c_Descriptor.getMethod("packages");
 
             Object self = m_getModule.invoke(Felix.class);
             Object moduleLayer = m_getLayer.invoke(self);
@@ -198,7 +199,7 @@ public class Util
 
             for (Object module : ((Iterable) c_ModuleLayer.getMethod("modules").invoke(moduleLayer)))
             {
-                if ((Boolean) m_canRead.invoke(self, module))
+                if (!self.equals(module))
                 {
                     String name = (String) m_getName.invoke(module);
 
@@ -206,12 +207,19 @@ public class Util
 
                     Object descriptor = c_Module.getMethod("getDescriptor").invoke(module);
 
-                    for (Object export :((Set) c_Descriptor.getMethod("exports").invoke(descriptor)))
+                    if (!((Boolean) isAutomatic.invoke(descriptor)))
                     {
-                        if (((Set) c_Exports.getMethod("targets").invoke(export)).isEmpty())
+                        for (Object export : ((Set) c_Descriptor.getMethod("exports").invoke(descriptor)))
                         {
-                            pkgs.add((String) c_Exports.getMethod("source").invoke(export));
+                            if (((Set) c_Exports.getMethod("targets").invoke(export)).isEmpty())
+                            {
+                                pkgs.add((String) c_Exports.getMethod("source").invoke(export));
+                            }
                         }
+                    }
+                    else
+                    {
+                        pkgs.addAll((Set<String>) packagesMethod.invoke(descriptor));
                     }
                     result.put(name, pkgs);
                 }
