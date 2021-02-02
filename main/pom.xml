@@ -121,6 +121,7 @@
                 </moduleInfoSource>
                 <mainClass>org.apache.felix.main.Main</mainClass>
               </module>
+              <overwriteExistingFiles>true</overwriteExistingFiles>
             </configuration>
           </execution>
         </executions>

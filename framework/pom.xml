@@ -91,6 +91,7 @@
                     }
                 </moduleInfoSource>
               </module>
+              <overwriteExistingFiles>true</overwriteExistingFiles>
             </configuration>
           </execution>
         </executions>
