@@ -46,10 +46,12 @@ public class FileStoreInitializationTest extends BaseIntegrationTest
     @Test
     public void testStoreIsInitializedAndClosedProperlyOk() throws Exception
     {
-        UserAdmin ua = getUserAdmin();
+        
         // Start the file store bundle...
         Bundle fileStoreBundle = getFileStoreBundle();
         fileStoreBundle.start();
+        
+        UserAdmin ua = getUserAdmin();
 
         // Create two roles...
         User user = (User) ua.createRole("user1", Role.USER);
@@ -66,20 +68,15 @@ public class FileStoreInitializationTest extends BaseIntegrationTest
 
         Thread.sleep(100); // Wait a little until the bundle is really stopped...
 
-        // Retrieve the roles again; should both yield null due to the store not being available...
-        user = (User) ua.getRole("user1");
-        assertNull(user);
-
-        group = (Group) ua.getRole("group1");
-        assertNull(group);
-
-        // This will not succeed: no backend to store the user in...
-        assertNull(ua.createRole("user2", Role.USER));
+        // UserAdmin should no longer be there, no backing store
+        assertNull(getUserAdmin());
 
         fileStoreBundle.start();
 
         awaitService(ORG_APACHE_FELIX_USERADMIN_FILESTORE);
 
+        ua = getUserAdmin();
+        
         // Retrieve the roles again; should both yield valid values...
         user = (User) ua.getRole("user1");
         assertNotNull(user);

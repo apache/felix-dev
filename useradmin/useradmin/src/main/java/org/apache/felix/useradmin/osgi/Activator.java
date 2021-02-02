@@ -36,12 +36,6 @@ public class Activator implements BundleActivator {
     public void start(BundleContext context) throws Exception {
         m_context = createServiceContext(context);
         
-        // The actual service itself...
-        UserAdminImpl service = new UserAdminImpl(m_context.m_roleRepository, m_context.m_eventDispatcher);
-        
-        // Register the actual service...
-        context.registerService(UserAdmin.class.getName(), service, null);
-        
         // Start/open all helper classes...
         m_context.start();
     }
@@ -67,10 +61,7 @@ public class Activator implements BundleActivator {
         EventAdminHelper eventAdmin = new EventAdminHelper(context);
         UserAdminListenerListHelper listenerList = new UserAdminListenerListHelper(context);
         EventDispatcher eventDispatcher = new EventDispatcher(eventAdmin, listenerList);
-        RoleRepositoryStoreHelper store = new RoleRepositoryStoreHelper(context);
 
-        RoleRepository roleRepository = new RoleRepository(store);
-
-        return new ServiceContext(eventAdmin, listenerList, eventDispatcher, roleRepository, store);
+        return new ServiceContext(eventAdmin, listenerList, eventDispatcher, context);
     }
 }

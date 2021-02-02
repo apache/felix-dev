@@ -66,9 +66,10 @@ public abstract class BaseIntegrationTest
     {
         return options(
             bootDelegationPackage("sun.*"),
-            systemPackages("javax.naming", "javax.net.ssl", "javax.xml.parsers", "org.w3c.dom", "org.xml.sax", "org.xml.sax.helpers"),
+            systemPackages("javax.naming", "javax.net.ssl", "javax.xml.parsers", "org.w3c.dom", "org.xml.sax", "org.xml.sax.helpers","javax.management","javax.net","javax.crypto",
+            		 "javax.crypto.spec","javax.security.sasl","javax.security.auth.callback","org.ietf.jgss"),
             frameworkProperty("org.osgi.framework.system.capabilities.extra").value(
-                "osgi.ee;osgi.ee=JavaSE;version=1.6,osgi.ee;osgi.ee=JavaSE;version=1.5,osgi.ee;osgi.ee=JavaSE;version=1.4,osgi.ee;osgi.ee=JavaSE;version=1.3"),
+                "osgi.ee;osgi.ee=JavaSE;version=1.7,osgi.ee;osgi.ee=JavaSE;version=1.6,osgi.ee;osgi.ee=JavaSE;version=1.5,osgi.ee;osgi.ee=JavaSE;version=1.4,osgi.ee;osgi.ee=JavaSE;version=1.3"),
             cleanCaches(),
             CoreOptions.systemProperty("logback.configurationFile").value("file:src/test/resources/logback.xml"), //
 //            CoreOptions.vmOption("-Xrunjdwp:transport=dt_socket,server=y,suspend=y,address=8787"),

@@ -47,10 +47,11 @@ public class UserAdminIntegrationTest extends BaseIntegrationTest
         final String userName = "testUser";
         final String groupName = "testGroup";
 
-        UserAdmin userAdmin = awaitService(UserAdmin.class.getName());
         Bundle fileStoreBundle = getFileStoreBundle();
         // Start a suitable storage service...
         fileStoreBundle.start();
+        
+        UserAdmin userAdmin = awaitService(UserAdmin.class.getName());
 
         // Fill the user admin with some data...
         User testUser = (User) userAdmin.createRole(userName, Role.USER);
@@ -62,16 +63,13 @@ public class UserAdminIntegrationTest extends BaseIntegrationTest
         // Stop the file store...
         fileStoreBundle.stop();
 
-        // retrieve the useradmin again...
-        userAdmin = awaitService(UserAdmin.class.getName());
-
-        // Verify the user + group are gone (no store available)...
-        assertNull(userAdmin.getRole(userName));
-        assertNull(userAdmin.getRole(groupName));
+        assertNull(getUserAdmin());
 
         // Start the file store...
         fileStoreBundle.start();
-
+        
+        userAdmin = awaitService(UserAdmin.class.getName());
+        
         // Verify the user + group are gone (no store available)...
         User readUser = (User) userAdmin.getRole(userName);
         assertNotNull(readUser);
@@ -95,10 +93,11 @@ public class UserAdminIntegrationTest extends BaseIntegrationTest
         final String userName = "anotherTestUser";
         final String groupName = "anotherTestGroup";
 
-        UserAdmin userAdmin = awaitService(UserAdmin.class.getName());
         Bundle fileStoreBundle = getFileStoreBundle();
         // Start a suitable storage service...
         fileStoreBundle.start();
+        
+        UserAdmin userAdmin = awaitService(UserAdmin.class.getName());
 
         // Fill the user admin with some data...
         User testUser = (User) userAdmin.createRole(userName, Role.USER);
@@ -120,16 +119,12 @@ public class UserAdminIntegrationTest extends BaseIntegrationTest
 
         userAdminBundle.start();
 
-        // Obtain user admin service again; should be available now...
-        userAdmin = awaitService(UserAdmin.class.getName());
-        assertNotNull(userAdmin);
-
-        // Verify the user + group are gone (no store available)...
-        assertNull(userAdmin.getRole(userName));
-        assertNull(userAdmin.getRole(groupName));
+        assertNull(getUserAdmin());
 
         // Start the file store...
         fileStoreBundle.start();
+        
+        userAdmin = awaitService(UserAdmin.class.getName());
 
         // Verify the user + group are gone (no store available)...
         User readUser = (User) userAdmin.getRole(userName);

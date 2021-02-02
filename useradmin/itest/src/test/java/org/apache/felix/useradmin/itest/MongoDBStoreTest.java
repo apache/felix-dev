@@ -55,12 +55,12 @@ public class MongoDBStoreTest extends BaseIntegrationTest
     @Test
     public void testFelix4399_FetchEmptyRoleOk() throws Exception
     {
-        UserAdmin ua = getUserAdmin();
-
         String roleName = "emptyRole";
 
         if (canRunTest())
         {
+        	UserAdmin ua = getUserAdmin();
+        	
             Role emptyRole = ua.createRole(roleName, Role.USER);
             assertNotNull("Collection not empty?!", emptyRole);
 
@@ -83,12 +83,12 @@ public class MongoDBStoreTest extends BaseIntegrationTest
     @Test
     public void testFelix4400_CreateRoleReturnsNonNullOk() throws Exception
     {
-        UserAdmin ua = getUserAdmin();
-
         String roleName = "newRole";
 
         if (canRunTest())
         {
+        	UserAdmin ua = getUserAdmin();
+        	
             Role newRole = ua.createRole(roleName, Role.USER);
             assertNotNull("Felix-4400 not resolved?!", newRole);
 
@@ -103,13 +103,13 @@ public class MongoDBStoreTest extends BaseIntegrationTest
     @Test
     public void testRemoveRoleOk() throws Exception
     {
-        UserAdmin ua = getUserAdmin();
-
         String roleName = "newRole";
         Role[] readRoles;
 
         if (canRunTest())
         {
+        	UserAdmin ua = getUserAdmin();
+        	
             Role role = ua.createRole(roleName, Role.USER);
             assertNotNull("Collection not empty?!", role);
 
@@ -132,13 +132,13 @@ public class MongoDBStoreTest extends BaseIntegrationTest
     @Test
     public void testUpdateRoleOk() throws Exception
     {
-        UserAdmin ua = getUserAdmin();
-
         String roleName = "role1";
         Role[] readRoles;
 
         if (canRunTest())
         {
+        	UserAdmin ua = getUserAdmin();
+        	
             User role = (User) ua.createRole(roleName, Role.USER);
             assertNotNull("Collection not empty?!", role);
 

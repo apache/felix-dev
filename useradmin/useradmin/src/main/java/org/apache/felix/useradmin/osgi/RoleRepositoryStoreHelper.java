@@ -17,71 +17,60 @@
 package org.apache.felix.useradmin.osgi;
 
 import org.apache.felix.useradmin.RoleRepositoryStore;
+import org.apache.felix.useradmin.impl.EventDispatcher;
+import org.apache.felix.useradmin.impl.RoleRepository;
+import org.apache.felix.useradmin.impl.UserAdminImpl;
 import org.osgi.framework.BundleContext;
-import org.osgi.service.useradmin.Role;
-import org.osgi.util.tracker.ServiceTracker;
+import org.osgi.framework.ServiceReference;
+import org.osgi.framework.ServiceRegistration;
+import org.osgi.service.useradmin.UserAdmin;
+import org.osgi.util.tracker.ServiceTrackerCustomizer;
 
 /**
  * Provides an OSGi service tracker for {@link RoleRepositoryStore}.
- * <p>
- * This helper allows us to use {@link RoleRepositoryStore} without having to 
- * worry about the possible absence of the actual store implementation.
- * </p>
  */
-class RoleRepositoryStoreHelper extends ServiceTracker implements RoleRepositoryStore {
+class RoleRepositoryStoreHelper implements ServiceTrackerCustomizer {
+
+	private final EventDispatcher m_eventDispatcher;
+	private final BundleContext m_bundleContext;
 	
-    /**
-     * Creates a new {@link RoleRepositoryStoreHelper} instance.
-     * 
-     * @param context the bundle context to use, cannot be <code>null</code>.
-     */
-    public RoleRepositoryStoreHelper(BundleContext context) {
-        super(context, RoleRepositoryStore.class.getName(), null /* customizer */);
-    }
+	private ServiceRegistration m_userAdminRegistration = null;
+	
+	RoleRepositoryStoreHelper(EventDispatcher eventDispatcher, BundleContext bundleContext) {
+		this.m_eventDispatcher = eventDispatcher;
+		this.m_bundleContext = bundleContext;
+	}
+	
+	@Override
+	public Object addingService(ServiceReference reference) {
+		
+		if (m_userAdminRegistration != null) {
+			// consider only first tracked store 
+			return null;
+		}
+		
+		final RoleRepositoryStore store = (RoleRepositoryStore) m_bundleContext.getService(reference);
+		
+		// The actual service itself...
+        UserAdminImpl service = new UserAdminImpl(new RoleRepository(store), this.m_eventDispatcher);
+		
+		m_userAdminRegistration = m_bundleContext.registerService(UserAdmin.class.getName(), service, null);
+		
+		return store;
+	}
 
-    public Role addRole(String roleName, int type) throws Exception {
-        RoleRepositoryStore store = getStore();
-        if (store != null) {
-            return store.addRole(roleName, type);
-        }
+	@Override
+	public void modifiedService(ServiceReference reference, Object service) {
+		// do nothing
+	}
 
-        return null;
-    }
-
-    public Role[] getRoles(String filter) throws Exception {
-        RoleRepositoryStore store = getStore();
-        if (store != null) {
-            return store.getRoles(filter);
-        }
-
-        return new Role[0];
-    }
-
-    public Role getRoleByName(String roleName) throws Exception {
-        RoleRepositoryStore store = getStore();
-        if (store != null) {
-            return store.getRoleByName(roleName);
-        }
-
-        return null;
-    }
-
-    public Role removeRole(String roleName) throws Exception {
-        // and possibly also from our tracked store...
-        RoleRepositoryStore store = getStore();
-        if (store != null) {
-            return store.removeRole(roleName);
-        }
-
-        return null;
-    }
-
-    /**
-     * Returns the tracked {@link RoleRepositoryStore}.
-     * 
-     * @return the {@link RoleRepositoryStore}, can be <code>null</code>.
-     */
-    private RoleRepositoryStore getStore() {
-        return (RoleRepositoryStore) getService();
-    }
+	@Override
+	public void removedService(ServiceReference reference, Object service) {
+		m_userAdminRegistration.unregister();
+		m_userAdminRegistration = null;
+		
+		m_bundleContext.ungetService(reference);
+	}
+	
+     
 }
