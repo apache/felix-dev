@@ -34,6 +34,7 @@ class RoleRepositoryStoreHelper implements ServiceTrackerCustomizer {
 	private final EventDispatcher m_eventDispatcher;
 	private final BundleContext m_bundleContext;
 	
+	private UserAdminImpl m_userAdmin = null;
 	private ServiceRegistration m_userAdminRegistration = null;
 	
 	RoleRepositoryStoreHelper(EventDispatcher eventDispatcher, BundleContext bundleContext) {
@@ -52,9 +53,9 @@ class RoleRepositoryStoreHelper implements ServiceTrackerCustomizer {
 		final RoleRepositoryStore store = (RoleRepositoryStore) m_bundleContext.getService(reference);
 		
 		// The actual service itself...
-        UserAdminImpl service = new UserAdminImpl(new RoleRepository(store), this.m_eventDispatcher);
+        this.m_userAdmin = new UserAdminImpl(new RoleRepository(store), this.m_eventDispatcher);
 		
-		m_userAdminRegistration = m_bundleContext.registerService(UserAdmin.class.getName(), service, null);
+		this.m_userAdminRegistration = m_bundleContext.registerService(UserAdmin.class.getName(), this.m_userAdmin, null);
 		
 		return store;
 	}
@@ -66,10 +67,11 @@ class RoleRepositoryStoreHelper implements ServiceTrackerCustomizer {
 
 	@Override
 	public void removedService(ServiceReference reference, Object service) {
-		m_userAdminRegistration.unregister();
-		m_userAdminRegistration = null;
+		this.m_userAdminRegistration.unregister();
+		this.m_userAdminRegistration = null;
 		
-		m_bundleContext.ungetService(reference);
+		this.m_userAdmin.close();
+		this.m_bundleContext.ungetService(reference);
 	}
 	
      

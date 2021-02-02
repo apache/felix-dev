@@ -184,4 +184,8 @@ public class UserAdminImpl implements ServiceFactory, UserAdmin, RoleChangeListe
     private UserAdminEvent createUserAdminEvent(int type, Role role) {
         return new UserAdminEvent(m_serviceRef, type, role);
     }
+    
+    public void close() {
+    	this.m_roleRepository.removeRoleChangeListener(this);
+    }
 }
