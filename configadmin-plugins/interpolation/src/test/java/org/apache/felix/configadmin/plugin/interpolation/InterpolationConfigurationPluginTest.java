@@ -138,10 +138,19 @@ public class InterpolationConfigurationPluginTest {
 
         Dictionary<String, Object> dict = new Hashtable<>();
         dict.put("defaulted", "$[env:notset;default=foo]");
-
+        dict.put("defaulted2", "$[env:notset;default=]");
+        dict.put("defaulted3", "$[env:notset;default=foo=bar]");
+        dict.put("defaulted4", "$[env:notset;default=foo;=bar]");
+        dict.put("defaulted5", "$[env:notset;default= ]");
+        dict.put("defaulted6", "$[env:notset;default");
         plugin.modifyConfiguration(null, dict);
 
         assertEquals("foo", dict.get("defaulted"));
+        assertEquals("", dict.get("defaulted2"));
+        assertEquals("foo=bar", dict.get("defaulted3"));
+        assertEquals("foo", dict.get("defaulted4")); // semicolon is not supported in values
+        assertEquals(" ", dict.get("defaulted5"));
+        assertEquals("$[env:notset;default", dict.get("defaulted6"));
     }
 
     @Test

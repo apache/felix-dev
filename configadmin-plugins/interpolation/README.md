@@ -61,9 +61,12 @@ It is possible to specify a default value as part of the placeholder, for exampl
 
 ```
 "port" : "$[env:PORT;default=8080]"
+"label" : "$[env:LABEL;default=]"
 ```
 
 Without a default, the placeholder is left in the value if no value can be found. With a default, the default is used instead.
+
+The default value may contain all alphanumeric and punctuation characters and space except for a `;`. It may even be left out which leads to replacing the placeholder with the empty string.
 
 ## Type Support
 
