@@ -21,12 +21,15 @@ package org.apache.felix.scr.integration;
 
 import static org.junit.Assert.assertEquals;
 
+import java.util.Optional;
+
 import org.apache.felix.scr.integration.components.ConstructorSingleReference;
 import org.apache.felix.scr.integration.components.InjectOptionalComponent;
 import org.apache.felix.scr.integration.components.InjectOptionalComponent.Mode;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.ops4j.pax.exam.junit.PaxExam;
+import org.osgi.framework.ServiceRegistration;
 import org.osgi.service.component.runtime.dto.ComponentConfigurationDTO;
 
 
@@ -60,14 +63,26 @@ public class ComponentOptionalTest extends ComponentTestBase
             cmp1.checkMode(mode, null);
         }
 
-        ComponentConfigurationDTO ref1DTO = getDisabledConfigurationAndEnable(
-            SINGLE_REFERENCE1,
-            mode.isDynamic() && !mode.isMandatory()//
-                ? ComponentConfigurationDTO.ACTIVE
-                : ComponentConfigurationDTO.SATISFIED);
-        ConstructorSingleReference ref1Service = getServiceFromConfiguration(ref1DTO,
-            ConstructorSingleReference.class);
-
+        Object ref1Service;
+        ComponentConfigurationDTO ref1DTO;
+        ServiceRegistration<?> ref1Reg;
+        if (mode.isOptionalService())
+        {
+            ref1Service = Optional.of("Test1");
+            ref1DTO = null;
+            ref1Reg = bundleContext.registerService(Optional.class,
+                (Optional<?>) ref1Service, null);
+        }
+        else
+        {
+            ref1DTO = getDisabledConfigurationAndEnable(
+                SINGLE_REFERENCE1, mode.isDynamic() && !mode.isMandatory()//
+                    ? ComponentConfigurationDTO.ACTIVE
+                    : ComponentConfigurationDTO.SATISFIED);
+            ref1Service = getServiceFromConfiguration(ref1DTO,
+                ConstructorSingleReference.class);
+            ref1Reg = null;
+        }
         cc = findComponentConfigurationByName(componentname, mode.getSecondState());
         InjectOptionalComponent cmp2 = this.getServiceFromConfiguration(cc,
             InjectOptionalComponent.class);
@@ -86,12 +101,24 @@ public class ComponentOptionalTest extends ComponentTestBase
             cmp2.checkMode(mode, null);
         }
 
-        ComponentConfigurationDTO ref2DTO = getDisabledConfigurationAndEnable(
-            SINGLE_REFERENCE2, ComponentConfigurationDTO.SATISFIED);
-
-        ConstructorSingleReference ref2Service = getServiceFromConfiguration(ref2DTO,
-            ConstructorSingleReference.class);
-
+        Object ref2Service;
+        ComponentConfigurationDTO ref2DTO;
+        ServiceRegistration<?> ref2Reg;
+        if (mode.isOptionalService())
+        {
+            ref2Service = Optional.of("Test2");
+            ref2DTO = null;
+            ref2Reg = bundleContext.registerService(Optional.class,
+                (Optional<?>) ref2Service, null);
+        }
+        else
+        {
+            ref2DTO = getDisabledConfigurationAndEnable(
+                SINGLE_REFERENCE2, ComponentConfigurationDTO.SATISFIED);
+            ref2Service = getServiceFromConfiguration(ref2DTO,
+                ConstructorSingleReference.class);
+            ref2Reg = null;
+        }
         if (mode.isMandatory() || mode.isDynamic())
         {
             cmp2.checkMode(mode, ref1Service);
@@ -101,7 +128,14 @@ public class ComponentOptionalTest extends ComponentTestBase
             cmp2.checkMode(mode, null);
         }
 
-        disableAndCheck(ref1DTO);
+        if (ref1Reg != null)
+        {
+            ref1Reg.unregister();
+        }
+        if (ref1DTO != null)
+        {
+            disableAndCheck(ref1DTO);
+        }
 
         if (mode.isDynamic())
         {
@@ -166,5 +200,17 @@ public class ComponentOptionalTest extends ComponentTestBase
     public void test_constructor_optional() throws Exception
     {
         doTest(Mode.CONSTRUCTOR_OPTIONAL);
+    }
+
+    @Test
+    public void test_field_static_mandatory_service_optional() throws Exception
+    {
+        doTest(Mode.FIELD_SERVICE_STATIC_MANDATORY);
+    }
+
+    @Test
+    public void test_constructor_static_mandatory_service_optional() throws Exception
+    {
+        doTest(Mode.CONSTRUCTOR_SERVICE_STATIC_MANDATORY);
     }
 }

@@ -48,6 +48,20 @@
         />
     </scr:component>
 
+    <scr:component name="FIELD_SERVICE_STATIC_MANDATORY" enabled="false"
+                   init="3">
+        <implementation class="org.apache.felix.scr.integration.components.InjectOptionalComponent" />
+        <service factory="false">
+            <provide interface="org.apache.felix.scr.integration.components.InjectOptionalComponent"/>
+        </service>
+        <reference
+            name="refServiceFieldStatic"
+            interface="java.util.Optional"
+            field="refServiceFieldStatic"
+            cardinality="1..1"
+        />
+    </scr:component>
+
     <!-- Dynamic Field -->
     <scr:component name="FIELD_DYNAMIC_MANDATORY" enabled="false"
                    init="1">
@@ -101,6 +115,17 @@
         <reference interface="org.apache.felix.scr.integration.components.ConstructorSingleReference"
                    cardinality="0..1"
                    parameter="1"/>
+    </scr:component>
+
+    <scr:component name="CONSTRUCTOR_SERVICE_STATIC_MANDATORY" enabled="false"
+                   init="4">
+        <implementation class="org.apache.felix.scr.integration.components.InjectOptionalComponent" />
+        <service factory="false">
+            <provide interface="org.apache.felix.scr.integration.components.InjectOptionalComponent"/>
+        </service>
+        <reference interface="java.util.Optional"
+                   cardinality="1..1"
+                   parameter="3"/>
     </scr:component>
 
     <scr:component name="SingleReference1" enabled="false" activate="activator">
