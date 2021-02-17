@@ -1,3 +1,31 @@
+Changes in 2.1.26
+-----------------
+** Bug
+    * [FELIX-6352] - SCR should protect against unregistered IllegalStateException for its ConfigurationListener registrations
+    * [FELIX-6361] - IllegalArgumentException possible from LoggerFactory.getLogger(Bundle, String, Class<L>)
+    * [FELIX-6353] - Constructor injection: activation with optional reference fails if service not available
+    * [FELIX-6351] - EventDispatcher: Error during dispatch. (java.lang.IllegalStateException: Service already unregistered.)
+    * [FELIX-6349] - Possible NullPointerException on modified event in DependencyManager
+
+Changes in 2.1.24
+-----------------
+** Bug
+    * [FELIX-6327] - NoSuchElementException can occur with SingleDynamicCustomizer when services are removed
+    * [FELIX-6315] - Factory components are eagerly deactivated
+    * [FELIX-6325] - OSGi log package is mandatory but imported as optional
+
+Changes in 2.1.22
+-----------------
+** Bug
+    * [FELIX-6314] - NullPointerException in SingleComponentManager.disposeImplementationObject
+    * [FELIX-6108] - SCR activation log-messages cannot be disabled with R7 LogService
+    * [FELIX-6274] - Potential Class Space problems with multiple Log Service APIs
+    * [FELIX-6317] - dynamic greedy optional/mandatory references can get wrong service ranking
+    * [FELIX-6161] - SCR: Method of resolving references limits Service ListenerHook implementations
+** Improvement
+    * [FELIX-6307] - SCR logging uses null name for logger in LogServiceEnabledLogger.getLogger()
+    * [FELIX-6293] - Apache Felix SCR Logging
+
 Changes in 2.1.20
 -----------------
 ** Bug
