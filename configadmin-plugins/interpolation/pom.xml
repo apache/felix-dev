@@ -22,7 +22,7 @@
     <parent>
         <groupId>org.apache.felix</groupId>
         <artifactId>felix-parent</artifactId>
-        <version>6</version>
+        <version>7</version>
         <relativePath>../../../pom/pom.xml</relativePath>
     </parent>
 
@@ -121,7 +121,7 @@
         <dependency>
             <groupId>org.apache.felix</groupId>
             <artifactId>org.apache.felix.converter</artifactId>
-            <version>1.0.12</version>
+            <version>1.0.14</version>
             <scope>provided</scope>
         </dependency>
 
