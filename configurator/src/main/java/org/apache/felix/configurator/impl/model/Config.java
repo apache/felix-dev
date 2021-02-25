@@ -22,6 +22,8 @@ import java.io.File;
 import java.io.IOException;
 import java.io.Serializable;
 import java.util.Dictionary;
+import java.util.Enumeration;
+import java.util.Hashtable;
 import java.util.List;
 
 public class Config implements Serializable, Comparable<Config> {
@@ -62,7 +64,7 @@ public class Config implements Serializable, Comparable<Config> {
         this.pid = pid;
         this.ranking = ranking;
         this.bundleId = bundleId;
-        this.properties = properties;
+        this.properties = this.getPrivateCopyOf(properties);
         this.policy = policy;
     }
 
@@ -86,6 +88,22 @@ public class Config implements Serializable, Comparable<Config> {
         out.writeObject(files);
     }
 
+    /**
+     * Copy given Dictionary
+     */
+    private Dictionary<String, Object> getPrivateCopyOf(final Dictionary<String, Object> input) {
+        if ( input == null ) {
+            return null;
+        }
+
+        final Dictionary<String, Object> result = new Hashtable<>();
+        final Enumeration<String> e = input.keys();
+        while(e.hasMoreElements()) {
+            final String key = e.nextElement();
+            result.put(key, input.get(key));
+        }
+        return result;
+    }
     /**
      * Deserialize the object
      * - read version id
