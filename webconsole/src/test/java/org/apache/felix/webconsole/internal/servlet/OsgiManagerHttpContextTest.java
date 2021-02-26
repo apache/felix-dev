@@ -33,14 +33,15 @@ public class OsgiManagerHttpContextTest {
     public void testAuthenticate() throws Exception {
         BundleContext bc = Mockito.mock(BundleContext.class);
         HttpService svc = Mockito.mock(HttpService.class);
-        OsgiManagerHttpContext ctx = new OsgiManagerHttpContext(bc, svc, null, "foo", "bar", "blah");
+        OsgiManagerHttpContext ctx = new OsgiManagerHttpContext(svc, null, "blah");
 
         Method authenticateMethod = OsgiManagerHttpContext.class.getDeclaredMethod(
                 "authenticate", new Class [] {WebConsoleSecurityProvider.class, String.class, byte[].class});
         authenticateMethod.setAccessible(true);
 
-        assertEquals(true, authenticateMethod.invoke(ctx, null, "foo", "bar".getBytes()));
-        assertEquals(false, authenticateMethod.invoke(ctx, null, "foo", "blah".getBytes()));
+        BasicWebConsoleSecurityProvider lastResortSp = new BasicWebConsoleSecurityProvider(bc, "foo", "bar", "blah");
+        assertEquals(true, authenticateMethod.invoke(ctx, lastResortSp, "foo", "bar".getBytes()));
+        assertEquals(false, authenticateMethod.invoke(ctx, lastResortSp, "foo", "blah".getBytes()));
 
         WebConsoleSecurityProvider sp = new TestSecurityProvider();
         assertEquals(true, authenticateMethod.invoke(ctx, sp, "xxx", "yyy".getBytes()));
@@ -54,7 +55,7 @@ public class OsgiManagerHttpContextTest {
         Mockito.when(bc.getProperty(OsgiManager.FRAMEWORK_PROP_SECURITY_PROVIDERS)).thenReturn("a");
 
         HttpService svc = Mockito.mock(HttpService.class);
-        OsgiManagerHttpContext ctx = new OsgiManagerHttpContext(bc, svc, null, "foo", "bar", "blah");
+        OsgiManagerHttpContext ctx = new OsgiManagerHttpContext(svc, null, "blah");
 
         Method authenticateMethod = OsgiManagerHttpContext.class.getDeclaredMethod(
                 "authenticate", new Class [] {WebConsoleSecurityProvider.class, String.class, byte[].class});
