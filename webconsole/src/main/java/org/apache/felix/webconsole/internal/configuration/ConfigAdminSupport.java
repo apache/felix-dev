@@ -99,7 +99,7 @@ class ConfigAdminSupport
         return bundleContext;
     }
 
-    private MetaTypeServiceSupport getMetaTypeSupport()
+    MetaTypeServiceSupport getMetaTypeSupport()
     {
         Object metaTypeService = configManager.getService( ConfigManager.META_TYPE_NAME );
         if ( metaTypeService != null )
@@ -556,8 +556,9 @@ class ConfigAdminSupport
     }
 
 
-    final void listConfigurations( JSONWriter jw, String pidFilter, String locale, Locale loc )
+    final boolean listConfigurations( JSONWriter jw, String pidFilter, String locale, Locale loc )
     {
+        boolean hasConfigurations = false;
         try
         {
             // start with ManagedService instances
@@ -613,6 +614,7 @@ class ConfigAdminSupport
             jw.array();
             for ( Iterator<String> ii = optionsPlain.keySet().iterator(); ii.hasNext(); )
             {
+                hasConfigurations = true;
                 String id = ii.next();
                 Object name = optionsPlain.get( id );
 
@@ -652,6 +654,7 @@ class ConfigAdminSupport
         {
             configManager.log("listConfigurations: Unexpected problem encountered", e);
         }
+        return hasConfigurations;
     }
 
     /**

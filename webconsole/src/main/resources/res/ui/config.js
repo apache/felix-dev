@@ -698,12 +698,19 @@ $(document).ready(function() {
 	jsonSupport = configData.jsonsupport;
 
 	// display the configuration data
-	$(".statline").html(configData.status ? i18n.stat_ok : i18n.stat_missing);
+	var line = configData.status ? i18n.stat_ok : i18n.stat_missing;
+	line = line + " " + (configData.metatype ? i18n.metatype_ok : i18n.metatype_missing);
+	if ( configData.noconfigs ) {
+	    line = line + " " + i18n.noconfigs;
+	}
+	$(".statline").html(line);
 	if (configData.status) {
+	    var hasData = false;
 		configBody.empty();
 		var factories = {};
 
 		for(var i in configData.pids) {
+		    hasData = true;
 			var c = configData.pids[i];
 			if (c.fpid) {
 				if (!factories[c.fpid]) factories[c.fpid] = new Array();
@@ -713,6 +720,7 @@ $(document).ready(function() {
 			}
 		}
 		for(var i in configData.fpids) {
+            hasData = true;
 			addFactoryConfig(configData.fpids[i]);
 
 			var fpid = configData.fpids[i].id;
@@ -733,17 +741,19 @@ $(document).ready(function() {
 		}
 		initStaticWidgets(configTable);
 
-		// init tablesorte
-		configTable.tablesorter({
-			headers: {
-				0: { sorter: false },
-				3: { sorter: false }
-			},
-			sortList: [[1,1]],
-			textExtraction: treetableExtraction
-		}).bind('sortStart', function() { // clear cache, otherwise extraction will not work
-			var table = $(this).trigger('update'); 
-		}).find('th:eq(1)').click();
+		// init tablesorter
+		if ( hasData ) {
+		    configTable.tablesorter({
+			    headers: {
+				    0: { sorter: false },
+				    3: { sorter: false }
+			    },
+			    sortList: [[1,1]],
+			    textExtraction: treetableExtraction
+		    }).bind('sortStart', function() { // clear cache, otherwise extraction will not work
+			    var table = $(this).trigger('update'); 
+		    }).find('th:eq(1)').click();
+	 }
 	} else {
 		configContent.addClass('ui-helper-hidden');
 	}
