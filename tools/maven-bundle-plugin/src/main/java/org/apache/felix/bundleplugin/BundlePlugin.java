@@ -1074,7 +1074,7 @@ public class BundlePlugin extends AbstractMojo
              * Grab customized manifest entries from the maven-jar-plugin configuration
              */
             MavenArchiveConfiguration archiveConfig = JarPluginConfiguration.getArchiveConfiguration( currentProject );
-            String mavenManifestText = new MavenArchiver().getManifest( currentProject, archiveConfig.getManifest() ).toString();
+            String mavenManifestText = new MavenArchiver().getManifest( currentProject, archiveConfig ).toString();
             addMavenDescriptor = addMavenDescriptor && archiveConfig.isAddMavenDescriptor();
 
             Manifest mavenManifest = new Manifest();
