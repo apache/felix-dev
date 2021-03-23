@@ -1214,19 +1214,33 @@ public class BundlePlugin extends AbstractMojo
         String header = attributes.getValue( name );
         if ( header != null )
         {
-            Map<String, Map<String, String>> params = OSGiHeader.parseHeader( header, null ).toBasic();
-            Map<String, Map<String, String>> sorted = new TreeMap<>();
-            for ( Map.Entry<String, Map<String, String>> entry : params.entrySet() )
+            Parameters parameters = OSGiHeader.parseHeader(header, null);
+            Parameters sorted = new Parameters();
+            for ( Entry<String, Attrs> entry : parameters.entrySet() )
             {
-                String key = entry.getKey();
-                Map<String, String> attrs = entry.getValue();
-                Map<String, String> newAttrs = new TreeMap<>(
-                            Comparator.<String, Boolean>comparing( s -> !s.endsWith( ":" ) ).thenComparing( s -> s ) );
-                newAttrs.putAll( attrs );
-                sorted.put( key, newAttrs );
+                {
+                    String key = entry.getKey();
+                    Map<String, String> attrs = entry.getValue();
+                    Map<String, String> newAttrs = new TreeMap<>(
+                            Comparator.<String, Boolean>comparing( s -> !s.endsWith(":") ).thenComparing( s -> s ) );
+                    newAttrs.putAll( attrs );
+                    Attrs sortedAttrs = new Attrs();
+                    newAttrs.forEach( (k, v) ->
+                    {
+                        if ( v.contains( "," ) )
+                        {
+                            sortedAttrs.putTyped( k, v.split( "," ) );
+                        }
+                        else
+                        {
+                            sortedAttrs.putTyped( k, v );
+                        }
+                    });
+                    sorted.put( key, sortedAttrs );
+                }
+                String nh = sorted.toString();
+                attributes.putValue( name, nh );
             }
-            String nh = new Parameters( sorted ).toString();
-            attributes.putValue( name, nh );
         }
     }
 
