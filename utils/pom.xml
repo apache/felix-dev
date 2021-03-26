@@ -27,14 +27,14 @@
     <modelVersion>4.0.0</modelVersion>
     <name>Apache Felix Utils</name>
     <description>Utility classes for OSGi.</description>
-    <version>1.11.8</version>
+    <version>1.11.9-SNAPSHOT</version>
     <artifactId>org.apache.felix.utils</artifactId>
 
     <scm>
         <connection>scm:git:https://github.com/apache/felix-dev.git</connection>
         <developerConnection>scm:git:https://github.com/apache/felix-dev.git</developerConnection>
         <url>https://gitbox.apache.org/repos/asf?p=felix-dev.git</url>
-      <tag>org.apache.felix.utils-1.11.8</tag>
+      <tag>HEAD</tag>
   </scm>
 
     <properties>
