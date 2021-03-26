@@ -42,17 +42,19 @@ import org.osgi.service.log.LogListener;
 final class Log implements BundleListener, FrameworkListener, ServiceListener
 {
     /** The first log entry. */
-    private LogNode m_head;
+    private volatile LogNode m_head;
     /** The last log entry. */
-    private LogNode m_tail;
+    private volatile LogNode m_tail;
     /** The log size. */
-    private int m_size;
+    private volatile int m_size;
     /** The log listener thread. */
-    private LogListenerThread listenerThread;
+    private volatile LogListenerThread listenerThread;
     /** The maximum size for the log. */
     private final int m_maxSize;
     /** Whether or not to store debug messages. */
     private final boolean m_storeDebug;
+    /** Active flag */
+    private volatile boolean active = true;
 
     /**
      * Create a new instance.
@@ -68,8 +70,9 @@ final class Log implements BundleListener, FrameworkListener, ServiceListener
     /**
      * Close the log.
      */
-    void close()
+    synchronized void close()
     {
+        active = false;
         if (listenerThread != null)
         {
             listenerThread.shutdown();
@@ -98,6 +101,10 @@ final class Log implements BundleListener, FrameworkListener, ServiceListener
      */
     synchronized void addEntry(final LogEntry entry)
     {
+        if ( !active )
+        {
+            return;
+        }
         if (m_maxSize != 0)
         {
             // add the entry to the historic log
@@ -152,14 +159,17 @@ final class Log implements BundleListener, FrameworkListener, ServiceListener
      */
     synchronized void addListener(final LogListener listener)
     {
-        if (listenerThread == null)
+        if ( active )
         {
-            // create a new listener thread if necessary:
-            // the listener thread only runs if there are any registered listeners
-            listenerThread = new LogListenerThread();
-            listenerThread.start();
+            if (listenerThread == null)
+            {
+                // create a new listener thread if necessary:
+                // the listener thread only runs if there are any registered listeners
+                listenerThread = new LogListenerThread();
+                listenerThread.start();
+            }
+            listenerThread.addListener(listener);
         }
-        listenerThread.addListener(listener);
     }
 
     /**
