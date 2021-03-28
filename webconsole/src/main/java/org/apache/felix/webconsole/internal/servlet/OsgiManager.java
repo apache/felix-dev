@@ -230,6 +230,9 @@ public class OsgiManager extends GenericServlet
 
     private String webManagerRoot;
 
+    // not-null when the BasicWebConsoleSecurityProvider service is registered
+    private ServiceRegistration<WebConsoleSecurityProvider> basicSecurityServiceRegistration;
+
     // true if the OsgiManager is registered as a Servlet with the HttpService
     private boolean httpServletRegistered;
 
@@ -958,10 +961,21 @@ public class OsgiManager extends GenericServlet
         // register the servlet and resources
         try
         {
-            HttpContext httpContext = new OsgiManagerHttpContext(bundleContext, httpService,
-                securityProviderTracker, userId, password, realm);
+            HttpContext httpContext = new OsgiManagerHttpContext(httpService,
+                securityProviderTracker, realm);
 
             Dictionary<String, String> servletConfig = toStringConfig(config);
+
+            if (basicSecurityServiceRegistration == null) {
+                //register this component
+                BasicWebConsoleSecurityProvider service = new BasicWebConsoleSecurityProvider(bundleContext,
+                        userId, password, realm);
+                Dictionary<String, Object> serviceProperties = new Hashtable<>(); // NOSONAR
+                // this is a last resort service, so use a low service ranking to prefer all other services over this one
+                serviceProperties.put(Constants.SERVICE_RANKING, Integer.MIN_VALUE);
+                basicSecurityServiceRegistration = bundleContext.registerService(WebConsoleSecurityProvider.class,
+                        service, serviceProperties);
+            }
 
             if (!httpServletRegistered) {
                 // register this servlet and take note of this
@@ -1001,6 +1015,16 @@ public class OsgiManager extends GenericServlet
     synchronized void unregisterHttpService() {
         if (httpService == null)
             return;
+
+        if (basicSecurityServiceRegistration != null) {
+            try {
+                basicSecurityServiceRegistration.unregister();
+            } catch (Throwable t) {
+                log(LogService.LOG_WARNING,
+                        "unbindHttpService: Failed unregistering basic WebConsoleSecurityProvider", t);
+            }
+            basicSecurityServiceRegistration = null;
+        }
 
         if (httpResourcesRegistered)
         {
