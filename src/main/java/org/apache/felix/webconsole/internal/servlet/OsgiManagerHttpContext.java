@@ -17,16 +17,19 @@
 package org.apache.felix.webconsole.internal.servlet;
 
 
+import static org.apache.felix.webconsole.internal.servlet.BasicWebConsoleSecurityProvider.AUTHENTICATION_SCHEME_BASIC;
+import static org.apache.felix.webconsole.internal.servlet.BasicWebConsoleSecurityProvider.HEADER_AUTHORIZATION;
+import static org.apache.felix.webconsole.internal.servlet.BasicWebConsoleSecurityProvider.HEADER_WWW_AUTHENTICATE;
+
 import java.io.IOException;
-import java.io.UnsupportedEncodingException;
 import java.net.URL;
+
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 
 import org.apache.felix.webconsole.User;
 import org.apache.felix.webconsole.WebConsoleSecurityProvider;
 import org.apache.felix.webconsole.WebConsoleSecurityProvider2;
-import org.osgi.framework.BundleContext;
 import org.osgi.service.http.HttpContext;
 import org.osgi.service.http.HttpService;
 import org.osgi.util.tracker.ServiceTracker;
@@ -35,33 +38,17 @@ import org.osgi.util.tracker.ServiceTracker;
 final class OsgiManagerHttpContext implements HttpContext
 {
 
-    private static final String HEADER_WWW_AUTHENTICATE = "WWW-Authenticate";
-
-    private static final String HEADER_AUTHORIZATION = "Authorization";
-
-    private static final String AUTHENTICATION_SCHEME_BASIC = "Basic";
-
-    private final BundleContext bundleContext;
-
     private final HttpContext base;
 
     private final ServiceTracker<WebConsoleSecurityProvider, WebConsoleSecurityProvider> tracker;
 
-    private final String username;
-
-    private final Password password;
-
     private final String realm;
 
-
-    OsgiManagerHttpContext(final BundleContext bundleContext,
-        final HttpService httpService, final ServiceTracker<WebConsoleSecurityProvider, WebConsoleSecurityProvider> tracker, final String username,
-        final String password, final String realm )
+    OsgiManagerHttpContext(final HttpService httpService,
+            final ServiceTracker<WebConsoleSecurityProvider, WebConsoleSecurityProvider> tracker,
+            final String realm)
     {
-        this.bundleContext = bundleContext;
         this.tracker = tracker;
-        this.username = username;
-        this.password = new Password(password);
         this.realm = realm;
         this.base = httpService.createDefaultHttpContext();
     }
@@ -162,8 +149,8 @@ final class OsgiManagerHttpContext implements HttpContext
                 {
                     try
                     {
-                        byte[][] userPass = base64Decode( authInfo );
-                        final String username = toString( userPass[0] );
+                        byte[][] userPass = BasicWebConsoleSecurityProvider.base64Decode( authInfo );
+                        final String username = BasicWebConsoleSecurityProvider.toString( userPass[0] );
 
                         // authenticate
                         if ( authenticate( provider, username, userPass[1] ) )
@@ -204,52 +191,11 @@ final class OsgiManagerHttpContext implements HttpContext
         return false;
     }
 
-    private static byte[][] base64Decode( String srcString )
-    {
-        byte[] transformed = Base64.decodeBase64( srcString );
-        for ( int i = 0; i < transformed.length; i++ )
-        {
-            if ( transformed[i] == ':' )
-            {
-                byte[] user = new byte[i];
-                byte[] pass = new byte[transformed.length - i - 1];
-                System.arraycopy( transformed, 0, user, 0, user.length );
-                System.arraycopy( transformed, i + 1, pass, 0, pass.length );
-                return new byte[][]
-                    { user, pass };
-            }
-        }
-
-        return new byte[][]
-            { transformed, new byte[0] };
-    }
-
-
-    private static String toString( final byte[] src )
-    {
-        try
-        {
-            return new String( src, "ISO-8859-1" );
-        }
-        catch ( UnsupportedEncodingException uee )
-        {
-            return new String( src );
-        }
-    }
-
-
     private boolean authenticate( WebConsoleSecurityProvider provider, String username, byte[] password )
     {
         if ( provider != null )
         {
-            return provider.authenticate( username, toString( password ) ) != null;
-        }
-        if ( this.username.equals( username ) && this.password.matches( password ) )
-        {
-            if (bundleContext.getProperty(OsgiManager.FRAMEWORK_PROP_SECURITY_PROVIDERS) == null) {
-                // Only allow username and password authentication if no mandatory security providers are registered
-                return true;
-            }
+            return provider.authenticate( username, BasicWebConsoleSecurityProvider.toString( password ) ) != null;
         }
         return false;
     }
