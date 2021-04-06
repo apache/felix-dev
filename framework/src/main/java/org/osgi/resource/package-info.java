@@ -1,5 +1,5 @@
 /*
- * Copyright (c) OSGi Alliance (2011, 2013). All Rights Reserved.
+ * Copyright (c) OSGi Alliance (2011, 2020). All Rights Reserved.
  * 
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -25,10 +25,10 @@
  * Import-Package: org.osgi.resource; version=&quot;[1.0,2.0)&quot;
  * </pre>
  * 
- * @author $Id: package-info.java 1614569 2014-07-30 07:22:32Z cziegeler $
+ * @author $Id: f0906f34aa8c5d2fb14e184297c026a719cf2385 $
  */
 
-@Version("1.0")
+@Version("1.0.1")
 package org.osgi.resource;
 
 import org.osgi.annotation.versioning.Version;
