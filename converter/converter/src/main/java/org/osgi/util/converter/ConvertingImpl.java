@@ -297,20 +297,20 @@ class ConvertingImpl extends AbstractSpecifying<Converting>
 	@SuppressWarnings("unchecked")
 	private <T> T convertToArray(Class< ? > componentClz, Type componentType, InternalConverter c) {
 		Collection< ? > collectionView = collectionView(c);
-		Iterator< ? > itertor = collectionView.iterator();
+		Iterator< ? > iterator = collectionView.iterator();
 		try {
 			Object array = Array.newInstance(componentClz,
 					collectionView.size());
 			for (int i = 0; i < collectionView.size()
-					&& itertor.hasNext(); i++) {
-				Object next = itertor.next();
+					&& iterator.hasNext(); i++) {
+				Object next = iterator.next();
 				Object converted = c.convert(next)
 						.to(componentType);
 				Array.set(array, i, converted);
 			}
 			return (T) array;
 		} catch (Exception e) {
-			return null;
+			throw new ConversionException("Cannot iterate over " + collectionView.getClass(), e);
 		}
 	}
 
