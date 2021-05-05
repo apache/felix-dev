@@ -38,7 +38,6 @@ import java.util.ServiceLoader;
 import org.apache.felix.scr.impl.logger.InternalLogger.Level;
 import org.apache.felix.scr.impl.logger.LogManager.LoggerFacade;
 import org.apache.felix.scr.impl.logger.LogService.LogEntry;
-import org.apache.felix.scr.impl.manager.ScrConfiguration;
 import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
@@ -115,7 +114,7 @@ public class LoggerTest {
 	public void formatTest() {
 		LogService l = new LogService(log.getBundleContext());
 		l.register();
-		ScrConfiguration config = mock(ScrConfiguration.class);
+		LogConfiguration config = mock(LogConfiguration.class);
 		when(config.getLogLevel()).thenReturn(Level.DEBUG);
 		ExtLogManager elm = new ExtLogManager(scr.getBundleContext(), config);
         elm.open();
@@ -129,10 +128,12 @@ public class LoggerTest {
 
 	@Test
 	public void testStandardOutput() throws IOException {
-		ScrConfiguration config = mock(ScrConfiguration.class);
+	    LogConfiguration config = mock(LogConfiguration.class);
 		when(config.getLogLevel()).thenReturn(Level.DEBUG);
+		
 		ExtLogManager elm = new ExtLogManager(scr.getBundleContext(), config);
         elm.open();
+        
 		try (Buf out = new Buf(System.out);
 				Buf err = new Buf(System.err);) {
 			try {
@@ -185,15 +186,17 @@ public class LoggerTest {
 		LogService l = new LogService(log.getBundleContext());
 		l.register();
 
-		ScrConfiguration config = mock(ScrConfiguration.class);
+		LogConfiguration config = mock(LogConfiguration.class);
 		when(config.getLogLevel()).thenReturn(Level.DEBUG);
-		when(config.isLogExtension()).thenReturn(true);
-		ScrLogger logger = ScrLogManager.scr(scr.getBundleContext(), config);
+		when(config.isLogEnabled()).thenReturn(true);
+		when(config.isLogExtensionEnabled()).thenReturn(true);
+		
+		ScrLogger logger = ScrLoggerFactory.create(scr.getBundleContext(), config);
 		BundleLogger bundle = logger.bundle(component);
 		bundle.log(Level.ERROR, "Ext", null);
 		assertThat(l.entries).hasSize(1);
 		LogEntry le = l.entries.get(0);
-        assertThat(le.bundle).isEqualTo(component);
+        assertThat(le.bundle).isEqualTo(scr);
 	}
 
 	@Test
@@ -201,11 +204,13 @@ public class LoggerTest {
 		LogService l = new LogService(log.getBundleContext());
 		l.register();
 
-		ScrConfiguration config = mock(ScrConfiguration.class);
-		when(config.isLogExtension()).thenReturn(false);
+		LogConfiguration config = mock(LogConfiguration.class);
+		
+		when(config.isLogEnabled()).thenReturn(true);
+		when(config.isLogExtensionEnabled()).thenReturn(false);
 		when(config.getLogLevel()).thenReturn(Level.DEBUG);
 
-		ScrLogger logger = ScrLogManager.scr(scr.getBundleContext(), config);
+		ScrLogger logger = ScrLoggerFactory.create(scr.getBundleContext(), config);
 		BundleLogger bundle = logger.bundle(component);
 		bundle.log(Level.ERROR, "Ext", null);
 		assertThat(l.entries).hasSize(1);
@@ -215,8 +220,10 @@ public class LoggerTest {
 
 	@Test
 	public void testExtensionLogLevelNotLoggingWhenRootSetToInfoAndLevelIsDebug() {
-		ScrConfiguration config = mock(ScrConfiguration.class);
-		when(config.isLogExtension()).thenReturn(true);
+	    LogConfiguration config = mock(LogConfiguration.class);
+		
+		when(config.isLogEnabled()).thenReturn(true);
+		when(config.isLogExtensionEnabled()).thenReturn(true);
 		when(config.getLogLevel()).thenReturn(Level.DEBUG);
 
 		LogService l = new LogService(log.getBundleContext());
@@ -224,7 +231,7 @@ public class LoggerTest {
 		l.levels.put(Logger.ROOT_LOGGER_NAME, LogLevel.INFO);
 		l.defaultLogLevel = LogLevel.TRACE;
 
-		ScrLogger lscr = ScrLogManager.scr(scr.getBundleContext(), config);
+		ScrLogger lscr = ScrLoggerFactory.create(scr.getBundleContext(), config);
 
 		assertThat(lscr.isLogEnabled(Level.DEBUG)).isFalse();
 		assertThat(lscr.isLogEnabled(Level.INFO)).isTrue();
@@ -236,8 +243,10 @@ public class LoggerTest {
 
 	@Test
 	public void testExtensionLogLevelNotLoggingWhenPartialNameSetToInfoAndLevelIsDebug() {
-		ScrConfiguration config = mock(ScrConfiguration.class);
-		when(config.isLogExtension()).thenReturn(true);
+	    LogConfiguration config = mock(LogConfiguration.class);
+		
+		when(config.isLogEnabled()).thenReturn(true);    
+		when(config.isLogExtensionEnabled()).thenReturn(true);
 		when(config.getLogLevel()).thenReturn(Level.DEBUG);
 
 		LogService l = new LogService(log.getBundleContext());
@@ -245,7 +254,7 @@ public class LoggerTest {
 		l.register();
 		l.levels.put("org.apache.felix.scr", LogLevel.INFO);
 
-		ScrLogger lscr = ScrLogManager.scr(scr.getBundleContext(), config);
+		ScrLogger lscr = ScrLoggerFactory.create(scr.getBundleContext(), config);
 
 		assertThat(lscr.isLogEnabled(Level.DEBUG)).isFalse();
 		assertThat(lscr.isLogEnabled(Level.INFO)).isTrue();
@@ -257,8 +266,9 @@ public class LoggerTest {
 
 	@Test
 	public void testExtensionLogManager() {
-		ScrConfiguration config = mock(ScrConfiguration.class);
-		when(config.isLogExtension()).thenReturn(true);
+	    LogConfiguration config = mock(LogConfiguration.class);
+		
+		when(config.isLogExtensionEnabled()).thenReturn(true);
 		when(config.getLogLevel()).thenReturn(Level.DEBUG);
 
 		LogService l = new LogService(log.getBundleContext());
@@ -285,7 +295,7 @@ public class LoggerTest {
 			assertThat(l.entries).hasSize(1);
 			LogEntry le = l.entries.get(0);
 			assertThat(le.format).isEqualTo("Bundle");
-            assertThat(le.bundle).isEqualTo(component);
+            assertThat(le.bundle).isEqualTo(scr);
 			assertThat(le.loggername).isEqualTo(ExtLogManager.SCR_LOGGER_PREFIX + "component");
 		}
 
@@ -296,7 +306,7 @@ public class LoggerTest {
 			assertThat(l.entries).hasSize(1);
 			LogEntry le = l.entries.get(0);
 			assertThat(le.format).isEqualTo("[name] Component");
-			assertThat(le.bundle).isEqualTo(component);
+			assertThat(le.bundle).isEqualTo(scr);
 			assertThat(le.loggername).isEqualTo(ExtLogManager.SCR_LOGGER_PREFIX + "component.name");
 
 			l.entries.clear();
@@ -310,11 +320,33 @@ public class LoggerTest {
 			lm.scr().close();
 		}
 	}
+	
+	@Test
+    public void testDisabledLogging() {
+	    LogConfiguration config = mock(LogConfiguration.class);
+        
+        when(config.isLogEnabled()).thenReturn(false);
+
+        LogService l = new LogService(log.getBundleContext());
+        l.register();
+        l.levels.put(Logger.ROOT_LOGGER_NAME, LogLevel.ERROR);
+        l.defaultLogLevel = LogLevel.ERROR;
+
+        ScrLogger lscr = ScrLoggerFactory.create(scr.getBundleContext(), config);
+
+        assertThat(lscr.isLogEnabled(Level.DEBUG)).isFalse();
+        assertThat(lscr.isLogEnabled(Level.INFO)).isFalse();
+
+        lscr.log(Level.DEBUG, "I should not be reported", null);
+
+        assertThat(l.entries).isEmpty();
+    }
 
 	@Test
 	public void testBackwardCompatibilityOutput() {
-		ScrConfiguration config = mock(ScrConfiguration.class);
-		when(config.isLogExtension()).thenReturn(false);
+	    LogConfiguration config = mock(LogConfiguration.class);
+		
+		when(config.isLogExtensionEnabled()).thenReturn(false);
 		when(config.getLogLevel()).thenReturn(Level.DEBUG);
 
 		LogService l = new LogService(log.getBundleContext());
@@ -365,9 +397,11 @@ public class LoggerTest {
 
 	@Test
 	public void testLifeCycle() {
-
-		LogManager lm = new LogManager(scr.getBundleContext());
+	    LogConfiguration config = mock(LogConfiguration.class);
+	    
+		LogManager lm = new LogManager(scr.getBundleContext(), config);
         lm.open();
+        
 		LoggerFacade facade = lm.getLogger(scr, "lifecycle", LoggerFacade.class);
 		assertThat(facade.logger).isNull();
 
@@ -401,9 +435,11 @@ public class LoggerTest {
 
 	@Test
 	public void testPrioritiesLogService() {
-
-		LogManager lm = new LogManager(scr.getBundleContext());
+	    LogConfiguration config = mock(LogConfiguration.class);
+	    
+		LogManager lm = new LogManager(scr.getBundleContext(), config);
         lm.open();
+        
 		LoggerFacade facade = lm.getLogger(scr, "lifecycle", LoggerFacade.class);
 		assertThat(facade.logger).isNull();
 
@@ -429,8 +465,7 @@ public class LoggerTest {
 
 	@Test
 	public void testLifeCycleOfComponentBundle() throws BundleException, InterruptedException {
-
-		ScrConfiguration config = mock(ScrConfiguration.class);
+	    LogConfiguration config = mock(LogConfiguration.class);
 
 		LogService l = new LogService(log.getBundleContext());
 		l.register();
@@ -442,22 +477,21 @@ public class LoggerTest {
 		assertThat(lm.lock.domains).hasSize(1);
 		component.stop();
 
+		lm.close();
 		for (int i = 0; i < 100; i++) {
 			if (lm.lock.domains.isEmpty())
 				return;
 			Thread.sleep(10);
 		}
-		lm.close();
 		fail("domains not cleared within 1 sec");
 	}
 
 	@Test
 	public void testLogLevels() {
-
-		ScrConfiguration config = mock(ScrConfiguration.class);
+	    LogConfiguration config = mock(LogConfiguration.class);
 
 		when(config.getLogLevel()).thenReturn(Level.DEBUG);
-		when(config.isLogExtension()).thenReturn(false);
+		when(config.isLogExtensionEnabled()).thenReturn(false);
 
 		LogService l = new LogService(log.getBundleContext());
 
@@ -465,6 +499,7 @@ public class LoggerTest {
 
 		ScrLogManager lm = new ScrLogManager(scr.getBundleContext(), config);
         lm.open();
+        
 		ScrLogger facade = lm.scr();
 
 		assert LogLevel.values().length == Level.values().length;
