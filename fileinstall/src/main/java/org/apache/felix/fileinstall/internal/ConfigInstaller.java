@@ -298,11 +298,13 @@ public class ConfigInstaller implements ArtifactInstaller, ConfigurationListener
         {
             ht.put(DirectoryWatcher.FILENAME, toConfigKey(f));
             if (old == null) {
-                Util.log(context, Logger.LOG_INFO, "Creating configuration from " + pid[0]
-                        + (pid[1] == null ? "" : "-" + pid[1]) + ".cfg", null);
+                Util.log(context, Logger.LOG_INFO, "Creating configuration {" + pid[0]
+                        + (pid[1] == null ? "" : "-" + pid[1])
+                        + "} from " + f.getName(), null);
             } else {
-                Util.log(context, Logger.LOG_INFO, "Updating configuration from " + pid[0]
-                        + (pid[1] == null ? "" : "-" + pid[1]) + ".cfg", null);
+                Util.log(context, Logger.LOG_INFO, "Updating configuration {" + pid[0]
+                        + (pid[1] == null ? "" : "-" + pid[1])
+						+ "} from " + f.getName(), null);
             }
             config.update(ht);
             return true;
@@ -324,8 +326,9 @@ public class ConfigInstaller implements ArtifactInstaller, ConfigurationListener
     boolean deleteConfig(File f) throws Exception
     {
         String pid[] = parsePid(f.getName());
-        Util.log(context, Logger.LOG_INFO, "Deleting configuration from " + pid[0]
-                + (pid[1] == null ? "" : "-" + pid[1]) + ".cfg", null);
+        Util.log(context, Logger.LOG_INFO, "Deleting configuration {" + pid[0]
+                + (pid[1] == null ? "" : "-" + pid[1])
+                + "} from " + f.getName(), null);
         Configuration config = getConfiguration(toConfigKey(f), pid[0], pid[1]);
         config.delete();
         return true;

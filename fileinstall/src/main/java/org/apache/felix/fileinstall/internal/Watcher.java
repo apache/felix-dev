@@ -71,9 +71,9 @@ public abstract class Watcher implements Closeable {
             }
         }
         if (!Files.exists(root)) {
-            fail("Root path does not exist: " + root);
+            fail("Root path does not exist: %s", root);
         } else if (!Files.isDirectory(root)) {
-            fail("Root path is not a directory: " + root);
+            fail("Root path is not a directory: %s", root);
         }
         if (watcher == null) {
             watcher = watch ? getFileSystem().newWatchService() : null;
@@ -166,7 +166,7 @@ public abstract class Watcher implements Closeable {
             }
             Path dir = keys.get(key);
             if (dir == null) {
-                warn("Could not find key for " + key);
+                warn("Could not find key for %s", key);
                 continue;
             }
 
@@ -178,7 +178,7 @@ public abstract class Watcher implements Closeable {
                 Path name = ev.context();
                 Path child = dir.resolve(name);
 
-                debug("Processing event {} on path {}", kind, child);
+                debug("Processing event %s on path %s", kind, child);
 
                 if (kind == OVERFLOW) {
 //                    rescan();
@@ -211,7 +211,7 @@ public abstract class Watcher implements Closeable {
             // reset key and remove from set if directory no longer accessible
             boolean valid = key.reset();
             if (!valid) {
-                debug("Removing key " + key + " and dir " + dir + " from keys");
+                debug("Removing key %s and dir %s from keys", key, dir);
                 keys.remove(key);
 
                 // all directories are inaccessible
@@ -247,7 +247,7 @@ public abstract class Watcher implements Closeable {
             List<Path> files = new ArrayList<Path>(processedMap.keySet());
             for (Path path : files) {
                 if (!Files.exists(path)) {
-                    debug("File has been deleted: " + path);
+                    debug("File has been deleted: %s", path);
                     processedMap.remove(path);
                     if (isMatchesFile(path)) {
                         onRemove(file);
@@ -262,9 +262,9 @@ public abstract class Watcher implements Closeable {
         if (watcher != null) {
             WatchKey key = path.register(watcher, ENTRY_CREATE, ENTRY_MODIFY, ENTRY_DELETE);
             keys.put(key, path);
-            debug("Watched path " + path + " key " + key);
+            debug("Watched path %s key %s", path, key);
         } else {
-            warn("No watcher yet for path " + path);
+            warn("No watcher yet for path %s", path);
         }
     }
 
@@ -312,8 +312,8 @@ public abstract class Watcher implements Closeable {
      * like spring or blueprint, at least the error message will be clearly shown in the log
      *
      */
-    public void fail(String message) {
-        warn(message);
+    public void fail(String message, Object... args) {
+        warn(message, args);
         throw new IllegalArgumentException(message);
     }
 
