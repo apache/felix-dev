@@ -73,6 +73,7 @@ public class ConfigInstaller implements ArtifactInstaller, ConfigurationListener
     private final Method addAttributesMethod;
     private final Method getAttributesMethod;
     private final Method removeAttributesMethod;
+    private final Method updateIfDifferentMethod;
     private final Object READ_ONLY_ATTRIBUTE_ARRAY;
     private final boolean osWin;
     private ServiceRegistration<?> registration;
@@ -86,6 +87,7 @@ public class ConfigInstaller implements ArtifactInstaller, ConfigurationListener
         Method aaMethod = null;
         Method gaMethod = null;
         Method raMethod = null;
+        Method uidMethod = null;
 
         if (this.configAdmin != null) {
             for (Method method : Configuration.class.getDeclaredMethods())
@@ -102,12 +104,17 @@ public class ConfigInstaller implements ArtifactInstaller, ConfigurationListener
                 {
                     raMethod = method;
                 }
+                else if ("updateIfDifferent".equals(method.getName()))
+                {
+                    uidMethod = method;
+                }
             }
         }
 
         this.addAttributesMethod = aaMethod;
         this.getAttributesMethod = gaMethod;
         this.removeAttributesMethod = raMethod;
+        this.updateIfDifferentMethod = uidMethod;
 
         Object roAttributesArray = null;
         if (this.addAttributesMethod != null)
@@ -393,7 +400,7 @@ public class ConfigInstaller implements ArtifactInstaller, ConfigurationListener
                         + (pid[1] == null ? "" : "-" + pid[1])
                         + "} from " + f.getName(), null);
             }
-            config.update(ht);
+            update0(config, ht);
             return true;
         }
         else
@@ -563,6 +570,28 @@ public class ConfigInstaller implements ArtifactInstaller, ConfigurationListener
         }
 
         return false;
+    }
+
+    void update0(final Configuration config, final Hashtable<String, Object> ht) throws IOException {
+        if (updateIfDifferentMethod != null) {
+            try {
+                updateIfDifferentMethod.invoke(config, ht);
+            }
+            catch (InvocationTargetException ite) {
+                Throwable targetException = ite.getTargetException();
+                if (targetException instanceof IOException) {
+                    throw (IOException)targetException;
+                }
+
+                throw new RuntimeException(targetException);
+            }
+            catch (Throwable t) {
+                throw new RuntimeException(t);
+            }
+        }
+        else {
+            config.update(ht);
+        }
     }
 
     private boolean canWrite(File f) throws IOException {

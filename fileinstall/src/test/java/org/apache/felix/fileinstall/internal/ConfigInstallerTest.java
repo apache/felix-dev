@@ -101,7 +101,7 @@ public class ConfigInstallerTest extends TestCase {
         EasyMock.expect(mockBundleContext.getProperty((String) EasyMock.anyObject()))
                 .andReturn(null)
                 .anyTimes();
-        mockConfiguration.update(EasyMock.capture(props));
+        EasyMock.expect(mockConfiguration.updateIfDifferent(EasyMock.capture(props))).andReturn(true);
         EasyMock.expectLastCall();
         EasyMock.replay(mockConfiguration, mockConfigurationAdmin, mockBundleContext, mockBundle);
 
@@ -136,7 +136,7 @@ public class ConfigInstallerTest extends TestCase {
         EasyMock.expect(mockBundleContext.getProperty((String) EasyMock.anyObject()))
                 .andReturn(null)
                 .anyTimes();
-        mockConfiguration.update(EasyMock.capture(props));
+        EasyMock.expect(mockConfiguration.updateIfDifferent(EasyMock.capture(props))).andReturn(true);
         EasyMock.expectLastCall();
         EasyMock.replay(mockConfiguration, mockConfigurationAdmin, mockBundleContext, mockBundle);
 
@@ -248,7 +248,7 @@ public class ConfigInstallerTest extends TestCase {
                 .andReturn(mockConfiguration);
 
         ServiceReference<ConfigurationAdmin> sr = EasyMock.createMock(ServiceReference.class);
-        mockConfiguration.update(EasyMock.capture(props));
+        EasyMock.expect(mockConfiguration.updateIfDifferent(EasyMock.capture(props))).andReturn(true);
         EasyMock.expectLastCall();
 
         EasyMock.expect(mockConfigurationAdmin.getConfiguration(pid, "?"))
@@ -400,9 +400,9 @@ public class ConfigInstallerTest extends TestCase {
                 .andReturn(pid);
 
         final Capture<Dictionary<String, Object>> props = new Capture<>();
-        newConfiguration.update(EasyMock.capture(props));
+        EasyMock.expect(newConfiguration.updateIfDifferent(EasyMock.capture(props))).andReturn(true);
 
-        cachingPersistenceConfiguration.update(EasyMock.capture(props));
+        EasyMock.expect(cachingPersistenceConfiguration.updateIfDifferent(EasyMock.capture(props)));
         EasyMock.expectLastCall()
                 .andAnswer(new IAnswer<Boolean>() {
                     @Override
@@ -450,7 +450,7 @@ public class ConfigInstallerTest extends TestCase {
                 buffer.append("<Dictionary check: testkey present?>");
             }
         } );
-        mockConfiguration.update(new Hashtable<String, Object>());
+        EasyMock.expect(mockConfiguration.updateIfDifferent(new Hashtable<String, Object>())).andReturn(true);
         EasyMock.expect(mockConfigurationAdmin.listConfigurations((String) EasyMock.anyObject()))
                         .andReturn(null);
         EasyMock.expect(mockConfigurationAdmin.getConfiguration("firstcfg", "?"))
@@ -578,7 +578,7 @@ public class ConfigInstallerTest extends TestCase {
                 .andReturn(pid).times(2);
 
         final Capture<Dictionary<String, Object>> props = new Capture<>();
-        cachingPersistenceConfiguration.update(EasyMock.capture(props));
+        EasyMock.expect(cachingPersistenceConfiguration.updateIfDifferent(EasyMock.capture(props)));
         EasyMock.expectLastCall()
                 .andAnswer(new IAnswer<Boolean>() {
                     @Override
