@@ -16,17 +16,22 @@
  */
 package org.apache.felix.configadmin.plugin.interpolation;
 
+import static java.util.stream.Collectors.toList;
+
 import java.io.File;
 import java.io.IOException;
 import java.nio.charset.Charset;
 import java.nio.file.Files;
 import java.util.ArrayList;
 import java.util.Collection;
+import java.util.Collections;
 import java.util.Dictionary;
 import java.util.Enumeration;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.stream.Collectors;
+import java.util.stream.Stream;
 
 import org.osgi.framework.BundleContext;
 import org.osgi.framework.Constants;
@@ -91,17 +96,17 @@ class InterpolationConfigurationPlugin implements ConfigurationPlugin {
     }
 
     private final BundleContext context;
-    private final File directory;
+    private final List<File> directory;
 
     private final Charset encodingCharset;
 
     InterpolationConfigurationPlugin(BundleContext bc, String dir, String fileEncoding) {
         context = bc;
         if (dir != null) {
-            directory = new File(dir);
+            directory = Stream.of(dir.split("\\s*,\\s*")).map(File::new).collect(toList());
             getLog().info("Configured directory for secrets: {}", dir);
         } else {
-            directory = null;
+            directory = Collections.emptyList();
         }
         if (fileEncoding == null) {
             encodingCharset = Charset.defaultCharset();
@@ -188,7 +193,7 @@ class InterpolationConfigurationPlugin implements ConfigurationPlugin {
     }
 
     String getVariableFromFile(final String key, final String name, final Object pid) {
-        if (directory == null) {
+        if (directory.isEmpty()) {
             getLog().warn("Cannot replace property value {} for PID {}. No directory configured via framework property " +
                     Activator.DIR_PROPERTY, key, pid);
             return null;
@@ -199,16 +204,20 @@ class InterpolationConfigurationPlugin implements ConfigurationPlugin {
             return null;
         }
 
-        File file = new File(directory, name);
-        if (!file.isFile()) {
-            getLog().warn("Cannot replace variable. Configured path is not a regular file: " + file);
+        List<File> files = directory.stream().map(d -> new File(d, name)).filter(File::exists).collect(toList());
+        if (files.stream().noneMatch(File::isFile)) {
+            getLog().warn("Cannot replace variable. Configured paths are not regular files: " + files);
             return null;
         }
 
-        if (!file.getAbsolutePath().startsWith(directory.getAbsolutePath())) {
+        if (files.stream().map(File::getAbsolutePath).noneMatch(s -> directory.stream().anyMatch(dir -> s.startsWith(dir.getAbsolutePath())))) {
             getLog().error("Illegal secret location: " + name + " Going out the directory structure is not allowed");
             return null;
         }
+
+        File file = files.stream().findFirst().orElseThrow(
+            () -> new IllegalStateException(
+                "Something went terribly wrong. This should not be possible."));
 
         byte[] bytes;
         try {
@@ -253,7 +262,7 @@ class InterpolationConfigurationPlugin implements ConfigurationPlugin {
      * the delimiter (avoiding splitting), unless that backslash is preceded by
      * another backslash, in which case the two backslashes are replaced by a single
      * one and the value is split after the backslash.
-     * 
+     *
      * @param value     The value to split
      * @param delimiter The delimiter
      * @return The resulting array
