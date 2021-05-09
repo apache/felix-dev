@@ -96,6 +96,7 @@ public class ConfigInstallerTest extends TestCase {
         EasyMock.expect(mockConfigurationAdmin.getConfiguration(pid, "?"))
                 .andReturn(mockConfiguration);
         EasyMock.expect(mockConfiguration.getAttributes()).andReturn(Collections.emptySet());
+        EasyMock.expect(mockConfiguration.getPid()).andReturn(pid);
         EasyMock.expect(mockConfiguration.getProperties())
                 .andReturn(null);
         EasyMock.expect(mockBundleContext.getProperty((String) EasyMock.anyObject()))
@@ -133,6 +134,7 @@ public class ConfigInstallerTest extends TestCase {
             .andReturn(Collections.emptySet());
         EasyMock.expect(mockConfiguration.getProperties())
                 .andReturn(null);
+        EasyMock.expect(mockConfiguration.getPid()).andReturn(pid);
         EasyMock.expect(mockBundleContext.getProperty((String) EasyMock.anyObject()))
                 .andReturn(null)
                 .anyTimes();
@@ -155,7 +157,7 @@ public class ConfigInstallerTest extends TestCase {
         EasyMock.expect(mockBundle.loadClass(ConfigurationAttribute.class.getName())).andReturn((Class)ConfigurationAttribute.class).anyTimes();
         EasyMock.expect(mockConfigurationAdmin.listConfigurations((String) EasyMock.anyObject()))
                     .andReturn(null);
-        EasyMock.expect(mockConfigurationAdmin.createFactoryConfiguration( "pid", "?" ))
+        EasyMock.expect(mockConfigurationAdmin.getFactoryConfiguration( "pid", "factoryPid", "?" ))
                     .andReturn(mockConfiguration);
         EasyMock.replay(mockConfiguration, mockConfigurationAdmin, mockBundleContext, mockBundle);
 
@@ -173,7 +175,7 @@ public class ConfigInstallerTest extends TestCase {
         EasyMock.expect(mockBundle.loadClass(ConfigurationAttribute.class.getName())).andReturn((Class)ConfigurationAttribute.class).anyTimes();
         EasyMock.expect(mockConfigurationAdmin.listConfigurations((String) EasyMock.anyObject()))
                         .andReturn(null);
-        EasyMock.expect(mockConfigurationAdmin.createFactoryConfiguration( "pid", "?" ))
+        EasyMock.expect(mockConfigurationAdmin.getFactoryConfiguration( "pid", "factoryPid", "?" ))
                         .andReturn(mockConfiguration);
         EasyMock.replay(mockConfiguration, mockConfigurationAdmin, mockBundleContext, mockBundle);
 
@@ -206,6 +208,7 @@ public class ConfigInstallerTest extends TestCase {
     public void testDeleteConfig() throws Exception
     {
         mockConfiguration.delete();
+        EasyMock.expect(mockConfiguration.getPid()).andReturn("pid");
         EasyMock.expect(mockBundleContext.getBundle()).andReturn(mockBundle).anyTimes();
         EasyMock.expect(mockBundle.loadClass(ConfigurationAttribute.class.getName())).andReturn((Class)ConfigurationAttribute.class).anyTimes();
         EasyMock.expect(mockBundleContext.getProperty((String) EasyMock.anyObject()))
@@ -261,7 +264,7 @@ public class ConfigInstallerTest extends TestCase {
                     }
                 });
         EasyMock.expect(mockConfiguration.getPid())
-                .andReturn(pid);
+                .andReturn(pid).times(2);
 
         EasyMock.replay(mockConfiguration, mockConfigurationAdmin, mockBundleContext, mockBundle, sr);
 
@@ -377,7 +380,7 @@ public class ConfigInstallerTest extends TestCase {
                 .anyTimes();
 
         EasyMock.expect(cachingPersistenceConfiguration.getPid())
-                .andReturn(pid);
+                .andReturn(pid).times(2);
 
         EasyMock.expect(mockConfigurationAdmin.getConfiguration(pid, "?"))
                 .andReturn(cachingPersistenceConfiguration)
@@ -438,6 +441,7 @@ public class ConfigInstallerTest extends TestCase {
         EasyMock.expect(mockBundleContext.getProperty(DirectoryWatcher.LOG_LEVEL)).andReturn(null);
         EasyMock.expect(mockConfiguration.getProperties()).andReturn(new Hashtable<String, Object>());
         EasyMock.expect(mockConfiguration.getAttributes()).andReturn(Collections.emptySet());
+        EasyMock.expect(mockConfiguration.getPid()).andReturn("firstcfg");
         EasyMock.reportMatcher(new IArgumentMatcher()
         {
             public boolean matches( Object argument )
@@ -559,6 +563,8 @@ public class ConfigInstallerTest extends TestCase {
             }
         };
 
+        EasyMock.expect(cachingPersistenceConfiguration.getPid())
+                .andReturn(pid).times(3);
         EasyMock.expect(cachingPersistenceConfiguration.getProperties())
                 .andReturn(cachedProps)
                 .anyTimes();

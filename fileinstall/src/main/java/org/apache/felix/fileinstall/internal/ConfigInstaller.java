@@ -70,6 +70,7 @@ public class ConfigInstaller implements ArtifactInstaller, ConfigurationListener
     private final ConfigurationAdmin configAdmin;
     private final FileInstall fileInstall;
     private final Map<String, String> pidToFile = new HashMap<>();
+    private final Method getFactoryConfigurationMethod;
     private final Method addAttributesMethod;
     private final Method getAttributesMethod;
     private final Method removeAttributesMethod;
@@ -83,12 +84,20 @@ public class ConfigInstaller implements ArtifactInstaller, ConfigurationListener
         this.configAdmin = configAdmin;
         this.fileInstall = fileInstall;
 
+        Method gfcMethod = null;
         Method aaMethod = null;
         Method gaMethod = null;
         Method raMethod = null;
         Method uidMethod = null;
 
         if (this.configAdmin != null) {
+            for (Method method : ConfigurationAdmin.class.getDeclaredMethods())
+            {
+                if ("getFactoryConfiguration".equals(method.getName()) && (method.getParameterCount() == 3))
+                {
+                    gfcMethod = method;
+                }
+            }
             for (Method method : Configuration.class.getDeclaredMethods())
             {
                 if ("addAttributes".equals(method.getName()))
@@ -110,6 +119,7 @@ public class ConfigInstaller implements ArtifactInstaller, ConfigurationListener
             }
         }
 
+        this.getFactoryConfigurationMethod = gfcMethod;
         this.addAttributesMethod = aaMethod;
         this.getAttributesMethod = gaMethod;
         this.removeAttributesMethod = raMethod;
@@ -391,12 +401,12 @@ public class ConfigInstaller implements ArtifactInstaller, ConfigurationListener
             {
                 ht.put(DirectoryWatcher.FILENAME, toConfigKey(f));
                 if (old == null) {
-                    Util.log(context, Logger.LOG_INFO, "Creating configuration {" + pid[0]
-                            + (pid[1] == null ? "" : "-" + pid[1])
+                    Util.log(context, Logger.LOG_INFO, "Creating configuration {"
+                            + config.getPid()
                             + "} from " + f.getAbsolutePath(), null);
                 } else {
-                    Util.log(context, Logger.LOG_INFO, "Updating configuration {" + pid[0]
-                            + (pid[1] == null ? "" : "-" + pid[1])
+                    Util.log(context, Logger.LOG_INFO, "Updating configuration {"
+                            + config.getPid()
                             + "} from " + f.getAbsolutePath(), null);
                 }
                 update0(config, ht);
@@ -423,10 +433,10 @@ public class ConfigInstaller implements ArtifactInstaller, ConfigurationListener
     boolean deleteConfig(File f) throws Exception
     {
         String pid[] = parsePid(f.getName());
-        Util.log(context, Logger.LOG_INFO, "Deleting configuration {" + pid[0]
-                + (pid[1] == null ? "" : "-" + pid[1])
-                + "} from " + f.getAbsolutePath(), null);
         Configuration config = getConfiguration(toConfigKey(f), pid[0], pid[1]);
+        Util.log(context, Logger.LOG_INFO, "Deleting configuration {"
+                + config.getPid()
+                + "} from " + f.getAbsolutePath(), null);
         config.delete();
         return true;
     }
@@ -476,7 +486,12 @@ public class ConfigInstaller implements ArtifactInstaller, ConfigurationListener
             Configuration newConfiguration;
             if (factoryPid != null)
             {
-                newConfiguration = getConfigurationAdmin().createFactoryConfiguration(pid, "?");
+                if (getFactoryConfigurationMethod != null) {
+                    newConfiguration = (Configuration)getFactoryConfigurationMethod.invoke(getConfigurationAdmin(), pid, factoryPid, "?");
+                }
+                else {
+                    newConfiguration = getConfigurationAdmin().createFactoryConfiguration(pid, "?");
+                }
             }
             else
             {
@@ -544,8 +559,8 @@ public class ConfigInstaller implements ArtifactInstaller, ConfigurationListener
 
         try {
             if (Util.canWrite(f) && isReadOnly(configuration)) {
-                Util.log(context, Logger.LOG_INFO, "Removing  READ_ONLY attribute from configuration {" + pid[0]
-                        + (pid[1] == null ? "" : "-" + pid[1])
+                Util.log(context, Logger.LOG_INFO, "Removing  READ_ONLY attribute from configuration {"
+                        + configuration.getPid()
                         + "} from " + f.getAbsolutePath(), null);
                 removeAttributesMethod.invoke(configuration, READ_ONLY_ATTRIBUTE_ARRAY);
             }
@@ -570,8 +585,8 @@ public class ConfigInstaller implements ArtifactInstaller, ConfigurationListener
 
         try {
             if (!Util.canWrite(f)) {
-                Util.log(context, Logger.LOG_INFO, "Adding  READ_ONLY attribute to configuration {" + pid[0]
-                        + (pid[1] == null ? "" : "-" + pid[1])
+                Util.log(context, Logger.LOG_INFO, "Adding  READ_ONLY attribute to configuration {"
+                        + configuration.getPid()
                         + "} from " + f.getAbsolutePath(), null);
                 addAttributesMethod.invoke(configuration, READ_ONLY_ATTRIBUTE_ARRAY);
 
