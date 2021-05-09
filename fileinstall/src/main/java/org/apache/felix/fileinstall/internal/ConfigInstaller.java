@@ -18,11 +18,33 @@
  */
 package org.apache.felix.fileinstall.internal;
 
-import java.io.*;
+import java.io.BufferedInputStream;
+import java.io.File;
+import java.io.FileInputStream;
+import java.io.FileOutputStream;
+import java.io.IOException;
+import java.io.InputStream;
+import java.io.InputStreamReader;
+import java.io.OutputStreamWriter;
+import java.io.Reader;
+import java.io.Writer;
+import java.lang.reflect.Array;
+import java.lang.reflect.InvocationTargetException;
+import java.lang.reflect.Method;
 import java.net.URI;
+import java.nio.file.Files;
+import java.nio.file.attribute.PosixFilePermission;
 import java.security.AccessController;
 import java.security.PrivilegedAction;
-import java.util.*;
+import java.util.ArrayList;
+import java.util.Dictionary;
+import java.util.Enumeration;
+import java.util.HashMap;
+import java.util.Hashtable;
+import java.util.List;
+import java.util.Map;
+import java.util.Properties;
+import java.util.Set;
 
 import org.apache.felix.fileinstall.ArtifactInstaller;
 import org.apache.felix.fileinstall.ArtifactListener;
@@ -30,8 +52,13 @@ import org.apache.felix.fileinstall.internal.Util.Logger;
 import org.apache.felix.utils.collections.DictionaryAsMap;
 import org.apache.felix.utils.properties.InterpolationHelper;
 import org.apache.felix.utils.properties.TypedProperties;
-import org.osgi.framework.*;
-import org.osgi.service.cm.*;
+import org.osgi.framework.BundleContext;
+import org.osgi.framework.Constants;
+import org.osgi.framework.ServiceRegistration;
+import org.osgi.service.cm.Configuration;
+import org.osgi.service.cm.ConfigurationAdmin;
+import org.osgi.service.cm.ConfigurationEvent;
+import org.osgi.service.cm.ConfigurationListener;
 
 /**
  * ArtifactInstaller for configurations.
@@ -43,13 +70,65 @@ public class ConfigInstaller implements ArtifactInstaller, ConfigurationListener
     private final ConfigurationAdmin configAdmin;
     private final FileInstall fileInstall;
     private final Map<String, String> pidToFile = new HashMap<>();
-    private ServiceRegistration registration;
+    private final Method addAttributesMethod;
+    private final Method getAttributesMethod;
+    private final Method removeAttributesMethod;
+    private final Object READ_ONLY_ATTRIBUTE_ARRAY;
+    private final boolean osWin;
+    private ServiceRegistration<?> registration;
 
     ConfigInstaller(BundleContext context, ConfigurationAdmin configAdmin, FileInstall fileInstall)
     {
         this.context = context;
         this.configAdmin = configAdmin;
         this.fileInstall = fileInstall;
+
+        Method aaMethod = null;
+        Method gaMethod = null;
+        Method raMethod = null;
+
+        if (this.configAdmin != null) {
+            for (Method method : Configuration.class.getDeclaredMethods())
+            {
+                if ("addAttributes".equals(method.getName()))
+                {
+                    aaMethod = method;
+                }
+                else if ("getAttributes".equals(method.getName()))
+                {
+                    gaMethod = method;
+                }
+                else if ("removeAttributes".equals(method.getName()))
+                {
+                    raMethod = method;
+                }
+            }
+        }
+
+        this.addAttributesMethod = aaMethod;
+        this.getAttributesMethod = gaMethod;
+        this.removeAttributesMethod = raMethod;
+
+        Object roAttributesArray = null;
+        if (this.addAttributesMethod != null)
+        {
+            try {
+                Class<? extends Enum> attr = (Class<? extends Enum>)context.getBundle()
+                    .loadClass("org.osgi.service.cm.Configuration$ConfigurationAttribute");
+
+                Object attrArray = Array.newInstance(attr, 1);
+                Array.set(attrArray, 0, Enum.valueOf(attr, "READ_ONLY"));
+
+                roAttributesArray = attrArray;
+            }
+            catch (ClassNotFoundException cnfe) {
+                throw new IllegalStateException(
+                    "Cannot find the enum org.osgi.service.cm.Configuration.ConfigurationAttribute", cnfe);
+            }
+        }
+
+        this.READ_ONLY_ATTRIBUTE_ARRAY = roAttributesArray;
+        this.osWin = System.getProperty("os.name").toLowerCase().contains("win");
     }
 
     public void init()
@@ -63,12 +142,12 @@ public class ConfigInstaller implements ArtifactInstaller, ConfigurationListener
                 this, null);
         try
         {
-            Configuration[] configs = configAdmin.listConfigurations(null);
+            Configuration[] configs = getConfigurationAdmin().listConfigurations(null);
             if (configs != null)
             {
                 for (Configuration config : configs)
                 {
-                    Dictionary dict = config.getProperties();
+                    Dictionary<?,?> dict = config.getProperties();
                     String fileName = dict != null ? (String) dict.get( DirectoryWatcher.FILENAME ) : null;
                     if (fileName != null)
                     {
@@ -147,11 +226,17 @@ public class ConfigInstaller implements ArtifactInstaller, ConfigurationListener
                 Configuration config = getConfigurationAdmin().getConfiguration(
                                             configurationEvent.getPid(),
                                             "?");
-                Dictionary dict = config.getProperties();
+                Dictionary<?,?> dict = config.getProperties();
                 String fileName = dict != null ? (String) dict.get( DirectoryWatcher.FILENAME ) : null;
                 File file = fileName != null ? fromConfigKey(fileName) : null;
                 if( file != null && file.isFile() && canHandle( file ) ) {
                     pidToFile.put(config.getPid(), fileName);
+                    if (!file.canWrite())
+                    {
+                        Util.log(context, Logger.LOG_WARNING, "File is not writeable: " + fileName, null);
+                        return;
+                    }
+
                     TypedProperties props = new TypedProperties( bundleSubstitution() );
                     try (Reader r = new InputStreamReader(new FileInputStream(file), encoding()))
                     {
@@ -168,7 +253,7 @@ public class ConfigInstaller implements ArtifactInstaller, ConfigurationListener
                             propertiesToRemove.add(key);
                         }
                     }
-                    for( Enumeration e  = dict.keys(); e.hasMoreElements(); )
+                    for( Enumeration<?> e  = dict.keys(); e.hasMoreElements(); )
                     {
                         String key = e.nextElement().toString();
                         if( !Constants.SERVICE_PID.equals(key)
@@ -194,7 +279,7 @@ public class ConfigInstaller implements ArtifactInstaller, ConfigurationListener
             }
             catch (Exception e)
             {
-                Util.log( context, Logger.LOG_INFO, "Unable to save configuration", e );
+                Util.log( context, Logger.LOG_ERROR, "Unable to save configuration", e );
             }
         }
 
@@ -286,12 +371,14 @@ public class ConfigInstaller implements ArtifactInstaller, ConfigurationListener
         String pid[] = parsePid(f.getName());
         Configuration config = getConfiguration(toConfigKey(f), pid[0], pid[1]);
 
+        setReadOnly(pid, config, f);
+
         Dictionary<String, Object> props = config.getProperties();
         Hashtable<String, Object> old = props != null ? new Hashtable<String, Object>(new DictionaryAsMap<>(props)) : null;
         if (old != null) {
-        	old.remove( DirectoryWatcher.FILENAME );
-        	old.remove( Constants.SERVICE_PID );
-        	old.remove( ConfigurationAdmin.SERVICE_FACTORYPID );
+            old.remove( DirectoryWatcher.FILENAME );
+            old.remove( Constants.SERVICE_PID );
+            old.remove( ConfigurationAdmin.SERVICE_FACTORYPID );
         }
 
         if( !ht.equals( old ) )
@@ -304,7 +391,7 @@ public class ConfigInstaller implements ArtifactInstaller, ConfigurationListener
             } else {
                 Util.log(context, Logger.LOG_INFO, "Updating configuration {" + pid[0]
                         + (pid[1] == null ? "" : "-" + pid[1])
-						+ "} from " + f.getName(), null);
+                        + "} from " + f.getName(), null);
             }
             config.update(ht);
             return true;
@@ -411,6 +498,83 @@ public class ConfigInstaller implements ArtifactInstaller, ConfigurationListener
                 return cb.getValue(value);
             }
         };
+    }
+
+    boolean isReadOnly(Configuration configuration) throws IOException {
+        if (getAttributesMethod == null) {
+            return false;
+        }
+
+        try {
+            Set<? extends Enum<?>> attributes = (Set<? extends Enum<?>>)getAttributesMethod.invoke(configuration);
+
+            if (attributes.isEmpty()) {
+                return false;
+            }
+
+            return attributes.iterator().next().name().equals("READ_ONLY");
+        }
+        catch (InvocationTargetException ite) {
+            Throwable targetException = ite.getTargetException();
+            if (targetException instanceof IOException) {
+                throw (IOException)targetException;
+            }
+
+            throw new RuntimeException(targetException);
+        }
+        catch (Throwable t) {
+            throw new RuntimeException(t);
+        }
+    }
+
+    boolean setReadOnly(String[] pid, Configuration configuration, File f) throws IOException {
+        if (addAttributesMethod == null) {
+            return false;
+        }
+
+        try {
+            if (!canWrite(f)) {
+                Util.log(context, Logger.LOG_INFO, "Adding  READ_ONLY attribute to configuration {" + pid[0]
+                        + (pid[1] == null ? "" : "-" + pid[1])
+                        + "} from " + f.getName(), null);
+                addAttributesMethod.invoke(configuration, READ_ONLY_ATTRIBUTE_ARRAY);
+
+                return true;
+            }
+            else if (isReadOnly(configuration)) {
+                Util.log(context, Logger.LOG_INFO, "Removing  READ_ONLY attribute from configuration {" + pid[0]
+                        + (pid[1] == null ? "" : "-" + pid[1])
+                        + "} from " + f.getName(), null);
+                removeAttributesMethod.invoke(configuration, READ_ONLY_ATTRIBUTE_ARRAY);
+
+                return true;
+            }
+        }
+        catch (InvocationTargetException ite) {
+            Throwable targetException = ite.getTargetException();
+            if (targetException instanceof IOException) {
+                throw (IOException)targetException;
+            }
+
+            throw new RuntimeException(targetException);
+        }
+        catch (Throwable t) {
+            throw new RuntimeException(t);
+        }
+
+        return false;
+    }
+
+    private boolean canWrite(File f) throws IOException {
+        if (osWin) {
+            return f.canWrite();
+        }
+
+        Set<PosixFilePermission> posixFilePermissions = Files.getPosixFilePermissions(f.toPath());
+
+        return posixFilePermissions.contains(PosixFilePermission.OWNER_WRITE) ||
+            posixFilePermissions.contains(PosixFilePermission.GROUP_WRITE) ||
+            posixFilePermissions.contains(PosixFilePermission.OTHERS_WRITE);
     }
 
     private String escapeFilterValue(String s) {

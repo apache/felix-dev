@@ -23,6 +23,7 @@ import java.io.FileOutputStream;
 import java.io.OutputStream;
 import java.nio.file.Files;
 import java.nio.file.Paths;
+import java.util.Collections;
 import java.util.Dictionary;
 import java.util.Hashtable;
 import java.util.concurrent.atomic.AtomicReference;
@@ -36,6 +37,7 @@ import org.osgi.framework.Bundle;
 import org.osgi.framework.BundleContext;
 import org.osgi.framework.ServiceReference;
 import org.osgi.service.cm.Configuration;
+import org.osgi.service.cm.Configuration.ConfigurationAttribute;
 import org.osgi.service.cm.ConfigurationAdmin;
 import org.osgi.service.cm.ConfigurationEvent;
 
@@ -87,20 +89,21 @@ public class ConfigInstallerTest extends TestCase {
         String pid = file.getName().substring(0, file.getName().indexOf(".config"));
 
         Capture<Dictionary<String, Object>> props = new Capture<>();
+        EasyMock.expect(mockBundleContext.getBundle()).andReturn(mockBundle).anyTimes();
+        EasyMock.expect(mockBundle.loadClass(ConfigurationAttribute.class.getName())).andReturn((Class)ConfigurationAttribute.class).anyTimes();
         EasyMock.expect(mockConfigurationAdmin.listConfigurations((String) EasyMock.anyObject()))
                 .andReturn(null);
         EasyMock.expect(mockConfigurationAdmin.getConfiguration(pid, "?"))
                 .andReturn(mockConfiguration);
+        EasyMock.expect(mockConfiguration.getAttributes()).andReturn(Collections.emptySet());
         EasyMock.expect(mockConfiguration.getProperties())
                 .andReturn(null);
         EasyMock.expect(mockBundleContext.getProperty((String) EasyMock.anyObject()))
                 .andReturn(null)
                 .anyTimes();
-        EasyMock.expect(mockBundleContext.getBundle())
-                .andReturn(mockBundle);
         mockConfiguration.update(EasyMock.capture(props));
         EasyMock.expectLastCall();
-        EasyMock.replay(mockConfiguration, mockConfigurationAdmin, mockBundleContext);
+        EasyMock.replay(mockConfiguration, mockConfigurationAdmin, mockBundleContext, mockBundle);
 
         ConfigInstaller ci = new ConfigInstaller( mockBundleContext, mockConfigurationAdmin, new FileInstall() );
         ci.install(file);
@@ -120,20 +123,22 @@ public class ConfigInstallerTest extends TestCase {
         String pid = file.getName().substring(0, file.getName().indexOf(".config"));
 
         Capture<Dictionary<String, Object>> props = new Capture<>();
+        EasyMock.expect(mockBundleContext.getBundle()).andReturn(mockBundle).anyTimes();
+        EasyMock.expect(mockBundle.loadClass(ConfigurationAttribute.class.getName())).andReturn((Class)ConfigurationAttribute.class).anyTimes();
         EasyMock.expect(mockConfigurationAdmin.listConfigurations((String) EasyMock.anyObject()))
                 .andReturn(null);
         EasyMock.expect(mockConfigurationAdmin.getConfiguration(pid, "?"))
                 .andReturn(mockConfiguration);
+        EasyMock.expect(mockConfiguration.getAttributes())
+            .andReturn(Collections.emptySet());
         EasyMock.expect(mockConfiguration.getProperties())
                 .andReturn(null);
         EasyMock.expect(mockBundleContext.getProperty((String) EasyMock.anyObject()))
                 .andReturn(null)
                 .anyTimes();
-        EasyMock.expect(mockBundleContext.getBundle())
-                .andReturn(mockBundle);
         mockConfiguration.update(EasyMock.capture(props));
         EasyMock.expectLastCall();
-        EasyMock.replay(mockConfiguration, mockConfigurationAdmin, mockBundleContext);
+        EasyMock.replay(mockConfiguration, mockConfigurationAdmin, mockBundleContext, mockBundle);
 
         ConfigInstaller ci = new ConfigInstaller( mockBundleContext, mockConfigurationAdmin, new FileInstall() );
         ci.install(file);
@@ -146,11 +151,13 @@ public class ConfigInstallerTest extends TestCase {
 
     public void testGetNewFactoryConfiguration() throws Exception
     {
+        EasyMock.expect(mockBundleContext.getBundle()).andReturn(mockBundle).anyTimes();
+        EasyMock.expect(mockBundle.loadClass(ConfigurationAttribute.class.getName())).andReturn((Class)ConfigurationAttribute.class).anyTimes();
         EasyMock.expect(mockConfigurationAdmin.listConfigurations((String) EasyMock.anyObject()))
                     .andReturn(null);
         EasyMock.expect(mockConfigurationAdmin.createFactoryConfiguration( "pid", "?" ))
                     .andReturn(mockConfiguration);
-        EasyMock.replay(mockConfiguration, mockConfigurationAdmin, mockBundleContext);
+        EasyMock.replay(mockConfiguration, mockConfigurationAdmin, mockBundleContext, mockBundle);
 
         ConfigInstaller ci = new ConfigInstaller( mockBundleContext, mockConfigurationAdmin, new FileInstall() );
 
@@ -162,11 +169,13 @@ public class ConfigInstallerTest extends TestCase {
 
     public void testGetExistentFactoryConfiguration() throws Exception
     {
+        EasyMock.expect(mockBundleContext.getBundle()).andReturn(mockBundle).anyTimes();
+        EasyMock.expect(mockBundle.loadClass(ConfigurationAttribute.class.getName())).andReturn((Class)ConfigurationAttribute.class).anyTimes();
         EasyMock.expect(mockConfigurationAdmin.listConfigurations((String) EasyMock.anyObject()))
                         .andReturn(null);
         EasyMock.expect(mockConfigurationAdmin.createFactoryConfiguration( "pid", "?" ))
                         .andReturn(mockConfiguration);
-        EasyMock.replay(mockConfiguration, mockConfigurationAdmin, mockBundleContext);
+        EasyMock.replay(mockConfiguration, mockConfigurationAdmin, mockBundleContext, mockBundle);
 
         ConfigInstaller ci = new ConfigInstaller( mockBundleContext, mockConfigurationAdmin, new FileInstall() );
 
@@ -178,11 +187,13 @@ public class ConfigInstallerTest extends TestCase {
 
     public void testGetExistentNoFactoryConfiguration() throws Exception
     {
+        EasyMock.expect(mockBundleContext.getBundle()).andReturn(mockBundle).anyTimes();
+        EasyMock.expect(mockBundle.loadClass(ConfigurationAttribute.class.getName())).andReturn((Class)ConfigurationAttribute.class).anyTimes();
         EasyMock.expect(mockConfigurationAdmin.listConfigurations((String) EasyMock.anyObject()))
                         .andReturn(null);
         EasyMock.expect(mockConfigurationAdmin.getConfiguration( "pid", "?" ))
                         .andReturn(mockConfiguration);
-        EasyMock.replay(mockConfiguration, mockConfigurationAdmin, mockBundleContext);
+        EasyMock.replay(mockConfiguration, mockConfigurationAdmin, mockBundleContext, mockBundle);
 
         ConfigInstaller ci = new ConfigInstaller( mockBundleContext, mockConfigurationAdmin, new FileInstall() );
 
@@ -195,13 +206,16 @@ public class ConfigInstallerTest extends TestCase {
     public void testDeleteConfig() throws Exception
     {
         mockConfiguration.delete();
-        EasyMock.expect(mockBundleContext.getProperty(DirectoryWatcher.LOG_LEVEL)).andReturn(null);
         EasyMock.expect(mockBundleContext.getBundle()).andReturn(mockBundle).anyTimes();
+        EasyMock.expect(mockBundle.loadClass(ConfigurationAttribute.class.getName())).andReturn((Class)ConfigurationAttribute.class).anyTimes();
+        EasyMock.expect(mockBundleContext.getProperty((String) EasyMock.anyObject()))
+            .andReturn(null)
+            .anyTimes();
         EasyMock.expect(mockConfigurationAdmin.listConfigurations((String) EasyMock.anyObject()))
                         .andReturn(null);
         EasyMock.expect(mockConfigurationAdmin.getConfiguration("pid", "?" ))
                         .andReturn(mockConfiguration);
-        EasyMock.replay(mockConfiguration, mockConfigurationAdmin, mockBundleContext);
+        EasyMock.replay(mockConfiguration, mockConfigurationAdmin, mockBundleContext, mockBundle);
 
         ConfigInstaller ci = new ConfigInstaller( mockBundleContext, mockConfigurationAdmin, new FileInstall() );
 
@@ -220,6 +234,9 @@ public class ConfigInstallerTest extends TestCase {
 
         final Capture<Dictionary<String, Object>> props = new Capture<>();
 
+        EasyMock.expect(mockBundleContext.getBundle()).andReturn(mockBundle).anyTimes();
+        EasyMock.expect(mockBundle.loadClass(ConfigurationAttribute.class.getName())).andReturn((Class)ConfigurationAttribute.class).anyTimes();
+        EasyMock.expect(mockConfiguration.getAttributes()).andReturn(Collections.emptySet());
         EasyMock.expect(mockConfiguration.getProperties())
                 .andReturn(null);
         EasyMock.expect(mockBundleContext.getProperty((String) EasyMock.anyObject()))
@@ -246,7 +263,7 @@ public class ConfigInstallerTest extends TestCase {
         EasyMock.expect(mockConfiguration.getPid())
                 .andReturn(pid);
 
-        EasyMock.replay(mockConfiguration, mockConfigurationAdmin, mockBundleContext, sr);
+        EasyMock.replay(mockConfiguration, mockConfigurationAdmin, mockBundleContext, mockBundle, sr);
 
         ConfigInstaller ci = new ConfigInstaller( mockBundleContext, mockConfigurationAdmin, new FileInstall() );
         ci.install(file);
@@ -264,6 +281,8 @@ public class ConfigInstallerTest extends TestCase {
 
         Capture<Dictionary<String, Object>> props = new Capture<>();
 
+        EasyMock.expect(mockBundleContext.getBundle()).andReturn(mockBundle).anyTimes();
+        EasyMock.expect(mockBundle.loadClass(ConfigurationAttribute.class.getName())).andReturn((Class)ConfigurationAttribute.class).anyTimes();
         EasyMock.expect(mockConfiguration.getProperties())
                 .andReturn(null);
         EasyMock.expect(mockBundleContext.getProperty((String) EasyMock.anyObject()))
@@ -278,7 +297,7 @@ public class ConfigInstallerTest extends TestCase {
         mockConfiguration.update(EasyMock.capture(props));
         EasyMock.expectLastCall();
 
-        EasyMock.replay(mockConfiguration, mockConfigurationAdmin, mockBundleContext, sr);
+        EasyMock.replay(mockConfiguration, mockConfigurationAdmin, mockBundleContext, mockBundle, sr);
 
         ConfigInstaller ci = new ConfigInstaller( mockBundleContext, mockConfigurationAdmin, new FileInstall() );
 
@@ -298,6 +317,8 @@ public class ConfigInstallerTest extends TestCase {
         Dictionary<String, Object> props = new Hashtable<>();
         props.put(DirectoryWatcher.FILENAME, file.toURI().toString());
 
+        EasyMock.expect(mockBundleContext.getBundle()).andReturn(mockBundle).anyTimes();
+        EasyMock.expect(mockBundle.loadClass(ConfigurationAttribute.class.getName())).andReturn((Class)ConfigurationAttribute.class).anyTimes();
         EasyMock.expect(mockConfiguration.getProperties())
                 .andReturn(props);
         EasyMock.expect(mockBundleContext.getProperty((String) EasyMock.anyObject()))
@@ -314,7 +335,7 @@ public class ConfigInstallerTest extends TestCase {
         mockConfiguration.update(EasyMock.capture(propsCapture));
         EasyMock.expectLastCall();
 
-        EasyMock.replay(mockConfiguration, mockConfigurationAdmin, mockBundleContext, sr);
+        EasyMock.replay(mockConfiguration, mockConfigurationAdmin, mockBundleContext, mockBundle, sr);
 
         ConfigInstaller ci = new ConfigInstaller( mockBundleContext, mockConfigurationAdmin, new FileInstall() );
 
@@ -335,11 +356,14 @@ public class ConfigInstallerTest extends TestCase {
 
         ServiceReference<ConfigurationAdmin> sr = EasyMock.createMock(ServiceReference.class);
 
+        EasyMock.expect(mockBundleContext.getBundle()).andReturn(mockBundle).anyTimes();
+        EasyMock.expect(mockBundle.loadClass(ConfigurationAttribute.class.getName())).andReturn((Class)ConfigurationAttribute.class).anyTimes();
         EasyMock.expect(mockBundleContext.getProperty((String) EasyMock.anyObject()))
                 .andReturn(null)
                 .anyTimes();
 
         final Configuration cachingPersistenceConfiguration = EasyMock.createMock(Configuration.class);
+        EasyMock.expect(cachingPersistenceConfiguration.getAttributes()).andReturn(Collections.emptySet()).once();
 
         final Dictionary<String, Object> cachedProps = new Hashtable<String, Object>() {
             {
@@ -364,6 +388,7 @@ public class ConfigInstallerTest extends TestCase {
                 .anyTimes();
 
         final Configuration newConfiguration = EasyMock.createMock(Configuration.class);
+        EasyMock.expect(newConfiguration.getAttributes()).andReturn(Collections.emptySet()).once();
 
         EasyMock.expect(mockConfigurationAdmin.listConfigurations((String) EasyMock.anyObject()))
                 .andReturn(new Configuration[] { newConfiguration });
@@ -379,17 +404,17 @@ public class ConfigInstallerTest extends TestCase {
 
         cachingPersistenceConfiguration.update(EasyMock.capture(props));
         EasyMock.expectLastCall()
-                .andAnswer(new IAnswer<Object>() {
+                .andAnswer(new IAnswer<Boolean>() {
                     @Override
-                    public Object answer() throws Throwable {
+                    public Boolean answer() throws Throwable {
 
                         cachedProps.put("networkInterface", props.getValue().get("networkInterface"));
 
-                        return null;
+                        return Boolean.TRUE;
                    }
                }).anyTimes();
 
-        EasyMock.replay(mockBundleContext, mockConfigurationAdmin, cachingPersistenceConfiguration, newConfiguration, sr);
+        EasyMock.replay(mockBundleContext, mockConfigurationAdmin, mockBundle, cachingPersistenceConfiguration, newConfiguration, sr);
 
         ConfigInstaller ci = new ConfigInstaller( mockBundleContext, mockConfigurationAdmin, new FileInstall() );
 
@@ -406,11 +431,13 @@ public class ConfigInstallerTest extends TestCase {
 
     public void testSetConfiguration() throws Exception
     {
+        EasyMock.expect(mockBundleContext.getBundle()).andReturn(mockBundle).anyTimes();
+        EasyMock.expect(mockBundle.loadClass(ConfigurationAttribute.class.getName())).andReturn((Class)ConfigurationAttribute.class).anyTimes();
         EasyMock.expect(mockBundleContext.getProperty(DirectoryWatcher.CONFIG_ENCODING)).andReturn(null);
         EasyMock.expect(mockBundleContext.getProperty(DirectoryWatcher.LOG_DEFAULT)).andReturn(null);
         EasyMock.expect(mockBundleContext.getProperty(DirectoryWatcher.LOG_LEVEL)).andReturn(null);
-        EasyMock.expect(mockBundleContext.getBundle()).andReturn(mockBundle).anyTimes();
         EasyMock.expect(mockConfiguration.getProperties()).andReturn(new Hashtable<String, Object>());
+        EasyMock.expect(mockConfiguration.getAttributes()).andReturn(Collections.emptySet());
         EasyMock.reportMatcher(new IArgumentMatcher()
         {
             public boolean matches( Object argument )
@@ -428,7 +455,7 @@ public class ConfigInstallerTest extends TestCase {
                         .andReturn(null);
         EasyMock.expect(mockConfigurationAdmin.getConfiguration("firstcfg", "?"))
                         .andReturn(mockConfiguration);
-        EasyMock.replay(mockConfiguration, mockConfigurationAdmin, mockBundleContext);
+        EasyMock.replay(mockConfiguration, mockConfigurationAdmin, mockBundleContext, mockBundle);
 
         ConfigInstaller ci = new ConfigInstaller( mockBundleContext, mockConfigurationAdmin, new FileInstall() );
 
@@ -436,12 +463,14 @@ public class ConfigInstallerTest extends TestCase {
 
         EasyMock.verify(mockConfiguration, mockConfigurationAdmin, mockBundleContext);
     }
-    
-    public void testShouldSaveConfig() 
+
+    public void testShouldSaveConfig() throws Exception
     {
         final AtomicReference<Boolean> disable = new AtomicReference<Boolean>();
         final AtomicReference<Boolean> enable = new AtomicReference<Boolean>();
-        
+
+        EasyMock.expect(mockBundleContext.getBundle()).andReturn(mockBundle).anyTimes();
+        EasyMock.expect(mockBundle.loadClass(ConfigurationAttribute.class.getName())).andReturn((Class)ConfigurationAttribute.class).anyTimes();
         EasyMock.expect(mockBundleContext.getProperty(DirectoryWatcher.DISABLE_CONFIG_SAVE)).andAnswer(
                 new IAnswer<String>() {
                     public String answer() throws Throwable {
@@ -456,7 +485,7 @@ public class ConfigInstallerTest extends TestCase {
                     }
                 }
         ).anyTimes();
-        EasyMock.replay(mockConfiguration, mockConfigurationAdmin, mockBundleContext);
+        EasyMock.replay(mockConfiguration, mockConfigurationAdmin, mockBundleContext, mockBundle);
 
         ConfigInstaller ci = new ConfigInstaller( mockBundleContext, mockConfigurationAdmin, new FileInstall() );
 
@@ -497,6 +526,81 @@ public class ConfigInstallerTest extends TestCase {
         assertTrue( ci.shouldSaveConfig() );
 
         EasyMock.verify(mockConfiguration, mockConfigurationAdmin, mockBundleContext);
+    }
+
+    public void testSetREAD_ONLYFromFilePermissions() throws Exception
+    {
+        final File file = File.createTempFile("test", ".config");
+        try (OutputStream os = new FileOutputStream(file)) {
+            os.write("networkInterface = \"wlp3s1\"\n".getBytes("UTF-8"));
+        }
+        file.setReadOnly();
+
+        String pid = file.getName().substring(0, file.getName().indexOf(".config"));
+
+        ServiceReference<ConfigurationAdmin> sr = EasyMock.createMock(ServiceReference.class);
+
+        EasyMock.expect(mockBundleContext.getBundle()).andReturn(mockBundle).anyTimes();
+        EasyMock.expect(mockBundle.loadClass(ConfigurationAttribute.class.getName())).andReturn((Class)ConfigurationAttribute.class).anyTimes();
+        EasyMock.expect(mockBundleContext.getProperty((String) EasyMock.anyObject()))
+                .andReturn(null)
+                .anyTimes();
+
+        final Configuration cachingPersistenceConfiguration = EasyMock.createMock(Configuration.class);
+        EasyMock.expect(cachingPersistenceConfiguration.getAttributes()).andReturn(
+            Collections.singleton(ConfigurationAttribute.READ_ONLY)).anyTimes();
+        cachingPersistenceConfiguration.addAttributes(new ConfigurationAttribute[] {ConfigurationAttribute.READ_ONLY});
+        cachingPersistenceConfiguration.removeAttributes(EasyMock.anyObject(ConfigurationAttribute[].class));
+
+        final Dictionary<String, Object> cachedProps = new Hashtable<String, Object>() {
+            {
+                put("networkInterface", "wlp3s0");
+                put(DirectoryWatcher.FILENAME, file.toURI().toString());
+            }
+        };
+
+        EasyMock.expect(cachingPersistenceConfiguration.getProperties())
+                .andReturn(cachedProps)
+                .anyTimes();
+
+        EasyMock.expect(mockConfigurationAdmin.getConfiguration(pid, "?"))
+                .andReturn(cachingPersistenceConfiguration)
+                .anyTimes();
+
+        EasyMock.expect(mockConfigurationAdmin.getConfiguration(pid, null))
+                .andReturn(cachingPersistenceConfiguration)
+                .anyTimes();
+
+        final Configuration newConfiguration = EasyMock.createMock(Configuration.class);
+        EasyMock.expect(mockConfigurationAdmin.listConfigurations((String) EasyMock.anyObject()))
+                .andReturn(new Configuration[] { newConfiguration }).times(2);
+        EasyMock.expect(newConfiguration.getPid())
+                .andReturn(pid).times(2);
+
+        final Capture<Dictionary<String, Object>> props = new Capture<>();
+        cachingPersistenceConfiguration.update(EasyMock.capture(props));
+        EasyMock.expectLastCall()
+                .andAnswer(new IAnswer<Boolean>() {
+                    @Override
+                    public Boolean answer() throws Throwable {
+
+                        cachedProps.put("networkInterface", props.getValue().get("networkInterface"));
+
+                        return Boolean.TRUE;
+                   }
+               }).anyTimes();
+
+        EasyMock.replay(mockBundleContext, mockConfigurationAdmin, mockBundle, cachingPersistenceConfiguration, newConfiguration, sr);
+
+        ConfigInstaller ci = new ConfigInstaller( mockBundleContext, mockConfigurationAdmin, new FileInstall() );
+
+        ci.install(file);
+
+        file.setWritable(true);
+
+        ci.install(file);
+
+        EasyMock.verify(mockBundleContext, mockConfigurationAdmin, mockBundle, cachingPersistenceConfiguration, newConfiguration, sr);
     }
 
 }
