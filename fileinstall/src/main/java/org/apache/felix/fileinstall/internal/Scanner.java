@@ -22,10 +22,8 @@ import java.io.Closeable;
 import java.io.File;
 import java.io.FilenameFilter;
 import java.io.IOException;
-import java.util.Arrays;
 import java.util.HashMap;
 import java.util.HashSet;
-import java.util.LinkedHashSet;
 import java.util.Map;
 import java.util.Set;
 import java.util.TreeSet;
@@ -119,7 +117,7 @@ public class Scanner implements Closeable {
      * Modifications are checked against a computed checksum on some file
      * attributes to detect any modification.
      * Upon restart, such checksums are not known so that all files will
-     * be reported as modified. 
+     * be reported as modified.
      *
      * @param reportImmediately report all files immediately without waiting for the checksum to be stable
      * @return a list of changes on the files included in the directory
@@ -147,7 +145,7 @@ public class Scanner implements Closeable {
                 if (skipSubdir)
                 {
                     continue;
-                } 
+                }
                 else if (recurseSubdir)
                 {
                     files.addAll(processFiles(reportImmediately, file.listFiles()));
@@ -243,6 +241,7 @@ public class Scanner implements Closeable {
         {
             checksum(file.lastModified(), crc);
             checksum(file.length(), crc);
+            checksum(Util.collectWriteableChecksum(file), crc);
         }
         else if (file.isDirectory())
         {

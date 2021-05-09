@@ -75,7 +75,6 @@ public class ConfigInstaller implements ArtifactInstaller, ConfigurationListener
     private final Method removeAttributesMethod;
     private final Method updateIfDifferentMethod;
     private final Object READ_ONLY_ATTRIBUTE_ARRAY;
-    private final boolean osWin;
     private ServiceRegistration<?> registration;
 
     ConfigInstaller(BundleContext context, ConfigurationAdmin configAdmin, FileInstall fileInstall)
@@ -135,7 +134,6 @@ public class ConfigInstaller implements ArtifactInstaller, ConfigurationListener
         }
 
         this.READ_ONLY_ATTRIBUTE_ARRAY = roAttributesArray;
-        this.osWin = System.getProperty("os.name").toLowerCase().contains("win");
     }
 
     public void init()
@@ -378,7 +376,7 @@ public class ConfigInstaller implements ArtifactInstaller, ConfigurationListener
         String pid[] = parsePid(f.getName());
         Configuration config = getConfiguration(toConfigKey(f), pid[0], pid[1]);
 
-        setReadOnly(pid, config, f);
+        clearReadOnlyIfWritable(pid, config, f);
 
         Dictionary<String, Object> props = config.getProperties();
         Hashtable<String, Object> old = props != null ? new Hashtable<String, Object>(new DictionaryAsMap<>(props)) : null;
@@ -388,24 +386,29 @@ public class ConfigInstaller implements ArtifactInstaller, ConfigurationListener
             old.remove( ConfigurationAdmin.SERVICE_FACTORYPID );
         }
 
-        if( !ht.equals( old ) )
-        {
-            ht.put(DirectoryWatcher.FILENAME, toConfigKey(f));
-            if (old == null) {
-                Util.log(context, Logger.LOG_INFO, "Creating configuration {" + pid[0]
-                        + (pid[1] == null ? "" : "-" + pid[1])
-                        + "} from " + f.getName(), null);
-            } else {
-                Util.log(context, Logger.LOG_INFO, "Updating configuration {" + pid[0]
-                        + (pid[1] == null ? "" : "-" + pid[1])
-                        + "} from " + f.getName(), null);
+        try {
+            if( !ht.equals( old ) )
+            {
+                ht.put(DirectoryWatcher.FILENAME, toConfigKey(f));
+                if (old == null) {
+                    Util.log(context, Logger.LOG_INFO, "Creating configuration {" + pid[0]
+                            + (pid[1] == null ? "" : "-" + pid[1])
+                            + "} from " + f.getAbsolutePath(), null);
+                } else {
+                    Util.log(context, Logger.LOG_INFO, "Updating configuration {" + pid[0]
+                            + (pid[1] == null ? "" : "-" + pid[1])
+                            + "} from " + f.getAbsolutePath(), null);
+                }
+                update0(config, ht);
+                return true;
             }
-            update0(config, ht);
-            return true;
+            else
+            {
+                return false;
+            }
         }
-        else
-        {
-            return false;
+        finally {
+            setReadOnlyInNotWritable(pid, config, f);
         }
     }
 
@@ -422,7 +425,7 @@ public class ConfigInstaller implements ArtifactInstaller, ConfigurationListener
         String pid[] = parsePid(f.getName());
         Util.log(context, Logger.LOG_INFO, "Deleting configuration {" + pid[0]
                 + (pid[1] == null ? "" : "-" + pid[1])
-                + "} from " + f.getName(), null);
+                + "} from " + f.getAbsolutePath(), null);
         Configuration config = getConfiguration(toConfigKey(f), pid[0], pid[1]);
         config.delete();
         return true;
@@ -534,25 +537,43 @@ public class ConfigInstaller implements ArtifactInstaller, ConfigurationListener
         }
     }
 
-    boolean setReadOnly(String[] pid, Configuration configuration, File f) throws IOException {
+    void clearReadOnlyIfWritable(String[] pid, Configuration configuration, File f) throws IOException {
+        if (removeAttributesMethod == null) {
+            return;
+        }
+
+        try {
+            if (Util.canWrite(f) && isReadOnly(configuration)) {
+                Util.log(context, Logger.LOG_INFO, "Removing  READ_ONLY attribute from configuration {" + pid[0]
+                        + (pid[1] == null ? "" : "-" + pid[1])
+                        + "} from " + f.getAbsolutePath(), null);
+                removeAttributesMethod.invoke(configuration, READ_ONLY_ATTRIBUTE_ARRAY);
+            }
+        }
+        catch (InvocationTargetException ite) {
+            Throwable targetException = ite.getTargetException();
+            if (targetException instanceof IOException) {
+                throw (IOException)targetException;
+            }
+
+            throw new RuntimeException(targetException);
+        }
+        catch (Throwable t) {
+            throw new RuntimeException(t);
+        }
+    }
+
+    boolean setReadOnlyInNotWritable(String[] pid, Configuration configuration, File f) throws IOException {
         if (addAttributesMethod == null) {
             return false;
         }
 
         try {
-            if (!canWrite(f)) {
+            if (!Util.canWrite(f)) {
                 Util.log(context, Logger.LOG_INFO, "Adding  READ_ONLY attribute to configuration {" + pid[0]
                         + (pid[1] == null ? "" : "-" + pid[1])
-                        + "} from " + f.getName(), null);
+                        + "} from " + f.getAbsolutePath(), null);
                 addAttributesMethod.invoke(configuration, READ_ONLY_ATTRIBUTE_ARRAY);
-
-                return true;
-            }
-            else if (isReadOnly(configuration)) {
-                Util.log(context, Logger.LOG_INFO, "Removing  READ_ONLY attribute from configuration {" + pid[0]
-                        + (pid[1] == null ? "" : "-" + pid[1])
-                        + "} from " + f.getName(), null);
-                removeAttributesMethod.invoke(configuration, READ_ONLY_ATTRIBUTE_ARRAY);
 
                 return true;
             }
@@ -592,18 +613,6 @@ public class ConfigInstaller implements ArtifactInstaller, ConfigurationListener
         else {
             config.update(ht);
         }
-    }
-
-    private boolean canWrite(File f) throws IOException {
-        if (osWin) {
-            return f.canWrite();
-        }
-
-        Set<PosixFilePermission> posixFilePermissions = Files.getPosixFilePermissions(f.toPath());
-
-        return posixFilePermissions.contains(PosixFilePermission.OWNER_WRITE) ||
-            posixFilePermissions.contains(PosixFilePermission.GROUP_WRITE) ||
-            posixFilePermissions.contains(PosixFilePermission.OTHERS_WRITE);
     }
 
     private String escapeFilterValue(String s) {

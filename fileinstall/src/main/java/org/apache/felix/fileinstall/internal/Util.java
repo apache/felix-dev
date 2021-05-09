@@ -26,6 +26,8 @@ import java.io.FileInputStream;
 import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.OutputStream;
+import java.nio.file.Files;
+import java.nio.file.attribute.PosixFilePermission;
 import java.util.Collections;
 import java.util.Set;
 import java.util.jar.JarFile;
@@ -43,6 +45,8 @@ import org.osgi.service.log.LogService;
 public class Util
 {
     private static final String CHECKSUM_SUFFIX = ".checksum";
+
+    private static final boolean OS_WIN = System.getProperty("os.name").toLowerCase().contains("win");
 
     /**
      * Returns the log level as defined in the BundleContext or System properties.
@@ -375,6 +379,30 @@ public class Util
                 }
             }
         }
+    }
+
+    public static long collectWriteableChecksum(File file) {
+        return canWrite(file) ? 1000l : -1000l;
+    }
+
+    public static boolean canWrite(File f) {
+        if (!OS_WIN) {
+            try {
+                Set<PosixFilePermission> posixFilePermissions;
+                posixFilePermissions = Files.getPosixFilePermissions(f.toPath());
+
+                return posixFilePermissions.contains(PosixFilePermission.OWNER_WRITE) ||
+                        posixFilePermissions.contains(PosixFilePermission.GROUP_WRITE) ||
+                        posixFilePermissions.contains(PosixFilePermission.OTHERS_WRITE);
+            }
+            catch (IOException e) {
+                logger.log(
+                    Logger.LOG_ERROR, Logger.LOG_ERROR,
+                    "Could not get POSIX file permissions for " + f.getAbsolutePath(), e);
+            }
+        }
+
+        return f.canWrite();
     }
 
     private static String getBundleKey(Bundle b)
