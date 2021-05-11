@@ -380,7 +380,7 @@
                 <dependency>
                     <groupId>org.apache.felix</groupId>
                     <artifactId>org.apache.felix.framework</artifactId>
-                    <version>4.6.0</version>
+                    <version>6.0.4</version>
                     <scope>test</scope>
                 </dependency>
             </dependencies>
@@ -389,9 +389,9 @@
             <id>equinox</id>
             <dependencies>
                 <dependency>
-                    <groupId>org.eclipse</groupId>
+                    <groupId>org.eclipse.platform</groupId>
                     <artifactId>org.eclipse.osgi</artifactId>
-                    <version>3.8.0.v20120529-1548</version>
+                    <version>3.16.200</version>
                     <scope>test</scope>
                 </dependency>
             </dependencies>
