@@ -31,6 +31,7 @@ import java.io.FilterOutputStream;
 import java.io.IOException;
 import java.io.PrintStream;
 import java.io.StringWriter;
+import java.util.Collection;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.ServiceLoader;
@@ -42,8 +43,11 @@ import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
 import org.osgi.framework.Bundle;
+import org.osgi.framework.BundleContext;
 import org.osgi.framework.BundleException;
 import org.osgi.framework.Constants;
+import org.osgi.framework.ServiceReference;
+import org.osgi.framework.hooks.service.FindHook;
 import org.osgi.framework.launch.Framework;
 import org.osgi.service.log.LogLevel;
 import org.osgi.service.log.Logger;
@@ -70,6 +74,20 @@ public class LoggerTest {
 				.newFramework(configuration);
 		framework.init();
 		framework.start();
+        // hide LoggerFactory from equinox
+        framework.getBundleContext().registerService(FindHook.class, new FindHook()
+        {
+
+            @Override
+            public void find(BundleContext context, String name, String filter,
+                boolean allServices, Collection<ServiceReference<?>> references)
+            {
+                if (name != null && "org.osgi.service.log.LoggerFactory".equals(name))
+                {
+                    references.removeIf((r) -> r.getBundle().getBundleId() == 0);
+                }
+            }
+        }, null);
 
 		scr = framework.getBundleContext().installBundle("scr", makeBundle("scr").openInputStream());
 		component = framework.getBundleContext().installBundle("component",
