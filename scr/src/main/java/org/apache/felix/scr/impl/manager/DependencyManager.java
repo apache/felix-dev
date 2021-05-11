@@ -667,7 +667,7 @@ public class DependencyManager<S, T> implements ReferenceManager<S, T>
                 null, getName(), trackingCount, serviceReference );
             boolean reactivate = false;
             Collection<RefPair<S, T>> refs = this.refs.get();
-            if (isActive() && refs.contains(refPair))
+            if (isActive() && refs != null && refs.contains(refPair))
             {
                 reactivate = m_componentManager.invokeUpdatedMethod(DependencyManager.this, refPair, trackingCount);
             }
