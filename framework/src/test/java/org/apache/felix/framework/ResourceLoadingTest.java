@@ -18,15 +18,11 @@
  */
 package org.apache.felix.framework;
 
-import java.io.BufferedReader;
-import java.io.ByteArrayInputStream;
-import java.io.File;
-import java.io.FileOutputStream;
-import java.io.IOException;
-import java.io.InputStreamReader;
+import java.io.*;
+import java.net.MalformedURLException;
 import java.net.URL;
-import java.util.HashMap;
-import java.util.Map;
+import java.net.URLClassLoader;
+import java.util.*;
 import java.util.jar.JarOutputStream;
 import java.util.jar.Manifest;
 import java.util.zip.ZipEntry;
@@ -91,7 +87,7 @@ public class ResourceLoadingTest extends TestCase
         mf.getMainAttributes().putValue("Manifest-Version", "1.0");
         JarOutputStream os = new JarOutputStream(new FileOutputStream(bundleFile), mf);
 
-        String name = "bla/ bli/@@€ ß&&????ßß &&$$\" \'##&&/ äöüß/ @@ foo#bar#baz ?a=a.txt?d=ä#dlksl";
+        String name = "bla%2F%20bli%2F%40%40%E2%82%AC%20%C3%9F%26%26%3F%3F%3F%3F%C3%9F%C3%9F%20%26%26%24%24%22%20%27%23%23%26%26%2F%20%C3%A4%C3%B6%C3%BC%C3%9F%2F%20%40%40%20foo%23bar%23baz%20%3Fa%3Da.txt%3Fd%3D%C3%A4%23dlksl";
         os.putNextEntry(new ZipEntry(name));
         os.write("This is a Test".getBytes());
         os.close();
@@ -172,6 +168,59 @@ public class ResourceLoadingTest extends TestCase
         assertTrue(testBundle.getResource("bla/bli/blub").toExternalForm().endsWith("/blub"));
         assertTrue(testBundle.getEntry("bla/bli/blub").toExternalForm().endsWith("/blub"));
         assertTrue(testBundle.adapt(BundleWiring.class).getClassLoader().getResource("bla/bli/blub").toExternalForm().endsWith("/blub"));
+    }
+
+    public void testResourceLoadingUsingURLClassLoaderJDK9() throws Exception {
+        String bmf = "Bundle-SymbolicName: cap.bundle\n"
+            + "Bundle-Version: 1.2.3.Blah\n"
+            + "Bundle-ManifestVersion: 2\n"
+            + "Import-Package: org.osgi.framework\n";
+        File bundleFile = File.createTempFile("felix-bundle", ".jar", tempDir);
+        ByteArrayOutputStream embeddedJar1 = new ByteArrayOutputStream();
+        ByteArrayOutputStream embeddedJar2 = new ByteArrayOutputStream();
+
+        Manifest mf = new Manifest(new ByteArrayInputStream(bmf.getBytes("utf-8")));
+        mf.getMainAttributes().putValue("Manifest-Version", "1.0");
+        JarOutputStream bundle1 = new JarOutputStream(new FileOutputStream(bundleFile), mf);
+        JarOutputStream ej1 = new JarOutputStream(embeddedJar1, mf);
+        JarOutputStream ej2 = new JarOutputStream(embeddedJar2, mf);
+
+        String ej1Entry = "ej1.txt";
+        ej1.putNextEntry(new ZipEntry(ej1Entry));
+        ej1.write("This is a Test".getBytes());
+        ej1.close();
+
+        String ej2Entry = "ej2.txt";
+        ej2.putNextEntry(new ZipEntry(ej2Entry));
+        ej2.write("This is a Test".getBytes());
+        ej2.close();
+
+        String bundleResource = "b1.txt";
+        bundle1.putNextEntry(new ZipEntry(bundleResource));
+        bundle1.write("This is a Test".getBytes());
+        bundle1.putNextEntry(new ZipEntry("ej1.jar"));
+        bundle1.write(embeddedJar1.toByteArray());
+        bundle1.putNextEntry(new ZipEntry("ej2.jar"));
+        bundle1.write(embeddedJar2.toByteArray());
+        bundle1.close();
+
+        Bundle testBundle = felix.getBundleContext().installBundle(bundleFile.toURI().toASCIIString());
+
+        testBundle.start();
+
+        ClassLoader urlClassLoader = createClassLoader(testBundle);
+
+        assertNotNull(urlClassLoader.getResource("ej2.txt"));
+    }
+
+    ClassLoader createClassLoader(Bundle bundle) {
+        List<URL> urls = new ArrayList<URL>();
+        Collection<String> resources = bundle.adapt(BundleWiring.class).listResources("/", "*.jar", BundleWiring.LISTRESOURCES_LOCAL);
+        for (String resource : resources) {
+            urls.add(bundle.getResource(resource));
+        }
+        // Create the classloader
+        return new URLClassLoader(urls.toArray(new URL[urls.size()]), getClass().getClassLoader());
     }
 
     private static void deleteDir(File root) throws IOException

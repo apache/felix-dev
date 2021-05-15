@@ -46,9 +46,7 @@ class URLHandlersBundleURLConnection extends URLConnection
     {
         super(url);
 
-        String urlString = url.toExternalForm();
-
-        m_path = urlString.substring(urlString.indexOf(url.getPath()));
+        m_path = url.getPath();
 
         // If this is an attempt to create a connection to the root of
         // the bundle, then throw an exception since this isn't possible.
