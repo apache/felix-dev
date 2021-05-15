@@ -112,12 +112,11 @@
                 org.osgi.service.log;resolution:=optional,
                 org.osgi.service.cm;version="[1.5,2)";resolution:=optional,
                 !org.apache.felix.fileinstall,
-                !org.apache.felix.cm.file,
                 !org.apache.felix.utils.*,
                 *
             </Import-Package>
             <Bundle-Activator>org.apache.felix.fileinstall.internal.FileInstall</Bundle-Activator>
-            <Bundle-SymbolicName>${pom.artifactId}</Bundle-SymbolicName>
+            <Bundle-SymbolicName>${project.artifactId}</Bundle-SymbolicName>
             <Bundle-Vendor>The Apache Software Foundation</Bundle-Vendor>
             <Bundle-DocURL>
                 http://felix.apache.org/site/apache-felix-file-install.html
@@ -194,8 +193,9 @@
         </executions>
       </plugin>
       <plugin>
-        <groupId>org.codehaus.mojo</groupId>
-        <artifactId>rat-maven-plugin</artifactId>
+        <groupId>org.apache.rat</groupId>
+        <artifactId>apache-rat-plugin</artifactId>
+        <version>0.13</version>
         <configuration>
           <excludeSubProjects>false</excludeSubProjects>
           <useEclipseDefaultExcludes>true</useEclipseDefaultExcludes>
