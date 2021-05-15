@@ -149,7 +149,7 @@ public class DirectoryWatcher extends Thread implements BundleListener
 
     // Represents files that could not be processed because of a missing artifact listener
     final Set<File> processingFailures = new HashSet<File>();
-    
+
     // Represents installed artifacts which need to be started later because they failed to start
     Set<Bundle> delayedStart = new HashSet<Bundle>();
 
@@ -312,7 +312,7 @@ public class DirectoryWatcher extends Thread implements BundleListener
                     // Check that there is a result.  If not, this means that the directory can not be listed,
                     // so it's presumably not a valid directory (it may have been deleted by someone).
                     // In such case, just sleep
-                    if (files != null) {
+                    if (!files.isEmpty()) {
                         process(files);
                     }
                 }
@@ -1189,7 +1189,7 @@ public class DirectoryWatcher extends Thread implements BundleListener
         // when refreshing packages).
         if (startBundles)
         {
-            if (!isFragment(bundle)) 
+            if (!isFragment(bundle))
             {
                 bundle.stop(Bundle.STOP_TRANSIENT);
             }
@@ -1486,7 +1486,7 @@ public class DirectoryWatcher extends Thread implements BundleListener
             currentManagedArtifacts.remove(file);
         }
     }
-    
+
     private void setStateChanged(boolean changed) {
         this.stateChanged.set(changed);
     }

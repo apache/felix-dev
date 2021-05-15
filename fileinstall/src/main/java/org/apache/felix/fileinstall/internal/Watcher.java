@@ -40,7 +40,6 @@ import java.util.List;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 
-import static java.nio.file.LinkOption.NOFOLLOW_LINKS;
 import static java.nio.file.StandardWatchEventKinds.ENTRY_CREATE;
 import static java.nio.file.StandardWatchEventKinds.ENTRY_DELETE;
 import static java.nio.file.StandardWatchEventKinds.ENTRY_MODIFY;
@@ -158,6 +157,7 @@ public abstract class Watcher implements Closeable {
                            new FilteringFileVisitor());
     }
 
+    @SuppressWarnings({ "rawtypes", "unchecked" })
     public void processEvents() {
         while (true) {
             WatchKey key = watcher.poll();

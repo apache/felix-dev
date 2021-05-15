@@ -32,8 +32,6 @@ import java.lang.reflect.Array;
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
 import java.net.URI;
-import java.nio.file.Files;
-import java.nio.file.attribute.PosixFilePermission;
 import java.security.AccessController;
 import java.security.PrivilegedAction;
 import java.util.ArrayList;
@@ -78,6 +76,7 @@ public class ConfigInstaller implements ArtifactInstaller, ConfigurationListener
     private final Object READ_ONLY_ATTRIBUTE_ARRAY;
     private ServiceRegistration<?> registration;
 
+    @SuppressWarnings("unchecked")
     ConfigInstaller(BundleContext context, ConfigurationAdmin configAdmin, FileInstall fileInstall)
     {
         this.context = context;
@@ -129,6 +128,7 @@ public class ConfigInstaller implements ArtifactInstaller, ConfigurationListener
         if (this.addAttributesMethod != null)
         {
             try {
+                @SuppressWarnings("rawtypes")
                 Class<? extends Enum> attr = (Class<? extends Enum>)context.getBundle()
                     .loadClass("org.osgi.service.cm.Configuration$ConfigurationAttribute");
 
@@ -409,7 +409,7 @@ public class ConfigInstaller implements ArtifactInstaller, ConfigurationListener
                             + config.getPid()
                             + "} from " + f.getAbsolutePath(), null);
                 }
-                update0(config, ht);
+                update0(pid, config, ht, f);
                 return true;
             }
             else
@@ -525,13 +525,14 @@ public class ConfigInstaller implements ArtifactInstaller, ConfigurationListener
         };
     }
 
+    @SuppressWarnings({ "rawtypes", "unchecked" })
     boolean isReadOnly(Configuration configuration) throws IOException {
         if (getAttributesMethod == null) {
             return false;
         }
 
         try {
-            Set<? extends Enum<?>> attributes = (Set<? extends Enum<?>>)getAttributesMethod.invoke(configuration);
+            Set<? extends Enum> attributes = (Set<? extends Enum>)getAttributesMethod.invoke(configuration);
 
             if (attributes.isEmpty()) {
                 return false;
@@ -560,6 +561,32 @@ public class ConfigInstaller implements ArtifactInstaller, ConfigurationListener
         try {
             if (Util.canWrite(f) && isReadOnly(configuration)) {
                 Util.log(context, Logger.LOG_INFO, "Removing  READ_ONLY attribute from configuration {"
+                        + configuration.getPid()
+                        + "} from " + f.getAbsolutePath(), null);
+                removeAttributesMethod.invoke(configuration, READ_ONLY_ATTRIBUTE_ARRAY);
+            }
+        }
+        catch (InvocationTargetException ite) {
+            Throwable targetException = ite.getTargetException();
+            if (targetException instanceof IOException) {
+                throw (IOException)targetException;
+            }
+
+            throw new RuntimeException(targetException);
+        }
+        catch (Throwable t) {
+            throw new RuntimeException(t);
+        }
+    }
+
+    void clearReadOnlyToUpdate(String[] pid, Configuration configuration, File f) throws IOException {
+        if (removeAttributesMethod == null) {
+            return;
+        }
+
+        try {
+            if (isReadOnly(configuration)) {
+                Util.log(context, Logger.LOG_INFO, "Temporarily removing  READ_ONLY attribute from configuration for external update {"
                         + configuration.getPid()
                         + "} from " + f.getAbsolutePath(), null);
                 removeAttributesMethod.invoke(configuration, READ_ONLY_ATTRIBUTE_ARRAY);
@@ -608,7 +635,8 @@ public class ConfigInstaller implements ArtifactInstaller, ConfigurationListener
         return false;
     }
 
-    void update0(final Configuration config, final Hashtable<String, Object> ht) throws IOException {
+    void update0(String[] pid, final Configuration config, final Hashtable<String, Object> ht, File f) throws IOException {
+        clearReadOnlyToUpdate(pid, config, f);
         if (updateIfDifferentMethod != null) {
             try {
                 updateIfDifferentMethod.invoke(config, ht);

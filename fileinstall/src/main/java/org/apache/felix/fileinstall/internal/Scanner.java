@@ -157,17 +157,7 @@ public class Scanner implements Closeable {
                     continue;
                 }
             }
-            long lastChecksum = lastChecksums.get(file) != null ? (Long) lastChecksums.get(file) : 0;
-            long storedChecksum = storedChecksums.get(file) != null ? (Long) storedChecksums.get(file) : 0;
-            long newChecksum = checksum(file);
-            lastChecksums.put(file, newChecksum);
-            // Only handle file when it does not change anymore and it has changed
-            // since last reported
-            if ((newChecksum == lastChecksum || reportImmediately) && newChecksum != storedChecksum)
-            {
-                storedChecksums.put(file, newChecksum);
-                files.add(file);
-            }
+            verifyChecksum(files, file, reportImmediately);
             removed.remove(file);
         }
         // Make sure we'll handle a file that has been deleted
@@ -177,6 +167,11 @@ public class Scanner implements Closeable {
             // Remove no longer used checksums
             lastChecksums.remove(file);
             storedChecksums.remove(file);
+        }
+        // Double check known files because modifications from externally mounted
+        // file systems are not well handled by inotify in Linux.
+        for (File file : new HashSet<File>(storedChecksums.keySet())) {
+            verifyChecksum(files, file, false);
         }
         return files;
     }
@@ -217,6 +212,20 @@ public class Scanner implements Closeable {
         {
             long newChecksum = checksum(file);
             storedChecksums.put(file, newChecksum);
+        }
+    }
+
+    void verifyChecksum(Set<File> files, File file, boolean reportImmediately) {
+        long lastChecksum = lastChecksums.get(file) != null ? (Long) lastChecksums.get(file) : 0;
+        long storedChecksum = storedChecksums.get(file) != null ? (Long) storedChecksums.get(file) : 0;
+        long newChecksum = checksum(file);
+        lastChecksums.put(file, newChecksum);
+        // Only handle file when it does not change anymore and it has changed
+        // since last reported
+        if ((newChecksum == lastChecksum || reportImmediately) && newChecksum != storedChecksum)
+        {
+            storedChecksums.put(file, newChecksum);
+            files.add(file);
         }
     }
 

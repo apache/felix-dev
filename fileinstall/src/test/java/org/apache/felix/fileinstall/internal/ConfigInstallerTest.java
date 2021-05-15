@@ -95,7 +95,7 @@ public class ConfigInstallerTest extends TestCase {
                 .andReturn(null);
         EasyMock.expect(mockConfigurationAdmin.getConfiguration(pid, "?"))
                 .andReturn(mockConfiguration);
-        EasyMock.expect(mockConfiguration.getAttributes()).andReturn(Collections.emptySet());
+        EasyMock.expect(mockConfiguration.getAttributes()).andReturn(Collections.emptySet()).times(2);
         EasyMock.expect(mockConfiguration.getPid()).andReturn(pid);
         EasyMock.expect(mockConfiguration.getProperties())
                 .andReturn(null);
@@ -131,7 +131,7 @@ public class ConfigInstallerTest extends TestCase {
         EasyMock.expect(mockConfigurationAdmin.getConfiguration(pid, "?"))
                 .andReturn(mockConfiguration);
         EasyMock.expect(mockConfiguration.getAttributes())
-            .andReturn(Collections.emptySet());
+            .andReturn(Collections.emptySet()).times(2);
         EasyMock.expect(mockConfiguration.getProperties())
                 .andReturn(null);
         EasyMock.expect(mockConfiguration.getPid()).andReturn(pid);
@@ -239,7 +239,7 @@ public class ConfigInstallerTest extends TestCase {
 
         EasyMock.expect(mockBundleContext.getBundle()).andReturn(mockBundle).anyTimes();
         EasyMock.expect(mockBundle.loadClass(ConfigurationAttribute.class.getName())).andReturn((Class)ConfigurationAttribute.class).anyTimes();
-        EasyMock.expect(mockConfiguration.getAttributes()).andReturn(Collections.emptySet());
+        EasyMock.expect(mockConfiguration.getAttributes()).andReturn(Collections.emptySet()).times(2);
         EasyMock.expect(mockConfiguration.getProperties())
                 .andReturn(null);
         EasyMock.expect(mockBundleContext.getProperty((String) EasyMock.anyObject()))
@@ -366,7 +366,7 @@ public class ConfigInstallerTest extends TestCase {
                 .anyTimes();
 
         final Configuration cachingPersistenceConfiguration = EasyMock.createMock(Configuration.class);
-        EasyMock.expect(cachingPersistenceConfiguration.getAttributes()).andReturn(Collections.emptySet()).once();
+        EasyMock.expect(cachingPersistenceConfiguration.getAttributes()).andReturn(Collections.emptySet()).times(2);
 
         final Dictionary<String, Object> cachedProps = new Hashtable<String, Object>() {
             {
@@ -391,7 +391,7 @@ public class ConfigInstallerTest extends TestCase {
                 .anyTimes();
 
         final Configuration newConfiguration = EasyMock.createMock(Configuration.class);
-        EasyMock.expect(newConfiguration.getAttributes()).andReturn(Collections.emptySet()).once();
+        EasyMock.expect(newConfiguration.getAttributes()).andReturn(Collections.emptySet()).times(2);
 
         EasyMock.expect(mockConfigurationAdmin.listConfigurations((String) EasyMock.anyObject()))
                 .andReturn(new Configuration[] { newConfiguration });
@@ -440,7 +440,7 @@ public class ConfigInstallerTest extends TestCase {
         EasyMock.expect(mockBundleContext.getProperty(DirectoryWatcher.LOG_DEFAULT)).andReturn(null);
         EasyMock.expect(mockBundleContext.getProperty(DirectoryWatcher.LOG_LEVEL)).andReturn(null);
         EasyMock.expect(mockConfiguration.getProperties()).andReturn(new Hashtable<String, Object>());
-        EasyMock.expect(mockConfiguration.getAttributes()).andReturn(Collections.emptySet());
+        EasyMock.expect(mockConfiguration.getAttributes()).andReturn(Collections.emptySet()).times(2);
         EasyMock.expect(mockConfiguration.getPid()).andReturn("firstcfg");
         EasyMock.reportMatcher(new IArgumentMatcher()
         {
@@ -555,6 +555,7 @@ public class ConfigInstallerTest extends TestCase {
             Collections.singleton(ConfigurationAttribute.READ_ONLY)).anyTimes();
         cachingPersistenceConfiguration.addAttributes(new ConfigurationAttribute[] {ConfigurationAttribute.READ_ONLY});
         cachingPersistenceConfiguration.removeAttributes(EasyMock.anyObject(ConfigurationAttribute[].class));
+        EasyMock.expectLastCall().times(2);
 
         final Dictionary<String, Object> cachedProps = new Hashtable<String, Object>() {
             {
@@ -564,7 +565,7 @@ public class ConfigInstallerTest extends TestCase {
         };
 
         EasyMock.expect(cachingPersistenceConfiguration.getPid())
-                .andReturn(pid).times(3);
+                .andReturn(pid).times(4);
         EasyMock.expect(cachingPersistenceConfiguration.getProperties())
                 .andReturn(cachedProps)
                 .anyTimes();
