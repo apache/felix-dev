@@ -173,6 +173,12 @@
                   </includes>
                 </filter>
               </filters>
+              <relocations>
+                <relocation>
+                  <pattern>org.apache.felix.utils</pattern>
+                  <shadedPattern>org.apache.felix.fileinstall.shaded.util</shadedPattern>
+                </relocation>
+              </relocations>
               <createSourcesJar>true</createSourcesJar>
               <promoteTransitiveDependencies>true</promoteTransitiveDependencies>
               <createDependencyReducedPom>true</createDependencyReducedPom>
