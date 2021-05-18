@@ -143,12 +143,40 @@ class LogManager extends ServiceTracker<Object, Object> implements BundleListene
     }
 
     final Lock lock = new Lock();
+    
+    private final LogConfiguration config;
 
-    LogManager(BundleContext context)
+    LogManager(BundleContext context, LogConfiguration config)
     {
         super(context, LOGGER_FACTORY_CLASS_NAME, null);
         this.scrContext = context;
-        scrContext.addBundleListener(this);
+        this.config = config;
+    }
+    
+    /**
+     * Initializes the log manager. This internally executes the following:
+     * 
+     * <ul>
+     * <li>
+     * Track all bundles for retrieving the log levels of each bundles if the log extension 
+     * is ({@code ds.log.extension}) not set or set to {@code false} (log extension disabled)
+     * </li>
+     * <li>
+     * Don't track any bundles if log extension is enabled since we don't need the log levels 
+     * of the respective bundles. For log extension, we use the log level of the SCR bundle itself.
+     * <li>
+     * <li>
+     * Start the service tracker to track the OSGi LoggerFactory service
+     * </li>
+     * </ul>
+     */
+    public void init() 
+    {
+        if (!config.isLogExtensionEnabled()) 
+        {
+            scrContext.addBundleListener(this);
+        }
+        this.open();
     }
 
     @Override

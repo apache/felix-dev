@@ -24,7 +24,6 @@ import java.io.StringWriter;
 import java.text.MessageFormat;
 
 import org.apache.felix.scr.impl.logger.InternalLogger.Level;
-import org.apache.felix.scr.impl.manager.ScrConfiguration;
 import org.osgi.framework.Bundle;
 import org.osgi.framework.BundleContext;
 import org.osgi.service.log.Logger;
@@ -40,32 +39,11 @@ public class ScrLogManager extends LogManager
 {
 
     private final Bundle bundle;
-    private final ScrConfiguration config;
+    private final LogConfiguration config;
 
-    /**
-     * Get a new log manager based on the configuration.
-     * 
-     * @param context
-     *                    the bundle context of the SCR bundle
-     * @param config
-     *                    the SCR configuration
-     * @return a proper ScrLogManager
-     */
-
-    public static ScrLogger scr(BundleContext context, ScrConfiguration config)
+    ScrLogManager(BundleContext context, LogConfiguration config)
     {
-        ScrLogManager manager;
-        if (config.isLogExtension())
-            manager = new ExtLogManager(context, config);
-        else
-            manager = new ScrLogManager(context, config);
-        manager.open();
-        return manager.scr();
-    }
-
-    ScrLogManager(BundleContext context, ScrConfiguration config)
-    {
-        super(context);
+        super(context, config);
         this.config = config;
         this.bundle = context.getBundle();
     }
@@ -74,7 +52,7 @@ public class ScrLogManager extends LogManager
      * This logger is used for the main code of SCR. This will use the SCR
      * bundle & the {@link Logger#ROOT_LOGGER_NAME}
      * 
-     * @return an Scr Logger.
+     * @return scr logger.
      */
     public ScrLogger scr()
     {

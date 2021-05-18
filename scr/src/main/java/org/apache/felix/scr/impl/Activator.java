@@ -43,7 +43,7 @@ import java.util.concurrent.locks.ReentrantLock;
 import org.apache.felix.scr.impl.config.ScrConfigurationImpl;
 import org.apache.felix.scr.impl.inject.internal.ClassUtils;
 import org.apache.felix.scr.impl.logger.InternalLogger.Level;
-import org.apache.felix.scr.impl.logger.ScrLogManager;
+import org.apache.felix.scr.impl.logger.ScrLoggerFactory;
 import org.apache.felix.scr.impl.logger.ScrLogger;
 import org.apache.felix.scr.impl.manager.ComponentHolder;
 import org.apache.felix.scr.impl.metadata.ComponentMetadata;
@@ -657,10 +657,10 @@ public class Activator extends AbstractExtender
         // TODO we only set the logger once
         // If the need arises to be able to dynamically set the logger type
         // then more work is needed to do that switch
-        // for now we only can configure ds.log.extension with context properties
+        // for now we only can configure 'ds.log.extension' and 'ds.log.enabled' with context properties
         if (logger == null)
         {
-            logger = ScrLogManager.scr(m_context, m_configuration);
+            logger = ScrLoggerFactory.create(m_context, m_configuration);
         }
 
     }
