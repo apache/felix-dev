@@ -48,13 +48,13 @@ class URLHandlersBundleURLConnection extends URLConnection
 
         String urlString = url.toExternalForm();
 
-        m_path = urlString.substring(urlString.indexOf(url.getPath()));
+        String path = urlString.substring(urlString.indexOf(url.getPath()));
 
         // If this is an attempt to create a connection to the root of
         // the bundle, then throw an exception since this isn't possible.
         // We only allow "/" as a valid URL so it can be used as context
         // for creating other URLs.
-        if ((m_path == null) || (m_path.length() == 0) || m_path.equals("/"))
+        if ((path == null) || (path.length() == 0) || path.equals("/"))
         {
             throw new IOException("Resource does not exist: " + url);
         }
@@ -124,17 +124,40 @@ class URLHandlersBundleURLConnection extends URLConnection
             m_classPathIdx = 0;
         }
         if (!((BundleRevisionImpl) m_targetRevision)
-            .hasInputStream(m_classPathIdx, m_path))
+            .hasInputStream(m_classPathIdx, path))
         {
             BundleWiring wiring = m_targetRevision.getWiring();
             ClassLoader cl = (wiring != null) ? wiring.getClassLoader() : null;
-            URL newurl = (cl != null) ? cl.getResource(m_path) : null;
+            URL newurl = (cl != null) ? cl.getResource(path) : null;
             if (newurl == null)
             {
-                throw new IOException("Resource does not exist: " + url);
+                // FELIX-6416 - handle the special case of java adding a runtime ref
+                if (!"runtime".equals(url.getRef()))
+                {
+                    throw new IOException("Resource does not exist: " + url);
+                }
+                path = url.getPath();
+                if ((path == null) || (path.length() == 0) || path.equals("/"))
+                {
+                    throw new IOException("Resource does not exist: " + url);
+                }
+                if (!((BundleRevisionImpl) m_targetRevision)
+                        .hasInputStream(m_classPathIdx, path))
+                {
+                    newurl = (cl != null) ? cl.getResource(path) : null;
+                    if (newurl == null)
+                    {
+                        throw new IOException("Resource does not exist: " + url);
+                    }
+                    m_classPathIdx = newurl.getPort();
+                }
             }
-            m_classPathIdx = newurl.getPort();
+            else
+            {
+                m_classPathIdx = newurl.getPort();
+            }
         }
+        m_path = path;
     }
 
     public synchronized void connect() throws IOException
