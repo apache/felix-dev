@@ -61,9 +61,12 @@ It is possible to specify a default value as part of the placeholder, for exampl
 
 ```
 "port" : "$[env:PORT;default=8080]"
+"label" : "$[env:LABEL;default=]"
 ```
 
 Without a default, the placeholder is left in the value if no value can be found. With a default, the default is used instead.
+
+The default value may contain all alphanumeric and punctuation characters and space except for a `;`. It may even be left out which leads to replacing the placeholder with the empty string.
 
 ## Type Support
 
@@ -106,12 +109,12 @@ In case of the Apache Felix ConfigAdmin implementation, this can be achieved by 
 
 ### Secrets lookup
 
-In order to look up secrets on the filesystem, the plugin must be provided with the directory
+In order to look up secrets on the filesystem, the plugin must be provided with the directories
 where these can be found.
 
 This is done through the following property:
 
-* `org.apache.felix.configadmin.plugin.interpolation.secretsdir`: specify the directory where the files used for the file-based interpolation, such as Kubernetes secrets, are mounted.
+* `org.apache.felix.configadmin.plugin.interpolation.secretsdir`: specify a comma-separated (`,`) list of directories where the files used for the file-based interpolation, such as Kubernetes secrets, are mounted.
 
 If the property is not present, the plugin will function, but without being able to replace values based on secrets.
 

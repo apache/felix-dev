@@ -78,9 +78,12 @@
             ${bundle.build.name}/${project.build.finalName}.jar
         </bundle.file.name>
         <felix.ca.version>1.9.0</felix.ca.version>
-        <felix.java.version>8</felix.java.version>
-        <maven.compiler.source>1.8</maven.compiler.source>
-        <maven.compiler.target>1.8</maven.compiler.target>
+
+        <java.version>8</java.version>
+        <felix.java.version>${java.version}</felix.java.version>
+        <maven.compiler.release>${java.version}</maven.compiler.release>
+        <maven.compiler.source>${java.version}</maven.compiler.source>
+        <maven.compiler.target>${java.version}</maven.compiler.target>
     </properties>
     
     
@@ -393,7 +396,7 @@
                 <dependency>
                     <groupId>org.apache.felix</groupId>
                     <artifactId>org.apache.felix.framework</artifactId>
-                    <version>4.6.0</version>
+                    <version>6.0.4</version>
                     <scope>test</scope>
                 </dependency>
             </dependencies>
@@ -402,9 +405,9 @@
             <id>equinox</id>
             <dependencies>
                 <dependency>
-                    <groupId>org.eclipse</groupId>
+                    <groupId>org.eclipse.platform</groupId>
                     <artifactId>org.eclipse.osgi</artifactId>
-                    <version>3.8.0.v20120529-1548</version>
+                    <version>3.16.200</version>
                     <scope>test</scope>
                 </dependency>
             </dependencies>

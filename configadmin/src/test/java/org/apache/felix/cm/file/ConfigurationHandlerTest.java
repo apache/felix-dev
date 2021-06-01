@@ -25,6 +25,7 @@ import java.io.InputStream;
 import java.io.OutputStream;
 import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Dictionary;
 import java.util.Hashtable;
 import java.util.List;
@@ -48,6 +49,36 @@ public class ConfigurationHandlerTest {
         "  # custom datastore\n" +
         PAR_2 + "=B\"" + VAL_2 + "\"\n";
 
+    private static final String MULTI_LINE_CONFIG = "# Licensed to the Apache Software Foundation (ASF) under one or more\n"
+    + "# contributor license agreements. See the NOTICE file distributed with this\n"
+    + "# work for additional information regarding copyright ownership. The ASF\n"
+    + "# licenses this file to You under the Apache License, Version 2.0 (the\n"
+    + "# \"License\"); you may not use this file except in compliance with the License.\n"
+    + "# You may obtain a copy of the License at\n"
+    + "#\n"
+    + "# http://www.apache.org/licenses/LICENSE-2.0\n"
+    + "#\n"
+    + "# Unless required by applicable law or agreed to in writing, software\n"
+    + "# distributed under the License is distributed on an \"AS IS\" BASIS, WITHOUT\n"
+    + "# WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the\n"
+    + "# License for the specific language governing permissions and limitations under\n"
+    + "# the License.\n"
+    + "\n"
+    + "scripts=[\\\n"
+    + "    \"create service user test-user\n"
+    + "    set ACL for test-user\n"
+    + "        allow    jcr:read    on /conf\n"
+    + "    end\",\\\n"
+    + "    \"create service user test-user2\n"
+    + "    set ACL for test-user2\n"
+    + "        allow    jcr:read    on /conf\n"
+    + "    end\",\\\n"
+    + "    \"create path /test\n"
+    + "    set properties on /test\n"
+    + "        set testprop to \\\"one\\=two\\\"\n"
+    + "    end\"\\\n"
+    + "]";
+    
     @Test
     public void testComments() throws IOException
     {
@@ -58,6 +89,15 @@ public class ConfigurationHandlerTest {
         Assert.assertEquals(VAL_2, dict.get(PAR_2).toString());
     }
 
+    @Test
+    public void testMultiLineConfig() throws IOException
+    {
+        @SuppressWarnings("unchecked")
+        final Dictionary<String, Object> dict = ConfigurationHandler.read(new ByteArrayInputStream(MULTI_LINE_CONFIG.getBytes("UTF-8")));
+        final String[] scripts = (String[]) dict.get("scripts");
+        Assert.assertNotNull(scripts);
+        Assert.assertEquals(3, scripts.length);
+    }
 
     @Test
     public void test_writeArray() throws IOException {
@@ -101,6 +141,16 @@ public class ConfigurationHandlerTest {
         ConfigurationHandler.write(out, properties);
         String entry = new String(((ByteArrayOutputStream)out).toByteArray(),"UTF-8");
         Assert.assertEquals("service.pid=\"com.adobe.granite.foo.Bar\"\r\n", entry);
+    }
+
+    @Test
+    public void test_writeStringWithSpaces() throws IOException {
+        OutputStream out = new ByteArrayOutputStream();
+        Dictionary< String, String> properties = new Hashtable<>();
+        properties.put("prop", "Hello World");
+        ConfigurationHandler.write(out, properties);
+        String entry = new String(((ByteArrayOutputStream)out).toByteArray(),"UTF-8");
+        Assert.assertEquals("prop=\"Hello\\ World\"\r\n", entry);
     }
 
     @Test
@@ -234,6 +284,16 @@ public class ConfigurationHandlerTest {
         Dictionary<String, Object> dictionary = ConfigurationHandler.read(stream);
         Assert.assertEquals(1, dictionary.size());
         Assert.assertEquals( "com.adobe.granite.foo.Bar", dictionary.get(SERVICE_PID));
+    }
+
+    @Test
+    public void test_readStringWithSpaces() throws IOException {
+        String entry = "prop=\"Hello\\ World\"\r\n";
+        InputStream stream = new ByteArrayInputStream(entry.getBytes(StandardCharsets.UTF_8));
+        @SuppressWarnings("unchecked")
+        Dictionary<String, Object> dictionary = ConfigurationHandler.read(stream);
+        Assert.assertEquals(1, dictionary.size());
+        Assert.assertEquals( "Hello World", dictionary.get("prop"));
     }
 
     @Test

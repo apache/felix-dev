@@ -400,12 +400,21 @@ public class ConfigManager extends SimpleWebConsolePlugin implements OsgiManager
         @SuppressWarnings("unchecked")
         final Map<String, Object> labelMap = (Map<String, Object>) request.getAttribute(WebConsoleConstants.ATTR_LABEL_MAP);
         jw.key("jsonsupport").value( labelMap.containsKey("osgi-installer-config-printer") ); //$NON-NLS-1$
+        final boolean hasMetatype = ca.getMetaTypeSupport() != null;
         jw.key("status").value( ca != null ? Boolean.TRUE : Boolean.FALSE); //$NON-NLS-1$
+        jw.key("metatype").value( hasMetatype ? Boolean.TRUE : Boolean.FALSE); //$NON-NLS-1$
+        boolean hasConfigs = true;
         if ( ca != null )
         {
-            ca.listConfigurations( jw, pidFilter, locale, loc );
+            hasConfigs = ca.listConfigurations( jw, pidFilter, locale, loc );
             ca.listFactoryConfigurations( jw, pidFilter, locale );
         }
+        if ( !hasConfigs && !hasMetatype && ca != null ) {
+            jw.key("noconfigs").value(true); //$NON-NLS-1$
+        } else {
+            jw.key("noconfigs").value(false); //$NON-NLS-1$
+        }
+
         jw.endObject();
 
         // if a configuration is addressed, display it immediately

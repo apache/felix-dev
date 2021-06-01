@@ -1,5 +1,5 @@
 /*
- * Copyright (c) OSGi Alliance (2006, 2017). All Rights Reserved.
+ * Copyright (c) OSGi Alliance (2006, 2019). All Rights Reserved.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -13,10 +13,6 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-
-// This document is an experimental draft to enable interoperability
-// between bundle repositories. There is currently no commitment to
-// turn this draft into an official specification.
 
 package org.osgi.service.resolver;
 
@@ -36,7 +32,7 @@ import org.osgi.resource.Wiring;
  * by the caller.
  * 
  * @ThreadSafe
- * @author $Id: 86bff007315e1e3c03eca6aaacdcfa379be9ddea $
+ * @author $Id: e4011e12a98088d382bb7f5b27817213734f6504 $
  */
 @ProviderType
 public interface Resolver {

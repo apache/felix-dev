@@ -27,6 +27,7 @@ import java.util.Collections;
 import java.util.Dictionary;
 import java.util.List;
 
+import org.osgi.framework.Bundle;
 import org.osgi.framework.BundleContext;
 import org.osgi.framework.Constants;
 import org.osgi.framework.Filter;
@@ -86,12 +87,17 @@ public class ConfigurationListenerImpl {
             m_caReference = caReference;
             m_ca = m_context.getService(m_caReference);
 
+            final Bundle bundle = m_caReference.getBundle();
+            if ( bundle == null )
+            {
+                throw new IllegalStateException("Service already unregistered again");
+            }
             try {
-                m_caClass = m_caReference.getBundle().loadClass(CONFIGURATION_ADMIN_CLASS);
+                m_caClass = bundle.loadClass(CONFIGURATION_ADMIN_CLASS);
                 m_caGetConfiguration = m_caClass.getMethod("getConfiguration", String.class, String.class);
                 m_caListConfigurations = m_caClass.getMethod("listConfigurations", String.class);
 
-                m_configurationClass = m_caReference.getBundle().loadClass(CONFIGURATION_CLASS);
+                m_configurationClass = bundle.loadClass(CONFIGURATION_CLASS);
                 m_configurationGetProperties = m_configurationClass.getMethod("getProperties");
                 Method configurationGetProcessedProperties = null;
                 try {
@@ -103,11 +109,11 @@ public class ConfigurationListenerImpl {
                 }
                 m_configurationGetProcessedProperties = configurationGetProcessedProperties;
 
-                m_ceClass = m_caReference.getBundle().loadClass(CONFIGURATION_EVENT_CLASS);
+                m_ceClass = bundle.loadClass(CONFIGURATION_EVENT_CLASS);
                 m_ceGetPid = m_ceClass.getMethod("getPid");
                 m_ceGetType = m_ceClass.getMethod("getType");
 
-                m_clClass = m_caReference.getBundle().loadClass(CONFIGURATION_LISTENER_CLASS);
+                m_clClass = bundle.loadClass(CONFIGURATION_LISTENER_CLASS);
                 m_clConfigurationEvent = m_clClass.getMethod("configurationEvent", m_ceClass);
             }
             catch (ClassNotFoundException | NoSuchMethodException | SecurityException e) {

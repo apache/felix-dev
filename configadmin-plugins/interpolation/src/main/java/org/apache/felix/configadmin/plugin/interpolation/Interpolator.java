@@ -114,9 +114,10 @@ public class Interpolator {
                 directives = new HashMap<>();
 
                 for (String dir : postfix.substring(dirPos + 1).split(";")) {
-                    String[] kv = dir.split("=");
-                    if (kv.length == 2) {
-                        directives.put(kv[0], kv[1]);
+                    String[] kv = dir.split("=", 2);
+                    if (kv.length > 0) {
+                        final String directiveValue = kv.length == 2 ? kv[1] : "";
+                        directives.put(kv[0], directiveValue);
                     }
                 }
             }

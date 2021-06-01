@@ -23,7 +23,7 @@ import org.osgi.resource.Wiring;
 /**
  * Data Transfer Object for a Wiring node.
  * 
- * @author $Id: WiringDTO.java 1614569 2014-07-30 07:22:32Z cziegeler $
+ * @author $Id: 8dc3844e57eae338ddc2565e20b93360ea390382 $
  * @NotThreadSafe
  */
 public class WiringDTO extends DTO {

@@ -42,6 +42,61 @@
   <build>
     <plugins>
       <plugin>
+        <groupId>org.moditect</groupId>
+        <artifactId>moditect-maven-plugin</artifactId>
+        <version>1.0.0.RC1</version>
+        <executions>
+          <execution>
+            <id>add-module-infos</id>
+            <phase>package</phase>
+            <goals>
+              <goal>add-module-info</goal>
+            </goals>
+            <configuration>
+              <module>
+              <moduleInfoSource>
+                open module org.apache.felix.framework {
+                    requires jdk.unsupported;
+
+                    exports org.apache.felix.framework.ext;
+                    exports org.osgi.dto;
+                    exports org.osgi.framework;
+                    exports org.osgi.framework.connect;
+                    exports org.osgi.framework.dto;
+                    exports org.osgi.framework.hooks.bundle;
+                    exports org.osgi.framework.hooks.resolver;
+                    exports org.osgi.framework.hooks.service;
+                    exports org.osgi.framework.hooks.weaving;
+                    exports org.osgi.framework.launch;
+                    exports org.osgi.framework.namespace;
+                    exports org.osgi.framework.startlevel;
+                    exports org.osgi.framework.startlevel.dto;
+                    exports org.osgi.framework.wiring;
+                    exports org.osgi.framework.wiring.dto;
+                    exports org.osgi.resource;
+                    exports org.osgi.resource.dto;
+                    exports org.osgi.service.condition;
+                    exports org.osgi.service.packageadmin;
+                    exports org.osgi.service.resolver;
+                    exports org.osgi.service.startlevel;
+                    exports org.osgi.service.url;
+                    exports org.osgi.util.tracker;
+                    provides org.osgi.framework.launch.FrameworkFactory with
+                      org.apache.felix.framework.FrameworkFactory;
+                    provides org.osgi.framework.connect.ConnectFrameworkFactory with
+                      org.apache.felix.framework.FrameworkFactory;
+
+                    uses org.apache.felix.framework.ext.ClassPathExtenderFactory;
+                    uses org.osgi.framework.connect.FrameworkUtilHelper;
+                    }
+                </moduleInfoSource>
+              </module>
+              <overwriteExistingFiles>true</overwriteExistingFiles>
+            </configuration>
+          </execution>
+        </executions>
+      </plugin>
+      <plugin>
         <groupId>org.apache.felix</groupId>
         <artifactId>maven-bundle-plugin</artifactId>
         <version>5.1.1</version>
@@ -143,7 +198,7 @@
     <dependency>
        <groupId>org.apache.felix</groupId>
        <artifactId>org.apache.felix.resolver</artifactId>
-       <version>2.0.2</version>
+       <version>2.1.0-SNAPSHOT</version>
        <scope>provided</scope>
         <exclusions>
             <exclusion>

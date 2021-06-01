@@ -701,15 +701,12 @@ public final class ResourceBuilder {
         for (ParsedHeaderClause clause : clauses) {
             // Verify that the named package has not already been declared.
             for (String pkgName : clause.paths) {
-                // Verify that java.* packages are not exported.
-                if (pkgName.startsWith("java.")) {
-                    throw new BundleException("Exporting java.* packages not allowed: " + pkgName);
                 // The character "." has no meaning in the OSGi spec except
                 // when placed on the bundle class path. Some people, however,
                 // mistakenly think it means the default package when imported
                 // or exported. This is not correct. It is invalid.
-                } else if (pkgName.equals(".")) {
-                    throw new BundleException("Exporing '.' is invalid.");
+                if (pkgName.equals(".")) {
+                    throw new BundleException("Exporting '.' is invalid.");
                 // Make sure a package name was specified.
                 } else if (pkgName.length() == 0) {
                     throw new BundleException("Exported package names cannot be zero length.");

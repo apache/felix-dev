@@ -18,12 +18,14 @@
  */
 package org.apache.felix.inventory;
 
+import org.junit.Test;
+
 import junit.framework.TestCase;
 
-public class FormatTest extends TestCase
+public class FormatTest
 {
 
-    public void test_valueOf()
+    @Test public void test_valueOf()
     {
         TestCase.assertSame(Format.TEXT, Format.valueOf("TEXT"));
         TestCase.assertSame(Format.JSON, Format.valueOf("JSON"));
@@ -40,14 +42,14 @@ public class FormatTest extends TestCase
         TestCase.assertNull(Format.valueOf("unsupported_name"));
     }
 
-    public void test_toString()
+    @Test public void test_toString()
     {
         TestCase.assertEquals("TEXT", Format.TEXT.toString());
         TestCase.assertEquals("JSON", Format.JSON.toString());
         TestCase.assertEquals("HTML", Format.HTML.toString());
     }
 
-    public void test_equals()
+    @Test public void test_equals()
     {
         TestCase.assertTrue(Format.TEXT.equals(Format.TEXT));
         TestCase.assertFalse(Format.TEXT.equals(Format.JSON));

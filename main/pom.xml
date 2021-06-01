@@ -20,7 +20,7 @@
  <parent>
     <groupId>org.apache.felix</groupId>
     <artifactId>felix-parent</artifactId>
-    <version>5</version>
+    <version>6</version>
     <relativePath>../pom/pom.xml</relativePath>
   </parent>
   <modelVersion>4.0.0</modelVersion>
@@ -43,6 +43,7 @@
   </dependencies>
   <properties>
     <log.level>4</log.level>
+    <felix.java.version>8</felix.java.version>
     <dollar>$</dollar>
     <gogo.runtime.version>1.1.4</gogo.runtime.version>
     <gogo.jline.shell.version>1.1.8</gogo.jline.shell.version>
@@ -63,18 +64,72 @@
   <build>
     <plugins>
       <plugin>
-        <groupId>org.apache.maven.plugins</groupId>
-        <artifactId>maven-compiler-plugin</artifactId>
+        <groupId>org.codehaus.mojo</groupId>
+        <artifactId>animal-sniffer-maven-plugin</artifactId>
         <configuration>
-          <target>1.5</target>
-          <source>1.5</source>
+          <skip>true</skip>
         </configuration>
-      </plugin>
+     </plugin>
+     <plugin>
+        <groupId>org.moditect</groupId>
+        <artifactId>moditect-maven-plugin</artifactId>
+        <version>1.0.0.RC1</version>
+        <executions>
+          <execution>
+            <id>add-module-infos</id>
+            <phase>package</phase>
+            <goals>
+              <goal>add-module-info</goal>
+            </goals>
+            <configuration>
+              <module>
+              <moduleInfoSource>
+                open module org.apache.felix.main {
+                    requires jdk.unsupported;
 
+                    exports org.apache.felix.framework.ext;
+                    exports org.osgi.dto;
+                    exports org.osgi.framework;
+                    exports org.osgi.framework.connect;
+                    exports org.osgi.framework.dto;
+                    exports org.osgi.framework.hooks.bundle;
+                    exports org.osgi.framework.hooks.resolver;
+                    exports org.osgi.framework.hooks.service;
+                    exports org.osgi.framework.hooks.weaving;
+                    exports org.osgi.framework.launch;
+                    exports org.osgi.framework.namespace;
+                    exports org.osgi.framework.startlevel;
+                    exports org.osgi.framework.startlevel.dto;
+                    exports org.osgi.framework.wiring;
+                    exports org.osgi.framework.wiring.dto;
+                    exports org.osgi.resource;
+                    exports org.osgi.resource.dto;
+                    exports org.osgi.service.condition;
+                    exports org.osgi.service.packageadmin;
+                    exports org.osgi.service.resolver;
+                    exports org.osgi.service.startlevel;
+                    exports org.osgi.service.url;
+                    exports org.osgi.util.tracker;
+                    provides org.osgi.framework.launch.FrameworkFactory with
+                      org.apache.felix.framework.FrameworkFactory;
+                    provides org.osgi.framework.connect.ConnectFrameworkFactory with
+                      org.apache.felix.framework.FrameworkFactory;
+
+                    uses org.apache.felix.framework.ext.ClassPathExtenderFactory;
+                    uses org.osgi.framework.connect.FrameworkUtilHelper;
+                    }
+                </moduleInfoSource>
+                <mainClass>org.apache.felix.main.Main</mainClass>
+              </module>
+              <overwriteExistingFiles>true</overwriteExistingFiles>
+            </configuration>
+          </execution>
+        </executions>
+      </plugin>
       <plugin>
         <groupId>org.apache.felix</groupId>
         <artifactId>maven-bundle-plugin</artifactId>
-        <version>2.5.0</version>
+        <version>5.1.1</version>
         <extensions>true</extensions>
         <configuration>
           <instructions>
@@ -84,7 +139,7 @@
             <Bundle-Name>Apache Felix</Bundle-Name>
             <Bundle-Description>OSGi R6 framework.</Bundle-Description>
             <Bundle-Vendor>The Apache Software Foundation</Bundle-Vendor>
-            <Embed-Dependency>*;artifactId=org.apache.felix.framework;inline=true</Embed-Dependency>
+            <Embed-Dependency>*;artifactId=org.apache.felix.framework;inline=default.properties|org/**|META-INF/services/**</Embed-Dependency>
             <Private-Package>org.apache.felix.main.*</Private-Package>
             <Export-Package>!org.osgi.service.log, !org.osgi.service.obr, org.osgi.*</Export-Package>
             <Import-Package>!*</Import-Package>
@@ -190,11 +245,11 @@
         </executions>
       </plugin>
       <plugin>
-            <groupId>org.apache.maven.plugins</groupId>
-            <artifactId>maven-javadoc-plugin</artifactId>
-            <configuration>
-                <failOnError>false</failOnError>
-            </configuration>
+        <groupId>org.apache.maven.plugins</groupId>
+        <artifactId>maven-javadoc-plugin</artifactId>
+        <configuration>
+          <failOnError>false</failOnError>
+        </configuration>
       </plugin>
     </plugins>
     <resources>

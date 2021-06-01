@@ -21,9 +21,9 @@ package org.apache.felix.metatype;
 import java.util.HashMap;
 import java.util.Map;
 
-import junit.framework.TestCase;
-
 import org.osgi.service.metatype.AttributeDefinition;
+
+import junit.framework.TestCase;
 
 /**
  * The <code>ADTest</code> class tests the static helper methods of the
@@ -255,11 +255,9 @@ public class ADTest extends TestCase
         ad.setDefaultValue("");
         assertArrayEquals(new String[] { "" }, ad.getDefaultValue());
 
-        // corner case: in case of required values, an empty default makes no sense
-        // for single values, hence that the empty default is coerced into null...
         ad.setRequired(true);
         ad.setDefaultValue("");
-        assertNull(ad.getDefaultValue());
+        assertArrayEquals(new String[] { "" }, ad.getDefaultValue());
     }
 
     /**
@@ -284,11 +282,9 @@ public class ADTest extends TestCase
         ad.setDefaultValue("");
         assertArrayEquals(new String[] { "" }, ad.getDefaultValue());
 
-        // corner case: in case of required values, an empty default is coerced
-        // into a empty array...
         ad.setRequired(true);
         ad.setDefaultValue("");
-        assertArrayEquals(new String[0], ad.getDefaultValue());
+        assertArrayEquals(new String[] {""}, ad.getDefaultValue());
     }
 
     private static void assertArrayEquals(String[] a, String[] b)
@@ -298,5 +294,13 @@ public class ADTest extends TestCase
         {
             assertEquals(a[i], b[i]);
         }
+    }
+
+    public void testSplitList() {
+        final String[] array = AD.splitList("321, , 123");
+        assertEquals(3, array.length);
+        assertEquals("321", array[0]);
+        assertEquals("", array[1]);
+        assertEquals("123", array[2]);
     }
 }

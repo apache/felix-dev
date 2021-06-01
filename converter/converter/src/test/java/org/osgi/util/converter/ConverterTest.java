@@ -50,6 +50,7 @@ import java.util.Arrays;
 import java.util.Calendar;
 import java.util.Collection;
 import java.util.Collections;
+import java.util.ConcurrentModificationException;
 import java.util.Date;
 import java.util.Deque;
 import java.util.GregorianCalendar;
@@ -386,6 +387,38 @@ public class ConverterTest {
     	checkArray(float[][][].class);
     	checkArray(long[][][].class);
     	checkArray(double[][][].class);
+    }
+
+    @Test
+    public void testPropagatingExceptionInArray() {
+        try {
+            Set<String> concurrentModificationSet = new HashSet<String>() {
+                private static final long serialVersionUID = 1L;
+
+                @Override
+                public Iterator<String> iterator() {
+                    return new Iterator<String>() {
+
+                        @Override
+                        public boolean hasNext() {
+                            return true;
+                        }
+
+                        @Override
+                        public String next() {
+                            throw new ConcurrentModificationException("This iterator deliberately throws CMEs!");
+                        }
+                    };
+                }
+                
+            };
+            concurrentModificationSet.add("one");
+            concurrentModificationSet.add("two");
+            converter.convert(concurrentModificationSet).to(String[].class);
+            fail("Should have thrown a Conversion Exception when a collection throwing a CME was used as source");
+        } catch (ConversionException e) {
+            // good
+        }
     }
 
 	private void checkArray(Class<?> arrayType) {

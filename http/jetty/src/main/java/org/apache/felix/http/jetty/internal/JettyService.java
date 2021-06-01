@@ -454,7 +454,7 @@ public final class JettyService extends AbstractLifeCycle.AbstractLifeCycleListe
         HttpConnectionFactory connFactory = new HttpConnectionFactory();
         configureHttpConnectionFactory(connFactory);
 
-        SslContextFactory sslContextFactory = new SslContextFactory.Server();
+        SslContextFactory.Server sslContextFactory = new SslContextFactory.Server();
         configureSslContextFactory(sslContextFactory);
 
         ServerConnector connector = new ServerConnector(
@@ -498,7 +498,7 @@ public final class JettyService extends AbstractLifeCycle.AbstractLifeCycleListe
         return startConnector(connector);
     }
 
-    private void configureSslContextFactory(final SslContextFactory connector)
+    private void configureSslContextFactory(final SslContextFactory.Server connector)
     {
         if (this.config.getKeystoreType() != null)
         {

@@ -82,7 +82,10 @@ public class ScrConfigurationImpl implements ScrConfiguration
     private boolean infoAsService;
 
     private boolean cacheMetadata;
-    private boolean logExtension;
+
+    private boolean isLogEnabled;
+
+    private boolean isLogExtensionEnabled;
 
     private long lockTimeout = DEFAULT_LOCK_TIMEOUT_MILLISECONDS;
 
@@ -179,7 +182,8 @@ public class ScrConfigurationImpl implements ScrConfiguration
                         serviceChangecountTimeout = DEFAULT_SERVICE_CHANGECOUNT_TIMEOUT_MILLISECONDS;
                         newGlobalExtender = false;
                         cacheMetadata = false;
-                        logExtension = false;
+                        isLogEnabled = true;
+                        isLogExtensionEnabled = false;
                     }
                     else
                     {
@@ -192,7 +196,8 @@ public class ScrConfigurationImpl implements ScrConfiguration
                         serviceChangecountTimeout = getServiceChangecountTimeout();
                         newGlobalExtender = getDefaultGlobalExtender();
                         cacheMetadata = getDefaultCacheMetadata();
-                        logExtension = getDefaultLogExtension();
+                        isLogEnabled = getDefaultLogEnabled();
+                        isLogExtensionEnabled = getDefaultLogExtension();
                     }
                 }
                 else
@@ -213,7 +218,8 @@ public class ScrConfigurationImpl implements ScrConfiguration
                 newGlobalExtender = VALUE_TRUE.equalsIgnoreCase( String.valueOf( config.get( PROP_GLOBAL_EXTENDER) ) );
                 cacheMetadata = VALUE_TRUE.equalsIgnoreCase(
                     String.valueOf(config.get(PROP_CACHE_METADATA)));
-                logExtension = VALUE_TRUE.equalsIgnoreCase(String.valueOf(config.get(PROP_LOG_EXTENSION)));
+                isLogEnabled = checkIfLogEnabled(config);
+                isLogExtensionEnabled = VALUE_TRUE.equalsIgnoreCase(String.valueOf(config.get(PROP_LOG_EXTENSION)));
             }
             if ( scrCommand != null )
             {
@@ -408,13 +414,38 @@ public class ScrConfigurationImpl implements ScrConfiguration
         return Level.ERROR;
     }
 
-	@Override
-	public boolean isLogExtension() {
-		return logExtension;
-	}
+    @Override
+    public boolean isLogEnabled() 
+    {
+        return isLogEnabled;
+    }
 
-    private boolean getDefaultLogExtension() {
-        return VALUE_TRUE.equalsIgnoreCase( bundleContext.getProperty( PROP_LOG_EXTENSION) );
-	}
+    @Override
+    public boolean isLogExtensionEnabled() 
+    {
+        return isLogExtensionEnabled;
+    }
+    
+    private boolean getDefaultLogExtension() 
+    {
+        return VALUE_TRUE.equalsIgnoreCase(bundleContext.getProperty(PROP_LOG_EXTENSION));
+    }
+    
+    private boolean getDefaultLogEnabled() 
+    {
+        String isLogEnabled = bundleContext.getProperty(PROP_LOG_ENABLED);
+        return isLogEnabled == null ? true : VALUE_TRUE.equalsIgnoreCase(isLogEnabled);
+    }
+    
+    private boolean checkIfLogEnabled(Dictionary<String, ?> properties) 
+    {
+        Object isLogEnabled = properties.get(PROP_LOG_ENABLED);
+        if (isLogEnabled == null) 
+        {
+            return true;
+        }
+        return isLogEnabled == null ? true : Boolean.parseBoolean(isLogEnabled.toString());
+    }
+    
 
 }

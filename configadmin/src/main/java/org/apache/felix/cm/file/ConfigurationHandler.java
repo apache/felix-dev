@@ -297,7 +297,7 @@ public class ConfigurationHandler
         token = 0;
         while ( nextToken( pr, true ) == TOKEN_NAME )
         {
-            String key = tokenValue;
+            String key = tokenValue.trim();
 
             // expect equal sign
             if ( nextToken( pr, false ) != TOKEN_EQ )
@@ -559,7 +559,6 @@ public class ConfigurationHandler
                 case -1: // fall through
 
                 // separator token
-                case TOKEN_SPACE:
                 case TOKEN_EQ:
                 case TOKEN_VAL_CLOS:
                     pr.unread( c );
@@ -649,7 +648,6 @@ public class ConfigurationHandler
         }
         return c;
     }
-
 
     private int read( PushbackReader pr ) throws IOException
     {

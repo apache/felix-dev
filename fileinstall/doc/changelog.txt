@@ -1,3 +1,14 @@
+Version 3.7.0
+-------------
+** Bug
+    * [FELIX-6229] - Not compatible with the symlinks Kubernetes uses to mount ConfigMaps
+    * [FELIX-6409] - FileInstall logs useless messages due to incorrect interpolations
+** Improvement
+    * [FELIX-6410] - Set the  READ_ONLY attribute for configurations
+    * [FELIX-6411] - use friendly name as factory name when creating new configurations
+    * [FELIX-6412] - Use Configuration.updateIfDifferent
+    * [FELIX-6413] - Make sure file checksums account for write permissions
+
 Version 3.6.6
 -------------
 ** Bug

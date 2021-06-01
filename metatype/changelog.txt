@@ -1,3 +1,9 @@
+Changes in 1.2.4
+----------------
+** Bug
+    * [FELIX-6009] - Metatype AD empty String default value
+
+
 Changes in 1.2.2
 ----------------
 ** Bug

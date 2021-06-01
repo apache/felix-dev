@@ -18,7 +18,6 @@
  */
 package org.apache.felix.scr.impl.logger;
 
-import org.apache.felix.scr.impl.manager.ScrConfiguration;
 import org.osgi.framework.Bundle;
 import org.osgi.framework.BundleContext;
 
@@ -41,7 +40,7 @@ class ExtLogManager extends ScrLogManager
     public static String SCR_LOGGER_PREFIX = "org.apache.felix.scr.";
     private final Bundle bundle;
 
-    ExtLogManager(BundleContext context, ScrConfiguration config)
+    ExtLogManager(BundleContext context, LogConfiguration config)
     {
         super(context, config);
         this.bundle = context.getBundle();
@@ -50,13 +49,16 @@ class ExtLogManager extends ScrLogManager
     @Override
     public ScrLogger scr()
     {
-        return getLogger(bundle, SCR_LOGGER_NAME, ScrLoggerFacade.class);
+        // use the log level from the scr bundle itself
+        return getLogger(this.bundle, SCR_LOGGER_NAME, ScrLoggerFacade.class);
     }
 
     @Override
     public BundleLogger bundle(Bundle bundle)
     {
-        return getLogger(bundle, SCR_LOGGER_PREFIX.concat(bundle.getSymbolicName()),
+        // use the log level of the scr bundle itself
+        // we will not use the log level of the bundle containing the component (extended bundle)
+        return getLogger(this.bundle, SCR_LOGGER_PREFIX.concat(bundle.getSymbolicName()),
             ScrLoggerFacade.class);
     }
 
@@ -72,7 +74,10 @@ class ExtLogManager extends ScrLogManager
 
         String loggerName = SCR_LOGGER_PREFIX.concat(bundle.getSymbolicName()).concat(
             ".").concat(componentName);
-        ScrLoggerFacade logger = getLogger(bundle, loggerName, ScrLoggerFacade.class);
+        
+        // use the log level of the scr bundle itself
+        // we will not use the log level of the bundle containing the component (extended bundle)
+        ScrLoggerFacade logger = getLogger(this.bundle, loggerName, ScrLoggerFacade.class);
         logger.setPrefix("[" + componentName + "]");
         return logger;
     }

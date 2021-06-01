@@ -18,7 +18,7 @@
  */
 package org.apache.felix.scr.impl.manager;
 
-import org.apache.felix.scr.impl.logger.InternalLogger.Level;
+import org.apache.felix.scr.impl.logger.LogConfiguration;
 
 /**
  * The <code>ScrConfiguration</code> class conveys configuration for the
@@ -42,7 +42,7 @@ import org.apache.felix.scr.impl.logger.InternalLogger.Level;
  * <a href="http://felix.apache.org/site/apache-felix-service-component-runtime.html">Apache Felix Service Component Runtime</a>
  * documentation page for detailed information.
  */
-public interface ScrConfiguration
+public interface ScrConfiguration extends LogConfiguration
 {
 
     String PID = "org.apache.felix.scr.ScrService";
@@ -63,25 +63,12 @@ public interface ScrConfiguration
 
     long DEFAULT_STOP_TIMEOUT_MILLISECONDS = 60000;
 
-    String PROP_LOGLEVEL = "ds.loglevel";
-    /**
-     * See {@link #isLogExtension()}
-     */
-    String PROP_LOG_EXTENSION = "ds.log.extension";
-
     String PROP_GLOBAL_EXTENDER="ds.global.extender";
 
     String PROP_SERVICE_CHANGECOUNT_TIMEOUT = "ds.service.changecount.timeout";
 
     String PROP_CACHE_METADATA = "ds.cache.metadata";
     
-
-    /**
-     * Returns the current log level.
-     * @return
-     */
-    Level getLogLevel();
-
 
     boolean isFactoryEnabled();
 
@@ -106,12 +93,5 @@ public interface ScrConfiguration
     long serviceChangecountTimeout();
 
     boolean cacheMetadata();
-
-
-    /**
-     * If true, use a logging extension. The extension can be incompatible with the OSGi specification.
-     * @return true if extension allowed
-     */
-	boolean isLogExtension();
 
 }

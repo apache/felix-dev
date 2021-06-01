@@ -1,4 +1,11 @@
-Changes in 4.5.6
+Changes in 4.6.2
+----------------
+** Bug
+    * [FELIX-6375] - Configuration Admin Service not available with org.apache.felix.webconsole_4.6.0.all
+    * [FELIX-6392] - Webconsole configadmin javascript error: Uncaught TypeError: parsers is undefined
+
+
+Changes in 4.6.0
 ----------------
 ** Improvement
     * [FELIX-6366] - Update to jQuery 3.5.1 and jQuery migrate 3.3.0

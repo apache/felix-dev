@@ -957,7 +957,7 @@ public abstract class ComponentTestBase
                     {
                         if ( m_warnings.size() < 1024 )
                         {
-                            m_warnings.add( entry.getMessage() );
+                            m_warnings.add(entry.getMessage() + entry.getError());
                         }
                         else
                         {

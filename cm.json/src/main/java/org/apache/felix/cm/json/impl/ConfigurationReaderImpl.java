@@ -269,7 +269,11 @@ public class ConfigurationReaderImpl
             if ( keyInfo.isInternal ) {
                 final Object value = JsonSupport.convertToObject(propEntry.getValue());
                 if ( propertyHandler == null ) {
-                    properties.put(keyInfo.propertyKey, value);
+                    if ( properties.put(keyInfo.propertyKey, value) != null ) {
+                        throwIOException("PID ".concat(pid)
+                        .concat(" : Duplicate property (properties are case-insensitive) : ")
+                        .concat(keyInfo.propertyKey));
+                    }
                 } else {
                     propertyHandler.handleConfiguratorProperty(pid, keyInfo.propertyKey, value);
                 }
@@ -310,7 +314,11 @@ public class ConfigurationReaderImpl
                 if ( convertedVal == null ) {
                     valid = false;
                 } else {
-                    properties.put(keyInfo.propertyKey, convertedVal);
+                    if ( properties.put(keyInfo.propertyKey, convertedVal) != null ) {
+                        throwIOException("PID ".concat(pid)
+                        .concat(" : Duplicate property (properties are case-insensitive) : ")
+                        .concat(keyInfo.propertyKey));
+                    }
                 }
             }
         }

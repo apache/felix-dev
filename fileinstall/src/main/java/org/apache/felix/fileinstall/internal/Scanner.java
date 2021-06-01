@@ -22,10 +22,8 @@ import java.io.Closeable;
 import java.io.File;
 import java.io.FilenameFilter;
 import java.io.IOException;
-import java.util.Arrays;
 import java.util.HashMap;
 import java.util.HashSet;
-import java.util.LinkedHashSet;
 import java.util.Map;
 import java.util.Set;
 import java.util.TreeSet;
@@ -119,7 +117,7 @@ public class Scanner implements Closeable {
      * Modifications are checked against a computed checksum on some file
      * attributes to detect any modification.
      * Upon restart, such checksums are not known so that all files will
-     * be reported as modified. 
+     * be reported as modified.
      *
      * @param reportImmediately report all files immediately without waiting for the checksum to be stable
      * @return a list of changes on the files included in the directory
@@ -147,7 +145,7 @@ public class Scanner implements Closeable {
                 if (skipSubdir)
                 {
                     continue;
-                } 
+                }
                 else if (recurseSubdir)
                 {
                     files.addAll(processFiles(reportImmediately, file.listFiles()));
@@ -159,17 +157,7 @@ public class Scanner implements Closeable {
                     continue;
                 }
             }
-            long lastChecksum = lastChecksums.get(file) != null ? (Long) lastChecksums.get(file) : 0;
-            long storedChecksum = storedChecksums.get(file) != null ? (Long) storedChecksums.get(file) : 0;
-            long newChecksum = checksum(file);
-            lastChecksums.put(file, newChecksum);
-            // Only handle file when it does not change anymore and it has changed
-            // since last reported
-            if ((newChecksum == lastChecksum || reportImmediately) && newChecksum != storedChecksum)
-            {
-                storedChecksums.put(file, newChecksum);
-                files.add(file);
-            }
+            verifyChecksum(files, file, reportImmediately);
             removed.remove(file);
         }
         // Make sure we'll handle a file that has been deleted
@@ -179,6 +167,11 @@ public class Scanner implements Closeable {
             // Remove no longer used checksums
             lastChecksums.remove(file);
             storedChecksums.remove(file);
+        }
+        // Double check known files because modifications from externally mounted
+        // file systems are not well handled by inotify in Linux.
+        for (File file : new HashSet<File>(storedChecksums.keySet())) {
+            verifyChecksum(files, file, false);
         }
         return files;
     }
@@ -222,6 +215,20 @@ public class Scanner implements Closeable {
         }
     }
 
+    void verifyChecksum(Set<File> files, File file, boolean reportImmediately) {
+        long lastChecksum = lastChecksums.get(file) != null ? (Long) lastChecksums.get(file) : 0;
+        long storedChecksum = storedChecksums.get(file) != null ? (Long) storedChecksums.get(file) : 0;
+        long newChecksum = checksum(file);
+        lastChecksums.put(file, newChecksum);
+        // Only handle file when it does not change anymore and it has changed
+        // since last reported
+        if ((newChecksum == lastChecksum || reportImmediately) && newChecksum != storedChecksum)
+        {
+            storedChecksums.put(file, newChecksum);
+            files.add(file);
+        }
+    }
+
     /**
      * Compute a cheksum for the file or directory that consists of the name, length and the last modified date
      * for a file and its children in case of a directory
@@ -243,6 +250,7 @@ public class Scanner implements Closeable {
         {
             checksum(file.lastModified(), crc);
             checksum(file.length(), crc);
+            checksum(Util.collectWriteableChecksum(file), crc);
         }
         else if (file.isDirectory())
         {

@@ -114,9 +114,10 @@ public class InterpolationConfigurationPluginTest {
 
     @Test
     public void testReplacement() throws Exception {
-        String rf = getClass().getResource("/testfile.txt").getFile();
+        String rf = getClass().getResource("/other/testfile.txt").getFile();
+        File file = new File(rf);
         InterpolationConfigurationPlugin plugin = new InterpolationConfigurationPlugin(null,
-                new File(rf).getParent(), null);
+                file.getParent() + "," + file.getParentFile().getParent(), null);
 
         assertEquals("xxla la layy", plugin.replace("akey", "xx$[secret:testfile.txt]yy", "apid"));
         String doesNotReplace = "xx$[" + rf + "]yy";
@@ -125,9 +126,10 @@ public class InterpolationConfigurationPluginTest {
 
     @Test
     public void testNoReplacement() throws IOException {
-        String rf = getClass().getResource("/testfile.txt").getFile();
+        String rf = getClass().getResource("/other/testfile.txt").getFile();
+        File file = new File(rf);
         InterpolationConfigurationPlugin plugin = new InterpolationConfigurationPlugin(null,
-                new File(rf).getParent(), null);
+                file.getParent() + "," + file.getParentFile().getParent(), null);
 
         assertEquals("foo", plugin.replace("akey", "foo", "apid"));
     }
@@ -138,10 +140,19 @@ public class InterpolationConfigurationPluginTest {
 
         Dictionary<String, Object> dict = new Hashtable<>();
         dict.put("defaulted", "$[env:notset;default=foo]");
-
+        dict.put("defaulted2", "$[env:notset;default=]");
+        dict.put("defaulted3", "$[env:notset;default=foo=bar]");
+        dict.put("defaulted4", "$[env:notset;default=foo;=bar]");
+        dict.put("defaulted5", "$[env:notset;default= ]");
+        dict.put("defaulted6", "$[env:notset;default");
         plugin.modifyConfiguration(null, dict);
 
         assertEquals("foo", dict.get("defaulted"));
+        assertEquals("", dict.get("defaulted2"));
+        assertEquals("foo=bar", dict.get("defaulted3"));
+        assertEquals("foo", dict.get("defaulted4")); // semicolon is not supported in values
+        assertEquals(" ", dict.get("defaulted5"));
+        assertEquals("$[env:notset;default", dict.get("defaulted6"));
     }
 
     @Test
@@ -178,15 +189,31 @@ public class InterpolationConfigurationPluginTest {
     public void testMultiplePlaceholders() throws Exception {
         BundleContext bc = Mockito.mock(BundleContext.class);
         Mockito.when(bc.getProperty("foo.bar")).thenReturn("hello there");
-        String rf = getClass().getResource("/testfile.txt").getFile();
-        InterpolationConfigurationPlugin plugin = new InterpolationConfigurationPlugin(bc, new File(rf).getParent(),
-                null);
+        String rf = getClass().getResource("/other/testfile.txt").getFile();
+        File file = new File(rf);
+        InterpolationConfigurationPlugin plugin = new InterpolationConfigurationPlugin(bc,
+                file.getParent() + "," + file.getParentFile().getParent(), null);
 
         assertEquals("xxhello thereyyhello therezz",
                 plugin.replace("akey", "xx$[prop:foo.bar]yy$[prop:foo.bar]zz", "apid"));
 
         assertEquals("xxla la layyhello therezz",
                 plugin.replace("akey", "xx$[secret:testfile.txt]yy$[prop:foo.bar]zz", "apid"));
+    }
+
+    @Test
+    public void testMultipleDirectories() throws Exception {
+        BundleContext bc = Mockito.mock(BundleContext.class);
+        String rf = getClass().getResource("/other/testfile.txt").getFile();
+        File file = new File(rf);
+        InterpolationConfigurationPlugin plugin = new InterpolationConfigurationPlugin(bc,
+                file.getParent() + "," + file.getParentFile().getParent(), null);
+
+        assertEquals("xxhello thereyyhello therezz",
+                plugin.replace("akey", "xx$[secret:foo.bar]yy$[secret:foo.bar]zz", "apid"));
+
+        assertEquals("xxla la layyhello therezz",
+                plugin.replace("akey", "xx$[secret:testfile.txt]yy$[secret:foo.bar]zz", "apid"));
     }
 
     @Test
