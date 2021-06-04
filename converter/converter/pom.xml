@@ -28,14 +28,14 @@
 
     <name>Apache Felix Converter</name>
     <artifactId>org.apache.felix.converter</artifactId>
-    <version>1.0.17-SNAPSHOT</version>
+    <version>1.0.18</version>
     <packaging>bundle</packaging>
 
     <scm>
         <connection>scm:git:https://github.com/apache/felix-dev.git</connection>
         <developerConnection>scm:git:https://github.com/apache/felix-dev.git</developerConnection>
         <url>https://gitbox.apache.org/repos/asf?p=felix-dev.git</url>
-      <tag>HEAD</tag>
+      <tag>org.apache.felix.converter-1.0.18</tag>
   </scm>
 
     <properties>
