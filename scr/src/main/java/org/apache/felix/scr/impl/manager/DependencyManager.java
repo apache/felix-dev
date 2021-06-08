@@ -2487,7 +2487,7 @@ public class DependencyManager<S, T> implements ReferenceManager<S, T>
         // append target
         if (target != null)
         {
-            initialReferenceFilterSB.append(m_target);
+            initialReferenceFilterSB.append(target);
         }
         if (multipleExpr)
         {
