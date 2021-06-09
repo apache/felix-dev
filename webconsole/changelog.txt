@@ -1,8 +1,14 @@
 Changes in 4.6.2
 ----------------
+** Improvement
+    * [FELIX-6390] - Refactor the default authentication mechanism of the webconsole to be a WebConsoleSecurityProvider2
+    * [FELIX-6423] - Use property type password for password
+    * [FELIX-6424] - Update commons-io to 2.8.0
 ** Bug
     * [FELIX-6375] - Configuration Admin Service not available with org.apache.felix.webconsole_4.6.0.all
     * [FELIX-6392] - Webconsole configadmin javascript error: Uncaught TypeError: parsers is undefined
+    * [FELIX-6371] - JSONConfigurationWriter does not escape backslash and other chars
+    * [FELIX-2715] - Configuration Admin Service jQuery error.
 
 
 Changes in 4.6.0
