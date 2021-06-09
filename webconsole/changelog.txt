@@ -1,5 +1,7 @@
 Changes in 4.6.2
 ----------------
+** Improvement
+    * [FELIX-6423] - Use property type password for password
 ** Bug
     * [FELIX-6375] - Configuration Admin Service not available with org.apache.felix.webconsole_4.6.0.all
     * [FELIX-6392] - Webconsole configadmin javascript error: Uncaught TypeError: parsers is undefined

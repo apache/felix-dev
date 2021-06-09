@@ -40,7 +40,6 @@ class ConfigurationMetatypeSupport extends ConfigurationSupport implements MetaT
             OsgiManager.PROP_DEFAULT_RENDER, OsgiManager.DEFAULT_PAGE, //
             OsgiManager.PROP_REALM, OsgiManager.DEFAULT_REALM, //
             OsgiManager.PROP_USER_NAME, OsgiManager.DEFAULT_USER_NAME, //
-            OsgiManager.PROP_PASSWORD, OsgiManager.DEFAULT_PASSWORD, //
             OsgiManager.PROP_CATEGORY, OsgiManager.DEFAULT_CATEGORY, //
             OsgiManager.PROP_LOCALE, "", //$NON-NLS-1$
         };
@@ -58,6 +57,7 @@ class ConfigurationMetatypeSupport extends ConfigurationSupport implements MetaT
 
     //---------- MetaTypeProvider
 
+    @Override
     public String[] getLocales()
     {
         // there is no locale support here
@@ -65,6 +65,7 @@ class ConfigurationMetatypeSupport extends ConfigurationSupport implements MetaT
     }
 
 
+    @Override
     public ObjectClassDefinition getObjectClassDefinition( String id, String locale )
     {
         if ( !osgiManager.getConfigurationPid().equals( id ) )
@@ -100,6 +101,11 @@ class ConfigurationMetatypeSupport extends ConfigurationSupport implements MetaT
             final String descr = getString( rb, "metadata." + key + ".description", key ); //$NON-NLS-1$ //$NON-NLS-2$
             adList.add( new AttributeDefinitionImpl( key, name, descr, defaultValue ) );
         }
+
+        // password is special
+        final String pwKey = OsgiManager.PROP_PASSWORD;
+        adList.add( new AttributeDefinitionImpl( pwKey, getString( rb, "metadata." + pwKey + ".name", pwKey ),
+                getString( rb, "metadata." + pwKey + ".description", pwKey ) ) );
 
         // log level is select - so no simple default value; requires localized option labels
         adList.add( new AttributeDefinitionImpl( OsgiManager.PROP_LOG_LEVEL, getString( rb,
@@ -144,24 +150,28 @@ class ConfigurationMetatypeSupport extends ConfigurationSupport implements MetaT
                 .toArray( new AttributeDefinition[adList.size()] );
 
 
+            @Override
             public String getName()
             {
                 return getString( rb, "metadata.name", "Apache Felix OSGi Management Console" ); //$NON-NLS-1$ //$NON-NLS-2$
             }
 
 
+            @Override
             public InputStream getIcon( int arg0 )
             {
                 return null;
             }
 
 
+            @Override
             public String getID()
             {
                 return osgiManager.getConfigurationPid();
             }
 
 
+            @Override
             public String getDescription()
             {
                 return getString( rb,
@@ -169,6 +179,7 @@ class ConfigurationMetatypeSupport extends ConfigurationSupport implements MetaT
             }
 
 
+            @Override
             public AttributeDefinition[] getAttributeDefinitions( int filter )
             {
                 return ( filter == OPTIONAL ) ? null : attrs;
@@ -210,6 +221,11 @@ class ConfigurationMetatypeSupport extends ConfigurationSupport implements MetaT
         private final String[] optionValues;
 
 
+        AttributeDefinitionImpl( final String id, final String name, final String description )
+        {
+            this( id, name, description, PASSWORD, null, 0, null, null );
+        }
+
         AttributeDefinitionImpl( final String id, final String name, final String description, final String defaultValue )
         {
             this( id, name, description, STRING, new String[]
@@ -232,54 +248,63 @@ class ConfigurationMetatypeSupport extends ConfigurationSupport implements MetaT
         }
 
 
+        @Override
         public int getCardinality()
         {
             return cardinality;
         }
 
 
+        @Override
         public String[] getDefaultValue()
         {
             return defaultValues;
         }
 
 
+        @Override
         public String getDescription()
         {
             return description;
         }
 
 
+        @Override
         public String getID()
         {
             return id;
         }
 
 
+        @Override
         public String getName()
         {
             return name;
         }
 
 
+        @Override
         public String[] getOptionLabels()
         {
             return optionLabels;
         }
 
 
+        @Override
         public String[] getOptionValues()
         {
             return optionValues;
         }
 
 
+        @Override
         public int getType()
         {
             return type;
         }
 
 
+        @Override
         public String validate( String arg0 )
         {
             return null;
