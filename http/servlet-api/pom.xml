@@ -55,6 +55,7 @@
                             javax.servlet.http;
                                 version=3.1
                         </Export-Package>
+                        <Import-Package>!*</Import-Package>
                         <Provide-Capability>
                             osgi.contract;osgi.contract="JavaServlet";version:Version="3.1";
                             uses:="javax.servlet,javax.servlet.http,javax.servlet.descriptor,javax.servlet.annotation"
