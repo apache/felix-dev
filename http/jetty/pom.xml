@@ -194,7 +194,7 @@
                             org.osgi.service.cm;version="[1.3,2)",                         
                             org.osgi.service.event;version="[1.2,2)",
                             org.osgi.service.log;version="[1.3,2)",
-                            org.osgi.service.metatype;version="[1.1,2)"
+                            org.osgi.service.metatype;version="[1.4,2)"
                         </DynamicImport-Package>
                         <Provide-Capability>
                             osgi.implementation;osgi.implementation="osgi.http";version:Version="1.1";
@@ -253,7 +253,7 @@
                                     org.osgi.service.cm;resolution:=optional;version="[1.3,2)",
                                     org.osgi.service.event;resolution:=optional;version="[1.2,2)",
                                     org.osgi.service.log;resolution:=optional;version="[1.3,2)",
-                                    org.osgi.service.metatype;resolution:=optional;version="[1.1,2)",
+                                    org.osgi.service.metatype;resolution:=optional;version="[1.4,2)",
                                     org.osgi.service.useradmin;resolution:=optional;version="[1.1,2)",
                                     org.osgi.service.http;version="[1.2.1,1.3)",
                                     org.osgi.service.http.context;version="[1.1,1.2)",
@@ -314,7 +314,7 @@
         <dependency>
             <groupId>org.osgi</groupId>
             <artifactId>org.osgi.service.metatype</artifactId>
-            <version>1.3.0</version>
+            <version>1.4.0</version>
             <scope>provided</scope>
         </dependency>
         <dependency>
