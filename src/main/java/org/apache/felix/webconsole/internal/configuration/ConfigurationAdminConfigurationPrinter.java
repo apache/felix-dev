@@ -29,10 +29,11 @@ import java.util.TreeSet;
 
 import org.apache.felix.webconsole.internal.AbstractConfigurationPrinter;
 import org.apache.felix.webconsole.internal.misc.ConfigurationRender;
-import org.osgi.framework.Constants;
 import org.osgi.framework.ServiceReference;
 import org.osgi.service.cm.Configuration;
 import org.osgi.service.cm.ConfigurationAdmin;
+import org.osgi.service.metatype.AttributeDefinition;
+import org.osgi.service.metatype.ObjectClassDefinition;
 
 /**
  * ConfigurationAdminConfigurationPrinter uses the {@link ConfigurationAdmin} service
@@ -68,45 +69,68 @@ public class ConfigurationAdminConfigurationPrinter extends AbstractConfiguratio
             }
             else
             {
-                final Configuration[] configs = ca.listConfigurations(null);
-
-                if (configs != null && configs.length > 0)
+                MetaTypeServiceSupport metatypeSupport = null;
+                final ServiceReference<?> msr = getBundleContext().getServiceReference( ConfigManager.META_TYPE_NAME );
+                try
                 {
-                    final Set<String> factories = new HashSet<>();
-                    final SortedMap<String, Configuration> sm = new TreeMap<>();
-                    for (int i = 0; i < configs.length; i++)
+
+                    if ( msr != null )
                     {
-                        sm.put(configs[i].getPid(), configs[i]);
-                        String fpid = configs[i].getFactoryPid();
-                        if (null != fpid)
+                        final Object metaTypeService = getBundleContext().getService( msr );
+                        if ( metaTypeService != null )
                         {
-                            factories.add(fpid);
+                            metatypeSupport = new MetaTypeServiceSupport( this.getBundleContext(), metaTypeService );
                         }
                     }
-                    if (factories.isEmpty())
+
+                    final Configuration[] configs = ca.listConfigurations(null);
+
+                    if (configs != null && configs.length > 0)
                     {
-                        pw.println("Status: " + configs.length
-                            + " configurations available");
+                        final Set<String> factories = new HashSet<>();
+                        final SortedMap<String, Configuration> sm = new TreeMap<>();
+                        for (int i = 0; i < configs.length; i++)
+                        {
+                            sm.put(configs[i].getPid(), configs[i]);
+                            String fpid = configs[i].getFactoryPid();
+                            if (null != fpid)
+                            {
+                                factories.add(fpid);
+                            }
+                        }
+                        if (factories.isEmpty())
+                        {
+                            pw.println("Status: " + configs.length
+                                + " configurations available");
+                        }
+                        else
+                        {
+                            pw.println("Status: " + configs.length + " configurations with " + factories.size()
+                                    + " different factories available");
+                        }
+                        pw.println();
+
+                        for (Iterator<Configuration> mi = sm.values().iterator(); mi.hasNext();)
+                        {
+                            this.printConfiguration(pw, metatypeSupport, mi.next());
+                        }
                     }
                     else
                     {
-                        pw.println("Status: " + configs.length + " configurations with " + factories.size()
-                                + " different factories available");
-                    }
-                    pw.println();
-
-                    for (Iterator<Configuration> mi = sm.values().iterator(); mi.hasNext();)
-                    {
-                        this.printConfiguration(pw, mi.next());
+                        pw.println("Status: No Configurations available");
                     }
                 }
-                else
+                finally
                 {
-                    pw.println("Status: No Configurations available");
+                    if ( msr != null )
+                    {
+                        getBundleContext().ungetService(msr);
+                    }
+
                 }
             }
         }
-        catch (Exception e)
+        catch (final Exception ignore)
         {
             pw.println("Status: Configuration Admin Service not accessible");
         }
@@ -119,7 +143,7 @@ public class ConfigurationAdminConfigurationPrinter extends AbstractConfiguratio
         }
     }
 
-    private void printConfiguration(PrintWriter pw, Configuration config)
+    private void printConfiguration(final PrintWriter pw, final MetaTypeServiceSupport metatypeSupport, final Configuration config)
     {
         ConfigurationRender.infoLine(pw, "", "PID", config.getPid());
 
@@ -136,23 +160,44 @@ public class ConfigurationAdminConfigurationPrinter extends AbstractConfiguratio
         Dictionary<String, Object> props = config.getProperties();
         if (props != null)
         {
-            SortedSet<String> keys = new TreeSet<>();
+            final Set<String> obfuscateProperties = new HashSet<>();
+            if ( metatypeSupport != null )
+            {
+                if ( config != null )
+                {
+                    final ObjectClassDefinition ocd = metatypeSupport.getObjectClassDefinition( config, null );
+                    if ( ocd != null )
+                    {
+                        final AttributeDefinition[] ad = ocd.getAttributeDefinitions( ObjectClassDefinition.ALL );
+                        if ( ad != null )
+                        {
+                            for(final AttributeDefinition def : ad)
+                            {
+                               if ( def.getType() == AttributeDefinition.PASSWORD )
+                               {
+                                   obfuscateProperties.add(def.getID());
+                               }
+                            }
+                        }
+                    }
+                }
+            }
+
+            final SortedSet<String> keys = new TreeSet<>();
             for (Enumeration<String> ke = props.keys(); ke.hasMoreElements();)
             {
                 keys.add(ke.nextElement());
             }
 
-            for (Iterator<String> ki = keys.iterator(); ki.hasNext();)
+            for(final String key : keys)
             {
-                String key = ki.next();
                 // pid, factory pid and bundle location are already printed
-                if ( Constants.SERVICE_PID.equals(key)
-                     || ConfigurationAdmin.SERVICE_FACTORYPID.equals(key)
-                     || ConfigurationAdmin.SERVICE_BUNDLELOCATION.equals(key) )
+                if ( ConfigAdminSupport.CONFIG_PROPERTIES_HIDE.contains(key) )
                 {
                          continue;
                 }
-                ConfigurationRender.infoLine(pw, "  ", key, props.get(key));
+                final Object value = obfuscateProperties.contains(key) ? "********" : props.get(key);
+                ConfigurationRender.infoLine(pw, "  ", key, value);
             }
         }
 
