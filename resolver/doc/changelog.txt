@@ -1,3 +1,9 @@
+2.0.4
+----
+
+** Improvement
+    * [FELIX-6398] - Update framework packages to osgi.core 8
+
 2.0.2
 -----
 

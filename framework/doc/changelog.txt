@@ -1,3 +1,14 @@
+Changes from 7.0.0 to 7.0.1
+---------------------------
+
+** Improvement
+    * [FELIX-6287] - Support running on module path
+    * [FELIX-6398] - Update framework packages to osgi.core 8
+
+** Bug
+    * [FELIX-6416] - Special case JDK9+ URLClassLoader url resource loading
+    * [FELIX-6430] - Felix uses sun.misc.Unsafe, crashed on JDK 17
+
 Changes from 6.0.4 to 7.0.0
 ---------------------------
 
