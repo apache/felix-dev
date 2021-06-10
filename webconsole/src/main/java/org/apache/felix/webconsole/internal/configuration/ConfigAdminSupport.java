@@ -64,7 +64,7 @@ class ConfigAdminSupport
 {
 
     private static final String PROPERTY_FACTORYCONFIG_NAMEHINT = "webconsole.configurationFactory.nameHint";
-    private static final Set<String> CONFIG_PROPERTIES_HIDE = new HashSet<>();
+    public static final Set<String> CONFIG_PROPERTIES_HIDE = new HashSet<>();
     static {
         CONFIG_PROPERTIES_HIDE.add(PROPERTY_FACTORYCONFIG_NAMEHINT);
         CONFIG_PROPERTIES_HIDE.add(ConfigurationAdmin.SERVICE_BUNDLELOCATION);
