@@ -347,18 +347,19 @@ public class BundleRevisionImpl implements BundleRevision, Resource
         return m_content;
     }
 
-    void resetContent(Content content)
+    synchronized void resetContent(Content content)
     {
         m_content = content;
     }
 
     List<Content> getContentPath()
     {
-        if (m_contentPath == null)
+        List<Content> contentPath = m_contentPath;
+        if (contentPath == null)
         {
             try
             {
-                m_contentPath = initializeContentPath();
+                contentPath = initializeContentPath();
             }
             catch (Exception ex)
             {
@@ -366,7 +367,7 @@ public class BundleRevisionImpl implements BundleRevision, Resource
                     m_bundle, Logger.LOG_ERROR, "Unable to get module class path.", ex);
             }
         }
-        return m_contentPath;
+        return contentPath;
     }
 
     private synchronized List<Content> initializeContentPath() throws Exception
@@ -397,7 +398,7 @@ public class BundleRevisionImpl implements BundleRevision, Resource
                     fragments.get(i), fragmentContents.get(i), contentList, false);
             }
         }
-        return contentList;
+        return m_contentPath = contentList;
     }
 
     private List calculateContentPath(
@@ -710,11 +711,7 @@ public class BundleRevisionImpl implements BundleRevision, Resource
         }
         m_content.close();
         m_content = null;
-        for (int i = 0; (m_contentPath != null) && (i < m_contentPath.size()); i++)
-        {
-            m_contentPath.get(i).close();
-        }
-        m_contentPath = null;
+        disposeContentPath();
     }
 
     @Override

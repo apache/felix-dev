@@ -66,7 +66,7 @@ class BundleImpl implements Bundle, BundleRevisions
     private final Felix __m_felix;
 
     private final BundleArchive m_archive;
-    private final List<BundleRevisionImpl> m_revisions = new ArrayList<BundleRevisionImpl>(0);
+    private final List<BundleRevisionImpl> m_revisions = new ArrayList<>(0);
     private volatile BundleRevisionImpl m_currentRevision = null;
     private volatile int m_state;
     private boolean m_useDeclaredActivationPolicy;
@@ -205,7 +205,6 @@ class BundleImpl implements Bundle, BundleRevisions
             }
 
             m_revisions.clear();
-            m_currentRevision = null;
 
             // Re-add the revision to the bundle.
             addRevision(current);
