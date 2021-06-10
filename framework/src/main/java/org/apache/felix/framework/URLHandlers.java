@@ -202,7 +202,7 @@ class URLHandlers implements URLStreamHandlerFactory, ContentHandlerFactory
                 }
             }
 
-            // Try to preload the jrt handler as we need it from the jvm on java > 8
+            // Try to preload the jar handler as we need it from the jvm on java > 8
             if (getFromCache(m_builtIn, "jar") == null)
             {
                 try
@@ -459,7 +459,7 @@ class URLHandlers implements URLStreamHandlerFactory, ContentHandlerFactory
             }
         }
         // This is a workaround for android - Starting with 4.1 the built-in core handler
-        // are not following the normal naming nore package schema :-(
+        // are not following the normal naming package schema :-(
         String androidHandler = null;
         if ("file".equalsIgnoreCase(protocol))
         {
