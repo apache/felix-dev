@@ -19,6 +19,8 @@
 package org.apache.felix.framework.util;
 
 import java.io.*;
+import java.lang.invoke.MethodHandles;
+import java.lang.invoke.MethodHandles.Lookup;
 import java.lang.reflect.*;
 import java.lang.reflect.Proxy;
 import java.net.*;
@@ -1114,7 +1116,6 @@ public class SecureAction
 
     private static volatile Consumer<AccessibleObject[]> m_accessorCache = null;
 
-    @SuppressWarnings("unchecked")
     private static Consumer<AccessibleObject[]> getAccessor(Class clazz)
     {
         String packageName = clazz.getPackage().getName();
@@ -1122,34 +1123,80 @@ public class SecureAction
         {
             if (m_accessorCache == null)
             {
-                try
-                {
-                    // Use reflection on Unsafe to avoid having to compile against it
-                    Class<?> unsafeClass = Class.forName("sun.misc.Unsafe"); //$NON-NLS-1$
-                    Field theUnsafe = unsafeClass.getDeclaredField("theUnsafe"); //$NON-NLS-1$
-                    // NOTE: deep reflection is allowed on sun.misc package for java 9.
-                    theUnsafe.setAccessible(true);
-                    Object unsafe = theUnsafe.get(null);
-                    // using defineAnonymousClass here because it seems more simple to get what we need
-                    Method defineAnonymousClass = unsafeClass.getMethod("defineAnonymousClass", Class.class, byte[].class, Object[].class); //$NON-NLS-1$
-                    // The bytes stored in a resource to avoid real loading of it (see accessible.src for source).
-
-                    Class<Consumer<AccessibleObject[]>> result =
-                        (Class<Consumer<AccessibleObject[]>>)
-                            defineAnonymousClass.invoke(unsafe, URL.class, accessor , null);
-                    m_accessorCache = result.getConstructor().newInstance();
-                }
-                catch (Throwable t)
-                {
-                    t.printStackTrace();
-                    m_accessorCache = objects -> AccessibleObject.setAccessible(objects, true);
-                }
+                initAccessor();
             }
             return m_accessorCache;
         }
         else
         {
             return objects -> AccessibleObject.setAccessible(objects, true);
+        }
+    }
+
+    private static void initAccessor() {
+        if (tryInitAccessorWithMethodHandles()) {
+            return;
+        }
+        if (tryInitAccessorWithUnsafe()) {
+            return;
+        }
+        m_accessorCache = objects -> AccessibleObject.setAccessible(objects, true);
+        System.err.println("m_accessorCache defaulted to: " + m_accessorCache);
+    }
+
+    /**
+     * @return true if succeeded. Should succeed for JDK 8-14.
+     */
+    private static boolean tryInitAccessorWithUnsafe() {
+        try
+        {
+            // Use reflection on Unsafe to avoid having to compile against it
+            Class<?> unsafeClass = Class.forName("sun.misc.Unsafe"); //$NON-NLS-1$
+            Field theUnsafe = unsafeClass.getDeclaredField("theUnsafe"); //$NON-NLS-1$
+            // NOTE: deep reflection is allowed on sun.misc package for java 9.
+            theUnsafe.setAccessible(true);
+            Object unsafe = theUnsafe.get(null);
+            // using defineAnonymousClass here because it seems more simple to get what we need
+            Method defineAnonymousClass = unsafeClass.getMethod("defineAnonymousClass", Class.class, byte[].class, Object[].class); //$NON-NLS-1$
+            // The bytes stored in a resource to avoid real loading of it (see accessible.src for source).
+
+            @SuppressWarnings("unchecked")
+            Class<Consumer<AccessibleObject[]>> result = (Class<Consumer<AccessibleObject[]>>) defineAnonymousClass
+                .invoke(unsafe, URL.class, accessor, null);
+            m_accessorCache = result.getConstructor().newInstance();
+            System.err.println("tryInitAccessorWithUnsafe succeeded: " + m_accessorCache);
+            return true;
+        }
+        catch (Throwable t)
+        {
+            t.printStackTrace();
+            return false;
+        }
+    }
+
+    /**
+     * @return true if succeeded. Should succeed for JDK 15 and later.
+     */
+    private static boolean tryInitAccessorWithMethodHandles() {
+        try
+        {
+            Object coArray = Array.newInstance(Class.forName("java.lang.invoke.MethodHandles$Lookup$ClassOption"), 0);
+            Class<?> coClass = coArray.getClass();
+            Method defineHiddenClass = Lookup.class.getMethod("defineHiddenClass", byte[].class, boolean.class, coClass);
+            Method privateLookupIn = MethodHandles.class.getMethod("privateLookupIn", Class.class, Lookup.class);
+            Lookup lookupPrivate = (Lookup) privateLookupIn.invoke(null, MethodHandles.class, MethodHandles.lookup());
+            Lookup lookup = (Lookup) defineHiddenClass.invoke(lookupPrivate, accessor, true, coArray);
+            Method accessClass = Lookup.class.getMethod("accessClass", Class.class);
+            @SuppressWarnings("unchecked")
+            Class<Consumer<AccessibleObject[]>> accClass = (Class<Consumer<AccessibleObject[]>>) accessClass.invoke(lookup, URL.class);
+            m_accessorCache = accClass.getConstructor().newInstance();
+            System.err.println("tryInitAccessorWithMethodHandles succeeded: " + m_accessorCache);
+            return true;
+        }
+        catch (Throwable t)
+        {
+            t.printStackTrace();
+            return false;
         }
     }
 
