@@ -194,9 +194,9 @@ public class ConfigurationAdminConfigurationPrinter extends AbstractConfiguratio
                 // pid, factory pid and bundle location are already printed
                 if ( ConfigAdminSupport.CONFIG_PROPERTIES_HIDE.contains(key) )
                 {
-                         continue;
+                    continue;
                 }
-                final Object value = obfuscateProperties.contains(key) ? "********" : props.get(key);
+                final Object value = (obfuscateProperties.contains(key) || MetaTypeSupport.isPasswordProperty(key)) ? "********" : props.get(key);
                 ConfigurationRender.infoLine(pw, "  ", key, value);
             }
         }
