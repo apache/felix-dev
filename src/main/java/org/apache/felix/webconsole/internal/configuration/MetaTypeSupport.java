@@ -28,6 +28,7 @@ import java.util.List;
 import java.util.Vector;
 
 import org.apache.felix.utils.json.JSONWriter;
+import org.apache.felix.webconsole.internal.servlet.OsgiManager;
 import org.osgi.framework.Bundle;
 import org.osgi.framework.BundleContext;
 import org.osgi.service.metatype.AttributeDefinition;
@@ -41,14 +42,11 @@ import org.osgi.service.metatype.AttributeDefinition;
  */
 class MetaTypeSupport
 {
-
-
     /**
      * Marker value of password fields used as dummy values and
      * indicating unmodified values.
      */
     static final String PASSWORD_PLACEHOLDER_VALUE = "unmodified"; //$NON-NLS-1$
-
 
     static Bundle getBundle( final BundleContext bundleContext, final String bundleLocation )
     {
@@ -275,8 +273,21 @@ class MetaTypeSupport
     }
 
 
+    public static boolean isPasswordProperty( final String name )
+    {
+        if ( name == null || !OsgiManager.ENABLE_SECRET_HEURISTICS )
+        {
+            return false;
+        }
+        return name.toLowerCase().indexOf( "password" ) != -1; //$NON-NLS-1$
+    }
+
     static int getAttributeType( final PropertyDescriptor ad )
     {
+        if ( ad.getType() == AttributeDefinition.STRING && isPasswordProperty( ad.getID() ) )
+        {
+            return AttributeDefinition.PASSWORD;
+        }
         return ad.getType();
     }
 

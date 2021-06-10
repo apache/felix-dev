@@ -107,6 +107,11 @@ class ConfigurationMetatypeSupport extends ConfigurationSupport implements MetaT
         adList.add( new AttributeDefinitionImpl( pwKey, getString( rb, "metadata." + pwKey + ".name", pwKey ),
                 getString( rb, "metadata." + pwKey + ".description", pwKey ) ) );
 
+        // boolean props
+        final String propKey = OsgiManager.PROP_ENABLE_SECRET_HEURISTIC;
+        adList.add( new AttributeDefinitionImpl( propKey, getString( rb, "metadata." + propKey + ".name", propKey ),
+                getString( rb, "metadata." + propKey + ".description", propKey ), OsgiManager.DEFAULT_ENABLE_SECRET_HEURISTIC ) );
+
         // log level is select - so no simple default value; requires localized option labels
         adList.add( new AttributeDefinitionImpl( OsgiManager.PROP_LOG_LEVEL, getString( rb,
             "metadata.loglevel.name", OsgiManager.PROP_LOG_LEVEL ), //$NON-NLS-1$
@@ -224,6 +229,12 @@ class ConfigurationMetatypeSupport extends ConfigurationSupport implements MetaT
         AttributeDefinitionImpl( final String id, final String name, final String description )
         {
             this( id, name, description, PASSWORD, null, 0, null, null );
+        }
+
+        AttributeDefinitionImpl( final String id, final String name, final String description, final boolean defaultValue )
+        {
+            this( id, name, description, BOOLEAN, new String[]
+                { String.valueOf(defaultValue) }, 0, null, null );
         }
 
         AttributeDefinitionImpl( final String id, final String name, final String description, final String defaultValue )
