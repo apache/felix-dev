@@ -119,7 +119,7 @@ public class URLHandlersStreamHandlerProxy extends URLStreamHandler
         m_builtInURL = builtInURL;
     }
 
-    private URLHandlersStreamHandlerProxy(Object service, SecureAction action)
+    URLHandlersStreamHandlerProxy(Object service, SecureAction action)
     {
         m_protocol = null;
         m_service = service;
