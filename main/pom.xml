@@ -87,6 +87,9 @@
             <Private-Package>org.apache.felix.main.*</Private-Package>
             <Export-Package>!org.osgi.service.log, !org.osgi.service.obr, org.osgi.*</Export-Package>
             <Import-Package>!*</Import-Package>
+            <Add-opens>
+                  java.base/java.net java.base/sun.net.www.protocol.file java.base/sun.net.www.protocol.ftp java.base/sun.net.www.protocol.http java.base/sun.net.www.protocol.https java.base/sun.net.www.protocol.jar java.base/sun.net.www.protocol.jmod java.base/sun.net.www.protocol.mailto java.base/sun.net.www.protocol.jrt java.base/jdk.internal.loader java.base/java.security
+            </Add-opens>
           </instructions>
         </configuration>
       </plugin>

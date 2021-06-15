@@ -116,8 +116,16 @@ class URLHandlers implements URLStreamHandlerFactory, ContentHandlerFactory
         m_streamPkgs = (pkgs.equals(""))
             ? DEFAULT_STREAM_HANDLER_PACKAGE
             : pkgs + "|" + DEFAULT_STREAM_HANDLER_PACKAGE;
-        m_loaded = (null != URLHandlersStreamHandlerProxy.class) &&
-            (null != URLHandlersContentHandlerProxy.class) && (null != URLStreamHandlerService.class);
+        boolean loaded;
+        try
+        {
+            loaded = (null != URLHandlersStreamHandlerProxy.class) &&
+                    (null != URLHandlersContentHandlerProxy.class) && (null != URLStreamHandlerService.class) && new URLHandlersStreamHandlerProxy(null, null) != null;
+        }
+        catch (Throwable e) {
+            loaded = false;
+        }
+        m_loaded = loaded;
     }
 
     private void init(String protocol, URLStreamHandlerFactory factory)
@@ -509,10 +517,26 @@ class URLHandlers implements URLStreamHandlerFactory, ContentHandlerFactory
         handler = getBuiltInStreamHandler(protocol,
             (m_streamHandlerFactory != this) ? m_streamHandlerFactory : null);
 
+        if (handler == null && isJVM(protocol))
+        {
+            return null;
+        }
         // If built-in content handler, then create a proxy handler.
         return addToCache(m_streamHandlerCache, protocol,
-            new URLHandlersStreamHandlerProxy(protocol, m_secureAction,
+            URLHandlersStreamHandlerProxy.wrap(protocol, m_secureAction,
                 handler, getFromCache(m_protocolToURL, protocol)));
+    }
+
+    private boolean isJVM(String protocol)
+    {
+        return protocol.equals("file") ||
+                protocol.equals("ftp") ||
+                protocol.equals("http") ||
+                protocol.equals("https") ||
+                protocol.equals("jar") ||
+                protocol.equals("jmod") ||
+                protocol.equals("mailto") ||
+                protocol.equals("jrt");
     }
 
     /**
