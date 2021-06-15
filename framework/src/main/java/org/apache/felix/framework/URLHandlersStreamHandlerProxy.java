@@ -71,54 +71,35 @@ public class URLHandlersStreamHandlerProxy extends URLStreamHandler
 
     static {
         SecureAction action = new SecureAction();
-        try
-        {
-            EQUALS = URLStreamHandler.class.getDeclaredMethod("equals",
-                new Class[]{URL.class, URL.class});
-            action.setAccesssible(EQUALS);
-            GET_DEFAULT_PORT = URLStreamHandler.class.getDeclaredMethod("getDefaultPort",
-                (Class[]) null);
-            action.setAccesssible(GET_DEFAULT_PORT);
-            GET_HOST_ADDRESS = URLStreamHandler.class.getDeclaredMethod(
-                    "getHostAddress", new Class[]{URL.class});
-            action.setAccesssible(GET_HOST_ADDRESS);
-            HASH_CODE = URLStreamHandler.class.getDeclaredMethod(
-                    "hashCode", new Class[]{URL.class});
-            action.setAccesssible(HASH_CODE);
-            HOSTS_EQUAL = URLStreamHandler.class.getDeclaredMethod(
-                    "hostsEqual", new Class[]{URL.class, URL.class});
-            action.setAccesssible(HOSTS_EQUAL);
-            OPEN_CONNECTION = URLStreamHandler.class.getDeclaredMethod(
-                    "openConnection", new Class[]{URL.class});
-            action.setAccesssible(OPEN_CONNECTION);
-            SAME_FILE = URLStreamHandler.class.getDeclaredMethod(
-                    "sameFile", new Class[]{URL.class, URL.class});
-            action.setAccesssible(SAME_FILE);
-            TO_EXTERNAL_FORM = URLStreamHandler.class.getDeclaredMethod(
-                   "toExternalForm", new Class[]{URL.class});
-            action.setAccesssible(TO_EXTERNAL_FORM);
-        }
-        catch (Exception ex)
-        {
-            throw new RuntimeException(ex.getMessage(), ex);
-        }
 
-        Method open_connection_proxy = null;
-        Class[] url_proxy_class = null;
+        EQUALS = reflect(action, "equals",
+            new Class[]{URL.class, URL.class});
+        GET_DEFAULT_PORT = reflect(action, "getDefaultPort",
+            (Class[]) null);
+        GET_HOST_ADDRESS = reflect(action, "getHostAddress", new Class[]{URL.class});
+        HASH_CODE = reflect(action, "hashCode", new Class[]{URL.class});
+        HOSTS_EQUAL = reflect(action, "hostsEqual", new Class[]{URL.class, URL.class});
+        OPEN_CONNECTION = reflect(action, "openConnection", new Class[]{URL.class});
+        SAME_FILE = reflect(action, "sameFile", new Class[]{URL.class, URL.class});
+        TO_EXTERNAL_FORM =reflect(action, "toExternalForm", new Class[]{URL.class});
+
+        URL_PROXY_CLASS = new Class[]{URL.class, java.net.Proxy.class};
+        OPEN_CONNECTION_PROXY = reflect(action, "openConnection", URL_PROXY_CLASS);
+    }
+
+    private static Method reflect(SecureAction action, String name, Class... classes)
+    {
         try
         {
-        	url_proxy_class = new Class[]{URL.class, java.net.Proxy.class};
-            open_connection_proxy = URLStreamHandler.class.getDeclaredMethod(
-                "openConnection", url_proxy_class);
-            action.setAccesssible(open_connection_proxy);
+            Method method = URLStreamHandler.class.getDeclaredMethod(name,
+                    classes);
+            action.setAccesssible(method);
+            return method;
         }
-        catch (Throwable ex)
+        catch (Throwable t)
         {
-           open_connection_proxy = null;
-           url_proxy_class = null;
+            return null;
         }
-        OPEN_CONNECTION_PROXY = open_connection_proxy;
-        URL_PROXY_CLASS = url_proxy_class;
     }
 
     private final Object m_service;
@@ -144,6 +125,14 @@ public class URLHandlersStreamHandlerProxy extends URLStreamHandler
         m_action = action;
         m_builtIn = null;
         m_builtInURL = null;
+    }
+
+    static URLStreamHandler wrap(String protocol, SecureAction action, URLStreamHandler builtIn, URL builtInURL)
+    {
+        return ((EQUALS == null) || (GET_DEFAULT_PORT == null) ||
+                (GET_HOST_ADDRESS == null) || HASH_CODE == null || HOSTS_EQUAL == null ||
+                (OPEN_CONNECTION == null) || (OPEN_CONNECTION_PROXY == null) || (SAME_FILE == null) ||
+                (TO_EXTERNAL_FORM == null)) && builtIn != null ? builtIn : new URLHandlersStreamHandlerProxy(protocol, action, builtIn, builtInURL);
     }
 
     //
@@ -389,7 +378,7 @@ public class URLHandlersStreamHandlerProxy extends URLStreamHandler
                 if (m_builtInURL != null)
                 {
                     // However, if we are on gnu/classpath we have to pass the handler directly
-                    // because the hidden feature is not there. Funnily, the workaround to pass
+                    // because the hidden feature is not there. Funnily, the workaround to
                     // pass the handler directly doesn't work on sun as their handler detects
                     // that it is not the same as the one inside the url and throws an exception
                     // Luckily it doesn't do that on gnu/classpath. We detect that we need to
@@ -417,7 +406,7 @@ public class URLHandlersStreamHandlerProxy extends URLStreamHandler
                 else
                 {
                     // We don't have a url with a built-in handler for this but still want to create
-                    // the url with the buil-in handler as we could find one now. This might not
+                    // the url with the built-in handler as we could find one now. This might not
                     // work for all handlers on sun but it is better then doing nothing.
                     test = m_action.createURL(url, spec, (URLStreamHandler) svc);
                 }
