@@ -1178,7 +1178,6 @@ public class SecureAction
                 }
                 catch (Throwable t)
                 {
-                    t.printStackTrace();
                     m_accessorCache = objects -> AccessibleObject.setAccessible(objects, true);
                 }
             }
