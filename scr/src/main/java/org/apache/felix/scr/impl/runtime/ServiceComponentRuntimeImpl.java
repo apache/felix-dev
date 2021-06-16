@@ -444,7 +444,7 @@ public class ServiceComponentRuntimeImpl implements ServiceComponentRuntime, Ser
             dto.updated = r.getUpdated();
             // DS 1.4
             dto.parameter = r.getParameterIndex();
-            dto.collectionType = r.getFieldCollectionType();
+            dto.collectionType = r.getCollectionType();
             dtos[i++] = dto;
         }
         return dtos;

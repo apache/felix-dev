@@ -266,7 +266,8 @@ public class ComponentConstructorImpl<S> implements ComponentConstructor<S>
                             constructorArgTypes[i],
                             constructor.getParameterTypes()[i],
                             componentContext,
-                            null);
+                            null,
+                            refMetadata);
                 }
                 else
                 {
@@ -289,7 +290,8 @@ public class ComponentConstructorImpl<S> implements ComponentConstructor<S>
                                     constructorArgTypes[i],
                                     constructor.getParameterTypes()[i],
                                     componentContext,
-                                    refPair);
+                                    refPair,
+                                    refMetadata);
                             if ( refMetadata.isMultiple() && ref != null )
                             {
                                 refs.add(ref);
@@ -332,7 +334,8 @@ public class ComponentConstructorImpl<S> implements ComponentConstructor<S>
                         activationFieldTypes[i],
                         activationFields[i].getType(),
                         componentContext,
-                        null); // null is ok as activation fields are not references
+                        null, // null is ok as activation fields are not references
+                        null);
                 FieldUtils.setField(activationFields[i], component, value, componentContext.getLogger());
             }
         }

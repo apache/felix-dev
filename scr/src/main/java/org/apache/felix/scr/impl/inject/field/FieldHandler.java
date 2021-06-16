@@ -225,7 +225,7 @@ public class FieldHandler
             			return MethodResult.REACTIVATE;
             		}
                     final Object obj = ValueUtils.getValue(componentInstance.getClass().getName(),
-                            valueType, field.getType(), key, refPair);
+                        valueType, field.getType(), key, refPair, this.metadata);
                     this.setFieldValue(componentInstance, obj);
                     bp.getComponentContext().getBoundValues(metadata.getName()).put(refPair, obj);
             	}
@@ -234,7 +234,7 @@ public class FieldHandler
             else
             {
                 final Object obj = ValueUtils.getValue(componentInstance.getClass().getName(),
-                        valueType, field.getType(), key, refPair);
+                    valueType, field.getType(), key, refPair, this.metadata);
                 this.setFieldValue(componentInstance, obj);
                 bp.getComponentContext().getBoundValues(metadata.getName()).put(refPair, obj);
             }
@@ -247,7 +247,7 @@ public class FieldHandler
             if ( mType == METHOD_TYPE.BIND )
             {
                 final Object obj = ValueUtils.getValue(componentInstance.getClass().getName(),
-                        valueType, field.getType(), key, refPair);
+                    valueType, field.getType(), key, refPair, this.metadata);
                 bp.getComponentContext().getBoundValues(metadata.getName()).put(refPair, obj);
                 if ( metadata.isReplace() )
                 {
@@ -286,7 +286,7 @@ public class FieldHandler
                     if ( !this.metadata.isStatic() )
                     {
 	                    final Object obj = ValueUtils.getValue(componentInstance.getClass().getName(),
-	                            valueType, field.getType(), key, refPair);
+                            valueType, field.getType(), key, refPair, this.metadata);
 	                    final Object oldObj = bp.getComponentContext().getBoundValues(metadata.getName()).put(refPair, obj);
 
 	                    if ( metadata.isReplace() )

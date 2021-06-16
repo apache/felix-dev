@@ -407,7 +407,7 @@ public class XmlHandler extends DefaultHandler
                     // field reference
                     ref.setField( attributes.getValue( XmlConstants.NAMESPACE_URI_EMPTY, "field" ) );
                     ref.setFieldOption( attributes.getValue( XmlConstants.NAMESPACE_URI_EMPTY, "field-option" ) );
-                    ref.setFieldCollectionType( attributes.getValue( XmlConstants.NAMESPACE_URI_EMPTY, "field-collection-type" ) );
+                    ref.setCollectionType( attributes.getValue( XmlConstants.NAMESPACE_URI_EMPTY, "field-collection-type" ) );
 
                     // DS 1.4 : references as parameter of the activator (method or constructor)
                     if ( attributes.getValue( XmlConstants.NAMESPACE_URI_EMPTY, "parameter" ) != null)

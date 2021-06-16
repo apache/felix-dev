@@ -384,7 +384,7 @@ public class ReferenceMetadata
      *
      * @param valuetype the field value type
      */
-    public void setFieldCollectionType( final String valuetype )
+    public void setCollectionType(final String valuetype)
     {
         if ( m_validated )
         {
@@ -548,7 +548,7 @@ public class ReferenceMetadata
      *
      * @return a String with the value type for the field
      */
-    public String getFieldCollectionType()
+    public String getCollectionType()
     {
         return m_collection_type;
     }
@@ -564,17 +564,6 @@ public class ReferenceMetadata
     public Integer getParameterIndex()
     {
     	return m_parameterIndex;
-    }
-
-    /**
-     * Get the value type of a parameter in the component implementation class that is used to hold
-     * the reference
-     * DS 1.4
-     * @return a String with the value type for the parameter
-     */
-    public String getParameterCollectionType()
-    {
-        return m_collection_type;
     }
 
     // Getters for boolean values that determine both policy and cardinality
@@ -759,25 +748,11 @@ public class ReferenceMetadata
             }
 
             // field value type
-            if ( !m_isMultiple )
+            if (m_collection_type != null
+                && !FIELD_VALUE_TYPE_VALID.contains(m_collection_type))
             {
-                // value type must not be specified for unary references
-                if ( m_collection_type != null )
-                {
-                    // spec says to ignore this
-                    this.m_collection_type = null;
-                }
-            }
-            else
-            {
-                if ( m_collection_type == null )
-                {
-                    setFieldCollectionType( FIELD_VALUE_TYPE_SERVICE );
-                }
-                else if ( !FIELD_VALUE_TYPE_VALID.contains( m_collection_type ) )
-                {
-                    throw componentMetadata.validationFailure( "Field value type must be one of " + FIELD_VALUE_TYPE_VALID );
-                }
+                throw componentMetadata.validationFailure(
+                    "Field value type must be one of " + FIELD_VALUE_TYPE_VALID);
             }
         }
 
@@ -801,25 +776,14 @@ public class ReferenceMetadata
                 throw componentMetadata.validationFailure( "Reference parameter value must be zero or higher: " + m_parameter );
             }
             // parameter value type
-            if ( !m_isMultiple )
+            if (m_collection_type == null)
             {
-                // value type must not be specified for unary references
-                if ( m_collection_type != null )
-                {
-                    // spec says to ignore this
-                    this.m_collection_type = null;
-                }
+                setCollectionType(FIELD_VALUE_TYPE_SERVICE);
             }
-            else
+            else if (!FIELD_VALUE_TYPE_VALID.contains(m_collection_type))
             {
-                if ( m_collection_type == null )
-                {
-                    setFieldCollectionType( FIELD_VALUE_TYPE_SERVICE );
-                }
-                else if ( !FIELD_VALUE_TYPE_VALID.contains( m_collection_type ) )
-                {
-                    throw componentMetadata.validationFailure( "Collection value type must be one of " + FIELD_VALUE_TYPE_VALID );
-                }
+                throw componentMetadata.validationFailure(
+                    "Collection value type must be one of " + FIELD_VALUE_TYPE_VALID);
             }
         }
         m_validated = true;
@@ -837,7 +801,8 @@ public class ReferenceMetadata
                 ", updated=" + this.getUpdated() +
                 ", field=" + this.getField() +
                 ", field-option=" + this.getFieldOption() +
-                ", collection-type=" + this.getFieldCollectionType() +
+                ", collection-type=" + this.getCollectionType()
+            +
                 ", parameter=" + this.getParameterIndex();
     }
 

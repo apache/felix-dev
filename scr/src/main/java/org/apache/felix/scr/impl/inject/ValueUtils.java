@@ -196,27 +196,8 @@ public class ValueUtils {
         }
         else
         {
-            String colType = field != null ? metadata.getFieldCollectionType() : metadata.getParameterCollectionType();
-            if ( ReferenceMetadata.FIELD_VALUE_TYPE_SERVICE.equals(colType) )
-            {
-                valueType = ValueType.ref_serviceType;
-            }
-            else if ( ReferenceMetadata.FIELD_VALUE_TYPE_REFERENCE.equals(colType) )
-            {
-                valueType = ValueType.ref_serviceReference;
-            }
-            else if ( ReferenceMetadata.FIELD_VALUE_TYPE_SERVICEOBJECTS.equals(colType) )
-            {
-                valueType = ValueType.ref_serviceObjects;
-            }
-            else if ( ReferenceMetadata.FIELD_VALUE_TYPE_PROPERTIES.equals(colType) )
-            {
-                valueType = ValueType.ref_map;
-            }
-            else if ( ReferenceMetadata.FIELD_VALUE_TYPE_TUPLE.equals(colType) )
-            {
-                valueType = ValueType.ref_tuple;
-            }
+            String colType = metadata.getCollectionType();
+            valueType = getCollectionValueType(colType);
 
             // multiple cardinality, field type must be collection or subtype
             if ( !ClassUtils.COLLECTION_CLASS.isAssignableFrom(typeClass) )
@@ -282,6 +263,29 @@ public class ValueUtils {
         return valueType;
     }
 
+    public static ValueType getCollectionValueType(String colType)
+    {
+        if (colType == null)
+        {
+            return ValueType.ref_serviceType;
+        }
+        switch (colType)
+        {
+            case ReferenceMetadata.FIELD_VALUE_TYPE_SERVICE:
+                return ValueType.ref_serviceType;
+            case ReferenceMetadata.FIELD_VALUE_TYPE_REFERENCE:
+                return ValueType.ref_serviceReference;
+            case ReferenceMetadata.FIELD_VALUE_TYPE_SERVICEOBJECTS:
+                return ValueType.ref_serviceObjects;
+            case ReferenceMetadata.FIELD_VALUE_TYPE_PROPERTIES:
+                return ValueType.ref_map;
+            case ReferenceMetadata.FIELD_VALUE_TYPE_TUPLE:
+                return ValueType.ref_tuple;
+            default:
+                return ValueType.ignore;
+        }
+    }
+
     /**
      * Get the value for the value type
      * @param componentType The class of the component
@@ -293,48 +297,56 @@ public class ValueUtils {
      */
     @SuppressWarnings("unchecked")
     public static Object getValue(
-            final String componentType,
-            final ValueType type,
-            final Class<?> targetType,
-            final ScrComponentContext componentContext,
-            final RefPair<?, ?> refPair)
+        final String componentType,
+        final ValueType type,
+        final Class<?> targetType,
+        final ScrComponentContext componentContext,
+        final RefPair<?, ?> refPair,
+        final ReferenceMetadata referenceMetaData)
     {
-        final Object value;
         switch ( type )
         {
-            case ignore                 : value = null;
-                                          break;
-            case componentContext       : value = componentContext;
-                                          break;
-            case bundleContext          : value = componentContext.getBundleContext();
-                                          break;
-            case config_map             : // note: getProperties() returns a ReadOnlyDictionary which is a Map
-                                          value = componentContext.getProperties();
-                                          break;
-            case config_annotation      : value = Annotations.toObject(targetType,
-                                                (Map<String, Object>) componentContext.getProperties(),
-                                          componentContext.getBundleContext().getBundle(), componentContext.getComponentMetadata().isConfigureWithInterfaces());
-                                          break;
-            case ref_serviceType        : value = refPair.getServiceObject(componentContext);
-                                          break;
-            case ref_serviceReference   : value = refPair.getRef();
-                                          break;
-            case ref_serviceObjects     : value = componentContext.getComponentServiceObjectsHelper().getServiceObjects(refPair.getRef());
-                                          break;
-            case ref_map                : value = new ReadOnlyDictionary( refPair.getRef() );
-                                          break;
-            case ref_tuple              : final Object tupleKey = new ReadOnlyDictionary( refPair.getRef() );
-                                          final Object tupleValue = refPair.getServiceObject(componentContext);
-                                          value = new MapEntryImpl(tupleKey, tupleValue, refPair.getRef());
-                                          break;
-            case ref_logger             :
-            case ref_formatterLogger    : value = getLogger(componentType, targetType, componentContext, refPair);
-                                          break;
-            case ref_optional           : value = Optional.ofNullable(refPair.getServiceObject(componentContext));
-                                          break;
-            default: value = null;
+            case ignore:
+                return null;
+            case componentContext:
+                return componentContext;
+            case bundleContext:
+                return componentContext.getBundleContext();
+            case config_map:
+                // note: getProperties() returns a ReadOnlyDictionary which is a Map
+                return componentContext.getProperties();
+            case config_annotation:
+                return Annotations.toObject(targetType,
+                    (Map<String, Object>) componentContext.getProperties(),
+                    componentContext.getBundleContext().getBundle(),
+                    componentContext.getComponentMetadata().isConfigureWithInterfaces());
+            case ref_serviceType:
+                return refPair.getServiceObject(componentContext);
+            case ref_serviceReference:
+                return refPair.getRef();
+            case ref_serviceObjects:
+                return componentContext.getComponentServiceObjectsHelper().getServiceObjects(
+                    refPair.getRef());
+            case ref_map:
+                return new ReadOnlyDictionary(refPair.getRef());
+            case ref_tuple:
+                final Object tupleKey = new ReadOnlyDictionary(refPair.getRef());
+                final Object tupleValue = refPair.getServiceObject(componentContext);
+                return new MapEntryImpl(tupleKey, tupleValue, refPair.getRef());
+            case ref_logger:
+            case ref_formatterLogger:
+                return getLogger(componentType, targetType, componentContext, refPair);
+            case ref_optional:
+                final String stringType = referenceMetaData == null
+                    ? ReferenceMetadata.FIELD_VALUE_TYPE_SERVICE
+                    : referenceMetaData.getCollectionType();
+                final ValueType optionalValueType = getCollectionValueType(stringType);
+                Object value = getValue(componentType, optionalValueType, targetType,
+                    componentContext, refPair, referenceMetaData);
+                return Optional.ofNullable(value);
+            default:
+                return null;
         }
-        return value;
     }
 
     private static Object getLogger(String componentType,
