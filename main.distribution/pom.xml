@@ -27,7 +27,7 @@
   <packaging>pom</packaging>
   <name>Apache Felix Main Distribution</name>
   <artifactId>org.apache.felix.main.distribution</artifactId>
-  <version>7.0.1</version>
+  <version>7.1.0-SNAPSHOT</version>
   <properties>
     <dollar>$</dollar>
     <framework.version>7.0.1</framework.version>
@@ -42,7 +42,7 @@
       <connection>scm:git:https://github.com/apache/felix-dev.git</connection>
       <developerConnection>scm:git:https://github.com/apache/felix-dev.git</developerConnection>
       <url>https://gitbox.apache.org/repos/asf?p=felix-dev.git</url>
-      <tag>org.apache.felix.main.distribution-7.0.1</tag>
+      <tag>HEAD</tag>
   </scm>
   <build>
     <plugins>
