@@ -504,6 +504,14 @@ public class XmlHandler extends DefaultHandler
                 trueReference.setInterface(ReferenceMetadata.CONDITION_SERVICE_CLASS);
                 trueReference.setPolicy(ReferenceMetadata.POLICY_DYNAMIC);
                 m_currentComponent.addDependency(trueReference);
+                // Here we add the target property for the implicit satisfying condition
+                // first such that any properties that are specified explicitly can
+                // be used to override this implicit property
+                PropertyMetadata prop = new PropertyMetadata();
+                prop.setName(
+                    ReferenceMetadata.REFERENCE_NAME_SATISFYING_CONDITION + ".target");
+                prop.setValue(ReferenceMetadata.CONDITION_TRUE_FILTER);
+                m_currentComponent.addFirstProperty(prop);
             }
         }
     }

@@ -327,6 +327,16 @@ public class ComponentMetadata
      */
     public void addProperty( PropertyMetadata newProperty )
     {
+        addProperty(newProperty, false);
+    }
+
+    public void addFirstProperty(PropertyMetadata newProperty)
+    {
+        addProperty(newProperty, true);
+    }
+
+    private void addProperty(PropertyMetadata newProperty, boolean first)
+    {
         if ( m_validated )
         {
             return;
@@ -335,9 +345,15 @@ public class ComponentMetadata
         {
             throw new IllegalArgumentException( "Cannot add a null property" );
         }
-        m_propertyMetaData.add( newProperty );
+        if (first)
+        {
+            m_propertyMetaData.add(0, newProperty);
+        }
+        else
+        {
+            m_propertyMetaData.add(newProperty);
+        }
     }
-
 
     /**
      * Used to add a factory property to the instance

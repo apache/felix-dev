@@ -86,21 +86,30 @@ public class SatisfyingConditionTest extends ComponentTestBase
     @Test
     public void test_default_satisfying_condition() throws Exception
     {
-        final String componentname = "satisfying.condition.default";
+        doTargetTrueCondition("satisfying.condition.default");
+    }
 
+    @Test
+    public void test_specified_satisfying_condition() throws Exception
+    {
+        doTargetTrueCondition("satisfying.condition.reference.specified");
+    }
+
+    void doTargetTrueCondition(final String componentname) throws Exception
+    {
         ComponentConfigurationDTO configDTO = getDisabledConfigurationAndEnable(
             componentname,
             ComponentConfigurationDTO.ACTIVE);
 
-        assertEquals("Wrong number of references.", 1,
+        assertEquals("Wrong number of references.", 2,
             configDTO.satisfiedReferences.length);
-        SatisfiedReferenceDTO satisfiedDTO = configDTO.satisfiedReferences[0];
+        SatisfiedReferenceDTO satisfiedDTO = configDTO.satisfiedReferences[1];
         assertEquals("Wrong target.", "(osgi.condition.id=true)", satisfiedDTO.target);
 
         ComponentDescriptionDTO descriptionDTO = configDTO.description;
-        assertEquals("Wrong number of references.", 1, descriptionDTO.references.length);
+        assertEquals("Wrong number of references.", 2, descriptionDTO.references.length);
 
-        ReferenceDTO trueReference = descriptionDTO.references[0];
+        ReferenceDTO trueReference = descriptionDTO.references[1];
         assertEquals("Wrong name.", "osgi.ds.satisfying.condition", trueReference.name);
         assertEquals("Wrong interface.", "org.osgi.service.condition.Condition",
             trueReference.interfaceName);
@@ -115,26 +124,39 @@ public class SatisfyingConditionTest extends ComponentTestBase
         configDTO = findComponentConfigurationByName(componentname,
             ComponentConfigurationDTO.UNSATISFIED_REFERENCE);
 
+        assertEquals("Wrong number of unsatisfied references.", 1,
+            configDTO.unsatisfiedReferences.length);
         UnsatisfiedReferenceDTO unsatisfiedDTO = configDTO.unsatisfiedReferences[0];
         assertEquals("Wrong target.", "(foo=baz)", unsatisfiedDTO.target);
     }
 
     @Test
-    public void test_specified_satisfying_condition() throws Exception
+    public void test_default_satisfying_condition_target() throws Exception
     {
-        final String componentname = "satisfying.condition.target.specified";
+        doTestTargetCustomCondition("satisfying.condition.target.specified");
+    }
 
+    @Test
+    public void test_specified_satisfying_condition_target() throws Exception
+    {
+        doTestTargetCustomCondition("satisfying.condition.reference.target.specified");
+    }
+
+    void doTestTargetCustomCondition(final String componentname) throws Exception
+    {
         ComponentConfigurationDTO configDTO = getDisabledConfigurationAndEnable(
             componentname, ComponentConfigurationDTO.UNSATISFIED_REFERENCE);
         ComponentDescriptionDTO descriptionDTO = configDTO.description;
 
+        assertEquals("Wrong number of unsatisfied references.", 1,
+            configDTO.unsatisfiedReferences.length);
         UnsatisfiedReferenceDTO unsatisfiedDTO = configDTO.unsatisfiedReferences[0];
         assertEquals("Wrong target.", "(foo=bar)", unsatisfiedDTO.target);
 
         assertNotNull("No component DTO found.", descriptionDTO);
-        assertEquals("Wrong number of references.", 1, descriptionDTO.references.length);
+        assertEquals("Wrong number of references.", 2, descriptionDTO.references.length);
 
-        ReferenceDTO trueReference = descriptionDTO.references[0];
+        ReferenceDTO trueReference = descriptionDTO.references[1];
         assertEquals("Wrong name.", "osgi.ds.satisfying.condition", trueReference.name);
         assertEquals("Wrong interface.", "org.osgi.service.condition.Condition",
             trueReference.interfaceName);
@@ -151,9 +173,9 @@ public class SatisfyingConditionTest extends ComponentTestBase
 
         configDTO = findComponentConfigurationByName(componentname,
             ComponentConfigurationDTO.ACTIVE);
-        assertEquals("Wrong number of references.", 1,
+        assertEquals("Wrong number of references.", 2,
             configDTO.satisfiedReferences.length);
-        SatisfiedReferenceDTO satisfiedDTO = configDTO.satisfiedReferences[0];
+        SatisfiedReferenceDTO satisfiedDTO = configDTO.satisfiedReferences[1];
         assertEquals("Wrong target.", "(foo=bar)", satisfiedDTO.target);
     }
 
