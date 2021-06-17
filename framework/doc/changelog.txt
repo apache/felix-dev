@@ -3,6 +3,7 @@ Changes from 6.0.4 to 6.0.5
 
 ** Bug
     * [FELIX-6416] - Special case JDK9+ URLClassLoader url resource loading 
+    * [FELIX-6433] - Felix 6.0.4 doesn't work on JDK 17
 
 Changes from 6.0.3 to 6.0.4
 ---------------------------
