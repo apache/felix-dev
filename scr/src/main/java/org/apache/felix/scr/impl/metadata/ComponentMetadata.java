@@ -327,16 +327,6 @@ public class ComponentMetadata
      */
     public void addProperty( PropertyMetadata newProperty )
     {
-        addProperty(newProperty, false);
-    }
-
-    public void addFirstProperty(PropertyMetadata newProperty)
-    {
-        addProperty(newProperty, true);
-    }
-
-    private void addProperty(PropertyMetadata newProperty, boolean first)
-    {
         if ( m_validated )
         {
             return;
@@ -345,14 +335,7 @@ public class ComponentMetadata
         {
             throw new IllegalArgumentException( "Cannot add a null property" );
         }
-        if (first)
-        {
-            m_propertyMetaData.add(0, newProperty);
-        }
-        else
-        {
-            m_propertyMetaData.add(newProperty);
-        }
+        m_propertyMetaData.add(newProperty);
     }
 
     /**
@@ -965,7 +948,16 @@ public class ComponentMetadata
         for ( PropertyMetadata propMeta: m_propertyMetaData )
         {
             propMeta.validate( this );
-            m_properties.put( propMeta.getName(), propMeta.getValue() );
+            if (m_dsVersion.isDS15() && propMeta.isReferenceTarget())
+            {
+                // for DS 15 the reference target property must not override,
+                // only add if the key does not exist yet
+                m_properties.putIfAbsent(propMeta.getName(), propMeta.getValue());
+            }
+            else
+            {
+                m_properties.put(propMeta.getName(), propMeta.getValue());
+            }
         }
         m_propertyMetaData.clear();
 

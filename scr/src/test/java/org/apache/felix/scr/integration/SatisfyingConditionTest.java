@@ -95,6 +95,12 @@ public class SatisfyingConditionTest extends ComponentTestBase
         doTargetTrueCondition("satisfying.condition.reference.specified");
     }
 
+    @Test
+    public void test_specified_satisfying_condition_14() throws Exception
+    {
+        doTargetTrueCondition("satisfying.condition.reference.specified.1.4.0");
+    }
+
     void doTargetTrueCondition(final String componentname) throws Exception
     {
         ComponentConfigurationDTO configDTO = getDisabledConfigurationAndEnable(
@@ -137,9 +143,29 @@ public class SatisfyingConditionTest extends ComponentTestBase
     }
 
     @Test
+    public void test_default_satisfying_condition_target_14() throws Exception
+    {
+        doTargetTrueCondition("satisfying.condition.target.specified.1.4.0");
+    }
+
+    @Test
     public void test_specified_satisfying_condition_target() throws Exception
     {
         doTestTargetCustomCondition("satisfying.condition.reference.target.specified");
+    }
+
+    @Test
+    public void test_specified_satisfying_condition_target_14_postfix() throws Exception
+    {
+        doTestTargetCustomCondition(
+            "satisfying.condition.reference.target.specified.1.4.0.postfix");
+    }
+
+    @Test
+    public void test_specified_satisfying_condition_target_14_prefic() throws Exception
+    {
+        doTargetTrueCondition(
+            "satisfying.condition.reference.target.specified.1.4.0.prefix");
     }
 
     void doTestTargetCustomCondition(final String componentname) throws Exception

@@ -392,7 +392,7 @@ public class XmlHandler extends DefaultHandler
                     if ( attributes.getValue( XmlConstants.NAMESPACE_URI_EMPTY, "target" ) != null)
                     {
                         ref.setTarget( attributes.getValue( XmlConstants.NAMESPACE_URI_EMPTY, "target" ) );
-                        PropertyMetadata prop = new PropertyMetadata();
+                        PropertyMetadata prop = new PropertyMetadata(true);
                         prop.setName( (ref.getName() == null? ref.getInterface(): ref.getName()) + ".target");
                         prop.setValue( attributes.getValue( XmlConstants.NAMESPACE_URI_EMPTY, "target" ) );
                         m_currentComponent.addProperty( prop );
@@ -507,11 +507,11 @@ public class XmlHandler extends DefaultHandler
                 // Here we add the target property for the implicit satisfying condition
                 // first such that any properties that are specified explicitly can
                 // be used to override this implicit property
-                PropertyMetadata prop = new PropertyMetadata();
+                PropertyMetadata prop = new PropertyMetadata(true);
                 prop.setName(
                     ReferenceMetadata.REFERENCE_NAME_SATISFYING_CONDITION + ".target");
                 prop.setValue(ReferenceMetadata.CONDITION_TRUE_FILTER);
-                m_currentComponent.addFirstProperty(prop);
+                m_currentComponent.addProperty(prop);
             }
         }
     }

@@ -31,12 +31,12 @@
         <implementation class="org.apache.felix.scr.integration.components.SatisfyingConditionComponentClass"/>
         <reference name="optional.condition"
           interface="org.osgi.service.condition.Condition"
-          target="(optional.condition)"
+          target="(optional.condition=true)"
           policy="dynamic"
           cardinality="0..1"/>
     </scr:component>
 
-    <scr:component xmlns:scr="http://www.osgi.org/xmlns/scr/v1.4.0"
+    <scr:component xmlns:scr="http://www.osgi.org/xmlns/scr/v1.5.0"
         name="satisfying.condition.target.specified"
         immediate="true"
         enabled="false">
@@ -44,19 +44,32 @@
         <implementation class="org.apache.felix.scr.integration.components.SatisfyingConditionComponentClass"/>
         <reference name="optional.condition"
           interface="org.osgi.service.condition.Condition"
-          target="(optional.condition)"
+          target="(optional.condition=true)"
           policy="dynamic"
           cardinality="0..1"/>
     </scr:component>
 
     <scr:component xmlns:scr="http://www.osgi.org/xmlns/scr/v1.4.0"
+        name="satisfying.condition.target.specified.1.4.0"
+        immediate="true"
+        enabled="false">
+        <property name="osgi.ds.satisfying.condition.target" value="(foo=bar)"/>
+        <implementation class="org.apache.felix.scr.integration.components.SatisfyingConditionComponentClass"/>
+        <reference name="optional.condition"
+          interface="org.osgi.service.condition.Condition"
+          target="(optional.condition=true)"
+          policy="dynamic"
+          cardinality="0..1"/>
+    </scr:component>
+
+    <scr:component xmlns:scr="http://www.osgi.org/xmlns/scr/v1.5.0"
         name="satisfying.condition.reference.specified"
         immediate="true"
         enabled="false">
         <implementation class="org.apache.felix.scr.integration.components.SatisfyingConditionComponentClass"/>
         <reference name="optional.condition"
           interface="org.osgi.service.condition.Condition"
-          target="(optional.condition)"
+          target="(optional.condition=true)"
           policy="dynamic"
           cardinality="0..1"/>
         <reference name="osgi.ds.satisfying.condition"
@@ -66,13 +79,46 @@
     </scr:component>
 
     <scr:component xmlns:scr="http://www.osgi.org/xmlns/scr/v1.4.0"
-        name="satisfying.condition.reference.target.specified"
+        name="satisfying.condition.reference.specified.1.4.0"
         immediate="true"
         enabled="false">
         <implementation class="org.apache.felix.scr.integration.components.SatisfyingConditionComponentClass"/>
         <reference name="optional.condition"
           interface="org.osgi.service.condition.Condition"
-          target="(optional.condition)"
+          target="(optional.condition=true)"
+          policy="dynamic"
+          cardinality="0..1"/>
+        <reference name="osgi.ds.satisfying.condition"
+          interface="org.osgi.service.condition.Condition"
+          target="(osgi.condition.id=true)"
+          policy="dynamic"/>
+    </scr:component>
+
+    <scr:component xmlns:scr="http://www.osgi.org/xmlns/scr/v1.5.0"
+        name="satisfying.condition.reference.target.specified"
+        immediate="true"
+        enabled="false">
+        <implementation class="org.apache.felix.scr.integration.components.SatisfyingConditionComponentClass"/>
+        <property name="osgi.ds.satisfying.condition.target" value="(foo=bar)"/>
+        <reference name="optional.condition"
+          interface="org.osgi.service.condition.Condition"
+          target="(optional.condition=true)"
+          policy="dynamic"
+          cardinality="0..1"/>
+        <reference name="osgi.ds.satisfying.condition"
+          interface="org.osgi.service.condition.Condition"
+          target="(osgi.condition.id=true)"
+          policy="dynamic"/>
+    </scr:component>
+
+    <scr:component xmlns:scr="http://www.osgi.org/xmlns/scr/v1.4.0"
+        name="satisfying.condition.reference.target.specified.1.4.0.postfix"
+        immediate="true"
+        enabled="false">
+        <implementation class="org.apache.felix.scr.integration.components.SatisfyingConditionComponentClass"/>
+        <reference name="optional.condition"
+          interface="org.osgi.service.condition.Condition"
+          target="(optional.condition=true)"
           policy="dynamic"
           cardinality="0..1"/>
         <reference name="osgi.ds.satisfying.condition"
@@ -80,5 +126,22 @@
           target="(osgi.condition.id=true)"
           policy="dynamic"/>
         <property name="osgi.ds.satisfying.condition.target" value="(foo=bar)"/>
+    </scr:component>
+
+    <scr:component xmlns:scr="http://www.osgi.org/xmlns/scr/v1.4.0"
+        name="satisfying.condition.reference.target.specified.1.4.0.prefix"
+        immediate="true"
+        enabled="false">
+        <property name="osgi.ds.satisfying.condition.target" value="(foo=bar)"/>
+        <implementation class="org.apache.felix.scr.integration.components.SatisfyingConditionComponentClass"/>
+        <reference name="optional.condition"
+          interface="org.osgi.service.condition.Condition"
+          target="(optional.condition=true)"
+          policy="dynamic"
+          cardinality="0..1"/>
+        <reference name="osgi.ds.satisfying.condition"
+          interface="org.osgi.service.condition.Condition"
+          target="(osgi.condition.id=true)"
+          policy="dynamic"/>
     </scr:component>
 </components>
