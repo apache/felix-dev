@@ -23,6 +23,7 @@ import java.io.IOException;
 import java.io.PrintWriter;
 import java.lang.reflect.Array;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Dictionary;
 import java.util.Enumeration;
 import java.util.HashMap;
@@ -35,7 +36,6 @@ import java.util.Map;
 import java.util.Map.Entry;
 import java.util.Set;
 import java.util.SortedMap;
-import java.util.StringTokenizer;
 import java.util.TreeMap;
 import java.util.Vector;
 import java.util.regex.Matcher;
@@ -162,175 +162,227 @@ class ConfigAdminSupport
         return ConfigManager.PLACEHOLDER_PID;
     }
 
-    String applyConfiguration( final HttpServletRequest request, final String pid, final boolean isUpdate )
+    boolean shouldSet(final PropertyDescriptor ad, final String value, final boolean isUpdate) 
+    {
+        if ( ad.hasMetatype() && !isUpdate )
+        {
+            if ( value.isEmpty() && ad.getDefaultValue() == null )
+            {
+                return false;
+            }
+            if ( ad.getDefaultValue() != null && value.equals(ad.getDefaultValue()[0]) )
+            {
+                return false;
+            }
+        }
+        return true;
+    }
+
+    boolean shouldSet(final PropertyDescriptor ad, final String[] values, final boolean isUpdate) 
+    {
+        if ( ad.hasMetatype() && !isUpdate )
+        {
+            if ( ad.getDefaultValue() == null )
+            {
+                if ( values.length == 0 || (values.length == 1 && values[0].isEmpty() ) )
+                {
+                    return false;
+                }
+            }
+            if ( ad.getDefaultValue() != null && Arrays.equals(ad.getDefaultValue(), values) )
+            {
+                return false;
+            }
+        }
+        return true;
+    }
+
+    boolean applyConfiguration( final HttpServletRequest request, final String pid, final String propertyList, final boolean isUpdate )
             throws IOException
     {
-        if ( request.getParameter( ConfigManager.ACTION_DELETE ) != null ) //$NON-NLS-1$
-        {
-            // only delete if the PID is not our place holder
-            if ( !ConfigManager.PLACEHOLDER_PID.equals( pid ) )
-            {
-                configManager.log( "applyConfiguration: Deleting configuration " + pid );
-                Configuration config = service.getConfiguration( pid, null );
-                config.delete();
-            }
-            return null; // return request.getHeader( "Referer" );
-        }
-
         final String factoryPid = request.getParameter( ConfigManager.FACTORY_PID );
-        Configuration config = null;
+        final Configuration config = getConfiguration( pid, factoryPid );
 
-        String propertyList = request.getParameter( ConfigManager.PROPERTY_LIST ); //$NON-NLS-1$
-        if ( propertyList == null )
+        Dictionary<String, Object> props = config.getProperties();
+        if ( props == null )
         {
-            // FIXME: this would be a bug !!
+            props = new Hashtable<>();
         }
-        else
-        {
-            config = getConfiguration( pid, factoryPid );
 
-            Dictionary<String, Object> props = config.getProperties();
-            if ( props == null )
-            {
-                props = new Hashtable<>();
+        final MetaTypeServiceSupport mtss = getMetaTypeSupport();
+        final Map<String, MetatypePropertyDescriptor> adMap = ( mtss != null ) ? mtss.getAttributeDefinitionMap( config, null ) : new HashMap<>();
+        final List<String> propsToKeep = new ArrayList<>();
+        for(final String propName : propertyList.split(","))
+        {
+            final String paramName = "action".equals(propName) //$NON-NLS-1$
+                    || ConfigManager.ACTION_DELETE.equals(propName)
+                    || ConfigManager.ACTION_APPLY.equals(propName)
+                    || ConfigManager.PROPERTY_LIST.equals(propName)
+                    ? '$' + propName : propName;
+            propsToKeep.add(propName);
+
+            PropertyDescriptor ad = adMap.get( propName );
+
+            // try to derive from current value
+            if (ad == null) {
+                Object currentValue = props.get( propName );
+                ad = MetaTypeSupport.createAttributeDefinition( propName, currentValue );
             }
 
-            final MetaTypeServiceSupport mtss = getMetaTypeSupport();
-            final Map<String, MetatypePropertyDescriptor> adMap = ( mtss != null ) ? mtss.getAttributeDefinitionMap( config, null ) : new HashMap<>();
-            final StringTokenizer propTokens = new StringTokenizer( propertyList, "," ); //$NON-NLS-1$
-            final List<String> propsToKeep = new ArrayList<>();
-            while ( propTokens.hasMoreTokens() )
+            final int attributeType = MetaTypeSupport.getAttributeType( ad );
+
+            if ( ad.getCardinality() == 0 && ( attributeType == AttributeDefinition.STRING || attributeType == AttributeDefinition.PASSWORD ) )
             {
-                String propName = propTokens.nextToken();
-                String paramName = "action".equals(propName) //$NON-NLS-1$
-                        || ConfigManager.ACTION_DELETE.equals(propName)
-                        || ConfigManager.ACTION_APPLY.equals(propName)
-                        || ConfigManager.PROPERTY_LIST.equals(propName)
-                        ? '$' + propName : propName;
-                propsToKeep.add(propName);
-
-                PropertyDescriptor ad = adMap.get( propName );
-
-                // try to derive from current value
-                if (ad == null) {
-                    Object currentValue = props.get( propName );
-                    ad = MetaTypeSupport.createAttributeDefinition( propName, currentValue );
-                }
-
-                int attributeType = MetaTypeSupport.getAttributeType( ad );
-
-                if ( ad == null
-                        || ( ad.getCardinality() == 0 && ( attributeType == AttributeDefinition.STRING || attributeType == AttributeDefinition.PASSWORD ) ) )
+                final String value = request.getParameter( paramName );
+                if ( value != null
+                    && ( attributeType != AttributeDefinition.PASSWORD || !MetaTypeSupport.PASSWORD_PLACEHOLDER_VALUE.equals( value ) ) )
                 {
-                    String prop = request.getParameter( paramName );
-                    if ( prop != null
-                            && ( attributeType != AttributeDefinition.PASSWORD || !MetaTypeSupport.PASSWORD_PLACEHOLDER_VALUE.equals( prop ) ) )
+                    if ( shouldSet(ad, value, isUpdate) ) 
                     {
-                        props.put( propName, prop );
+                        props.put( propName, value );
+                    }
+                    else
+                    {
+                        props.remove( propName );
                     }
                 }
-                else if ( ad.getCardinality() == 0 )
+            }
+            else if ( ad.getCardinality() == 0 )
+            {
+                // scalar of non-string
+                final String value = request.getParameter( paramName );
+                if ( value != null )
                 {
-                    // scalar of non-string
-                    String prop = request.getParameter( paramName );
-                    if ( prop != null )
+                    if ( shouldSet(ad, value, isUpdate) ) 
                     {
                         try
                         {
-                            props.put( propName, MetaTypeSupport.toType( attributeType, prop ) );
+                            props.put( propName, MetaTypeSupport.toType( attributeType, value ) );
                         }
-                        catch ( NumberFormatException nfe )
+                        catch ( final NumberFormatException nfe )
                         {
                             // the value is put as a string, for example this could be a placeholder etc
-                            props.put( propName, prop);
-                        }
-                    }
-                }
-                else
-                {
-                    // array or vector of any type
-                    Vector<Object> vec = new Vector<>();
-                    boolean formatError = false;
-
-                    String[] properties = request.getParameterValues( paramName );
-                    if ( properties != null )
-                    {
-                        if ( attributeType == AttributeDefinition.PASSWORD )
-                        {
-                            MetaTypeSupport.setPasswordProps( vec, properties, props.get( propName ) );
-                        }
-                        else
-                        {
-                            for ( int i = 0; i < properties.length; i++ )
-                            {
-                                try
-                                {
-                                    vec.add( MetaTypeSupport.toType( attributeType, properties[i] ) );
-                                }
-                                catch ( NumberFormatException nfe )
-                                {
-                                    // the value is put as a string, for example this could be a placeholder etc
-                                    vec.add( properties[i] );
-                                    formatError = true;
-                                }
-                            }
-                        }
-                    }
-
-                    // if a format error occurred revert to String!
-                    if ( formatError )
-                    {
-                        Vector<Object> newVec = new Vector<Object>();
-                        for(final Object v : vec)
-                        {
-                            newVec.add(v.toString());
-                        }
-                        vec = newVec;
-                    }
-
-                    // but ensure size (check for positive value since
-                    // abs(Integer.MIN_VALUE) is still INTEGER.MIN_VALUE)
-                    int maxSize = Math.abs( ad.getCardinality() );
-                    if ( vec.size() > maxSize && maxSize > 0 )
-                    {
-                        vec.setSize( maxSize );
-                    }
-
-                    if ( ad.getCardinality() < 0 )
-                    {
-                        // keep the vector, but only add if not empty
-                        if ( vec.isEmpty() )
-                        {
-                            props.remove( propName );
-                        }
-                        else
-                        {
-                            props.put( propName, vec );
+                            props.put( propName, value);
                         }
                     }
                     else
                     {
+                        props.remove( propName );
+                    }
+                }
+            }
+            else
+            {
+                // array or vector of any type
+                Vector<Object> vec = new Vector<>();
+                boolean formatError = false;
+
+                final String[] values = request.getParameterValues( paramName );
+                if ( values != null )
+                {
+                    if ( attributeType == AttributeDefinition.PASSWORD )
+                    {
+                        MetaTypeSupport.setPasswordProps( vec, values, props.get( propName ) );
+                    }
+                    else
+                    {
+                        for ( int i = 0; i < values.length; i++ )
+                        {
+                            try
+                            {
+                                vec.add( MetaTypeSupport.toType( attributeType, values[i] ) );
+                            }
+                            catch ( NumberFormatException nfe )
+                            {
+                                // the value is put as a string, for example this could be a placeholder etc
+                                vec.add( values[i] );
+                                formatError = true;
+                            }
+                        }
+                    }
+                }
+
+                // if a format error occurred revert to String!
+                if ( formatError )
+                {
+                    Vector<Object> newVec = new Vector<Object>();
+                    for(final Object v : vec)
+                    {
+                        newVec.add(v.toString());
+                    }
+                    vec = newVec;
+                }
+
+                // but ensure size (check for positive value since
+                // abs(Integer.MIN_VALUE) is still INTEGER.MIN_VALUE)
+                int maxSize = Math.abs( ad.getCardinality() );
+                if ( vec.size() > maxSize && maxSize > 0 )
+                {
+                    vec.setSize( maxSize );
+                }
+
+                // create array to compare
+                final String[] valueArray = new String[vec.size()];
+                for(int i=0; i<vec.size();i++) 
+                {
+                    valueArray[i] = vec.get(i).toString();
+                }
+                
+                final boolean shouldSet = shouldSet(ad, valueArray, isUpdate);
+
+                if ( ad.getCardinality() < 0 )
+                {
+                    // keep the vector, but only add if not empty
+                    if ( !shouldSet || vec.isEmpty() )
+                    {
+                        props.remove( propName );
+                    }
+                    else
+                    {
+                        if ( shouldSet )
+                        {
+                            props.put( propName, vec );
+                        }                        
+                    }
+                }
+                else
+                {
+                    if ( shouldSet )
+                    {
                         // convert to an array
                         props.put( propName, MetaTypeSupport.toArray( formatError ? AttributeDefinition.STRING : attributeType, vec ) );
                     }
-                }
-            }
-
-            if ( !isUpdate ) {
-                // remove the properties that are not specified in the request
-                final Dictionary<String, Object> updateProps = new Hashtable<>(props.size());
-                for ( Enumeration<String> e = props.keys(); e.hasMoreElements(); )
-                {
-                    final String key = e.nextElement();
-                    if ( propsToKeep.contains(key) )
+                    else
                     {
-                        updateProps.put(key, props.get(key));
+                        props.remove( propName );
                     }
                 }
-                props = updateProps;
             }
+        }
 
+        if ( !isUpdate ) 
+        {
+            // remove the properties that are not specified in the request
+            final Dictionary<String, Object> updateProps = new Hashtable<>(props.size());
+            for ( Enumeration<String> e = props.keys(); e.hasMoreElements(); )
+            {
+                final String key = e.nextElement();
+                if ( propsToKeep.contains(key) && props.get(key) != null )
+                {
+                    updateProps.put(key, props.get(key));
+                }
+            }
+            props = updateProps;
+        }
 
+        if ( props.isEmpty() )
+        {
+            config.delete();
+
+            return false;
+        }
+        else
+        {
             final String location = request.getParameter(ConfigManager.LOCATION);
             if ( location == null || location.trim().length() == 0 || ConfigManager.UNBOUND_LOCATION.equals(location) )
             {
@@ -347,7 +399,8 @@ class ConfigAdminSupport
                         config.setBundleLocation( null );
                     }
                 }
-            } else
+            } 
+            else
             {
                 if ( config.getBundleLocation() == null || !config.getBundleLocation().equals(location) )
                 {
@@ -355,10 +408,9 @@ class ConfigAdminSupport
                 }
             }
             config.update( props );
+    
+            return true;
         }
-
-        // redirect to the new configuration (if existing)
-        return (config != null) ? config.getPid() : ""; //$NON-NLS-1$
     }
 
 

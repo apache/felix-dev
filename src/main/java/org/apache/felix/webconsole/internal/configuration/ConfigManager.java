@@ -28,11 +28,11 @@ import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 
 import org.apache.felix.utils.json.JSONWriter;
-import org.apache.felix.webconsole.DefaultVariableResolver;
 import org.apache.felix.webconsole.SimpleWebConsolePlugin;
 import org.apache.felix.webconsole.WebConsoleConstants;
 import org.apache.felix.webconsole.WebConsoleUtil;
 import org.apache.felix.webconsole.internal.OsgiManagerPlugin;
+import org.apache.felix.webconsole.internal.Util;
 import org.osgi.framework.Constants;
 import org.osgi.framework.InvalidSyntaxException;
 import org.osgi.service.cm.Configuration;
@@ -118,6 +118,14 @@ public class ConfigManager extends SimpleWebConsolePlugin implements OsgiManager
     @Override
     protected void doPost( HttpServletRequest request, HttpServletResponse response ) throws IOException
     {
+        // service unavailable if config admin is not available
+        final ConfigAdminSupport cas = getConfigurationAdminSupport();
+        if ( cas == null )
+        {
+            response.sendError(503);
+            return;
+        }
+
         // needed multiple times below
         String pid = request.getParameter( ConfigManager.PID );
         if ( pid == null )
@@ -125,62 +133,71 @@ public class ConfigManager extends SimpleWebConsolePlugin implements OsgiManager
             String info = request.getPathInfo();
             pid = WebConsoleUtil.urlDecode( info.substring( info.lastIndexOf( '/' ) + 1 ) );
         }
+        // ignore this request if the PID is invalid / not provided
+        if ( pid == null || pid.length() == 0 || !isAllowedPid(pid))
+        {
+            response.sendError(400);
+            return;
+        }
 
         // the filter to select part of the configurations
-        String pidFilter = request.getParameter( PID_FILTER );
-
-        final ConfigAdminSupport cas = getConfigurationAdminSupport();
-
-        // ignore this request if the PID and/or configuration admin is missing
-        if ( pid == null || pid.length() == 0 || cas == null )
-        {
-            // should log this here !!
-            return;
-        }
-
-        // ignore this request, if the PID is invalid
-        if ( ! isAllowedPid(pid) )
-        {
-            response.sendError(500);
-            return;
-        }
+        final String pidFilter = request.getParameter( PID_FILTER );
         if ( pidFilter != null && ! isAllowedPid(pidFilter) )
         {
-            response.sendError(500);
+            response.sendError(400);
+            return;
+        }
+
+        if ( request.getParameter( ACTION_APPLY ) != null )
+        {
+            if ( request.getParameter( ConfigManager.ACTION_DELETE ) != null ) //$NON-NLS-1$
+            {
+                // only delete if the PID is not our place holder
+                if ( !ConfigManager.PLACEHOLDER_PID.equals( pid ) )
+                {
+                    this.log( "applyConfiguration: Deleting configuration " + pid );
+                    cas.getConfiguration( pid, null ).delete();
+                }            
+
+                Util.sendJsonOk(response);
+            } 
+            else 
+            {
+                final String propertyList = request.getParameter( ConfigManager.PROPERTY_LIST ); //$NON-NLS-1$
+                if ( propertyList == null )
+                {
+                    response.sendError(400);
+                    return;        
+                }
+
+                if (cas.applyConfiguration( request, pid, propertyList, ACTION_UPDATE.equals(request.getParameter(ACTION_APPLY)) ) )
+                {
+                    String redirect = pid;
+                    if (pidFilter != null) {
+                        redirect += '?' + PID_FILTER + '=' + pidFilter;
+                    }
+    
+                    WebConsoleUtil.sendRedirect(request, response, redirect);    
+                }
+                else
+                {
+                    Util.sendJsonOk(response);
+                }
+            }
+            
             return;
         }
 
         // the configuration to operate on (to be created or "missing")
-        Configuration config = null;
+        final Configuration config;
 
         // should actually apply the configuration before redirecting
         if ( request.getParameter( ACTION_CREATE ) != null )
         {
-            config = cas.getPlaceholderConfiguration( pid ); // ca.createFactoryConfiguration( pid, null );
+            config = cas.getPlaceholderConfiguration( pid );
             pid = config.getPid();
         }
-        else if ( request.getParameter( ACTION_APPLY ) != null )
-        {
-            String redirect = cas.applyConfiguration( request, pid, ACTION_UPDATE.equals(request.getParameter(ACTION_APPLY)) );
-            if ( redirect != null )
-            {
-                if (pidFilter != null) {
-                    redirect += '?' + PID_FILTER + '=' + pidFilter;
-                }
-
-                WebConsoleUtil.sendRedirect(request, response, redirect);
-            }
-            else
-            {
-                response.setContentType( "application/json" ); //$NON-NLS-1$
-                response.setCharacterEncoding( "UTF-8" ); //$NON-NLS-1$
-                response.getWriter().print( "{ \"status\": true }" ); //$NON-NLS-1$
-            }
-
-            return;
-        }
-
-        if ( config == null )
+        else
         {
             config = cas.getConfiguration( pid );
         }
@@ -193,9 +210,7 @@ public class ConfigManager extends SimpleWebConsolePlugin implements OsgiManager
                 config.setBundleLocation( UNBOUND_LOCATION );
 
             }
-            response.setContentType( "application/json" ); //$NON-NLS-1$
-            response.setCharacterEncoding( "UTF-8" ); //$NON-NLS-1$
-            response.getWriter().print( "{ \"status\": true }" ); //$NON-NLS-1$
+            Util.sendJsonOk(response);
             return;
         }
 
@@ -257,11 +272,11 @@ public class ConfigManager extends SimpleWebConsolePlugin implements OsgiManager
             // check both PID and PID filter
             if ( pid != null && !isAllowedPid(pid) )
             {
-                response.sendError(500);
+                response.sendError(400);
             }
             if ( pidFilter != null && !isAllowedPid(pidFilter) )
             {
-                response.sendError(500);
+                response.sendError(400);
             }
 
 
@@ -381,11 +396,11 @@ public class ConfigManager extends SimpleWebConsolePlugin implements OsgiManager
         // check both PID and PID filter
         if ( pid != null && !isAllowedPid(pid) )
         {
-            response.sendError(500);
+            response.sendError(400);
         }
         if ( pidFilter != null && !isAllowedPid(pidFilter) )
         {
-            response.sendError(500);
+            response.sendError(400);
         }
 
         final Locale loc = getLocale( request );
@@ -427,7 +442,7 @@ public class ConfigManager extends SimpleWebConsolePlugin implements OsgiManager
         // prepare variables
         final String referer = request.getParameter( REFERER );
         final boolean factoryCreate = "true".equals( request.getParameter(FACTORY_CREATE) ); //$NON-NLS-1$
-        DefaultVariableResolver vars = ( ( DefaultVariableResolver ) WebConsoleUtil.getVariableResolver( request ) );
+        final Map<String, Object> vars = ( ( Map<String, Object> ) WebConsoleUtil.getVariableResolver( request ) );
         vars.put( "__data__", json.toString() ); //$NON-NLS-1$
         vars.put( "selectedPid", pid != null ? pid : "" ); //$NON-NLS-1$ //$NON-NLS-2$
         vars.put( "configurationReferer", referer != null ? referer : "" ); //$NON-NLS-1$ //$NON-NLS-2$
@@ -451,7 +466,5 @@ public class ConfigManager extends SimpleWebConsolePlugin implements OsgiManager
         }
         return null;
     }
-
-
 }
 

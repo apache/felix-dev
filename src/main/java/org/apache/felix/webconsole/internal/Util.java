@@ -17,11 +17,14 @@
 package org.apache.felix.webconsole.internal;
 
 
+import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Comparator;
 import java.util.Enumeration;
 import java.util.Locale;
+
+import javax.servlet.http.HttpServletResponse;
 
 import org.osgi.framework.Bundle;
 import org.osgi.framework.Constants;
@@ -241,5 +244,12 @@ public class Util
             // b1 id must be > b2 id because equality is already checked
             return 1;
         }
+    }
+
+    public static void sendJsonOk(final HttpServletResponse response) throws IOException
+    {
+        response.setContentType( "application/json" ); //$NON-NLS-1$
+        response.setCharacterEncoding( "UTF-8" ); //$NON-NLS-1$
+        response.getWriter().print( "{ \"status\": true }" ); //$NON-NLS-1$
     }
 }
