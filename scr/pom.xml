@@ -328,6 +328,7 @@
                 <configuration>
                     <encoding>${project.build.sourceEncoding}</encoding>
                     <excludePackageNames>*.impl</excludePackageNames>
+                    <source>${java.version}</source>
                 </configuration>
             </plugin>
         </plugins>
