@@ -1,3 +1,9 @@
+Changes in 2.1.28
+-----------------
+** Bug
+    * [FELIX-6407] - SCR Log Extension still logs using the log level of the extended bundle
+    * [FELIX-6408] - SCR NPE in MultipleStaticReluctantCustomizer.modifiedService
+
 Changes in 2.1.26
 -----------------
 ** Bug
