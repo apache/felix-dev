@@ -17,9 +17,13 @@
 package org.apache.felix.useradmin.osgi;
 
 
+import org.apache.felix.useradmin.RoleRepositoryStore;
 import org.apache.felix.useradmin.impl.EventDispatcher;
 import org.apache.felix.useradmin.impl.RoleRepository;
+import org.osgi.framework.BundleContext;
+import org.osgi.framework.FrameworkUtil;
 import org.osgi.service.useradmin.UserAdmin;
+import org.osgi.util.tracker.ServiceTracker;
 
 /**
  * Provides a convenience class for all helpers that are used for this
@@ -30,18 +34,16 @@ final class ServiceContext {
     final EventAdminHelper m_eventAdmin;
     final UserAdminListenerListHelper m_listenerList;
     final EventDispatcher m_eventDispatcher;
-    final RoleRepository m_roleRepository;
-    final RoleRepositoryStoreHelper m_store;
+    final ServiceTracker m_roleRepositoryStoreHelper;
 
     /**
      * Creates a new ServiceContext instance.
      */
-    public ServiceContext(EventAdminHelper eventAdmin, UserAdminListenerListHelper listenerList, EventDispatcher eventDispatcher, RoleRepository roleRepository, RoleRepositoryStoreHelper store) {
+    public ServiceContext(EventAdminHelper eventAdmin, UserAdminListenerListHelper listenerList, EventDispatcher eventDispatcher, BundleContext bundleContext) {
         m_eventAdmin = eventAdmin;
         m_listenerList = listenerList;
         m_eventDispatcher = eventDispatcher;
-        m_roleRepository = roleRepository;
-        m_store = store;
+        m_roleRepositoryStoreHelper = new ServiceTracker(bundleContext, RoleRepositoryStore.class.getName(), new RoleRepositoryStoreHelper(m_eventDispatcher, bundleContext));
     }
 
     /**
@@ -51,16 +53,16 @@ final class ServiceContext {
         m_eventAdmin.open();
         m_listenerList.open(true /* trackAllServices */);
         m_eventDispatcher.start();
-        m_store.open();
+        m_roleRepositoryStoreHelper.open(true);
     }
     
     /**
      * Stops/closes all helpers.
      */
     public void stop() {
+    	m_roleRepositoryStoreHelper.close();
         m_eventDispatcher.stop();
         m_listenerList.close();
         m_eventAdmin.close();
-        m_store.close();
     }
 }
