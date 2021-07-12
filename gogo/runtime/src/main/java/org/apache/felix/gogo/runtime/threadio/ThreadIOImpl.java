@@ -19,120 +19,149 @@
 // DWB20: ThreadIO should check and reset IO if something (e.g. jetty) overrides
 package org.apache.felix.gogo.runtime.threadio;
 
+import java.io.Closeable;
+import java.io.IOException;
 import java.io.InputStream;
+import java.io.OutputStream;
 import java.io.PrintStream;
 import java.util.logging.Logger;
 
+import org.apache.felix.service.systemio.SystemIO;
 import org.apache.felix.service.threadio.ThreadIO;
 import org.osgi.annotation.bundle.Capability;
 import org.osgi.namespace.service.ServiceNamespace;
 
-@Capability(
-    namespace = ServiceNamespace.SERVICE_NAMESPACE,
-    attribute = "objectClass='org.apache.felix.service.threadio.ThreadIO'"
-)
-public class ThreadIOImpl implements ThreadIO
+@Capability(namespace = ServiceNamespace.SERVICE_NAMESPACE,
+         attribute = "objectClass='org.apache.felix.service.threadio.ThreadIO'")
+public class ThreadIOImpl extends InputStream implements ThreadIO
 {
-    static private final Logger log = Logger.getLogger(ThreadIOImpl.class.getName());
+   static final Logger log = Logger.getLogger(ThreadIOImpl.class.getName());
+   final SystemIO systemio;
+   final ThreadLocal<Streams> threadLocal = new ThreadLocal<>();
+   Closeable system;
 
-    final Marker defaultMarker = new Marker(System.in, System.out, System.err, null);
-    final ThreadPrintStream err = new ThreadPrintStream(this, System.err, true);
-    final ThreadPrintStream out = new ThreadPrintStream(this, System.out, false);
-    final ThreadInputStream in = new ThreadInputStream(this, System.in);
-    final ThreadLocal<Marker> current = new InheritableThreadLocal<Marker>()
-    {
-        @Override
-        protected Marker initialValue()
-        {
-            return defaultMarker;
-        }
-    };
+   class Streams
+   {
+      final PrintStream out;
+      final PrintStream err;
+      final InputStream in;
+      Streams prev;
 
-    public void start()
-    {
-        if (System.out instanceof ThreadPrintStream)
-        {
-            throw new IllegalStateException("Thread Print Stream already set");
-        }
-        System.setOut(out);
-        System.setIn(in);
-        System.setErr(err);
-    }
+      Streams(InputStream in, PrintStream out, PrintStream err)
+      {
+         this.in = in;
+         this.out = out;
+         this.err = err;
+      }
 
-    public void stop()
-    {
-        System.setErr(defaultMarker.err);
-        System.setOut(defaultMarker.out);
-        System.setIn(defaultMarker.in);
-    }
+   }
 
-    private void checkIO()
-    { // derek
-        if (System.in != in)
-        {
-            log.fine("ThreadIO: eek! who's set System.in=" + System.in);
-            System.setIn(in);
-        }
+   abstract class ThreadOutStream extends OutputStream
+   {
+      @Override
+      public void write(int b) throws IOException
+      {
+         Streams streams = threadLocal.get();
+         if (streams == null)
+            return;
 
-        if (System.out != out)
-        {
-            log.fine("ThreadIO: eek! who's set System.out=" + System.out);
-            System.setOut(out);
-        }
+         get(streams).write(b);
+      }
 
-        if (System.err != err)
-        {
-            log.fine("ThreadIO: eek! who's set System.err=" + System.err);
-            System.setErr(err);
-        }
-    }
+      @Override
+      public void write(byte[] b) throws IOException
+      {
+         write(b, 0, b.length);
+      }
 
-    Marker current()
-    {
-        Marker m = current.get();
-        if (m.deactivated)
-        {
-            while (m.deactivated)
+      @Override
+      public void write(byte[] b, int off, int len) throws IOException
+      {
+         Streams streams = threadLocal.get();
+         if (streams == null)
+            return;
+
+         get(streams).write(b, off, len);
+      }
+
+      abstract OutputStream get(Streams s);
+   }
+
+
+   public ThreadIOImpl(SystemIO systemio)
+   {
+      this.systemio = systemio;
+   }
+
+   public void start()
+   {}
+
+   public void stop()
+   {
+      if (system != null)
+         try
+         {
+            system.close();
+         }
+         catch (IOException e)
+         {
+            // ignore
+         }
+   }
+
+   public void close()
+   {
+      Streams streams = threadLocal.get();
+      if (streams != null)
+         threadLocal.set(streams.prev);
+   }
+
+   public void setStreams(InputStream in, PrintStream out, PrintStream err)
+   {
+      init();
+      Streams s = new Streams(in, out, err);
+      s.prev = threadLocal.get();
+      threadLocal.set(s);
+   }
+
+   private synchronized void init()
+   {
+      if (system == null)
+      {
+         system = systemio.system(this, new ThreadOutStream()
+         {
+
+            @Override
+            OutputStream get(Streams s)
             {
-                m = m.previous;
+               return s.out;
             }
-            current.set(m);
-        }
-        return m;
-    }
 
-    public void close()
-    {
-        checkIO(); // derek
-        Marker top = this.current.get();
-        if (top == null)
-        {
-            throw new IllegalStateException("No thread io active");
-        }
-        if (top != defaultMarker)
-        {
-            top.deactivate();
-            this.current.set(top.previous);
-        }
-    }
+         }, new ThreadOutStream()
+         {
 
-    public void setStreams(InputStream in, PrintStream out, PrintStream err)
-    {
-        assert in != null;
-        assert out != null;
-        assert err != null;
-        checkIO(); // derek
-        Marker prev = current();
-        if (in == this.in) {
-            in = prev.getIn();
-        }
-        if (out == this.out) {
-            out = prev.getOut();
-        }
-        if (err == this.err) {
-            err = prev.getErr();
-        }
-        Marker marker = new Marker(in, out, err, prev);
-        this.current.set(marker);
-    }
+            @Override
+            OutputStream get(Streams s)
+            {
+               return s.err;
+            }
+         });
+      }
+   }
+
+   @Override
+   public int read() throws IOException
+   {
+      Streams s = threadLocal.get();
+      while (s != null)
+      {
+         if (s.in == null)
+            s = s.prev;
+         else
+         {
+            return s.in.read();
+         }
+      }
+      return SystemIO.NO_DATA;
+   }
 }
