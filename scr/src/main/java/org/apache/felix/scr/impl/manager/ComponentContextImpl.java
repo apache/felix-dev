@@ -19,7 +19,7 @@
 package org.apache.felix.scr.impl.manager;
 
 
-import java.util.Comparator;
+import java.util.Collections;
 import java.util.Dictionary;
 import java.util.HashMap;
 import java.util.Map;
@@ -328,15 +328,6 @@ public class ComponentContextImpl<S> implements ScrComponentContext {
 
     private Map<RefPair<?, ?>, Object> createNewFieldHandlerMap()
     {
-        return new TreeMap<>(
-            new Comparator<RefPair<?, ?>>()
-            {
-
-                @Override
-                public int compare(final RefPair<?, ?> o1, final RefPair<?, ?> o2)
-                {
-                    return o1.getRef().compareTo(o2.getRef());
-                }
-            });
+        return Collections.synchronizedMap(new TreeMap<>((o1, o2) -> o1.getRef().compareTo(o2.getRef())));
     }
 }
