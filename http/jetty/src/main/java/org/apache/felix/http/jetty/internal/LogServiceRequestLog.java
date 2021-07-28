@@ -43,6 +43,18 @@ class LogServiceRequestLog extends AbstractNCSARequestLog {
     LogServiceRequestLog(JettyConfig config) {
         super(new RequestLogWriter());
         this.serviceName = config.getRequestLogOSGiServiceName();
+
+        setExtended(config.isRequestLogFileExtended());
+        setIgnorePaths(config.getRequestLogFileIgnorePaths());
+        setLogCookies(config.isRequestLogFileLogCookies());
+        setLogServer(config.isRequestLogFileLogServer());
+        setLogLatency(config.isRequestLogFileLogLatency());
+        if (config.getRequestLogDateFormat() != null) {
+            setLogDateFormat(config.getRequestLogDateFormat());
+        }
+        if (config.getRequestLogTimeZone() != null) {
+            setLogTimeZone(config.getRequestLogTimeZone());
+        }
     }
 
     public synchronized void register(BundleContext context) throws IllegalStateException {
