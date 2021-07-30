@@ -69,7 +69,7 @@ public class InterpolationConfigurationPluginTest {
         BundleContext bc = Mockito.mock(BundleContext.class);
         Mockito.when(bc.getProperty("foo.bar")).thenReturn("hello there");
 
-        InterpolationConfigurationPlugin plugin = new InterpolationConfigurationPlugin(bc, null, null);
+        InterpolationConfigurationPlugin plugin = new InterpolationConfigurationPlugin(bc::getProperty, null, null);
 
         String envUser = System.getenv("USER");
         String userVar;
@@ -171,7 +171,7 @@ public class InterpolationConfigurationPluginTest {
     public void testReplacementInStringArray() throws IOException {
         BundleContext bc = Mockito.mock(BundleContext.class);
         Mockito.when(bc.getProperty("foo.bar")).thenReturn("hello there");
-        InterpolationConfigurationPlugin plugin = new InterpolationConfigurationPlugin(bc, null, null);
+        InterpolationConfigurationPlugin plugin = new InterpolationConfigurationPlugin(bc::getProperty, null, null);
 
         Dictionary<String, Object> dict = new Hashtable<>();
         dict.put("array", new String[] { "1", "$[prop:foo.bar]", "3" });
@@ -191,7 +191,7 @@ public class InterpolationConfigurationPluginTest {
         Mockito.when(bc.getProperty("foo.bar")).thenReturn("hello there");
         String rf = getClass().getResource("/other/testfile.txt").getFile();
         File file = new File(rf);
-        InterpolationConfigurationPlugin plugin = new InterpolationConfigurationPlugin(bc,
+        InterpolationConfigurationPlugin plugin = new InterpolationConfigurationPlugin(bc::getProperty,
                 file.getParent() + "," + file.getParentFile().getParent(), null);
 
         assertEquals("xxhello thereyyhello therezz",
@@ -206,7 +206,7 @@ public class InterpolationConfigurationPluginTest {
         BundleContext bc = Mockito.mock(BundleContext.class);
         String rf = getClass().getResource("/other/testfile.txt").getFile();
         File file = new File(rf);
-        InterpolationConfigurationPlugin plugin = new InterpolationConfigurationPlugin(bc,
+        InterpolationConfigurationPlugin plugin = new InterpolationConfigurationPlugin(bc::getProperty,
                 file.getParent() + "," + file.getParentFile().getParent(), null);
 
         assertEquals("xxhello thereyyhello therezz",
@@ -221,7 +221,7 @@ public class InterpolationConfigurationPluginTest {
         BundleContext bc = Mockito.mock(BundleContext.class);
         Mockito.when(bc.getProperty("foo.bar")).thenReturn("hello there");
         Mockito.when(bc.getProperty("key")).thenReturn("foo.bar");
-        InterpolationConfigurationPlugin plugin = new InterpolationConfigurationPlugin(bc, null, null);
+        InterpolationConfigurationPlugin plugin = new InterpolationConfigurationPlugin(bc::getProperty, null, null);
 
         assertEquals("hello there", plugin.replace("akey", "$[prop:$[prop:key]]", "apid"));
     }
@@ -240,7 +240,7 @@ public class InterpolationConfigurationPluginTest {
     public void testArrayTypeConversion() throws Exception {
         BundleContext bc = Mockito.mock(BundleContext.class);
         Mockito.when(bc.getProperty("foo")).thenReturn("2000,3000");
-        InterpolationConfigurationPlugin plugin = new InterpolationConfigurationPlugin(bc, null, null);
+        InterpolationConfigurationPlugin plugin = new InterpolationConfigurationPlugin(bc::getProperty, null, null);
 
         assertArrayEquals(new Integer[] { 2000, 3000 },
                 (Integer[]) plugin.replace("key", "$[prop:foo;type=Integer[];delimiter=,]", "somepid"));
