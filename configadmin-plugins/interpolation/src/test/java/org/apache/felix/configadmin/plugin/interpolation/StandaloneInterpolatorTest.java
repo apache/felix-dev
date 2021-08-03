@@ -27,7 +27,6 @@ import java.util.HashMap;
 import java.util.Hashtable;
 import java.util.Map;
 
-import org.apache.felix.configadmin.plugin.interpolation.StandaloneInterpolator;
 import org.junit.Test;
 import org.osgi.framework.Constants;
 
