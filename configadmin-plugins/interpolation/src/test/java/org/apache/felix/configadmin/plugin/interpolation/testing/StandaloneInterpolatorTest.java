@@ -14,7 +14,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package org.apache.felix.configadmin.plugin.interpolation;
+package org.apache.felix.configadmin.plugin.interpolation.testing;
 
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotEquals;
@@ -27,6 +27,7 @@ import java.util.HashMap;
 import java.util.Hashtable;
 import java.util.Map;
 
+import org.apache.felix.configadmin.plugin.interpolation.StandaloneInterpolator;
 import org.junit.Test;
 import org.osgi.framework.Constants;
 
