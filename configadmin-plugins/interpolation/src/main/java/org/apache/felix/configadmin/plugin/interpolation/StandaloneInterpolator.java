@@ -50,6 +50,9 @@ public class StandaloneInterpolator {
      * @param secretsLocations The directories where secrets files can be found.
      */
     public StandaloneInterpolator(Map<String,String> frameworkProperties, String encoding, File ... secretsLocations) {
+        if (secretsLocations == null)
+            secretsLocations = new File[] {};
+
         String locations = Arrays.asList(secretsLocations).stream()
                 .map(File::toString)
                 .collect(Collectors.joining(","));
