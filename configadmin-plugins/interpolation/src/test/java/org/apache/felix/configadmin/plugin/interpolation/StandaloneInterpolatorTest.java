@@ -62,7 +62,7 @@ public class StandaloneInterpolatorTest {
             userVar = "USER";
         }
 
-        StandaloneInterpolator interpolator = new StandaloneInterpolator(Collections.emptyMap());
+        StandaloneInterpolator interpolator = new StandaloneInterpolator(Collections.emptyMap(), null);
 
         Dictionary<String, Object> dict = new Hashtable<>();
         dict.put("someuser", "$[env:" + userVar + "]");
