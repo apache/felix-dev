@@ -50,7 +50,7 @@ import org.slf4j.LoggerFactory;
 
 public class BaseTest {
     private Logger log = LoggerFactory.getLogger(this.getClass());
-    
+
     @Inject
     public BundleContext context;
 
@@ -63,7 +63,7 @@ public class BaseTest {
             System.setProperty("org.ops4j.pax.url.mvn.localRepository", localRepo);
         }
         return CoreOptions.composite(
-        		
+
                 systemProperty("pax.exam.invoker").value("junit"),
                 systemProperty("pax.exam.osgi.unresolved.fail").value("true"),
                 systemProperty("logback.configurationFile")
@@ -71,45 +71,47 @@ public class BaseTest {
                 mavenBundle().groupId("org.slf4j").artifactId("slf4j-api").version("1.7.6"),
                 mavenBundle().groupId("ch.qos.logback").artifactId("logback-core").version("1.0.13"),
                 mavenBundle().groupId("ch.qos.logback").artifactId("logback-classic").version("1.0.13"),
-                
+
                 bundle("link:classpath:META-INF/links/org.ops4j.pax.tipi.junit.link"),
                 bundle("link:classpath:META-INF/links/org.ops4j.pax.exam.invoker.junit.link"),
                 mavenBundle().groupId("org.apache.servicemix.bundles").artifactId("org.apache.servicemix.bundles.hamcrest").version("1.3_1"),
                 mavenBundle().groupId("org.awaitility").artifactId("awaitility").version("3.1.0"),
 
-                mavenBundle().groupId("org.apache.felix").artifactId("org.apache.felix.scr").version("2.0.14"),
-                mavenBundle().groupId("org.apache.felix").artifactId("org.apache.felix.configadmin").version("1.8.16"),
-                mavenBundle().groupId("org.apache.felix").artifactId("org.apache.felix.rootcause").version("0.1.0-SNAPSHOT"),
+                mavenBundle().groupId("org.osgi").artifactId("org.osgi.util.function").version("1.1.0"),
+                mavenBundle().groupId("org.osgi").artifactId("org.osgi.util.promise").version("1.1.1"),
+                mavenBundle().groupId("org.apache.felix").artifactId("org.apache.felix.scr").version("2.1.26"),
+                mavenBundle().groupId("org.apache.felix").artifactId("org.apache.felix.configadmin").version("1.9.22"),
+                mavenBundle().groupId("org.apache.felix").artifactId("org.apache.felix.rootcause").version("0.1.0"),
                 bundle("reference:file:target/classes/")
 
         );
     }
-    
+
     protected static OptionalCompositeOption localRepo() {
         String localRepo = System.getProperty("maven.repo.local", "");
         return when(localRepo.length() > 0)
         	.useOptions(systemProperty("org.ops4j.pax.url.mvn.localRepository").value(localRepo));
     }
-    
+
     public Option servicesCheckConfig(StateType type, String... services) {
         return ConfigurationAdminOptions.factoryConfiguration(ServicesCheck.PID)
                 .put("services.list", services)
                 .put("type", type.name())
                 .asOption();
     }
-    
+
     public Option componentsCheckConfig(String... components) {
         return newConfiguration(ComponentsCheck.PID)
                 .put("components.list", components)
                 .asOption();
     }
-    
+
     public Option monitorConfig() {
         return newConfiguration(SystemReadyMonitor.PID)
                 .put("poll.interval", 100)
                 .asOption();
     }
-    
+
     public Option httpService() {
         return CoreOptions.composite(
                 mavenBundle("org.apache.felix", "org.apache.felix.http.servlet-api", "1.1.2"),
@@ -122,7 +124,7 @@ public class BaseTest {
                 .put("osgi.http.whiteboard.servlet.pattern", path)
                 .asOption();
     }
-    
+
     public Option aliveServletConfig(String path) {
         return newConfiguration(SystemAliveServlet.PID)
                 .put("osgi.http.whiteboard.servlet.pattern", path)

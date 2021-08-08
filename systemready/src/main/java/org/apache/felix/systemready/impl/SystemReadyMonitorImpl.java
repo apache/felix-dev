@@ -43,7 +43,6 @@ import org.osgi.service.component.annotations.Component;
 import org.osgi.service.component.annotations.Deactivate;
 import org.osgi.service.component.annotations.Reference;
 import org.osgi.service.component.annotations.ReferencePolicy;
-import org.osgi.service.component.annotations.ReferencePolicyOption;
 import org.osgi.service.metatype.annotations.AttributeDefinition;
 import org.osgi.service.metatype.annotations.Designate;
 import org.osgi.service.metatype.annotations.ObjectClassDefinition;
@@ -70,16 +69,16 @@ public class SystemReadyMonitorImpl implements SystemReadyMonitor {
 
     private final Logger log = LoggerFactory.getLogger(getClass());
 
-    @Reference(policyOption = ReferencePolicyOption.GREEDY, policy = ReferencePolicy.DYNAMIC)
+    @Reference(policy = ReferencePolicy.DYNAMIC)
     private volatile List<SystemReadyCheck> checks;
 
     private BundleContext context;
 
-    private ServiceRegistration<SystemReady> sreg;
+    private final AtomicReference<ServiceRegistration<SystemReady>> sreg = new AtomicReference<>();
 
-    private ScheduledExecutorService executor;
-    
-    private AtomicReference<Collection<CheckStatus>> curStates;
+    private final AtomicReference<ScheduledExecutorService> executor = new AtomicReference<>();
+
+    private final AtomicReference<Collection<CheckStatus>> curStates;
 
     public SystemReadyMonitorImpl() {
     	CheckStatus checkStatus = new CheckStatus("dummy", StateType.READY, State.YELLOW, "");
@@ -89,14 +88,20 @@ public class SystemReadyMonitorImpl implements SystemReadyMonitor {
     @Activate
     public void activate(BundleContext context, final Config config) {
         this.context = context;
-        this.executor = Executors.newSingleThreadScheduledExecutor();
-        this.executor.scheduleAtFixedRate(this::check, 0, config.poll_interval(), TimeUnit.MILLISECONDS);
+        this.executor.set(Executors.newSingleThreadScheduledExecutor());
+        this.executor.get().scheduleAtFixedRate(this::check, 0, config.poll_interval(), TimeUnit.MILLISECONDS);
         log.info("Activated. Running checks every {} ms.", config.poll_interval());
     }
 
     @Deactivate
     public void deactivate() {
-        executor.shutdown();
+        final ScheduledExecutorService s = this.executor.getAndSet(null);
+        s.shutdownNow();
+        final ServiceRegistration<SystemReady> reg = this.sreg.getAndSet(null);
+        if ( reg != null ) {
+            reg.unregister();
+        }
+        log.info("Deactivated.");
     }
 
     @Override
@@ -130,25 +135,35 @@ public class SystemReadyMonitorImpl implements SystemReadyMonitor {
 
     private List<CheckStatus> evaluateAllChecks(List<SystemReadyCheck> currentChecks) {
         return currentChecks.stream()
-                .map(SystemReadyMonitorImpl::getStatus)
+                .map(s -> getStatus(s))
                 .sorted(Comparator.comparing(CheckStatus::getCheckName))
                 .collect(Collectors.toList());
     }
-    
+
     private void manageMarkerService(CheckStatus.State currState) {
-        if (currState == CheckStatus.State.GREEN) {
-            SystemReady readyService = new SystemReady() {
-            };
-            sreg = context.registerService(SystemReady.class, readyService, null);
-        } else if (sreg != null) {
-            sreg.unregister();
+        if ( this.executor.get() != null ) {
+            if (currState == CheckStatus.State.GREEN) {
+                SystemReady readyService = new SystemReady() {
+                };
+                sreg.compareAndSet(null, context.registerService(SystemReady.class, readyService, null));
+            } else {
+                final ServiceRegistration<SystemReady> reg = this.sreg.getAndSet(null);
+                if ( reg != null ) {
+                    reg.unregister();
+                }
+            }
         }
     }
 
-    private static final CheckStatus getStatus(SystemReadyCheck c) {
+    private final CheckStatus getStatus(final SystemReadyCheck c) {
         try {
-            return c.getStatus();
-        } catch (Throwable e) {
+            final CheckStatus status = c.getStatus();
+            if ( status.getState() != State.GREEN ) {
+                log.info("Executing systemready checked {} returned {}", c.getName(), status);
+            }
+            return status;
+        } catch (final Throwable e) {
+            log.error("Exception while executing systemready check {} : {}", c.getClass().getName(), e.getMessage(), e);
             return new CheckStatus(c.getName(), StateType.READY, CheckStatus.State.RED, e.getMessage());
         }
     }
