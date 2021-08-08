@@ -20,7 +20,11 @@ package org.apache.felix.systemready;
 
 /**
  * Marker service that is registered when all system checks succeed.
+ *
+ * This framework is deprecated.
+ * @deprecated Use the Apache Felix Healthchecks instead.
  */
+@Deprecated
 public interface SystemReady {
 
 }

@@ -26,7 +26,10 @@ package org.apache.felix.systemready;
  *
  * {@see SystemReadyMonitor}
  *
+ * This framework is deprecated.
+ * @deprecated Use the Apache Felix Healthchecks instead.
  */
+@Deprecated
 public interface SystemReadyCheck {
 
     /**
