@@ -18,6 +18,15 @@
  */
 package org.apache.felix.framework;
 
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.HashMap;
+import java.util.HashSet;
+import java.util.LinkedHashSet;
+import java.util.List;
+import java.util.Map;
+import java.util.Set;
+
 import org.osgi.dto.DTO;
 import org.osgi.framework.Bundle;
 import org.osgi.framework.BundleContext;
@@ -52,15 +61,6 @@ import org.osgi.resource.dto.CapabilityRefDTO;
 import org.osgi.resource.dto.RequirementDTO;
 import org.osgi.resource.dto.RequirementRefDTO;
 import org.osgi.resource.dto.WireDTO;
-
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.HashMap;
-import java.util.HashSet;
-import java.util.LinkedHashSet;
-import java.util.List;
-import java.util.Map;
-import java.util.Set;
 
 /**
  * Creates various DTOs provided by the core framework.
@@ -335,18 +335,27 @@ public class DTOFactory
         if (svcs == null)
             return new ServiceReferenceDTO[0];
 
-        ServiceReferenceDTO[] dtos = new ServiceReferenceDTO[svcs.length];
+        List<ServiceReferenceDTO> dtos = new ArrayList<>();
         for (int i=0; i < svcs.length; i++)
         {
-            dtos[i] = createServiceReferenceDTO(svcs[i]);
+            ServiceReferenceDTO dto = createServiceReferenceDTO(svcs[i]);
+            if ( dto != null )
+            {
+                dtos.add(dto);
+            }
         }
-        return dtos;
+        return dtos.toArray(new ServiceReferenceDTO[dtos.size()]);
     }
 
     private static ServiceReferenceDTO createServiceReferenceDTO(ServiceReference<?> svc)
     {
+        final Bundle bundle = svc.getBundle();
+        if ( bundle == null )
+        {
+            return null;
+        }
         ServiceReferenceDTO dto = new ServiceReferenceDTO();
-        dto.bundle = svc.getBundle().getBundleId();
+        dto.bundle = bundle.getBundleId();
         dto.id = (Long) svc.getProperty(Constants.SERVICE_ID);
         Map<String, Object> props = new HashMap<String, Object>();
         for (String key : svc.getPropertyKeys())
