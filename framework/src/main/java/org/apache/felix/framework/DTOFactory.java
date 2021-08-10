@@ -335,27 +335,18 @@ public class DTOFactory
         if (svcs == null)
             return new ServiceReferenceDTO[0];
 
-        List<ServiceReferenceDTO> dtos = new ArrayList<>();
+        ServiceReferenceDTO[] dtos = new ServiceReferenceDTO[svcs.length];
         for (int i=0; i < svcs.length; i++)
         {
-            ServiceReferenceDTO dto = createServiceReferenceDTO(svcs[i]);
-            if ( dto != null )
-            {
-                dtos.add(dto);
-            }
+            dtos[i] = createServiceReferenceDTO(svcs[i]);
         }
-        return dtos.toArray(new ServiceReferenceDTO[dtos.size()]);
+        return dtos;
     }
 
     private static ServiceReferenceDTO createServiceReferenceDTO(ServiceReference<?> svc)
     {
-        final Bundle bundle = svc.getBundle();
-        if ( bundle == null )
-        {
-            return null;
-        }
         ServiceReferenceDTO dto = new ServiceReferenceDTO();
-        dto.bundle = bundle.getBundleId();
+        dto.bundle = (Long)svc.getProperty(Constants.SERVICE_BUNDLEID);
         dto.id = (Long) svc.getProperty(Constants.SERVICE_ID);
         Map<String, Object> props = new HashMap<String, Object>();
         for (String key : svc.getPropertyKeys())
