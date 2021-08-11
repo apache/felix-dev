@@ -18,6 +18,7 @@
  */
 package org.apache.felix.systemready.impl;
 
+import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
 import java.util.List;
@@ -78,11 +79,14 @@ public class ComponentsCheck implements SystemReadyCheck {
 
     private final AtomicReference<CheckStatus> cache = new AtomicReference<>();
 
+    private static final CheckStatus INVALID = new CheckStatus("invalid", StateType.READY, CheckStatus.State.RED, "invalid");
+
     @Activate
     public void activate(final BundleContext ctx, final Config config) throws InterruptedException {
         this.analyzer = new DSRootCause(scr);
         this.type = config.type();
         this.componentsList = Arrays.asList(config.components_list());
+        this.cache.set(INVALID);
     }
 
     @Override
@@ -104,29 +108,47 @@ public class ComponentsCheck implements SystemReadyCheck {
 
     @Override
     public CheckStatus getStatus() {
-        CheckStatus result = this.cache.get();
-        if ( result == null ) {
-            // get component description DTOs only once
-            final Collection<ComponentDescriptionDTO> descriptions = scr.getComponentDescriptionDTOs();
+        CheckStatus result = null;
+        while ( result == null )
+        {
+            this.cache.compareAndSet(INVALID, null);
+            result = this.cache.get();
+            if ( result == INVALID )
+            {
+                result = null; // repeat
+            }
+            else if ( result == null )
+            {
+                // get component description DTOs only once
+                final Collection<ComponentDescriptionDTO> descriptions = scr.getComponentDescriptionDTOs();
 
-            final List<DSComp> watchedComps = getComponents(descriptions);
-            if (watchedComps.size() < componentsList.size()) {
-                result = new CheckStatus(getName(), type, CheckStatus.State.RED, "Not all named components could be found");
-            } else {
-                try {
-                    final StringBuilder details = new StringBuilder();
-                    watchedComps.stream().forEach(dsComp -> addDetails(dsComp, details));
-                    final CheckStatus.State state = CheckStatus.State.worstOf(watchedComps.stream().map(this::status));
-                    result = new CheckStatus(getName(), type, state, details.toString());
-                } catch (Throwable e) {
-                    log.error("Exception while checking ds component dtos {}", e.getMessage(), e);
-                    throw e;
+                final List<DSComp> watchedComps = getComponents(descriptions);
+                if (watchedComps.size() < componentsList.size()) {
+                    final List<String> missed = new ArrayList<>(this.componentsList);
+                    for(final DSComp c : watchedComps)
+                    {
+                        missed.remove(c.desc.name);
+                    }
+                    result = new CheckStatus(getName(), type, CheckStatus.State.RED, "Not all named components could be found, missing : " + missed);
+                } else {
+                    try {
+                        final StringBuilder details = new StringBuilder();
+                        watchedComps.stream().forEach(dsComp -> addDetails(dsComp, details));
+                        final CheckStatus.State state = CheckStatus.State.worstOf(watchedComps.stream().map(this::status));
+                        result = new CheckStatus(getName(), type, state, details.toString());
+                    } catch (Throwable e) {
+                        log.error("Exception while checking ds component dtos {}", e.getMessage(), e);
+                        throw e;
+                    }
+                }
+                if ( !this.cache.compareAndSet(null, result) )
+                {
+                    result = null;
                 }
             }
-            this.cache.set(result);
         }
         return result;
-    }
+     }
 
     private CheckStatus.State status(DSComp component) {
         boolean missingConfig = component.config == null && "require".equals(component.desc.configurationPolicy);
@@ -149,7 +171,7 @@ public class ComponentsCheck implements SystemReadyCheck {
     }
 
     private void updatedServiceComponentRuntime(final ServiceComponentRuntime c) {
-        // change in DS - clear cache
-        this.cache.set(null);
+        // change in DS - update cache
+        this.cache.set(INVALID);
     }
 }
