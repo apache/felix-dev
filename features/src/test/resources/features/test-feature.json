@@ -1,0 +1,28 @@
+{
+    "id" : "org.apache.sling:test-feature:1.1",
+    "description": "The feature description",
+
+    "bundles" :[
+            {
+              "id" : "org.osgi:osgi.promise:7.0.1",
+              "hash" : "4632463464363646436",
+              "start-order" : 1
+            },
+            {
+              "id" : "org.slf4j:slf4j-api:1.7.29"
+            },
+            {
+              "id" : "org.slf4j:slf4j-simple:1.7.29"
+            }
+    ],
+    "configurations" : {
+        "my.pid" : {
+           "foo" : 5,
+           "bar" : "test",
+           "number:Integer" : 7
+        },
+        "my.factory.pid~name" : {
+           "a.value" : ["yeah", "yeah", "yeah"]
+        }
+    }
+}
