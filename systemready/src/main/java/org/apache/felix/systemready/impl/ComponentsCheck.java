@@ -32,9 +32,13 @@ import org.apache.felix.systemready.CheckStatus;
 import org.apache.felix.systemready.StateType;
 import org.apache.felix.systemready.SystemReadyCheck;
 import org.osgi.framework.BundleContext;
+import org.osgi.framework.InvalidSyntaxException;
+import org.osgi.framework.ServiceEvent;
+import org.osgi.framework.ServiceListener;
 import org.osgi.service.component.annotations.Activate;
 import org.osgi.service.component.annotations.Component;
 import org.osgi.service.component.annotations.ConfigurationPolicy;
+import org.osgi.service.component.annotations.Deactivate;
 import org.osgi.service.component.annotations.Reference;
 import org.osgi.service.component.runtime.ServiceComponentRuntime;
 import org.osgi.service.component.runtime.dto.ComponentDescriptionDTO;
@@ -45,11 +49,12 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 @Component(
+        service = {SystemReadyCheck.class},
         name = ComponentsCheck.PID,
         configurationPolicy = ConfigurationPolicy.REQUIRE
 )
 @Designate(ocd=ComponentsCheck.Config.class)
-public class ComponentsCheck implements SystemReadyCheck {
+public class ComponentsCheck implements SystemReadyCheck, ServiceListener {
 
     public static final String PID = "org.apache.felix.systemready.impl.ComponentsCheck";
 
@@ -75,17 +80,30 @@ public class ComponentsCheck implements SystemReadyCheck {
 
     private StateType type;
 
-    volatile ServiceComponentRuntime scr;
+    @Reference
+    private ServiceComponentRuntime scr;
 
     private final AtomicReference<CheckStatus> cache = new AtomicReference<>();
 
     private static final CheckStatus INVALID = new CheckStatus("invalid", StateType.READY, CheckStatus.State.RED, "invalid");
 
     @Activate
-    public void activate(final BundleContext ctx, final Config config) throws InterruptedException {
+    public void activate(final BundleContext ctx, final Config config) throws InterruptedException, InvalidSyntaxException {
         this.analyzer = new DSRootCause(scr);
         this.type = config.type();
         this.componentsList = Arrays.asList(config.components_list());
+        this.cache.set(INVALID);
+//        ctx.addServiceListener(this, "(objectClass=" + ServiceComponentRuntime.class.getName() + ")");
+    }
+
+    @Deactivate
+    public void deactivate(final BundleContext ctx) {
+//        ctx.removeServiceListener(this);
+    }
+
+    @Override
+    public void serviceChanged(ServiceEvent event) {
+//        log.info("CALLED");
         this.cache.set(INVALID);
     }
 
@@ -109,6 +127,7 @@ public class ComponentsCheck implements SystemReadyCheck {
     @Override
     public CheckStatus getStatus() {
         CheckStatus result = null;
+/*
         while ( result == null )
         {
             this.cache.compareAndSet(INVALID, null);
@@ -119,10 +138,7 @@ public class ComponentsCheck implements SystemReadyCheck {
             }
             else if ( result == null )
             {
-                // get component description DTOs only once
-                final Collection<ComponentDescriptionDTO> descriptions = scr.getComponentDescriptionDTOs();
-
-                final List<DSComp> watchedComps = getComponents(descriptions);
+*/                final List<DSComp> watchedComps = getComponents(scr.getComponentDescriptionDTOs());
                 if (watchedComps.size() < componentsList.size()) {
                     final List<String> missed = new ArrayList<>(this.componentsList);
                     for(final DSComp c : watchedComps)
@@ -141,13 +157,13 @@ public class ComponentsCheck implements SystemReadyCheck {
                         throw e;
                     }
                 }
-                if ( !this.cache.compareAndSet(null, result) )
+/*                if ( !this.cache.compareAndSet(null, result) )
                 {
                     result = null;
                 }
             }
         }
-        return result;
+*/        return result;
      }
 
     private CheckStatus.State status(DSComp component) {
@@ -159,19 +175,5 @@ public class ComponentsCheck implements SystemReadyCheck {
     private void addDetails(final DSComp component, final StringBuilder details) {
         RootCausePrinter printer = new RootCausePrinter(st -> details.append(st + "\n"));
         printer.print(component);
-    }
-
-    @Reference(updated = "updatedServiceComponentRuntime")
-    private void setServiceComponentRuntime(final ServiceComponentRuntime c) {
-        this.scr = c;
-    }
-
-    private void unsetServiceComponentRuntime(final ServiceComponentRuntime c) {
-        this.scr = null;
-    }
-
-    private void updatedServiceComponentRuntime(final ServiceComponentRuntime c) {
-        // change in DS - update cache
-        this.cache.set(INVALID);
     }
 }
