@@ -31,10 +31,11 @@ import org.apache.felix.rootcause.RootCausePrinter;
 import org.apache.felix.systemready.CheckStatus;
 import org.apache.felix.systemready.StateType;
 import org.apache.felix.systemready.SystemReadyCheck;
+import org.osgi.framework.AllServiceListener;
 import org.osgi.framework.BundleContext;
-import org.osgi.framework.InvalidSyntaxException;
 import org.osgi.framework.ServiceEvent;
-import org.osgi.framework.ServiceListener;
+import org.osgi.service.cm.ConfigurationEvent;
+import org.osgi.service.cm.ConfigurationListener;
 import org.osgi.service.component.annotations.Activate;
 import org.osgi.service.component.annotations.Component;
 import org.osgi.service.component.annotations.ConfigurationPolicy;
@@ -49,14 +50,16 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 @Component(
-        service = {SystemReadyCheck.class},
+        service = {SystemReadyCheck.class, ConfigurationListener.class},
         name = ComponentsCheck.PID,
         configurationPolicy = ConfigurationPolicy.REQUIRE
 )
 @Designate(ocd=ComponentsCheck.Config.class)
-public class ComponentsCheck implements SystemReadyCheck, ServiceListener {
+public class ComponentsCheck implements SystemReadyCheck, AllServiceListener, ConfigurationListener {
 
     public static final String PID = "org.apache.felix.systemready.impl.ComponentsCheck";
+
+    private static final CheckStatus INVALID = new CheckStatus("invalid", StateType.READY, CheckStatus.State.RED, "invalid");
 
     @ObjectClassDefinition(
             name="DS Components System Ready Check",
@@ -74,36 +77,38 @@ public class ComponentsCheck implements SystemReadyCheck, ServiceListener {
     }
     private final Logger log = LoggerFactory.getLogger(getClass());
 
-    private List<String> componentsList;
+    private final List<String> componentsList;
 
-    private DSRootCause analyzer;
+    private final DSRootCause analyzer;
 
-    private StateType type;
+    private final StateType type;
 
-    @Reference
-    private ServiceComponentRuntime scr;
+    private final ServiceComponentRuntime scr;
 
     private final AtomicReference<CheckStatus> cache = new AtomicReference<>();
 
-    private static final CheckStatus INVALID = new CheckStatus("invalid", StateType.READY, CheckStatus.State.RED, "invalid");
-
     @Activate
-    public void activate(final BundleContext ctx, final Config config) throws InterruptedException, InvalidSyntaxException {
+    public ComponentsCheck(final BundleContext ctx, final Config config, final @Reference ServiceComponentRuntime scr) throws InterruptedException {
         this.analyzer = new DSRootCause(scr);
         this.type = config.type();
         this.componentsList = Arrays.asList(config.components_list());
         this.cache.set(INVALID);
-//        ctx.addServiceListener(this, "(objectClass=" + ServiceComponentRuntime.class.getName() + ")");
+        this.scr = scr;
+        ctx.addServiceListener(this);
     }
 
     @Deactivate
     public void deactivate(final BundleContext ctx) {
-//        ctx.removeServiceListener(this);
+        ctx.removeServiceListener(this);
     }
 
     @Override
-    public void serviceChanged(ServiceEvent event) {
-//        log.info("CALLED");
+    public void serviceChanged(final ServiceEvent event) {
+        this.cache.set(INVALID);
+    }
+
+    @Override
+    public void configurationEvent(final ConfigurationEvent event) {
         this.cache.set(INVALID);
     }
 
@@ -127,22 +132,17 @@ public class ComponentsCheck implements SystemReadyCheck, ServiceListener {
     @Override
     public CheckStatus getStatus() {
         CheckStatus result = null;
-/*
-        while ( result == null )
-        {
+
+        while ( result == null ) {
             this.cache.compareAndSet(INVALID, null);
             result = this.cache.get();
-            if ( result == INVALID )
-            {
+            if ( result == INVALID ) {
                 result = null; // repeat
-            }
-            else if ( result == null )
-            {
-*/                final List<DSComp> watchedComps = getComponents(scr.getComponentDescriptionDTOs());
+            } else if ( result == null ) {
+                final List<DSComp> watchedComps = getComponents(scr.getComponentDescriptionDTOs());
                 if (watchedComps.size() < componentsList.size()) {
                     final List<String> missed = new ArrayList<>(this.componentsList);
-                    for(final DSComp c : watchedComps)
-                    {
+                    for(final DSComp c : watchedComps) {
                         missed.remove(c.desc.name);
                     }
                     result = new CheckStatus(getName(), type, CheckStatus.State.RED, "Not all named components could be found, missing : " + missed);
@@ -157,13 +157,12 @@ public class ComponentsCheck implements SystemReadyCheck, ServiceListener {
                         throw e;
                     }
                 }
-/*                if ( !this.cache.compareAndSet(null, result) )
-                {
+                if ( !this.cache.compareAndSet(null, result) ) {
                     result = null;
                 }
             }
         }
-*/        return result;
+        return result;
      }
 
     private CheckStatus.State status(DSComp component) {

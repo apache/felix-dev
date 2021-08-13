@@ -115,7 +115,7 @@ public class BaseTest {
     public Option httpService() {
         return CoreOptions.composite(
                 mavenBundle("org.apache.felix", "org.apache.felix.http.servlet-api", "1.1.2"),
-                mavenBundle("org.apache.felix", "org.apache.felix.http.jetty", "3.4.8")
+                mavenBundle("org.apache.felix", "org.apache.felix.http.jetty", "4.1.10")
                 );
     }
 

@@ -22,7 +22,9 @@ import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.Comparator;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.concurrent.Executors;
 import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.TimeUnit;
@@ -72,7 +74,7 @@ public class SystemReadyMonitorImpl implements SystemReadyMonitor {
     @Reference(policy = ReferencePolicy.DYNAMIC)
     private volatile List<SystemReadyCheck> checks;
 
-    private BundleContext context;
+    private final BundleContext context;
 
     private final AtomicReference<ServiceRegistration<SystemReady>> sreg = new AtomicReference<>();
 
@@ -80,17 +82,16 @@ public class SystemReadyMonitorImpl implements SystemReadyMonitor {
 
     private final AtomicReference<Collection<CheckStatus>> curStates;
 
-    public SystemReadyMonitorImpl() {
-    	CheckStatus checkStatus = new CheckStatus("dummy", StateType.READY, State.YELLOW, "");
-        this.curStates = new AtomicReference<>(Collections.singleton(checkStatus));
-    }
+    private final Map<String, String> errorMsgs = new HashMap<>();
 
     @Activate
-    public void activate(BundleContext context, final Config config) {
+    public SystemReadyMonitorImpl(BundleContext context, final Config config) {
+        CheckStatus checkStatus = new CheckStatus("dummy", StateType.READY, State.YELLOW, "");
+        this.curStates = new AtomicReference<>(Collections.singleton(checkStatus));
         this.context = context;
         this.executor.set(Executors.newSingleThreadScheduledExecutor());
         this.executor.get().scheduleAtFixedRate(this::check, 0, config.poll_interval(), TimeUnit.MILLISECONDS);
-        log.info("Activated. Running checks every {} ms.", config.poll_interval());
+        this.log.info("Activated. Running checks every {} ms.", config.poll_interval());
     }
 
     @Deactivate
@@ -101,15 +102,15 @@ public class SystemReadyMonitorImpl implements SystemReadyMonitor {
         if ( reg != null ) {
             reg.unregister();
         }
-        log.info("Deactivated.");
+        this.log.info("Deactivated.");
     }
 
     @Override
     /**
      * Returns a map of the statuses of all the checks
      */
-    public SystemStatus getStatus(StateType stateType) {
-    	Collection<CheckStatus> filtered = stateType == StateType.READY ? curStates.get() :
+    public SystemStatus getStatus(final StateType stateType) {
+    	final Collection<CheckStatus> filtered = stateType == StateType.READY ? curStates.get() :
     		curStates.get().stream()
     			.filter(status -> status.getType() == StateType.ALIVE).collect(Collectors.toList());
         return new SystemStatus(filtered);
@@ -117,11 +118,15 @@ public class SystemReadyMonitorImpl implements SystemReadyMonitor {
 
     private void check() {
         try {
-            CheckStatus.State prevState = getStatus(StateType.READY).getState();
-            List<SystemReadyCheck> currentChecks = new ArrayList<>(checks);
-            List<String> checkNames = currentChecks.stream().map(check -> check.getName()).collect(Collectors.toList());
-            log.debug("Running system checks {}", checkNames);
-            List<CheckStatus> statuses = evaluateAllChecks(currentChecks);
+            final CheckStatus.State prevState = getStatus(StateType.READY).getState();
+
+            final List<SystemReadyCheck> currentChecks = new ArrayList<>(checks);
+            final List<String> checkNames = currentChecks.stream().map(check -> check.getName()).collect(Collectors.toList());
+
+            this.log.debug("Running system checks {}", checkNames);
+
+            final List<CheckStatus> statuses = evaluateAllChecks(currentChecks);
+
             this.curStates.set(statuses);
             State currState = getStatus(StateType.READY).getState();
             if (currState != prevState) {
@@ -130,6 +135,7 @@ public class SystemReadyMonitorImpl implements SystemReadyMonitor {
             log.debug("Checks finished");
         } catch (Exception e) {
             log.warn("Exception when running checks", e);
+            this.errorMsgs.clear();
         }
     }
 
@@ -155,14 +161,28 @@ public class SystemReadyMonitorImpl implements SystemReadyMonitor {
         }
     }
 
+    /**
+     * Execute a single check
+     * @param c The check
+     * @return Return the status
+     */
     private final CheckStatus getStatus(final SystemReadyCheck c) {
         try {
             final CheckStatus status = c.getStatus();
             if ( status.getState() != State.GREEN ) {
-                log.info("Executing systemready checked {} returned {}", c.getName(), status);
+                final String msg = status.toString();
+                if ( !msg.equals(this.errorMsgs.get(c.getName())) ) {
+                    this.errorMsgs.put(c.getName(), msg);
+                    log.info("Executing systemready check {} returned {}", c.getName(), msg);
+                }
+            } else {
+                if ( this.errorMsgs.remove(c.getName()) != null ) {
+                    log.info("Executing systemready check {} back to GREEN", c.getName());
+                }
             }
             return status;
         } catch (final Throwable e) {
+            this.errorMsgs.remove(c.getName());
             log.error("Exception while executing systemready check {} : {}", c.getClass().getName(), e.getMessage(), e);
             return new CheckStatus(c.getName(), StateType.READY, CheckStatus.State.RED, e.getMessage());
         }
