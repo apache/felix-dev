@@ -15,7 +15,7 @@
     <parent>
         <groupId>org.apache.felix</groupId>
         <artifactId>felix-parent</artifactId>
-        <version>5</version>
+        <version>7</version>
         <relativePath />
     </parent>
 
@@ -40,7 +40,7 @@
             <plugin>
                 <groupId>biz.aQute.bnd</groupId>
                 <artifactId>bnd-maven-plugin</artifactId>
-                <version>4.0.0</version>
+                <version>5.3.0</version>
                 <executions>
                     <execution>
                         <goals>
@@ -75,20 +75,32 @@
     <dependencies>
         <dependency>
             <groupId>org.osgi</groupId>
-            <artifactId>osgi.cmpn</artifactId>
-            <version>6.0.0</version>
-            <scope>provided</scope>
-        </dependency>
-        <dependency>
-            <groupId>org.osgi</groupId>
-            <artifactId>org.osgi.core</artifactId>
-            <version>6.0.0</version>
-            <scope>provided</scope>
-        </dependency>
-        <dependency>
-            <groupId>org.osgi</groupId>
-            <artifactId>osgi.annotation</artifactId>
+            <artifactId>osgi.core</artifactId>
             <version>7.0.0</version>
+            <scope>provided</scope>
+        </dependency>
+        <dependency>
+            <groupId>org.osgi</groupId>
+            <artifactId>org.osgi.service.component</artifactId>
+            <version>1.4.0</version>
+            <scope>provided</scope>
+        </dependency>
+        <dependency>
+            <groupId>org.osgi</groupId>
+            <artifactId>org.osgi.annotation.versioning</artifactId>
+            <version>1.1.1</version>
+            <scope>provided</scope>
+        </dependency>
+         <dependency>
+            <groupId>org.osgi</groupId>
+            <artifactId>org.osgi.annotation.bundle</artifactId>
+            <version>1.0.0</version>
+            <scope>provided</scope>
+        </dependency>
+        <dependency>
+            <groupId>org.osgi</groupId>
+            <artifactId>org.osgi.service.component.annotations</artifactId>
+            <version>1.4.0</version>
             <scope>provided</scope>
         </dependency>
         <dependency>
@@ -150,7 +162,7 @@
         <dependency>
             <groupId>org.apache.felix</groupId>
             <artifactId>org.apache.felix.framework</artifactId>
-            <version>5.6.10</version>
+            <version>6.0.5</version>
             <scope>test</scope>
         </dependency>
 

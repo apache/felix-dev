@@ -25,8 +25,14 @@ import org.osgi.dto.DTO;
 import org.osgi.service.component.runtime.dto.ComponentConfigurationDTO;
 import org.osgi.service.component.runtime.dto.ComponentDescriptionDTO;
 
+/**
+ * DTO for a component
+ */
 public class DSComp extends DTO {
+    /** The component description */
     public ComponentDescriptionDTO desc;
+    /** The component configuration */
     public ComponentConfigurationDTO config;
+    /** List of unsatisfied references. */
     public List<DSRef> unsatisfied = new ArrayList<>();
 }

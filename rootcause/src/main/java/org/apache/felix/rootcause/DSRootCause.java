@@ -18,10 +18,13 @@
  */
 package org.apache.felix.rootcause;
 
+import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Optional;
+import java.util.Set;
 import java.util.stream.Collectors;
 
 import org.osgi.service.component.runtime.ServiceComponentRuntime;
@@ -30,67 +33,132 @@ import org.osgi.service.component.runtime.dto.ComponentDescriptionDTO;
 import org.osgi.service.component.runtime.dto.ReferenceDTO;
 import org.osgi.service.component.runtime.dto.UnsatisfiedReferenceDTO;
 
+/**
+ * Utility class to get the root cause for declarative services.
+ */
 public class DSRootCause {
 
     private static final int MAX_RECURSION = 10;
-    
-    private ServiceComponentRuntime scr;
-    
-    public DSRootCause(ServiceComponentRuntime scr) {
+
+    private final ServiceComponentRuntime scr;
+
+    /**
+     * Create new instance
+     * @param scr Service component runtime
+     */
+    public DSRootCause(final ServiceComponentRuntime scr) {
         this.scr = scr;
     }
-    
-    public Optional<DSComp> getRootCause(String iface) {
-        return scr.getComponentDescriptionDTOs().stream()
-            .filter(desc -> offersInterface(desc, iface))
-            .map(this::getRootCause)
-            .findFirst();
-    }
-    
-    public DSComp getRootCause(ComponentDescriptionDTO desc) {
-        return getRootCause(desc, 0);
+
+    /**
+     * Get the root cause based on an interface name
+     * @param iface The interface name
+     * @return Optional root cause
+     */
+    public Optional<DSComp> getRootCause(final String iface) {
+        return this.getRootCause(iface, null);
     }
 
-    private DSComp getRootCause(ComponentDescriptionDTO desc, int level) {
-        if (level > MAX_RECURSION) {
-            throw new IllegalStateException("Aborting after because of cyclic references");
+    /**
+     * Get the root cause based on an interface name
+     * @param iface The interface name
+     * @param allDTOs A collection with all dtos as a cache to lookup, optional
+     * @return Optional root cause
+     * @since 0.2.0
+     */
+    public Optional<DSComp> getRootCause(final String iface, final Collection<ComponentDescriptionDTO> allDTOs) {
+        final Collection<ComponentDescriptionDTO> cache = allDTOs == null ? scr.getComponentDescriptionDTOs() : allDTOs;
+        return cache.stream()
+            .filter(desc -> offersInterface(desc, iface))
+            .map(d -> getRootCause(d, cache))
+            .findFirst();
+    }
+
+    /**
+     * Get the root cause for a component description
+     * @param desc The description
+     * @return The root cause
+     */
+    public DSComp getRootCause(final ComponentDescriptionDTO desc) {
+        return getRootCause(desc, null);
+    }
+
+    /**
+     * Get the root cause for a component description
+     * @param desc The description
+     * @param allDTOs A collection with all dtos as a cache to lookup, optional
+     * @return The root cause
+     * @since 0.2.0
+     */
+    public DSComp getRootCause(final ComponentDescriptionDTO desc, final Collection<ComponentDescriptionDTO> allDTOs) {
+        final Set<String> visitedNames = new HashSet<>();
+        return getRootCause(desc, visitedNames, 0, allDTOs == null ? new ArrayList<>() : allDTOs);
+    }
+
+    private DSComp getRootCause(final ComponentDescriptionDTO desc,
+            final Set<String> visitedNames,
+            final int level,
+            final Collection<ComponentDescriptionDTO> cache) {
+        if (level > MAX_RECURSION || visitedNames.contains(desc.name)) {
+            return null;
         }
-        DSComp dsComp = new DSComp();
+        final boolean added = visitedNames.add(desc.name);
+        final DSComp dsComp = new DSComp();
         dsComp.desc = desc;
-        Collection<ComponentConfigurationDTO> instances = scr.getComponentConfigurationDTOs(desc);
+
+        final Collection<ComponentConfigurationDTO> instances = scr.getComponentConfigurationDTOs(desc);
         if (instances.isEmpty()) {
             return dsComp;
         }
-        for (ComponentConfigurationDTO instance : instances) {
-            for (UnsatisfiedReferenceDTO ref : instance.unsatisfiedReferences) {
-                ReferenceDTO refdef = getReference(desc, ref.name);
-                DSRef unresolvedRef = createRef(ref, refdef);
-                unresolvedRef.candidates = getCandidates(ref, refdef, level + 1);
+        for (final ComponentConfigurationDTO instance : instances) {
+            for (final UnsatisfiedReferenceDTO ref : instance.unsatisfiedReferences) {
+                final ReferenceDTO refdef = getReference(desc, ref.name);
+
+                final DSRef unresolvedRef = createRef(ref, refdef);
+                unresolvedRef.candidates = getCandidates(ref, refdef, visitedNames, level + 1, cache);
                 dsComp.unsatisfied.add(unresolvedRef);
             }
+        }
+        if ( added ) {
+            visitedNames.remove(desc.name);
         }
         return dsComp;
     }
 
     private DSRef createRef(UnsatisfiedReferenceDTO unsatifiedRef, ReferenceDTO refdef) {
-        DSRef ref = new DSRef();
+        final DSRef ref = new DSRef();
         ref.name = unsatifiedRef.name;
         ref.filter = unsatifiedRef.target;
         ref.iface = refdef.interfaceName;
         return ref;
     }
 
-    private List<DSComp> getCandidates(UnsatisfiedReferenceDTO ref, ReferenceDTO refdef, int level) {
-        return scr.getComponentDescriptionDTOs().stream()
-                .filter(desc -> offersInterface(desc, refdef.interfaceName))
-                .map(desc -> getRootCause(desc, level)).collect(Collectors.toList());
+    private List<DSComp> getCandidates(final UnsatisfiedReferenceDTO ref,
+            final ReferenceDTO refdef,
+            final Set<String> visitedNames,
+            final int level,
+            final Collection<ComponentDescriptionDTO> cache) {
+        if ( cache.isEmpty() ) {
+            cache.addAll(scr.getComponentDescriptionDTOs());
+        }
+        final List<DSComp> result = new ArrayList<>();
+
+        final List<ComponentDescriptionDTO> candidates = cache.stream()
+                .filter(desc -> offersInterface(desc, refdef.interfaceName)).collect(Collectors.toList());
+        for(final ComponentDescriptionDTO c : candidates) {
+            final DSComp r = getRootCause(c, visitedNames, level, cache);
+            if ( r != null ) {
+                result.add(r);
+            }
+        }
+        return result;
     }
 
     private boolean offersInterface(ComponentDescriptionDTO desc, String interfaceName) {
         return Arrays.asList(desc.serviceInterfaces).contains(interfaceName);
     }
 
-    private ReferenceDTO getReference(ComponentDescriptionDTO desc, String name) {
+    private ReferenceDTO getReference(final ComponentDescriptionDTO desc, final String name) {
         return Arrays.asList(desc.references).stream().filter(ref -> ref.name.equals(name)).findFirst().get();
     }
 
