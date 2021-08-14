@@ -18,8 +18,9 @@
  */
 package org.apache.felix.hc.generalchecks.scrutil;
 
+import java.util.Collection;
+
 import org.apache.felix.hc.api.FormattingResultLog;
-import org.apache.felix.hc.api.Result.Status;
 import org.osgi.service.component.annotations.Activate;
 import org.osgi.service.component.annotations.Component;
 import org.osgi.service.component.annotations.Reference;
@@ -53,17 +54,17 @@ public class DsRootCauseAnalyzer {
         }
     }
 
-    public void logMissingService(FormattingResultLog log, String missingServiceName) {
+    public void logMissingService(FormattingResultLog log, String missingServiceName, Collection<ComponentDescriptionDTO> componentDescriptionDTOs) {
         if (dsRootCauseAdapter != null) {
-            dsRootCauseAdapter.logMissingService(log, missingServiceName);
+            dsRootCauseAdapter.logMissingService(log, missingServiceName, componentDescriptionDTOs);
         } else {
             log.info("Service '{}' is missing", missingServiceName);
         }
     }
 
-    public void logNotEnabledComponent(FormattingResultLog log, ComponentDescriptionDTO desc) {
+    public void logNotEnabledComponent(FormattingResultLog log, ComponentDescriptionDTO desc, Collection<ComponentDescriptionDTO> componentDescriptionDTOs) {
         if (dsRootCauseAdapter != null) {
-            dsRootCauseAdapter.logNotEnabledComponent(log, desc);
+            dsRootCauseAdapter.logNotEnabledComponent(log, desc, componentDescriptionDTOs);
         } else {
             log.info("Component '{}' is missing", desc.name);
         }

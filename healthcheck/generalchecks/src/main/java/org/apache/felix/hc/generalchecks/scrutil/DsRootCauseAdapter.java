@@ -18,6 +18,7 @@
  */
 package org.apache.felix.hc.generalchecks.scrutil;
 
+import java.util.Collection;
 import java.util.Optional;
 import java.util.function.Consumer;
 
@@ -39,8 +40,8 @@ public class DsRootCauseAdapter {
         this.analyzer = new DSRootCause(scr);
     }
 
-    public void logMissingService(FormattingResultLog log, String missingServiceName) {
-        Optional<DSComp> rootCauseOptional = analyzer.getRootCause(missingServiceName);
+    public void logMissingService(FormattingResultLog log, String missingServiceName, Collection<ComponentDescriptionDTO> componentDescriptionDTOs) {
+        Optional<DSComp> rootCauseOptional = analyzer.getRootCause(missingServiceName, componentDescriptionDTOs);
         if (rootCauseOptional.isPresent()) {
             logRootCause(log, rootCauseOptional.get());
         } else {
@@ -48,8 +49,8 @@ public class DsRootCauseAdapter {
         }
     }
 
-    public void logNotEnabledComponent(FormattingResultLog log, ComponentDescriptionDTO desc) {
-        DSComp component = analyzer.getRootCause(desc);
+    public void logNotEnabledComponent(FormattingResultLog log, ComponentDescriptionDTO desc, Collection<ComponentDescriptionDTO> componentDescriptionDTOs) {
+        DSComp component = analyzer.getRootCause(desc, componentDescriptionDTOs);
         logRootCause(log, component);
     }
 

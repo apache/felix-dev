@@ -51,10 +51,12 @@ import org.slf4j.LoggerFactory;
 @Designate(ocd = DsComponentsCheck.Config.class, factory = true)
 public class DsComponentsCheck implements HealthCheck {
 
-    private static final Logger LOG = LoggerFactory.getLogger(DsComponentsCheck.class);
+    private final Logger LOG = LoggerFactory.getLogger(DsComponentsCheck.class);
 
     public static final String HC_NAME = "DS Components Ready Check";
     public static final String HC_DEFAULT_TAG = "systemalive";
+
+    private static final Result INVALID = new Result(Result.Status.CRITICAL, "invalid");
 
     @ObjectClassDefinition(name = "Health Check: "
             + HC_NAME, description = "System ready check that checks a list of DS components and provides root cause analysis in case of errors")
@@ -87,8 +89,6 @@ public class DsComponentsCheck implements HealthCheck {
 
     private final AtomicReference<Result> cache = new AtomicReference<>();
 
-    private static final Result INVALID = new Result(Result.Status.CRITICAL, "invalid");
-
     @Activate
     public void activate(final BundleContext ctx, final Config config) throws InterruptedException {
         componentsList = Arrays.asList(config.components_list());
@@ -108,69 +108,78 @@ public class DsComponentsCheck implements HealthCheck {
             } else if ( result == null ) {
                 FormattingResultLog log = new FormattingResultLog();
 
-                Collection<ComponentDescriptionDTO> componentDescriptionDTOs = scr.getComponentDescriptionDTOs();
-                List<ComponentDescriptionDTO> watchedComps = new LinkedList<ComponentDescriptionDTO>();
-                List<String> missingComponents = new LinkedList<String>(componentsList);
-                for (ComponentDescriptionDTO desc : componentDescriptionDTOs) {
-                    if (componentsList.contains(desc.name)) {
-                        watchedComps.add(desc);
-                        missingComponents.remove(desc.name);
-                    }
+                Collection<ComponentDescriptionDTO> componentDescriptionDTOs = null;
+                try {
+                    componentDescriptionDTOs = scr.getComponentDescriptionDTOs();
+                } catch ( final Throwable e) {
+                    log.temporarilyUnavailable("Exception while getting ds component dtos {}", e.getMessage(), e);
                 }
-                for (String missingComp : missingComponents) {
-                    log.info("No component with name {} is registered in SCR runtime", missingComp);
-                }
-
-                int countEnabled = 0;
-                int countDisabled = 0;
-                for (ComponentDescriptionDTO dsComp : watchedComps) {
-
-                    boolean isActive;
-
-                    boolean componentEnabled = scr.isComponentEnabled(dsComp);
-                    if (componentEnabled) {
-
-                        Collection<ComponentConfigurationDTO> componentConfigurationDTOs = scr.getComponentConfigurationDTOs(dsComp);
-                        List<String> idStateTuples = new ArrayList<>();
-                        boolean foundActiveOrSatisfiedConfig = false;
-                        for (ComponentConfigurationDTO configDto : componentConfigurationDTOs) {
-                            idStateTuples.add("id " + configDto.id + ":" + toStateString(configDto.state));
-                            if (configDto.state == ComponentConfigurationDTO.ACTIVE || configDto.state == ComponentConfigurationDTO.SATISFIED) {
-                                foundActiveOrSatisfiedConfig = true;
-                            }
+                if ( componentDescriptionDTOs != null ) {
+                    final List<ComponentDescriptionDTO> watchedComps = new LinkedList<ComponentDescriptionDTO>();
+                    final List<String> missingComponents = new LinkedList<String>(componentsList);
+                    for (final ComponentDescriptionDTO desc : componentDescriptionDTOs) {
+                        if (componentsList.contains(desc.name)) {
+                            watchedComps.add(desc);
+                            missingComponents.remove(desc.name);
                         }
-                        log.debug(dsComp.name + " (" + String.join(",", idStateTuples) + ")");
+                    }
+                    for (final String missingComp : missingComponents) {
+                        log.info("No component with name {} is registered in SCR runtime", missingComp);
+                    }
 
-                        if (componentConfigurationDTOs.isEmpty() || foundActiveOrSatisfiedConfig) {
-                            countEnabled++;
-                            isActive = true;
+                    int countEnabled = 0;
+                    int countDisabled = 0;
+                    for (final ComponentDescriptionDTO dsComp : watchedComps) {
+
+                        boolean isActive;
+
+                        boolean componentEnabled = scr.isComponentEnabled(dsComp);
+                        if (componentEnabled) {
+
+                            try {
+                                Collection<ComponentConfigurationDTO> componentConfigurationDTOs = scr.getComponentConfigurationDTOs(dsComp);
+                                List<String> idStateTuples = new ArrayList<>();
+                                boolean foundActiveOrSatisfiedConfig = false;
+                                for (ComponentConfigurationDTO configDto : componentConfigurationDTOs) {
+                                    idStateTuples.add("id " + configDto.id + ":" + toStateString(configDto.state));
+                                    if (configDto.state == ComponentConfigurationDTO.ACTIVE || configDto.state == ComponentConfigurationDTO.SATISFIED) {
+                                        foundActiveOrSatisfiedConfig = true;
+                                    }
+                                }
+                                log.debug(dsComp.name + " (" + String.join(",", idStateTuples) + ")");
+
+                                if (componentConfigurationDTOs.isEmpty() || foundActiveOrSatisfiedConfig) {
+                                    countEnabled++;
+                                    isActive = true;
+                                } else {
+                                    countDisabled++;
+                                    isActive = false;
+                                }
+                            } catch ( final Throwable e) {
+                                log.temporarilyUnavailable("Exception while getting ds component dtos {}", e.getMessage(), e);
+                                isActive = true; // no info available, doesn't make sense to report as inactive
+                            }
+
                         } else {
                             countDisabled++;
                             isActive = false;
                         }
 
-                    } else {
-                        countDisabled++;
-                        isActive = false;
+                        if (!isActive) {
+                            analyzer.logNotEnabledComponent(log, dsComp, componentDescriptionDTOs);
+                        }
                     }
 
-                    if (!isActive) {
-                        analyzer.logNotEnabledComponent(log, dsComp);
+                    if (!missingComponents.isEmpty()) {
+                        log.add(new Entry(statusForMissing, missingComponents.size() + " required components are missing in SCR runtime"));
                     }
+                    if (countDisabled > 0) {
+                        log.add(new Entry(statusForMissing, countDisabled + " required components are not active"));
+                    }
+                    log.info("{} required components are active", countEnabled);
                 }
-
-                if (!missingComponents.isEmpty()) {
-                    log.add(new Entry(statusForMissing, missingComponents.size() + " required components are missing in SCR runtime"));
-                }
-                if (countDisabled > 0) {
-                    log.add(new Entry(statusForMissing, countDisabled + " required components are not active"));
-                }
-                log.info("{} required components are active", countEnabled);
-
                 result = new Result(log);
-                if ( !this.cache.compareAndSet(null, result) ) {
-                    result = null;
-                }
+                this.cache.compareAndSet(null, result);
             }
         }
         return result;

@@ -158,7 +158,7 @@
         <dependency>
             <groupId>org.apache.felix</groupId>
             <artifactId>org.apache.felix.rootcause</artifactId>
-            <version>0.1.0</version>
+            <version>0.1.1-SNAPSHOT</version>
         </dependency>
 
         <dependency>

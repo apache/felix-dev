@@ -140,9 +140,7 @@ public class ComponentsCheck implements SystemReadyCheck {
                         result = new CheckStatus(getName(), type, CheckStatus.State.RED, "Exception while checking ds component dtos : " + e.getMessage());
                     }
                 }
-                if ( !this.cache.compareAndSet(null, result) ) {
-                    result = null;
-                }
+                this.cache.compareAndSet(null, result);
             }
         }
         return result;

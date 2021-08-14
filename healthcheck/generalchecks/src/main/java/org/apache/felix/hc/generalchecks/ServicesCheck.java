@@ -23,6 +23,7 @@ import static java.util.stream.Collectors.toMap;
 
 import java.io.Closeable;
 import java.util.Arrays;
+import java.util.Collection;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
@@ -44,6 +45,7 @@ import org.osgi.service.component.annotations.Deactivate;
 import org.osgi.service.component.annotations.Reference;
 import org.osgi.service.component.annotations.ReferencePolicyOption;
 import org.osgi.service.component.runtime.ServiceComponentRuntime;
+import org.osgi.service.component.runtime.dto.ComponentDescriptionDTO;
 import org.osgi.service.metatype.annotations.AttributeDefinition;
 import org.osgi.service.metatype.annotations.Designate;
 import org.osgi.service.metatype.annotations.ObjectClassDefinition;
@@ -113,10 +115,10 @@ public class ServicesCheck implements HealthCheck {
         FormattingResultLog log = new FormattingResultLog();
         List<String> missingServiceNames = getMissingServiceNames(log);
 
-
+        final Collection<ComponentDescriptionDTO> dtos = getDTOs(missingServiceNames, log);
         for (String missingServiceName : missingServiceNames) {
-            if (!missingServiceName.startsWith("(")) {
-                analyzer.logMissingService(log, missingServiceName);
+            if (!missingServiceName.startsWith("(") && dtos != null) {
+                analyzer.logMissingService(log, missingServiceName, dtos);
             } else {
                 log.info("Service '{}' is missing", missingServiceName);
             }
@@ -127,8 +129,26 @@ public class ServicesCheck implements HealthCheck {
         } else {
             log.add(new Entry(statusForMissing, "Not all required services are available ("+missingServiceNames.size()+" are missing)"));
         }
-        
+
         return new Result(log);
+    }
+
+    private Collection<ComponentDescriptionDTO> getDTOs(List<String> missingServiceNames, FormattingResultLog log) {
+        boolean needsDTOs = false;
+        for (String missingServiceName : missingServiceNames) {
+            if (!missingServiceName.startsWith("(")) {
+                needsDTOs = true;
+                break;
+            }
+        }
+        if ( needsDTOs ) {
+            try {
+                return scr.getComponentDescriptionDTOs();
+            } catch ( final Throwable e) {
+                log.temporarilyUnavailable("Exception while getting ds component dtos {}", e.getMessage(), e);
+            }
+        }
+        return null;
     }
 
     private List<String> getMissingServiceNames(FormattingResultLog log) {
@@ -162,11 +182,11 @@ public class ServicesCheck implements HealthCheck {
         public boolean present() {
             return getTrackingCount() > 0;
         }
-        
+
         public int getTrackingCount() {
             return this.stracker.getTrackingCount();
         }
-        
+
         @Override
         public void close() {
             stracker.close();
