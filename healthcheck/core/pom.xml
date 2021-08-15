@@ -23,7 +23,7 @@
     <parent>
         <groupId>org.apache.felix</groupId>
         <artifactId>felix-parent</artifactId>
-        <version>6</version>
+        <version>7</version>
         <relativePath />
     </parent>
 
@@ -39,8 +39,8 @@
 
     <properties>
         <felix.java.version>8</felix.java.version>
-        <pax-exam.version>4.11.0</pax-exam.version>
-        <pax-link.version>2.6.2</pax-link.version>
+        <pax-exam.version>4.13.4</pax-exam.version>
+        <pax-link.version>2.6.7</pax-link.version>
         <org.ops4j.pax.logging.DefaultServiceLog.level>INFO</org.ops4j.pax.logging.DefaultServiceLog.level>
         <felix.shell>false</felix.shell>
         <project.bundle.file>${project.build.directory}/${project.build.finalName}.jar</project.bundle.file>
@@ -59,7 +59,7 @@
             <plugin>
                 <groupId>biz.aQute.bnd</groupId>
                 <artifactId>bnd-maven-plugin</artifactId>
-                <version>4.1.0</version>
+                <version>5.3.0</version>
                 <executions>
                     <execution>
                         <goals>
@@ -109,6 +109,7 @@
             <plugin>
                 <groupId>org.apache.maven.plugins</groupId>
                 <artifactId>maven-failsafe-plugin</artifactId>
+                <version>3.0.0-M5</version>
                 <executions>
                     <execution>
                         <goals>
@@ -169,7 +170,7 @@
         <dependency>
             <groupId>org.apache.servicemix.bundles</groupId>
             <artifactId>org.apache.servicemix.bundles.quartz</artifactId>
-            <version>2.3.0_2</version>
+            <version>2.3.2_1</version>
             <scope>provided</scope>
             <!-- if not present in runtime, there is no support for async health checks -->
             <optional>true</optional>
@@ -179,7 +180,7 @@
         <dependency>
             <groupId>org.apache.felix</groupId>
             <artifactId>org.apache.felix.utils</artifactId>
-            <version>1.11.0</version>
+            <version>1.11.8</version>
             <scope>provided</scope>
         </dependency>
 
@@ -187,19 +188,19 @@
         <dependency>
             <groupId>junit</groupId>
             <artifactId>junit</artifactId>
-            <version>4.13</version>
+            <version>4.13.2</version>
             <scope>test</scope>
         </dependency>
         <dependency>
             <groupId>org.mockito</groupId>
             <artifactId>mockito-core</artifactId>
-            <version>3.3.3</version>
+            <version>3.11.2</version>
             <scope>test</scope>
         </dependency>
         <dependency>
             <groupId>rhino</groupId>
             <artifactId>js</artifactId>
-            <version>1.6R6</version>
+            <version>1.7.6</version>
             <scope>test</scope>
         </dependency>
         <dependency>
@@ -247,7 +248,7 @@
         <dependency>
             <groupId>org.apache.felix</groupId>
             <artifactId>org.apache.felix.framework</artifactId>
-            <version>5.6.10</version>
+            <version>6.0.5</version>
             <scope>test</scope>
         </dependency>
         <!-- END test scope dependencies -->
