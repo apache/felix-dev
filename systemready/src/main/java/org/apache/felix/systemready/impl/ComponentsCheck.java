@@ -22,6 +22,7 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
 import java.util.List;
+import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.atomic.AtomicReference;
 import java.util.stream.Collectors;
 
@@ -36,7 +37,6 @@ import org.osgi.service.component.annotations.Activate;
 import org.osgi.service.component.annotations.Component;
 import org.osgi.service.component.annotations.ConfigurationPolicy;
 import org.osgi.service.component.annotations.Reference;
-import org.osgi.service.component.annotations.ReferencePolicyOption;
 import org.osgi.service.component.runtime.ServiceComponentRuntime;
 import org.osgi.service.component.runtime.dto.ComponentDescriptionDTO;
 import org.osgi.service.metatype.annotations.AttributeDefinition;
@@ -54,8 +54,6 @@ import org.slf4j.LoggerFactory;
 public class ComponentsCheck implements SystemReadyCheck {
 
     public static final String PID = "org.apache.felix.systemready.impl.ComponentsCheck";
-
-    private static final CheckStatus INVALID = new CheckStatus("invalid", StateType.READY, CheckStatus.State.RED, "invalid");
 
     @ObjectClassDefinition(
             name="DS Components System Ready Check",
@@ -81,6 +79,8 @@ public class ComponentsCheck implements SystemReadyCheck {
 
     private ServiceComponentRuntime scr;
 
+    private final AtomicBoolean refreshCache = new AtomicBoolean();
+
     private final AtomicReference<CheckStatus> cache = new AtomicReference<>();
 
     @Activate
@@ -88,7 +88,7 @@ public class ComponentsCheck implements SystemReadyCheck {
         this.analyzer = new DSRootCause(scr);
         this.type = config.type();
         this.componentsList = Arrays.asList(config.components_list());
-        this.cache.set(INVALID);
+        this.refreshCache.set(false); // cache is empty
     }
 
     @Override
@@ -111,37 +111,30 @@ public class ComponentsCheck implements SystemReadyCheck {
 
     @Override
     public CheckStatus getStatus() {
-        CheckStatus result = null;
-
-        while ( result == null ) {
-            this.cache.compareAndSet(INVALID, null);
-            result = this.cache.get();
-            if ( result == INVALID ) {
-                result = null; // repeat
-            } else if ( result == null ) {
-                final List<DSComp> watchedComps = getComponents(scr.getComponentDescriptionDTOs());
-                if ( watchedComps == null ) {
-                    result = new CheckStatus(getName(), type, CheckStatus.State.RED, "Exception while checking ds component dtos.");
-                } else if (watchedComps.size() < componentsList.size()) {
-                    final List<String> missed = new ArrayList<>(this.componentsList);
-                    for(final DSComp c : watchedComps) {
-                        missed.remove(c.desc.name);
-                    }
-                    result = new CheckStatus(getName(), type, CheckStatus.State.RED, "Not all named components could be found, missing : " + missed);
-                } else {
-                    try {
-                        final StringBuilder details = new StringBuilder();
-                        watchedComps.stream().forEach(dsComp -> addDetails(dsComp, details));
-                        final CheckStatus.State state = CheckStatus.State.worstOf(watchedComps.stream().map(this::status));
-                        result = new CheckStatus(getName(), type, state, details.toString());
-                    } catch (Throwable e) {
-                        // exception might occur on shutdown or startup
-                        log.warn("Exception while checking ds component dtos {}", e.getMessage(), e);
-                        result = new CheckStatus(getName(), type, CheckStatus.State.RED, "Exception while checking ds component dtos : " + e.getMessage());
-                    }
+        CheckStatus result = this.cache.get();
+        if ( result == null || this.refreshCache.compareAndSet(true, false) ) {
+            final List<DSComp> watchedComps = getComponents(scr.getComponentDescriptionDTOs());
+            if ( watchedComps == null ) {
+                result = new CheckStatus(getName(), type, CheckStatus.State.RED, "Exception while checking ds component dtos.");
+            } else if (watchedComps.size() < componentsList.size()) {
+                final List<String> missed = new ArrayList<>(this.componentsList);
+                for(final DSComp c : watchedComps) {
+                    missed.remove(c.desc.name);
                 }
-                this.cache.compareAndSet(null, result);
+                result = new CheckStatus(getName(), type, CheckStatus.State.RED, "Not all named components could be found, missing : " + missed);
+            } else {
+                try {
+                    final StringBuilder details = new StringBuilder();
+                    watchedComps.stream().forEach(dsComp -> addDetails(dsComp, details));
+                    final CheckStatus.State state = CheckStatus.State.worstOf(watchedComps.stream().map(this::status));
+                    result = new CheckStatus(getName(), type, state, details.toString());
+                } catch (Throwable e) {
+                    // exception might occur on shutdown or startup
+                    log.warn("Exception while checking ds component dtos {}", e.getMessage(), e);
+                    result = new CheckStatus(getName(), type, CheckStatus.State.RED, "Exception while checking ds component dtos : " + e.getMessage());
+                }
             }
+            this.cache.set(result);
         }
         return result;
      }
@@ -157,7 +150,7 @@ public class ComponentsCheck implements SystemReadyCheck {
         printer.print(component);
     }
 
-    @Reference(policyOption = ReferencePolicyOption.GREEDY, updated = "updatedServiceComponentRuntime")
+    @Reference(updated = "updatedServiceComponentRuntime")
     private void setServiceComponentRuntime(final ServiceComponentRuntime c) {
         this.scr = c;
     }
@@ -167,7 +160,7 @@ public class ComponentsCheck implements SystemReadyCheck {
     }
 
     private void updatedServiceComponentRuntime(final ServiceComponentRuntime c) {
-        // change in DS - clear cache
-        this.cache.set(INVALID);
+        // change in DS - mark cache
+        this.refreshCache.compareAndSet(false, true);
     }
 }
