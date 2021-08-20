@@ -24,7 +24,7 @@ package org.apache.felix.systemready;
  *
  * Examples: An asynchronous integration with another instance or a third-party service
  *
- * {@see SystemReadyMonitor}
+ * @see SystemReadyMonitor
  *
  * This framework is deprecated.
  * @deprecated Use the Apache Felix Healthchecks instead.

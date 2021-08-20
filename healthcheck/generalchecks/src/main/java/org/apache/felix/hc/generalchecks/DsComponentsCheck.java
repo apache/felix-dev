@@ -47,7 +47,7 @@ import org.osgi.service.metatype.annotations.ObjectClassDefinition;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-@Component(configurationPolicy = ConfigurationPolicy.REQUIRE)
+@Component(configurationPolicy = ConfigurationPolicy.REQUIRE, immediate = true)
 @HealthCheckService(name = DsComponentsCheck.HC_NAME, tags = { DsComponentsCheck.HC_DEFAULT_TAG })
 @Designate(ocd = DsComponentsCheck.Config.class, factory = true)
 public class DsComponentsCheck implements HealthCheck {
@@ -175,7 +175,9 @@ public class DsComponentsCheck implements HealthCheck {
                 log.info("{} required components are active", countEnabled);
             }
             result = new Result(log);
-            this.cache.set(result);
+            if ( result.isOk() ) {
+                this.cache.set(result);
+            }
         }
         return result;
     }
@@ -200,7 +202,7 @@ public class DsComponentsCheck implements HealthCheck {
         }
     }
 
-    @Reference(updated = "updatedServiceComponentRuntime")
+    @Reference(name = "scr", updated = "updatedServiceComponentRuntime")
     private void setServiceComponentRuntime(final ServiceComponentRuntime c) {
         this.scr = c;
     }

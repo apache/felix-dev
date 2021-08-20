@@ -104,7 +104,7 @@ public class ComponentsCheck implements SystemReadyCheck {
                 .collect(Collectors.toList());
         } catch (Throwable e) {
             // exception might occur on shutdown or startup
-            log.warn("Exception while getting ds component dtos {}", e.getMessage(), e);
+            log.info("Exception while getting ds component dtos {}", e.getMessage(), e);
             return null;
         }
     }
@@ -128,18 +128,20 @@ public class ComponentsCheck implements SystemReadyCheck {
                     watchedComps.stream().forEach(dsComp -> addDetails(dsComp, details));
                     final CheckStatus.State state = CheckStatus.State.worstOf(watchedComps.stream().map(this::status));
                     result = new CheckStatus(getName(), type, state, details.toString());
-                } catch (Throwable e) {
+                } catch (final Throwable e) {
                     // exception might occur on shutdown or startup
-                    log.warn("Exception while checking ds component dtos {}", e.getMessage(), e);
+                    log.info("Exception while checking ds component dtos {}", e.getMessage(), e);
                     result = new CheckStatus(getName(), type, CheckStatus.State.RED, "Exception while checking ds component dtos : " + e.getMessage());
                 }
             }
-            this.cache.set(result);
+            if ( result.getState() == CheckStatus.State.GREEN ) {
+                this.cache.set(result);
+            }
         }
         return result;
      }
 
-    private CheckStatus.State status(DSComp component) {
+    private CheckStatus.State status(final DSComp component) {
         boolean missingConfig = component.config == null && "require".equals(component.desc.configurationPolicy);
         boolean unsatisfied = !component.unsatisfied.isEmpty();
         return (missingConfig || unsatisfied) ? CheckStatus.State.YELLOW : CheckStatus.State.GREEN;
@@ -150,7 +152,7 @@ public class ComponentsCheck implements SystemReadyCheck {
         printer.print(component);
     }
 
-    @Reference(updated = "updatedServiceComponentRuntime")
+    @Reference(name = "scr", updated = "updatedServiceComponentRuntime")
     private void setServiceComponentRuntime(final ServiceComponentRuntime c) {
         this.scr = c;
     }
