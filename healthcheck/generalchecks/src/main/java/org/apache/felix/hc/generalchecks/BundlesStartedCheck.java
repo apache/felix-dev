@@ -37,7 +37,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 @HealthCheckService(name = BundlesStartedCheck.HC_NAME)
-@Component(configurationPolicy = ConfigurationPolicy.REQUIRE)
+@Component(configurationPolicy = ConfigurationPolicy.REQUIRE, immediate = true)
 @Designate(ocd = BundlesStartedCheck.Config.class, factory = true)
 public class BundlesStartedCheck implements HealthCheck {
 
@@ -62,7 +62,7 @@ public class BundlesStartedCheck implements HealthCheck {
 
         @AttributeDefinition(name = "CRITICAL for inactive bundles", description = "By default inactive bundles produce warnings, if this is set to true inactive bundles produce a CRITICAL result")
         boolean useCriticalForInactive() default false;
-        
+
         @AttributeDefinition
         String webconsole_configurationFactory_nameHint() default "Bundles started includes: {includesRegex} excludes: {excludesRegex}";
     }
@@ -81,21 +81,21 @@ public class BundlesStartedCheck implements HealthCheck {
         LOG.debug("Activated bundles started HC for includesRegex={} excludesRegex={}% useCriticalForInactive={}", includesRegex, excludesRegex, useCriticalForInactive);
     }
 
-    
+
     @Override
     public Result execute() {
         FormattingResultLog log = new FormattingResultLog();
 
         Bundle[] bundles = this.bundleContext.getBundles();
         log.debug("Framwork has {} bundles in total", bundles.length);
- 
+
         int countExcluded = 0;
         int relevantBundlesCount = 0;
         int inctiveCount = 0;
         for (Bundle bundle : bundles) {
             String bundleSymbolicName = bundle.getSymbolicName();
             int bundleState = bundle.getState();
-            
+
             if(!includesRegex.matcher(bundleSymbolicName).matches()) {
                 LOG.debug("Bundle {} not matched by {}", bundleSymbolicName, includesRegex);
                 continue;
@@ -107,13 +107,13 @@ public class BundlesStartedCheck implements HealthCheck {
                 continue;
             }
             relevantBundlesCount++;
-            
+
             boolean bundleIsLogged = false;
             if (bundleState != Bundle.ACTIVE) {
                 // support lazy activation (https://www.osgi.org/developer/design/lazy-start/)
                 if (bundleState == Bundle.STARTING && isLazyActivation(bundle)) {
                     LOG.debug("Ignoring lazily activated bundle {}", bundleSymbolicName);
-                } else  if (StringUtils.isNotBlank((String) bundle.getHeaders().get(Constants.FRAGMENT_HOST))) {
+                } else  if (StringUtils.isNotBlank(bundle.getHeaders().get(Constants.FRAGMENT_HOST))) {
                     LOG.debug("Ignoring bundle fragment: {}", bundleSymbolicName);
                 } else {
                     String msg = "Inactive bundle {} {}: {}";
@@ -132,7 +132,7 @@ public class BundlesStartedCheck implements HealthCheck {
                 log.debug("Bundle {} {}: {}", bundle.getBundleId(), bundleSymbolicName, getStateLabel(bundleState));
             }
         }
-        
+
         String baseMsg = relevantBundlesCount+" bundles"+(!includesRegex.pattern().equals(".*")?" for pattern "+includesRegex.pattern(): "");
         String excludedMsg = countExcluded > 0 ? " (" + countExcluded + " excluded via pattern "+excludesRegex.pattern()+")" : "";
         if (inctiveCount > 0) {
@@ -147,7 +147,7 @@ public class BundlesStartedCheck implements HealthCheck {
     private static boolean isLazyActivation(Bundle b) {
         return Constants.ACTIVATION_LAZY.equals(b.getHeaders().get(Constants.BUNDLE_ACTIVATIONPOLICY));
     }
-    
+
     private static String getStateLabel(int state) {
         switch(state) {
         case Bundle.UNINSTALLED: return "UNINSTALLED";
@@ -158,6 +158,6 @@ public class BundlesStartedCheck implements HealthCheck {
         case Bundle.ACTIVE: return "ACTIVE";
         default: return ""+state;
         }
-    } 
+    }
 
 }

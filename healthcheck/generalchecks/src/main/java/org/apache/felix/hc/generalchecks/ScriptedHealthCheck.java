@@ -38,7 +38,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 /** {@link HealthCheck} that runs an arbitrary script. */
-@Component(service = HealthCheck.class, configurationPolicy = ConfigurationPolicy.REQUIRE)
+@Component(service = HealthCheck.class, configurationPolicy = ConfigurationPolicy.REQUIRE, immediate = true)
 @Designate(ocd = ScriptedHealthCheck.Config.class, factory = true)
 public class ScriptedHealthCheck implements HealthCheck {
 
@@ -67,7 +67,7 @@ public class ScriptedHealthCheck implements HealthCheck {
 
         @AttributeDefinition(name = "Script", description = "The script itself (either use 'script' or 'scriptUrl').")
         String script() default "log.info('ok'); log.warn('not so good'); log.critical('bad') // minimal example";
-        
+
         @AttributeDefinition(name = "Script Url", description = "Url to the script to be used as alternative source (either use 'script' or 'scriptUrl').")
         String scriptUrl() default "";
 
@@ -78,9 +78,9 @@ public class ScriptedHealthCheck implements HealthCheck {
     private String language;
     private String script;
     private String scriptUrl;
-    
+
     private BundleContext bundleContext;
-    
+
     @Reference(policyOption = ReferencePolicyOption.GREEDY)
     private ScriptEnginesTracker scriptEnginesTracker;
 
@@ -92,7 +92,7 @@ public class ScriptedHealthCheck implements HealthCheck {
         this.language = config.language().toLowerCase();
         this.script = config.script();
         this.scriptUrl = config.scriptUrl();
-        
+
         if(StringUtils.isNotBlank(script) && StringUtils.isNotBlank(scriptUrl)) {
             LOG.info("Both 'script' and 'scriptUrl' (=()) are configured, ignoring 'scriptUrl'", scriptUrl);
             scriptUrl = null;
@@ -105,8 +105,8 @@ public class ScriptedHealthCheck implements HealthCheck {
     @Override
     public Result execute() {
         FormattingResultLog log = new FormattingResultLog();
-        
-        
+
+
         boolean urlIsUsed = StringUtils.isBlank(script);
         String scriptToExecute = urlIsUsed ? scriptHelper.getFileContents(scriptUrl): script;
         log.info("Executing script {} ({} lines)...", (urlIsUsed?scriptUrl:" as configured"), scriptToExecute.split("\n").length);

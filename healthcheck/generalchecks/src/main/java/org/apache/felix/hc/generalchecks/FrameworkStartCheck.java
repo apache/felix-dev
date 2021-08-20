@@ -48,7 +48,7 @@ public class FrameworkStartCheck implements HealthCheck {
 
 
     public static final String PROP_START_LEVEL_BEGINNING = "org.osgi.framework.startlevel.beginning";
-    
+
     @ObjectClassDefinition(name = "Health Check: " + HC_NAME, description = "System ready that waits for the system bundle to be active")
     public @interface Config {
 
@@ -100,7 +100,7 @@ public class FrameworkStartCheck implements HealthCheck {
         }
         return tStartLevel;
     }
-    
+
 
     private String getBeginningStartLevel() {
         String beginningStartLevel = StringUtils.defaultIfBlank(bundleContext.getProperty(PROP_START_LEVEL_BEGINNING), "<unknown>");

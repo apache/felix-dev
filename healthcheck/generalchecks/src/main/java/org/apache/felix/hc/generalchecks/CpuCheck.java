@@ -42,7 +42,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 @HealthCheckService(name = CpuCheck.HC_NAME)
-@Component(configurationPolicy = ConfigurationPolicy.REQUIRE)
+@Component(configurationPolicy = ConfigurationPolicy.REQUIRE, immediate = true)
 @Designate(ocd = CpuCheck.Config.class, factory = false)
 public class CpuCheck implements HealthCheck {
 

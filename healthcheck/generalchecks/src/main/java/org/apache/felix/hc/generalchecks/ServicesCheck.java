@@ -53,7 +53,7 @@ import org.osgi.util.tracker.ServiceTracker;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-@Component(configurationPolicy = ConfigurationPolicy.REQUIRE)
+@Component(configurationPolicy = ConfigurationPolicy.REQUIRE, immediate = true)
 @HealthCheckService(name = ServicesCheck.HC_NAME, tags = { ServicesCheck.HC_DEFAULT_TAG })
 @Designate(ocd = ServicesCheck.Config.class, factory = true)
 public class ServicesCheck implements HealthCheck {
