@@ -1,6 +1,12 @@
 {
     "id" : "org.apache.sling:test-feature:1.1",
     "description": "The feature description",
+    
+    "variables": {
+      "user.name": "jack",
+      "user.pwd": null,
+      "threads": 999
+    },
 
     "bundles" :[
             {
@@ -23,6 +29,10 @@
         },
         "my.factory.pid~name" : {
            "a.value" : ["yeah", "yeah", "yeah"]
+        },
+        "my.db.cfg": {
+          "user-name": "${user.name}",
+          "user-pwd": "${user.pwd}"
         }
     }
 }

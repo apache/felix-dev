@@ -37,6 +37,7 @@ import javax.json.JsonString;
 import javax.json.JsonValue;
 import javax.json.stream.JsonGenerator;
 import javax.json.stream.JsonGeneratorFactory;
+import javax.print.DocFlavor.STRING;
 
 import org.apache.felix.cm.json.impl.JsonSupport;
 import org.apache.felix.cm.json.impl.TypeConverter;
@@ -94,9 +95,9 @@ public class FeatureServiceImpl implements FeatureService {
         builder.setLicense(json.getString("license", null));
         builder.setSCM(json.getString("scm", null));
         builder.setVendor(json.getString("vendor", null));
-
         builder.setComplete(json.getBoolean("complete", false));
 
+        builder.addVariables(getVariables(json));
         builder.addBundles(getBundles(json));
         builder.addCategories(getCategories(json));
         builder.addConfigurations(getConfigurations(json));
@@ -105,7 +106,43 @@ public class FeatureServiceImpl implements FeatureService {
         return builder.build();
     }
 
-    private FeatureBundle[] getBundles(JsonObject json) {
+    private Map<String, Object> getVariables(JsonObject json) {
+		Map<String, Object> variables = new LinkedHashMap<>();
+		
+    	JsonObject jo = json.getJsonObject("variables");
+    	if (jo == null)
+    		return Collections.emptyMap();
+    	
+    	for (Map.Entry<String, JsonValue> entry : jo.entrySet()) {
+    		Object value;
+    		
+    		JsonValue val = entry.getValue();
+			switch (val.getValueType()) {
+			case STRING:
+				value = ((JsonString) val).getString();
+				break;
+			case NUMBER:
+				value = ((JsonNumber) val).bigDecimalValue();
+				break;
+			case TRUE:
+				value = true;
+				break;
+			case FALSE:
+				value = false;
+				break;
+			case NULL:
+				value = null;
+				break;
+			default:
+				throw new IllegalArgumentException("Variables can only contain singular values, not objects or arrays.");
+    		}
+			
+			variables.put(entry.getKey(), value);
+    	}
+		return variables;
+	}
+
+	private FeatureBundle[] getBundles(JsonObject json) {
         JsonArray ja = json.getJsonArray("bundles");
         if (ja == null)
             return new FeatureBundle[] {};
@@ -297,6 +334,11 @@ public class FeatureServiceImpl implements FeatureService {
     	
 		JsonObjectBuilder json = Json.createObjectBuilder(attrs);
 
+		JsonObject variables = getVariables(feature);
+		if (variables != null) {
+			json.add("variables", variables);
+		}
+
 		JsonArray bundles = getBundles(feature);
 		if (bundles != null) {
 			json.add("bundles", bundles);
@@ -311,10 +353,7 @@ public class FeatureServiceImpl implements FeatureService {
 		if (extensions != null) {
 			json.add("extensions", extensions);
 		}
-		
-		// TODO add variables
-		// TODO add frameworkproperties
-		
+
 		JsonObject fo = json.build();
 		
 		JsonGeneratorFactory gf = Json.createGeneratorFactory(Collections.singletonMap(JsonGenerator.PRETTY_PRINTING, true));
@@ -322,6 +361,17 @@ public class FeatureServiceImpl implements FeatureService {
 			gr.write(fo);
 		}
     }
+
+	private JsonObject getVariables(Feature feature) {
+		Map<String,Object> vars = feature.getVariables();
+		
+		if (vars == null || vars.size() == 0) {
+			return null;
+		}
+		
+		JsonObjectBuilder jo = Json.createObjectBuilder(vars);
+		return jo.build();
+	}
 
 	private JsonArray getBundles(Feature feature) {
 		List<FeatureBundle> bundles = feature.getBundles();

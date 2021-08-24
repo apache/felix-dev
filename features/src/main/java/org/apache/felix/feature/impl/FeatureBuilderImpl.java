@@ -47,7 +47,7 @@ class FeatureBuilderImpl implements FeatureBuilder {
     private final List<String> categories = new ArrayList<>();
     private final Map<String,FeatureConfiguration> configurations = new LinkedHashMap<>();
     private final Map<String,FeatureExtension> extensions = new LinkedHashMap<>();
-    private final Map<String,String> variables = new LinkedHashMap<>();
+    private final Map<String,Object> variables = new LinkedHashMap<>();
 
     FeatureBuilderImpl(ID id) {
         this.id = id;
@@ -125,13 +125,13 @@ class FeatureBuilderImpl implements FeatureBuilder {
     }
 
     @Override
-    public FeatureBuilder addVariable(String key, String value) {
+    public FeatureBuilder addVariable(String key, Object value) {
         this.variables.put(key, value);
         return this;
     }
 
     @Override
-    public FeatureBuilder addVariables(Map<String,String> variables) {
+    public FeatureBuilder addVariables(Map<String,Object> variables) {
         this.variables.putAll(variables);
         return this;
     }
@@ -157,11 +157,11 @@ class FeatureBuilderImpl implements FeatureBuilder {
         private final List<String> categories;
         private final Map<String,FeatureConfiguration> configurations;
         private final Map<String,FeatureExtension> extensions;
-        private final Map<String,String> variables;
+        private final Map<String,Object> variables;
 
         private FeatureImpl(ID id, String aName, String desc, String docs, String lic, String sc, String vnd,
                 boolean comp, List<FeatureBundle> bs, List<String> cats, Map<String,FeatureConfiguration> cs,
-                Map<String,FeatureExtension> es, Map<String,String> vars) {
+                Map<String,FeatureExtension> es, Map<String,Object> vars) {
             this.id = id;
             name = Optional.ofNullable(aName);
             description = Optional.ofNullable(desc);
@@ -239,7 +239,7 @@ class FeatureBuilderImpl implements FeatureBuilder {
         }
 
         @Override
-        public Map<String,String> getVariables() {
+        public Map<String,Object> getVariables() {
             return variables;
         }
 

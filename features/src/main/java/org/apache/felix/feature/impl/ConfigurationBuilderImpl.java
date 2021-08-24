@@ -41,19 +41,6 @@ class ConfigurationBuilderImpl implements FeatureConfigurationBuilder {
         this.name = name;
     }
 
-    ConfigurationBuilderImpl(FeatureConfiguration c) {
-        if (c.getFactoryPid() == null) {
-            p = c.getPid();
-            name = null;
-        } else {
-            // TODO
-            p = null;
-            name = null;
-        }
-
-        addValues(c.getValues());
-    }
-
     @Override
     public FeatureConfigurationBuilder addValue(String key, Object value) {
         // TODO can do some validation on the configuration
