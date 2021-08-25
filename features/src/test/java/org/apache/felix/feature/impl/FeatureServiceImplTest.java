@@ -19,6 +19,7 @@ package org.apache.felix.feature.impl;
 import static org.junit.Assert.assertArrayEquals;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
+import static org.junit.Assert.assertNull;
 import static org.junit.Assert.assertTrue;
 
 import java.io.IOException;
@@ -26,6 +27,7 @@ import java.io.InputStreamReader;
 import java.io.Reader;
 import java.io.StringReader;
 import java.io.StringWriter;
+import java.math.BigDecimal;
 import java.net.URL;
 import java.util.List;
 import java.util.Map;
@@ -34,7 +36,6 @@ import javax.json.Json;
 import javax.json.JsonObject;
 import javax.json.JsonReader;
 
-import org.apache.felix.feature.impl.FeatureServiceImpl;
 import org.junit.Before;
 import org.junit.Test;
 import org.osgi.service.feature.BuilderFactory;
@@ -71,6 +72,13 @@ public class FeatureServiceImplTest {
             assertFalse(f.getSCM().isPresent());
             assertFalse(f.getVendor().isPresent());
 
+            Map<String, Object> variables = f.getVariables();
+            assertEquals(3, variables.size());
+            assertEquals("jack", variables.get("user.name"));
+            assertTrue(variables.containsKey("user.pwd"));
+            assertNull(variables.get("user.pwd"));
+            assertEquals(BigDecimal.valueOf(999), variables.get("threads"));
+            
             List<FeatureBundle> bundles = f.getBundles();
             assertEquals(3, bundles.size());
 
@@ -87,7 +95,7 @@ public class FeatureServiceImplTest {
             assertTrue(bundles.contains(bf.newBundleBuilder(features.getID("org.slf4j", "slf4j-simple", "1.7.29")).build()));
             
             Map<String, FeatureConfiguration> configs = f.getConfigurations();
-            assertEquals(2, configs.size());
+            assertEquals(3, configs.size());
             
             FeatureConfiguration cfg1 = configs.get("my.pid");
             assertEquals("my.pid", cfg1.getPid());
@@ -104,6 +112,12 @@ public class FeatureServiceImplTest {
             Map<String, Object> values2 = cfg2.getValues();
             assertEquals(1, values2.size());
             assertArrayEquals(new String[] {"yeah", "yeah", "yeah"}, (String[]) values2.get("a.value"));
+            
+            FeatureConfiguration cfg3 = configs.get("my.db.cfg");
+            assertEquals("No variable substitution should yet be taking place", 
+            		"${user.name}", cfg3.getValues().get("user-name"));
+            assertEquals("No variable substitution should yet be taking place", 
+            		"${user.pwd}", cfg3.getValues().get("user-pwd"));
         }
 
         testWriteFeature(f, res);
