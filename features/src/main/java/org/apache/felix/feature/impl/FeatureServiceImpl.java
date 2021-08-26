@@ -37,7 +37,6 @@ import javax.json.JsonString;
 import javax.json.JsonValue;
 import javax.json.stream.JsonGenerator;
 import javax.json.stream.JsonGeneratorFactory;
-import javax.print.DocFlavor.STRING;
 
 import org.apache.felix.cm.json.impl.JsonSupport;
 import org.apache.felix.cm.json.impl.TypeConverter;
