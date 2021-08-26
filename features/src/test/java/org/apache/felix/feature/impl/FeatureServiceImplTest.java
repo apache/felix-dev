@@ -29,8 +29,10 @@ import java.io.StringReader;
 import java.io.StringWriter;
 import java.math.BigDecimal;
 import java.net.URL;
+import java.util.Arrays;
 import java.util.List;
 import java.util.Map;
+import java.util.Scanner;
 
 import javax.json.Json;
 import javax.json.JsonObject;
@@ -65,7 +67,7 @@ public class FeatureServiceImplTest {
         try (Reader r = new InputStreamReader(res.openStream())) {
             f = features.readFeature(r);
 
-            assertTrue(f.getName().isEmpty());
+            assertTrue(!f.getName().isPresent());
             assertEquals("The feature description", f.getDescription().get());
             assertFalse(f.getDocURL().isPresent());
             assertFalse(f.getLicense().isPresent());
@@ -132,7 +134,7 @@ public class FeatureServiceImplTest {
             assertEquals("org.apache.sling:test-feature2:osgifeature:cls_abc:1.1", f.getID().toString());
             assertEquals("test-feature2", f.getName().get());
             assertEquals("The feature description", f.getDescription().get());
-            assertEquals(List.of("foo", "bar"), f.getCategories());
+            assertEquals(Arrays.asList("foo", "bar"), f.getCategories());
             assertEquals("http://foo.bar.com/abc", f.getDocURL().get());
             assertEquals("Apache-2.0; link=\"http://opensource.org/licenses/apache2.0.php\"", f.getLicense().get());
             assertEquals("url=https://github.com/apache/sling-aggregator, connection=scm:git:https://github.com/apache/sling-aggregator.git, developerConnection=scm:git:git@github.com:apache/sling-aggregator.git", 
@@ -180,7 +182,7 @@ public class FeatureServiceImplTest {
             FeatureExtension textEx = extensions.get("my-text-ex");
             assertEquals(FeatureExtension.Kind.OPTIONAL, textEx.getKind());
             assertEquals(FeatureExtension.Type.TEXT, textEx.getType());
-            assertEquals(List.of("ABC", "DEF"), textEx.getText());
+            assertEquals(Arrays.asList("ABC", "DEF"), textEx.getText());
             
             FeatureExtension artEx = extensions.get("my-art-ex");
             assertEquals(FeatureExtension.Kind.MANDATORY, artEx.getKind());
@@ -210,7 +212,10 @@ public class FeatureServiceImplTest {
 		StringWriter sw = new StringWriter();
         features.writeFeature(feature, sw);
         
-        String expected = new String(expectedURL.openStream().readAllBytes()).replaceAll("\\s","");
+        Scanner s = new Scanner(expectedURL.openStream()).useDelimiter("\\A");
+        String expected = s.hasNext() ? s.next() : "";
+        expected = expected.replaceAll("\\s","");
+        
         String actual = sw.toString().replaceAll("\\s","");
         assertEquals(expected, actual);
 	}
