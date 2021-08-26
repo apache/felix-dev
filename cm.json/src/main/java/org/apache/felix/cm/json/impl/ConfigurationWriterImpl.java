@@ -92,14 +92,9 @@ public class ConfigurationWriterImpl
             final String name = e.nextElement();
             final Object value = properties.get(name);
 
-            final Map.Entry<String, JsonValue> entry = TypeConverter.convertObjectToTypedJsonValue(value);
-            final String key;
-            if (TypeConverter.NO_TYPE_INFO.equals(entry.getKey())) {
-                key = name;
-            } else {
-                key = name.concat(":").concat(entry.getKey());
-            }
-            generator.write(key, entry.getValue());
+            final Map.Entry<String, JsonValue> entry = TypeConverter.convertToTypedJsonEntry(name, value);
+
+            generator.write(entry.getKey(), entry.getValue());
         }
         generator.writeEnd();
     }

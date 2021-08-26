@@ -19,6 +19,7 @@
 package org.apache.felix.cm.json.impl;
 
 import java.lang.reflect.Array;
+import java.util.AbstractMap;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
@@ -241,6 +242,28 @@ public class TypeConverter {
 
         return new Entry(NO_TYPE_INFO, JsonSupport.convertToJson(value));
     }
+
+    /**
+     * Convert name and value of on attribute to a {@code Map.Entry<String, JsonValue>} with an typed name as key.
+     *
+     * @param name The (untyped) name to attribute
+     * @param value The value to attribute
+     *
+     * @return A Entry<String, JsonValue> where the key contains the key:type info and the value the
+     *         converted JsonValue.
+     */   
+	public static Map.Entry<String, JsonValue> convertToTypedJsonEntry(final String name, Object value) {
+
+		final Map.Entry<String, JsonValue> entry = convertObjectToTypedJsonValue(value);
+		final String key;
+		if (TypeConverter.NO_TYPE_INFO.equals(entry.getKey())) {
+			key = name;
+		} else {
+			key = name.concat(":").concat(entry.getKey());
+		}
+		return new AbstractMap.SimpleEntry<String,JsonValue>(key, entry.getValue());
+
+	}
 
     private static final class Entry implements Map.Entry<String, JsonValue> {
 

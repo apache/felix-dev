@@ -21,6 +21,7 @@ package org.apache.felix.cm.json;
 import java.io.IOException;
 import java.io.Reader;
 import java.util.Hashtable;
+import java.util.Map;
 
 import javax.json.JsonValue;
 
@@ -28,6 +29,7 @@ import org.apache.felix.cm.json.impl.ConfigurationReaderImpl;
 import org.apache.felix.cm.json.impl.ConfigurationWriterImpl;
 import org.apache.felix.cm.json.impl.JsonSupport;
 import org.apache.felix.cm.json.impl.OrderedDictionary;
+import org.apache.felix.cm.json.impl.TypeConverter;
 
 /**
  * Factory class for JSON and configuration support
@@ -119,5 +121,18 @@ public class Configurations {
      */
     public static JsonValue convertToJsonValue(final Object value) {
         return JsonSupport.convertToJson(value);
+    }
+    
+    /**
+     * Convert name and value of on attribute to a {@code Map.Entry<String, JsonValue>} with an typed name as key.
+     *
+     * @param name The (untyped) name to attribute
+     * @param value The value to attribute
+     *
+     * @return A Entry<String, JsonValue> where the key contains the key:type info and the value the
+     *         converted JsonValue.
+     */    
+	public static Map.Entry<String, JsonValue>convertToTypedJsonEntry(String name, final Object value) {
+        return TypeConverter.convertToTypedJsonEntry(name,value);
     }
 }
