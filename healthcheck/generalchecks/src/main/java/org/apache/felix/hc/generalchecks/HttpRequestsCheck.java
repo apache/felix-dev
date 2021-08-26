@@ -57,11 +57,12 @@ import org.apache.felix.hc.api.ResultLog;
 import org.apache.felix.hc.core.impl.util.lang.StringUtils;
 import org.apache.felix.hc.generalchecks.util.SimpleConstraintChecker;
 import org.apache.felix.utils.json.JSONParser;
-import org.osgi.framework.BundleContext;
 import org.osgi.framework.ServiceReference;
 import org.osgi.service.component.annotations.Activate;
 import org.osgi.service.component.annotations.Component;
 import org.osgi.service.component.annotations.ConfigurationPolicy;
+import org.osgi.service.component.annotations.Reference;
+import org.osgi.service.http.HttpService;
 import org.osgi.service.metatype.annotations.AttributeDefinition;
 import org.osgi.service.metatype.annotations.Designate;
 import org.osgi.service.metatype.annotations.ObjectClassDefinition;
@@ -128,32 +129,34 @@ public class HttpRequestsCheck implements HealthCheck {
     private Result.Status statusForFailedContraint;
     private boolean runInParallel;
 
-    private String defaultBaseUrl = null;
+    private String defaultBaseUrl;
 
     private FormattingResultLog configErrors;
 
+    @Reference
+    private ServiceReference<HttpService> httpServiceReference;
+
     @Activate
-    protected void activate(BundleContext bundleContext, Config config) {
+    protected void activate(Config config) {
         this.requestSpecs = getRequestSpecs(config.requests());
         this.connectTimeoutInMs = config.connectTimeoutInMs();
         this.readTimeoutInMs = config.readTimeoutInMs();
         this.statusForFailedContraint = config.statusForFailedContraint();
         this.runInParallel = config.runInParallel() && requestSpecs.size() > 1;
 
-        setupDefaultBaseUrl(bundleContext);
+        setupDefaultBaseUrl();
 
         LOG.debug("Default BaseURL: {}", defaultBaseUrl);
         LOG.debug("Activated Requests HC: {}", requestSpecs);
     }
 
-    private void setupDefaultBaseUrl(BundleContext bundleContext) {
-        ServiceReference<?> serviceReference = bundleContext.getServiceReference("org.osgi.service.http.HttpService");
-        boolean isHttp = Boolean.parseBoolean(String.valueOf(serviceReference.getProperty("org.apache.felix.http.enable")));
-        boolean isHttps = Boolean.parseBoolean(String.valueOf(serviceReference.getProperty("org.apache.felix.https.enable")));
-        if(isHttp) {
-            defaultBaseUrl = "http://localhost:"+serviceReference.getProperty("org.osgi.service.http.port");
-        } else if(isHttps) {
-            defaultBaseUrl = "http://localhost:"+serviceReference.getProperty("org.osgi.service.https.port");
+    private void setupDefaultBaseUrl() {
+        boolean isHttp = Boolean.parseBoolean(String.valueOf(httpServiceReference.getProperty("org.apache.felix.http.enable")));
+        boolean isHttps = Boolean.parseBoolean(String.valueOf(httpServiceReference.getProperty("org.apache.felix.https.enable")));
+        if (isHttp) {
+            defaultBaseUrl = "http://localhost:"+httpServiceReference.getProperty("org.osgi.service.http.port");
+        } else if (isHttps) {
+            defaultBaseUrl = "http://localhost:"+httpServiceReference.getProperty("org.osgi.service.https.port");
         }
     }
 
