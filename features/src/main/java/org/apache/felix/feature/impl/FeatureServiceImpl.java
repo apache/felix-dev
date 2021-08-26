@@ -19,13 +19,16 @@ package org.apache.felix.feature.impl;
 import java.io.IOException;
 import java.io.Reader;
 import java.io.StringReader;
+import java.io.StringWriter;
 import java.io.Writer;
 import java.util.ArrayList;
 import java.util.Collections;
+import java.util.Dictionary;
 import java.util.HashMap;
+import java.util.Hashtable;
 import java.util.LinkedHashMap;
 import java.util.List;
-import java.util.Map;	
+import java.util.Map;
 
 import javax.json.Json;
 import javax.json.JsonArray;
@@ -33,13 +36,15 @@ import javax.json.JsonArrayBuilder;
 import javax.json.JsonNumber;
 import javax.json.JsonObject;
 import javax.json.JsonObjectBuilder;
+import javax.json.JsonReader;
 import javax.json.JsonString;
 import javax.json.JsonValue;
 import javax.json.stream.JsonGenerator;
 import javax.json.stream.JsonGeneratorFactory;
 
-import org.apache.felix.cm.json.impl.JsonSupport;
-import org.apache.felix.cm.json.impl.TypeConverter;
+import org.apache.felix.cm.json.ConfigurationReader;
+import org.apache.felix.cm.json.ConfigurationWriter;
+import org.apache.felix.cm.json.Configurations;
 import org.osgi.service.feature.BuilderFactory;
 import org.osgi.service.feature.Feature;
 import org.osgi.service.feature.FeatureArtifact;
@@ -83,7 +88,7 @@ public class FeatureServiceImpl implements FeatureService {
 
 	public Feature readFeature(Reader jsonReader) throws IOException {
         JsonObject json = Json.createReader(
-        		JsonSupport.createCommentRemovingReader(jsonReader)).readObject();
+        		Configurations.jsonCommentAwareReader(jsonReader)).readObject();
 
         String id = json.getString("id");
         FeatureBuilder builder = builderFactory.newFeatureBuilder(getIDfromMavenCoordinates(id));
@@ -189,7 +194,7 @@ public class FeatureServiceImpl implements FeatureService {
         return cats.toArray(new String[] {});
     }
 
-    private FeatureConfiguration[] getConfigurations(JsonObject json) {
+    private FeatureConfiguration[] getConfigurations(JsonObject json) throws IOException {
         JsonObject jo = json.getJsonObject("configurations");
         if (jo == null)
             return new FeatureConfiguration[] {};
@@ -214,20 +219,14 @@ public class FeatureServiceImpl implements FeatureService {
             }
 
             JsonObject values = entry.getValue().asJsonObject();
-            for (Map.Entry<String, JsonValue> value : values.entrySet()) {
-            	String key = value.getKey();
-            	String typeInfo = null;
-            	int cidx = key.indexOf(':');
-            	if (cidx > 0) {
-            		typeInfo = key.substring(cidx + 1);
-            		key = key.substring(0, cidx);
-            	}
-            	
-                JsonValue val = value.getValue();
-                // TODO ensure that binary support works as well
-                Object v = TypeConverter.convertObjectToType(val, typeInfo);                
-                builder.addValue(key, v);
+            
+            ConfigurationReader cr = Configurations.buildReader().build(values);
+            Hashtable<String, Object> cmap = cr.readConfiguration();
+
+            for (Map.Entry<String, Object> cme : cmap.entrySet()) {
+                builder.addValue(cme.getKey(), cme.getValue());
             }
+
             configs.add(builder.build());
         }
 
@@ -389,23 +388,28 @@ public class FeatureServiceImpl implements FeatureService {
 		return ab.build();
 	}
 
-	private JsonObject getConfigurations(Feature feature) {
+	private JsonObject getConfigurations(Feature feature) throws IOException {
 		Map<String, FeatureConfiguration> configs = feature.getConfigurations();
 		if (configs == null || configs.size() == 0)
 			return null;
 		
 		JsonObjectBuilder ob = Json.createObjectBuilder();
-		
+
 		for (Map.Entry<String,FeatureConfiguration> cfg : configs.entrySet()) {
-			JsonObjectBuilder cb = Json.createObjectBuilder();
+			StringWriter sw = new StringWriter();
+			ConfigurationWriter cw = Configurations.buildWriter().build(sw);
+
+			Dictionary<String, Object> dict = Configurations.newConfiguration();
+			cfg.getValue().getValues().entrySet()
+				.forEach(e -> dict.put(e.getKey(), e.getValue()));
 			
-			for (Map.Entry<String,Object> prop : cfg.getValue().getValues().entrySet()) {
-				Map.Entry<String, JsonValue> je = TypeConverter.convertObjectToTypedJsonValue(prop.getValue());
-				String tk = je.getKey();
-				cb.add(TypeConverter.NO_TYPE_INFO.equals(tk) ? prop.getKey() : prop.getKey() + ":" + tk, je.getValue());
-			}
-			ob.add(cfg.getKey(), cb.build());
-		}
+			cw.writeConfiguration(dict);
+			sw.close();
+			
+			JsonReader jr = Json.createReader(new StringReader(sw.toString()));
+			JsonObject jo = jr.readObject();
+			ob.add(cfg.getKey(), jo);
+		}		
 		return ob.build();
 	}
 
