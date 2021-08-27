@@ -78,11 +78,19 @@ public class FeatureServiceImpl implements FeatureService {
 
 	@Override
 	public ID getID(String groupId, String artifactId, String version, String type) {
+		if (type == null)
+			throw new NullPointerException("type must not be null");
+		
 		return new IDImpl(groupId, artifactId, version, type, null);
 	}
 
 	@Override
 	public ID getID(String groupId, String artifactId, String version, String type, String classifier) {
+		if (type == null)
+			throw new NullPointerException("type must not be null");
+		if (classifier == null)
+			throw new NullPointerException("classifier must not be null");
+
 		return new IDImpl(groupId, artifactId, version, type, classifier);
 	}
 

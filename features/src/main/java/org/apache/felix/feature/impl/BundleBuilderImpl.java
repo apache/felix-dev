@@ -36,12 +36,33 @@ class BundleBuilderImpl implements FeatureBundleBuilder {
 
     @Override
     public FeatureBundleBuilder addMetadata(String key, Object value) {
+    	if (key == null)
+    		throw new IllegalArgumentException("Metadata key cannot be null");
+
+    	if (value == null)
+    		throw new IllegalArgumentException("Metadata key cannot be null");
+    	
+    	if ("id".equalsIgnoreCase(key))
+    		throw new IllegalArgumentException("Key cannot be 'id'");
+    	
         this.metadata.put(key, value);
         return this;
     }
 
     @Override
     public FeatureBundleBuilder addMetadata(Map<String,Object> md) {
+    	if (md.keySet().contains(null))
+    		throw new IllegalArgumentException("Metadata key cannot be null");
+    	
+    	if (md.values().contains(null))
+    		throw new IllegalArgumentException("Metadata key cannot be null");
+    	
+    	if (md.keySet().stream()
+    		.map(String::toLowerCase)
+    		.anyMatch(s -> "id".equals(s))) {
+    		throw new IllegalArgumentException("Key cannot be 'id'");    		
+    	}
+    		    	
         this.metadata.putAll(md);
         return this;
     }

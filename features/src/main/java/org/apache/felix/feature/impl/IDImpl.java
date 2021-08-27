@@ -41,6 +41,13 @@ public class IDImpl implements ID {
 			throws IllegalArgumentException {
         String[] parts = mavenID.split(":");
 
+        
+        if (mavenID.startsWith(":") 
+        		|| mavenID.endsWith(":") 
+        		|| mavenID.contains("::")) {
+            throw new IllegalArgumentException("Not a valid maven ID" + mavenID);        	
+        }
+        
         if (parts.length < 3 || parts.length > 5)
             throw new IllegalArgumentException("Not a valid maven ID" + mavenID);
 
