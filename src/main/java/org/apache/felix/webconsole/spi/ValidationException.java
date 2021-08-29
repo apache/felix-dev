@@ -18,9 +18,11 @@
  */
 package org.apache.felix.webconsole.spi;
 
-import java.io.IOException;
-
-public class ValidationException extends IOException {
+/**
+ * A {@link ConfigurationHandler} should throws a validation exception
+ * if an operation is not allowed or not valid.
+ */
+public class ValidationException extends Exception {
 
     /**
      * Create validation exception

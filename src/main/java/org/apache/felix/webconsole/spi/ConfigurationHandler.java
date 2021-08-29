@@ -33,32 +33,36 @@ public interface ConfigurationHandler {
     /**
      * A new configuration with that pid should be created
      * @param pid The pid
-     * @throws IOException For an error or {@link ValidationException} if creation is not allowed
+     * @throws IOException For an error
+     * @throws ValidationException if creation is not allowed
      */
-    void createConfiguration(String pid) throws IOException;
+    void createConfiguration(String pid) throws ValidationException, IOException;
 
     /**
      * A new factory configuration with that pid should be created
      * @param factoryPid The factory pid
      * @param name Optional name, might be {@code null} if unknown
-     * @throws IOException For an error or {@link ValidationException} if creation is not allowed
+     * @throws IOException For an error
+     * @throws ValidationException if creation is not allowed
      */
-    void createFactoryConfiguration(String factoryPid, String name) throws IOException;
+    void createFactoryConfiguration(String factoryPid, String name) throws ValidationException, IOException;
 
     /**
      * A configuration should be deleted
      * @param factoryPid Optional factory pid
      * @param pid The pid
-     * @throws IOException For an error or {@link ValidationException} if deletion is not allowed
+     * @throws IOException For an error
+     * @throws ValidationException if deletion is not allowed
      */
-    void deleteConfiguration(String factoryPid, String pid) throws IOException;
+    void deleteConfiguration(String factoryPid, String pid) throws ValidationException, IOException;
 
     /**
      * A configuration should be updated
      * @param factoryPid Optional factory pid
      * @param pid The pid
      * @param props Mutable dictionary
-     * @throws IOException For an error or {@link ValidationException} if deletion is not allowed
+     * @throws IOException For an error
+     * @throws ValidationException if updating is not allowed
      */
-    void updateConfiguration(String factoryPid, String pid, Dictionary<String, Object> props) throws IOException;
+    void updateConfiguration(String factoryPid, String pid, Dictionary<String, Object> props) throws ValidationException, IOException;
 }

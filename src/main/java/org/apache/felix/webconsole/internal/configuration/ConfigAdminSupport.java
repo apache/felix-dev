@@ -37,6 +37,7 @@ import javax.servlet.http.HttpServletRequest;
 
 import org.apache.felix.webconsole.internal.misc.ServletSupport;
 import org.apache.felix.webconsole.spi.ConfigurationHandler;
+import org.apache.felix.webconsole.spi.ValidationException;
 import org.osgi.framework.Constants;
 import org.osgi.framework.InvalidSyntaxException;
 import org.osgi.service.cm.Configuration;
@@ -133,8 +134,8 @@ class ConfigAdminSupport {
      * @param isUpdate {@code true} if this is a rest call, false if it is done via the webconsole UI
      * @throws IOException
      */
-    void applyConfiguration( final HttpServletRequest request, final String pid, final String propertyList, final boolean isUpdate )
-            throws IOException
+    void applyConfiguration( final HttpServletRequest request, final String pid, final String[] propertyList, final boolean isUpdate )
+            throws ValidationException, IOException
     {
         final String factoryPid = request.getParameter( ConfigManager.FACTORY_PID );
         final Configuration config = ConfigurationUtil.getOrCreateConfiguration( this.service, this.configurationHandlers, pid, factoryPid );
@@ -147,7 +148,7 @@ class ConfigAdminSupport {
         final MetaTypeServiceSupport mtss = getMetaTypeSupport();
         final Map<String, MetatypePropertyDescriptor> adMap = ( mtss != null ) ? mtss.getAttributeDefinitionMap( config, null ) : new HashMap<>();
         final List<String> propsToKeep = new ArrayList<>();
-        for(final String propName : propertyList.split(","))
+        for(final String propName : propertyList)
         {
             final String paramName = "action".equals(propName) //$NON-NLS-1$
                     || ConfigManager.ACTION_DELETE.equals(propName)
@@ -342,21 +343,16 @@ class ConfigAdminSupport {
         config.update( props );
     }
 
-    public void deleteConfiguration(final String pid) throws IOException {
+    public void deleteConfiguration(final String pid) throws ValidationException, IOException {
         // only delete if the PID is not our place holder
         if ( !ConfigurationUtil.getPlaceholderPid().equals( pid ) ) {
             final Configuration config = ConfigurationUtil.findConfiguration(this.service, pid);
-            this.deleteConfiguration(config);
-        }            
-    }
-
-    void deleteConfiguration(final Configuration config) throws IOException {
-        // only delete if the PID is not our place holder
-        if ( config != null && !ConfigurationUtil.getPlaceholderPid().equals( config.getPid() ) ) {
-            for(final ConfigurationHandler h : this.configurationHandlers) {
-                h.deleteConfiguration(config.getFactoryPid(), config.getPid());
+            if ( config != null ) {
+                for(final ConfigurationHandler h : this.configurationHandlers) {
+                    h.deleteConfiguration(config.getFactoryPid(), config.getPid());
+                }
+                config.delete();
             }
-            config.delete();
         }            
     }
 
