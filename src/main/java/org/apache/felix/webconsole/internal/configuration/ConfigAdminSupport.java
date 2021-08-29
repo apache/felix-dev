@@ -131,10 +131,9 @@ class ConfigAdminSupport {
      * @param pid The pid 
      * @param propertyList The list of properties
      * @param isUpdate {@code true} if this is a rest call, false if it is done via the webconsole UI
-     * @return {@code true} when the configuration got updated, {@code false} when the codnfiugration got deleted
      * @throws IOException
      */
-    boolean applyConfiguration( final HttpServletRequest request, final String pid, final String propertyList, final boolean isUpdate )
+    void applyConfiguration( final HttpServletRequest request, final String pid, final String propertyList, final boolean isUpdate )
             throws IOException
     {
         final String factoryPid = request.getParameter( ConfigManager.FACTORY_PID );
@@ -316,39 +315,31 @@ class ConfigAdminSupport {
             h.updateConfiguration(factoryPid, pid, props);
         }
   
-        if ( props.isEmpty() ) {
-            this.deleteConfiguration(config);
-
-            return false;
-        } else {
-            final String location = request.getParameter(ConfigManager.LOCATION);
-            if ( location == null || location.trim().length() == 0 || ConfigManager.UNBOUND_LOCATION.equals(location) )
+        final String location = request.getParameter(ConfigManager.LOCATION);
+        if ( location == null || location.trim().length() == 0 || ConfigManager.UNBOUND_LOCATION.equals(location) )
+        {
+            if ( config.getBundleLocation() != null )
             {
+                config.setBundleLocation(null);
+                // workaround for Felix Config Admin 1.2.8 not clearing dynamic
+                // bundle location when clearing static bundle location. In
+                // this case we first set the static bundle location to the
+                // dynamic bundle location and then try to set both to null
                 if ( config.getBundleLocation() != null )
                 {
-                    config.setBundleLocation(null);
-                    // workaround for Felix Config Admin 1.2.8 not clearing dynamic
-                    // bundle location when clearing static bundle location. In
-                    // this case we first set the static bundle location to the
-                    // dynamic bundle location and then try to set both to null
-                    if ( config.getBundleLocation() != null )
-                    {
-                        config.setBundleLocation( "??invalid:bundle/location" ); //$NON-NLS-1$
-                        config.setBundleLocation( null );
-                    }
-                }
-            } 
-            else
-            {
-                if ( config.getBundleLocation() == null || !config.getBundleLocation().equals(location) )
-                {
-                    config.setBundleLocation(location);
+                    config.setBundleLocation( "??invalid:bundle/location" ); //$NON-NLS-1$
+                    config.setBundleLocation( null );
                 }
             }
-            config.update( props );
-    
-            return true;
+        } 
+        else
+        {
+            if ( config.getBundleLocation() == null || !config.getBundleLocation().equals(location) )
+            {
+                config.setBundleLocation(location);
+            }
         }
+        config.update( props );
     }
 
     public void deleteConfiguration(final String pid) throws IOException {

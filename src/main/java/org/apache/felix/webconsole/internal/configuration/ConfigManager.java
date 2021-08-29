@@ -159,25 +159,18 @@ public class ConfigManager extends SimpleWebConsolePlugin implements OsgiManager
             else 
             {
                 final String propertyList = request.getParameter( ConfigManager.PROPERTY_LIST ); //$NON-NLS-1$
-                if ( propertyList == null )
-                {
+                if ( propertyList == null ) {
                     response.sendError(400);
                     return;        
                 }
 
-                if (cas.applyConfiguration( request, pid, propertyList, ACTION_UPDATE.equals(request.getParameter(ACTION_APPLY)) ) )
-                {
-                    String redirect = pid;
-                    if (pidFilter != null) {
-                        redirect += '?' + PID_FILTER + '=' + pidFilter;
-                    }
+                cas.applyConfiguration( request, pid, propertyList, ACTION_UPDATE.equals(request.getParameter(ACTION_APPLY)));
+                String redirect = pid;
+                if (pidFilter != null) {
+                    redirect = redirect.concat("?").concat(PID_FILTER).concat("=").concat(pidFilter);
+                }
     
-                    WebConsoleUtil.sendRedirect(request, response, redirect);    
-                }
-                else
-                {
-                    Util.sendJsonOk(response);
-                }
+                WebConsoleUtil.sendRedirect(request, response, redirect);    
             }
             
             return;
