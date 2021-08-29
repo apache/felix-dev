@@ -16,10 +16,10 @@
  */
 package org.apache.felix.webconsole.internal.configuration;
 
-
 import java.io.IOException;
 import java.io.PrintWriter;
 import java.io.StringWriter;
+import java.util.Collections;
 import java.util.Locale;
 import java.util.Map;
 
@@ -33,6 +33,8 @@ import org.apache.felix.webconsole.WebConsoleConstants;
 import org.apache.felix.webconsole.WebConsoleUtil;
 import org.apache.felix.webconsole.internal.OsgiManagerPlugin;
 import org.apache.felix.webconsole.internal.Util;
+import org.apache.felix.webconsole.internal.misc.ServletSupport;
+import org.osgi.framework.BundleContext;
 import org.osgi.framework.Constants;
 import org.osgi.framework.InvalidSyntaxException;
 import org.osgi.service.cm.Configuration;
@@ -42,7 +44,7 @@ import org.osgi.service.cm.Configuration;
  * The <code>ConfigManager</code> class is the Web Console plugin to
  * manage configurations.
  */
-public class ConfigManager extends SimpleWebConsolePlugin implements OsgiManagerPlugin
+public class ConfigManager extends SimpleWebConsolePlugin implements OsgiManagerPlugin, ServletSupport
 {
 
     private static final long serialVersionUID = 5021174538498622428L;
@@ -54,7 +56,6 @@ public class ConfigManager extends SimpleWebConsolePlugin implements OsgiManager
     static final String PID_FILTER = "pidFilter"; //$NON-NLS-1$
     static final String PID = "pid"; //$NON-NLS-1$
     static final String FACTORY_PID = "factoryPid"; //$NON-NLS-1$
-    static final String PLACEHOLDER_PID = "[Temporary PID replaced by real PID upon save]"; //$NON-NLS-1$
     static final String REFERER = "referer"; //$NON-NLS-1$
     static final String FACTORY_CREATE = "factoryCreate"; //$NON-NLS-1$
 
@@ -152,13 +153,7 @@ public class ConfigManager extends SimpleWebConsolePlugin implements OsgiManager
         {
             if ( request.getParameter( ConfigManager.ACTION_DELETE ) != null ) //$NON-NLS-1$
             {
-                // only delete if the PID is not our place holder
-                if ( !ConfigManager.PLACEHOLDER_PID.equals( pid ) )
-                {
-                    this.log( "applyConfiguration: Deleting configuration " + pid );
-                    cas.getConfiguration( pid, null ).delete();
-                }            
-
+                cas.deleteConfiguration( pid );
                 Util.sendJsonOk(response);
             } 
             else 
@@ -192,21 +187,17 @@ public class ConfigManager extends SimpleWebConsolePlugin implements OsgiManager
         final Configuration config;
 
         // should actually apply the configuration before redirecting
-        if ( request.getParameter( ACTION_CREATE ) != null )
-        {
-            config = cas.getPlaceholderConfiguration( pid );
+        if ( request.getParameter( ACTION_CREATE ) != null ) {
+            config = ConfigurationUtil.getPlaceholderConfiguration( pid );
             pid = config.getPid();
-        }
-        else
-        {
-            config = cas.getConfiguration( pid );
+        } else {
+            config = cas.findConfiguration( pid );
         }
 
         // check for configuration unbinding
         if ( request.getParameter( ACTION_UNBIND ) != null )
         {
-            if ( config != null && config.getBundleLocation() != null )
-            {
+            if ( config != null && config.getBundleLocation() != null ) {
                 config.setBundleLocation( UNBOUND_LOCATION );
 
             }
@@ -219,7 +210,7 @@ public class ConfigManager extends SimpleWebConsolePlugin implements OsgiManager
         response.setCharacterEncoding( "UTF-8" ); //$NON-NLS-1$
         final Locale loc = getLocale( request );
         final String locale = ( loc != null ) ? loc.toString() : null;
-        cas.printConfigurationJson( response.getWriter(), pid, config, pidFilter, locale );
+        cas.getJsonSupport().printConfigurationJson( response.getWriter(), pid, config, pidFilter, locale );
     }
 
 
@@ -327,7 +318,7 @@ public class ConfigManager extends SimpleWebConsolePlugin implements OsgiManager
                             {
                                 pw.print( ',' );
                             }
-                            ca.printConfigurationJson( pw, config.getPid(), config, null, locale );
+                            ca.getJsonSupport().printConfigurationJson( pw, config.getPid(), config, null, locale );
                             printComma = true;
                         }
                     }
@@ -410,21 +401,21 @@ public class ConfigManager extends SimpleWebConsolePlugin implements OsgiManager
         StringWriter json = new StringWriter();
         JSONWriter jw = new JSONWriter(json);
         jw.object();
-        final ConfigAdminSupport ca = getConfigurationAdminSupport();
+        final ConfigAdminSupport cas = getConfigurationAdminSupport();
         // check for osgi installer plugin
         @SuppressWarnings("unchecked")
         final Map<String, Object> labelMap = (Map<String, Object>) request.getAttribute(WebConsoleConstants.ATTR_LABEL_MAP);
         jw.key("jsonsupport").value( labelMap.containsKey("osgi-installer-config-printer") ); //$NON-NLS-1$
-        final boolean hasMetatype = ca.getMetaTypeSupport() != null;
-        jw.key("status").value( ca != null ? Boolean.TRUE : Boolean.FALSE); //$NON-NLS-1$
+        final boolean hasMetatype = cas.getMetaTypeSupport() != null;
+        jw.key("status").value( cas != null ? Boolean.TRUE : Boolean.FALSE); //$NON-NLS-1$
         jw.key("metatype").value( hasMetatype ? Boolean.TRUE : Boolean.FALSE); //$NON-NLS-1$
         boolean hasConfigs = true;
-        if ( ca != null )
+        if ( cas != null )
         {
-            hasConfigs = ca.listConfigurations( jw, pidFilter, locale, loc );
-            ca.listFactoryConfigurations( jw, pidFilter, locale );
+            hasConfigs = cas.getJsonSupport().listConfigurations( jw, pidFilter, locale, loc );
+            cas.getJsonSupport().listFactoryConfigurations( jw, pidFilter, locale );
         }
-        if ( !hasConfigs && !hasMetatype && ca != null ) {
+        if ( !hasConfigs && !hasMetatype && cas != null ) {
             jw.key("noconfigs").value(true); //$NON-NLS-1$
         } else {
             jw.key("noconfigs").value(false); //$NON-NLS-1$
@@ -433,9 +424,8 @@ public class ConfigManager extends SimpleWebConsolePlugin implements OsgiManager
         jw.endObject();
 
         // if a configuration is addressed, display it immediately
-        if ( request.getParameter( ACTION_CREATE ) != null && pid != null )
-        {
-            pid = PLACEHOLDER_PID; // new PlaceholderConfiguration( pid ).getPid();
+        if ( request.getParameter( ACTION_CREATE ) != null && pid != null ) {
+            pid = ConfigurationUtil.getPlaceholderPid();
         }
 
 
@@ -457,14 +447,16 @@ public class ConfigManager extends SimpleWebConsolePlugin implements OsgiManager
         response.getWriter().print(TEMPLATE);
     }
 
-    private ConfigAdminSupport getConfigurationAdminSupport()
-    {
+    private ConfigAdminSupport getConfigurationAdminSupport() {
         Object configurationAdmin = getService( CONFIGURATION_ADMIN_NAME );
-        if ( configurationAdmin != null )
-        {
-            return new ConfigAdminSupport( this, this.getBundleContext(), configurationAdmin );
+        if ( configurationAdmin != null ) {
+            return new ConfigAdminSupport( this, configurationAdmin, Collections.emptyList() );
         }
         return null;
+    }
+
+    public BundleContext getBundleContext() {
+        return super.getBundleContext();
     }
 }
 
