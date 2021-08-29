@@ -41,8 +41,9 @@
         <webconsole.exports>
             org.apache.felix.webconsole;provide:=true,
             org.apache.felix.webconsole.bundleinfo;provide:=true,
-            org.apache.felix.webconsole.i18n;provide:=true
-        </webconsole.exports>
+            org.apache.felix.webconsole.i18n;provide:=true,
+            org.apache.felix.webconsole.spi
+	</webconsole.exports>
     </properties>
 
     <scm>
