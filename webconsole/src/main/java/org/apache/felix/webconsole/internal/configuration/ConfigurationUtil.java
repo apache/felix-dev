@@ -24,6 +24,7 @@ import java.util.Dictionary;
 import java.util.List;
 
 import org.apache.felix.webconsole.spi.ConfigurationHandler;
+import org.apache.felix.webconsole.spi.ValidationException;
 import org.osgi.framework.Constants;
 import org.osgi.framework.InvalidSyntaxException;
 import org.osgi.service.cm.Configuration;
@@ -58,7 +59,7 @@ public class ConfigurationUtil {
     public static Configuration getOrCreateConfiguration( final ConfigurationAdmin service, 
             final List<ConfigurationHandler> handlers,
             final String pid, 
-            final String factoryPid ) throws IOException {
+            final String factoryPid ) throws ValidationException, IOException {
         Configuration cfg = null;
         if ( !PLACEHOLDER_PID.equals(pid) ) {
             cfg = findConfiguration(service, pid);
@@ -79,7 +80,17 @@ public class ConfigurationUtil {
         return cfg;
     }
 
+    public static final boolean isAllowedPid(final String pid) {
+        for(int i = 0; i < pid.length(); i++) {
+            final char c = pid.charAt(i);
+            if ( c == '&' || c == '<' || c == '>' || c == '"' || c == '\'' ) {
+                return false;
+            }
+        }
+        return true;
+    }
 
+ 
     public static Configuration getPlaceholderConfiguration( final String factoryPid ) {
         return new PlaceholderConfiguration( factoryPid );
     }

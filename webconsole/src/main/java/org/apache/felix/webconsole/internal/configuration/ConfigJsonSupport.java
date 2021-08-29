@@ -241,7 +241,7 @@ class ConfigJsonSupport {
                 // ignore configuration object if an entry already exists in the map
                 // or if it is invalid
                 final String pid = cfgs[i].getPid();
-                if (optionsPlain.containsKey(pid) || !ConfigManager.isAllowedPid(pid) )
+                if (optionsPlain.containsKey(pid) || !ConfigurationUtil.isAllowedPid(pid) )
                 {
                     continue;
                 }
@@ -445,7 +445,7 @@ class ConfigJsonSupport {
         for ( int i = 0; refs != null && i < refs.length; i++ ) {
             Object pidObject = refs[i].getProperty( Constants.SERVICE_PID );
             // only include valid PIDs
-            if ( pidObject instanceof String && ConfigManager.isAllowedPid((String)pidObject) ) {
+            if ( pidObject instanceof String && ConfigurationUtil.isAllowedPid((String)pidObject) ) {
                 String pid = ( String ) pidObject;
                 String name = pid;
                 boolean haveOcd = !ocdRequired;

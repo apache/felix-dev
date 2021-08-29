@@ -24,6 +24,7 @@ import java.util.Comparator;
 import java.util.Enumeration;
 import java.util.Locale;
 
+import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 
 import org.osgi.framework.Bundle;
@@ -251,5 +252,15 @@ public class Util
         response.setContentType( "application/json" ); //$NON-NLS-1$
         response.setCharacterEncoding( "UTF-8" ); //$NON-NLS-1$
         response.getWriter().print( "{ \"status\": true }" ); //$NON-NLS-1$
+    }
+
+    public static final Locale getLocale( final HttpServletRequest request ) {
+        try {
+            return request.getLocale();
+        } catch ( Throwable t ) {
+            // expected in standard OSGi Servlet 2.1 environments
+            // fallback to using the default locale
+            return Locale.getDefault();
+        }
     }
 }
