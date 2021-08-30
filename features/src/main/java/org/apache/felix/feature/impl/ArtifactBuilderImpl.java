@@ -55,7 +55,7 @@ class ArtifactBuilderImpl implements FeatureArtifactBuilder {
     		throw new IllegalArgumentException("Metadata key cannot be null");
     	
     	if (md.values().contains(null))
-    		throw new IllegalArgumentException("Metadata key cannot be null");
+    		throw new IllegalArgumentException("Metadata value cannot be null");
     	
     	if (md.keySet().stream()
     		.map(String::toLowerCase)
