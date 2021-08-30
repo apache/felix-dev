@@ -438,8 +438,11 @@ public class ConfigManager extends SimpleWebConsolePlugin implements OsgiManager
         Object configurationAdmin = getService( CONFIGURATION_ADMIN_NAME );
         if ( configurationAdmin != null ) {
             final List<ConfigurationHandler> handlers = new ArrayList<>();
-            for(final Object o : this.spiTracker.getServices()) {
-                handlers.add((ConfigurationHandler)o);
+            Object[] services = this.spiTracker.getServices();
+            if (services != null) {
+                for(final Object o : services) {
+                    handlers.add((ConfigurationHandler)o);
+                }
             }
             return new ConfigAdminSupport( this, configurationAdmin, handlers );
         }
