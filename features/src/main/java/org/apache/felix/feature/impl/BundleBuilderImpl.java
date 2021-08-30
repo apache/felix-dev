@@ -40,7 +40,7 @@ class BundleBuilderImpl implements FeatureBundleBuilder {
     		throw new IllegalArgumentException("Metadata key cannot be null");
 
     	if (value == null)
-    		throw new IllegalArgumentException("Metadata key cannot be null");
+    		throw new IllegalArgumentException("Metadata value cannot be null");
     	
     	if ("id".equalsIgnoreCase(key))
     		throw new IllegalArgumentException("Key cannot be 'id'");
@@ -55,7 +55,7 @@ class BundleBuilderImpl implements FeatureBundleBuilder {
     		throw new IllegalArgumentException("Metadata key cannot be null");
     	
     	if (md.values().contains(null))
-    		throw new IllegalArgumentException("Metadata key cannot be null");
+    		throw new IllegalArgumentException("Metadata value cannot be null");
     	
     	if (md.keySet().stream()
     		.map(String::toLowerCase)

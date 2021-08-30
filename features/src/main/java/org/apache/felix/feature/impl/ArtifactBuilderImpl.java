@@ -40,7 +40,7 @@ class ArtifactBuilderImpl implements FeatureArtifactBuilder {
     		throw new IllegalArgumentException("Metadata key cannot be null");
 
     	if (value == null)
-    		throw new IllegalArgumentException("Metadata key cannot be null");
+    		throw new IllegalArgumentException("Metadata value cannot be null");
     	
     	if ("id".equalsIgnoreCase(key))
     		throw new IllegalArgumentException("Key cannot be 'id'");
