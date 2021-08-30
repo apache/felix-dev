@@ -93,7 +93,7 @@ class ConfigAdminSupport {
 
     boolean shouldSet(final PropertyDescriptor ad, final String value, final boolean isUpdate) 
     {
-        if ( ad.hasMetatype() && !isUpdate )
+        if ( this.configurationHandlers.isEmpty() && ad.hasMetatype() && !isUpdate )
         {
             if ( value.isEmpty() && ad.getDefaultValue() == null )
             {
@@ -109,7 +109,7 @@ class ConfigAdminSupport {
 
     boolean shouldSet(final PropertyDescriptor ad, final String[] values, final boolean isUpdate) 
     {
-        if ( ad.hasMetatype() && !isUpdate )
+        if ( this.configurationHandlers.isEmpty() && ad.hasMetatype() && !isUpdate )
         {
             if ( ad.getDefaultValue() == null )
             {
@@ -173,7 +173,7 @@ class ConfigAdminSupport {
                 if ( value != null
                     && ( attributeType != AttributeDefinition.PASSWORD || !MetaTypeSupport.PASSWORD_PLACEHOLDER_VALUE.equals( value ) ) )
                 {
-                    if ( this.configurationHandlers.isEmpty() && shouldSet(ad, value, isUpdate) ) 
+                    if ( shouldSet(ad, value, isUpdate) ) 
                     {
                         props.put( propName, value );
                     }
@@ -189,7 +189,7 @@ class ConfigAdminSupport {
                 final String value = request.getParameter( paramName );
                 if ( value != null )
                 {
-                    if ( this.configurationHandlers.isEmpty() && shouldSet(ad, value, isUpdate) ) 
+                    if ( shouldSet(ad, value, isUpdate) ) 
                     {
                         try
                         {
@@ -264,7 +264,7 @@ class ConfigAdminSupport {
                     valueArray[i] = vec.get(i).toString();
                 }
                 
-                final boolean shouldSet = this.configurationHandlers.isEmpty() && shouldSet(ad, valueArray, isUpdate);
+                final boolean shouldSet = shouldSet(ad, valueArray, isUpdate);
 
                 if ( ad.getCardinality() < 0 )
                 {
