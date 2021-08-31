@@ -145,6 +145,10 @@ public class InterpolationConfigurationPluginTest {
         dict.put("defaulted4", "$[env:notset;default=foo;=bar]");
         dict.put("defaulted5", "$[env:notset;default= ]");
         dict.put("defaulted6", "$[env:notset;default");
+        dict.put("defaulted7", "$[env:notset;default=/()^$]");
+        dict.put("defaulted8", "$[env:notset;default=[8080]]");
+        dict.put("defaulted9", "$[env:notset;default=[aabb]cc]");
+
         plugin.modifyConfiguration(null, dict);
 
         assertEquals("foo", dict.get("defaulted"));
@@ -153,6 +157,9 @@ public class InterpolationConfigurationPluginTest {
         assertEquals("foo", dict.get("defaulted4")); // semicolon is not supported in values
         assertEquals(" ", dict.get("defaulted5"));
         assertEquals("$[env:notset;default", dict.get("defaulted6"));
+        assertEquals("/()^$", dict.get("defaulted7"));
+        assertEquals("[8080]", dict.get("defaulted8"));
+        assertEquals("[aabb]cc", dict.get("defaulted9"));
     }
 
     @Test
