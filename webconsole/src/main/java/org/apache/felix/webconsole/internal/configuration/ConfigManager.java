@@ -94,7 +94,7 @@ public class ConfigManager extends SimpleWebConsolePlugin implements OsgiManager
     public void activate(final BundleContext bundleContext) {
         super.activate(bundleContext);
         this.spiTracker = new ServiceTracker<>(bundleContext, ConfigurationHandler.class.getName(), null);
-        this.spiTracker.open();
+        this.spiTracker.open(true);
     }
 
 
@@ -146,13 +146,13 @@ public class ConfigManager extends SimpleWebConsolePlugin implements OsgiManager
                 } catch ( final ValidationException ve) {
                     response.sendError(400, ve.getMessage());
                 }
-            } 
-            else 
+            }
+            else
             {
                 final String propertyList = request.getParameter( ConfigManager.PROPERTY_LIST ); //$NON-NLS-1$
                 if ( propertyList == null ) {
                     response.sendError(400);
-                    return;        
+                    return;
                 }
 
                 try {
@@ -161,13 +161,13 @@ public class ConfigManager extends SimpleWebConsolePlugin implements OsgiManager
                     if (pidFilter != null) {
                         redirect = redirect.concat("?").concat(PID_FILTER).concat("=").concat(pidFilter);
                     }
-        
-                    WebConsoleUtil.sendRedirect(request, response, redirect);    
+
+                    WebConsoleUtil.sendRedirect(request, response, redirect);
                 } catch ( final ValidationException ve) {
                     response.sendError(400, ve.getMessage());
                 }
             }
-            
+
             return;
         }
 
