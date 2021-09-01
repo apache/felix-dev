@@ -75,7 +75,10 @@ public final class Dispatcher
         if ( mgr == null )
         {
             // not active, always return 404
-            res.sendError(404);
+            if ( !res.isCommitted() ) 
+            {
+                res.sendError(404);
+            }
             return;
         }
 
@@ -123,7 +126,10 @@ public final class Dispatcher
 		        final HttpServletResponse wrappedResponse = new ServletResponseWrapper(req, res, servletName, errorRegistry);
 		        if ( pr == null )
 		        {
-		            wrappedResponse.sendError(404);
+                    if ( !wrappedResponse.isCommitted() ) 
+                    {
+                        wrappedResponse.sendError(404);
+                    }
 		            return;
 		        }
 
@@ -152,7 +158,10 @@ public final class Dispatcher
 		            req.setAttribute(RequestDispatcher.ERROR_EXCEPTION, e);
 		            req.setAttribute(RequestDispatcher.ERROR_EXCEPTION_TYPE, e.getClass().getName());
 
-		            wrappedResponse.sendError(500);
+                    if ( !wrappedResponse.isCommitted() ) 
+                    {
+                        wrappedResponse.sendError(500);
+                    }
 		        }
 		        finally
 		        {
