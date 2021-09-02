@@ -21,13 +21,16 @@ package org.apache.felix.webconsole.spi;
 import java.io.IOException;
 import java.util.Dictionary;
 
+import org.osgi.annotation.versioning.ConsumerType;
+
 /**
  * A configuration handler allows to hook into the processing of configurations for
  * the webconsole plugin.
  * A handler can decide to hide configurations and properties but also implement
  * additional validation.
- * All configuration handlers are called in order of their service ranking, highest first.
+ * All configuration handlers are called in no particular order.
  */
+@ConsumerType
 public interface ConfigurationHandler {
 
     /**
