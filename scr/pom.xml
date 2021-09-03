@@ -38,18 +38,6 @@
       <tag>HEAD</tag>
   </scm>
 
-    <!-- TEMPORARY: use snapshots until R8 compendium is released -->
-    <repositories>
-        <repository>
-            <id>osgi-snapshots</id>
-            <url>https://oss.sonatype.org/content/repositories/snapshots</url>
-            <snapshots>
-                <enabled>true</enabled>
-                <updatePolicy>always</updatePolicy>
-            </snapshots>
-        </repository>
-    </repositories>
-
     <!--
         A Note on Testing
         =================
@@ -103,7 +91,7 @@
         <dependency>
             <groupId>org.osgi</groupId>
             <artifactId>org.osgi.service.component</artifactId>
-            <version>1.5.0-SNAPSHOT</version>
+            <version>1.5.0-RC1</version>
             <scope>provided</scope>
         </dependency>
         <dependency>
