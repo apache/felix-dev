@@ -51,19 +51,21 @@ public class BaseTest {
                 mavenBundle().groupId("org.slf4j").artifactId("slf4j-api").version("1.7.6"),
                 mavenBundle().groupId("ch.qos.logback").artifactId("logback-core").version("1.0.13"),
                 mavenBundle().groupId("ch.qos.logback").artifactId("logback-classic").version("1.0.13"),
-                
+
                 bundle("link:classpath:META-INF/links/org.ops4j.pax.tipi.junit.link"),
                 bundle("link:classpath:META-INF/links/org.ops4j.pax.exam.invoker.junit.link"),
                 mavenBundle().groupId("org.apache.servicemix.bundles").artifactId("org.apache.servicemix.bundles.hamcrest").version("1.3_1"),
                 mavenBundle().groupId("org.awaitility").artifactId("awaitility").version("3.1.0"),
 
-                mavenBundle().groupId("org.apache.felix").artifactId("org.apache.felix.scr").version("2.0.14"),
-                mavenBundle().groupId("org.apache.felix").artifactId("org.apache.felix.configadmin").version("1.8.16"),
+                mavenBundle().groupId("org.osgi").artifactId("org.osgi.util.function").version("1.1.0"),
+                mavenBundle().groupId("org.osgi").artifactId("org.osgi.util.promise").version("1.1.1"),
+                mavenBundle().groupId("org.apache.felix").artifactId("org.apache.felix.scr").version("2.1.26"),
+                mavenBundle().groupId("org.apache.felix").artifactId("org.apache.felix.configadmin").version("1.9.22"),
                 bundle("reference:file:target/classes/")
 
         );
     }
-    
+
     public ComponentDescriptionDTO getComponentDesc(String compName) {
         return getComponentDesc(desc -> desc.name.equals(compName), compName);
     }

@@ -1,3 +1,9 @@
+Changes from 2.8.0 to 2.8.1
+---------------------------
+
+** Improvement
+    * [FELIX-6398] - Update packages to osgi.core 8
+
 Changes from 2.6.1 to 2.8.0
 ---------------------------
 

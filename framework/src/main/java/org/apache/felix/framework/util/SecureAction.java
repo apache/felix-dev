@@ -18,14 +18,38 @@
  */
 package org.apache.felix.framework.util;
 
-import java.io.*;
-import java.lang.reflect.*;
+import java.io.ByteArrayOutputStream;
+import java.io.File;
+import java.io.FileInputStream;
+import java.io.FileOutputStream;
+import java.io.IOException;
+import java.io.InputStream;
+import java.io.OutputStream;
+import java.lang.invoke.MethodHandles;
+import java.lang.reflect.AccessibleObject;
+import java.lang.reflect.Array;
+import java.lang.reflect.Constructor;
+import java.lang.reflect.Executable;
+import java.lang.reflect.Field;
+import java.lang.reflect.InvocationHandler;
+import java.lang.reflect.Method;
+import java.lang.reflect.Modifier;
 import java.lang.reflect.Proxy;
-import java.net.*;
+import java.net.MalformedURLException;
+import java.net.URI;
+import java.net.URL;
+import java.net.URLClassLoader;
+import java.net.URLConnection;
+import java.net.URLStreamHandler;
 import java.nio.channels.FileChannel;
 import java.nio.file.Files;
 import java.nio.file.StandardOpenOption;
-import java.security.*;
+import java.security.AccessControlContext;
+import java.security.AccessController;
+import java.security.Policy;
+import java.security.PrivilegedAction;
+import java.security.PrivilegedActionException;
+import java.security.PrivilegedExceptionAction;
 import java.util.Collection;
 import java.util.HashMap;
 import java.util.Hashtable;
@@ -1130,18 +1154,30 @@ public class SecureAction
                     // NOTE: deep reflection is allowed on sun.misc package for java 9.
                     theUnsafe.setAccessible(true);
                     Object unsafe = theUnsafe.get(null);
-                    // using defineAnonymousClass here because it seems more simple to get what we need
-                    Method defineAnonymousClass = unsafeClass.getMethod("defineAnonymousClass", Class.class, byte[].class, Object[].class); //$NON-NLS-1$
-                    // The bytes stored in a resource to avoid real loading of it (see accessible.src for source).
+                    Class<Consumer<AccessibleObject[]>> result;
+                    try {
+                        Method defineAnonymousClass = unsafeClass.getMethod("defineAnonymousClass", Class.class, byte[].class, Object[].class); //$NON-NLS-1$
+                        result = (Class<Consumer<AccessibleObject[]>>) defineAnonymousClass.invoke(unsafe, URL.class, accessor , null);;
+                    }
+                    catch (NoSuchMethodException ex)
+                    {
+                        long offset = (long) unsafeClass.getMethod("staticFieldOffset", Field.class)
+                                .invoke(unsafe, MethodHandles.Lookup.class.getDeclaredField("IMPL_LOOKUP"));
 
-                    Class<Consumer<AccessibleObject[]>> result =
-                        (Class<Consumer<AccessibleObject[]>>)
-                            defineAnonymousClass.invoke(unsafe, URL.class, accessor , null);
+                        MethodHandles.Lookup lookup = (MethodHandles.Lookup) unsafeClass.getMethod("getObject", Object.class, long.class)
+                                .invoke(unsafe, MethodHandles.Lookup.class, offset);
+                        lookup = lookup.in(URL.class);
+                        Class<?> classOption = Class.forName("java.lang.invoke.MethodHandles$Lookup$ClassOption"); //$NON-NLS-1$
+                        Object classOptions = Array.newInstance(classOption, 0);
+                        Method defineHiddenClass = MethodHandles.Lookup.class.getMethod("defineHiddenClass", byte[].class, boolean.class, //$NON-NLS-1$
+                                classOptions.getClass());
+                        lookup = (MethodHandles.Lookup) defineHiddenClass.invoke(lookup, accessor, Boolean.FALSE, classOptions);
+                        result = (Class<Consumer<AccessibleObject[]>>) lookup.lookupClass();
+                    }
                     m_accessorCache = result.getConstructor().newInstance();
                 }
                 catch (Throwable t)
                 {
-                    t.printStackTrace();
                     m_accessorCache = objects -> AccessibleObject.setAccessible(objects, true);
                 }
             }

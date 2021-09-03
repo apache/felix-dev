@@ -96,6 +96,7 @@ public class OsgiManager extends GenericServlet
      *
      * @deprecated use {@link WebConsoleConstants#ATTR_APP_ROOT} instead
      */
+    @Deprecated
     private static final String ATTR_APP_ROOT_OLD = OsgiManager.class.getName()
         + ".appRoot";
 
@@ -106,6 +107,7 @@ public class OsgiManager extends GenericServlet
      *
      * @deprecated use {@link WebConsoleConstants#ATTR_LABEL_MAP} instead
      */
+    @Deprecated
     private static final String ATTR_LABEL_MAP_OLD = OsgiManager.class.getName()
         + ".labelMap";
 
@@ -162,6 +164,8 @@ public class OsgiManager extends GenericServlet
 
     static final String PROP_LOCALE = "locale"; //$NON-NLS-1$
 
+    static final String PROP_ENABLE_SECRET_HEURISTIC = "secret.heuristic.enabled"; //$NON-NLS-1$
+
     static final String PROP_HTTP_SERVICE_SELECTOR = "http.service.filter"; //$NON-NLS-1$
 
     public static final int DEFAULT_LOG_LEVEL = LogService.LOG_WARNING;
@@ -177,6 +181,9 @@ public class OsgiManager extends GenericServlet
     static final String DEFAULT_CATEGORY = "Main"; //$NON-NLS-1$
 
     static final String DEFAULT_HTTP_SERVICE_SELECTOR = ""; //$NON-NLS-1$
+
+    /** Default value for secret heuristics */
+    public static final boolean DEFAULT_ENABLE_SECRET_HEURISTIC = false;
 
     private static final String HEADER_AUTHORIZATION = "Authorization"; //$NON-NLS-1$
 
@@ -209,6 +216,9 @@ public class OsgiManager extends GenericServlet
             "org.apache.felix.webconsole.internal.misc.LicenseServlet", "licenses", //$NON-NLS-1$ //$NON-NLS-2$
             "org.apache.felix.webconsole.internal.system.VMStatPlugin", "vmstat", //$NON-NLS-1$ //$NON-NLS-2$
     };
+
+    /** Flag to control whether secret heuristics is enabled */
+    public static volatile boolean ENABLE_SECRET_HEURISTICS = OsgiManager.DEFAULT_ENABLE_SECRET_HEURISTIC;
 
     private BundleContext bundleContext;
 
@@ -363,6 +373,7 @@ public class OsgiManager extends GenericServlet
         this.configurationListener = bundleContext.registerService( "org.osgi.service.cm.ManagedService", //$NON-NLS-1$
             new ServiceFactory()
             {
+                @Override
                 public Object getService( Bundle bundle, ServiceRegistration registration )
                 {
                     /*
@@ -386,6 +397,7 @@ public class OsgiManager extends GenericServlet
                 }
 
 
+                @Override
                 public void ungetService( Bundle bundle, ServiceRegistration registration, Object service )
                 {
                     // do nothing
@@ -473,6 +485,7 @@ public class OsgiManager extends GenericServlet
     /**
      * @see javax.servlet.GenericServlet#init()
      */
+    @Override
     public void init()
     {
         // base class initialization not needed, since the GenericServlet.init
@@ -485,6 +498,7 @@ public class OsgiManager extends GenericServlet
     /**
      * @see javax.servlet.GenericServlet#service(javax.servlet.ServletRequest, javax.servlet.ServletResponse)
      */
+    @Override
     public void service(final ServletRequest req, final ServletResponse res)
         throws ServletException, IOException
     {
@@ -493,6 +507,7 @@ public class OsgiManager extends GenericServlet
         {
             AccessController.doPrivileged(new PrivilegedExceptionAction<Object>()
             {
+                @Override
                 public Object run() throws Exception
                 {
                     service((HttpServletRequest) req, (HttpServletResponse) res);
@@ -722,6 +737,7 @@ public class OsgiManager extends GenericServlet
     /**
      * @see javax.servlet.GenericServlet#destroy()
      */
+    @Override
     public void destroy()
     {
         // base class destroy not needed, since the GenericServlet.destroy
@@ -829,6 +845,7 @@ public class OsgiManager extends GenericServlet
             /**
              * @see javax.servlet.ServletRequestWrapper#getLocale()
              */
+            @Override
             public Locale getLocale()
             {
                 return locale;
@@ -899,6 +916,7 @@ public class OsgiManager extends GenericServlet
             return httpServiceSelector == null;
         }
 
+        @Override
         public HttpService addingService(ServiceReference<HttpService> reference)
         {
             HttpService service = super.addingService(reference);
@@ -906,6 +924,7 @@ public class OsgiManager extends GenericServlet
             return service;
         }
 
+        @Override
         public void removedService(ServiceReference<HttpService> reference, HttpService service)
         {
             osgiManager.unbindHttpService(service);
@@ -921,6 +940,7 @@ public class OsgiManager extends GenericServlet
             super(osgiManager.getBundleContext(), BrandingPlugin.class, null);
         }
 
+        @Override
         public BrandingPlugin addingService(ServiceReference<BrandingPlugin> reference)
         {
             BrandingPlugin plugin = super.addingService(reference);
@@ -928,6 +948,7 @@ public class OsgiManager extends GenericServlet
             return plugin;
         }
 
+        @Override
         public void removedService(ServiceReference<BrandingPlugin> reference, BrandingPlugin service)
         {
             AbstractWebConsolePlugin.setBrandingPlugin(null);
@@ -1113,6 +1134,10 @@ public class OsgiManager extends GenericServlet
             httpServiceTracker.close();
             httpServiceTracker = null;
         }
+
+        // secret heuristics
+        final boolean enableHeuristics = ConfigurationUtil.getProperty(config, PROP_ENABLE_SECRET_HEURISTIC, DEFAULT_ENABLE_SECRET_HEURISTIC);
+        OsgiManager.ENABLE_SECRET_HEURISTICS = enableHeuristics;
 
         // get enabled plugins
         String[] plugins = ConfigurationUtil.getStringArrayProperty(config, PROP_ENABLED_PLUGINS);

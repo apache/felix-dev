@@ -41,7 +41,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 @HealthCheckService(name = ThreadUsageCheck.HC_NAME)
-@Component(configurationPolicy = ConfigurationPolicy.REQUIRE)
+@Component(configurationPolicy = ConfigurationPolicy.REQUIRE, immediate = true)
 @Designate(ocd = ThreadUsageCheck.Config.class, factory = false)
 public class ThreadUsageCheck implements HealthCheck {
 
@@ -94,11 +94,11 @@ public class ThreadUsageCheck implements HealthCheck {
             for (int i = 0; i < threadTimeInfos.size(); i++) {
 
                 ThreadTimeInfo threadInfo = threadTimeInfos.get(i);
-                float cpuTimePercentage = ((float) threadInfo.getCpuTime() / ((float) samplePeriodInMs * 1000000)) * 100f;
+                float cpuTimePercentage = (threadInfo.getCpuTime() / ((float) samplePeriodInMs * 1000000)) * 100f;
                 totalCpuTimePercentage += cpuTimePercentage;
 
                 String msg = String.format("%4.1f", cpuTimePercentage) + "% used by thread \"" + threadInfo.name + "\"";
-                
+
                 // usually just shows the 3 busiest threads. For the case more threads take more than 15% CPU time, up to 10 threads are shown.
                 // use hcDebug=true to show all threads
                 if (i < 3 || (i < 10 && cpuTimePercentage > 15)) {

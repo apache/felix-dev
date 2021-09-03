@@ -107,15 +107,11 @@ class ConfigMetaTypeProvider implements MetaTypeProvider
 
         adList.add(new AttributeDefinitionImpl(JettyConfig.FELIX_KEYSTORE_PASSWORD,
                 "Keystore Password",
-                "Password to access the Keystore. Only used if HTTPS is enabled.",
-                null,
-                bundle.getBundleContext().getProperty(JettyConfig.FELIX_KEYSTORE_PASSWORD)));
+                "Password to access the Keystore. Only used if HTTPS is enabled."));
 
         adList.add(new AttributeDefinitionImpl(JettyConfig.FELIX_KEYSTORE_KEY_PASSWORD,
                 "Key Password",
-                "Password to unlock the secret key from the Keystore. Only used if HTTPS is enabled.",
-                null,
-                bundle.getBundleContext().getProperty(JettyConfig.FELIX_KEYSTORE_KEY_PASSWORD)));
+                "Password to unlock the secret key from the Keystore. Only used if HTTPS is enabled."));
 
         adList.add(new AttributeDefinitionImpl(JettyConfig.FELIX_TRUSTSTORE,
                 "Truststore",
@@ -125,9 +121,7 @@ class ConfigMetaTypeProvider implements MetaTypeProvider
 
         adList.add(new AttributeDefinitionImpl(JettyConfig.FELIX_TRUSTSTORE_PASSWORD,
                 "Truststore Password",
-                "Password to access the Truststore. Only used if HTTPS is enabled.",
-                null,
-                bundle.getBundleContext().getProperty(JettyConfig.FELIX_TRUSTSTORE_PASSWORD)));
+                "Password to access the Truststore. Only used if HTTPS is enabled."));
 
         adList.add(new AttributeDefinitionImpl(JettyConfig.FELIX_HTTPS_CLIENT_CERT,
                 "Client Certificate",
@@ -534,6 +528,16 @@ class ConfigMetaTypeProvider implements MetaTypeProvider
         private final String[] optionLabels;
         private final String[] optionValues;
 
+        /**
+         * Constructor for password properties
+         * @param id The id of the property
+         * @param name The property name
+         * @param description The property description
+         */
+        AttributeDefinitionImpl( final String id, final String name, final String description )
+        {
+            this( id, name, description, PASSWORD, (String[])null, 0, null, null, (String[])null );
+        }
 
         AttributeDefinitionImpl( final String id, final String name, final String description, final String defaultValue, final String overrideValue )
         {

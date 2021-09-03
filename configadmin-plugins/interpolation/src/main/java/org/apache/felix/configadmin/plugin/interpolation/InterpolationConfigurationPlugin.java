@@ -30,10 +30,9 @@ import java.util.Enumeration;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
-import java.util.stream.Collectors;
+import java.util.function.Function;
 import java.util.stream.Stream;
 
-import org.osgi.framework.BundleContext;
 import org.osgi.framework.Constants;
 import org.osgi.framework.ServiceReference;
 import org.osgi.service.cm.ConfigurationPlugin;
@@ -95,13 +94,13 @@ class InterpolationConfigurationPlugin implements ConfigurationPlugin {
         TYPE_MAP.put("char[]", char[].class);
     }
 
-    private final BundleContext context;
+    private final Function<String, String> propertiesProvider;
     private final List<File> directory;
 
     private final Charset encodingCharset;
 
-    InterpolationConfigurationPlugin(BundleContext bc, String dir, String fileEncoding) {
-        context = bc;
+    InterpolationConfigurationPlugin(Function<String, String> pp, String dir, String fileEncoding) {
+        propertiesProvider = pp;
         if (dir != null) {
             directory = Stream.of(dir.split("\\s*,\\s*")).map(File::new).collect(toList());
             getLog().info("Configured directory for secrets: {}", dir);
@@ -189,7 +188,7 @@ class InterpolationConfigurationPlugin implements ConfigurationPlugin {
     }
 
     String getVariableFromProperty(final String name) {
-        return context.getProperty(name);
+        return propertiesProvider.apply(name);
     }
 
     String getVariableFromFile(final String key, final String name, final Object pid) {

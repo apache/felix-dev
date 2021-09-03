@@ -25,6 +25,7 @@ import java.lang.reflect.Modifier;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.List;
+import java.util.Map;
 import java.util.Optional;
 import java.util.concurrent.CopyOnWriteArrayList;
 import java.util.concurrent.CopyOnWriteArraySet;
@@ -195,23 +196,27 @@ public class FieldHandler
             // unbind needs only be done, if reference is dynamic and optional
             if ( mType == METHOD_TYPE.UNBIND )
             {
-                if ( this.metadata.isOptional() && !this.metadata.isStatic() )
+                Map<RefPair<?, ?>, Object> boundValues = bp.getComponentContext().getBoundValues(metadata.getName());
+                synchronized (boundValues) 
                 {
-                    // we only reset if it was previously set with this value
-                    if ( bp.getComponentContext().getBoundValues(metadata.getName()).size() == 1 )
+                    if ( this.metadata.isOptional() && !this.metadata.isStatic() )
                     {
-                        if (valueType == ValueType.ref_optional)
+                        // we only reset if it was previously set with this value
+                        if (boundValues.size() == 1)
                         {
-                            this.setFieldValue(componentInstance, Optional.empty());
-                        }
-                        else
-                        {
-                            // null the field if optional and unary
-                            this.setFieldValue(componentInstance, null);
+                            if (valueType == ValueType.ref_optional)
+                            {
+                                this.setFieldValue(componentInstance, Optional.empty());
+                            }
+                            else
+                            {
+                                // null the field if optional and unary
+                                this.setFieldValue(componentInstance, null);
+                            }
                         }
                     }
+                    boundValues.remove(refPair);
                 }
-                bp.getComponentContext().getBoundValues(metadata.getName()).remove(refPair);
             }
             // updated needs only be done, if the value type is map or tuple
             // If it's a dynamic reference, the value can be updated

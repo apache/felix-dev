@@ -18,8 +18,12 @@
  */
 package org.apache.felix.systemready.impl;
 
+import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Collection;
 import java.util.List;
+import java.util.concurrent.atomic.AtomicBoolean;
+import java.util.concurrent.atomic.AtomicReference;
 import java.util.stream.Collectors;
 
 import org.apache.felix.rootcause.DSComp;
@@ -34,11 +38,15 @@ import org.osgi.service.component.annotations.Component;
 import org.osgi.service.component.annotations.ConfigurationPolicy;
 import org.osgi.service.component.annotations.Reference;
 import org.osgi.service.component.runtime.ServiceComponentRuntime;
+import org.osgi.service.component.runtime.dto.ComponentDescriptionDTO;
 import org.osgi.service.metatype.annotations.AttributeDefinition;
 import org.osgi.service.metatype.annotations.Designate;
 import org.osgi.service.metatype.annotations.ObjectClassDefinition;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 @Component(
+        service = {SystemReadyCheck.class},
         name = ComponentsCheck.PID,
         configurationPolicy = ConfigurationPolicy.REQUIRE
 )
@@ -56,27 +64,31 @@ public class ComponentsCheck implements SystemReadyCheck {
 
         @AttributeDefinition(name = "Components list", description = "The components that need to come up before this check reports GREEN")
         String[] components_list();
-        
-        @AttributeDefinition(name = "Check type") 
+
+        @AttributeDefinition(name = "Check type")
         StateType type() default StateType.ALIVE;
 
     }
+    private final Logger log = LoggerFactory.getLogger(getClass());
 
     private List<String> componentsList;
-    
+
     private DSRootCause analyzer;
 
     private StateType type;
-    
-    @Reference
-    ServiceComponentRuntime scr;
 
+    private ServiceComponentRuntime scr;
+
+    private final AtomicBoolean refreshCache = new AtomicBoolean();
+
+    private final AtomicReference<CheckStatus> cache = new AtomicReference<>();
 
     @Activate
     public void activate(final BundleContext ctx, final Config config) throws InterruptedException {
         this.analyzer = new DSRootCause(scr);
         this.type = config.type();
-        componentsList = Arrays.asList(config.components_list());
+        this.componentsList = Arrays.asList(config.components_list());
+        this.refreshCache.set(false); // cache is empty
     }
 
     @Override
@@ -84,30 +96,73 @@ public class ComponentsCheck implements SystemReadyCheck {
         return "Components Check " + componentsList;
     }
 
+    private List<DSComp> getComponents(final Collection<ComponentDescriptionDTO> descriptions) {
+        try {
+            return descriptions.stream()
+                .filter(desc -> componentsList.contains(desc.name))
+                .map(analyzer::getRootCause)
+                .collect(Collectors.toList());
+        } catch (Throwable e) {
+            // exception might occur on shutdown or startup
+            log.info("Exception while getting ds component dtos {}", e.getMessage(), e);
+            return null;
+        }
+    }
+
     @Override
     public CheckStatus getStatus() {
-        StringBuilder details = new StringBuilder();
-        List<DSComp> watchedComps = scr.getComponentDescriptionDTOs().stream()
-            .filter(desc -> componentsList.contains(desc.name))
-            .map(analyzer::getRootCause)
-            .collect(Collectors.toList());
-        if (watchedComps.size() < componentsList.size()) {
-            throw new IllegalStateException("Not all named components could be found");
-        };
-        watchedComps.stream().forEach(dsComp -> addDetails(dsComp, details));
-        final CheckStatus.State state = CheckStatus.State.worstOf(watchedComps.stream().map(this::status));
-        return new CheckStatus(getName(), type, state, details.toString());
-    }
-    
-    private CheckStatus.State status(DSComp component) {
+        CheckStatus result = this.cache.get();
+        if ( result == null || this.refreshCache.compareAndSet(true, false) ) {
+            final List<DSComp> watchedComps = getComponents(scr.getComponentDescriptionDTOs());
+            if ( watchedComps == null ) {
+                result = new CheckStatus(getName(), type, CheckStatus.State.RED, "Exception while checking ds component dtos.");
+            } else if (watchedComps.size() < componentsList.size()) {
+                final List<String> missed = new ArrayList<>(this.componentsList);
+                for(final DSComp c : watchedComps) {
+                    missed.remove(c.desc.name);
+                }
+                result = new CheckStatus(getName(), type, CheckStatus.State.RED, "Not all named components could be found, missing : " + missed);
+            } else {
+                try {
+                    final StringBuilder details = new StringBuilder();
+                    watchedComps.stream().forEach(dsComp -> addDetails(dsComp, details));
+                    final CheckStatus.State state = CheckStatus.State.worstOf(watchedComps.stream().map(this::status));
+                    result = new CheckStatus(getName(), type, state, details.toString());
+                } catch (final Throwable e) {
+                    // exception might occur on shutdown or startup
+                    log.info("Exception while checking ds component dtos {}", e.getMessage(), e);
+                    result = new CheckStatus(getName(), type, CheckStatus.State.RED, "Exception while checking ds component dtos : " + e.getMessage());
+                }
+            }
+            if ( result.getState() == CheckStatus.State.GREEN ) {
+                this.cache.set(result);
+            }
+        }
+        return result;
+     }
+
+    private CheckStatus.State status(final DSComp component) {
         boolean missingConfig = component.config == null && "require".equals(component.desc.configurationPolicy);
         boolean unsatisfied = !component.unsatisfied.isEmpty();
         return (missingConfig || unsatisfied) ? CheckStatus.State.YELLOW : CheckStatus.State.GREEN;
     }
 
-    private void addDetails(DSComp component, StringBuilder details) {
+    private void addDetails(final DSComp component, final StringBuilder details) {
         RootCausePrinter printer = new RootCausePrinter(st -> details.append(st + "\n"));
         printer.print(component);
     }
 
+    @Reference(name = "scr", updated = "updatedServiceComponentRuntime")
+    private void setServiceComponentRuntime(final ServiceComponentRuntime c) {
+        this.scr = c;
+    }
+
+    private void unsetServiceComponentRuntime(final ServiceComponentRuntime c) {
+        this.scr = null;
+    }
+
+    private void updatedServiceComponentRuntime(final ServiceComponentRuntime c) {
+        // change in DS - mark cache
+        this.refreshCache.compareAndSet(false, true);
+    }
 }

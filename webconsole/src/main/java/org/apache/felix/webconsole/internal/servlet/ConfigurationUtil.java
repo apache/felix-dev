@@ -197,4 +197,33 @@ public class ConfigurationUtil
         return ret;
     }
 
+
+    /**
+     * Returns the value of the named property from the configuration. If the property does
+     * not exist, the default value <code>def</code> is returned.
+     *
+     * @param config The properties from which to returned the named one
+     * @param name The name of the property to return
+     * @param def The default value if the named property does not exist
+     * @return The value of the named property as a boolean or <code>def</code>
+     *         if the property does not exist
+     */
+    public static boolean getProperty(Map<String, Object> config, String name,
+            boolean def)
+    {
+        Object value = config.get(name);
+        if (value instanceof Boolean)
+        {
+            return ((Boolean) value).booleanValue();
+        }
+
+        if (value != null)
+        {
+            return Boolean.getBoolean(value.toString());
+        }
+
+        // use default
+        return def;
+    }
+
 }

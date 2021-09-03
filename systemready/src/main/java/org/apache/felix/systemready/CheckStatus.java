@@ -23,6 +23,11 @@ import static java.util.stream.Collectors.minBy;
 import java.util.Objects;
 import java.util.stream.Stream;
 
+/**
+ * This framework is deprecated.
+ * @deprecated Use the Apache Felix Healthchecks instead.
+ */
+@Deprecated
 public final class CheckStatus {
     public enum State {
         // Be aware that the order of the enum declarations matters for the Comparator

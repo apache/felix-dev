@@ -18,6 +18,15 @@
  */
 package org.apache.felix.framework;
 
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.HashMap;
+import java.util.HashSet;
+import java.util.LinkedHashSet;
+import java.util.List;
+import java.util.Map;
+import java.util.Set;
+
 import org.osgi.dto.DTO;
 import org.osgi.framework.Bundle;
 import org.osgi.framework.BundleContext;
@@ -52,15 +61,6 @@ import org.osgi.resource.dto.CapabilityRefDTO;
 import org.osgi.resource.dto.RequirementDTO;
 import org.osgi.resource.dto.RequirementRefDTO;
 import org.osgi.resource.dto.WireDTO;
-
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.HashMap;
-import java.util.HashSet;
-import java.util.LinkedHashSet;
-import java.util.List;
-import java.util.Map;
-import java.util.Set;
 
 /**
  * Creates various DTOs provided by the core framework.
@@ -346,7 +346,7 @@ public class DTOFactory
     private static ServiceReferenceDTO createServiceReferenceDTO(ServiceReference<?> svc)
     {
         ServiceReferenceDTO dto = new ServiceReferenceDTO();
-        dto.bundle = svc.getBundle().getBundleId();
+        dto.bundle = (Long)svc.getProperty(Constants.SERVICE_BUNDLEID);
         dto.id = (Long) svc.getProperty(Constants.SERVICE_ID);
         Map<String, Object> props = new HashMap<String, Object>();
         for (String key : svc.getPropertyKeys())

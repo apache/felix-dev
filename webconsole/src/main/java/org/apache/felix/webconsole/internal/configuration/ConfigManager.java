@@ -16,10 +16,11 @@
  */
 package org.apache.felix.webconsole.internal.configuration;
 
-
 import java.io.IOException;
 import java.io.PrintWriter;
 import java.io.StringWriter;
+import java.util.ArrayList;
+import java.util.List;
 import java.util.Locale;
 import java.util.Map;
 
@@ -28,21 +29,26 @@ import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 
 import org.apache.felix.utils.json.JSONWriter;
-import org.apache.felix.webconsole.DefaultVariableResolver;
 import org.apache.felix.webconsole.SimpleWebConsolePlugin;
 import org.apache.felix.webconsole.WebConsoleConstants;
 import org.apache.felix.webconsole.WebConsoleUtil;
 import org.apache.felix.webconsole.internal.OsgiManagerPlugin;
+import org.apache.felix.webconsole.internal.Util;
+import org.apache.felix.webconsole.internal.misc.ServletSupport;
+import org.apache.felix.webconsole.spi.ConfigurationHandler;
+import org.apache.felix.webconsole.spi.ValidationException;
+import org.osgi.framework.BundleContext;
 import org.osgi.framework.Constants;
 import org.osgi.framework.InvalidSyntaxException;
 import org.osgi.service.cm.Configuration;
+import org.osgi.util.tracker.ServiceTracker;
 
 
 /**
  * The <code>ConfigManager</code> class is the Web Console plugin to
  * manage configurations.
  */
-public class ConfigManager extends SimpleWebConsolePlugin implements OsgiManagerPlugin
+public class ConfigManager extends SimpleWebConsolePlugin implements OsgiManagerPlugin, ServletSupport
 {
 
     private static final long serialVersionUID = 5021174538498622428L;
@@ -54,7 +60,6 @@ public class ConfigManager extends SimpleWebConsolePlugin implements OsgiManager
     static final String PID_FILTER = "pidFilter"; //$NON-NLS-1$
     static final String PID = "pid"; //$NON-NLS-1$
     static final String FACTORY_PID = "factoryPid"; //$NON-NLS-1$
-    static final String PLACEHOLDER_PID = "[Temporary PID replaced by real PID upon save]"; //$NON-NLS-1$
     static final String REFERER = "referer"; //$NON-NLS-1$
     static final String FACTORY_CREATE = "factoryCreate"; //$NON-NLS-1$
 
@@ -74,137 +79,126 @@ public class ConfigManager extends SimpleWebConsolePlugin implements OsgiManager
     // templates
     private final String TEMPLATE;
 
+    // service tracker for SPI
+    private ServiceTracker<ConfigurationHandler, ConfigurationHandler> spiTracker;
+
     /** Default constructor */
-    public ConfigManager()
-    {
+    public ConfigManager() {
         super(LABEL, TITLE, CATEGORY_OSGI, CSS);
 
         // load templates
         TEMPLATE = readTemplateFile( "/templates/config.html" ); //$NON-NLS-1$
     }
 
-    static final boolean isAllowedPid(final String pid)
-    {
-        for(int i = 0; i < pid.length(); i++)
-        {
-            final char c = pid.charAt(i);
-            if ( c == '&' || c == '<' || c == '>' || c == '"' || c == '\'' )
-            {
-                return false;
-            }
-        }
-        return true;
+    @Override
+    public void activate(final BundleContext bundleContext) {
+        super.activate(bundleContext);
+        this.spiTracker = new ServiceTracker<>(bundleContext, ConfigurationHandler.class.getName(), null);
+        this.spiTracker.open(true);
     }
 
 
-    private static final Locale getLocale( HttpServletRequest request )
-    {
-        try
-        {
-            return request.getLocale();
+    @Override
+    public void deactivate() {
+        if ( this.spiTracker != null ) {
+            this.spiTracker.close();
+            this.spiTracker = null;
         }
-        catch ( Throwable t )
-        {
-            // expected in standard OSGi Servlet 2.1 environments
-            // fallback to using the default locale
-            return Locale.getDefault();
-        }
+        super.deactivate();
     }
-
 
     /**
      * @see javax.servlet.http.HttpServlet#doPost(javax.servlet.http.HttpServletRequest, javax.servlet.http.HttpServletResponse)
      */
     @Override
-    protected void doPost( HttpServletRequest request, HttpServletResponse response ) throws IOException
-    {
+    protected void doPost( HttpServletRequest request, HttpServletResponse response ) throws IOException {
+        // service unavailable if config admin is not available
+        final ConfigAdminSupport cas = getConfigurationAdminSupport();
+        if ( cas == null ) {
+            response.sendError(503);
+            return;
+        }
+
         // needed multiple times below
         String pid = request.getParameter( ConfigManager.PID );
-        if ( pid == null )
-        {
+        if ( pid == null ) {
             String info = request.getPathInfo();
             pid = WebConsoleUtil.urlDecode( info.substring( info.lastIndexOf( '/' ) + 1 ) );
         }
+        // ignore this request if the PID is invalid / not provided
+        if ( pid == null || pid.length() == 0 || !ConfigurationUtil.isAllowedPid(pid)) {
+            response.sendError(400);
+            return;
+        }
 
         // the filter to select part of the configurations
-        String pidFilter = request.getParameter( PID_FILTER );
-
-        final ConfigAdminSupport cas = getConfigurationAdminSupport();
-
-        // ignore this request if the PID and/or configuration admin is missing
-        if ( pid == null || pid.length() == 0 || cas == null )
-        {
-            // should log this here !!
+        final String pidFilter = request.getParameter( PID_FILTER );
+        if ( pidFilter != null && !ConfigurationUtil.isAllowedPid(pidFilter) ) {
+            response.sendError(400);
             return;
         }
 
-        // ignore this request, if the PID is invalid
-        if ( ! isAllowedPid(pid) )
-        {
-            response.sendError(500);
-            return;
-        }
-        if ( pidFilter != null && ! isAllowedPid(pidFilter) )
-        {
-            response.sendError(500);
+        if ( request.getParameter( ACTION_APPLY ) != null ) {
+            if ( request.getParameter( ConfigManager.ACTION_DELETE ) != null ) { //$NON-NLS-1$
+                try {
+                    cas.deleteConfiguration( pid );
+                    Util.sendJsonOk(response);
+                } catch ( final ValidationException ve) {
+                    response.sendError(400, ve.getMessage());
+                }
+            }
+            else
+            {
+                final String propertyList = request.getParameter( ConfigManager.PROPERTY_LIST ); //$NON-NLS-1$
+                if ( propertyList == null ) {
+                    response.sendError(400);
+                    return;
+                }
+
+                try {
+                    cas.applyConfiguration( request, pid, propertyList.split(","), ACTION_UPDATE.equals(request.getParameter(ACTION_APPLY)));
+                    String redirect = pid;
+                    if (pidFilter != null) {
+                        redirect = redirect.concat("?").concat(PID_FILTER).concat("=").concat(pidFilter);
+                    }
+
+                    WebConsoleUtil.sendRedirect(request, response, redirect);
+                } catch ( final ValidationException ve) {
+                    response.sendError(400, ve.getMessage());
+                }
+            }
+
             return;
         }
 
         // the configuration to operate on (to be created or "missing")
-        Configuration config = null;
+        final Configuration config;
 
         // should actually apply the configuration before redirecting
-        if ( request.getParameter( ACTION_CREATE ) != null )
-        {
-            config = cas.getPlaceholderConfiguration( pid ); // ca.createFactoryConfiguration( pid, null );
+        if ( request.getParameter( ACTION_CREATE ) != null ) {
+            config = ConfigurationUtil.getPlaceholderConfiguration( pid );
             pid = config.getPid();
-        }
-        else if ( request.getParameter( ACTION_APPLY ) != null )
-        {
-            String redirect = cas.applyConfiguration( request, pid, ACTION_UPDATE.equals(request.getParameter(ACTION_APPLY)) );
-            if ( redirect != null )
-            {
-                if (pidFilter != null) {
-                    redirect += '?' + PID_FILTER + '=' + pidFilter;
-                }
-
-                WebConsoleUtil.sendRedirect(request, response, redirect);
-            }
-            else
-            {
-                response.setContentType( "application/json" ); //$NON-NLS-1$
-                response.setCharacterEncoding( "UTF-8" ); //$NON-NLS-1$
-                response.getWriter().print( "{ \"status\": true }" ); //$NON-NLS-1$
-            }
-
-            return;
-        }
-
-        if ( config == null )
-        {
-            config = cas.getConfiguration( pid );
+        } else {
+            config = cas.findConfiguration( pid );
         }
 
         // check for configuration unbinding
         if ( request.getParameter( ACTION_UNBIND ) != null )
         {
-            if ( config != null && config.getBundleLocation() != null )
-            {
+            if ( config != null && config.getBundleLocation() != null ) {
                 config.setBundleLocation( UNBOUND_LOCATION );
 
             }
-            response.setContentType( "application/json" ); //$NON-NLS-1$
-            response.setCharacterEncoding( "UTF-8" ); //$NON-NLS-1$
-            response.getWriter().print( "{ \"status\": true }" ); //$NON-NLS-1$
+            Util.sendJsonOk(response);
             return;
         }
 
         // send the result
         response.setContentType( "application/json" ); //$NON-NLS-1$
         response.setCharacterEncoding( "UTF-8" ); //$NON-NLS-1$
-        final Locale loc = getLocale( request );
+        final Locale loc = Util.getLocale( request );
         final String locale = ( loc != null ) ? loc.toString() : null;
-        cas.printConfigurationJson( response.getWriter(), pid, config, pidFilter, locale );
+        cas.getJsonSupport().printConfigurationJson( response.getWriter(), pid, config, pidFilter, locale );
     }
 
 
@@ -213,8 +207,7 @@ public class ConfigManager extends SimpleWebConsolePlugin implements OsgiManager
      */
     @Override
     protected void doGet( HttpServletRequest request, HttpServletResponse response )
-            throws ServletException, IOException
-    {
+            throws ServletException, IOException {
         // check for "post" requests from previous versions
         if ( "true".equals(request.getParameter("post")) ) { //$NON-NLS-1$ //$NON-NLS-2$
             this.doPost(request, response);
@@ -255,17 +248,17 @@ public class ConfigManager extends SimpleWebConsolePlugin implements OsgiManager
             }
 
             // check both PID and PID filter
-            if ( pid != null && !isAllowedPid(pid) )
+            if ( pid != null && !ConfigurationUtil.isAllowedPid(pid) )
             {
-                response.sendError(500);
+                response.sendError(400);
             }
-            if ( pidFilter != null && !isAllowedPid(pidFilter) )
+            if ( pidFilter != null && !ConfigurationUtil.isAllowedPid(pidFilter) )
             {
-                response.sendError(500);
+                response.sendError(400);
             }
 
 
-            final Locale loc = getLocale( request );
+            final Locale loc = Util.getLocale( request );
             final String locale = ( loc != null ) ? loc.toString() : null;
 
             final PrintWriter pw = response.getWriter();
@@ -312,7 +305,7 @@ public class ConfigManager extends SimpleWebConsolePlugin implements OsgiManager
                             {
                                 pw.print( ',' );
                             }
-                            ca.printConfigurationJson( pw, config.getPid(), config, null, locale );
+                            ca.getJsonSupport().printConfigurationJson( pw, config.getPid(), config, null, locale );
                             printComma = true;
                         }
                     }
@@ -379,37 +372,37 @@ public class ConfigManager extends SimpleWebConsolePlugin implements OsgiManager
         }
 
         // check both PID and PID filter
-        if ( pid != null && !isAllowedPid(pid) )
+        if ( pid != null && !ConfigurationUtil.isAllowedPid(pid) )
         {
-            response.sendError(500);
+            response.sendError(400);
         }
-        if ( pidFilter != null && !isAllowedPid(pidFilter) )
+        if ( pidFilter != null && !ConfigurationUtil.isAllowedPid(pidFilter) )
         {
-            response.sendError(500);
+            response.sendError(400);
         }
 
-        final Locale loc = getLocale( request );
+        final Locale loc = Util.getLocale( request );
         final String locale = ( loc != null ) ? loc.toString() : null;
 
 
         StringWriter json = new StringWriter();
         JSONWriter jw = new JSONWriter(json);
         jw.object();
-        final ConfigAdminSupport ca = getConfigurationAdminSupport();
+        final ConfigAdminSupport cas = getConfigurationAdminSupport();
         // check for osgi installer plugin
         @SuppressWarnings("unchecked")
         final Map<String, Object> labelMap = (Map<String, Object>) request.getAttribute(WebConsoleConstants.ATTR_LABEL_MAP);
         jw.key("jsonsupport").value( labelMap.containsKey("osgi-installer-config-printer") ); //$NON-NLS-1$
-        final boolean hasMetatype = ca.getMetaTypeSupport() != null;
-        jw.key("status").value( ca != null ? Boolean.TRUE : Boolean.FALSE); //$NON-NLS-1$
+        final boolean hasMetatype = cas.getMetaTypeSupport() != null;
+        jw.key("status").value( cas != null ? Boolean.TRUE : Boolean.FALSE); //$NON-NLS-1$
         jw.key("metatype").value( hasMetatype ? Boolean.TRUE : Boolean.FALSE); //$NON-NLS-1$
         boolean hasConfigs = true;
-        if ( ca != null )
+        if ( cas != null )
         {
-            hasConfigs = ca.listConfigurations( jw, pidFilter, locale, loc );
-            ca.listFactoryConfigurations( jw, pidFilter, locale );
+            hasConfigs = cas.getJsonSupport().listConfigurations( jw, pidFilter, locale, loc );
+            cas.getJsonSupport().listFactoryConfigurations( jw, pidFilter, locale );
         }
-        if ( !hasConfigs && !hasMetatype && ca != null ) {
+        if ( !hasConfigs && !hasMetatype && cas != null ) {
             jw.key("noconfigs").value(true); //$NON-NLS-1$
         } else {
             jw.key("noconfigs").value(false); //$NON-NLS-1$
@@ -418,16 +411,15 @@ public class ConfigManager extends SimpleWebConsolePlugin implements OsgiManager
         jw.endObject();
 
         // if a configuration is addressed, display it immediately
-        if ( request.getParameter( ACTION_CREATE ) != null && pid != null )
-        {
-            pid = PLACEHOLDER_PID; // new PlaceholderConfiguration( pid ).getPid();
+        if ( request.getParameter( ACTION_CREATE ) != null && pid != null ) {
+            pid = ConfigurationUtil.getPlaceholderPid();
         }
 
 
         // prepare variables
         final String referer = request.getParameter( REFERER );
         final boolean factoryCreate = "true".equals( request.getParameter(FACTORY_CREATE) ); //$NON-NLS-1$
-        DefaultVariableResolver vars = ( ( DefaultVariableResolver ) WebConsoleUtil.getVariableResolver( request ) );
+        final Map<String, Object> vars = ( ( Map<String, Object> ) WebConsoleUtil.getVariableResolver( request ) );
         vars.put( "__data__", json.toString() ); //$NON-NLS-1$
         vars.put( "selectedPid", pid != null ? pid : "" ); //$NON-NLS-1$ //$NON-NLS-2$
         vars.put( "configurationReferer", referer != null ? referer : "" ); //$NON-NLS-1$ //$NON-NLS-2$
@@ -442,16 +434,24 @@ public class ConfigManager extends SimpleWebConsolePlugin implements OsgiManager
         response.getWriter().print(TEMPLATE);
     }
 
-    private ConfigAdminSupport getConfigurationAdminSupport()
-    {
+    private ConfigAdminSupport getConfigurationAdminSupport() {
         Object configurationAdmin = getService( CONFIGURATION_ADMIN_NAME );
-        if ( configurationAdmin != null )
-        {
-            return new ConfigAdminSupport( this, this.getBundleContext(), configurationAdmin );
+        if ( configurationAdmin != null ) {
+            final List<ConfigurationHandler> handlers = new ArrayList<>();
+            Object[] services = this.spiTracker.getServices();
+            if (services != null) {
+                for(final Object o : services) {
+                    handlers.add((ConfigurationHandler)o);
+                }
+            }
+            return new ConfigAdminSupport( this, configurationAdmin, handlers );
         }
         return null;
     }
 
-
+    @Override
+    public BundleContext getBundleContext() {
+        return super.getBundleContext();
+    }
 }
 

@@ -28,7 +28,7 @@
 
     <name>Apache Felix Converter</name>
     <artifactId>org.apache.felix.converter</artifactId>
-    <version>1.0.15-SNAPSHOT</version>
+    <version>1.0.19-SNAPSHOT</version>
     <packaging>bundle</packaging>
 
     <scm>

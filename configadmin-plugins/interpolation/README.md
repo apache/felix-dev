@@ -1,6 +1,11 @@
 # org.apache.felix.configadmin.plugin.interpolation
 
-An OSGi Configuration Admin Plugin that can interpolate values in configuration with values obtained elsewhere. Supported sources:
+An OSGi Configuration Admin Plugin that can interpolate values in configuration with values obtained elsewhere.
+
+The [StandaloneInterpolator](./src/main/java/org/apache/felix/configadmin/plugin/interpolation/StandaloneInterpolator.java)
+can also be used independently of Configuration Admin.
+
+Supported sources:
 
 * Files on disk, for example to be used with Kubernetes secrets
 * Environment variables
