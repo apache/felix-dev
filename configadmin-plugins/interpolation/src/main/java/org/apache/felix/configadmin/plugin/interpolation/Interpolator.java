@@ -156,7 +156,10 @@ public class Interpolator {
                     return replacement;
                 }
                 // replace and continue with replacement
-                result = result.substring(0, boundaries[0]).concat(replacement.toString()).concat(result.substring(boundaries[1] + 1));
+                replacement = replace(replacement.toString(), provider);
+                final String val = replacement.toString();
+                result = result.substring(0, boundaries[0]).concat(val).concat(result.substring(boundaries[1] + 1));
+                index = boundaries[0] + val.length();
             }
         }
         return result;
