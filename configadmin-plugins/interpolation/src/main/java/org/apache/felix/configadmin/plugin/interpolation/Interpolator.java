@@ -135,20 +135,12 @@ public class Interpolator {
             final int dirPos = postfix.indexOf(';');
             final Map<String, String> directives;
             final String name;
-            if (dirPos == -1) {
-                name = postfix;
-                directives = Collections.emptyMap();
-            } else {
+            if (dirPos != -1) {
+                directives = parseDirectives(postfix.substring(dirPos + 1));
                 name = postfix.substring(0, dirPos);
-                directives = new HashMap<>();
-
-                for (String dir : postfix.substring(dirPos + 1).split(";")) {
-                    String[] kv = dir.split("=", 2);
-                    if (kv.length > 0) {
-                        final String directiveValue = kv.length == 2 ? kv[1] : "";
-                        directives.put(kv[0], directiveValue);
-                    }
-                }
+            } else {
+                directives = Collections.emptyMap();
+                name = postfix;
             }
 
             // recursive replacement
@@ -168,5 +160,39 @@ public class Interpolator {
             }
         }
         return result;
+    }
+
+    public static Map<String,String> parseDirectives(String value) {
+        final Map<String,String> directives = new HashMap<>();
+        int index = 0;
+        while ( index <= value.length()) {
+            boolean split = false;
+            if ( index == value.length() ) {
+                split = true;
+            } else  if ( value.charAt(index) == ';' ) {
+                if ( index > 0 && value.charAt(index - 1) == ESCAPE && (index == 1 || value.charAt(index - 2) != ESCAPE) ) {
+                    // escape
+                    value = value.substring(0, index - 1).concat(value.substring(index));
+                    index--;
+                } else {
+                    split = true;
+                }
+            }
+            if ( split ) {
+                final String[] kv = value.substring(0, index).split("=", 2);
+                if (kv.length > 0) {
+                    final String directiveValue = kv.length == 2 ? kv[1] : "";
+                    directives.put(kv[0], directiveValue);
+                }
+                if ( index == value.length() ) {
+                    break;
+                }
+                value = value.substring(index + 1);
+                index = -1;         
+            }
+            index++;
+        }
+
+        return directives;
     }
 }

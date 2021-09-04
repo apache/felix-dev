@@ -18,6 +18,7 @@ package org.apache.felix.configadmin.plugin.interpolation;
 
 import static org.junit.Assert.assertEquals;
 
+import java.util.HashMap;
 import java.util.Map;
 
 import org.apache.felix.configadmin.plugin.interpolation.Interpolator.Provider;
@@ -73,5 +74,20 @@ public class InterpolatorTest {
             }
         };
         assertEquals("$[no:replacement]", Interpolator.replace("\\$[no:replacement]", p));
+    }
+
+    @Test
+    public void testParseDirectives() {
+        final Map<String, String> directives = Interpolator.parseDirectives("a=1;b=2");
+        assertEquals(2, directives.size());
+        assertEquals("1", directives.get("a"));
+        assertEquals("2", directives.get("b"));
+    }
+
+    @Test
+    public void testParseDirectivesWithEscaping() {
+        final Map<String, String> directives = Interpolator.parseDirectives("a=1\\;b=2");
+        assertEquals(1, directives.size());
+        assertEquals("1;b=2", directives.get("a"));
     }
 }
