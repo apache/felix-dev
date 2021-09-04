@@ -66,19 +66,31 @@ public class Interpolator {
         }
 
         // find END marker
-        final String value = valueRef.get();
+        String value = valueRef.get();
         int index = start + START.length();
         int end = -1;
         int count = 1;
         while ( index < value.length() && count > 0 ) {            
-            if ( value.charAt(index) == END 
-                 && (value.charAt(index - 1) != ESCAPE || value.charAt(index - 2) == ESCAPE) ) {
-                end = index;
-                count--;
+            if ( value.charAt(index) == END ) {
+                if ( value.charAt(index - 1) != ESCAPE || value.charAt(index - 2) == ESCAPE ) {
+                    end = index;
+                    count--;
+                } else {
+                    // remove escape
+                    value = value.substring(0, index - 1).concat(value.substring(index));
+                    valueRef.set(value);
+                    index--;
+                }
             }
-            if ( value.charAt(index) == '['
-                 && (value.charAt(index - 1) != ESCAPE || value.charAt(index - 2) == ESCAPE) ) {
-                count++;
+            if ( value.charAt(index) == '[' ) {
+                if ( value.charAt(index - 1) != ESCAPE || value.charAt(index - 2) == ESCAPE ) {
+                    count++;
+                } else {
+                    // remove escape
+                    value = value.substring(0, index - 1).concat(value.substring(index));
+                    valueRef.set(value);
+                    index--;
+                }    
             }
             index++;
         }

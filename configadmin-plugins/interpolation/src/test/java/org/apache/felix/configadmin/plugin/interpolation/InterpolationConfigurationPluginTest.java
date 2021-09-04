@@ -148,6 +148,8 @@ public class InterpolationConfigurationPluginTest {
         dict.put("defaulted7", "$[env:notset;default=/()^$]");
         dict.put("defaulted8", "$[env:notset;default=[8080]]");
         dict.put("defaulted9", "$[env:notset;default=[aabb]cc]");
+        dict.put("defaulted10", "$[env:notset;default=\\[aabb]cc]");
+        dict.put("defaulted11", "$[env:notset;default=\\[aabb\\]cc]");
 
         plugin.modifyConfiguration(null, dict);
 
@@ -160,6 +162,8 @@ public class InterpolationConfigurationPluginTest {
         assertEquals("/()^$", dict.get("defaulted7"));
         assertEquals("[8080]", dict.get("defaulted8"));
         assertEquals("[aabb]cc", dict.get("defaulted9"));
+        assertEquals("[aabbcc]", dict.get("defaulted10"));
+        assertEquals("[aabb]cc", dict.get("defaulted11"));
     }
 
     @Test
