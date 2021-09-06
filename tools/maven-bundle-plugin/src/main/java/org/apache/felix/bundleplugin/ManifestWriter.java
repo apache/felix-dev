@@ -20,6 +20,7 @@ package org.apache.felix.bundleplugin;
 
 import java.io.IOException;
 import java.io.OutputStream;
+import java.nio.charset.StandardCharsets;
 import java.util.Arrays;
 import java.util.HashSet;
 import java.util.Map;
@@ -56,11 +57,11 @@ public class ManifestWriter {
      * <p>
      * As a bonus, we can now sort the manifest!
      */
-    static byte[]	CONTINUE	= new byte[] {
+    private static final byte[] CONTINUE = new byte[] {
             '\r', '\n', ' '
     };
 
-    static Set<String> NICE_HEADERS = new HashSet<>(
+    private static final Set<String> NICE_HEADERS = new HashSet<>(
             Arrays.asList(
                     Constants.IMPORT_PACKAGE,
                     Constants.DYNAMICIMPORT_PACKAGE,
@@ -68,7 +69,10 @@ public class ManifestWriter {
                     Constants.REQUIRE_CAPABILITY,
                     Constants.EXPORT_PACKAGE,
                     Constants.EXPORT_SERVICE,
-                    Constants.PROVIDE_CAPABILITY
+                    Constants.PROVIDE_CAPABILITY,
+                    Constants.REQUIRE_BUNDLE,
+                    Constants.BUNDLE_CLASSPATH,
+                    DependencyEmbedder.EMBEDDED_ARTIFACTS
             )
     );
 
@@ -140,7 +144,7 @@ public class ManifestWriter {
      *             when something fails
      */
     private static int write(OutputStream out, int i, String s) throws IOException {
-        byte[] bytes = s.getBytes("UTF8");
+		byte[] bytes = s.getBytes(StandardCharsets.UTF_8);
         return write(out, i, bytes);
     }
 
@@ -189,9 +193,7 @@ public class ManifestWriter {
             map.put(entry.getKey().toString(), entry.getValue().toString());
         }
 
-        map.remove("Manifest-Version"); // get rid of
-        // manifest
-        // version
+        map.remove("Manifest-Version"); // get rid of manifest version
         for (Map.Entry<String,String> entry : map.entrySet()) {
             writeEntry(out, entry.getKey(), entry.getValue(), nice);
         }
