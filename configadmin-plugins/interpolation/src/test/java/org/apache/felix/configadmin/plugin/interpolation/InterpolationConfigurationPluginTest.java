@@ -260,4 +260,17 @@ public class InterpolationConfigurationPluginTest {
         assertArrayEquals(new Integer[] { 1, 2 },
                 (Integer[]) plugin.replace("key", "$[prop:bar;type=Integer[];delimiter=,;default=1,2]", "somepid"));
     }
+
+    @Test
+    public void testConvertTypeDelimiterWithoutType() throws Exception {
+        BundleContext bc = Mockito.mock(BundleContext.class);
+        Mockito.when(bc.getProperty("foo")).thenReturn("2000,3000");
+        InterpolationConfigurationPlugin plugin = new InterpolationConfigurationPlugin(bc::getProperty, null, null);
+
+        Object obj = plugin.convertType(null, "a,b", ",");
+        assertArrayEquals(new String[] {"a", "b"}, (Object[])obj);
+
+        obj = plugin.convertType("String", "a,b", ",");
+        assertEquals("a,b", obj);
+    }
 }

@@ -238,7 +238,11 @@ class InterpolationConfigurationPlugin implements ConfigurationPlugin {
      * @param delimiter The delimiter for array types (optional)
      * @return The converted value
      */
-    Object convertType(final String type, final String value, final String delimiter) {
+    Object convertType(String type, final String value, final String delimiter) {
+        // if delimiter is specifed but no type, assume String[]
+        if ( delimiter != null && type == null ) {
+            type = "String[]";
+        }
         if (type == null) {
             return value;
         }
