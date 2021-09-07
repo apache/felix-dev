@@ -45,7 +45,9 @@ class BundleBuilderImpl implements FeatureBundleBuilder {
     	if ("id".equalsIgnoreCase(key))
     		throw new IllegalArgumentException("Key cannot be 'id'");
     	
-        this.metadata.put(key, value);
+    	checkMetadataValue(value);
+
+    	this.metadata.put(key, value);
         return this;
     }
 
@@ -63,9 +65,25 @@ class BundleBuilderImpl implements FeatureBundleBuilder {
     		throw new IllegalArgumentException("Key cannot be 'id'");    		
     	}
     		    	
+    	md.values().stream()
+			.forEach(this::checkMetadataValue);
+
         this.metadata.putAll(md);
         return this;
     }
+
+    private void checkMetadataValue(Object value) {
+    	if (value instanceof String) 
+    		return;
+    	
+    	if (value instanceof Boolean)
+    		return;
+    	
+    	if (value instanceof Number)
+    		return;
+    	
+    	throw new IllegalArgumentException("Illegal metadata value: " + value);
+	}
 
     @Override
     public FeatureBundle build() {
