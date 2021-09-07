@@ -39,33 +39,51 @@ class ArtifactBuilderImpl implements FeatureArtifactBuilder {
     	if (key == null)
     		throw new IllegalArgumentException("Metadata key cannot be null");
 
-    	if (value == null)
-    		throw new IllegalArgumentException("Metadata value cannot be null");
-    	
+    	if (key.length() == 0)
+    		throw new IllegalArgumentException("Key must not be empty");
+
     	if ("id".equalsIgnoreCase(key))
     		throw new IllegalArgumentException("Key cannot be 'id'");
+    	
+    	checkMetadataValue(value);
     	    	
         this.metadata.put(key, value);
         return this;
     }
 
-    @Override
+	@Override
     public FeatureArtifactBuilder addMetadata(Map<String,Object> md) {
     	if (md.keySet().contains(null))
     		throw new IllegalArgumentException("Metadata key cannot be null");
     	
-    	if (md.values().contains(null))
-    		throw new IllegalArgumentException("Metadata value cannot be null");
-    	
+    	if (md.keySet().contains(""))
+    		throw new IllegalArgumentException("Key must not be empty");
+
     	if (md.keySet().stream()
     		.map(String::toLowerCase)
     		.anyMatch(s -> "id".equals(s))) {
     		throw new IllegalArgumentException("Key cannot be 'id'");    		
     	}
+    	
+    	md.values().stream()
+			.forEach(this::checkMetadataValue);
 
     	this.metadata.putAll(md);
         return this;
     }
+
+    private void checkMetadataValue(Object value) {
+    	if (value instanceof String) 
+    		return;
+    	
+    	if (value instanceof Boolean)
+    		return;
+    	
+    	if (value instanceof Number)
+    		return;
+    	
+    	throw new IllegalArgumentException("Illegal metadata value: " + value);
+	}
 
     @Override
     public FeatureArtifact build() {
