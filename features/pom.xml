@@ -50,6 +50,7 @@
                         <configuration>
                             <bnd><![CDATA[
                             Bundle-Activator: org.apache.felix.feature.impl.Activator
+                            Provide-Capability: osgi.service;objectClass:List<String>="org.osgi.service.feature.FeatureService";uses:="org.osgi.service.feature"
                             ]]></bnd>
                         </configuration>
                     </execution>
