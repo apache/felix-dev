@@ -18,14 +18,12 @@
  */
 package org.apache.felix.scr.impl.runtime;
 
-import java.lang.ref.SoftReference;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
-import java.util.concurrent.ConcurrentHashMap;
 
 import org.apache.felix.scr.impl.ComponentRegistry;
 import org.apache.felix.scr.impl.manager.ComponentHolder;
@@ -36,11 +34,6 @@ import org.apache.felix.scr.impl.metadata.ReferenceMetadata;
 import org.osgi.dto.DTO;
 import org.osgi.framework.Bundle;
 import org.osgi.framework.BundleContext;
-import org.osgi.framework.BundleEvent;
-import org.osgi.framework.BundleListener;
-import org.osgi.framework.Constants;
-import org.osgi.framework.ServiceEvent;
-import org.osgi.framework.ServiceListener;
 import org.osgi.framework.ServiceReference;
 import org.osgi.framework.dto.BundleDTO;
 import org.osgi.framework.dto.ServiceReferenceDTO;
@@ -53,21 +46,17 @@ import org.osgi.service.component.runtime.dto.UnsatisfiedReferenceDTO;
 import org.osgi.util.promise.Promise;
 import org.osgi.util.promise.Promises;
 
-public class ServiceComponentRuntimeImpl implements ServiceComponentRuntime, ServiceListener, BundleListener
+public class ServiceComponentRuntimeImpl implements ServiceComponentRuntime
 {
     private static final String[] EMPTY = {};
 
     private final BundleContext context;
     private final ComponentRegistry componentRegistry;
 
-    private volatile SoftReference<ConcurrentHashMap<Long, ServiceReferenceDTO[]>> dtoCache = new SoftReference<>(new ConcurrentHashMap<Long, ServiceReferenceDTO[]>());
-
     public ServiceComponentRuntimeImpl(final BundleContext context, final ComponentRegistry componentRegistry)
     {
         this.context = context;
         this.componentRegistry = componentRegistry;
-        this.context.addBundleListener(this);
-        this.context.addServiceListener(this);
     }
 
     /**
@@ -288,44 +277,7 @@ public class ServiceComponentRuntimeImpl implements ServiceComponentRuntime, Ser
     {
         if (serviceRef == null)
             return null;
-        final Bundle bundle = serviceRef.getBundle();
-        if (bundle == null) {
-            return null;
-        }
-        final long bundleId = bundle.getBundleId();
-        ConcurrentHashMap<Long, ServiceReferenceDTO[]> cache = dtoCache.get();
-        if (cache == null) {
-            cache = new ConcurrentHashMap<>();
-            dtoCache = new SoftReference<>(cache);
-        }
-        ServiceReferenceDTO[] dtos = cache.get(bundleId);
-        if (dtos == null) {
-            dtos = bundle.adapt(ServiceReferenceDTO[].class);
-            if (dtos == null) {
-                dtos = new ServiceReferenceDTO[0];
-            }
-            cache.put(bundleId, dtos);
-        }
-        final long id = (Long) serviceRef.getProperty(Constants.SERVICE_ID);
-        for (final ServiceReferenceDTO dto : dtos)
-        {
-            if (dto.id == id)
-            {
-                // we need to return a copy!
-                final ServiceReferenceDTO result = new ServiceReferenceDTO();
-                result.bundle = dto.bundle;
-                result.id = dto.id;
-                result.properties = new HashMap<>(dto.properties);
-                if (dto.usingBundles != null) {
-                    result.usingBundles = new long[dto.usingBundles.length];
-                    if (dto.usingBundles.length > 0) {
-                        System.arraycopy(dto.usingBundles, 0, result.usingBundles, 0, result.usingBundles.length);
-                    }
-                }
-                return result;
-            }
-        }
-        return null;
+        return serviceRef.adapt(ServiceReferenceDTO.class);
     }
 
     /**
@@ -476,28 +428,4 @@ public class ServiceComponentRuntimeImpl implements ServiceComponentRuntime, Ser
             return null;
         }
     }
-
-    @Override
-    public void bundleChanged(final BundleEvent event) {
-        ConcurrentHashMap<Long, ServiceReferenceDTO[]> cache = dtoCache.get();
-        if (cache != null)
-        {
-            cache.remove(event.getBundle().getBundleId());
-        }
-    }
-
-    @Override
-    public void serviceChanged(final ServiceEvent event) {
-        if (event.getServiceReference() != null) {
-            ConcurrentHashMap<Long, ServiceReferenceDTO[]> cache = dtoCache.get();
-            if (cache != null)
-            {
-                // using bundle id property incase the service has gotten unregistered
-                // before we could get the bundle object
-                cache.remove(event.getServiceReference().getProperty(Constants.SERVICE_BUNDLEID));
-            }
-        }
-    }
-
-
 }

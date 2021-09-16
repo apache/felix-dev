@@ -44,18 +44,11 @@ public class ServiceComponentRuntimeImplTest extends TestCase
         Mockito.when(sr.getProperty(Constants.SERVICE_ID)).thenReturn(327L);
         Mockito.when(sr.getPropertyKeys()).thenReturn(new String[] {});
         Mockito.when(sr.getBundle()).thenReturn(b);
-
-        ServiceReferenceDTO one = new ServiceReferenceDTO();
-        one.id = 5;
-        ServiceReferenceDTO two = new ServiceReferenceDTO();
-        two.id = 825;
-        ServiceReferenceDTO three = new ServiceReferenceDTO();
-        three.id = 19;
         ServiceReferenceDTO real = new ServiceReferenceDTO();
         real.id = 327;
         real.properties = new HashMap<>();
+        Mockito.when(sr.adapt(ServiceReferenceDTO.class)).thenReturn(real);
 
-        Mockito.when(b.adapt(ServiceReferenceDTO[].class)).thenReturn(new ServiceReferenceDTO[] {one, two, real, three});
         ServiceComponentRuntimeImpl scr = new ServiceComponentRuntimeImpl(Mockito.mock(BundleContext.class), null);
         Method m = scr.getClass().getDeclaredMethod("serviceReferenceToDTO", ServiceReference.class);
         m.setAccessible(true);
