@@ -557,7 +557,8 @@ function addConfig(conf) {
         }
 		tr.attr('fpid', conf.name);
 	} else {
-		nms.addClass('ui-helper-hidden').parent().text(conf.name);
+		var name = escapeHtml(conf.name) + '<span class="pid">' + conf.id + '</span>';
+		nms.addClass('ui-helper-hidden').parent().html(name);
 	}
 
 	tr.find('td:eq(1)').click(function() { // name & edit

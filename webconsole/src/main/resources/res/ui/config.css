@@ -68,3 +68,12 @@ input.placeholder-active { color: #AAA !important }
 .iconMarginTop {
 	margin-top: .25em;
 }
+.pid { 
+	font-style: italic 
+}
+.pid:before { 
+	content: " (" 
+}
+.pid:after { 
+	content: ")"
+}
