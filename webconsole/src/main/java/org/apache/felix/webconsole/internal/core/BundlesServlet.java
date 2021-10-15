@@ -125,6 +125,10 @@ public class BundlesServlet extends SimpleWebConsolePlugin implements OsgiManage
     // templates
     private final String TEMPLATE_MAIN;
 
+    private ServiceRegistration<BundleInfoProvider> bipCapabilitiesProvided;
+
+    private ServiceRegistration<BundleInfoProvider> bipCapabilitiesRequired;
+
     /** Default constructor */
     public BundlesServlet()
     {
@@ -166,6 +170,8 @@ public class BundlesServlet extends SimpleWebConsolePlugin implements OsgiManage
         props.put( WebConsoleConstants.CONFIG_PRINTER_MODES, new String[] { ConfigurationPrinter.MODE_TXT,
                 ConfigurationPrinter.MODE_ZIP } );
         configurationPrinter = bundleContext.registerService( ConfigurationPrinter.class, this, props );
+        bipCapabilitiesProvided = bundleContext.registerService( BundleInfoProvider.class, new CapabilitiesProvidedInfoProvider( bundleContext.getBundle() ), null );
+        bipCapabilitiesRequired = bundleContext.registerService( BundleInfoProvider.class, new CapabilitiesRequiredInfoProvider( bundleContext.getBundle() ), null );
     }
 
 
@@ -181,12 +187,22 @@ public class BundlesServlet extends SimpleWebConsolePlugin implements OsgiManage
             configurationPrinter = null;
         }
 
-        if ( bundleInfoTracker != null)
+        if ( bundleInfoTracker != null )
         {
             bundleInfoTracker.close();
             bundleInfoTracker = null;
         }
 
+        if ( bipCapabilitiesProvided != null )
+        {
+            bipCapabilitiesProvided.unregister();
+            bipCapabilitiesProvided = null;
+        }
+        if ( bipCapabilitiesRequired != null )
+        {
+            bipCapabilitiesRequired.unregister();
+            bipCapabilitiesRequired = null;
+        }
         super.deactivate();
     }
 
