@@ -23,6 +23,7 @@ import java.io.PrintWriter;
 import java.lang.reflect.Array;
 import java.util.Map;
 import java.util.Map.Entry;
+import java.util.TreeMap;
 import java.util.stream.Collectors;
 
 import org.apache.felix.webconsole.internal.AbstractConfigurationPrinter;
@@ -51,20 +52,22 @@ public class FrameworkPropertiesPrinter extends AbstractConfigurationPrinter
     {
         Bundle systemBundle = getBundleContext().getBundle( Constants.SYSTEM_BUNDLE_ID );
         FrameworkDTO framework = systemBundle.adapt( FrameworkDTO.class );
-        
-        // https://docs.osgi.org/javadoc/osgi.core/8.0.0/org/osgi/framework/dto/FrameworkDTO.html#properties
+        // sorted map of https://docs.osgi.org/javadoc/osgi.core/8.0.0/org/osgi/framework/dto/FrameworkDTO.html#properties
         return framework.properties.entrySet().stream()
-            .collect( Collectors.toMap( Entry::getKey, e -> FrameworkPropertiesPrinter.getStringValue( e.getValue() ) ) );
-        
+            .collect( Collectors.toMap( 
+                Entry::getKey, 
+                e -> FrameworkPropertiesPrinter.getStringValue( e.getValue() ),
+                ( key1, key2 ) -> key1,
+                TreeMap::new ) );
     }
-    
+
     private static final String getStringValue( Object object ) {
         // numerical type, Boolean, String, DTO or an array of any of the former
         if ( object.getClass().isArray() ) {
             StringBuilder values = new StringBuilder( "[" );
             int length = Array.getLength( object );
             for ( int i = 0; i < length; i ++ ) {
-                if (i > 0) {
+                if ( i > 0 ) {
                     values.append( " ," );
                 }
                 values.append( getStringValue( Array.get( object, i ) ) );
