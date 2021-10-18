@@ -102,84 +102,91 @@ public class DsComponentsCheck implements HealthCheck {
     public Result execute() {
         Result result = this.cache.get();
         if ( result == null || this.refreshCache.compareAndSet(true, false) ) {
-            FormattingResultLog log = new FormattingResultLog();
-
-            Collection<ComponentDescriptionDTO> componentDescriptionDTOs = null;
-            try {
-                componentDescriptionDTOs = scr.getComponentDescriptionDTOs();
-            } catch ( final Throwable e) {
-                log.temporarilyUnavailable("Exception while getting ds component dtos {}", e.getMessage(), e);
-            }
-            if ( componentDescriptionDTOs != null ) {
-                final List<ComponentDescriptionDTO> watchedComps = new LinkedList<ComponentDescriptionDTO>();
-                final List<String> missingComponents = new LinkedList<String>(componentsList);
-                for (final ComponentDescriptionDTO desc : componentDescriptionDTOs) {
-                    if (componentsList.contains(desc.name)) {
-                        watchedComps.add(desc);
-                        missingComponents.remove(desc.name);
-                    }
-                }
-                for (final String missingComp : missingComponents) {
-                    log.info("No component with name {} is registered in SCR runtime", missingComp);
-                }
-
-                int countEnabled = 0;
-                int countDisabled = 0;
-                for (final ComponentDescriptionDTO dsComp : watchedComps) {
-
-                    boolean isActive;
-
-                    boolean componentEnabled = scr.isComponentEnabled(dsComp);
-                    if (componentEnabled) {
-
-                        try {
-                            Collection<ComponentConfigurationDTO> componentConfigurationDTOs = scr.getComponentConfigurationDTOs(dsComp);
-                            List<String> idStateTuples = new ArrayList<>();
-                            boolean foundActiveOrSatisfiedConfig = false;
-                            for (ComponentConfigurationDTO configDto : componentConfigurationDTOs) {
-                                idStateTuples.add("id " + configDto.id + ":" + toStateString(configDto.state));
-                                if (configDto.state == ComponentConfigurationDTO.ACTIVE || configDto.state == ComponentConfigurationDTO.SATISFIED) {
-                                    foundActiveOrSatisfiedConfig = true;
-                                }
-                            }
-                            log.debug(dsComp.name + " (" + String.join(",", idStateTuples) + ")");
-
-                            if (componentConfigurationDTOs.isEmpty() || foundActiveOrSatisfiedConfig) {
-                                countEnabled++;
-                                isActive = true;
-                            } else {
-                                countDisabled++;
-                                isActive = false;
-                            }
-                        } catch ( final Throwable e) {
-                            log.temporarilyUnavailable("Exception while getting ds component dtos {}", e.getMessage(), e);
-                            isActive = true; // no info available, doesn't make sense to report as inactive
-                        }
-
-                    } else {
-                        countDisabled++;
-                        isActive = false;
-                    }
-
-                    if (!isActive) {
-                        analyzer.logNotEnabledComponent(log, dsComp, componentDescriptionDTOs);
-                    }
-                }
-
-                if (!missingComponents.isEmpty()) {
-                    log.add(new Entry(statusForMissing, missingComponents.size() + " required components are missing in SCR runtime"));
-                }
-                if (countDisabled > 0) {
-                    log.add(new Entry(statusForMissing, countDisabled + " required components are not active"));
-                }
-                log.info("{} required components are active", countEnabled);
-            }
-            result = new Result(log);
+            result = executeInternal();
             if ( result.isOk() ) {
                 this.cache.set(result);
+            } else {
+            	this.cache.set(null);
             }
         }
         return result;
+    }
+    
+    
+    protected Result executeInternal () {
+    	FormattingResultLog log = new FormattingResultLog();
+
+        Collection<ComponentDescriptionDTO> componentDescriptionDTOs = null;
+        try {
+            componentDescriptionDTOs = scr.getComponentDescriptionDTOs();
+        } catch ( final Throwable e) {
+            log.temporarilyUnavailable("Exception while getting ds component dtos {}", e.getMessage(), e);
+        }
+        if ( componentDescriptionDTOs != null ) {
+            final List<ComponentDescriptionDTO> watchedComps = new LinkedList<ComponentDescriptionDTO>();
+            final List<String> missingComponents = new LinkedList<String>(componentsList);
+            for (final ComponentDescriptionDTO desc : componentDescriptionDTOs) {
+                if (componentsList.contains(desc.name)) {
+                    watchedComps.add(desc);
+                    missingComponents.remove(desc.name);
+                }
+            }
+            for (final String missingComp : missingComponents) {
+                log.info("No component with name {} is registered in SCR runtime", missingComp);
+            }
+
+            int countEnabled = 0;
+            int countDisabled = 0;
+            for (final ComponentDescriptionDTO dsComp : watchedComps) {
+
+                boolean isActive;
+
+                boolean componentEnabled = scr.isComponentEnabled(dsComp);
+                if (componentEnabled) {
+
+                    try {
+                        Collection<ComponentConfigurationDTO> componentConfigurationDTOs = scr.getComponentConfigurationDTOs(dsComp);
+                        List<String> idStateTuples = new ArrayList<>();
+                        boolean foundActiveOrSatisfiedConfig = false;
+                        for (ComponentConfigurationDTO configDto : componentConfigurationDTOs) {
+                            idStateTuples.add("id " + configDto.id + ":" + toStateString(configDto.state));
+                            if (configDto.state == ComponentConfigurationDTO.ACTIVE || configDto.state == ComponentConfigurationDTO.SATISFIED) {
+                                foundActiveOrSatisfiedConfig = true;
+                            }
+                        }
+                        log.debug(dsComp.name + " (" + String.join(",", idStateTuples) + ")");
+
+                        if (componentConfigurationDTOs.isEmpty() || foundActiveOrSatisfiedConfig) {
+                            countEnabled++;
+                            isActive = true;
+                        } else {
+                            countDisabled++;
+                            isActive = false;
+                        }
+                    } catch ( final Throwable e) {
+                        log.temporarilyUnavailable("Exception while getting ds component dtos {}", e.getMessage(), e);
+                        isActive = true; // no info available, doesn't make sense to report as inactive
+                    }
+
+                } else {
+                    countDisabled++;
+                    isActive = false;
+                }
+
+                if (!isActive) {
+                    analyzer.logNotEnabledComponent(log, dsComp, componentDescriptionDTOs);
+                }
+            }
+
+            if (!missingComponents.isEmpty()) {
+                log.add(new Entry(statusForMissing, missingComponents.size() + " required components are missing in SCR runtime"));
+            }
+            if (countDisabled > 0) {
+                log.add(new Entry(statusForMissing, countDisabled + " required components are not active"));
+            }
+            log.info("{} required components are active", countEnabled);
+        }
+        return new Result(log);
     }
 
     static final String toStateString(int state) {
@@ -211,8 +218,9 @@ public class DsComponentsCheck implements HealthCheck {
         this.scr = null;
     }
 
-    private void updatedServiceComponentRuntime(final ServiceComponentRuntime c) {
+    protected void updatedServiceComponentRuntime(final ServiceComponentRuntime c) {
         // change in DS - mark cache
         this.refreshCache.compareAndSet(false, true);
+        LOG.debug("invalidate DsComponentsCheck cache");
     }
 }
