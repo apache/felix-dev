@@ -16,7 +16,7 @@
  * specific language governing permissions and limitations
  * under the License.
  */
-package org.apache.felix.webconsole.internal.misc;
+package org.apache.felix.webconsole.internal.core;
 
 
 import java.io.PrintWriter;
@@ -26,6 +26,7 @@ import java.util.Map.Entry;
 import java.util.stream.Collectors;
 
 import org.apache.felix.webconsole.internal.AbstractConfigurationPrinter;
+import org.apache.felix.webconsole.internal.misc.ConfigurationRender;
 import org.osgi.framework.Bundle;
 import org.osgi.framework.Constants;
 import org.osgi.framework.dto.FrameworkDTO;
