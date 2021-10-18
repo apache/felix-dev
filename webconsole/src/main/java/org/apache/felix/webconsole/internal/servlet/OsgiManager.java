@@ -203,9 +203,9 @@ public class OsgiManager extends GenericServlet
             "org.apache.felix.webconsole.internal.compendium.PreferencesConfigurationPrinter", //$NON-NLS-1$
             "org.apache.felix.webconsole.internal.compendium.WireAdminConfigurationPrinter", //$NON-NLS-1$
             "org.apache.felix.webconsole.internal.core.BundlesConfigurationPrinter", //$NON-NLS-1$
+            "org.apache.felix.webconsole.internal.core.FrameworkPropertiesPrinter", //$NON-NLS-1$
             "org.apache.felix.webconsole.internal.core.PermissionsConfigurationPrinter", //$NON-NLS-1$
             "org.apache.felix.webconsole.internal.core.ServicesConfigurationPrinter", //$NON-NLS-1$
-            "org.apache.felix.webconsole.internal.misc.FrameworkPropertiesPrinter", //$NON-NLS-1$
             "org.apache.felix.webconsole.internal.misc.SystemPropertiesPrinter", //$NON-NLS-1$
             "org.apache.felix.webconsole.internal.misc.ThreadPrinter", }; //$NON-NLS-1$
 
