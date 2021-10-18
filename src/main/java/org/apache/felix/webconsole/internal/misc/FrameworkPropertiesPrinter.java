@@ -20,15 +20,15 @@ package org.apache.felix.webconsole.internal.misc;
 
 
 import java.io.PrintWriter;
+import java.lang.reflect.Array;
 import java.util.Map;
-import java.util.TreeMap;
+import java.util.Map.Entry;
+import java.util.stream.Collectors;
 
 import org.apache.felix.webconsole.internal.AbstractConfigurationPrinter;
 import org.osgi.framework.Bundle;
 import org.osgi.framework.Constants;
-import org.osgi.framework.namespace.NativeNamespace;
-import org.osgi.framework.wiring.BundleCapability;
-import org.osgi.framework.wiring.BundleWiring;
+import org.osgi.framework.dto.FrameworkDTO;
 
 
 public class FrameworkPropertiesPrinter extends AbstractConfigurationPrinter
@@ -48,17 +48,36 @@ public class FrameworkPropertiesPrinter extends AbstractConfigurationPrinter
 
     private Map<String,String> getFrameworkProperties() 
     {
-        Bundle systemBundle = getBundleContext().getBundle( Constants.SYSTEM_BUNDLE_LOCATION );
-        BundleWiring bundleWiring = systemBundle.adapt(BundleWiring.class);
-        // https://docs.osgi.org/specification/osgi.core/7.0.0/framework.namespaces.html#framework.namespaces.osgi.native
-        Map<String, String> frameworkProperties = new TreeMap<>();
-        for ( BundleCapability capability : bundleWiring.getCapabilities( NativeNamespace.NATIVE_NAMESPACE ) ) 
+        Bundle systemBundle = getBundleContext().getBundle( Constants.SYSTEM_BUNDLE_ID );
+        FrameworkDTO framework = systemBundle.adapt( FrameworkDTO.class );
+        
+        // https://docs.osgi.org/javadoc/osgi.core/8.0.0/org/osgi/framework/dto/FrameworkDTO.html#properties
+        return framework.properties.entrySet().stream()
+            .collect( Collectors.toMap( Entry::getKey, e -> FrameworkPropertiesPrinter.getStringValue( e.getValue() ) ) );
+        
+    }
+    
+    private static final String getStringValue( Object object ) {
+        // numerical type, Boolean, String, DTO or an array of any of the former
+        if ( object.getClass().isArray() ) {
+            StringBuilder values = new StringBuilder( "[" );
+            int length = Array.getLength( object );
+            for ( int i = 0; i < length; i ++ ) {
+                if (i > 0) {
+                    values.append( " ," );
+                }
+                values.append( getStringValue( Array.get( object, i ) ) );
+            }
+            values.append( "]" );
+            return values.toString();
+        } 
+        else if ( object instanceof String )
         {
-            capability.getAttributes().entrySet().stream()
-                // filter out everything starting with osgi.native.
-                .filter( e -> !e.getKey().startsWith( NativeNamespace.NATIVE_NAMESPACE + "." ) )
-                .forEach( e -> frameworkProperties.put( e.getKey(), e.getValue().toString() ) );
+            return object.toString();
+        } 
+        else
+        {
+            return  object.toString() + " (" + object.getClass() + ")";
         }
-        return frameworkProperties;
     }
 }
