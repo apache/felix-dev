@@ -44,7 +44,7 @@ public class FrameworkPropertiesPrinter extends AbstractConfigurationPrinter
 
     public void printConfiguration( PrintWriter printWriter )
     {
-        getFrameworkProperties().entrySet().stream().forEach( e -> ConfigurationRender.infoLine( printWriter, null, e.getKey(), e.getValue() ));
+        getFrameworkProperties().entrySet().stream().forEach( e -> ConfigurationRender.infoLine( printWriter, null, e.getKey(), e.getValue() ) );
     }
 
     private Map<String,String> getFrameworkProperties() 
