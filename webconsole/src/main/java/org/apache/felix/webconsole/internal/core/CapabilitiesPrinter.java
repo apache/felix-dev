@@ -75,16 +75,12 @@ public class CapabilitiesPrinter extends AbstractConfigurationPrinter
             for ( BundleCapability capability : capabilities )
             {
                 ConfigurationRender.infoLine( printWriter, "  ", "Capability namespace", capability.getNamespace() );
-                // resolve lists (http://docs.osgi.org/specification/osgi.core/7.0.0/framework.module.html#i3306043)
-                
                 String attributes = dumpTypedAttributes( capability.getAttributes() );
                 if ( !attributes.isEmpty() ) 
                 {
                     ConfigurationRender.infoLine( printWriter, "    ", "Attributes", attributes );
                 }
-                String directives = capability.getDirectives().entrySet().stream()
-                    .map( entry -> entry.getKey() + "=" + entry.getValue() )
-                    .collect( Collectors.joining(", ") );
+                String directives = dumpDirectives( capability.getDirectives() );
                 if ( !directives.isEmpty() )
                 {
                     ConfigurationRender.infoLine( printWriter, "    ", "Directives", directives );
@@ -100,7 +96,7 @@ public class CapabilitiesPrinter extends AbstractConfigurationPrinter
         }
     }
 
-    static String dumpTypedAttributes(Map<String, Object> typedAttributes)
+    static String dumpTypedAttributes( Map<String, Object> typedAttributes )
     {
         StringBuilder attributes = new StringBuilder();
         boolean isFirst = true;
@@ -137,7 +133,7 @@ public class CapabilitiesPrinter extends AbstractConfigurationPrinter
         return attributes.toString();
     }
 
-    static String dumpDirectives(Map<String, String> directives)
+    static String dumpDirectives( Map<String, String> directives )
     {
         return directives.entrySet().stream().map( e -> e.getKey() + "=" + e.getValue() ).collect( Collectors.joining( " ," ) );
     }
