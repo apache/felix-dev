@@ -157,16 +157,15 @@ public class ConfigInstaller implements ArtifactInstaller, ConfigurationListener
                 this, null);
         try
         {
-            Configuration[] configs = getConfigurationAdmin().listConfigurations(null);
-            if (configs != null)
-            {
-                for (Configuration config : configs)
-                {
-                    Dictionary<?,?> dict = config.getProperties();
-                    String fileName = dict != null ? (String) dict.get( DirectoryWatcher.FILENAME ) : null;
-                    if (fileName != null)
-                    {
-                        pidToFile.put(config.getPid(), fileName);
+            if (getConfigurationAdmin() != null) {
+                Configuration[] configs = getConfigurationAdmin().listConfigurations(null);
+                if (configs != null) {
+                    for (Configuration config : configs) {
+                        Dictionary<?, ?> dict = config.getProperties();
+                        String fileName = dict != null ? (String) dict.get(DirectoryWatcher.FILENAME) : null;
+                        if (fileName != null) {
+                            pidToFile.put(config.getPid(), fileName);
+                        }
                     }
                 }
             }
