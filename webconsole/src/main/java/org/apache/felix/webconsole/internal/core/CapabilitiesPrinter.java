@@ -32,6 +32,7 @@ import org.osgi.framework.Bundle;
 import org.osgi.framework.namespace.HostNamespace;
 import org.osgi.framework.namespace.PackageNamespace;
 import org.osgi.framework.wiring.BundleCapability;
+import org.osgi.framework.wiring.BundleWire;
 import org.osgi.framework.wiring.BundleWiring;
 
 
@@ -61,18 +62,27 @@ public class CapabilitiesPrinter extends AbstractConfigurationPrinter
         for ( Bundle bundle : getBundleContext().getBundles() )
         {
             BundleWiring wiring = bundle.adapt( BundleWiring.class );
-            
-            List<BundleCapability> capabilities = wiring.getCapabilities( null ).stream()
+            if ( wiring == null )
+            {
+                continue;
+            }
+            List<BundleCapability> capabilities = wiring.getCapabilities( null );
+            if ( capabilities == null )
+            {
+                continue;
+            }
+            // which capabilities to filter?
+            List<BundleCapability> filteredCapabilities = capabilities.stream()
                     .filter( c -> EXCLUDED_NAMESPACES_PREDICATE.test(c.getNamespace()) )
                     .collect( Collectors.toList() );
-            if ( capabilities.isEmpty() )
+            if ( filteredCapabilities.isEmpty() )
             {
                 // skip bundles not exporting capabilities
                 continue;
             }
             
             ConfigurationRender.infoLine( printWriter, null,  "Bundle", bundle.getSymbolicName() + " (" + bundle.getBundleId() + ")" );
-            for ( BundleCapability capability : capabilities )
+            for ( BundleCapability capability : filteredCapabilities )
             {
                 ConfigurationRender.infoLine( printWriter, "  ", "Capability namespace", capability.getNamespace() );
                 String attributes = dumpTypedAttributes( capability.getAttributes() );
@@ -85,7 +95,12 @@ public class CapabilitiesPrinter extends AbstractConfigurationPrinter
                 {
                     ConfigurationRender.infoLine( printWriter, "    ", "Directives", directives );
                 }
-                String requirerBundles = wiring.getProvidedWires( capability.getNamespace() ).stream()
+                List<BundleWire> wires = wiring.getRequiredWires( capability.getNamespace() );
+                if ( wires == null )
+                {
+                    continue;
+                }
+                String requirerBundles = wires.stream()
                         .map( w -> w.getRequirer().getSymbolicName() + " (" + w.getRequirer().getBundle().getBundleId() + ") with directives: " + dumpDirectives( w.getRequirement().getDirectives() ) )
                         .collect( Collectors.joining( ", ") );
                 if ( !requirerBundles.isEmpty() )
