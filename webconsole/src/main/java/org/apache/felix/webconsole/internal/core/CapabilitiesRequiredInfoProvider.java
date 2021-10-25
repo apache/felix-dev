@@ -20,7 +20,9 @@ package org.apache.felix.webconsole.internal.core;
 
 
 import java.text.MessageFormat;
+import java.util.List;
 import java.util.Locale;
+import java.util.Objects;
 import java.util.Optional;
 
 import org.apache.felix.webconsole.bundleinfo.BundleInfo;
@@ -29,6 +31,7 @@ import org.apache.felix.webconsole.bundleinfo.BundleInfoType;
 import org.apache.felix.webconsole.i18n.LocalizationHelper;
 import org.osgi.framework.Bundle;
 import org.osgi.framework.wiring.BundleRequirement;
+import org.osgi.framework.wiring.BundleWire;
 import org.osgi.framework.wiring.BundleWiring;
 
 
@@ -51,15 +54,29 @@ public class CapabilitiesRequiredInfoProvider implements BundleInfoProvider
     public BundleInfo[] getBundleInfo( Bundle bundle, String webConsoleRoot, Locale locale )
     {
         BundleWiring wiring = bundle.adapt( BundleWiring.class );
-        return wiring.getRequirements( null ).stream()
+        if ( wiring == null )
+        {
+            return new BundleInfo[0];
+        }
+        List<BundleRequirement> requirements = wiring.getRequirements( null );
+        if ( requirements == null )
+        {
+            return new BundleInfo[0];
+        }
+        return requirements.stream()
             .filter( t -> CapabilitiesPrinter.EXCLUDED_NAMESPACES_PREDICATE.test(t.getNamespace()))
-            .map( r -> toInfo( r, wiring, webConsoleRoot, locale ) ).toArray( BundleInfo[]::new );
+            .map( r -> toInfo( r, wiring, webConsoleRoot, locale ) ).filter( Objects::nonNull ).toArray( BundleInfo[]::new );
     }
 
     private BundleInfo toInfo( BundleRequirement requirement, BundleWiring wiring, String webConsoleRoot, Locale locale )
     {
         final String descr = localization.getResourceBundle( locale ).getString( "capabilities.required.info.descr" ); //$NON-NLS-1$;
-        Optional<Bundle> providerBundle = wiring.getRequiredWires( requirement.getNamespace() ).stream()
+        List<BundleWire> wires = wiring.getRequiredWires( requirement.getNamespace() );
+        if ( wires == null )
+        {
+            return null;
+        }
+        Optional<Bundle> providerBundle = wires.stream()
                 .map( w -> w.getProvider().getBundle() ).findFirst(); // only the first one is returned
         String name = localization.getResourceBundle( locale ).getString( "capabilities.required.info.key" ); //$NON-NLS-1$;
         name = MessageFormat.format( name, requirement.getNamespace(), CapabilitiesPrinter.dumpDirectives( requirement.getDirectives() ) );

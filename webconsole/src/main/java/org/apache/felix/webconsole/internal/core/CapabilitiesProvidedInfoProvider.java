@@ -81,12 +81,21 @@ public class CapabilitiesProvidedInfoProvider implements BundleInfoProvider
     public BundleInfo[] getBundleInfo( Bundle bundle, String webConsoleRoot, Locale locale )
     {
         BundleWiring wiring = bundle.adapt( BundleWiring.class );
+        if ( wiring == null )
+        {
+            return new BundleInfo[0];
+        }
         Predicate<BundleCapability> capabilityFilter = new CapabilityFilter( wiring );
+        List<BundleCapability> capabilities = wiring.getCapabilities( null );
+        if ( capabilities == null )
+        {
+            return new BundleInfo[0];
+        }
         // which capabilities to filter?
-        List<BundleCapability> capabilities = wiring.getCapabilities( null ).stream()
+        List<BundleCapability> filteredCapabilities = capabilities.stream()
                 .filter( capabilityFilter )
                 .collect( Collectors.toList() );
-        return capabilities.stream().map( c -> toInfo( c, wiring, webConsoleRoot, locale ) ).toArray( BundleInfo[]::new );
+        return filteredCapabilities.stream().map( c -> toInfo( c, wiring, webConsoleRoot, locale ) ).toArray( BundleInfo[]::new );
     }
 
     private BundleInfo toInfo( BundleCapability capability, BundleWiring wiring, String webConsoleRoot, Locale locale )
