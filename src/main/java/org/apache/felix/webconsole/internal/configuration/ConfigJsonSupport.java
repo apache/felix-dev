@@ -292,7 +292,7 @@ class ConfigJsonSupport {
                     if ( null != fpid )
                     {
                         jw.key("fpid").value( fpid ); //$NON-NLS-1$
-                        final String val = getConfigurationFactoryNameHint(config, mtss);
+                        final String val = getConfigurationFactoryNameHint(config);
                         if ( val != null )
                         {
                             jw.key( "nameHint").value(val ); //$NON-NLS-1$
@@ -322,15 +322,30 @@ class ConfigJsonSupport {
      * @param props Service properties.
      * @return Name hint or null if none is defined.
      */
-    private static final String getConfigurationFactoryNameHint(Configuration config, MetaTypeServiceSupport mtss) {
-        Dictionary<String, Object> props = config.getProperties();
+    private final String getConfigurationFactoryNameHint(Configuration config) {
         Map<String, MetatypePropertyDescriptor> adMap = (mtss != null) ? mtss.getAttributeDefinitionMap(config, null) : null;
         if (null == adMap) {
             return null;
         }
 
+        final Dictionary<String, Object> props = config.getProperties();
+        String nameHint = null;
         // check for configured name hint template
-        String nameHint = getConfigurationPropertyValueOrDefault(ConfigAdminSupport.PROPERTY_FACTORYCONFIG_NAMEHINT, props, adMap);
+        ServiceReference<?>[] refs;
+        String filter = "(service.pid=" + config.getPid() + ")";
+        try {
+            refs = servletSupport.getBundleContext().getAllServiceReferences(null, filter);
+        } catch (InvalidSyntaxException e) {
+            throw new IllegalStateException("Invalid filter: " + filter);
+        }
+        // first try via service reference properties
+        if (refs != null) {
+            nameHint = getPropertyValueAsString(refs[0].getProperty(ConfigAdminSupport.PROPERTY_FACTORYCONFIG_NAMEHINT));
+        } 
+        // as fallback use the configuration admin properties
+        if (nameHint == null) {
+            nameHint = getConfigurationPropertyValueOrDefault(ConfigAdminSupport.PROPERTY_FACTORYCONFIG_NAMEHINT, props, adMap);
+        }
         if (nameHint == null) {
             return null;
         }
@@ -369,19 +384,7 @@ class ConfigJsonSupport {
         Object value = props.get(propertyName);
 
         if (value != null) {
-            // convert array to string
-            if (value.getClass().isArray()) {
-                StringBuffer valueString = new StringBuffer();
-                for (int i = 0; i < Array.getLength(value); i++) {
-                    if (i > 0) {
-                        valueString.append(", ");
-                    }
-                    valueString.append(Array.get(value, i));
-                }
-                return valueString.toString();
-            } else {
-                return value.toString();
-            }
+            return getPropertyValueAsString(value);
         } else {
             // if not set try to get default value
             PropertyDescriptor ad = adMap.get(propertyName);
@@ -391,6 +394,25 @@ class ConfigJsonSupport {
         }
 
         return null;
+    }
+
+    private static String getPropertyValueAsString(Object value) {
+        if (value == null) {
+            return null;
+        }
+        // convert array to string
+        if (value.getClass().isArray()) {
+            StringBuffer valueString = new StringBuffer();
+            for (int i = 0; i < Array.getLength(value); i++) {
+                if (i > 0) {
+                    valueString.append(", ");
+                }
+                valueString.append(Array.get(value, i));
+            }
+            return valueString.toString();
+        } else {
+            return value.toString();
+        }
     }
 
     /**
