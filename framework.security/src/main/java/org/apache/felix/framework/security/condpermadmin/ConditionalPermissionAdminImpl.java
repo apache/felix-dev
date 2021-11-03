@@ -878,6 +878,12 @@ public final class ConditionalPermissionAdminImpl implements
 
             public boolean commit()
             {
+                Object sm = System.getSecurityManager();
+                if (sm != null)
+                {
+                    ((SecurityManager) sm).checkPermission(Permissions.ALL_PERMISSION);
+                }
+
                 synchronized (m_condPermInfos)
                 {
                     if (current.equals(new ArrayList(m_condPermInfos.values())))
