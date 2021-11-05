@@ -70,7 +70,7 @@ public class Activator implements BundleActivator
      * This inner class implements the circle <tt>SimpleShape</tt> service.
      * It simply provides a <tt>draw()</tt> that paints a circle.
     **/
-    public class Circle implements SimpleShape
+    public static class Circle implements SimpleShape
     {
         /**
          * Implements the <tt>SimpleShape.draw()</tt> method for painting
