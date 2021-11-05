@@ -77,7 +77,7 @@ public class ShapeBundleTracker extends BundleTracker<SimpleShape>
             return shape;
         }
 
-        // bundle is no ShapeBundle, ingore it
+        // bundle is no ShapeBundle, ignore it
         return null;
     }
 
@@ -125,7 +125,7 @@ public class ShapeBundleTracker extends BundleTracker<SimpleShape>
         // if the name is not null, bundle is a ShapeBundle
         if (name != null)
         {
-            prcoessRemove(name);
+            processRemove(name);
         }
     }
 
@@ -134,7 +134,7 @@ public class ShapeBundleTracker extends BundleTracker<SimpleShape>
      *
      * @param name the name of the shape that is about to be removed.
      */
-    private void prcoessRemove(final String name)
+    private void processRemove(final String name)
     {
         try
         {
