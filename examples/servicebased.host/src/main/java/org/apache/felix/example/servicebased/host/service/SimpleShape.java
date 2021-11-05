@@ -45,7 +45,7 @@ public interface SimpleShape
     /**
      * Method to draw the shape of the service.
      * @param g2 The graphics object used for painting.
-     * @param p The position to paint the triangle.
+     * @param p The position to paint the shape.
     **/
     public void draw(Graphics2D g2, Point p);
 }

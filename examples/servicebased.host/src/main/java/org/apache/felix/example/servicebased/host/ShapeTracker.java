@@ -28,7 +28,7 @@ import org.osgi.util.tracker.ServiceTracker;
 /**
  * Extends the <tt>ServiceTracker</tt> to create a tracker for
  * <tt>SimpleShape</tt> services. The tracker is responsible for
- * listener for the arrival/departure of <tt>SimpleShape</tt>
+ * listening for the arrival/departure of <tt>SimpleShape</tt>
  * services and informing the application about the availability
  * of shapes. This tracker forces all notifications to be processed
  * on the Swing event thread to avoid synchronization and redraw
