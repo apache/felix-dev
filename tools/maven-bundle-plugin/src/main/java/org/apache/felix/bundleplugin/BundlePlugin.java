@@ -312,6 +312,16 @@ public class BundlePlugin extends AbstractMojo
     @Parameter( defaultValue = "${session}", readonly = true, required = true )
     private MavenSession m_mavenSession;
 
+    /**
+     * Timestamp for reproducible output archive entries, either formatted as ISO 8601
+     * <code>yyyy-MM-dd'T'HH:mm:ssXXX</code> or as an int representing seconds since the epoch (like
+     * <a href="https://reproducible-builds.org/docs/source-date-epoch/">SOURCE_DATE_EPOCH</a>).
+     *
+     * @since 5.1.3
+     */
+    @Parameter( defaultValue = "${project.build.outputTimestamp}" )
+    private String outputTimestamp;
+
     @Component
     protected BuildContext buildContext;
     
@@ -367,7 +377,7 @@ public class BundlePlugin extends AbstractMojo
 
         try
         {
-            execute( instructions, getClasspath( project) );
+            execute( instructions, getClasspath( project ) );
         }
         catch ( IOException e )
         {
@@ -532,6 +542,11 @@ public class BundlePlugin extends AbstractMojo
         Properties properties = new Properties();
         properties.putAll( getDefaultProperties( currentProject ) );
         properties.putAll( transformDirectives( originalInstructions ) );
+
+        if ( new MavenArchiver().parseOutputTimestamp( outputTimestamp ) != null )
+        {
+          properties.put( "-reproducible", "true" );
+        }
 
         // process overrides from project
         final Map<String, String> addProps = new HashMap<>();

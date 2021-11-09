@@ -24,6 +24,9 @@ under the License.
   <artifactId>reproducible</artifactId>
   <version>1-SNAPSHOT</version>
   <packaging>bundle</packaging>
+  <properties>
+    <project.build.outputTimestamp>1</project.build.outputTimestamp>
+  </properties>
   <dependencies>
     <dependency>
       <groupId>commons-io</groupId>
@@ -43,12 +46,6 @@ under the License.
         <artifactId>maven-bundle-plugin</artifactId>
         <version>@project.version@</version>
         <extensions>true</extensions>
-        <configuration>
-          <instructions>
-            <!--_removeheaders>Build-Jdk,Built-By</_removeheaders-->
-            <_reproducible>true</_reproducible>
-          </instructions>
-        </configuration>
       </plugin>
     </plugins>
   </build>
