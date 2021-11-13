@@ -21,7 +21,7 @@
  <parent>
    <artifactId>felix-parent</artifactId>
    <groupId>org.apache.felix</groupId>
-   <version>6</version>
+   <version>7</version>
    <relativePath>../../pom/pom.xml</relativePath>
  </parent>
 
@@ -59,6 +59,7 @@
  <properties>
    <felix.java.version>8</felix.java.version>
    <maven.site.path>bundle-plugin-archives/bundle-plugin-LATEST</maven.site.path>
+   <project.build.outputTimestamp>10</project.build.outputTimestamp>
  </properties>
 
  <build>
@@ -67,7 +68,7 @@
     <plugin>
      <groupId>org.apache.maven.plugins</groupId>
      <artifactId>maven-plugin-plugin</artifactId>
-     <version>3.4</version>
+     <version>3.6.1</version>
      <executions>
       <execution>
        <id>default-descriptor</id>
@@ -75,44 +76,44 @@
       </execution>
      </executions>
     </plugin>
-          <plugin>
-            <artifactId>maven-site-plugin</artifactId>
-            <version>3.4</version>
-            <dependencies>
-              <dependency>
-                <groupId>org.apache.maven</groupId>
-                <artifactId>maven-archiver</artifactId>
-                <version>2.6</version>
-              </dependency>
-              <dependency>
-                <groupId>org.codehaus.plexus</groupId>
-                <artifactId>plexus-archiver</artifactId>
-                <version>2.4.4</version>
-              </dependency>
-              <dependency>
-                <groupId>org.apache.maven.doxia</groupId>
-                <artifactId>doxia-core</artifactId>
-                <version>1.6</version>
-                <exclusions>
-                  <exclusion>
-                    <artifactId>xercesImpl</artifactId>
-                    <groupId>xerces</groupId>
-                  </exclusion>
-                </exclusions>
-              </dependency>
-            </dependencies>
-            <configuration>
-              <topSiteURL>scm:svn:https://svn.apache.org/repos/infra/websites/production/felix/content/components/${maven.site.path}</topSiteURL>
-            </configuration>
-          </plugin>
-          <plugin>
-            <artifactId>maven-scm-publish-plugin</artifactId>
-            <version>1.1</version>
-            <configuration>
-              <checkoutDirectory>${user.home}/maven-sites/${maven.site.path}</checkoutDirectory>
-              <tryUpdate>true</tryUpdate>
-            </configuration>
-          </plugin>
+    <plugin>
+      <artifactId>maven-site-plugin</artifactId>
+      <version>3.4</version>
+      <dependencies>
+        <dependency>
+          <groupId>org.apache.maven</groupId>
+          <artifactId>maven-archiver</artifactId>
+          <version>2.6</version>
+        </dependency>
+        <dependency>
+          <groupId>org.codehaus.plexus</groupId>
+          <artifactId>plexus-archiver</artifactId>
+          <version>2.4.4</version>
+        </dependency>
+        <dependency>
+          <groupId>org.apache.maven.doxia</groupId>
+          <artifactId>doxia-core</artifactId>
+          <version>1.6</version>
+          <exclusions>
+            <exclusion>
+              <artifactId>xercesImpl</artifactId>
+              <groupId>xerces</groupId>
+            </exclusion>
+          </exclusions>
+        </dependency>
+      </dependencies>
+      <configuration>
+        <topSiteURL>scm:svn:https://svn.apache.org/repos/infra/websites/production/felix/content/components/${maven.site.path}</topSiteURL>
+      </configuration>
+    </plugin>
+    <plugin>
+      <artifactId>maven-scm-publish-plugin</artifactId>
+      <version>1.1</version>
+      <configuration>
+        <checkoutDirectory>${user.home}/maven-sites/${maven.site.path}</checkoutDirectory>
+        <tryUpdate>true</tryUpdate>
+      </configuration>
+    </plugin>
    </plugins>
   </pluginManagement>
   <plugins>
@@ -269,7 +270,6 @@
    <plugin>
     <groupId>org.apache.maven.plugins</groupId>
     <artifactId>maven-plugin-plugin</artifactId>
-    <version>3.4</version>
    </plugin>
    <plugin>
     <groupId>org.apache.maven.plugins</groupId>
