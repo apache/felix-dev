@@ -44,6 +44,7 @@
         <org.ops4j.pax.logging.DefaultServiceLog.level>INFO</org.ops4j.pax.logging.DefaultServiceLog.level>
         <felix.shell>false</felix.shell>
         <project.bundle.file>${project.build.directory}/${project.build.finalName}.jar</project.bundle.file>
+        <project.build.outputTimestamp>10</project.build.outputTimestamp>
     </properties>
 
     <scm>
