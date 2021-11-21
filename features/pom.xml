@@ -34,6 +34,7 @@
 
     <properties>
       <felix.java.version>8</felix.java.version>
+      <project.build.outputTimestamp>10</project.build.outputTimestamp>
     </properties>
         
     <build>
