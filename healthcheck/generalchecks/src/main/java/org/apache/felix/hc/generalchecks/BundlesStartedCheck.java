@@ -17,6 +17,7 @@
  */
 package org.apache.felix.hc.generalchecks;
 
+import java.util.Optional;
 import java.util.regex.Pattern;
 
 import org.apache.felix.hc.annotation.HealthCheckService;
@@ -69,14 +70,14 @@ public class BundlesStartedCheck implements HealthCheck {
 
     private BundleContext bundleContext;
     private Pattern includesRegex;
-    private Pattern excludesRegex;
+    private Optional<Pattern> excludesRegex;
     boolean useCriticalForInactive;
 
     @Activate
     protected void activate(BundleContext bundleContext, Config config) {
         this.bundleContext = bundleContext;
         this.includesRegex = Pattern.compile(config.includesRegex());
-        this.excludesRegex = StringUtils.isNotBlank(config.excludesRegex()) ? Pattern.compile(config.excludesRegex()) : null;
+        this.excludesRegex = StringUtils.isNotBlank(config.excludesRegex()) ? Optional.of(Pattern.compile(config.excludesRegex())) : Optional.empty();
         this.useCriticalForInactive = config.useCriticalForInactive();
         LOG.debug("Activated bundles started HC for includesRegex={} excludesRegex={}% useCriticalForInactive={}", includesRegex, excludesRegex, useCriticalForInactive);
     }
@@ -91,17 +92,17 @@ public class BundlesStartedCheck implements HealthCheck {
 
         int countExcluded = 0;
         int relevantBundlesCount = 0;
-        int inctiveCount = 0;
+        int inactiveCount = 0;
         for (Bundle bundle : bundles) {
             String bundleSymbolicName = bundle.getSymbolicName();
             int bundleState = bundle.getState();
 
-            if(!includesRegex.matcher(bundleSymbolicName).matches()) {
+            if (!includesRegex.matcher(bundleSymbolicName).matches()) {
                 LOG.debug("Bundle {} not matched by {}", bundleSymbolicName, includesRegex);
                 continue;
             }
 
-            if(excludesRegex!=null && excludesRegex.matcher(bundleSymbolicName).matches()) {
+            if (excludesRegex.isPresent() && excludesRegex.get().matcher(bundleSymbolicName).matches()) {
                 LOG.debug("Bundle {} excluded {}", bundleSymbolicName, excludesRegex);
                 countExcluded ++;
                 continue;
@@ -125,7 +126,7 @@ public class BundlesStartedCheck implements HealthCheck {
                         log.warn(msg, msgObjs);
                     }
                     bundleIsLogged = true;
-                    inctiveCount++;
+                    inactiveCount++;
                 }
             }
             if(!bundleIsLogged) {
@@ -133,12 +134,13 @@ public class BundlesStartedCheck implements HealthCheck {
             }
         }
 
-        String baseMsg = relevantBundlesCount+" bundles"+(!includesRegex.pattern().equals(".*")?" for pattern "+includesRegex.pattern(): "");
-        String excludedMsg = countExcluded > 0 ? " (" + countExcluded + " excluded via pattern "+excludesRegex.pattern()+")" : "";
-        if (inctiveCount > 0) {
-            log.info("Found  "+inctiveCount + " inactive of "+baseMsg + excludedMsg);
+        String includeMsg = !includesRegex.pattern().equals(".*") ? " for pattern " + includesRegex.pattern(): "";
+        String baseMsg = relevantBundlesCount + " bundles" + includeMsg;
+        String excludedMsg = countExcluded > 0 ? " (" + countExcluded + " excluded via pattern " + excludesRegex.get().pattern() + ")" : "";
+        if (inactiveCount > 0) {
+            log.info("Found  " + inactiveCount + " inactive of " + baseMsg + excludedMsg);
         } else {
-            log.info("All "+baseMsg+" are started" + excludedMsg);
+            log.info("All " + baseMsg + " are started" + excludedMsg);
         }
 
         return new Result(log);
@@ -156,7 +158,7 @@ public class BundlesStartedCheck implements HealthCheck {
         case Bundle.STARTING: return "STARTING";
         case Bundle.STOPPING: return "STOPPING";
         case Bundle.ACTIVE: return "ACTIVE";
-        default: return ""+state;
+        default: return Integer.toString(state);
         }
     }
 
