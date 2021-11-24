@@ -45,7 +45,7 @@ public class HttpRequestsCheckTest {
     HttpRequestsCheck.Response simple200HtmlResponse = new HttpRequestsCheck.Response(200, "OK", null, "<html><head><title>test</title></head><body>body text</body></html>", 200);
 
     @Test
-    public void testRequestSpecParsing() throws Exception {
+    public void testRequestSpecParsingPath() throws Exception {
         
         HttpRequestsCheck.RequestSpec requestSpec = new HttpRequestsCheck.RequestSpec("/path/to/page.html");
         assertEquals("/path/to/page.html", requestSpec.url);
@@ -56,8 +56,11 @@ public class HttpRequestsCheckTest {
         assertNull(requestSpec.connectTimeoutInMs);
         assertNull(requestSpec.readTimeoutInMs);
         assertNull(requestSpec.proxy);
-        
-        requestSpec = new HttpRequestsCheck.RequestSpec("-X POST -H \"X-Test: Test\" -d \"{ 1,2,3 }\" -u admin:admin --connect-timeout 4 -m 5 --proxy http://proxy:2000 /path/to/page.html => 201");
+    }
+    
+    @Test
+    public void testRequestSpecParsingPost() throws Exception {
+        RequestSpec requestSpec = new HttpRequestsCheck.RequestSpec("-X POST -H \"X-Test: Test\" -d \"{ 1,2,3 }\" -u admin:admin --connect-timeout 4 -m 5 --proxy http://proxy:2000 /path/to/page.html => 201");
         assertEquals("/path/to/page.html", requestSpec.url);
         assertEquals("POST", requestSpec.method);
         HashMap<String, String> expectedHeaders = new HashMap<String,String>();
@@ -68,8 +71,9 @@ public class HttpRequestsCheckTest {
         assertEquals("admin", requestSpec.user);
         assertEquals((Integer) 4000, requestSpec.connectTimeoutInMs);
         assertEquals((Integer) 5000, requestSpec.readTimeoutInMs);
-        assertEquals("proxy:2000", requestSpec.proxy.address().toString());
-
+        String proxyAddress = requestSpec.proxy.address().toString();
+        assertThat(proxyAddress, containsString("proxy"));
+        assertThat(proxyAddress, containsString(":2000"));
     }
     
     @Test
