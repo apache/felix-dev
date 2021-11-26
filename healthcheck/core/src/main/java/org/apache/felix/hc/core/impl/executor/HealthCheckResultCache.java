@@ -72,7 +72,12 @@ public class HealthCheckResultCache {
         }
     }
 
-    /** Get the valid cache results */
+    /**
+     * Get the valid cache results for given metadata list
+     * 
+     * @param metadatas list of metadata to get results for. For each found result the metadata will be deleted
+     * @param results matching cached results are added to this list
+     */
     public void useValidCacheResults(final List<HealthCheckMetadata> metadatas,
             final Collection<HealthCheckExecutionResult> results,
             final long resultCacheTtlInMs) {
