@@ -27,7 +27,7 @@ import ch.qos.logback.classic.encoder.PatternLayoutEncoder;
 import ch.qos.logback.classic.spi.ILoggingEvent;
 import ch.qos.logback.core.Appender;
 import ch.qos.logback.core.read.ListAppender;
-import junit.framework.AssertionFailedError;
+
 
 public class LogTestHelper {
 
@@ -72,7 +72,7 @@ public class LogTestHelper {
                 return lr.equals(record);
             })) {
 
-            throw new AssertionFailedError("Log record not found: " + record);
+            throw new RuntimeException("Log record not found: " + record);
         }
     }
 

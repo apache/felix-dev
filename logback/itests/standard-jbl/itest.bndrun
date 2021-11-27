@@ -1,6 +1,4 @@
--standalone: true
--runee: JavaSE-1.8
--resolve.effective: resolve, active
+-include: ../base.bndrun
 
 -runfw: org.apache.felix.framework
 
@@ -9,13 +7,12 @@
     osgi.identity;filter:='(osgi.identity=org.apache.felix.logback.itests.standard.jbl)'
 
 -runproperties: \
-    logback.configurationFile=${fileuri;${.}/logback.xml},\
     org.jboss.logging.provider=slf4j
 
 -runbundles: \
-    biz.aQute.junit;version='[5.0.1,5.0.2)',\
-    ch.qos.logback.classic;version='[1.2.3,1.2.4)',\
-    ch.qos.logback.core;version='[1.2.3,1.2.4)',\
+    ch.qos.logback.classic;version='[1.2.7,1.2.8)',\
+    ch.qos.logback.core;version='[1.2.7,1.2.8)',\
     org.apache.felix.logback.itests.standard.jbl;version='[1.0.0,1.0.1)',\
-    org.jboss.logging.jboss-logging;version='[3.3.2,3.3.3)',\
-    slf4j.api;version='[1.7.25,1.7.26)'
+    org.apache.servicemix.bundles.junit;version='[4.13.2,4.13.3)',\
+    org.jboss.logging.jboss-logging;version='[3.4.2,3.4.3)',\
+    slf4j.api;version='[1.7.32,1.7.33)'

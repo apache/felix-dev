@@ -1,6 +1,4 @@
--standalone: true
--runee: JavaSE-1.8
--resolve.effective: resolve, active
+-include: ../base.bndrun
 
 -runfw: org.eclipse.osgi
 
@@ -10,13 +8,12 @@
     osgi.identity;filter:='(osgi.identity=org.apache.felix.logback.itests.standard.equinox.logservice)'
 
 -runproperties: \
-    eclipse.log.enabled=false,\
-    logback.configurationFile=${fileuri;${.}/logback.xml}
+    eclipse.log.enabled=false
 
 -runbundles: \
-    biz.aQute.junit;version='[5.0.1,5.0.2)',\
-    ch.qos.logback.classic;version='[1.2.3,1.2.4)',\
-    ch.qos.logback.core;version='[1.2.3,1.2.4)',\
+    ch.qos.logback.classic;version='[1.2.7,1.2.8)',\
+    ch.qos.logback.core;version='[1.2.7,1.2.8)',\
+    org.apache.felix.logback;version='[1.0.3,1.0.4)',\
     org.apache.felix.logback.itests.standard.equinox.logservice;version='[1.0.0,1.0.1)',\
-    org.apache.felix.logback;version='[1.0.1,1.0.2)',\
-    slf4j.api;version='[1.7.25,1.7.26)'
+    org.apache.servicemix.bundles.junit;version='[4.13.2,4.13.3)',\
+    slf4j.api;version='[1.7.32,1.7.33)'

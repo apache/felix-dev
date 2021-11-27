@@ -19,9 +19,9 @@
 <project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/maven-v4_0_0.xsd">
     <parent>
         <groupId>org.apache.felix</groupId>
-        <artifactId>org.apache.felix.logback.reactor</artifactId>
+        <artifactId>org.apache.felix.logback.itests.parent</artifactId>
         <version>1.0.0-SNAPSHOT</version>
-        <relativePath>../../pom.xml</relativePath>
+        <relativePath>../itest-parent/pom.xml</relativePath>
     </parent>
 
     <modelVersion>4.0.0</modelVersion>
@@ -34,6 +34,8 @@
         <maven.javadoc.skip>true</maven.javadoc.skip>
         <maven.site.skip>true</maven.site.skip>
         <maven.source.skip>true</maven.source.skip>
+        <maven.test.skip>true</maven.test.skip>
+        <bnd.resolve.skip>true</bnd.resolve.skip>
     </properties>
 
     <dependencies>
@@ -59,21 +61,4 @@
             <version>1.4.0</version>
         </dependency>
     </dependencies>
-
-    <build>
-        <plugins>
-            <plugin>
-                <groupId>org.apache.maven.plugins</groupId>
-                <artifactId>maven-compiler-plugin</artifactId>
-                <configuration>
-                    <source>1.8</source>
-                    <target>1.8</target>
-                </configuration>
-            </plugin>
-            <plugin>
-                <groupId>biz.aQute.bnd</groupId>
-                <artifactId>bnd-maven-plugin</artifactId>
-            </plugin>
-        </plugins>
-    </build>
 </project>

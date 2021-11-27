@@ -23,22 +23,17 @@
     <appender name="STDOUT" class="ch.qos.logback.core.ConsoleAppender">
         <encoder>
             <!-- <pattern>%d{HH:mm:ss.SSS} [%.15thread] %-5level %logger{36}:%line - %msg%n</pattern> -->
-            <pattern>%-5level %logger{1000}:%line - %msg%n</pattern>
+            <pattern>[%.15thread] %-5level %logger{1000}:%line - %msg%n</pattern>
         </encoder>
     </appender>
     <appender name="FILE" class="ch.qos.logback.core.read.ListAppender" />
 
-    <logger name="Events.Bundle" level="ERROR"/>
-    <logger name="Events.Framework" level="ERROR"/>
-    <logger name="Events.Service" level="ERROR"/>
-    <logger name="LogService" level="ERROR"/>
-
     <logger name="Events.Service.org.apache.felix.logback.itests" level="INFO"/>
-    <logger name="LogService.org.apache.felix.logback.itests" level="OFF"/>
+    <logger name="LogService.org.apache.felix.logback.itests" level="INFO"/>
 
-    <logger name="org.apache.felix.logback.test" level="DEBUG" />
+    <logger name="org.apache.felix.logback.test" level="INFO" />
 
-    <root level="ERROR">
+    <root level="OFF">
         <appender-ref ref="STDOUT" />
         <appender-ref ref="FILE" />
     </root>

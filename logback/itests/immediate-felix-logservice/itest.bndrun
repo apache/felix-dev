@@ -1,6 +1,4 @@
--standalone: true
--runee: JavaSE-1.8
--resolve.effective: resolve, active
+-include: ../base.bndrun
 
 -runfw: org.apache.felix.framework
 
@@ -15,10 +13,7 @@
     org.apache.felix.log;version=latest,\
     org.apache.felix.logback;version=latest
 
--runproperties: \
-    logback.configurationFile=${fileuri;${.}/logback.xml}
-
 -runbundles: \
-    biz.aQute.junit;version='[5.0.1,5.0.2)',\
     org.apache.felix.log.extension;version='[1.0.0,1.0.1)',\
-    org.apache.felix.logback.itests.immediate.felix.logservice;version='[1.0.0,1.0.1)'
+    org.apache.felix.logback.itests.immediate.felix.logservice;version='[1.0.0,1.0.1)',\
+    org.apache.servicemix.bundles.junit;version='[4.13.2,4.13.3)'

@@ -1,6 +1,4 @@
--standalone: true
--runee: JavaSE-1.8
--resolve.effective: resolve
+-include: ../base.bndrun
 
 -runfw: org.apache.felix.framework
 
@@ -12,14 +10,12 @@
     osgi.identity;filter:='(osgi.identity=org.apache.felix.logback)',\
     osgi.identity;filter:='(osgi.identity=org.apache.felix.logback.itests.standard.felix.logservice)'
 
--runproperties: \
-    logback.configurationFile=${fileuri;${.}/logback.xml}
-
 -runbundles: \
-    biz.aQute.junit;version='[5.0.1,5.0.2)',\
-    ch.qos.logback.classic;version='[1.2.3,1.2.4)',\
-    ch.qos.logback.core;version='[1.2.3,1.2.4)',\
-    org.apache.felix.log;version='[1.2.0,1.2.1)',\
-    org.apache.felix.logback.itests.standard.felix.logservice;version='[1.0.0,1.0.1)',\
-    org.apache.felix.logback;version='[1.0.1,1.0.2)',\
-    slf4j.api;version='[1.7.25,1.7.26)'
+	ch.qos.logback.classic;version='[1.2.7,1.2.8)',\
+	ch.qos.logback.core;version='[1.2.7,1.2.8)',\
+	org.apache.felix.configadmin;version='[1.9.22,1.9.23)',\
+	org.apache.felix.log;version='[1.2.5,1.2.6)',\
+	org.apache.felix.logback;version='[1.0.3,1.0.4)',\
+	org.apache.felix.logback.itests.standard.felix.logservice;version='[1.0.0,1.0.1)',\
+	org.apache.servicemix.bundles.junit;version='[4.13.2,4.13.3)',\
+	slf4j.api;version='[1.7.32,1.7.33)'

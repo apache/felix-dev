@@ -1,6 +1,4 @@
--standalone: true
--runee: JavaSE-1.8
--resolve.effective: resolve, active
+-include: ../base.bndrun
 
 -runfw: org.apache.felix.framework
 
@@ -15,14 +13,11 @@
     slf4j.api;version=latest
 
 -runsystempackages: \
-    org.apache.logging.log4j;version=2.11.0,\
-    org.slf4j;version=1.7.25,\
-    org.slf4j.helpers;version=1.7.25,\
-    org.slf4j.spi;version=1.7.25
-
--runproperties: \
-    logback.configurationFile=${fileuri;${.}/logback.xml}
+    org.apache.logging.log4j;version=${apache.logging.log4j.version},\
+    org.slf4j;version=${slf4j.api.version},\
+    org.slf4j.helpers;version=${slf4j.api.version},\
+    org.slf4j.spi;version=${slf4j.api.version}
 
 -runbundles: \
-    biz.aQute.junit;version='[5.0.1,5.0.2)',\
-    org.apache.felix.logback.itests.immediate.log4j2;version='[1.0.0,1.0.1)'
+    org.apache.felix.logback.itests.immediate.log4j2;version='[1.0.0,1.0.1)',\
+    org.apache.servicemix.bundles.junit;version='[4.13.2,4.13.3)'

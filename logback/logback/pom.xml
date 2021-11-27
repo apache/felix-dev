@@ -38,6 +38,16 @@
         <url>https://gitbox.apache.org/repos/asf?p=felix-dev.git</url>
     </scm>
 
+    <properties>
+        <bnd.version>6.1.0</bnd.version>
+
+        <animal.sniffer.skip>true</animal.sniffer.skip>
+        <felix.java.version>8</felix.java.version>
+        <maven.compiler.source>1.8</maven.compiler.source>
+        <maven.compiler.target>1.8</maven.compiler.target>
+        <project.reporting.outputEncoding>UTF-8</project.reporting.outputEncoding>
+    </properties>
+
     <dependencies>
         <dependency>
             <groupId>org.osgi</groupId>
@@ -48,12 +58,12 @@
         <dependency>
             <groupId>ch.qos.logback</groupId>
             <artifactId>logback-classic</artifactId>
-            <version>1.2.0</version>
+            <version>1.2.7</version>
         </dependency>
         <dependency>
             <groupId>org.eclipse.platform</groupId>
             <artifactId>org.eclipse.osgi</artifactId>
-            <version>3.13.0</version>
+            <version>3.17.0</version>
             <scope>provided</scope>
         </dependency>
         <dependency>
@@ -65,13 +75,13 @@
         <dependency>
             <groupId>org.osgi</groupId>
             <artifactId>osgi.annotation</artifactId>
-            <version>7.0.0</version>
+            <version>8.0.1</version>
             <scope>provided</scope>
         </dependency>
         <dependency>
             <groupId>org.slf4j</groupId>
             <artifactId>jul-to-slf4j</artifactId>
-            <version>1.7.22</version>
+            <version>1.7.32</version>
             <scope>provided</scope>
         </dependency>
     </dependencies>
@@ -80,7 +90,7 @@
             <plugin>
                 <groupId>biz.aQute.bnd</groupId>
                 <artifactId>bnd-maven-plugin</artifactId>
-                <version>4.1.0</version>
+                <version>${bnd.version}</version>
                 <configuration>
                     <bnd><![CDATA[
                         Import-Package: !org.eclipse.osgi.internal.hookregistry, *
@@ -98,14 +108,6 @@
             </plugin>
             <plugin>
                 <groupId>org.apache.maven.plugins</groupId>
-                <artifactId>maven-compiler-plugin</artifactId>
-                <configuration>
-                    <source>1.8</source>
-                    <target>1.8</target>
-                </configuration>
-            </plugin>
-            <plugin>
-                <groupId>org.apache.maven.plugins</groupId>
                 <artifactId>maven-jar-plugin</artifactId>
                 <configuration>
                     <archive>
@@ -114,9 +116,8 @@
                 </configuration>
             </plugin>
             <plugin>
-                <groupId>org.codehaus.mojo</groupId>
-                <artifactId>rat-maven-plugin</artifactId>
-                <version>0.12</version>
+                <groupId>org.apache.rat</groupId>
+                <artifactId>apache-rat-plugin</artifactId>
                 <configuration>
                     <excludeSubProjects>false</excludeSubProjects>
                     <useEclipseDefaultExcludes>true</useEclipseDefaultExcludes>
