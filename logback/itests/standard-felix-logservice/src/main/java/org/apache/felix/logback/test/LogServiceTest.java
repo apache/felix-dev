@@ -25,6 +25,7 @@ import org.osgi.framework.BundleContext;
 import org.osgi.framework.FrameworkUtil;
 import org.osgi.framework.ServiceReference;
 import org.osgi.framework.ServiceRegistration;
+import org.osgi.service.log.LogService;
 import org.osgi.service.log.Logger;
 
 public class LogServiceTest extends LogTestHelper {
@@ -48,11 +49,28 @@ public class LogServiceTest extends LogTestHelper {
         String refString = reference.toString();
 
         try {
-            assertLog("INFO|Events.Service.org.apache.felix.logback.itests.standard.felix.logservice|ServiceEvent REGISTERED " + refString);
+            assertLog("INFO|Events.Service." + getBSN() + "|ServiceEvent REGISTERED " + refString);
         }
         finally {
             registration.unregister();
-            assertLog("INFO|Events.Service.org.apache.felix.logback.itests.standard.felix.logservice|ServiceEvent UNREGISTERING " + refString);
+            assertLog("INFO|Events.Service." + getBSN() + "|ServiceEvent UNREGISTERING " + refString);
+        }
+    }
+
+    @SuppressWarnings("deprecation")
+    @Test
+    public void logService() {
+        BundleContext bundleContext = FrameworkUtil.getBundle(getClass()).getBundleContext();
+        ServiceReference<LogService> reference = bundleContext.getServiceReference(LogService.class);
+        LogService logService = bundleContext.getService(reference);
+
+        logService.log(LogService.LOG_INFO, "Test log");
+
+        try {
+            assertLog("INFO|LogService." + getBSN() + "|Test log");
+        }
+        finally {
+            bundleContext.ungetService(reference);
         }
     }
 
