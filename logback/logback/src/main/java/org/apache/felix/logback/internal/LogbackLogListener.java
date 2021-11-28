@@ -83,8 +83,19 @@ public class LogbackLogListener implements LogListener, LoggerContextListener {
             loggerName = formatBundle(entry.getBundle(), loggerName);
             avoidCallerData.set(true);
         }
+        else if (loggerName.startsWith(EVENTS_BUNDLE) ||
+                 loggerName.startsWith(EVENTS_FRAMEWORK) ||
+                 loggerName.startsWith(LOG_SERVICE)) {
+
+            avoidCallerData.set(true);
+        }
         else if (EVENTS_SERVICE.equals(loggerName)) {
             loggerName = formatBundle(entry.getBundle(), loggerName);
+            message = message + " {}";
+            arguments = new Object[] {entry.getServiceReference()};
+            avoidCallerData.set(true);
+        }
+        else if (loggerName.startsWith(EVENTS_SERVICE)) {
             message = message + " {}";
             arguments = new Object[] {entry.getServiceReference()};
             avoidCallerData.set(true);
