@@ -42,7 +42,7 @@ public class LogServiceTest extends LogTestHelper {
     @Test
     public void service() {
         BundleContext bundleContext = FrameworkUtil.getBundle(getClass()).getBundleContext();
-        ServiceRegistration<Integer> registration = bundleContext.registerService(Integer.class, new Integer(25), null);
+        ServiceRegistration<Integer> registration = bundleContext.registerService(Integer.class, Integer.valueOf(25), null);
 
         ServiceReference<Integer> reference = registration.getReference();
         String refString = reference.toString();
