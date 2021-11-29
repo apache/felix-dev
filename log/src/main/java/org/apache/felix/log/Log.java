@@ -230,7 +230,7 @@ final class Log implements BundleListener, FrameworkListener, ServiceListener
         }
 
         log(
-                "Events.Framework",
+            "Events.Framework.".concat(event.getBundle().getSymbolicName()),
             event.getBundle(),
             null,
             (eventType == FrameworkEvent.ERROR) ? LogLevel.ERROR : LogLevel.INFO,
@@ -250,7 +250,7 @@ final class Log implements BundleListener, FrameworkListener, ServiceListener
         "BundleEvent UNRESOLVED",
         "BundleEvent STARTING",
         "BundleEvent STOPPING",
-        "BundleEvent LAZY ACTIVATION",
+        "BundleEvent LAZY_ACTIVATION",
     };
 
     /**
@@ -274,7 +274,7 @@ final class Log implements BundleListener, FrameworkListener, ServiceListener
         if (message != null)
         {
             log(
-                    "Events.Bundle",
+                "Events.Bundle.".concat(event.getBundle().getSymbolicName()),
                 event.getBundle(),
                 null,
                 LogLevel.INFO,
@@ -323,7 +323,7 @@ final class Log implements BundleListener, FrameworkListener, ServiceListener
         }
 
         log(
-                "Events.Service",
+            "Events.Service.".concat(event.getServiceReference().getBundle().getSymbolicName()),
             event.getServiceReference().getBundle(),
             event.getServiceReference(),
             (eventType == ServiceEvent.MODIFIED) ? LogLevel.DEBUG : LogLevel.INFO,

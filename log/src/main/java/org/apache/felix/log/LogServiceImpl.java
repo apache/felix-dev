@@ -97,7 +97,7 @@ final class LogServiceImpl implements LogService
         final String message,
         final Throwable exception)
     {
-        LoggerImpl logger = (LoggerImpl)m_loggerAdminImpl.getLogger(m_bundle, "LogService", Logger.class);
+        LoggerImpl logger = (LoggerImpl)m_loggerAdminImpl.getLogger(m_bundle, "LogService.".concat(m_bundle.getSymbolicName()), Logger.class);
 
         switch (level) {
             case LogService.LOG_DEBUG:
