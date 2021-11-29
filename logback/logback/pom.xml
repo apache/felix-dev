@@ -46,6 +46,11 @@
         <maven.compiler.source>1.8</maven.compiler.source>
         <maven.compiler.target>1.8</maven.compiler.target>
         <project.reporting.outputEncoding>UTF-8</project.reporting.outputEncoding>
+
+        <slf4j.api.version>1.7.32</slf4j.api.version>
+        <!-- <slf4j.api.version>2.0.0-alpha4</slf4j.api.version> -->
+        <logback.version>1.2.7</logback.version>
+        <!-- <logback.version>1.3.0-alpha10</logback.version> -->
     </properties>
 
     <dependencies>
@@ -56,9 +61,14 @@
             <scope>provided</scope>
         </dependency>
         <dependency>
+            <groupId>org.slf4j</groupId>
+            <artifactId>slf4j-api</artifactId>
+            <version>${slf4j.api.version}</version>
+        </dependency>
+        <dependency>
             <groupId>ch.qos.logback</groupId>
             <artifactId>logback-classic</artifactId>
-            <version>1.2.7</version>
+            <version>${logback.version}</version>
         </dependency>
         <dependency>
             <groupId>org.eclipse.platform</groupId>
@@ -93,7 +103,11 @@
                 <version>${bnd.version}</version>
                 <configuration>
                     <bnd><![CDATA[
-                        Import-Package: !org.eclipse.osgi.internal.hookregistry, *
+                        Import-Package: \
+                            !org.eclipse.osgi.internal.hookregistry,\
+                            ch.qos.logback.classic.*;version="[1.2,2)",\
+                            org.slf4j.*;version="[1.7,3)",\
+                            *
                         -conditionalpackage: org.slf4j.bridge
                     ]]></bnd>
                 </configuration>

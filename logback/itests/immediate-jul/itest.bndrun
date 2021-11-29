@@ -12,9 +12,9 @@
     org.apache.felix.logback;version=latest
 
 -runsystempackages: \
-    org.slf4j;version=${slf4j.api.version},\
-    org.slf4j.helpers;version=${slf4j.api.version},\
-    org.slf4j.spi;version=${slf4j.api.version}
+    org.slf4j;version=${version_cleanup;${slf4j.api.version}},\
+    org.slf4j.helpers;version=${version_cleanup;${slf4j.api.version}},\
+    org.slf4j.spi;version=${version_cleanup;${slf4j.api.version}}
 
 -runbundles: \
     org.apache.felix.logback.itests.immediate.jul;version='[1.0.0,1.0.1)',\

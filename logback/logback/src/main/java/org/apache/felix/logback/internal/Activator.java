@@ -15,6 +15,7 @@
 package org.apache.felix.logback.internal;
 
 import java.util.AbstractMap.SimpleEntry;
+import java.util.function.Supplier;
 
 import org.osgi.annotation.bundle.Header;
 import org.osgi.framework.BundleActivator;
@@ -45,20 +46,25 @@ public class Activator implements BundleActivator {
             public LRST addingService(
                 ServiceReference<LoggerAdmin> reference) {
 
-                LoggerAdmin loggerAdmin = bundleContext.getService(reference);
+                return tccl(() -> {
+                    LoggerAdmin loggerAdmin = bundleContext.getService(reference);
 
-                LRST lrst = new LRST(bundleContext, loggerAdmin);
+                    LRST lrst = new LRST(bundleContext, loggerAdmin);
 
-                lrst.open();
+                    lrst.open();
 
-                return lrst;
+                    return lrst;
+                });
             }
 
             @Override
             public void removedService(
                 ServiceReference<LoggerAdmin> reference, LRST lrst) {
 
-                lrst.close();
+                tccl(() -> {
+                    lrst.close();
+                    return null;
+                });
             }
         };
 
@@ -68,6 +74,18 @@ public class Activator implements BundleActivator {
     @Override
     public void stop(BundleContext bundleContext) throws Exception {
         lat.close();
+    }
+
+    private static <R> R tccl(Supplier<R> action) {
+        Thread currentThread = Thread.currentThread();
+        ClassLoader original = currentThread.getContextClassLoader();
+        try {
+            currentThread.setContextClassLoader(Activator.class.getClassLoader());
+            return action.get();
+        }
+        finally {
+            currentThread.setContextClassLoader(original);
+        }
     }
 
     class LRST extends ServiceTracker<LogReaderService, Pair> {
@@ -82,13 +100,15 @@ public class Activator implements BundleActivator {
         public Pair addingService(
             ServiceReference<LogReaderService> reference) {
 
-            LogReaderService logReaderService = context.getService(reference);
+            return tccl(() -> {
+                LogReaderService logReaderService = context.getService(reference);
 
-            LogbackLogListener logbackLogListener = new LogbackLogListener(loggerAdmin);
+                LogbackLogListener logbackLogListener = new LogbackLogListener(loggerAdmin);
 
-            logReaderService.addLogListener(logbackLogListener);
+                logReaderService.addLogListener(logbackLogListener);
 
-            return new Pair(logReaderService, logbackLogListener);
+                return new Pair(logReaderService, logbackLogListener);
+            });
         }
 
         @Override
@@ -96,7 +116,10 @@ public class Activator implements BundleActivator {
             ServiceReference<LogReaderService> reference,
             Pair pair) {
 
-            pair.getKey().removeLogListener(pair.getValue());
+            tccl(() -> {
+                pair.getKey().removeLogListener(pair.getValue());
+                return null;
+            });
         }
 
         private final LoggerAdmin loggerAdmin;
