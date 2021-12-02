@@ -609,9 +609,19 @@ public final class Permissions
         // target + "\n\n");
         try
         {
-            return (Permission) m_action.getConstructor(target,
-                new Class[] { String.class, String.class }).newInstance(
-                new Object[] { name, action });
+            try
+            {
+                return (Permission) m_action.getConstructor(target,
+                    new Class[] { String.class, String.class }).newInstance(
+                    new Object[] { name, action });
+            }
+            // Fall-back to action-less constructor
+            catch (NoSuchMethodException ex)
+            {
+                return (Permission) m_action.getConstructor(target,
+                    new Class[] { String.class }).newInstance(
+                    new Object[] { name });
+            }
         }
         catch (Exception ex)
         {
