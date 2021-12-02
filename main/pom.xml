@@ -70,6 +70,50 @@
           <skip>true</skip>
         </configuration>
      </plugin>
+      <plugin>
+        <groupId>org.apache.felix</groupId>
+        <artifactId>maven-bundle-plugin</artifactId>
+        <version>5.1.1</version>
+        <extensions>true</extensions>
+        <configuration>
+          <instructions>
+            <_donotcopy>(CVS|.svn|config.properties)</_donotcopy>
+            <Main-Class>org.apache.felix.main.Main</Main-Class>
+            <Bundle-SymbolicName>org.apache.felix.main</Bundle-SymbolicName>
+            <Bundle-Name>Apache Felix</Bundle-Name>
+            <Bundle-Description>OSGi R6 framework.</Bundle-Description>
+            <Bundle-Vendor>The Apache Software Foundation</Bundle-Vendor>
+            <Embed-Dependency>*;artifactId=org.apache.felix.framework;inline=default.properties|org/**|META-INF/services/**</Embed-Dependency>
+            <Private-Package>org.apache.felix.main.*</Private-Package>
+            <Export-Package>!org.osgi.service.log, !org.osgi.service.obr, org.osgi.*</Export-Package>
+            <Import-Package>!*</Import-Package>
+            <Add-opens>
+                  java.base/java.net java.base/sun.net.www.protocol.file java.base/sun.net.www.protocol.ftp java.base/sun.net.www.protocol.http java.base/sun.net.www.protocol.https java.base/sun.net.www.protocol.jar java.base/sun.net.www.protocol.jmod java.base/sun.net.www.protocol.mailto java.base/sun.net.www.protocol.jrt java.base/jdk.internal.loader java.base/java.security
+            </Add-opens>
+          </instructions>
+        </configuration>
+      </plugin>
+      <plugin>
+        <artifactId>maven-antrun-plugin</artifactId>
+          <executions>
+              <execution>
+                  <id>repackage</id>
+                  <phase>package</phase>
+                  <goals>
+                      <goal>run</goal>
+                  </goals>
+                  <configuration>
+                      <tasks>
+                          <unzip src="${project.build.directory}/${project.artifactId}-${project.version}.jar"
+                                dest="${project.build.directory}/classes"/>
+                          <jar destfile="${project.build.directory}/org.apache.felix.main-7.1.0-SNAPSHOT.jar"
+                               manifest="${project.build.directory}/classes/META-INF/MANIFEST.MF"
+                               basedir="${project.build.directory}/classes"/>
+                      </tasks>
+                  </configuration>
+              </execution>
+          </executions>
+      </plugin>
      <plugin>
         <groupId>org.moditect</groupId>
         <artifactId>moditect-maven-plugin</artifactId>
@@ -126,29 +170,28 @@
           </execution>
         </executions>
       </plugin>
-      <plugin>
-        <groupId>org.apache.felix</groupId>
-        <artifactId>maven-bundle-plugin</artifactId>
-        <version>5.1.1</version>
-        <extensions>true</extensions>
-        <configuration>
-          <instructions>
-            <_donotcopy>(CVS|.svn|config.properties)</_donotcopy>
-            <Main-Class>org.apache.felix.main.Main</Main-Class>
-            <Bundle-SymbolicName>org.apache.felix.main</Bundle-SymbolicName>
-            <Bundle-Name>Apache Felix</Bundle-Name>
-            <Bundle-Description>OSGi R6 framework.</Bundle-Description>
-            <Bundle-Vendor>The Apache Software Foundation</Bundle-Vendor>
-            <Embed-Dependency>*;artifactId=org.apache.felix.framework;inline=default.properties|org/**|META-INF/services/**</Embed-Dependency>
-            <Private-Package>org.apache.felix.main.*</Private-Package>
-            <Export-Package>!org.osgi.service.log, !org.osgi.service.obr, org.osgi.*</Export-Package>
-            <Import-Package>!*</Import-Package>
-            <Add-opens>
-                  java.base/java.net java.base/sun.net.www.protocol.file java.base/sun.net.www.protocol.ftp java.base/sun.net.www.protocol.http java.base/sun.net.www.protocol.https java.base/sun.net.www.protocol.jar java.base/sun.net.www.protocol.jmod java.base/sun.net.www.protocol.mailto java.base/sun.net.www.protocol.jrt java.base/jdk.internal.loader java.base/java.security
-            </Add-opens>
-          </instructions>
-        </configuration>
-      </plugin>
+    <plugin>
+        <artifactId>maven-antrun-plugin</artifactId>
+        <executions>
+            <execution>
+                <id>copy</id>
+                <phase>install</phase>
+                <goals>
+                    <goal>run</goal>
+                </goals>
+                <configuration>
+                    <tasks>
+                        <delete dir="${basedir}/bin" />
+                        <mkdir dir="${basedir}/bin" />
+                        <delete dir="${basedir}/conf" />
+                        <mkdir dir="${basedir}/conf" />
+                        <copy file="${basedir}/target/org.apache.felix.main-${project.version}.jar" tofile="${basedir}/bin/felix.jar" />
+                        <copy file="${basedir}/target/classes/config.properties" todir="${basedir}/conf" />
+                    </tasks>
+                </configuration>
+            </execution>
+        </executions>
+    </plugin>
       <plugin>
         <groupId>org.apache.maven.plugins</groupId>
         <artifactId>maven-dependency-plugin</artifactId>
@@ -211,27 +254,6 @@
                    </artifactItem>
                  </artifactItems>
             </configuration>
-          </execution>
-        </executions>
-      </plugin>
-      <plugin>
-        <artifactId>maven-antrun-plugin</artifactId>
-        <executions>
-          <execution>
-            <phase>package</phase>
-            <configuration>
-              <tasks>
-                <delete dir="${basedir}/bin" />
-                <mkdir dir="${basedir}/bin" />
-                <delete dir="${basedir}/conf" />
-                <mkdir dir="${basedir}/conf" />
-                <copy file="${basedir}/target/org.apache.felix.main-${project.version}.jar" tofile="${basedir}/bin/felix.jar" />
-                <copy file="${basedir}/target/classes/config.properties" todir="${basedir}/conf" />
-              </tasks>
-            </configuration>
-            <goals>
-              <goal>run</goal>
-            </goals>
           </execution>
         </executions>
       </plugin>
