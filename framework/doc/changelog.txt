@@ -1,3 +1,13 @@
+Changes from 7.0.1 to 7.0.2
+---------------------------
+
+** Bug
+    * [FELIX-6429] - IllegalArgumentException that should not happen
+    * [FELIX-6442] - NPE when generating ServiceReferenceDTOs
+    * [FELIX-6467] - `AllPermission` not checked when updating `ConditionalPermissionAdmin`
+    * [FELIX-6468] - felix.main-7.0.1 jar file entries have bogus timestamps
+
+
 Changes from 7.0.0 to 7.0.1
 ---------------------------
 
