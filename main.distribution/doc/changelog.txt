@@ -1,8 +1,8 @@
-Changes from 7.0.1 to 7.0.2
+Changes from 7.0.1 to 7.0.3
 ---------------------------
 
 ** Improvement
-    * Update to latest framework and main version 7.0.2
+    * Update to latest framework and main version 7.0.3
 
 Changes from 7.0.0 to 7.0.1
 ---------------------------
