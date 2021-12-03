@@ -27,7 +27,7 @@
   <packaging>bundle</packaging>
   <name>Apache Felix Framework</name>
   <artifactId>org.apache.felix.framework</artifactId>
-  <version>7.1.0-SNAPSHOT</version>
+  <version>7.0.3</version>
   <properties>
     <dollar>$</dollar>
     <felix.java.version>8</felix.java.version>
@@ -36,7 +36,7 @@
     <connection>scm:git:https://github.com/apache/felix-dev.git</connection>
     <developerConnection>scm:git:https://github.com/apache/felix-dev.git</developerConnection>
     <url>https://gitbox.apache.org/repos/asf?p=felix-dev.git</url>
-    <tag>HEAD</tag>
+    <tag>org.apache.felix.framework-7.0.3</tag>
   </scm>
 
   <build>
