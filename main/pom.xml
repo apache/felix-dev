@@ -106,7 +106,7 @@
                       <tasks>
                           <unzip src="${project.build.directory}/${project.artifactId}-${project.version}.jar"
                                 dest="${project.build.directory}/classes"/>
-                          <jar destfile="${project.build.directory}/org.apache.felix.main-7.1.0-SNAPSHOT.jar"
+                          <jar destfile="${project.build.directory}/${project.artifactId}-${project.version}.jar"
                                manifest="${project.build.directory}/classes/META-INF/MANIFEST.MF"
                                basedir="${project.build.directory}/classes"/>
                       </tasks>
