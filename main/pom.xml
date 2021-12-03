@@ -105,6 +105,9 @@
                   <configuration>
                       <tasks>
                           <unzip src="${project.build.directory}/${project.artifactId}-${project.version}.jar" dest="${project.build.directory}/classes" />
+                          <touch>
+                              <fileset dir="${project.build.directory}/classes" />
+                          </touch>
                           <jar destfile="${project.build.directory}/${project.artifactId}-${project.version}.jar" manifest="${project.build.directory}/classes/META-INF/MANIFEST.MF" basedir="${project.build.directory}/classes" />
                       </tasks>
                   </configuration>
