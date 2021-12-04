@@ -91,7 +91,7 @@
         <dependency>
             <groupId>org.slf4j</groupId>
             <artifactId>jul-to-slf4j</artifactId>
-            <version>1.7.32</version>
+            <version>${slf4j.api.version}</version>
             <scope>provided</scope>
         </dependency>
     </dependencies>
