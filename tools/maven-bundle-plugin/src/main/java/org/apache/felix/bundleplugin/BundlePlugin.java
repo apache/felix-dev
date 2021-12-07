@@ -1647,10 +1647,9 @@ public class BundlePlugin extends AbstractMojo
     {
         List<ClassPathItem> list = new ArrayList<>( currentProject.getArtifacts().size() + 1 );
 
-        String d = currentProject.getBuild() != null ? currentProject.getBuild().getOutputDirectory() : null;
-        if ( d != null )
+        if ( getOutputDirectory() != null && getOutputDirectory().exists() )
         {
-            list.add( new ClassPathItem( ".", new File( d ) ) );
+            list.add( new ClassPathItem( ".", getOutputDirectory() ) );
         }
 
         final Collection<Artifact> artifacts = getSelectedDependencies(currentProject.getArtifacts() );
@@ -2158,7 +2157,7 @@ public class BundlePlugin extends AbstractMojo
         final String sourcePath = analyzer.getProperty( Analyzer.SOURCEPATH );
         if ( sourcePath != null )
         {
-            if ( sourcePath.contains(MAVEN_SOURCES) || sourcePath.contains(MAVEN_TEST_RESOURCES) )
+            if ( sourcePath.contains(MAVEN_SOURCES) || sourcePath.contains(MAVEN_TEST_SOURCES) )
             {
                 String combinedSource = StringUtils.replace( sourcePath, MAVEN_SOURCES, mavenSourcePaths.toString() );
                 combinedSource = StringUtils.replace( combinedSource, MAVEN_TEST_SOURCES, mavenTestSourcePaths.toString() );
