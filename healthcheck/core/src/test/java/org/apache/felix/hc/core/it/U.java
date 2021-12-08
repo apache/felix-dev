@@ -83,6 +83,9 @@ public class U {
 
                         mavenBundle("org.apache.felix", "org.apache.felix.healthcheck.api").versionAsInProject(),
 
+                        // javax annotation
+                        mavenBundle("org.apache.geronimo.specs", "geronimo-annotation_1.3_spec", "1.0"),
+
                         mavenBundle("org.apache.felix", "org.apache.felix.http.servlet-api", "1.1.2"),
                         mavenBundle("org.apache.felix", "org.apache.felix.http.jetty", "4.0.2"),
                         mavenBundle("org.apache.felix", "org.apache.felix.http.whiteboard", "4.0.0"),

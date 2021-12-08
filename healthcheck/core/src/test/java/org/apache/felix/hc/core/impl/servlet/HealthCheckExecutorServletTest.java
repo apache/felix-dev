@@ -100,6 +100,12 @@ public class HealthCheckExecutorServletTest {
         doReturn("OK:200").when(healthCheckExecutorServletConfig).httpStatusMapping();
         doReturn(new String[0]).when(healthCheckExecutorServletConfig).tags();
         doReturn(HealthCheckExecutorServlet.FORMAT_HTML).when(healthCheckExecutorServletConfig).format();
+        doReturn(new String[] {HealthCheckExecutorServlet.FORMAT_HTML,
+            HealthCheckExecutorServlet.FORMAT_JSON,
+            HealthCheckExecutorServlet.FORMAT_JSONP,
+            HealthCheckExecutorServlet.FORMAT_TXT,
+            HealthCheckExecutorServlet.FORMAT_VERBOSE_TXT}).when(healthCheckExecutorServletConfig).allowed_formats();
+        doReturn("/hc").when(healthCheckExecutorServletConfig).servletPath();
         healthCheckExecutorServlet.activate(healthCheckExecutorServletConfig);
     }
 

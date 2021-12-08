@@ -38,7 +38,6 @@ import org.apache.felix.hc.api.execution.HealthCheckExecutor;
 import org.apache.felix.hc.api.execution.HealthCheckSelector;
 import org.apache.felix.hc.core.impl.executor.CombinedExecutionResult;
 import org.apache.felix.hc.core.impl.util.lang.StringUtils;
-import org.osgi.service.component.ComponentContext;
 import org.osgi.service.component.annotations.Activate;
 import org.osgi.service.component.annotations.Component;
 import org.osgi.service.component.annotations.ConfigurationPolicy;
@@ -69,7 +68,8 @@ import org.slf4j.LoggerFactory;
 public class HealthCheckExecutorServlet extends HttpServlet {
     private static final long serialVersionUID = 8013511523994541848L;
 
-    private static final Logger LOG = LoggerFactory.getLogger(HealthCheckExecutorServlet.class);
+    private final Logger LOG = LoggerFactory.getLogger(this.getClass());
+
     public static final String PARAM_SPLIT_REGEX = "[,;]+";
 
     static class Param {
@@ -126,8 +126,6 @@ public class HealthCheckExecutorServlet extends HttpServlet {
 
     private String[] servletPaths;
 
-    private boolean disabled;
-
     private String servletPath;
 
     private String corsAccessControlAllowOrigin;
@@ -137,8 +135,10 @@ public class HealthCheckExecutorServlet extends HttpServlet {
     private long servletDefaultTimeout;
     private String[] servletDefaultTags;
     private String defaultFormat;
+    private String[] allowedFormats;
     private boolean defaultCombineTagsWithOr;
-    
+    private boolean disableRequestConfiguration;
+
     @Reference
     private HttpService httpService;
 
@@ -160,41 +160,51 @@ public class HealthCheckExecutorServlet extends HttpServlet {
     @Activate
     protected final void activate(final HealthCheckExecutorServletConfiguration configuration) {
         this.servletPath = configuration.servletPath();
-        LOG.info("servletPath={}", servletPath);
-
-        this.disabled = configuration.disabled();
-        LOG.info("disabled={}", disabled);
-
         this.defaultStatusMapping = getStatusMapping(configuration.httpStatusMapping());
-        LOG.info("defaultStatusMapping={}", defaultStatusMapping);
-
         this.servletDefaultTimeout = configuration.timeout();
-        LOG.info("servletDefaultTimeout={}", servletDefaultTimeout);
-
         this.servletDefaultTags = configuration.tags();
-        LOG.info("servletDefaultTags={}", servletDefaultTags!=null ? Arrays.asList(servletDefaultTags): "<none>");
-        
         this.defaultCombineTagsWithOr = configuration.combineTagsWithOr();
-        LOG.info("defaultCombineTagsWithOr={}", defaultCombineTagsWithOr);
-        
         this.defaultFormat = configuration.format();
-        LOG.info("defaultFormat={}", defaultFormat);
-        
+        this.allowedFormats = configuration.allowed_formats();
+        // make sure to include default format
+        if ( !this.isFormatAllowed(this.defaultFormat) ) {
+            final String[] allFormats = new String[this.allowedFormats.length + 1];
+            System.arraycopy(this.allowedFormats, 0, allFormats, 0, this.allowedFormats.length);
+            allFormats[this.allowedFormats.length] = this.defaultFormat;
+            this.allowedFormats = allFormats;
+        }
         this.corsAccessControlAllowOrigin = configuration.cors_accessControlAllowOrigin();
-        LOG.info("corsAccessControlAllowOrigin={}", corsAccessControlAllowOrigin);
+        this.disableRequestConfiguration = configuration.disable_request_configuration();
         
-        if (disabled) {
+        if ( configuration.disabled() ) {
+            this.servletPaths = null;
             LOG.info("Health Check Servlet is disabled by configuration");
             return;
         }
+
+        LOG.info("Health Check Servlet Configuration: servletPath={}, defaultStatusMapping={}, servletDefaultTimeout={}, " +
+            "servletDefaultTags={}, defaultCombineTagsWithOr={}, defaultFormat={}, allowedFormats={}, corsAccessControlAllowOrigin={}", 
+            servletPath, defaultStatusMapping, servletDefaultTimeout, 
+            servletDefaultTags!=null ? Arrays.asList(servletDefaultTags): "<none>", defaultCombineTagsWithOr, defaultFormat, 
+            Arrays.toString(this.allowedFormats), corsAccessControlAllowOrigin);
         
         Map<String, HttpServlet> servletsToRegister = new LinkedHashMap<String, HttpServlet>();
         servletsToRegister.put(this.servletPath, this);
-        servletsToRegister.put(this.servletPath + "." + FORMAT_HTML, new ProxyServlet(FORMAT_HTML));
-        servletsToRegister.put(this.servletPath + "." + FORMAT_JSON, new ProxyServlet(FORMAT_JSON));
-        servletsToRegister.put(this.servletPath + "." + FORMAT_JSONP, new ProxyServlet(FORMAT_JSONP));
-        servletsToRegister.put(this.servletPath + "." + FORMAT_TXT, new ProxyServlet(FORMAT_TXT));
-        servletsToRegister.put(this.servletPath + "." + FORMAT_VERBOSE_TXT, new ProxyServlet(FORMAT_VERBOSE_TXT));
+        if ( isFormatAllowed(FORMAT_HTML) ) {
+            servletsToRegister.put(this.servletPath.concat(".").concat(FORMAT_HTML), new ProxyServlet(FORMAT_HTML));
+        }
+        if ( isFormatAllowed(FORMAT_JSON) ) {
+            servletsToRegister.put(this.servletPath.concat(".").concat(FORMAT_JSON), new ProxyServlet(FORMAT_JSON));
+        }
+        if ( isFormatAllowed(FORMAT_JSONP) ) {
+            servletsToRegister.put(this.servletPath.concat(".").concat(FORMAT_JSONP), new ProxyServlet(FORMAT_JSONP));
+        }
+        if ( isFormatAllowed(FORMAT_TXT) ) {
+            servletsToRegister.put(this.servletPath.concat(".").concat(FORMAT_TXT), new ProxyServlet(FORMAT_TXT));
+        }
+        if ( isFormatAllowed(FORMAT_VERBOSE_TXT) ) {
+            servletsToRegister.put(this.servletPath.concat(".").concat(FORMAT_VERBOSE_TXT), new ProxyServlet(FORMAT_VERBOSE_TXT));
+        }
 
         for (final Map.Entry<String, HttpServlet> servlet : servletsToRegister.entrySet()) {
             try {
@@ -205,18 +215,17 @@ public class HealthCheckExecutorServlet extends HttpServlet {
             }
         }
         this.servletPaths = servletsToRegister.keySet().toArray(new String[0]);
-
     }
 
     @Deactivate
-    public void deactivate(final ComponentContext componentContext) {
-        if (disabled || this.servletPaths == null) {
+    public void deactivate() {
+        if (this.servletPaths == null) {
             return;
         }
 
         for (final String servletPath : this.servletPaths) {
             try {
-                LOG.debug("Unregistering path {}", servletPath);
+                LOG.info("Unregistering HC Servlet {} from path {}", getClass().getSimpleName(), servletPath);
                 this.httpService.unregister(servletPath);
             } catch (Exception e) {
                 LOG.error("Could not unregister health check servlet: " + e, e);
@@ -225,15 +234,28 @@ public class HealthCheckExecutorServlet extends HttpServlet {
         this.servletPaths = null;
     }
 
-    protected void doGet(final HttpServletRequest request, final HttpServletResponse response, String pathTokensStr, String format)
+    /**
+     * Check if the format is allowed
+     * @param format The format
+     * @return {@code true} if allowed
+     */
+    private boolean isFormatAllowed(final String format) {
+        for(final String f : this.allowedFormats) {
+            if ( f.equals(format) ) {
+                return true;
+            }
+        }        
+        return false;
+    }
+
+    protected void doGet(final HttpServletRequest request, final HttpServletResponse response, final String pathTokensStr, final String format)
             throws ServletException, IOException {
         HealthCheckSelector selector = HealthCheckSelector.empty();
-
 
         List<String> tags = new ArrayList<String>();
         List<String> names = new ArrayList<String>();
 
-        if (StringUtils.isNotBlank(pathTokensStr)) {
+        if (!disableRequestConfiguration && StringUtils.isNotBlank(pathTokensStr)) {
             String[] pathTokens = pathTokensStr.split(PARAM_SPLIT_REGEX);
             for (String pathToken : pathTokens) {
                 if (pathToken.indexOf(' ') >= 0) {
@@ -246,30 +268,32 @@ public class HealthCheckExecutorServlet extends HttpServlet {
         }
         if (tags.size() == 0) {
             // if not provided via path use parameter or configured default
-            String tagsParameter = request.getParameter(PARAM_TAGS.name);
+            String tagsParameter = this.disableRequestConfiguration ? null : request.getParameter(PARAM_TAGS.name);
             tags = Arrays.asList(StringUtils.isNotBlank(tagsParameter) ? tagsParameter.split(PARAM_SPLIT_REGEX): servletDefaultTags);
         }
         selector.withTags(tags.toArray(new String[0]));
 
-        if (names.size() == 0) {
+        if (names.size() == 0 && !this.disableRequestConfiguration) {
             // if not provided via path use parameter or default
             names = Arrays.asList(StringUtils.defaultIfBlank(request.getParameter(PARAM_NAMES.name), "").split(PARAM_SPLIT_REGEX));
         }
         selector.withNames(names.toArray(new String[0]));
 
-        final Boolean includeDebug = Boolean.valueOf(request.getParameter(PARAM_INCLUDE_DEBUG.name));
+        final boolean includeDebug = this.disableRequestConfiguration ? false : Boolean.valueOf(request.getParameter(PARAM_INCLUDE_DEBUG.name));
         
-        String httpStatusMappingParameterVal = request.getParameter(PARAM_HTTP_STATUS.name);
+        String httpStatusMappingParameterVal = this.disableRequestConfiguration ? null : request.getParameter(PARAM_HTTP_STATUS.name);
         final Map<Result.Status, Integer> statusMapping = httpStatusMappingParameterVal!=null ? getStatusMapping(httpStatusMappingParameterVal) : defaultStatusMapping;
 
         HealthCheckExecutionOptions executionOptions = new HealthCheckExecutionOptions();
         
-        String paramCombineTagsWithOr = request.getParameter(PARAM_COMBINE_TAGS_WITH_OR.name);
+        String paramCombineTagsWithOr = this.disableRequestConfiguration ? null : request.getParameter(PARAM_COMBINE_TAGS_WITH_OR.name);
         executionOptions.setCombineTagsWithOr( paramCombineTagsWithOr!=null ? Boolean.valueOf(paramCombineTagsWithOr) : defaultCombineTagsWithOr);
         
-        executionOptions.setForceInstantExecution(Boolean.valueOf(request.getParameter(PARAM_FORCE_INSTANT_EXECUTION.name)));
+        if ( !this.disableRequestConfiguration ) {
+            executionOptions.setForceInstantExecution(Boolean.valueOf(request.getParameter(PARAM_FORCE_INSTANT_EXECUTION.name)));
+        }
         
-        String overrideGlobalTimeoutVal = request.getParameter(PARAM_OVERRIDE_GLOBAL_TIMEOUT.name);
+        String overrideGlobalTimeoutVal = this.disableRequestConfiguration ? null : request.getParameter(PARAM_OVERRIDE_GLOBAL_TIMEOUT.name);
         if (StringUtils.isNotBlank(overrideGlobalTimeoutVal)) {
             executionOptions.setOverrideGlobalTimeout(Integer.valueOf(overrideGlobalTimeoutVal));
         } else if(servletDefaultTimeout > -1) {
@@ -288,45 +312,49 @@ public class HealthCheckExecutorServlet extends HttpServlet {
         response.setStatus(httpStatus);
 
         response.setHeader(STATUS_HEADER_NAME, overallResult.getStatus().toString());
-        if (FORMAT_HTML.equals(format)) {
+        
+        final boolean formatAllowed = this.isFormatAllowed(format);
+
+        if (formatAllowed && FORMAT_HTML.equals(format)) {
             sendHtmlResponse(overallResult, executionResults, request, response, includeDebug);
-        } else if (FORMAT_JSON.equals(format)) {
+        } else if (formatAllowed && FORMAT_JSON.equals(format)) {
             sendJsonResponse(overallResult, executionResults, null, response, includeDebug);
-        } else if (FORMAT_JSONP.equals(format)) {
+        } else if (formatAllowed && FORMAT_JSONP.equals(format)) {
             String jsonpCallback = StringUtils.defaultIfBlank(request.getParameter(PARAM_JSONP_CALLBACK.name), JSONP_CALLBACK_DEFAULT);
             sendJsonResponse(overallResult, executionResults, jsonpCallback, response, includeDebug);
-        } else if (format != null && format.endsWith(FORMAT_TXT)) {
+        } else if (formatAllowed && format != null && format.endsWith(FORMAT_TXT)) {
             sendTxtResponse(overallResult, response, FORMAT_VERBOSE_TXT.equals(format), executionResults, includeDebug);
         } else {
             response.setContentType("text/plain");
-            response.getWriter().println("Invalid format " + format + " - supported formats: html|json|jsonp|txt|verbose.txt");
+            response.getWriter().println("Invalid format " + format + " - supported formats: " + Arrays.toString(this.allowedFormats));
         }
     }
 
     @Override
     protected void doGet(final HttpServletRequest request, final HttpServletResponse response) throws ServletException, IOException {
-        String pathInfo = request.getPathInfo();
-        String[] splitPathInfo = splitFormat(pathInfo);
+        final String[] splitPathInfo = splitFormat(request.getPathInfo());
         String format = splitPathInfo[1];
-        if (StringUtils.isBlank(format)) {
+        if (format == null) {
             // if not provided via extension use parameter or default
             format = StringUtils.defaultIfBlank(request.getParameter(PARAM_FORMAT.name), defaultFormat);
         }
         
         String pathTokensStr = splitPathInfo[0];
-        if(pathTokensStr!=null && pathTokensStr.startsWith("/")) {
+        if (pathTokensStr!=null && pathTokensStr.startsWith("/")) {
             pathTokensStr = pathTokensStr.substring(1, pathTokensStr.length());
         }
 
         doGet(request, response, pathTokensStr, format);
     }
 
-    String[] splitFormat(String pathInfo) {
-        for (String format : new String[] { FORMAT_HTML, FORMAT_JSON, FORMAT_JSONP, FORMAT_VERBOSE_TXT, FORMAT_TXT }) {
-            String formatWithDot = "." + format;
-            if (pathInfo != null && pathInfo.endsWith(formatWithDot)) {
-                return new String[] { pathInfo.substring(0, pathInfo.length() - formatWithDot.length()), format };
-            }
+    String[] splitFormat(final String pathInfo) {
+        if ( pathInfo != null ) {
+            for (String format : new String[] { FORMAT_HTML, FORMAT_JSON, FORMAT_JSONP, FORMAT_VERBOSE_TXT, FORMAT_TXT }) {
+                final String formatWithDot = ".".concat(format);
+                if (pathInfo.endsWith(formatWithDot)) {
+                    return new String[] { pathInfo.substring(0, pathInfo.length() - formatWithDot.length()), format };
+                }
+            }    
         }
         return new String[] { pathInfo, null };
     }
@@ -418,7 +446,7 @@ public class HealthCheckExecutorServlet extends HttpServlet {
 
         @Override
         protected void doGet(HttpServletRequest req, HttpServletResponse resp) throws ServletException, IOException {
-            HealthCheckExecutorServlet.this.doGet(req, resp, "", format);
+            HealthCheckExecutorServlet.this.doGet(req, resp, null, format);
         }
     }
 
