@@ -59,4 +59,6 @@ public interface ComponentActivator extends ExtendedServiceListenerContext<Exten
 
     /** Inform about any change in the state of the components. */
     void updateChangeCount();
+
+    ServiceReference<?> getTrueCondition();
 }

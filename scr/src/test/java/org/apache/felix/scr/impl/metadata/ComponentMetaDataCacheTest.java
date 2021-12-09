@@ -175,13 +175,11 @@ public class ComponentMetaDataCacheTest extends ComponentBase
             assertEquals("Reference field not equal", r1.getField(), r2.getField());
             assertEquals("Reference field option not equal", r1.getFieldOption(),
                 r2.getFieldOption());
-            assertEquals("Reference field collection type not equal",
-                r1.getFieldCollectionType(), r2.getFieldCollectionType());
+            assertEquals("Reference collection type not equal", r1.getCollectionType(),
+                r2.getCollectionType());
             assertEquals("Reference scope not equal", r1.getScope(), r2.getScope());
             assertEquals("Reference parameter index not equal", r1.getParameterIndex(),
                 r2.getParameterIndex());
-            assertEquals("Reference parameter collection type not equal",
-                r1.getParameterCollectionType(), r2.getParameterCollectionType());
         }
     }
 

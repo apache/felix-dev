@@ -34,6 +34,7 @@ import org.apache.felix.scr.impl.metadata.PropertyMetadata;
 import org.apache.felix.scr.impl.metadata.ReferenceMetadata;
 import org.apache.felix.scr.impl.metadata.ServiceMetadata;
 import org.osgi.framework.Bundle;
+import org.osgi.framework.ServiceReference;
 import org.xml.sax.Attributes;
 import org.xml.sax.SAXException;
 import org.xml.sax.helpers.DefaultHandler;
@@ -52,6 +53,8 @@ public class XmlHandler extends DefaultHandler
     private final boolean m_globalObsoleteFactoryComponentFactory;
 
     private final boolean m_globalDelayedKeepInstances;
+
+    private final ServiceReference<?> m_trueCondition;
 
     // A reference to the current component
     private ComponentMetadata m_currentComponent;
@@ -81,12 +84,13 @@ public class XmlHandler extends DefaultHandler
 
     // creates an instance with the bundle owning the component descriptor
     // file parsed by this instance
-    public XmlHandler( Bundle bundle, BundleLogger logger, boolean globalObsoleteFactoryComponentFactory, boolean globalDelayedKeepInstances )
+    public XmlHandler(Bundle bundle, BundleLogger logger, boolean globalObsoleteFactoryComponentFactory, boolean globalDelayedKeepInstances, ServiceReference<?> trueCondition)
     {
         m_bundle = bundle;
         m_logger = logger;
         m_globalObsoleteFactoryComponentFactory = globalObsoleteFactoryComponentFactory;
         m_globalDelayedKeepInstances = globalDelayedKeepInstances;
+        m_trueCondition = trueCondition;
     }
 
 
@@ -388,7 +392,7 @@ public class XmlHandler extends DefaultHandler
                     if ( attributes.getValue( XmlConstants.NAMESPACE_URI_EMPTY, "target" ) != null)
                     {
                         ref.setTarget( attributes.getValue( XmlConstants.NAMESPACE_URI_EMPTY, "target" ) );
-                        PropertyMetadata prop = new PropertyMetadata();
+                        PropertyMetadata prop = new PropertyMetadata(true);
                         prop.setName( (ref.getName() == null? ref.getInterface(): ref.getName()) + ".target");
                         prop.setValue( attributes.getValue( XmlConstants.NAMESPACE_URI_EMPTY, "target" ) );
                         m_currentComponent.addProperty( prop );
@@ -403,7 +407,7 @@ public class XmlHandler extends DefaultHandler
                     // field reference
                     ref.setField( attributes.getValue( XmlConstants.NAMESPACE_URI_EMPTY, "field" ) );
                     ref.setFieldOption( attributes.getValue( XmlConstants.NAMESPACE_URI_EMPTY, "field-option" ) );
-                    ref.setFieldCollectionType( attributes.getValue( XmlConstants.NAMESPACE_URI_EMPTY, "field-collection-type" ) );
+                    ref.setCollectionType( attributes.getValue( XmlConstants.NAMESPACE_URI_EMPTY, "field-collection-type" ) );
 
                     // DS 1.4 : references as parameter of the activator (method or constructor)
                     if ( attributes.getValue( XmlConstants.NAMESPACE_URI_EMPTY, "parameter" ) != null)
@@ -477,6 +481,37 @@ public class XmlHandler extends DefaultHandler
                     m_currentComponent.addFactoryProperty( m_pendingFactoryProperty );
                 }
                 m_pendingFactoryProperty = null;
+            }
+        }
+        if (m_trueCondition != null && localName.equals(XmlConstants.EL_COMPONENT))
+        {
+            boolean missingSatisfyingConditionRef = true;
+            for (ReferenceMetadata ref : m_currentComponent.getDependencies())
+            {
+                if (ReferenceMetadata.REFERENCE_NAME_SATISFYING_CONDITION.equals(
+                    ref.getName()))
+                {
+                    missingSatisfyingConditionRef = false;
+                    break;
+                }
+            }
+            if (missingSatisfyingConditionRef)
+            {
+                ReferenceMetadata trueReference = new ReferenceMetadata();
+                trueReference.setName(
+                    ReferenceMetadata.REFERENCE_NAME_SATISFYING_CONDITION);
+                trueReference.setTarget(ReferenceMetadata.CONDITION_TRUE_FILTER);
+                trueReference.setInterface(ReferenceMetadata.CONDITION_SERVICE_CLASS);
+                trueReference.setPolicy(ReferenceMetadata.POLICY_DYNAMIC);
+                m_currentComponent.addDependency(trueReference);
+                // Here we add the target property for the implicit satisfying condition
+                // first such that any properties that are specified explicitly can
+                // be used to override this implicit property
+                PropertyMetadata prop = new PropertyMetadata(true);
+                prop.setName(
+                    ReferenceMetadata.REFERENCE_NAME_SATISFYING_CONDITION + ".target");
+                prop.setValue(ReferenceMetadata.CONDITION_TRUE_FILTER);
+                m_currentComponent.addProperty(prop);
             }
         }
     }

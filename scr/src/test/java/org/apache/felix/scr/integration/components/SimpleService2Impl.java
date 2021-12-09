@@ -21,8 +21,6 @@ package org.apache.felix.scr.integration.components;
 
 import java.util.Dictionary;
 import java.util.Hashtable;
-import java.util.Properties;
-
 import org.osgi.framework.BundleContext;
 import org.osgi.framework.Constants;
 import org.osgi.framework.ServiceRegistration;
@@ -37,7 +35,7 @@ public class SimpleService2Impl implements SimpleService2
 
     private String m_filterProp;
 
-    private ServiceRegistration m_registration;
+    private ServiceRegistration<SimpleService2> m_registration;
 
 
     public static SimpleService2Impl create( BundleContext bundleContext, String value )
@@ -50,7 +48,8 @@ public class SimpleService2Impl implements SimpleService2
     {
         SimpleService2Impl instance = new SimpleService2Impl( value, ranking );
         Dictionary<String,?> props = instance.getProperties();
-        instance.setRegistration( bundleContext.registerService( SimpleService2.class.getName(), instance, props ) );
+        instance.setRegistration(
+            bundleContext.registerService(SimpleService2.class, instance, props));
         return instance;
     }
 
@@ -98,7 +97,7 @@ public class SimpleService2Impl implements SimpleService2
 
     public void drop()
     {
-        ServiceRegistration sr = getRegistration();
+        ServiceRegistration<SimpleService2> sr = getRegistration();
         if ( sr != null )
         {
             setRegistration( null );
@@ -107,19 +106,20 @@ public class SimpleService2Impl implements SimpleService2
     }
 
 
+    @Override
     public String getValue2()
     {
         return m_value;
     }
 
 
-    public void setRegistration( ServiceRegistration registration )
+    public void setRegistration(ServiceRegistration<SimpleService2> registration)
     {
         m_registration = registration;
     }
 
 
-    public ServiceRegistration getRegistration()
+    public ServiceRegistration<SimpleService2> getRegistration()
     {
         return m_registration;
     }

@@ -29,6 +29,7 @@ import java.util.Collection;
 import org.apache.felix.scr.integration.components.ConstructorComponent;
 import org.apache.felix.scr.integration.components.ConstructorMultiReference;
 import org.apache.felix.scr.integration.components.ConstructorSingleReference;
+import org.junit.Assert;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.ops4j.pax.exam.junit.PaxExam;
@@ -40,7 +41,6 @@ import org.osgi.framework.ServiceReference;
 import org.osgi.framework.ServiceRegistration;
 import org.osgi.service.component.runtime.dto.ComponentConfigurationDTO;
 
-import junit.framework.Assert;
 import junit.framework.TestCase;
 
 

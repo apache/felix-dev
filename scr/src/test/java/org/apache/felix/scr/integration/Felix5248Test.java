@@ -38,6 +38,7 @@ public class Felix5248Test extends ComponentTestBase
     }
 
     @Test
+    @SuppressWarnings("deprecation")
     public void test_reconfigurationActivates() throws Exception
     {
         Hashtable<String, Object> props = new Hashtable<String, Object>();
@@ -47,6 +48,7 @@ public class Felix5248Test extends ComponentTestBase
         delay();
 
         String componentName = "Component";
+        @SuppressWarnings("unused")
         ComponentConfigurationDTO component = findComponentConfigurationByName( componentName,
                 ComponentConfigurationDTO.FAILED_ACTIVATION );
         log.log( LogService.LOG_INFO, "A checked satisfied (not active)" );

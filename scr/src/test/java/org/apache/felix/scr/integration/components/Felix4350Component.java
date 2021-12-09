@@ -24,7 +24,9 @@ public class Felix4350Component {
 	private static int m_activateCount;
 	private static int m_deactivateCount;
 	
+    @SuppressWarnings("unused")
     private SimpleComponent component1;
+    @SuppressWarnings("unused")
     private SimpleComponent2 component2;
 
     public void bindComponent1(SimpleComponent component1) {

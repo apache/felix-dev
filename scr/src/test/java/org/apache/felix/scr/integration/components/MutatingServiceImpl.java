@@ -32,20 +32,25 @@ public class MutatingServiceImpl implements MutatingService
 {
     private ComponentContext activateContext;
 
+    @SuppressWarnings("unused")
     private void activate( ComponentContext activateContext )
     {
         this.activateContext = activateContext;
     }
 
+    @SuppressWarnings("unused")
     private void modified( ComponentContext activateContext )
     {
 
     }
 
-    private Map activateMutate( ComponentContext activateContext )
+    @SuppressWarnings("unused")
+    private Map<String, Object> activateMutate(ComponentContext activateContext)
     {
         this.activateContext = activateContext;
-        Map result = new Hashtable( (Map )activateContext.getProperties() );
+        @SuppressWarnings("unchecked")
+        Map<String, Object> result = new Hashtable<>(
+            (Map<String, Object>) activateContext.getProperties());
         if (activateContext.getServiceReference() != null) 
         {
             result.put( "theValue", "anotherValue1" );
@@ -57,36 +62,46 @@ public class MutatingServiceImpl implements MutatingService
         return result;
     }
 
-    private Map modifiedMutate( ComponentContext activateContext )
+    @SuppressWarnings("unused")
+    private Map<String, Object> modifiedMutate(ComponentContext activateContext)
     {
-        Map result = new Hashtable( (Map )activateContext.getProperties() );
+        @SuppressWarnings("unchecked")
+        Map<String, Object> result = new Hashtable<>(
+            (Map<String, Object>) activateContext.getProperties());
         result.put( "theValue", "anotherValue2" );
         return result;
     }
 
+    @SuppressWarnings({ "rawtypes", "unused" })
     private Map deactivateMutate( ComponentContext activateContext )
     {
-        Map result = new Hashtable( (Map )activateContext.getProperties() );
+        @SuppressWarnings("unchecked")
+        Map<String, Object> result = new Hashtable<>(
+            (Map<String, Object>) activateContext.getProperties());
         result.put( "theValue", "anotherValue3" );
         return result;
     }
 
-    public void updateProperties( Dictionary changes )
+    @Override
+    public void updateProperties(Dictionary<String, ?> changes)
     {
         ( ( ExtComponentContext ) activateContext ).setServiceProperties( changes );
     }
 
-    private Map bindSimpleService( SimpleService ss )
+    @SuppressWarnings("unused")
+    private Map<String, String> bindSimpleService(SimpleService ss)
     {
         return Collections.singletonMap( "SimpleService", "bound" );
     }
 
-    private Map unbindSimpleService( SimpleService ss )
+    @SuppressWarnings("unused")
+    private Map<String, String> unbindSimpleService(SimpleService ss)
     {
         return Collections.singletonMap( "SimpleService", "unbound" );
     }
 
-    private Map updateSimpleService( SimpleService ss )
+    @SuppressWarnings("unused")
+    private Map<String, String> updateSimpleService(SimpleService ss)
     {
         return Collections.singletonMap( "SimpleService", "updated" );
     }

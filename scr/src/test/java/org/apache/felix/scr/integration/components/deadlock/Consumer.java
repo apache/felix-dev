@@ -23,7 +23,7 @@ import org.osgi.service.component.ComponentContext;
 
 public class Consumer
 {
-    
+    @SuppressWarnings("unused")
     private ComponentContext cc;
     
     protected void activate(ComponentContext cc) 

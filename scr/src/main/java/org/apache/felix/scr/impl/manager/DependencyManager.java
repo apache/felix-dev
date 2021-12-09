@@ -58,6 +58,9 @@ import org.osgi.service.component.ComponentException;
  */
 public class DependencyManager<S, T> implements ReferenceManager<S, T>
 {
+    public static final String ANY_SERVICE_CLASS = "org.osgi.service.component.AnyService";
+
+    public static final String NEVER_SATIFIED_FILTER = "(&(invalid.target.cannot.resolve=*)(!(invalid.target.cannot.resolve=*)))";
 
     // the component to which this dependency belongs
     private final AbstractComponentManager<S> m_componentManager;
@@ -67,7 +70,7 @@ public class DependencyManager<S, T> implements ReferenceManager<S, T>
 
     private final int m_index;
 
-    private volatile Customizer<S, T> m_customizer;
+    private final Customizer<S, T> m_customizer;
 
     //only set once, but it's not clear there is enough other synchronization to get the correct object before it's used.
     private volatile ReferenceMethods m_bindMethods;
@@ -1586,7 +1589,7 @@ public class DependencyManager<S, T> implements ReferenceManager<S, T>
         return m_tracker.getTracked(null, trackingCount).size();
     }
 
-    private ServiceReference<T>[] getFrameworkServiceReferences(String targetFilter)
+    private ServiceReference<?>[] getFrameworkServiceReferences(String targetFilter)
     {
         if (hasGetPermission())
         {
@@ -1599,7 +1602,7 @@ public class DependencyManager<S, T> implements ReferenceManager<S, T>
 
             try
             {
-                return (ServiceReference<T>[]) bc.getServiceReferences(m_dependencyMetadata.getInterface(),
+                return bc.getServiceReferences(m_dependencyMetadata.getInterface(),
                     targetFilter);
             }
             catch (IllegalStateException ise)
@@ -1663,7 +1666,7 @@ public class DependencyManager<S, T> implements ReferenceManager<S, T>
      * after this method returns.
      * @param key TODO
      */
-    T[] getServices(ComponentContextImpl<S> key)
+    Object[] getServices(ComponentContextImpl<S> key)
     {
         Collection<RefPair<S, T>> refs = m_customizer.getRefs(new AtomicInteger());
         List<T> services = new ArrayList<>(refs.size());
@@ -1675,7 +1678,7 @@ public class DependencyManager<S, T> implements ReferenceManager<S, T>
                 services.add(service);
             }
         }
-        return services.isEmpty() ? null : (T[]) services.toArray(new Object[services.size()]);
+        return services.isEmpty() ? null : services.toArray(new Object[services.size()]);
     }
 
     //---------- bound services maintenance -----------------------------------
@@ -2282,7 +2285,7 @@ public class DependencyManager<S, T> implements ReferenceManager<S, T>
         // invariant: target filter change + mandatory + dynamic policy
 
         // 4. check target services matching the new filter
-        ServiceReference<T>[] refs = getFrameworkServiceReferences(newTarget);
+        ServiceReference<?>[] refs = getFrameworkServiceReferences(newTarget);
         if (refs != null)
         {
             // Return whether there are enough target services
@@ -2327,6 +2330,7 @@ public class DependencyManager<S, T> implements ReferenceManager<S, T>
         if (minimumCardinality != null && (minimumCardinality < defaultMinimumCardinality(m_dependencyMetadata)
             || (!m_dependencyMetadata.isMultiple() && minimumCardinality > 1)))
         {
+            // TODO no warning logged here?  Seem we should at least have a debug message.
             minimumCardinality = null;
         }
         if (minimumCardinality == null)
@@ -2382,7 +2386,7 @@ public class DependencyManager<S, T> implements ReferenceManager<S, T>
                         getName(), target);
 
                 //create a filter that will never be satisfied
-                target = "(&(invalid.target.cannot.resolve=*)(!(invalid.target.cannot.resolve=*)))";
+                target = DependencyManager.NEVER_SATIFIED_FILTER;
             }
         }
         m_target = target;
@@ -2393,39 +2397,11 @@ public class DependencyManager<S, T> implements ReferenceManager<S, T>
 
         // classFilter
         // "(" + Constants.OBJECTCLASS + "=" + m_dependencyMetadata.getInterface() + ")"
-        final StringBuilder classFilterSB = new StringBuilder();
-        classFilterSB.append(OBJECTCLASS_CLAUSE);
-        classFilterSB.append(m_dependencyMetadata.getInterface());
-        classFilterSB.append(')');
-        final String classFilterString = classFilterSB.toString();
+        final String classFilterString = getClassFilter();
 
         // initialReferenceFilter
-        final boolean multipleExpr = m_target != null
-                || m_dependencyMetadata.getScope() == ReferenceScope.prototype_required;
-        final StringBuilder initialReferenceFilterSB = new StringBuilder();
-        if (multipleExpr)
-        {
-            initialReferenceFilterSB.append("(&");
-        }
-        initialReferenceFilterSB.append(classFilterString);
-
-        // if reference scope is prototype_required, we simply add
-        // (service.scope=prototype) to the filter
-        if (m_dependencyMetadata.getScope() == ReferenceScope.prototype_required)
-        {
-            initialReferenceFilterSB.append(PROTOTYPE_SCOPE_CLAUSE);
-        }
-
-        // append target
-        if (m_target != null)
-        {
-            initialReferenceFilterSB.append(m_target);
-        }
-        if (multipleExpr)
-        {
-            initialReferenceFilterSB.append(')');
-        }
-        String initialReferenceFilterString = initialReferenceFilterSB.toString();
+        final String initialReferenceFilterString = getInitialReferenceFilter(
+            classFilterString, target);
 
         final ServiceTracker<T, RefPair<S, T>, ExtendedServiceEvent> oldTracker = m_tracker;
         AtomicInteger trackingCount = new AtomicInteger();
@@ -2446,9 +2422,10 @@ public class DependencyManager<S, T> implements ReferenceManager<S, T>
             "New service tracker for {0}, initial active: {1}, previous references: {2}, classFilter: {3}, initialReferenceFilter {4}",
             null, getName(), initialActive, refMap, classFilterString,
                     initialReferenceFilterString );
+        ServiceReference<T> trueReference = getTrueConditionRef();
         ServiceTracker<T, RefPair<S, T>, ExtendedServiceEvent> tracker = new ServiceTracker<>(
             bundleContext, m_customizer, initialActive, m_componentManager.getActivator(),
-            initialReferenceFilterString);
+            initialReferenceFilterString, trueReference);
         m_customizer.setTracker(tracker);
         //set minimum cardinality
         m_minCardinality = minimumCardinality;
@@ -2462,6 +2439,85 @@ public class DependencyManager<S, T> implements ReferenceManager<S, T>
         m_componentManager.getLogger().log(Level.DEBUG,
             "registering service listener for dependency {0}",
                 null, getName());
+    }
+
+    private String getClassFilter()
+    {
+        String objectClass = m_dependencyMetadata.getInterface();
+        if (DependencyManager.ANY_SERVICE_CLASS.equals(objectClass))
+        {
+            objectClass = "*";
+        }
+        final StringBuilder classFilterSB = new StringBuilder();
+        classFilterSB.append(OBJECTCLASS_CLAUSE);
+        classFilterSB.append(objectClass);
+        classFilterSB.append(')');
+        return classFilterSB.toString();
+    }
+
+    private String getInitialReferenceFilter(String classFilterString, String target)
+    {
+        if (target == null)
+        {
+            if (DependencyManager.ANY_SERVICE_CLASS.equals(
+                m_dependencyMetadata.getInterface()))
+            {
+                m_componentManager.getLogger().log(Level.ERROR,
+                    "The dependency reference {0} is an AnyService reference with no target specified.",
+                    null, getName());
+                target = DependencyManager.NEVER_SATIFIED_FILTER;
+            }
+        }
+        final boolean multipleExpr = target != null
+            || m_dependencyMetadata.getScope() == ReferenceScope.prototype_required;
+        final StringBuilder initialReferenceFilterSB = new StringBuilder();
+        if (multipleExpr)
+        {
+            initialReferenceFilterSB.append("(&");
+        }
+        initialReferenceFilterSB.append(classFilterString);
+
+        // if reference scope is prototype_required, we simply add
+        // (service.scope=prototype) to the filter
+        if (m_dependencyMetadata.getScope() == ReferenceScope.prototype_required)
+        {
+            initialReferenceFilterSB.append(PROTOTYPE_SCOPE_CLAUSE);
+        }
+
+        // append target
+        if (target != null)
+        {
+            initialReferenceFilterSB.append(target);
+        }
+        if (multipleExpr)
+        {
+            initialReferenceFilterSB.append(')');
+        }
+        return initialReferenceFilterSB.toString();
+    }
+
+    @SuppressWarnings("unchecked")
+    private ServiceReference<T> getTrueConditionRef()
+    {
+        if (m_dependencyMetadata.getScope() == ReferenceScope.prototype_required)
+        {
+            return null;
+        }
+        if (ReferenceMetadata.REFERENCE_NAME_SATISFYING_CONDITION.equals(
+            m_dependencyMetadata.getName()) == false)
+        {
+            return null;
+        }
+        if (ReferenceMetadata.CONDITION_TRUE_FILTER.equals(m_target) == false)
+        {
+            return null;
+        }
+        if (ReferenceMetadata.CONDITION_SERVICE_CLASS.equals(
+            m_dependencyMetadata.getInterface()) == false)
+        {
+            return null;
+        }
+        return (ServiceReference<T>) m_componentManager.getActivator().getTrueCondition();
     }
 
     private Customizer<S, T> newCustomizer()

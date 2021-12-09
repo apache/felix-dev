@@ -19,6 +19,7 @@
 package org.apache.felix.scr.impl.inject.methods;
 
 
+@SuppressWarnings("serial")
 public class SuitableMethodNotAccessibleException extends Exception
 {
 }

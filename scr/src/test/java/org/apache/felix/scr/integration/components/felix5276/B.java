@@ -25,12 +25,14 @@ public class B
 {
     private A a;
 
+    @SuppressWarnings("unused")
     private Map<String, Object> setA(A a)
     {
         this.a = a;
         return Collections.<String, Object> singletonMap("foo", "bar");
     }
 
+    @SuppressWarnings("unused")
     private Map<String, Object> unsetA(A a)
     {
         if (this.a == a)

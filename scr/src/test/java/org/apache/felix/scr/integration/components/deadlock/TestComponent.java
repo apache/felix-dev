@@ -26,7 +26,7 @@ public class TestComponent
     
     private ComponentContext cc;
     
-    private ServiceReference sr;
+    private ServiceReference<?> sr;
     private boolean success1;
     private boolean success2;
     
@@ -35,12 +35,12 @@ public class TestComponent
         this.cc =cc;
     }
     
-    protected void setRef(ServiceReference sr)
+    protected void setRef(ServiceReference<?> sr)
     {
         this.sr = sr;
     }
     
-    protected void unsetRef(ServiceReference sr)
+    protected void unsetRef(ServiceReference<?> sr)
     {
         if (sr == this.sr)
         {

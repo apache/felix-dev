@@ -40,6 +40,7 @@ public class Felix5276Test extends ComponentTestBase
     }
 
     @Test
+    @SuppressWarnings("deprecation")
     public void test_servicePropsCauseDeactivation() throws Exception
     {
         Hashtable<String, Object> props = new Hashtable<String, Object>();

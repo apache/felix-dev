@@ -269,16 +269,18 @@ public class ConfigurationChangeTest extends ComponentTestBase
         getDisabledConfigurationAndEnable(pid, ComponentConfigurationDTO.ACTIVE); //?????? Not clear what should happen.
 
         // create a component instance
-        final ServiceReference[] refs = bundleContext.getServiceReferences( ComponentFactory.class.getName(), "("
+        final ServiceReference<?>[] refs = bundleContext.getServiceReferences(
+            ComponentFactory.class.getName(), "("
                 + ComponentConstants.COMPONENT_FACTORY + "=" + factoryPid + ")" );
         TestCase.assertNotNull( refs );
         TestCase.assertEquals( 1, refs.length );
-        final ComponentFactory factory = ( ComponentFactory ) bundleContext.getService( refs[0] );
+        final ComponentFactory<?> factory = (ComponentFactory<?>) bundleContext.getService(
+            refs[0]);
         TestCase.assertNotNull( factory );
 
         Hashtable<String, String> props = new Hashtable<String, String>();
         props.put( PROP_NAME_FACTORY, PROP_NAME_FACTORY );
-        final ComponentInstance instance = factory.newInstance( props );
+        final ComponentInstance<?> instance = factory.newInstance(props);
         TestCase.assertNotNull( instance );
         TestCase.assertNotNull( instance.getInstance() );
         TestCase.assertEquals( SimpleComponent.INSTANCE, instance.getInstance() );

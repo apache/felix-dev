@@ -946,7 +946,8 @@ public class ComponentMetadataTest extends TestCase
     }
 
 
-    private void assertPrimitiveType( final Class expectedBoxClass, final Class actualClass )
+    private void assertPrimitiveType(final Class<?> expectedBoxClass,
+        final Class<?> actualClass)
     {
         if ( expectedBoxClass == String.class )
         {

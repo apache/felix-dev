@@ -29,6 +29,7 @@ import java.util.concurrent.CountDownLatch;
 import javax.inject.Inject;
 
 import org.apache.felix.scr.integration.components.felix4188.Felix4188Component;
+import org.junit.Assert;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.ops4j.pax.exam.junit.PaxExam;
@@ -40,7 +41,6 @@ import org.osgi.framework.InvalidSyntaxException;
 import org.osgi.framework.ServiceReference;
 import org.osgi.service.component.runtime.dto.ComponentConfigurationDTO;
 
-import junit.framework.Assert;
 import junit.framework.TestCase;
 
 /**

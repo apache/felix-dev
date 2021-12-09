@@ -34,7 +34,6 @@ public class RegistrationManagerTest
     private volatile boolean fail;
 
     private int n = 10;
-    private ArrayList<Thread> threads = new ArrayList<>();
 
     private TRM trm = new TRM();
 
@@ -117,7 +116,7 @@ public class RegistrationManagerTest
         {
             if ( arguments != null && arguments.length == 1 && (arguments[0] instanceof ArrayList))
             {
-                ArrayList<RegState> opqueue = ( ArrayList<org.apache.felix.scr.impl.manager.RegistrationManager.RegState> ) arguments[0];
+                ArrayList<?> opqueue = (ArrayList<?>) arguments[0];
 //                System.out.println("opqueue: " + opqueue);
                 if (opqueue.size() > 1)
                 {

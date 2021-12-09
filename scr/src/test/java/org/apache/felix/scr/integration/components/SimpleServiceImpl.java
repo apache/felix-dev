@@ -114,6 +114,7 @@ public class SimpleServiceImpl implements SimpleService, Comparable<SimpleServic
     }
 
 
+    @Override
     public String getValue()
     {
         return m_value;

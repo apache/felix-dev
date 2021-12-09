@@ -50,7 +50,7 @@ import junit.framework.TestCase;
 public class ActivateMethodTest extends TestCase
 {
 
-    private static final Class ACCEPT_METHOD_CLASS = AcceptMethod.class;
+    private static final Class<AcceptMethod> ACCEPT_METHOD_CLASS = AcceptMethod.class;
 
     private Bundle m_bundle;
 
@@ -156,7 +156,7 @@ public class ActivateMethodTest extends TestCase
 
     public void test_getPackage() throws Exception
     {
-        Class dpc = getClass().getClassLoader().loadClass( "DefaultPackageClass" );
+        Class<?> dpc = getClass().getClassLoader().loadClass("DefaultPackageClass");
         assertEquals( "", BaseMethod.getPackageName( dpc ) );
 
         assertEquals( "org.apache.felix.scr.impl.metadata.instances", BaseMethod.getPackageName( base.getClass() ) );
@@ -288,11 +288,14 @@ public class ActivateMethodTest extends TestCase
      */
     private void checkMethod( BaseObject obj, String methodName, String methodDesc, DSVersion version )
     {
-        ComponentContainer<?> container = newContainer();
-        SingleComponentManager<?> icm = new SingleComponentManager( container, new ComponentMethodsImpl() );
+        ComponentContainer<Object> container = newContainer();
+        SingleComponentManager<?> icm = new SingleComponentManager<>(container,
+            new ComponentMethodsImpl<>());
         ActivateMethod am = new ActivateMethod( methodName, methodName != null, obj.getClass(), version, false, false );
 
-        am.invoke( obj, new ActivatorParameter( new ComponentContextImpl(icm, m_bundle, null), -1 ), null );
+        am.invoke(obj,
+            new ActivatorParameter(new ComponentContextImpl<>(icm, m_bundle, null), -1),
+            null);
         Method m = am.getMethod();
         assertNotNull( m );
         assertEquals( methodName, m.getName() );
@@ -300,10 +303,11 @@ public class ActivateMethodTest extends TestCase
     }
 
 
-    private ComponentContainer newContainer()
+    private ComponentContainer<Object> newContainer()
     {
         final ComponentMetadata metadata = newMetadata();
-        ComponentContainer container = new ComponentContainer() {
+        ComponentContainer<Object> container = new ComponentContainer<Object>()
+        {
 
             @Override
             public ComponentActivator getActivator()
@@ -320,13 +324,8 @@ public class ActivateMethodTest extends TestCase
             }
 
             @Override
-            public void disposed(SingleComponentManager component)
+            public void disposed(SingleComponentManager<Object> component)
             {
-            }
-
-            public boolean isEnabled()
-            {
-                return false;
             }
 
             @Override
@@ -374,10 +373,13 @@ public class ActivateMethodTest extends TestCase
      */
     private void ensureMethodNotFoundMethod( BaseObject obj, String methodName, DSVersion version )
     {
-        ComponentContainer container = newContainer();
-        SingleComponentManager icm = new SingleComponentManager( container, new ComponentMethodsImpl() );
+        ComponentContainer<Object> container = newContainer();
+        SingleComponentManager<Object> icm = new SingleComponentManager<>(container,
+            new ComponentMethodsImpl<>());
         ActivateMethod am = new ActivateMethod( methodName, methodName != null, obj.getClass(), version, false, false );
-        am.invoke( obj, new ActivatorParameter( new ComponentContextImpl(icm, m_bundle, null), -1 ), null );
+        am.invoke(obj,
+            new ActivatorParameter(new ComponentContextImpl<>(icm, m_bundle, null), -1),
+            null);
         Method m = am.getMethod();
         assertNull( m );
         assertNull( obj.getCalledMethod() );
@@ -387,19 +389,24 @@ public class ActivateMethodTest extends TestCase
     private void assertMethod( boolean expected, String methodName, boolean acceptPrivate, boolean acceptPackage )
         throws NoSuchMethodException
     {
-        Method method = ACCEPT_METHOD_CLASS.getDeclaredMethod( methodName, null );
+        Method method = ACCEPT_METHOD_CLASS.getDeclaredMethod(methodName);
         boolean accepted = BaseMethod.accept( method, acceptPrivate, acceptPackage, false );
         assertEquals( expected, accepted );
     }
 
     private static @interface Ann{}
+
+    @SuppressWarnings("unused")
     private static class Sort
     {
         public void a(Ann ann) {};
         public void a(int c) {};
         public void a(Integer c) {};
         public void a(BundleContext c) {};
-        public void a(Map m) {};
+
+        public void a(Map<?, ?> m)
+        {
+        };
         public void a() {};
         public void a(ComponentContext cc) {};
         public void a(ComponentContext cc, BundleContext c) {};

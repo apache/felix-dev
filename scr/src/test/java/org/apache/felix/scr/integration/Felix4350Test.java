@@ -80,8 +80,9 @@ public class Felix4350Test extends ComponentTestBase
 
     protected void doTest(String componentName) throws Exception
     {
-        ServiceRegistration dep1Reg = register(new SimpleComponent(), 0);
-        ServiceRegistration dep2Reg = register(new SimpleComponent2(), 1000);
+        ServiceRegistration<SimpleComponent> dep1Reg = register(new SimpleComponent(), 0);
+        ServiceRegistration<SimpleComponent2> dep2Reg = register(new SimpleComponent2(),
+            1000);
 
         final ComponentDescriptionDTO main = findComponentDescriptorByName(componentName);
         TestCase.assertNotNull(main);
@@ -136,16 +137,21 @@ public class Felix4350Test extends ComponentTestBase
             }}).start();
     }
 
-    protected ServiceRegistration register(final Object service, final int delay) {
-        return bundleContext.registerService(service.getClass().getName(), new ServiceFactory() {
+    @SuppressWarnings("unchecked")
+    protected <T> ServiceRegistration<T> register(final T service, final int delay)
+    {
+        return bundleContext.registerService((Class<T>) service.getClass(),
+            new ServiceFactory<T>()
+            {
             @Override
-            public Object getService(Bundle bundle, ServiceRegistration registration)
+                public T getService(Bundle bundle, ServiceRegistration<T> registration)
             {
                 delay(delay);
                 return service;
             }
             @Override
-            public void ungetService(Bundle bundle, ServiceRegistration registration, Object service)
+                public void ungetService(Bundle bundle,
+                    ServiceRegistration<T> registration, T service)
             {
             }
         }, null);

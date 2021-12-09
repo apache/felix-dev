@@ -77,9 +77,9 @@ public class Felix3680_2Test extends ComponentTestBase
             {
                 throw log.getFirstFrameworkThrowable();
             }
-            for ( Iterator it = log.foundWarnings().iterator(); it.hasNext(); )
+            for (Iterator<String> it = log.foundWarnings().iterator(); it.hasNext();)
             {
-                String message = ( String ) it.next();
+                String message = it.next();
                 TestCase.fail( "unexpected warning or error logged: " + message );
             }
         }

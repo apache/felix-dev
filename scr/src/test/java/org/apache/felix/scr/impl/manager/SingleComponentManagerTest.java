@@ -41,9 +41,9 @@ import org.osgi.service.cm.ConfigurationAdmin;
 
 public class SingleComponentManagerTest
 {
+    private ServiceRegistration<?> serviceRegistration = Mockito.mock(
+        ServiceRegistration.class);
 
-    private ServiceRegistration serviceRegistration = Mockito.mock(ServiceRegistration.class);
-    private ServiceReference serviceReference = Mockito.mock(ServiceReference.class);
     private BundleLogger bundleLogger = Mockito.mock(BundleLogger.class);
     private ComponentLogger componentLogger = Mockito.mock(ComponentLogger.class);
 
@@ -170,21 +170,30 @@ public class SingleComponentManagerTest
         public BundleLogger getLogger() {
             return bundleLogger;
         }
+
+        @Override
+        public ServiceReference<?> getTrueCondition()
+        {
+            // TODO Auto-generated method stub
+            return null;
+        }
     };
 
+    @SuppressWarnings("unchecked")
     @Test
     public void testGetService() throws Exception {
         ComponentMetadata cm = new ComponentMetadata(DSVersion.DS13);
         cm.setImplementationClassName("foo.bar.SomeClass");
         cm.validate();
 
-        @SuppressWarnings("unchecked")
         ComponentContainer<Object> cc = Mockito.mock(ComponentContainer.class);
         Mockito.when(cc.getComponentMetadata()).thenReturn(cm);
         Mockito.when(cc.getActivator()).thenReturn(componentActivator);
         Mockito.when(cc.getLogger()).thenReturn(componentLogger);
 
-        SingleComponentManager<Object> scm = new SingleComponentManager<Object>(cc, new ComponentMethodsImpl()) {
+        SingleComponentManager<Object> scm = new SingleComponentManager<Object>(cc,
+            new ComponentMethodsImpl<>())
+        {
             @Override
             boolean getServiceInternal(ServiceRegistration<Object> serviceRegistration)
             {
@@ -206,7 +215,8 @@ public class SingleComponentManagerTest
         f.set(scm, cci);
 
         scm.setState(scm.getState(), State.unsatisfiedReference);
-        assertSame(implObj, scm.getService(b, serviceRegistration));
+        assertSame(implObj,
+            scm.getService(b, (ServiceRegistration<Object>) serviceRegistration));
 
         Field u = SingleComponentManager.class.getDeclaredField("m_useCount");
         u.setAccessible(true);
@@ -214,6 +224,7 @@ public class SingleComponentManagerTest
         assertEquals(1, use.get());
     }
 
+    @SuppressWarnings("unchecked")
     @Test
     public void testGetServiceWithNullComponentContext() throws Exception
     {
@@ -221,13 +232,14 @@ public class SingleComponentManagerTest
         cm.setImplementationClassName("foo.bar.SomeClass");
         cm.validate();
 
-        @SuppressWarnings("unchecked")
         ComponentContainer<Object> cc = Mockito.mock(ComponentContainer.class);
         Mockito.when(cc.getComponentMetadata()).thenReturn(cm);
         Mockito.when(cc.getActivator()).thenReturn(componentActivator);
         Mockito.when(cc.getLogger()).thenReturn(componentLogger);
 
-        SingleComponentManager<?> scm = new SingleComponentManager<Object>(cc, new ComponentMethodsImpl()) {
+        SingleComponentManager<Object> scm = new SingleComponentManager<Object>(cc,
+            new ComponentMethodsImpl<>())
+        {
             @Override
             boolean getServiceInternal(ServiceRegistration<Object> serviceRegistration)
             {
@@ -240,7 +252,7 @@ public class SingleComponentManagerTest
 
         scm.setState(scm.getState(), State.unsatisfiedReference);
         assertNull("m_componentContext is null, this should not cause an NPE",
-                scm.getService(b, serviceRegistration));
+            scm.getService(b, (ServiceRegistration<Object>) serviceRegistration));
 
         Field u = SingleComponentManager.class.getDeclaredField("m_useCount");
         u.setAccessible(true);

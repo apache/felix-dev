@@ -49,7 +49,7 @@ public class Main implements Runnable
     private ServiceComponentRuntime m_scr;
     private final Executor m_exec = Executors.newFixedThreadPool( 12 );
     private volatile BundleContext m_bctx;
-    volatile ConcurrentHashMap<Class, ServiceRegistration> m_registrations = new ConcurrentHashMap<Class, ServiceRegistration>();
+    volatile ConcurrentHashMap<Class<?>, ServiceRegistration<?>> m_registrations = new ConcurrentHashMap<>();
     volatile Exception _bindStackTrace;
 
     private volatile boolean running = true;
@@ -103,10 +103,12 @@ public class Main implements Runnable
         }
 
 
-        private void register( final Class clazz )
+        private void register(final Class<?> clazz)
         {
             m_exec.execute( new Runnable()
             {
+                @SuppressWarnings("deprecation")
+                @Override
                 public void run()
                 {
                     try
@@ -124,15 +126,17 @@ public class Main implements Runnable
         }
 
 
-        private void unregister( final Class clazz )
+        private void unregister(final Class<?> clazz)
         {
             m_exec.execute( new Runnable()
             {
+                @SuppressWarnings("deprecation")
+                @Override
                 public void run()
                 {
                     try
                     {
-                        ServiceRegistration sr = m_registrations.remove( clazz );
+                        ServiceRegistration<?> sr = m_registrations.remove(clazz);
                         sr.unregister();
                         m_disabledLatch.countDown();
                     }
@@ -158,7 +162,8 @@ public class Main implements Runnable
     }
 
 
-    void bindA( ServiceReference sr )
+    @SuppressWarnings("deprecation")
+    void bindA(ServiceReference<?> sr)
     {
         Exception trace = new Exception( "bindA (" + Thread.currentThread() + ")" );
         if ( _bindStackTrace != null )
@@ -219,6 +224,8 @@ public class Main implements Runnable
     }
 
 
+    @SuppressWarnings("deprecation")
+    @Override
     public void run()
     {
         int loop = 0;
@@ -298,6 +305,7 @@ public class Main implements Runnable
         return b.toString();
     }
 
+    @SuppressWarnings("deprecation")
     private void dumpA()
     {
         ComponentDescriptionDTO c = m_scr

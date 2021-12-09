@@ -142,6 +142,12 @@ public class ComponentContextImpl<S> implements ScrComponentContext {
         return new ReadOnlyDictionary( m_componentManager.getProperties() );
     }
 
+    @SuppressWarnings("unchecked")
+    @Override
+    public Map<String, Object> getPropertiesMap()
+    {
+        return (Map<String, Object>) getProperties();
+    }
 
     @SuppressWarnings("unchecked")
     @Override

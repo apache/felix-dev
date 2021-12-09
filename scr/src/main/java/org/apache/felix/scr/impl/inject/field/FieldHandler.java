@@ -26,6 +26,7 @@ import java.util.ArrayList;
 import java.util.Collection;
 import java.util.List;
 import java.util.Map;
+import java.util.Optional;
 import java.util.concurrent.CopyOnWriteArrayList;
 import java.util.concurrent.CopyOnWriteArraySet;
 
@@ -130,23 +131,32 @@ public class FieldHandler
                         }
                         if ( fieldType == ClassUtils.LIST_CLASS )
                         {
-                        	    this.setFieldValue(componentInstance, new CopyOnWriteArrayList<>());
+                            this.setFieldValue(componentInstance,
+                                new CopyOnWriteArrayList<>());
                         }
                         else
                         {
-                        	    this.setFieldValue(componentInstance, new CopyOnWriteArraySet<>());
+                            this.setFieldValue(componentInstance,
+                                new CopyOnWriteArraySet<>());
                         }
                     }
                 }
             }
             else
             {
-            	// only optional field need initialization
-            	if ( metadata.isOptional() )
-            	{
-	            	// null the field if optional and unary
-	            	this.setFieldValue(componentInstance, null);
-	            }
+                // only optional field need initialization
+                if (metadata.isOptional())
+                {
+                    if (valueType == ValueType.ref_optional)
+                    {
+                        this.setFieldValue(componentInstance, Optional.empty());
+                    }
+                    else
+                    {
+                        // null the field if optional and unary
+                        this.setFieldValue(componentInstance, null);
+                    }
+                }
             }
         }
         catch ( final InvocationTargetException ite)
@@ -183,7 +193,7 @@ public class FieldHandler
         {
             // unary references
 
-        	// unbind needs only be done, if reference is dynamic and optional
+            // unbind needs only be done, if reference is dynamic and optional
             if ( mType == METHOD_TYPE.UNBIND )
             {
                 Map<RefPair<?, ?>, Object> boundValues = bp.getComponentContext().getBoundValues(metadata.getName());
@@ -192,9 +202,17 @@ public class FieldHandler
                     if ( this.metadata.isOptional() && !this.metadata.isStatic() )
                     {
                         // we only reset if it was previously set with this value
-                        if ( boundValues.size() == 1 )
+                        if (boundValues.size() == 1)
                         {
-                            this.setFieldValue(componentInstance, null);
+                            if (valueType == ValueType.ref_optional)
+                            {
+                                this.setFieldValue(componentInstance, Optional.empty());
+                            }
+                            else
+                            {
+                                // null the field if optional and unary
+                                this.setFieldValue(componentInstance, null);
+                            }
                         }
                     }
                     boundValues.remove(refPair);
@@ -212,7 +230,7 @@ public class FieldHandler
             			return MethodResult.REACTIVATE;
             		}
                     final Object obj = ValueUtils.getValue(componentInstance.getClass().getName(),
-                            valueType, field.getType(), key, refPair);
+                        valueType, field.getType(), key, refPair, this.metadata);
                     this.setFieldValue(componentInstance, obj);
                     bp.getComponentContext().getBoundValues(metadata.getName()).put(refPair, obj);
             	}
@@ -221,7 +239,7 @@ public class FieldHandler
             else
             {
                 final Object obj = ValueUtils.getValue(componentInstance.getClass().getName(),
-                        valueType, field.getType(), key, refPair);
+                    valueType, field.getType(), key, refPair, this.metadata);
                 this.setFieldValue(componentInstance, obj);
                 bp.getComponentContext().getBoundValues(metadata.getName()).put(refPair, obj);
             }
@@ -234,7 +252,7 @@ public class FieldHandler
             if ( mType == METHOD_TYPE.BIND )
             {
                 final Object obj = ValueUtils.getValue(componentInstance.getClass().getName(),
-                        valueType, field.getType(), key, refPair);
+                    valueType, field.getType(), key, refPair, this.metadata);
                 bp.getComponentContext().getBoundValues(metadata.getName()).put(refPair, obj);
                 if ( metadata.isReplace() )
                 {
@@ -273,7 +291,7 @@ public class FieldHandler
                     if ( !this.metadata.isStatic() )
                     {
 	                    final Object obj = ValueUtils.getValue(componentInstance.getClass().getName(),
-	                            valueType, field.getType(), key, refPair);
+                            valueType, field.getType(), key, refPair, this.metadata);
 	                    final Object oldObj = bp.getComponentContext().getBoundValues(metadata.getName()).put(refPair, obj);
 
 	                    if ( metadata.isReplace() )
@@ -523,8 +541,11 @@ public class FieldHandler
                 //??? this resolves which we need.... better way?
                 if (rawParameter.getRefPair().getServiceObject(rawParameter.getComponentContext()) == null
                   && handler.fieldExists( rawParameter.getComponentContext().getLogger() )
-                  && (handler.valueType == ValueType.ref_serviceType || handler.valueType == ValueType.ref_tuple
-                      || handler.valueType == ValueType.ref_logger || handler.valueType == ValueType.ref_formatterLogger) )
+                    && (handler.valueType == ValueType.ref_serviceType //
+                        || handler.valueType == ValueType.ref_tuple
+                        || handler.valueType == ValueType.ref_logger
+                        || handler.valueType == ValueType.ref_formatterLogger
+                        || handler.valueType == ValueType.ref_optional))
                 {
                     return rawParameter.getRefPair().getServiceObject(rawParameter.getComponentContext(), context);
                 }
