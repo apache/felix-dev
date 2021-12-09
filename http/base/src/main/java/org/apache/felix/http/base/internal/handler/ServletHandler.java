@@ -64,6 +64,9 @@ public abstract class ServletHandler implements Comparable<ServletHandler>
         if ( origConfig != null )
         {
             String location = origConfig.multipartLocation;
+            if ( location != null && location.trim().length() == 0 ) {
+                location = null;
+            }
             if ( location == null ) {
                 final Object obj = context == null ? null : context.getAttribute(JAVA_SERVLET_TEMP_DIR_PROP);
                 if ( obj != null ) {
