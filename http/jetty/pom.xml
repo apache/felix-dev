@@ -42,7 +42,7 @@
     
     <properties>
         <felix.java.version>8</felix.java.version>
-	<jetty.version>9.4.43.v20210629</jetty.version>
+	<jetty.version>9.4.44.v20210927</jetty.version>
     </properties>
 
     <build>
@@ -398,7 +398,7 @@
         <dependency>
             <groupId>org.apache.felix</groupId>
             <artifactId>org.apache.felix.http.base</artifactId>
-            <version>4.1.4</version>
+            <version>4.1.5-SNAPSHOT</version>
         </dependency>
         <dependency>
             <groupId>commons-fileupload</groupId>
