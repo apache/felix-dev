@@ -20,7 +20,12 @@ package org.apache.felix.hc.core.impl.monitor;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertTrue;
 import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.anyBoolean;
+import static org.mockito.ArgumentMatchers.anyList;
+import static org.mockito.ArgumentMatchers.anyString;
 import static org.mockito.ArgumentMatchers.eq;
+import static org.mockito.ArgumentMatchers.matches;
+import static org.mockito.Mockito.lenient;
 import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.reset;
 import static org.mockito.Mockito.times;
@@ -44,13 +49,18 @@ import org.apache.felix.hc.core.impl.executor.ExecutionResult;
 import org.apache.felix.hc.core.impl.executor.ExtendedHealthCheckExecutor;
 import org.apache.felix.hc.core.impl.executor.HealthCheckExecutorThreadPool;
 import org.apache.felix.hc.core.impl.scheduling.AsyncIntervalJob;
+import org.apache.felix.hc.core.impl.servlet.ResultTxtVerboseSerializer;
 import org.junit.Before;
 import org.junit.Test;
+import org.junit.runner.RunWith;
 import org.mockito.ArgumentCaptor;
 import org.mockito.Captor;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
-import org.mockito.MockitoAnnotations;
+import org.mockito.Spy;
+import org.mockito.invocation.InvocationOnMock;
+import org.mockito.junit.MockitoJUnitRunner;
+import org.mockito.stubbing.Answer;
 import org.osgi.framework.BundleContext;
 import org.osgi.framework.InvalidSyntaxException;
 import org.osgi.framework.ServiceReference;
@@ -60,12 +70,15 @@ import org.osgi.service.component.ComponentContext;
 import org.osgi.service.event.Event;
 import org.osgi.service.event.EventAdmin;
 
+@RunWith(MockitoJUnitRunner.class)
 public class HealthCheckMonitorTest {
 
     private static final String TEST_TAG = "test-tag";
+    private static final String HC_RESULT_SERIALIZED = "HC result serialized";
 
+    @Spy
     @InjectMocks
-    private HealthCheckMonitor healthCheckMonitor = new HealthCheckMonitor();
+    private HealthCheckMonitor healthCheckMonitor;
 
     @Mock
     private BundleContext bundleContext;
@@ -103,9 +116,11 @@ public class HealthCheckMonitorTest {
     @Mock
     private ServiceRegistration<Unhealthy> unhealthyRegistration;
     
+    @Mock
+    private ResultTxtVerboseSerializer resultTxtVerboseSerializer;
+    
     @Before
     public void before() throws ReflectiveOperationException {
-        MockitoAnnotations.initMocks(this);
 
         for (Method m : HealthCheckMonitor.Config.class.getDeclaredMethods()) {
             when(m.invoke(config)).thenReturn(m.getDefaultValue());
@@ -115,10 +130,12 @@ public class HealthCheckMonitorTest {
         when(config.tags()).thenReturn(new String[] { TEST_TAG });
         
         when(healthCheckMetadata.getServiceReference()).thenReturn(healthCheckServiceRef);
-        
+        when(healthCheckMetadata.getTitle()).thenReturn("Test Check");
+
         Dictionary<String,Object> componentProps = new Hashtable<>();
         componentProps.put(ComponentConstants.COMPONENT_ID, 7L);
         when(componentContext.getProperties()).thenReturn(componentProps);
+
     }
 
     @Test
@@ -188,9 +205,9 @@ public class HealthCheckMonitorTest {
     private void resetMarkerServicesContext() {
         reset(bundleContext, healthyRegistration, unhealthyRegistration);
         when(bundleContext.registerService(eq(Healthy.class), eq(HealthState.MARKER_SERVICE_HEALTHY), any())).thenReturn((ServiceRegistration<Healthy>) healthyRegistration);
-        when(bundleContext.registerService(eq(Unhealthy.class), eq(HealthState.MARKER_SERVICE_UNHEALTHY), any())).thenReturn(unhealthyRegistration);
+        lenient().when(bundleContext.registerService(eq(Unhealthy.class), eq(HealthState.MARKER_SERVICE_UNHEALTHY), any())).thenReturn(unhealthyRegistration);
     }
-    
+
     @Test
     public void testRunSendEventsStatusChanges() throws InvalidSyntaxException {
 
@@ -271,7 +288,185 @@ public class HealthCheckMonitorTest {
         assertEquals(Result.Status.OK, postedEvents.get(0).getProperty(HealthState.EVENT_PROP_PREVIOUS_STATUS));
         assertEquals("org/apache/felix/health/component/org/apache/felix/TestHealthCheck/UPDATED", postedEvents.get(1).getTopic());
     }
+
+
+
+    @Test
+    public void testRunLogAll() throws InvalidSyntaxException {
+
+        prepareLoggingTest(HealthCheckMonitor.ChangeType.ALL);
+
+        setHcResult(Result.Status.OK);
+        healthCheckMonitor.run();
+        verify(healthCheckMonitor).logResultItem(eq(true), matches(".*healthy:true hasChanged:true .*" + HC_RESULT_SERIALIZED));
+
+        reset(healthCheckMonitor);
+        setHcResult(Result.Status.OK);
+        healthCheckMonitor.run();
+        verify(healthCheckMonitor).logResultItem(eq(true), matches(".*healthy:true hasChanged:false .*" + HC_RESULT_SERIALIZED));
+
+        reset(healthCheckMonitor);
+        setHcResult(Result.Status.WARN);
+        healthCheckMonitor.run();
+        verify(healthCheckMonitor).logResultItem(eq(false), matches(".*healthy:true hasChanged:true .*" + HC_RESULT_SERIALIZED));
+
+        reset(healthCheckMonitor);
+        setHcResult(Result.Status.WARN);
+        healthCheckMonitor.run();
+        verify(healthCheckMonitor).logResultItem(eq(false), matches(".*healthy:true hasChanged:false .*" + HC_RESULT_SERIALIZED));
+
+        reset(healthCheckMonitor);
+        setHcResult(Result.Status.CRITICAL);
+        healthCheckMonitor.run();
+        verify(healthCheckMonitor).logResultItem(eq(false), matches(".*healthy:false hasChanged:true .*" + HC_RESULT_SERIALIZED));
+        
+        reset(healthCheckMonitor);
+        setHcResult(Result.Status.CRITICAL);
+        healthCheckMonitor.run();
+        verify(healthCheckMonitor).logResultItem(eq(false), matches(".*healthy:false hasChanged:false .*" + HC_RESULT_SERIALIZED));
+
+        reset(healthCheckMonitor);
+        setHcResult(Result.Status.OK);
+        healthCheckMonitor.run();
+        verify(healthCheckMonitor).logResultItem(eq(true), matches(".*healthy:true hasChanged:true .*" + HC_RESULT_SERIALIZED));
+
+        reset(healthCheckMonitor);
+        setHcResult(Result.Status.OK);
+        healthCheckMonitor.run();
+        verify(healthCheckMonitor).logResultItem(eq(true), matches(".*healthy:true hasChanged:false .*" + HC_RESULT_SERIALIZED));
+
+    }
+
+
+
+    @Test
+    public void testRunLogStatusChanges() throws InvalidSyntaxException {
+
+        prepareLoggingTest(HealthCheckMonitor.ChangeType.STATUS_CHANGES);
+
+        setHcResult(Result.Status.OK);
+        healthCheckMonitor.run();
+        verify(healthCheckMonitor).logResultItem(eq(true), matches(".*healthy:true hasChanged:true .*" + HC_RESULT_SERIALIZED));
+
+        reset(healthCheckMonitor);
+        setHcResult(Result.Status.OK);
+        healthCheckMonitor.run();
+        verify(healthCheckMonitor, never()).logResultItem(anyBoolean(), anyString());
+
+        reset(healthCheckMonitor);
+        setHcResult(Result.Status.WARN);
+        healthCheckMonitor.run();
+        verify(healthCheckMonitor).logResultItem(eq(false), matches(".*healthy:true hasChanged:true .*" + HC_RESULT_SERIALIZED));
+
+        reset(healthCheckMonitor);
+        setHcResult(Result.Status.WARN);
+        healthCheckMonitor.run();
+        verify(healthCheckMonitor, never()).logResultItem(anyBoolean(), anyString());
+
+        reset(healthCheckMonitor);
+        setHcResult(Result.Status.CRITICAL);
+        healthCheckMonitor.run();
+        verify(healthCheckMonitor).logResultItem(eq(false), matches(".*healthy:false hasChanged:true .*" + HC_RESULT_SERIALIZED));
+        
+        reset(healthCheckMonitor);
+        setHcResult(Result.Status.CRITICAL);
+        healthCheckMonitor.run();
+        verify(healthCheckMonitor, never()).logResultItem(anyBoolean(), anyString());
+
+        reset(healthCheckMonitor);
+        setHcResult(Result.Status.OK);
+        healthCheckMonitor.run();
+        verify(healthCheckMonitor).logResultItem(eq(true), matches(".*healthy:true hasChanged:true .*" + HC_RESULT_SERIALIZED));
+
+        reset(healthCheckMonitor);
+        setHcResult(Result.Status.OK);
+        healthCheckMonitor.run();
+        verify(healthCheckMonitor, never()).logResultItem(anyBoolean(), anyString());
+
+    }
+
+
+    @Test
+    public void testRunLogStatusChangesOrNotOk() throws InvalidSyntaxException {
+
+        prepareLoggingTest(HealthCheckMonitor.ChangeType.STATUS_CHANGES_OR_NOT_OK);
+
+        setHcResult(Result.Status.OK);
+        healthCheckMonitor.run();
+        verify(healthCheckMonitor).logResultItem(eq(true), matches(".*healthy:true hasChanged:true .*" + HC_RESULT_SERIALIZED));
+
+        reset(healthCheckMonitor);
+        setHcResult(Result.Status.OK);
+        healthCheckMonitor.run();
+        verify(healthCheckMonitor, never()).logResultItem(anyBoolean(), anyString());
+
+        reset(healthCheckMonitor);
+        setHcResult(Result.Status.WARN);
+        healthCheckMonitor.run();
+        verify(healthCheckMonitor).logResultItem(eq(false), matches(".*healthy:true hasChanged:true .*" + HC_RESULT_SERIALIZED));
+
+        reset(healthCheckMonitor);
+        setHcResult(Result.Status.WARN);
+        healthCheckMonitor.run();
+        verify(healthCheckMonitor).logResultItem(eq(false), matches(".*healthy:true hasChanged:false .*" + HC_RESULT_SERIALIZED));
+
+        reset(healthCheckMonitor);
+        setHcResult(Result.Status.CRITICAL);
+        healthCheckMonitor.run();
+        verify(healthCheckMonitor).logResultItem(eq(false), matches(".*healthy:false hasChanged:true .*" + HC_RESULT_SERIALIZED));
+        
+        reset(healthCheckMonitor);
+        setHcResult(Result.Status.CRITICAL);
+        healthCheckMonitor.run();
+        verify(healthCheckMonitor).logResultItem(eq(false), matches(".*healthy:false hasChanged:false .*" + HC_RESULT_SERIALIZED));
+
+        reset(healthCheckMonitor);
+        setHcResult(Result.Status.OK);
+        healthCheckMonitor.run();
+        verify(healthCheckMonitor).logResultItem(eq(true), matches(".*healthy:true hasChanged:true .*" + HC_RESULT_SERIALIZED));
+
+        reset(healthCheckMonitor);
+        setHcResult(Result.Status.OK);
+        healthCheckMonitor.run();
+        verify(healthCheckMonitor, never()).logResultItem(anyBoolean(), anyString());
+
+    }
+
+
+    @Test
+    public void testRunLogStatusNone() throws InvalidSyntaxException {
+
+        prepareLoggingTest(HealthCheckMonitor.ChangeType.NONE);
+
+        for (Result.Status status : Arrays.asList(
+                Result.Status.OK, Result.Status.OK,
+                Result.Status.WARN, Result.Status.WARN,
+                Result.Status.CRITICAL, Result.Status.CRITICAL,
+                Result.Status.OK, Result.Status.OK)) {
+
+            setHcResult(status);
+            healthCheckMonitor.run();
+        }
+
+        // ensure logging is never called for whatever state remains the same or changes
+        verify(healthCheckMonitor, never()).logResultItem(anyBoolean(), anyString());
+
+    }
     
+    private void prepareLoggingTest(HealthCheckMonitor.ChangeType loggingChangeType) throws InvalidSyntaxException {
+        when(config.sendEvents()).thenReturn(HealthCheckMonitor.ChangeType.NONE);
+        when(config.logResults()).thenReturn(loggingChangeType);
+        healthCheckMonitor.activate(bundleContext, config, componentContext);
+        healthCheckMonitor.healthStates.put(TEST_TAG, new HealthState(healthCheckMonitor, TEST_TAG, true));
+
+        when(resultTxtVerboseSerializer.serialize(any(String.class), anyList(), eq(false))).thenAnswer(new Answer<String>() {
+            @Override
+            public String answer(InvocationOnMock invocation) throws Throwable {
+              Object[] args = invocation.getArguments();
+              return (String) args[0] + " " + HC_RESULT_SERIALIZED;
+            }
+          });
+    }
     
     private void setHcResult(Result.Status status) {
         when(healthCheckExecutor.execute(HealthCheckSelector.tags(TEST_TAG)))

@@ -26,7 +26,6 @@ import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 
 import org.apache.felix.hc.api.HealthCheck;
-import org.apache.felix.hc.api.Result.Status;
 import org.apache.felix.hc.api.condition.Healthy;
 import org.apache.felix.hc.api.condition.SystemReady;
 import org.apache.felix.hc.api.condition.Unhealthy;
@@ -78,22 +77,22 @@ public class HealthCheckMonitor implements Runnable {
     private static final Logger LOG = LoggerFactory.getLogger(HealthCheckMonitor.class);
 
     public enum ChangeType {
-        NONE, STATUS_CHANGES, ALL
+        NONE, STATUS_CHANGES, STATUS_CHANGES_OR_NOT_OK, ALL
     }
     
     @ObjectClassDefinition(name = "Health Check Monitor", description = "Regularly executes health checks according to given interval/cron expression")
     public @interface Config {
 
-        @AttributeDefinition(name = "Tags", description = "List of tags to query regularly")
+        @AttributeDefinition(name = "Tags", description = "List of tags to monitor")
         String[] tags() default {};
 
-        @AttributeDefinition(name = "Names", description = "List of health check names to query regularly")
+        @AttributeDefinition(name = "Names", description = "List of health check names to monitor")
         String[] names() default {};
 
-        @AttributeDefinition(name = "Interval (Sec)", description = "Will execute the checks for give tags every n seconds (either use intervalInSec or cronExpression )")
+        @AttributeDefinition(name = "Interval (Sec)", description = "Will execute the checks for given tags/names every n seconds (either use intervalInSec or cronExpression )")
         long intervalInSec() default 0;
 
-        @AttributeDefinition(name = "Interval (Cron Expresson)", description = "Will execute the checks for give tags according to cron expression")
+        @AttributeDefinition(name = "Interval (Cron Expresson)", description = "Will execute the checks for given tags/names according to cron expression")
         String cronExpression() default "";
 
         @AttributeDefinition(name = "Register Healthy Marker Service", description = "For the case a given tag/name is healthy, will register a service Healthy with property tag=<tagname> (or name=<hc.name>) that other services can depend on")
@@ -102,16 +101,16 @@ public class HealthCheckMonitor implements Runnable {
         @AttributeDefinition(name = "Register Unhealthy Marker Service", description = "For the case a given tag/name is unhealthy, will register a service Unhealthy with property tag=<tagname> (or name=<hc.name>) that other services can depend on")
         boolean registerUnhealthyMarkerService() default false;
 
-        @AttributeDefinition(name = "Treat WARN as Healthy", description = "Whether to treat status WARN as healthy (it normally should because WARN indicates a working system that only possibly might become unavailable if no action is taken")
+        @AttributeDefinition(name = "Treat WARN as Healthy", description = "Whether to treat status WARN as healthy (defaults to true because WARN indicates a working system that only possibly might become unavailable if no action is taken)")
         boolean treatWarnAsHealthy() default true;
 
-        @AttributeDefinition(name = "Send Events", description = "Send OSGi events for the case a status has changed or for all executions or for none.")
+        @AttributeDefinition(name = "Send Events", description = "What updates should be sent as OSGi events (none, status changes, status changes and not ok results, all updates)")
         ChangeType sendEvents() default ChangeType.STATUS_CHANGES;
 
-        @AttributeDefinition(name = "Log results", description = "Log the result to the regular log file.")
+        @AttributeDefinition(name = "Log results", description = "What updates should be logged to regular log file (none, status changes, status changes and not ok results, all updates)")
         ChangeType logResults() default ChangeType.NONE;
         
-        @AttributeDefinition(name = "Dynamic Mode", description = "In dynamic mode all checks for names/tags are monitored individually (this means events are sent/services registered for name only, never for given tags). This mode allows to use '*' in tags to query for all health checks in system. It is also possible to query for all except certain tags by using '-', e.g. by configuring the values '*', '-tag1' and '-tag2' for tags.")
+        @AttributeDefinition(name = "Resolve Tags (dynamic)", description = "In dynamic mode tags are resolved to a list of health checks that are monitored individually (this means events are sent/services are registered for name only, never for given tags). This mode allows to use '*' in tags to query for all health checks in system. It is also possible to query for all except certain tags by using '-', e.g. by configuring the values '*', '-tag1' and '-tag2' for tags.")
         boolean isDynamic() default false;
         
         @AttributeDefinition
@@ -166,7 +165,7 @@ public class HealthCheckMonitor implements Runnable {
         this.names = Arrays.stream(config.names()).filter(StringUtils::isNotBlank).collect(toList());
         this.isDynamic = config.isDynamic();
         initHealthStates();
-        
+
         this.registerHealthyMarkerService = config.registerHealthyMarkerService();
         this.registerUnhealthyMarkerService = config.registerUnhealthyMarkerService();
 
@@ -263,12 +262,10 @@ public class HealthCheckMonitor implements Runnable {
                 healthStates.values().parallelStream().forEach(healthState -> 
                     runWithThreadNameContext(healthState::update)
                 );
-                
 
                 if(logResults != ChangeType.NONE) {
                     logResults();
                 }
-                
 
                 LOG.debug("Updated {} health states for tags {} and names {}", healthStates.size(), this.tags, this.names);
             } catch (Exception e) {
@@ -278,42 +275,51 @@ public class HealthCheckMonitor implements Runnable {
     }
 
     private void logResults() {
-
-        List<HealthCheckExecutionResult> executionResults = healthStates.values().stream()
-            .filter(healthState -> { return healthState.hasChanged() || logResults == ChangeType.ALL; })
-            .flatMap( healthState -> {
-                HealthCheckExecutionResult executionResult = healthState.getExecutionResult();
-                List<HealthCheckExecutionResult> execResults;
-                if (executionResult instanceof CombinedExecutionResult) {
-                    execResults = ((CombinedExecutionResult) executionResult).getExecutionResults();
-                } else {
-                    execResults = Arrays.asList(executionResult);
-                }
-                return execResults.stream();
-            })
-            .sorted()
-            .collect(toList());
         
-        if(executionResults.isEmpty()) {
-            return;
-        }
-        
-        CombinedExecutionResult combinedResultForLogging = new CombinedExecutionResult(executionResults);
-        Status hcStatus = combinedResultForLogging.getHealthCheckResult().getStatus();
-        if(!LOG.isInfoEnabled() && hcStatus == Status.OK) {
-            return;
-        }
+        for(HealthState healthState: healthStates.values()) {
 
-        String logMsg = resultTxtVerboseSerializer.serialize(combinedResultForLogging.getHealthCheckResult(), combinedResultForLogging.getExecutionResults(), false);
-        String firstLineMsg = (logResults == ChangeType.STATUS_CHANGES) ? "Status Changes:" : "";
-        if(hcStatus == Status.OK) {
-            LOG.info(firstLineMsg+"\n"+logMsg);
-        } else {
-            LOG.warn(firstLineMsg+"\n"+logMsg);
+            HealthCheckExecutionResult executionResult = healthState.getExecutionResult();
+
+            boolean isOk = executionResult.getHealthCheckResult().isOk();
+            if(!LOG.isInfoEnabled() && isOk) {
+                return; // with INFO disabled even ChangeType.ALL would not log it
+            }
+            boolean changeToBeLogged = healthState.hasChanged() && (logResults == ChangeType.STATUS_CHANGES || logResults == ChangeType.STATUS_CHANGES_OR_NOT_OK);
+            boolean notOkToBeLogged = !isOk && logResults == ChangeType.STATUS_CHANGES_OR_NOT_OK;
+            if(!changeToBeLogged && !notOkToBeLogged && logResults != ChangeType.ALL) {
+                continue;
+            }
+
+            List<HealthCheckExecutionResult> execResults;
+            boolean isCombinedResult = executionResult instanceof CombinedExecutionResult;
+            if (isCombinedResult) {
+                execResults = ((CombinedExecutionResult) executionResult).getExecutionResults();
+            } else {
+                execResults = Arrays.asList(executionResult);
+            }
+
+            String label = 
+                    isCombinedResult ?  String.format("Health State for %s '%s': healthy:%b isOk:%b hasChanged:%b count HCs:%d", (healthState.isTag() ? "tag" : "name"), healthState.getTagOrName(), healthState.isHealthy(), isOk, healthState.hasChanged(), execResults.size())
+                            : String.format("Health State for '%s': healthy:%b hasChanged:%b", executionResult.getHealthCheckMetadata().getTitle(), healthState.isHealthy(), healthState.hasChanged());
+            if(!healthState.hasChanged() && notOkToBeLogged) {
+                // filter the ok items to not clutter the log file
+                execResults = execResults.stream().filter(r -> !r.getHealthCheckResult().isOk()).collect(toList());
+            }
+
+            String logMsg = resultTxtVerboseSerializer.serialize(label, execResults, false);
+            logResultItem(isOk, logMsg);
         }
 
     }
-    
+
+    void logResultItem(boolean isOk, String msg) {
+        if(isOk) {
+            LOG.info(msg);
+        } else {
+            LOG.warn(msg);
+        }
+    }
+
     private void runWithThreadNameContext(Runnable r) {
         String threadNameToRestore = Thread.currentThread().getName();
         try {

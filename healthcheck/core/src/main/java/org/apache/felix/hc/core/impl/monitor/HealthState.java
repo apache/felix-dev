@@ -25,11 +25,9 @@ import java.util.HashMap;
 import java.util.Hashtable;
 import java.util.List;
 import java.util.Map;
-import java.util.function.Function;
 
 import org.apache.felix.hc.api.HealthCheck;
 import org.apache.felix.hc.api.Result;
-import org.apache.felix.hc.api.Result.Status;
 import org.apache.felix.hc.api.condition.Healthy;
 import org.apache.felix.hc.api.condition.SystemReady;
 import org.apache.felix.hc.api.condition.Unhealthy;
@@ -107,6 +105,18 @@ class HealthState {
 
     public boolean hasChanged() {
         return statusChanged;
+    }
+
+    public boolean isHealthy() {
+        return isHealthy;
+    }
+
+    String getTagOrName() {
+        return tagOrName;
+    }
+
+    boolean isTag() {
+        return isTag;
     }
 
     HealthCheckExecutionResult getExecutionResult() {
@@ -214,8 +224,10 @@ class HealthState {
 
     private void sendEvents(HealthCheckExecutionResult executionResult, Result.Status previousStatus) {
         ChangeType sendEventsConfig = monitor.getSendEvents();
-        if ((sendEventsConfig == ChangeType.STATUS_CHANGES && statusChanged) || sendEventsConfig == ChangeType.ALL) {
-            
+        if (sendEventsConfig == ChangeType.ALL 
+                || (statusChanged && (sendEventsConfig == ChangeType.STATUS_CHANGES || sendEventsConfig == ChangeType.STATUS_CHANGES_OR_NOT_OK))
+                || (!executionResult.getHealthCheckResult().isOk() && sendEventsConfig == ChangeType.STATUS_CHANGES_OR_NOT_OK)) {
+
             String eventSuffix = statusChanged ? EVENT_TOPIC_SUFFIX_STATUS_CHANGED : EVENT_TOPIC_SUFFIX_STATUS_UPDATED;
             String logMsg = "Posted event for topic '{}': " + (statusChanged ? "Status change from {} to {}" : "Result updated (status {})");
 

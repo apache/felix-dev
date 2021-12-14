@@ -62,27 +62,47 @@ public class ResultTxtVerboseSerializer {
         colWidthLog = totalWidth - colWidthWithoutLog;
     }
 
-    public String serialize(final Result overallResult, final List<HealthCheckExecutionResult> executionResults, boolean includeDebug) {
+    // without overall result, only the execution results are listed without header
+    public String serialize(String label, final List<HealthCheckExecutionResult> executionResults, boolean includeDebug) {
+        StringBuilder resultStr = new StringBuilder();
 
-        LOG.debug("Sending verbose txt response... ");
+        resultStr.append(label + "\n");
+        resultStr.append(serializeResults(executionResults, includeDebug));
+
+        return resultStr.toString();
+    }
+
+    public String serialize(final Result overallResult, final List<HealthCheckExecutionResult> executionResults, boolean includeDebug) {
 
         StringBuilder resultStr = new StringBuilder();
 
         resultStr.append(StringUtils.repeat("-", totalWidth) + NEWLINE);
-        resultStr.append(center("Overall Health Result: " + overallResult.getStatus().toString(), totalWidth) + NEWLINE);
+        resultStr.append(
+                center("Overall Health Result: " + overallResult.getStatus().toString(), totalWidth) + NEWLINE);
         resultStr.append(StringUtils.repeat("-", totalWidth) + NEWLINE);
+
         resultStr.append(rightPad("Name", colWidthName));
         resultStr.append(rightPad("Result", colWidthResult));
         resultStr.append(rightPad("Timing", colWidthTiming));
         resultStr.append("Logs" + NEWLINE);
         resultStr.append(StringUtils.repeat("-", totalWidth) + NEWLINE);
 
+        resultStr.append(serializeResults(executionResults, includeDebug));
+        resultStr.append(StringUtils.repeat("-", totalWidth) + NEWLINE);
+
+        return resultStr.toString();
+
+    }
+    
+    private String serializeResults(final List<HealthCheckExecutionResult> executionResults, boolean includeDebug) {
+
+        StringBuilder resultStr = new StringBuilder();
+
         final DateFormat dfShort = new SimpleDateFormat("HH:mm:ss.SSS");
 
         for (HealthCheckExecutionResult healthCheckResult : executionResults) {
             appendVerboseTxtForResult(resultStr, healthCheckResult, includeDebug, dfShort);
         }
-        resultStr.append(StringUtils.repeat("-", totalWidth) + NEWLINE);
 
         return resultStr.toString();
 
