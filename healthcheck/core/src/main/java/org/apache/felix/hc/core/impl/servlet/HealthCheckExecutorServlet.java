@@ -74,17 +74,21 @@ public class HealthCheckExecutorServlet extends HttpServlet {
 
     static class Param {
         final String name;
-        final String description;
+        String description;
 
         Param(String n, String d) {
             name = n;
+            description = d;
+        }
+        
+        void setDescription(String d) {
             description = d;
         }
     }
 
     static final Param PARAM_TAGS = new Param("tags",
             "Comma-separated list of health checks tags to select - can also be specified via path, e.g. /system/health/tag1,tag2.json. Exclusions can be done by prepending '-' to the tag name");
-    static final Param PARAM_FORMAT = new Param("format", "Output format, html|json|jsonp|txt - an extension in the URL overrides this");
+    static final Param PARAM_FORMAT = new Param("format", null /* to be set in activate() */);
     static final Param PARAM_HTTP_STATUS = new Param("httpStatus", "Specify HTTP result code, for example"
             + " CRITICAL:503 (status 503 if result >= CRITICAL)"
             + " or CRITICAL:503,HEALTH_CHECK_ERROR:500,OK:418 for more specific HTTP status");
@@ -173,6 +177,8 @@ public class HealthCheckExecutorServlet extends HttpServlet {
             allFormats[this.allowedFormats.length] = this.defaultFormat;
             this.allowedFormats = allFormats;
         }
+        PARAM_FORMAT.setDescription("Output format, " + String.join("|", allowedFormats) + " - an extension in the URL overrides this");
+
         this.corsAccessControlAllowOrigin = configuration.cors_accessControlAllowOrigin();
         this.disableRequestConfiguration = configuration.disable_request_configuration();
         
@@ -391,7 +397,9 @@ public class HealthCheckExecutorServlet extends HttpServlet {
             throws IOException {
         response.setContentType(CONTENT_TYPE_HTML);
         response.setCharacterEncoding("UTF-8");
-        response.getWriter().append(this.htmlSerializer.serialize(overallResult, executionResults, Arrays.asList(PARAM_LIST), includeDebug));
+        
+        List<Param> allowedParameters = disableRequestConfiguration ? Arrays.asList(PARAM_FORMAT) : Arrays.asList(PARAM_LIST);
+        response.getWriter().append(this.htmlSerializer.serialize(overallResult, executionResults, allowedParameters, includeDebug));
     }
 
     private void sendNoCacheHeaders(final HttpServletResponse response) {
