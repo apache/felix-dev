@@ -29,14 +29,14 @@
     <description>
         A simple integration of the OSGi R7 Log (1.4) service to Logback backend.
     </description>
-    <version>1.0.6</version>
+    <version>1.0.7-SNAPSHOT</version>
     <artifactId>org.apache.felix.logback</artifactId>
 
     <scm>
         <connection>scm:git:https://github.com/apache/felix-dev.git</connection>
         <developerConnection>scm:git:https://github.com/apache/felix-dev.git</developerConnection>
         <url>https://gitbox.apache.org/repos/asf?p=felix-dev.git</url>
-      <tag>org.apache.felix.logback-1.0.6</tag>
+      <tag>HEAD</tag>
   </scm>
 
     <properties>
