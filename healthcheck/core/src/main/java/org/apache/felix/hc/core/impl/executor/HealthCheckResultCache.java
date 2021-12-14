@@ -53,10 +53,8 @@ public class HealthCheckResultCache {
     public void updateWith(HealthCheckExecutionResult result) {
         final ExecutionResult executionResult = (ExecutionResult) result;
         final HealthCheckExecutionResult previous = cache.put(executionResult.getServiceId(), result);
-        if ( previous == null
-                 || previous.getHealthCheckResult().getStatus() != result.getHealthCheckResult().getStatus()
-                 || !previous.getHealthCheckResult().toString().equals(result.getHealthCheckResult().toString())) {
-            logger.info("Updating HC result for {} : {}", result.getHealthCheckMetadata().getName(), result.getHealthCheckResult());
+        if ( previous == null || previous.getHealthCheckResult().getStatus() != result.getHealthCheckResult().getStatus()) {
+            logger.debug("Updated HC result for {} : {}", result.getHealthCheckMetadata().getName(), result.getHealthCheckResult());
         }
 
         // update cache for sticky handling
