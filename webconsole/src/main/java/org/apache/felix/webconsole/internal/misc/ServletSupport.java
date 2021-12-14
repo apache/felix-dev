@@ -30,7 +30,7 @@ public interface ServletSupport {
 
     /**
      * Log the message
-     * @param msg a log message
+     * @param message a log message
      * @param t a throwable
      */
     void log(String message, Throwable t);
