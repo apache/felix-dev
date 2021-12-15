@@ -17,14 +17,13 @@
  */
 package org.apache.felix.hc.generalchecks.util;
 
-import java.io.BufferedReader;
 import java.io.IOException;
-import java.io.InputStreamReader;
 import java.io.StringWriter;
 import java.lang.reflect.Array;
-import java.net.URL;
-import java.net.URLConnection;
-import java.nio.charset.StandardCharsets;
+import java.net.URI;
+import java.net.URISyntaxException;
+import java.nio.file.Files;
+import java.nio.file.Paths;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.Iterator;
@@ -53,16 +52,13 @@ public class ScriptHelper {
     public String getFileContents(String url) {
         String content;
         try {
-            URLConnection conn = new URL(url).openConnection();
-            try (BufferedReader reader = new BufferedReader(new InputStreamReader(conn.getInputStream(), StandardCharsets.UTF_8))) {
-                content = reader.lines().collect(Collectors.joining("\n"));
-            }
+            content = Files.readAllLines(Paths.get(new URI(url))).stream().collect(Collectors.joining("\n"));
             return content;
-        }catch(IOException e) {
-            throw new IllegalArgumentException("Could not read URL "+url+": "+e, e);
+        }catch(IOException | URISyntaxException e) {
+            throw new IllegalArgumentException("Could not read file URL "+url+": "+e, e);
         }
     }
-    
+
     public ScriptEngine getScriptEngine(ScriptEnginesTracker scriptEnginesTracker, String language) {
         ScriptEngine scriptEngine = scriptEnginesTracker.getEngineByLanguage(language);
         if(scriptEngine == null) {
