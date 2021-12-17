@@ -64,7 +64,7 @@ public class HealthCheckListCommand {
         }
 
         HealthCheckFilter hcFilter = new HealthCheckFilter(bundleContext);
-        HealthCheckSelector selector = HealthCheckSelector.tags("*");
+        HealthCheckSelector selector = HealthCheckSelector.empty();
 
         ServiceReference<HealthCheck>[] hcRefs = hcFilter.getHealthCheckServiceReferences(selector);
         Stream<ServiceReference<HealthCheck>> hcRefsStream = Arrays.asList(hcRefs).stream();

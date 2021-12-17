@@ -172,7 +172,7 @@ public class HealthCheckExecutorImpl implements ExtendedHealthCheckExecutor, Ser
     public List<HealthCheckExecutionResult> execute(HealthCheckSelector selector, HealthCheckExecutionOptions options) {
         logger.debug("Starting executing checks for filter selector {} and execution options {}", selector, options);
 
-        if (selector.tags() == null || selector.tags().length == 0) {
+        if ((selector.names() == null || selector.names().length == 0) && (selector.tags() == null || selector.tags().length == 0)) {
             logger.debug("Using default tags");
             selector.withTags(defaultTags);
         }
