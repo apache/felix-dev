@@ -35,7 +35,7 @@
         <pax.exam.version>4.13.1</pax.exam.version>
         <pax.url.aether.version>2.6.2</pax.url.aether.version>
         <http.servlet.api.version>1.1.2</http.servlet.api.version>
-        <http.jetty.version>4.1.13-SNAPSHOT</http.jetty.version>
+        <http.jetty.version>4.1.15-SNAPSHOT</http.jetty.version>
     </properties>
 
     <build>
@@ -149,7 +149,7 @@
         <dependency>
             <groupId>org.apache.felix</groupId>
             <artifactId>org.apache.felix.framework</artifactId>
-            <version>6.0.3</version>
+            <version>7.0.3</version>
             <scope>test</scope>
         </dependency>
     </dependencies>
