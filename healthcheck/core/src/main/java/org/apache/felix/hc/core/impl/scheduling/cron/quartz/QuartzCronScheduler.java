@@ -70,44 +70,44 @@ public class QuartzCronScheduler {
             this.healthCheckExecutorThreadPool = healthCheckExecutorThreadPool;
         }
 
-        /** @see org.quartz.spi.QuartzThreadPool#getPoolSize() */
+        /** see org.quartz.spi.QuartzThreadPool#getPoolSize() */
         @Override
         public int getPoolSize() {
             return healthCheckExecutorThreadPool.getPoolSize();
         }
 
-        /** @see org.quartz.spi.QuartzThreadPool#initialize() */
+        /** see org.quartz.spi.QuartzThreadPool#initialize() */
         @Override
         public void initialize() {
             // nothing to do
         }
 
-        /** @see org.quartz.spi.ThreadPool#setInstanceId(java.lang.String) */
+        /** see org.quartz.spi.ThreadPool#setInstanceId(java.lang.String) */
         @Override
         public void setInstanceId(final String id) {
             // we ignore this
         }
 
-        /** @see org.quartz.spi.ThreadPool#setInstanceName(java.lang.String) */
+        /** see org.quartz.spi.ThreadPool#setInstanceName(java.lang.String) */
         @Override
         public void setInstanceName(final String name) {
             // we ignore this
         }
 
-        /** @see org.quartz.spi.QuartzThreadPool#runInThread(java.lang.Runnable) */
+        /** see org.quartz.spi.QuartzThreadPool#runInThread(java.lang.Runnable) */
         @Override
         public boolean runInThread(final Runnable job) {
             healthCheckExecutorThreadPool.execute(job);
             return true;
         }
 
-        /** @see org.quartz.spi.ThreadPool#blockForAvailableThreads() */
+        /** see org.quartz.spi.ThreadPool#blockForAvailableThreads() */
         @Override
         public int blockForAvailableThreads() {
             return healthCheckExecutorThreadPool.getMaxCurrentlyAvailableThreads();
         }
 
-        /** @see org.quartz.spi.QuartzThreadPool#shutdown(boolean) */
+        /** see org.quartz.spi.QuartzThreadPool#shutdown(boolean) */
         @Override
         public void shutdown(final boolean waitForJobsToComplete) {
             // this executor is bound to the SCR lifecycle of HealthCheckExecutorThreadPool

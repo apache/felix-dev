@@ -27,8 +27,7 @@ import org.osgi.framework.ServiceReference;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-/** Select from available {@link HealthCheck} services. Once this filter object and the returned health check services are no longer be used
- * {@link #dispose()} should be called, to free the service references.
+/** Select from available {@link HealthCheck} services. 
  *
  * This class is not thread safe and instances shouldn't be used concurrently from different threads. */
 public class HealthCheckFilter {
@@ -41,7 +40,9 @@ public class HealthCheckFilter {
 
     private final BundleContext bundleContext;
 
-    /** Create a new filter object */
+    /** Create a new filter object
+     * 
+     *  @param bc bundle context*/
     public HealthCheckFilter(final BundleContext bc) {
         bundleContext = bc;
     }

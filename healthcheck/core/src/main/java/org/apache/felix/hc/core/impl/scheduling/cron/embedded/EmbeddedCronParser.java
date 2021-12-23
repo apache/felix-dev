@@ -29,14 +29,11 @@ import java.util.regex.Pattern;
 
 /**
  * Used to parse cron expressions.
- * <p>
- *
- * The pattern comprises a list of six single space-separated fields: second,
- * minute, hour, day, month, weekday. <br/>
- * Month and weekday names can be given as the first three letters of the
- * English names.
- * <p/>
- * <p>
+ * <p>The pattern comprises a list of six single space-separated fields: second,
+ * minute, hour, day, month, weekday. </p>
+ * <p>Month and weekday names can be given as the first three letters of the
+ * English names.</p>
+ * <br>
  * Examples:
  * <ul>
  * <li>"0 0 * * * *" = the top of every hour of every day.</li>

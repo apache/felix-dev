@@ -61,14 +61,12 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 /**
- * Monitors health check tags and/or names and depending on configuration:
- * <p>
+ * <p>Monitors health check tags and/or names and depending on configuration:</p>
  * <ul>
  * <li>Activates the condition marker services {@link SystemReady},
  * {@link Healthy}, {@link Unhealthy}</li>
  * <li>Sends OSGi events</li>
  * </ul>
- * <p>
  * 
  */
 @Component(immediate = true, configurationPolicy = ConfigurationPolicy.REQUIRE)
