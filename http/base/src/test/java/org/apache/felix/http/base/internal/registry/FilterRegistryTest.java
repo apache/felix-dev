@@ -21,17 +21,17 @@ import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertNull;
 import static org.junit.Assert.assertTrue;
 import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
-import java.util.EventListener;
-
-import javax.servlet.ServletContextListener;
+import javax.servlet.DispatcherType;
+import javax.servlet.Filter;
+import javax.servlet.FilterConfig;
 import javax.servlet.ServletException;
 
 import org.apache.felix.http.base.internal.context.ExtServletContext;
-import org.apache.felix.http.base.internal.handler.ListenerHandler;
-import org.apache.felix.http.base.internal.handler.WhiteboardListenerHandler;
-import org.apache.felix.http.base.internal.runtime.ListenerInfo;
+import org.apache.felix.http.base.internal.handler.FilterHandler;
+import org.apache.felix.http.base.internal.runtime.FilterInfo;
 import org.apache.felix.http.base.internal.runtime.dto.FailedDTOHolder;
 import org.junit.Test;
 import org.mockito.ArgumentMatchers;
@@ -42,88 +42,119 @@ import org.osgi.framework.InvalidSyntaxException;
 import org.osgi.framework.ServiceObjects;
 import org.osgi.framework.ServiceReference;
 import org.osgi.service.http.runtime.dto.ServletContextDTO;
+import org.osgi.service.http.whiteboard.HttpWhiteboardConstants;
 
 public class FilterRegistryTest {
 
+    private final FilterRegistry reg = new FilterRegistry();
+
     private void assertEmpty(final ServletContextDTO dto, final FailedDTOHolder holder)
     {
-        assertNull(dto.listenerDTOs);
-        assertTrue(holder.failedListenerDTOs.isEmpty());
+        assertNull(dto.filterDTOs);
+        assertTrue(holder.failedFilterDTOs.isEmpty());
     }
 
     private void clear(final ServletContextDTO dto, final FailedDTOHolder holder)
     {
-        dto.listenerDTOs = null;
-        holder.failedListenerDTOs.clear();
+        dto.filterDTOs = null;
+        holder.failedFilterDTOs.clear();
     }
 
-    @Test public void testSingleListener() throws InvalidSyntaxException, ServletException
+    @Test public void testSingleFilter() throws InvalidSyntaxException, ServletException
     {
-        final EventListenerRegistry reg = new EventListenerRegistry();
         final FailedDTOHolder holder = new FailedDTOHolder();
         final ServletContextDTO dto = new ServletContextDTO();
 
         // check DTO
-        reg.getRuntimeInfo(dto, holder.failedListenerDTOs);
+        reg.getRuntimeInfo(dto, holder.failedFilterDTOs);
         assertEmpty(dto, holder);
 
-        // register listener
-        final ListenerHandler h1 = createListenerHandler(1L, 0, ServletContextListener.class);
-        reg.addListeners(h1);
+        // register filter
+        final FilterHandler h1 = createFilterHandler(1L, 0, "/foo");
+        reg.addFilter(h1);
+
+        verify(h1.getFilter()).init(ArgumentMatchers.any(FilterConfig.class));
 
         // one entry in DTO
         clear(dto, holder);
-        reg.getRuntimeInfo(dto, holder.failedListenerDTOs);
-        assertTrue(holder.failedListenerDTOs.isEmpty());
-        assertNotNull(dto.listenerDTOs);
-        assertEquals(1, dto.listenerDTOs.length);
-        assertEquals(1, dto.listenerDTOs[0].types.length);
-        assertEquals(ServletContextListener.class.getName(), dto.listenerDTOs[0].types[0]);
+        reg.getRuntimeInfo(dto, holder.failedFilterDTOs);
+        assertTrue(holder.failedFilterDTOs.isEmpty());
+        assertNotNull(dto.filterDTOs);
+        assertEquals(1, dto.filterDTOs.length);
+        assertEquals(1, dto.filterDTOs[0].patterns.length);
+        assertEquals("/foo", dto.filterDTOs[0].patterns[0]);
 
-        // remove listener
-        reg.removeListeners(h1.getListenerInfo());
+        // remove filter
+        final Filter f = h1.getFilter();
+        reg.removeFilter(h1.getFilterInfo(), true);
+        verify(f).destroy();
 
         // empty again
         clear(dto, holder);
-        reg.getRuntimeInfo(dto, holder.failedListenerDTOs);
+        reg.getRuntimeInfo(dto, holder.failedFilterDTOs);
         assertEmpty(dto, holder);
     }
 
-    private static ListenerInfo createListenerInfo(final long id, final int ranking, final Class<? extends EventListener> type) throws InvalidSyntaxException
+    @Test public void testFilterOrdering() throws InvalidSyntaxException
     {
-        final String[] typeNames = new String[1];
-        int index = 0;
-        typeNames[index++] = type.getName();
+        final FilterHandler h1 = createFilterHandler(1L, 20, "/foo");
+        reg.addFilter(h1);
+        final FilterHandler h2 = createFilterHandler(2L, 10, "/foo");
+        reg.addFilter(h2);
+        final FilterHandler h3 = createFilterHandler(3L, 30, "/foo");
+        reg.addFilter(h3);
+        final FilterHandler h4 = createFilterHandler(4L, 0, "/other");
+        reg.addFilter(h4);
+        final FilterHandler h5 = createFilterHandler(5L, 90, "/foo");
+        reg.addFilter(h5);
 
+        final FilterHandler[] handlers = reg.getFilterHandlers(null, DispatcherType.REQUEST, "/foo");
+        assertEquals(4, handlers.length);
+        assertEquals(h5.getFilterInfo(), handlers[0].getFilterInfo());
+        assertEquals(h3.getFilterInfo(), handlers[1].getFilterInfo());
+        assertEquals(h1.getFilterInfo(), handlers[2].getFilterInfo());
+        assertEquals(h2.getFilterInfo(), handlers[3].getFilterInfo());
+
+        // cleanup
+        reg.removeFilter(h1.getFilterInfo(), true);
+        reg.removeFilter(h2.getFilterInfo(), true);
+        reg.removeFilter(h3.getFilterInfo(), true);
+        reg.removeFilter(h4.getFilterInfo(), true);
+        reg.removeFilter(h5.getFilterInfo(), true);
+    }
+
+    private static FilterInfo createFilterInfo(final long id, final int ranking, final String... paths) throws InvalidSyntaxException
+    {
         final BundleContext bCtx = mock(BundleContext.class);
         when(bCtx.createFilter(ArgumentMatchers.anyString())).thenReturn(null);
         final Bundle bundle = mock(Bundle.class);
         when(bundle.getBundleContext()).thenReturn(bCtx);
 
         @SuppressWarnings("unchecked")
-        final ServiceReference<EventListener> ref = mock(ServiceReference.class);
+        final ServiceReference<Filter> ref = mock(ServiceReference.class);
         when(ref.getBundle()).thenReturn(bundle);
         when(ref.getProperty(Constants.SERVICE_ID)).thenReturn(id);
         when(ref.getProperty(Constants.SERVICE_RANKING)).thenReturn(ranking);
-        when(ref.getProperty(Constants.OBJECTCLASS)).thenReturn(typeNames);
+        when(ref.getProperty(HttpWhiteboardConstants.HTTP_WHITEBOARD_FILTER_PATTERN)).thenReturn(paths);
         when(ref.getPropertyKeys()).thenReturn(new String[0]);
+        final FilterInfo si = new FilterInfo(ref);
 
-        final EventListener listener = mock(type);
-        @SuppressWarnings("unchecked")
-        final ServiceObjects<EventListener> so = mock(ServiceObjects.class);
-        when(bCtx.getServiceObjects(ref)).thenReturn(so);
-        when(so.getService()).thenReturn(listener);
-
-        final ListenerInfo info = new ListenerInfo(ref);
-
-        return info;
+        return si;
     }
 
-    private static ListenerHandler createListenerHandler(final long id, final int ranking, final Class<? extends EventListener> type) throws InvalidSyntaxException
+    private static FilterHandler createFilterHandler(final long id, final int ranking, final String... paths) throws InvalidSyntaxException
     {
-        final ListenerInfo info = createListenerInfo(id, ranking, type);
-        final ExtServletContext ctx = mock(ExtServletContext.class);
+        final FilterInfo si = createFilterInfo(id, ranking, paths);
+        @SuppressWarnings("unchecked")
+        final ServiceObjects<Filter> so = mock(ServiceObjects.class);
+        final BundleContext ctx = mock(BundleContext.class);
+        when(ctx.getServiceObjects(si.getServiceReference())).thenReturn(so);
 
-        return new WhiteboardListenerHandler(1L, ctx, info, info.getServiceReference().getBundle().getBundleContext());
+        final Filter filter = mock(Filter.class);
+        when(so.getService()).thenReturn(filter);
+
+        final ExtServletContext context = mock(ExtServletContext.class);
+        return new FilterHandler(-1, context, si, ctx);
     }
+
 }

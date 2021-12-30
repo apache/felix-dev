@@ -20,16 +20,15 @@ import java.util.HashMap;
 import java.util.Iterator;
 import java.util.Map;
 
-import org.jetbrains.annotations.NotNull;
 import javax.servlet.Servlet;
 import javax.servlet.ServletException;
 
 import org.apache.felix.http.base.internal.context.ExtServletContext;
-import org.apache.felix.http.base.internal.handler.FilterHandler;
 import org.apache.felix.http.base.internal.handler.HttpServiceServletHandler;
 import org.apache.felix.http.base.internal.handler.ServletHandler;
 import org.apache.felix.http.base.internal.registry.HandlerRegistry;
 import org.apache.felix.http.base.internal.runtime.ServletInfo;
+import org.jetbrains.annotations.NotNull;
 import org.osgi.service.http.NamespaceException;
 
 public final class SharedHttpServiceImpl
@@ -46,15 +45,6 @@ public final class SharedHttpServiceImpl
         }
 
         this.handlerRegistry = handlerRegistry;
-    }
-
-    /**
-     * Register a filter
-     */
-    public boolean registerFilter(@NotNull final FilterHandler handler)
-    {
-        this.handlerRegistry.getRegistry(handler.getContextServiceId()).registerFilter(handler);
-        return true;
     }
 
     /**

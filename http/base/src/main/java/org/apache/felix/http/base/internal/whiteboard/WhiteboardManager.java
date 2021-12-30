@@ -53,8 +53,6 @@ import org.apache.felix.http.base.internal.handler.HttpSessionWrapper;
 import org.apache.felix.http.base.internal.handler.ListenerHandler;
 import org.apache.felix.http.base.internal.handler.PreprocessorHandler;
 import org.apache.felix.http.base.internal.handler.ServletHandler;
-import org.apache.felix.http.base.internal.handler.WhiteboardFilterHandler;
-import org.apache.felix.http.base.internal.handler.WhiteboardListenerHandler;
 import org.apache.felix.http.base.internal.handler.WhiteboardServletHandler;
 import org.apache.felix.http.base.internal.logger.SystemLogger;
 import org.apache.felix.http.base.internal.registry.EventListenerRegistry;
@@ -788,7 +786,7 @@ public final class WhiteboardManager
                 }
                 else
                 {
-                    final FilterHandler filterHandler = new WhiteboardFilterHandler(
+                    final FilterHandler filterHandler = new FilterHandler(
                             handler.getContextInfo().getServiceId(),
                             servletContext,
                             (FilterInfo)info,
@@ -824,7 +822,7 @@ public final class WhiteboardManager
                 }
                 else
                 {
-                    final ListenerHandler listenerHandler = new WhiteboardListenerHandler(
+                    final ListenerHandler listenerHandler = new ListenerHandler(
                             handler.getContextInfo().getServiceId(),
                             servletContext,
                             (ListenerInfo)info,

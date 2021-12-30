@@ -18,7 +18,6 @@
  */
 package org.apache.felix.http.base.internal.runtime;
 
-import java.util.Collections;
 import java.util.Map;
 import java.util.regex.Pattern;
 import java.util.regex.PatternSyntaxException;
@@ -121,24 +120,6 @@ public final class FilterInfo extends WhiteboardServiceInfo<Filter>
         {
             this.dispatcher = new DispatcherType[] {DispatcherType.REQUEST};
         }
-    }
-
-    /**
-     * Constructor for Http Service
-     */
-    public FilterInfo(final String name,
-            final String regex,
-            final int serviceRanking,
-            final Map<String, String> initParams)
-    {
-        super(serviceRanking);
-        this.name = name;
-        this.patterns = null;
-        this.servletNames = null;
-        this.regexs = new String[] {regex};
-        this.initParams = Collections.unmodifiableMap(initParams);
-        this.asyncSupported = false;
-        this.dispatcher = new DispatcherType[] {DispatcherType.REQUEST};
     }
 
     @Override

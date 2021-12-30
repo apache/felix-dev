@@ -27,14 +27,17 @@ import javax.servlet.ServletResponse;
 import org.apache.felix.http.base.internal.context.ExtServletContext;
 import org.apache.felix.http.base.internal.logger.SystemLogger;
 import org.apache.felix.http.base.internal.runtime.FilterInfo;
+import org.apache.felix.http.base.internal.util.ServiceUtils;
 import org.jetbrains.annotations.NotNull;
+import org.osgi.framework.BundleContext;
+import org.osgi.framework.ServiceReference;
 import org.osgi.service.http.runtime.dto.DTOConstants;
 
 /**
  * The filter handler handles the initialization and destruction of filter
  * objects.
  */
-public abstract class FilterHandler implements Comparable<FilterHandler>
+public class FilterHandler implements Comparable<FilterHandler>
 {
     private final long contextServiceId;
 
@@ -42,17 +45,21 @@ public abstract class FilterHandler implements Comparable<FilterHandler>
 
     private final ExtServletContext context;
 
+    private final BundleContext bundleContext;
+
     private volatile Filter filter;
 
     protected volatile int useCount;
 
     public FilterHandler(final long contextServiceId,
             final ExtServletContext context,
-            final FilterInfo filterInfo)
+            final FilterInfo filterInfo,
+            final BundleContext bundleContext)
     {
         this.contextServiceId = contextServiceId;
         this.context = context;
         this.filterInfo = filterInfo;
+        this.bundleContext = bundleContext;
     }
 
     @Override
@@ -74,11 +81,6 @@ public abstract class FilterHandler implements Comparable<FilterHandler>
     public Filter getFilter()
     {
         return filter;
-    }
-
-    protected void setFilter(final Filter f)
-    {
-        this.filter = f;
     }
 
     public FilterInfo getFilterInfo()
@@ -112,6 +114,9 @@ public abstract class FilterHandler implements Comparable<FilterHandler>
             return -1;
         }
 
+        final ServiceReference<Filter> serviceReference = getFilterInfo().getServiceReference();
+        this.filter = ServiceUtils.safeGetServiceObjects(this.bundleContext, serviceReference);
+
         if (this.filter == null)
         {
             return DTOConstants.FAILURE_REASON_SERVICE_NOT_GETTABLE;
@@ -126,8 +131,10 @@ public abstract class FilterHandler implements Comparable<FilterHandler>
             SystemLogger.error(this.getFilterInfo().getServiceReference(),
                     "Error during calling init() on filter " + this.filter,
                     e);
+            ServiceUtils.safeUngetServiceObjects(this.bundleContext, serviceReference, this.getFilter());
             return DTOConstants.FAILURE_REASON_EXCEPTION_ON_INIT;
         }
+
         this.useCount++;
         return -1;
     }
@@ -149,28 +156,30 @@ public abstract class FilterHandler implements Comparable<FilterHandler>
 
     public boolean destroy()
     {
-        if (this.filter == null)
+        final Filter f = this.getFilter();
+        if ( f != null )
         {
-            return false;
-        }
-
-        this.useCount--;
-        if ( this.useCount == 0 )
-        {
-            try
+            this.useCount--;
+            if ( this.useCount == 0 )
             {
-                filter.destroy();
-            }
-            catch ( final Exception ignore )
-            {
-                // we ignore this
-                SystemLogger.error(this.getFilterInfo().getServiceReference(),
-                        "Error during calling destroy() on filter " + this.filter,
-                        ignore);
-            }
+                filter = null;
+                try
+                {
+                    f.destroy();
+                }
+                catch ( final Exception ignore )
+                {
+                    // we ignore this
+                    SystemLogger.error(this.getFilterInfo().getServiceReference(),
+                            "Error during calling destroy() on filter " + f,
+                            ignore);
+                }
 
-            filter = null;
-            return true;
+                ServiceUtils.safeUngetServiceObjects(this.bundleContext,
+                        getFilterInfo().getServiceReference(), f);
+
+                return true;
+            }
         }
         return false;
     }

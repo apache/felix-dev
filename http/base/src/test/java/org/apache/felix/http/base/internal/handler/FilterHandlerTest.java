@@ -20,14 +20,11 @@ import static javax.servlet.http.HttpServletResponse.SC_FORBIDDEN;
 import static javax.servlet.http.HttpServletResponse.SC_OK;
 import static javax.servlet.http.HttpServletResponse.SC_PAYMENT_REQUIRED;
 import static org.junit.Assert.assertTrue;
-import static org.mockito.Matchers.any;
+import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
-
-import java.util.Collections;
-import java.util.Map;
 
 import javax.servlet.DispatcherType;
 import javax.servlet.Filter;
@@ -42,6 +39,11 @@ import org.apache.felix.http.base.internal.runtime.FilterInfo;
 import org.junit.Before;
 import org.junit.Test;
 import org.mockito.Mockito;
+import org.osgi.framework.BundleContext;
+import org.osgi.framework.Constants;
+import org.osgi.framework.ServiceObjects;
+import org.osgi.framework.ServiceReference;
+import org.osgi.service.http.whiteboard.HttpWhiteboardConstants;
 
 public class FilterHandlerTest
 {
@@ -86,6 +88,7 @@ public class FilterHandlerTest
     public void testHandleFound() throws Exception
     {
         FilterHandler h1 = createHandler(0, "/a");
+        h1.init();
         HttpServletRequest req = createServletRequest();
         HttpServletResponse res = createServletResponse();
         FilterChain chain = mock(FilterChain.class);
@@ -102,6 +105,7 @@ public class FilterHandlerTest
     public void testHandleFoundContextRoot() throws Exception
     {
         FilterHandler h1 = createHandler(0, "/");
+        h1.init();
         HttpServletRequest req = createServletRequest();
         HttpServletResponse res = createServletResponse();
         FilterChain chain = mock(FilterChain.class);
@@ -234,19 +238,24 @@ public class FilterHandlerTest
         verify(this.filter).init(any(FilterConfig.class));
     }
 
+    private static long id = 1;
+
     private FilterHandler createHandler(int ranking, String pattern)
     {
-        return createHandler(pattern, ranking, null);
-    }
+        @SuppressWarnings("unchecked")
+        final ServiceReference<Filter> ref = mock(ServiceReference.class);
+        when(ref.getProperty(Constants.SERVICE_ID)).thenReturn(id++);
+        when(ref.getProperty(Constants.SERVICE_RANKING)).thenReturn(ranking);
+        when(ref.getProperty(HttpWhiteboardConstants.HTTP_WHITEBOARD_FILTER_PATTERN)).thenReturn(pattern);
+        when(ref.getPropertyKeys()).thenReturn(new String[0]);
+        final FilterInfo info = new FilterInfo(ref);
 
-    private FilterHandler createHandler(String pattern, int ranking, Map<String, String> initParams)
-    {
-        if ( initParams == null )
-        {
-            initParams = Collections.emptyMap();
-        }
-        final FilterInfo info = new FilterInfo(null, pattern, ranking, initParams);
-        return new HttpServiceFilterHandler(this.context, info, this.filter);
+        @SuppressWarnings("unchecked")
+        final ServiceObjects<Filter> so = mock(ServiceObjects.class);
+        final BundleContext ctx = mock(BundleContext.class);
+        when(ctx.getServiceObjects(ref)).thenReturn(so);
+        when(so.getService()).thenReturn(this.filter);
+        return  new FilterHandler(-1, this.context, info, ctx);
     }
 
     private HttpServletRequest createServletRequest()
