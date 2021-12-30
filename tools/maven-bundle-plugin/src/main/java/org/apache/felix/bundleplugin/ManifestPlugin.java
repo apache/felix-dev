@@ -47,6 +47,7 @@ import java.util.zip.ZipFile;
 
 import aQute.bnd.osgi.Analyzer;
 import aQute.bnd.osgi.Builder;
+import aQute.bnd.osgi.Constants;
 import aQute.bnd.osgi.Instructions;
 import aQute.bnd.osgi.Jar;
 import aQute.bnd.osgi.Resource;
@@ -318,6 +319,9 @@ public class ManifestPlugin extends BundlePlugin
         }
         else
         {
+            // FELIX-6495: workaround BND inconsistency: internal jar does not take "-reproducible" flag into account...
+            analyzer.getJar().setReproducible( "true".equals( analyzer.getProperties().getProperty( Constants.REPRODUCIBLE ) ) );
+
             analyzer.mergeManifest( analyzer.getJar().getManifest() );
             analyzer.getJar().setManifest( analyzer.calcManifest() );
         }
@@ -494,7 +498,7 @@ public class ManifestPlugin extends BundlePlugin
     public static void writeManifest( Manifest manifest, File outputFile, boolean niceManifest,
             BuildContext buildContext, Log log ) throws IOException
     {
-        log.debug("Write manifest to " + outputFile.getPath());
+        log.info("Writing manifest: " + outputFile.getPath());
         outputFile.getParentFile().mkdirs();
 
         try ( ByteArrayOutputStream baos = new ByteArrayOutputStream() )
