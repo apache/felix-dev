@@ -201,26 +201,8 @@ public final class JettyConfig
     /** Felix specific property to specify the date format in request log file names */
     public static final String FELIX_HTTP_REQUEST_LOG_FILE_FILENAME_DATE_FORMAT = "org.apache.felix.http.requestlog.file.dateformat";
 
-    /** Felix specific property to enable extended request logging to a named file */
-    public static final String FELIX_HTTP_REQUEST_LOG_FILE_EXTENDED = "org.apache.felix.http.requestlog.file.extended";
-
     /** Felix specific property to ignore matching paths in the request log file */
     public static final String FELIX_HTTP_REQUEST_LOG_FILE_IGNORE_PATHS = "org.apache.felix.http.requestlog.file.ignorepaths";
-
-    /** Felix specific property to enable request logging cookies in the request log file*/
-    public static final String FELIX_HTTP_REQUEST_LOG_FILE_LOG_COOKIES = "org.apache.felix.http.requestlog.file.logcookies";
-
-    /** Felix specific property to enable request logging the host name in the request log file*/
-    public static final String FELIX_HTTP_REQUEST_LOG_FILE_LOG_SERVER = "org.apache.felix.http.requestlog.file.logserver";
-
-    /** Felix specific property to enable request logging request processing time in the request log file*/
-    public static final String FELIX_HTTP_REQUEST_LOG_FILE_LOG_LATENCY = "org.apache.felix.http.requestlog.file.loglatency";
-
-    /** Felix specific property to specify the date format used for the logging timestamps*/
-    public static final String FELIX_HTTP_REQUEST_LOG_FILE_DATE_FORMAT = "org.apache.felix.http.requestlog.file.logdateformat";
-
-    /** Felix specific property to specify the timezone used for the logging timestamps*/
-    public static final String FELIX_HTTP_REQUEST_LOG_FILE_TIMEZONE = "org.apache.felix.http.requestlog.file.timezone";
 
     /** Felix specific property to define custom properties for the http runtime service. */
     public static final String FELIX_CUSTOM_HTTP_RUNTIME_PROPERTY_PREFIX = "org.apache.felix.http.runtime.init.";
@@ -234,17 +216,11 @@ public final class JettyConfig
     /** Felix specific property to specify the minimum response size to trigger dynamic compression */
     public static final String FELIX_JETTY_GZIP_MIN_GZIP_SIZE = "org.apache.felix.jetty.gzip.minGzipSize";
 
-    /** Felix specific property to specify the compression level to use to initialize {@link Deflater#setLevel(int)} */
-    public static final String FELIX_JETTY_GZIP_COMPRESSION_LEVEL = "org.apache.felix.jetty.gzip.compressionLevel";
-
     /** Felix specific property to specify the size in bytes of the buffer to inflate compressed request, or 0 for no inflation. */
     public static final String FELIX_JETTY_GZIP_INFLATE_BUFFER_SIZE = "org.apache.felix.jetty.gzip.inflateBufferSize";
 
     /** Felix specific property to specify the {@link Deflater} flush mode to use. */
     public static final String FELIX_JETTY_GZIP_SYNC_FLUSH = "org.apache.felix.jetty.gzip.syncFlush";
-
-    /** Felix specific property to specify the regular expressions matching user agents to exclude */
-    public static final String FELIX_JETTY_GZIP_EXCLUDED_USER_AGENT = "org.apache.felix.jetty.gzip.excludedUserAgents";
 
     /** Felix specific property to specify the methods to include in compression */
     public static final String FELIX_JETTY_GZIP_INCLUDED_METHODS = "org.apache.felix.jetty.gzip.includedMethods";
@@ -631,32 +607,8 @@ public final class JettyConfig
         return getProperty(FELIX_HTTP_REQUEST_LOG_FILE_FILENAME_DATE_FORMAT, null);
     }
 
-    public boolean isRequestLogFileExtended() {
-        return getBooleanProperty(FELIX_HTTP_REQUEST_LOG_FILE_EXTENDED, false);
-    }
-
     public String[] getRequestLogFileIgnorePaths() {
         return getStringArrayProperty(FELIX_HTTP_REQUEST_LOG_FILE_IGNORE_PATHS, new String[0]);
-    }
-
-    public boolean isRequestLogFileLogCookies() {
-        return getBooleanProperty(FELIX_HTTP_REQUEST_LOG_FILE_LOG_COOKIES, false);
-    }
-
-    public boolean isRequestLogFileLogServer() {
-        return getBooleanProperty(FELIX_HTTP_REQUEST_LOG_FILE_LOG_SERVER, false);
-    }
-
-    public boolean isRequestLogFileLogLatency() {
-        return getBooleanProperty(FELIX_HTTP_REQUEST_LOG_FILE_LOG_LATENCY, false);
-    }
-
-    public String getRequestLogDateFormat() {
-        return getProperty(FELIX_HTTP_REQUEST_LOG_FILE_DATE_FORMAT, null);
-    }
-
-    public String getRequestLogTimeZone() {
-        return getProperty(FELIX_HTTP_REQUEST_LOG_FILE_TIMEZONE, null);
     }
 
     public boolean isStatisticsHandlerEnabled() {
@@ -671,20 +623,12 @@ public final class JettyConfig
         return getIntProperty(FELIX_JETTY_GZIP_MIN_GZIP_SIZE, GzipHandler.DEFAULT_MIN_GZIP_SIZE);
     }
 
-    public int getGzipCompressionLevel() {
-        return getIntProperty(FELIX_JETTY_GZIP_COMPRESSION_LEVEL, Deflater.DEFAULT_COMPRESSION);
-    }
-
     public int getGzipInflateBufferSize() {
         return getIntProperty(FELIX_JETTY_GZIP_INFLATE_BUFFER_SIZE, -1);
     }
 
     public boolean isGzipSyncFlush() {
         return getBooleanProperty(FELIX_JETTY_GZIP_SYNC_FLUSH, false);
-    }
-
-    public String[] getGzipExcludedUserAgent() {
-        return getStringArrayProperty(FELIX_JETTY_GZIP_EXCLUDED_USER_AGENT, new String[0]);
     }
 
     public String[] getGzipIncludedMethods() {

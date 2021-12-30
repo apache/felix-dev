@@ -44,7 +44,7 @@ import org.osgi.util.tracker.ServiceTracker;
  */
 class RequestLogTracker extends ServiceTracker<RequestLog, RequestLog>  implements RequestLog {
 
-    private static final int MAX_ERROR_COUNT = 100;
+    public static final int MAX_ERROR_COUNT = 100;
 
     private final ConcurrentMap<ServiceReference<?>, RequestLog> logSvcs = new ConcurrentHashMap<>();
     private final ConcurrentMap<ServiceReference<?>, Integer> naughtyStep = new ConcurrentHashMap<>();

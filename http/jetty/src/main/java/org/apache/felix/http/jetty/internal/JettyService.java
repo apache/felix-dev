@@ -310,10 +310,8 @@ public final class JettyService extends AbstractLifeCycle.AbstractLifeCycleListe
             {
             	GzipHandler gzipHandler = new GzipHandler();
             	gzipHandler.setMinGzipSize(this.config.getGzipMinGzipSize());
-            	gzipHandler.setCompressionLevel(this.config.getGzipCompressionLevel());
             	gzipHandler.setInflateBufferSize(this.config.getGzipInflateBufferSize());
             	gzipHandler.setSyncFlush(this.config.isGzipSyncFlush());
-            	gzipHandler.addExcludedAgentPatterns(this.config.getGzipExcludedUserAgent());
             	gzipHandler.addIncludedMethods(this.config.getGzipIncludedMethods());
             	gzipHandler.addExcludedMethods(this.config.getGzipExcludedMethods());
             	gzipHandler.addIncludedPaths(this.config.getGzipIncludedPaths());

@@ -21,16 +21,15 @@ import java.util.Dictionary;
 import java.util.Hashtable;
 
 import org.apache.felix.http.base.internal.logger.SystemLogger;
-import org.eclipse.jetty.server.AbstractNCSARequestLog;
+import org.eclipse.jetty.server.CustomRequestLog;
 import org.eclipse.jetty.server.RequestLog;
-import org.eclipse.jetty.server.RequestLogWriter;
 import org.osgi.framework.BundleContext;
 import org.osgi.framework.ServiceRegistration;
 
 /**
  * A RequestLog that logs to the OSGi LogService when present. Not registered by default.
  */
-class LogServiceRequestLog extends AbstractNCSARequestLog {
+class LogServiceRequestLog extends CustomRequestLog {
 
     public static final String SVC_PROP_NAME = "name";
     public static final String DEFAULT_NAME = "osgi";
@@ -38,10 +37,16 @@ class LogServiceRequestLog extends AbstractNCSARequestLog {
 
     private final String serviceName;
 
-    private ServiceRegistration<RequestLog> registration;
+    private volatile ServiceRegistration<RequestLog> registration;
 
     LogServiceRequestLog(JettyConfig config) {
-        super(new RequestLogWriter());
+        super(new RequestLog.Writer() {
+
+                @Override
+                public void write(String requestEntry) throws IOException {
+                    SystemLogger.info(PREFIX.concat(requestEntry));
+                }
+            }, CustomRequestLog.NCSA_FORMAT);
         this.serviceName = config.getRequestLogOSGiServiceName();
     }
 
@@ -63,15 +68,4 @@ class LogServiceRequestLog extends AbstractNCSARequestLog {
             registration = null;
         }
     }
-
-    @Override
-    public void write(String s) throws IOException {
-        SystemLogger.info(PREFIX + s);
-    }
-
-    @Override
-    protected boolean isEnabled() {
-        return true;
-    }
-
 }
