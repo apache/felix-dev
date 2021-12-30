@@ -16,28 +16,28 @@
  */
 package org.apache.felix.http.jetty.internal;
 
+import static org.junit.Assert.assertEquals;
+import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.times;
+import static org.mockito.Mockito.verify;
+import static org.mockito.Mockito.when;
+
+import java.util.concurrent.atomic.AtomicInteger;
+
 import org.eclipse.jetty.server.Request;
 import org.eclipse.jetty.server.RequestLog;
 import org.eclipse.jetty.server.Response;
 import org.junit.Test;
-import org.junit.runner.RunWith;
-import org.mockito.Mock;
-import org.mockito.runners.MockitoJUnitRunner;
-import org.osgi.framework.*;
+import org.osgi.framework.Bundle;
+import org.osgi.framework.BundleContext;
+import org.osgi.framework.ServiceReference;
+import org.osgi.framework.Version;
 
-import java.util.concurrent.atomic.AtomicInteger;
-
-import static org.junit.Assert.assertEquals;
-import static org.mockito.Mockito.*;
-
-@RunWith(MockitoJUnitRunner.class)
 public class RequestLogTrackerTest {
-    
-    @Mock
-    BundleContext context;
-    
+
     @Test
     public void testInvokeRequestLog() throws Exception {
+        BundleContext context = mock(BundleContext.class);
         RequestLogTracker tracker = new RequestLogTracker(context, null);
 
         RequestLog mockRequestLog = mock(RequestLog.class);
@@ -61,11 +61,12 @@ public class RequestLogTrackerTest {
         for (int i = 0; i < 50; i++)
             tracker.log(null, null);
 
-        verify(mockRequestLog, times(15)).log(isNull(Request.class), isNull(Response.class));
+        verify(mockRequestLog, times(15)).log(org.mockito.ArgumentMatchers.isNull(), org.mockito.ArgumentMatchers.isNull());
     }
 
     @Test
     public void testNaughtyService() throws Exception {
+        BundleContext context = mock(BundleContext.class);
         RequestLogTracker tracker = new RequestLogTracker(context, null);
 
         AtomicInteger counter = new AtomicInteger(0);

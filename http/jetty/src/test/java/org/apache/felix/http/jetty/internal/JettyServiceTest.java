@@ -50,7 +50,7 @@ import org.eclipse.jetty.servlet.ServletHolder;
 import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
-import org.mockito.Matchers;
+import org.mockito.ArgumentMatchers;
 import org.osgi.framework.Bundle;
 import org.osgi.framework.BundleContext;
 import org.osgi.framework.Constants;
@@ -93,15 +93,15 @@ public class JettyServiceTest
         when(ref.getProperty(Constants.SERVICE_ID)).thenReturn(1L);
         final ServiceRegistration reg = mock(ServiceRegistration.class);
         when(reg.getReference()).thenReturn(ref);
-        when(mockBundleContext.registerService((Class<ServletContextHelper>)Matchers.isNotNull(),
-                (ServiceFactory<ServletContextHelper>)Matchers.any(ServiceFactory.class),
-                Matchers.any(Dictionary.class))).thenReturn(reg);
-        when(mockBundleContext.registerService(Matchers.<String[]>any(),
-                Matchers.any(ServiceFactory.class),
-                Matchers.any(Dictionary.class))).thenReturn(reg);
-        when(mockBundleContext.registerService((Class<HttpServiceRuntime>)Matchers.isNotNull(),
-                Matchers.any(HttpServiceRuntime.class),
-                Matchers.any(Dictionary.class))).thenReturn(reg);
+        when(mockBundleContext.registerService((Class<ServletContextHelper>)ArgumentMatchers.isNotNull(),
+                (ServiceFactory<ServletContextHelper>)ArgumentMatchers.any(ServiceFactory.class),
+                ArgumentMatchers.any(Dictionary.class))).thenReturn(reg);
+        when(mockBundleContext.registerService(ArgumentMatchers.<String[]>any(),
+                ArgumentMatchers.any(ServiceFactory.class),
+                ArgumentMatchers.any(Dictionary.class))).thenReturn(reg);
+        when(mockBundleContext.registerService((Class<HttpServiceRuntime>)ArgumentMatchers.isNotNull(),
+                ArgumentMatchers.any(HttpServiceRuntime.class),
+                ArgumentMatchers.any(Dictionary.class))).thenReturn(reg);
 
         httpServiceController = new HttpServiceController(mockBundleContext);
         jettyService = new JettyService(mockBundleContext, httpServiceController);
