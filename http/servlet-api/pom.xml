@@ -54,14 +54,19 @@
                             javax.servlet.annotation;
                             javax.servlet.descriptor;
                             javax.servlet.http;
-                                version=3.1
+                                version=3.1,
+                            javax.servlet;
+                            javax.servlet.annotation;
+                            javax.servlet.descriptor;
+                            javax.servlet.http;
+                                version=4.0
                         </Export-Package>
                         <Import-Package>!*</Import-Package>
                         <Provide-Capability>
-                            osgi.contract;osgi.contract="JavaServlet";version:Version="3.1";
+                            osgi.contract;osgi.contract="JavaServlet";version:Version="4.0";
                             uses:="javax.servlet,javax.servlet.http,javax.servlet.descriptor,javax.servlet.annotation"
                         </Provide-Capability>
-						<Embed-Dependency>tomcat-servlet-api;inline=true</Embed-Dependency>
+			<Embed-Dependency>tomcat-servlet-api;inline=true</Embed-Dependency>
                     </instructions>
                     <!-- Skip baselining -->
                     <skip>true</skip>
@@ -74,7 +79,7 @@
         <dependency>
             <groupId>org.apache.tomcat</groupId>
             <artifactId>tomcat-servlet-api</artifactId>
-            <version>8.5.66</version>
+            <version>9.0.56</version>
         </dependency>
     </dependencies>
 
