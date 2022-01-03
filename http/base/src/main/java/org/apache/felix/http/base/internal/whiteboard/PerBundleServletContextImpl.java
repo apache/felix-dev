@@ -494,6 +494,6 @@ public class PerBundleServletContextImpl implements ExtServletContext {
 
     @Override
     public void setResponseCharacterEncoding(final String encoding) {
-        this.delegatee.setRequestCharacterEncoding(encoding);
+        this.delegatee.setResponseCharacterEncoding(encoding);
     }
 }
