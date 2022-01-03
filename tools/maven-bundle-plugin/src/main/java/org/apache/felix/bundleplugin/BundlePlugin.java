@@ -470,6 +470,7 @@ public class BundlePlugin extends AbstractMojo
             }
 
             // attach bundle to maven project
+            getLog().info("Building bundle: " + jarFile.getPath());
             jarFile.getParentFile().mkdirs();
             builder.getJar().write( jarFile );
 
@@ -545,7 +546,7 @@ public class BundlePlugin extends AbstractMojo
 
         if ( new MavenArchiver().parseOutputTimestamp( outputTimestamp ) != null )
         {
-          properties.put( "-reproducible", "true" );
+          properties.put( Constants.REPRODUCIBLE, "true" );
         }
 
         // process overrides from project
