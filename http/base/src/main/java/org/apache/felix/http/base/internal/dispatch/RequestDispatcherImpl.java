@@ -29,6 +29,7 @@ import javax.servlet.http.HttpServletRequest;
 import org.apache.felix.http.base.internal.handler.FilterHandler;
 import org.apache.felix.http.base.internal.registry.ServletResolution;
 import org.apache.felix.http.base.internal.util.UriUtils;
+import org.jetbrains.annotations.NotNull;
 
 /**
  * Wrapper implementation for {@link RequestDispatcher}.
@@ -38,8 +39,13 @@ public final class RequestDispatcherImpl implements RequestDispatcher
     private final RequestInfo requestInfo;
     private final ServletResolution resolution;
 
-    public RequestDispatcherImpl(final ServletResolution resolution,
-            final RequestInfo requestInfo)
+    /**
+     * Create new dispatcher
+     * @param resolution The resolution
+     * @param requestInfo The request info
+     */
+    public RequestDispatcherImpl(@NotNull final ServletResolution resolution,
+            @NotNull final RequestInfo requestInfo)
     {
         this.resolution = resolution;
         this.requestInfo = requestInfo;

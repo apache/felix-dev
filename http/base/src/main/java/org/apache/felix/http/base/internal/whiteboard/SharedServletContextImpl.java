@@ -38,6 +38,7 @@ import javax.servlet.ServletContextAttributeEvent;
 import javax.servlet.ServletContextAttributeListener;
 import javax.servlet.ServletException;
 import javax.servlet.ServletRegistration;
+import javax.servlet.ServletRegistration.Dynamic;
 import javax.servlet.SessionCookieConfig;
 import javax.servlet.SessionTrackingMode;
 import javax.servlet.descriptor.JspConfigDescriptor;
@@ -319,7 +320,7 @@ public class SharedServletContextImpl implements ServletContext
         	resolution.handler = servletHandler;
             resolution.handlerRegistry = this.registry;
             // TODO - what is the path of a named servlet?
-            final RequestInfo requestInfo = new RequestInfo("", null, null, null);
+            final RequestInfo requestInfo = new RequestInfo("", null, null, null, null, "", true);
             dispatcher = new RequestDispatcherImpl(resolution, requestInfo);
         }
         else
@@ -353,12 +354,11 @@ public class SharedServletContextImpl implements ServletContext
         final PathResolution pathResolution = this.registry.resolve(requestURI);
         if ( pathResolution != null )
         {
-        	final ServletResolution resolution = new ServletResolution();
-        	resolution.handler = pathResolution.handler;
-            resolution.handlerRegistry = this.registry;
+            pathResolution.handlerRegistry = this.registry;
             final RequestInfo requestInfo = new RequestInfo(pathResolution.servletPath, pathResolution.pathInfo, query,
-                    UriUtils.concat(this.contextPath, encodedRequestURI));
-            dispatcher = new RequestDispatcherImpl(resolution, requestInfo);
+                    UriUtils.concat(this.contextPath, encodedRequestURI),
+                    pathResolution.handler.getName(), pathResolution.matchedPattern, false);
+            dispatcher = new RequestDispatcherImpl(pathResolution, requestInfo);
         }
         else
         {
@@ -485,6 +485,41 @@ public class SharedServletContextImpl implements ServletContext
     @Override
     public void setSessionTrackingModes(final Set<SessionTrackingMode> modes)
     {
+        throw new IllegalStateException();
+    }
+
+    @Override
+    public Dynamic addJspFile(final String servletName, final String jspFile) {
+        throw new IllegalStateException();
+    }
+
+    @Override
+    public int getSessionTimeout() {
+        return context.getSessionTimeout();
+    }
+
+    @Override
+    public void setSessionTimeout(final int sessionTimeout) {
+        throw new IllegalStateException();
+    }
+
+    @Override
+    public String getRequestCharacterEncoding() {
+        return context.getRequestCharacterEncoding();
+    }
+
+    @Override
+    public void setRequestCharacterEncoding(final String encoding) {
+        throw new IllegalStateException();
+    }
+
+    @Override
+    public String getResponseCharacterEncoding() {
+        return context.getResponseCharacterEncoding();
+    }
+
+    @Override
+    public void setResponseCharacterEncoding(final String encoding) {
         throw new IllegalStateException();
     }
 }

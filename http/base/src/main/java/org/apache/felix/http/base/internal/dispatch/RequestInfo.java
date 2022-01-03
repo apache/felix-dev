@@ -16,22 +16,74 @@
  */
 package org.apache.felix.http.base.internal.dispatch;
 
-public final class RequestInfo
+import javax.servlet.http.HttpServletMapping;
+import javax.servlet.http.MappingMatch;
+
+/**
+ * Information about the request
+ */
+public final class RequestInfo implements HttpServletMapping
 {
     final String servletPath;
     final String pathInfo;
     final String queryString;
     final String requestURI;
+    private final String servletName;
+    private final String servletPattern;
+    private final MappingMatch match;
+    final boolean nameMatch;
 
+    /**
+     * Create a new request info
+     * @param servletPath The servlet path
+     * @param pathInfo The path info
+     * @param queryString The query string
+     * @param requestURI The request uri
+     * @param servletName The servlet name
+     * @param servletPattern The servlet pattern
+     * @param nameMatch Is named dispatcher
+     */
     public RequestInfo(final String servletPath,
             final String pathInfo,
             final String queryString,
-            final String requestURI)
+            final String requestURI,
+            final String servletName,
+            final String servletPattern,
+            final boolean nameMatch)
     {
         this.servletPath = servletPath;
         this.pathInfo = pathInfo;
         this.queryString = queryString;
         this.requestURI = requestURI;
+        this.servletName = servletName;
+        this.servletPattern = servletPattern;
+        if ( "".equals(servletPattern) ) {
+            this.match = MappingMatch.DEFAULT;
+        } else {
+            this.match = MappingMatch.PATH;
+        }
+        this.nameMatch = nameMatch;
+    }
+
+    @Override
+    public String getMatchValue() {
+        // TODO - this is wrong
+        return this.servletPattern;
+    }
+
+    @Override
+    public String getPattern() {
+        return this.servletPattern;
+    }
+
+    @Override
+    public String getServletName() {
+        return this.servletName;
+    }
+
+    @Override
+    public MappingMatch getMappingMatch() {
+        return this.match;
     }
 
     @Override

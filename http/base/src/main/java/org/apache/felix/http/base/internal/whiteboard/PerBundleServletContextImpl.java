@@ -461,4 +461,39 @@ public class PerBundleServletContextImpl implements ExtServletContext {
     {
         return delegatee.getVirtualServerName();
     }
+
+    @Override
+    public Dynamic addJspFile(final String servletName, final String jspFile) {
+        return this.delegatee.addJspFile(servletName, jspFile);
+    }
+
+    @Override
+    public int getSessionTimeout() {
+        return this.delegatee.getSessionTimeout();
+    }
+
+    @Override
+    public void setSessionTimeout(final int sessionTimeout) {
+        this.delegatee.setSessionTimeout(sessionTimeout);
+    }
+
+    @Override
+    public String getRequestCharacterEncoding() {
+        return this.delegatee.getRequestCharacterEncoding();
+    }
+
+    @Override
+    public void setRequestCharacterEncoding(final String encoding) {
+        this.delegatee.setRequestCharacterEncoding(encoding);
+    }
+
+    @Override
+    public String getResponseCharacterEncoding() {
+        return this.delegatee.getResponseCharacterEncoding();
+    }
+
+    @Override
+    public void setResponseCharacterEncoding(final String encoding) {
+        this.delegatee.setRequestCharacterEncoding(encoding);
+    }
 }

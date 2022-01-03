@@ -29,13 +29,12 @@ import java.util.Set;
 import java.util.TreeMap;
 import java.util.concurrent.ConcurrentHashMap;
 
-import org.jetbrains.annotations.NotNull;
-
 import org.apache.felix.http.base.internal.handler.ServletHandler;
 import org.apache.felix.http.base.internal.runtime.ServletInfo;
 import org.apache.felix.http.base.internal.runtime.dto.BuilderConstants;
 import org.apache.felix.http.base.internal.runtime.dto.ResourceDTOBuilder;
 import org.apache.felix.http.base.internal.runtime.dto.ServletDTOBuilder;
+import org.jetbrains.annotations.NotNull;
 import org.osgi.service.http.runtime.dto.DTOConstants;
 import org.osgi.service.http.runtime.dto.FailedResourceDTO;
 import org.osgi.service.http.runtime.dto.FailedServletDTO;
@@ -81,6 +80,7 @@ public final class ServletRegistry
             {
                 // TODO - we should have all patterns under which this servlet is actively registered
                 pr.patterns = new String[] {entry.getPattern()};
+                pr.matchedPattern = entry.getPattern();
                 return pr;
             }
         }

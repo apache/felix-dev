@@ -19,8 +19,6 @@ package org.apache.felix.http.base.internal.dispatch;
 import java.io.IOException;
 import java.util.concurrent.atomic.AtomicInteger;
 
-import org.jetbrains.annotations.Nullable;
-import org.jetbrains.annotations.NotNull;
 import javax.servlet.DispatcherType;
 import javax.servlet.FilterChain;
 import javax.servlet.RequestDispatcher;
@@ -32,6 +30,8 @@ import javax.servlet.http.HttpServletResponseWrapper;
 import org.apache.felix.http.base.internal.handler.FilterHandler;
 import org.apache.felix.http.base.internal.handler.ServletHandler;
 import org.apache.felix.http.base.internal.registry.PerContextHandlerRegistry;
+import org.jetbrains.annotations.NotNull;
+import org.jetbrains.annotations.Nullable;
 
 final class ServletResponseWrapper extends HttpServletResponseWrapper
 {
@@ -86,7 +86,7 @@ final class ServletResponseWrapper extends HttpServletResponseWrapper
                 {
                     try
                     {
-                        request.setAttribute(RequestDispatcher.ERROR_STATUS_CODE, new Integer(code));
+                        request.setAttribute(RequestDispatcher.ERROR_STATUS_CODE, code);
                         if ( message != null )
                         {
                             request.setAttribute(RequestDispatcher.ERROR_MESSAGE, message);
@@ -101,7 +101,7 @@ final class ServletResponseWrapper extends HttpServletResponseWrapper
                         final String pathInfo = request.getRequestURI();
                         final String queryString = null; // XXX
 
-                        final RequestInfo requestInfo = new RequestInfo(servletPath, pathInfo, queryString, pathInfo);
+                        final RequestInfo requestInfo = new RequestInfo(servletPath, pathInfo, queryString, pathInfo, request.getHttpServletMapping().getServletName(), request.getHttpServletMapping().getPattern(), false);
 
                         final FilterHandler[] filterHandlers = errorRegistry.getFilterHandlers(errorResolution, DispatcherType.ERROR, request.getRequestURI());
 

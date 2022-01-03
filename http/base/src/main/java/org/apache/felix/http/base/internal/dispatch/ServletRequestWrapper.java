@@ -17,11 +17,13 @@
 package org.apache.felix.http.base.internal.dispatch;
 
 import static javax.servlet.RequestDispatcher.FORWARD_CONTEXT_PATH;
+import static javax.servlet.RequestDispatcher.FORWARD_MAPPING;
 import static javax.servlet.RequestDispatcher.FORWARD_PATH_INFO;
 import static javax.servlet.RequestDispatcher.FORWARD_QUERY_STRING;
 import static javax.servlet.RequestDispatcher.FORWARD_REQUEST_URI;
 import static javax.servlet.RequestDispatcher.FORWARD_SERVLET_PATH;
 import static javax.servlet.RequestDispatcher.INCLUDE_CONTEXT_PATH;
+import static javax.servlet.RequestDispatcher.INCLUDE_MAPPING;
 import static javax.servlet.RequestDispatcher.INCLUDE_PATH_INFO;
 import static javax.servlet.RequestDispatcher.INCLUDE_QUERY_STRING;
 import static javax.servlet.RequestDispatcher.INCLUDE_REQUEST_URI;
@@ -35,6 +37,7 @@ import java.security.AccessControlContext;
 import java.security.AccessController;
 import java.security.PrivilegedAction;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Collection;
 import java.util.Iterator;
 import java.util.List;
@@ -47,6 +50,7 @@ import javax.servlet.ServletException;
 import javax.servlet.ServletRequest;
 import javax.servlet.ServletRequestAttributeEvent;
 import javax.servlet.ServletResponse;
+import javax.servlet.http.HttpServletMapping;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletRequestWrapper;
 import javax.servlet.http.HttpSession;
@@ -65,6 +69,11 @@ import org.osgi.service.useradmin.Authorization;
 
 final class ServletRequestWrapper extends HttpServletRequestWrapper
 {
+    private static final List<String> FORBIDDEN_ATTRIBUTES = Arrays.asList(FORWARD_CONTEXT_PATH,
+            FORWARD_MAPPING, FORWARD_PATH_INFO, FORWARD_QUERY_STRING, FORWARD_REQUEST_URI, FORWARD_SERVLET_PATH,
+            INCLUDE_CONTEXT_PATH, INCLUDE_MAPPING, INCLUDE_PATH_INFO, INCLUDE_QUERY_STRING, INCLUDE_REQUEST_URI,
+            INCLUDE_SERVLET_PATH);
+
     private final DispatcherType type;
     private final RequestInfo requestInfo;
     private final ExtServletContext servletContext;
@@ -96,7 +105,7 @@ final class ServletRequestWrapper extends HttpServletRequestWrapper
     public Object getAttribute(String name)
     {
         HttpServletRequest request = (HttpServletRequest) getRequest();
-        if (isInclusionDispatcher())
+        if (isInclusionDispatcher() && !this.requestInfo.nameMatch)
         {
             // The javax.servlet.include.* attributes refer to the information of the *included* request,
             // meaning that the request information comes from the *original* request...
@@ -120,8 +129,12 @@ final class ServletRequestWrapper extends HttpServletRequestWrapper
             {
                 return this.requestInfo.queryString;
             }
+            else if (INCLUDE_MAPPING.equals(name))
+            {
+                return this.requestInfo;
+            }
         }
-        else if (isForwardingDispatcher())
+        else if (isForwardingDispatcher() && !this.requestInfo.nameMatch)
         {
             // The javax.servlet.forward.* attributes refer to the information of the *original* request,
             // meaning that the request information comes from the *forwarded* request...
@@ -145,6 +158,13 @@ final class ServletRequestWrapper extends HttpServletRequestWrapper
             {
                 return super.getQueryString();
             }
+            else if (FORWARD_MAPPING.equals(name))
+            {
+                return super.getHttpServletMapping();
+            }
+        }
+        if ( FORBIDDEN_ATTRIBUTES.contains(name) ) {
+            return null;
         }
         return super.getAttribute(name);
     }
@@ -322,12 +342,12 @@ final class ServletRequestWrapper extends HttpServletRequestWrapper
 
     private boolean isForwardingDispatcher()
     {
-        return (DispatcherType.FORWARD == this.type) && (this.requestInfo != null);
+        return DispatcherType.FORWARD == this.type;
     }
 
     private boolean isInclusionDispatcher()
     {
-        return (DispatcherType.INCLUDE == this.type) && (this.requestInfo != null);
+        return DispatcherType.INCLUDE == this.type;
     }
 
     @Override
@@ -537,4 +557,8 @@ final class ServletRequestWrapper extends HttpServletRequestWrapper
         return null;
     }
 
+    @Override
+    public HttpServletMapping getHttpServletMapping() {
+        return this.requestInfo;
+    }
 }

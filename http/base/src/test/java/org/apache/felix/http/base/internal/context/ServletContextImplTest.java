@@ -39,6 +39,7 @@ import javax.servlet.ServletContextAttributeEvent;
 import javax.servlet.ServletContextAttributeListener;
 import javax.servlet.ServletException;
 import javax.servlet.ServletRegistration;
+import javax.servlet.ServletRegistration.Dynamic;
 import javax.servlet.SessionCookieConfig;
 import javax.servlet.SessionTrackingMode;
 import javax.servlet.descriptor.JspConfigDescriptor;
@@ -452,6 +453,48 @@ public class ServletContextImplTest
         @Override
         public void setSessionTrackingModes(Set<SessionTrackingMode> modes)
         {
+        }
+
+        @Override
+        public Dynamic addJspFile(String servletName, String jspFile) {
+            // TODO Auto-generated method stub
+            return null;
+        }
+
+        @Override
+        public int getSessionTimeout() {
+            // TODO Auto-generated method stub
+            return 0;
+        }
+
+        @Override
+        public void setSessionTimeout(int sessionTimeout) {
+            // TODO Auto-generated method stub
+
+        }
+
+        @Override
+        public String getRequestCharacterEncoding() {
+            // TODO Auto-generated method stub
+            return null;
+        }
+
+        @Override
+        public void setRequestCharacterEncoding(String encoding) {
+            // TODO Auto-generated method stub
+
+        }
+
+        @Override
+        public String getResponseCharacterEncoding() {
+            // TODO Auto-generated method stub
+            return null;
+        }
+
+        @Override
+        public void setResponseCharacterEncoding(String encoding) {
+            // TODO Auto-generated method stub
+
         }
     }
 

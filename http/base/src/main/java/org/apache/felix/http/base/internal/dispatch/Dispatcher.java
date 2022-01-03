@@ -75,7 +75,7 @@ public final class Dispatcher
         if ( mgr == null )
         {
             // not active, always return 404
-            if ( !res.isCommitted() ) 
+            if ( !res.isCommitted() )
             {
                 res.sendError(404);
             }
@@ -126,7 +126,7 @@ public final class Dispatcher
 		        final HttpServletResponse wrappedResponse = new ServletResponseWrapper(req, res, servletName, errorRegistry);
 		        if ( pr == null )
 		        {
-                    if ( !wrappedResponse.isCommitted() ) 
+                    if ( !wrappedResponse.isCommitted() )
                     {
                         wrappedResponse.sendError(404);
                     }
@@ -134,8 +134,7 @@ public final class Dispatcher
 		        }
 
 		        final ExtServletContext servletContext = pr.handler.getContext();
-		        final RequestInfo requestInfo = new RequestInfo(pr.servletPath, pr.pathInfo, null, req.getRequestURI());
-
+		        final RequestInfo requestInfo = new RequestInfo(pr.servletPath, pr.pathInfo, null, req.getRequestURI(), pr.handler.getName(), pr.matchedPattern, false);
 		        final HttpServletRequest wrappedRequest = new ServletRequestWrapper(req, servletContext, requestInfo, null,
 		                pr.handler.getServletInfo().isAsyncSupported(),
 		                pr.handler.getMultipartConfig(),
@@ -158,7 +157,7 @@ public final class Dispatcher
 		            req.setAttribute(RequestDispatcher.ERROR_EXCEPTION, e);
 		            req.setAttribute(RequestDispatcher.ERROR_EXCEPTION_TYPE, e.getClass().getName());
 
-                    if ( !wrappedResponse.isCommitted() ) 
+                    if ( !wrappedResponse.isCommitted() )
                     {
                         wrappedResponse.sendError(500);
                     }
@@ -169,7 +168,8 @@ public final class Dispatcher
 		            {
 		                servletContext.getServletRequestListener().requestDestroyed(new ServletRequestEvent(servletContext, wrappedRequest));
 		            }
-		        }			}
+		        }
+		    }
 
 			@Override
 			public void destroy()

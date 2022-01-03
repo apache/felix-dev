@@ -38,6 +38,7 @@ import javax.servlet.ServletContext;
 import javax.servlet.ServletContextAttributeEvent;
 import javax.servlet.ServletException;
 import javax.servlet.ServletRegistration;
+import javax.servlet.ServletRegistration.Dynamic;
 import javax.servlet.ServletRequestAttributeListener;
 import javax.servlet.ServletRequestListener;
 import javax.servlet.SessionCookieConfig;
@@ -508,7 +509,7 @@ public class ServletContextImpl implements ExtServletContext
         	resolution.handler = servletHandler;
             resolution.handlerRegistry = this.handlerRegistry;
             // TODO - what is the path of a named servlet?
-            final RequestInfo requestInfo = new RequestInfo("", null, null, null);
+            final RequestInfo requestInfo = new RequestInfo("", null, null, null, null, "", true);
             dispatcher = new RequestDispatcherImpl(resolution, requestInfo);
         }
         else
@@ -542,17 +543,52 @@ public class ServletContextImpl implements ExtServletContext
         final PathResolution pathResolution = this.handlerRegistry.resolve(requestURI);
         if ( pathResolution != null )
         {
-        	final ServletResolution resolution = new ServletResolution();
-        	resolution.handler = pathResolution.handler;
-            resolution.handlerRegistry = this.handlerRegistry;
-            final RequestInfo requestInfo = new RequestInfo(pathResolution.servletPath, pathResolution.pathInfo, query, UriUtils.concat(this.getContextPath(), encodedRequestURI));
-            dispatcher = new RequestDispatcherImpl(resolution, requestInfo);
+            pathResolution.handlerRegistry = this.handlerRegistry;
+            final RequestInfo requestInfo = new RequestInfo(pathResolution.servletPath, pathResolution.pathInfo, query, UriUtils.concat(this.getContextPath(), encodedRequestURI),
+                    pathResolution.handler.getName(), pathResolution.matchedPattern, false);
+            dispatcher = new RequestDispatcherImpl(pathResolution, requestInfo);
         }
         else
         {
         	dispatcher = null;
         }
         return dispatcher;
+    }
+
+
+    @Override
+    public Dynamic addJspFile(final String servletName, final String jspFile) {
+        throw new IllegalStateException();
+    }
+
+    @Override
+    public int getSessionTimeout() {
+        return context.getSessionTimeout();
+    }
+
+    @Override
+    public void setSessionTimeout(final int sessionTimeout) {
+        throw new IllegalStateException();
+    }
+
+    @Override
+    public String getRequestCharacterEncoding() {
+        return context.getRequestCharacterEncoding();
+    }
+
+    @Override
+    public void setRequestCharacterEncoding(final String encoding) {
+        throw new IllegalStateException();
+    }
+
+    @Override
+    public String getResponseCharacterEncoding() {
+        return context.getResponseCharacterEncoding();
+    }
+
+    @Override
+    public void setResponseCharacterEncoding(final String encoding) {
+        throw new IllegalStateException();
     }
 
     @Override
