@@ -16,6 +16,8 @@
  */
 package org.apache.felix.http.base.internal.registry;
 
+import javax.servlet.http.MappingMatch;
+
 /**
  * Resolution of a servlet based on the path
  */
@@ -30,4 +32,8 @@ public class PathResolution extends ServletResolution {
     public String[] patterns;
 
     public String matchedPattern;
+
+    public MappingMatch match;
+
+    public String matchValue;
 }

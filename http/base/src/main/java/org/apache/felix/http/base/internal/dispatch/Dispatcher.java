@@ -134,7 +134,8 @@ public final class Dispatcher
 		        }
 
 		        final ExtServletContext servletContext = pr.handler.getContext();
-		        final RequestInfo requestInfo = new RequestInfo(pr.servletPath, pr.pathInfo, null, req.getRequestURI(), pr.handler.getName(), pr.matchedPattern, false);
+		        final RequestInfo requestInfo = new RequestInfo(pr.servletPath, pr.pathInfo, null, req.getRequestURI(),
+		                pr.handler.getName(), pr.matchedPattern, pr.matchValue, pr.match, false);
 		        final HttpServletRequest wrappedRequest = new ServletRequestWrapper(req, servletContext, requestInfo, null,
 		                pr.handler.getServletInfo().isAsyncSupported(),
 		                pr.handler.getMultipartConfig(),

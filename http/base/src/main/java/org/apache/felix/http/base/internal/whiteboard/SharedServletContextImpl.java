@@ -42,6 +42,7 @@ import javax.servlet.ServletRegistration.Dynamic;
 import javax.servlet.SessionCookieConfig;
 import javax.servlet.SessionTrackingMode;
 import javax.servlet.descriptor.JspConfigDescriptor;
+import javax.servlet.http.MappingMatch;
 
 import org.apache.felix.http.base.internal.dispatch.RequestDispatcherImpl;
 import org.apache.felix.http.base.internal.dispatch.RequestInfo;
@@ -320,7 +321,7 @@ public class SharedServletContextImpl implements ServletContext
         	resolution.handler = servletHandler;
             resolution.handlerRegistry = this.registry;
             // TODO - what is the path of a named servlet?
-            final RequestInfo requestInfo = new RequestInfo("", null, null, null, null, "", true);
+            final RequestInfo requestInfo = new RequestInfo("", null, null, null, name, "", "", MappingMatch.EXACT, true);
             dispatcher = new RequestDispatcherImpl(resolution, requestInfo);
         }
         else
@@ -357,7 +358,9 @@ public class SharedServletContextImpl implements ServletContext
             pathResolution.handlerRegistry = this.registry;
             final RequestInfo requestInfo = new RequestInfo(pathResolution.servletPath, pathResolution.pathInfo, query,
                     UriUtils.concat(this.contextPath, encodedRequestURI),
-                    pathResolution.handler.getName(), pathResolution.matchedPattern, false);
+                    pathResolution.handler.getName(), pathResolution.matchedPattern,
+                    pathResolution.matchValue, pathResolution.match,
+                    false);
             dispatcher = new RequestDispatcherImpl(pathResolution, requestInfo);
         }
         else

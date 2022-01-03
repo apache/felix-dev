@@ -18,11 +18,12 @@ package org.apache.felix.http.base.internal.registry;
 
 import java.util.regex.Pattern;
 
-import org.jetbrains.annotations.Nullable;
-import org.jetbrains.annotations.NotNull;
+import javax.servlet.http.MappingMatch;
 
 import org.apache.felix.http.base.internal.handler.ServletHandler;
 import org.apache.felix.http.base.internal.service.HttpServiceFactory;
+import org.jetbrains.annotations.NotNull;
+import org.jetbrains.annotations.Nullable;
 
 /**
  * The path resolver factory creates a path resolver for a pattern.
@@ -156,6 +157,10 @@ public abstract class PathResolverFactory {
                 pr.requestURI = uri;
                 pr.handler = this.getServletHandler();
 
+                pr.matchedPattern = this.getPattern();
+                pr.match = MappingMatch.CONTEXT_ROOT;
+                pr.matchValue = this.getPattern();
+
                 return pr;
             }
             return null;
@@ -176,6 +181,10 @@ public abstract class PathResolverFactory {
             pr.servletPath = uri;
             pr.requestURI = uri;
             pr.handler = this.getServletHandler();
+
+            pr.matchedPattern = this.getPattern();
+            pr.match = MappingMatch.DEFAULT;
+            pr.matchValue = "";
 
             return pr;
         }
@@ -204,6 +213,11 @@ public abstract class PathResolverFactory {
                 pr.requestURI = uri;
                 pr.handler = this.getServletHandler();
 
+                pr.matchedPattern = this.getPattern();
+                pr.match = MappingMatch.EXACT;
+                final int pos = uri.lastIndexOf("/");
+                pr.matchValue = uri.substring(pos + 1, uri.length());
+
                 return pr;
             }
             else if ( uri.startsWith(prefix) )
@@ -213,6 +227,11 @@ public abstract class PathResolverFactory {
                 pr.pathInfo = uri.substring(pr.servletPath.length());
                 pr.requestURI = uri;
                 pr.handler = this.getServletHandler();
+
+                pr.matchedPattern = this.getPattern();
+                pr.match = MappingMatch.PATH;
+                final int pos = uri.lastIndexOf("/");
+                pr.matchValue = uri.substring(pos + 1, uri.length());
 
                 return pr;
             }
@@ -245,6 +264,11 @@ public abstract class PathResolverFactory {
                 pr.pathInfo = null;
                 pr.requestURI = uri;
                 pr.handler = this.getServletHandler();
+
+                pr.matchedPattern = this.getPattern();
+                pr.match = MappingMatch.EXACT;
+                final int pos = uri.lastIndexOf("/");
+                pr.matchValue = uri.substring(pos + 1, uri.length());
 
                 return pr;
             }
@@ -281,6 +305,11 @@ public abstract class PathResolverFactory {
                 pr.requestURI = uri;
                 pr.handler = this.getServletHandler();
 
+                pr.matchedPattern = this.getPattern();
+                pr.match = MappingMatch.EXACT;
+                final int pos = uri.lastIndexOf("/");
+                pr.matchValue = uri.substring(pos + 1, uri.length());
+
                 return pr;
             }
             if ( uri.startsWith(this.prefix) )
@@ -290,6 +319,11 @@ public abstract class PathResolverFactory {
                 pr.pathInfo = uri.substring(pr.servletPath.length());
                 pr.requestURI = uri;
                 pr.handler = this.getServletHandler();
+
+                pr.matchedPattern = this.getPattern();
+                pr.match = MappingMatch.PATH;
+                final int pos = uri.lastIndexOf("/");
+                pr.matchValue = uri.substring(pos + 1, uri.length());
 
                 return pr;
             }
@@ -323,6 +357,11 @@ public abstract class PathResolverFactory {
                 pr.requestURI = uri;
                 pr.handler = this.getServletHandler();
 
+                pr.matchedPattern = this.getPattern();
+                pr.match = MappingMatch.EXTENSION;
+                final int pos = uri.lastIndexOf("/");
+                pr.matchValue = uri.substring(pos + 1, uri.length() - this.extension.length());
+
                 return pr;
             }
             return null;
@@ -353,6 +392,11 @@ public abstract class PathResolverFactory {
                 pr.pathInfo = null;
                 pr.servletPath = uri;
                 pr.requestURI = uri;
+
+                // regex is not supported by servlet spec, we use PATH matching
+                pr.matchedPattern = this.getPattern();
+                pr.match = MappingMatch.PATH;
+                pr.matchValue = uri;
 
                 return pr;
             }

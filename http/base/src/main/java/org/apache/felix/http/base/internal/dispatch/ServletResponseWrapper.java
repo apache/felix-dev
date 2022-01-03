@@ -101,7 +101,12 @@ final class ServletResponseWrapper extends HttpServletResponseWrapper
                         final String pathInfo = request.getRequestURI();
                         final String queryString = null; // XXX
 
-                        final RequestInfo requestInfo = new RequestInfo(servletPath, pathInfo, queryString, pathInfo, request.getHttpServletMapping().getServletName(), request.getHttpServletMapping().getPattern(), false);
+                        final RequestInfo requestInfo = new RequestInfo(servletPath, pathInfo, queryString, pathInfo,
+                                request.getHttpServletMapping().getServletName(),
+                                request.getHttpServletMapping().getPattern(),
+                                request.getHttpServletMapping().getMatchValue(),
+                                request.getHttpServletMapping().getMappingMatch(),
+                                false);
 
                         final FilterHandler[] filterHandlers = errorRegistry.getFilterHandlers(errorResolution, DispatcherType.ERROR, request.getRequestURI());
 

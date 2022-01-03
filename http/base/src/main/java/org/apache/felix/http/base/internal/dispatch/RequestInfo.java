@@ -28,8 +28,9 @@ public final class RequestInfo implements HttpServletMapping
     final String pathInfo;
     final String queryString;
     final String requestURI;
-    private final String servletName;
-    private final String servletPattern;
+    private final String matchServletName;
+    private final String matchPattern;
+    private final String matchValue;
     private final MappingMatch match;
     final boolean nameMatch;
 
@@ -39,46 +40,46 @@ public final class RequestInfo implements HttpServletMapping
      * @param pathInfo The path info
      * @param queryString The query string
      * @param requestURI The request uri
-     * @param servletName The servlet name
-     * @param servletPattern The servlet pattern
+     * @param matchServletName The servlet name
+     * @param matchPattern The servlet pattern
+     * @param matchValue The value matching
+     * @param match The match type
      * @param nameMatch Is named dispatcher
      */
     public RequestInfo(final String servletPath,
             final String pathInfo,
             final String queryString,
             final String requestURI,
-            final String servletName,
-            final String servletPattern,
+            final String matchServletName,
+            final String matchPattern,
+            final String matchValue,
+            final MappingMatch match,
             final boolean nameMatch)
     {
         this.servletPath = servletPath;
         this.pathInfo = pathInfo;
         this.queryString = queryString;
         this.requestURI = requestURI;
-        this.servletName = servletName;
-        this.servletPattern = servletPattern;
-        if ( "".equals(servletPattern) ) {
-            this.match = MappingMatch.DEFAULT;
-        } else {
-            this.match = MappingMatch.PATH;
-        }
+        this.matchServletName = matchServletName;
+        this.matchPattern = matchPattern;
+        this.matchValue = matchValue;
+        this.match = match;
         this.nameMatch = nameMatch;
     }
 
     @Override
     public String getMatchValue() {
-        // TODO - this is wrong
-        return this.servletPattern;
+        return this.matchValue;
     }
 
     @Override
     public String getPattern() {
-        return this.servletPattern;
+        return this.matchPattern;
     }
 
     @Override
     public String getServletName() {
-        return this.servletName;
+        return this.matchServletName;
     }
 
     @Override

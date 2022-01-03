@@ -48,6 +48,7 @@ import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 import javax.servlet.http.HttpSessionAttributeListener;
 import javax.servlet.http.HttpSessionListener;
+import javax.servlet.http.MappingMatch;
 
 import org.apache.felix.http.base.internal.HttpConfig;
 import org.apache.felix.http.base.internal.context.ExtServletContext;
@@ -509,7 +510,8 @@ public class ServletContextImpl implements ExtServletContext
         	resolution.handler = servletHandler;
             resolution.handlerRegistry = this.handlerRegistry;
             // TODO - what is the path of a named servlet?
-            final RequestInfo requestInfo = new RequestInfo("", null, null, null, null, "", true);
+            final RequestInfo requestInfo = new RequestInfo("", null, null, null, name,
+                    "", "", MappingMatch.EXACT, true);
             dispatcher = new RequestDispatcherImpl(resolution, requestInfo);
         }
         else
@@ -544,8 +546,13 @@ public class ServletContextImpl implements ExtServletContext
         if ( pathResolution != null )
         {
             pathResolution.handlerRegistry = this.handlerRegistry;
-            final RequestInfo requestInfo = new RequestInfo(pathResolution.servletPath, pathResolution.pathInfo, query, UriUtils.concat(this.getContextPath(), encodedRequestURI),
-                    pathResolution.handler.getName(), pathResolution.matchedPattern, false);
+            final RequestInfo requestInfo = new RequestInfo(pathResolution.servletPath,
+                    pathResolution.pathInfo,
+                    query,
+                    UriUtils.concat(this.getContextPath(), encodedRequestURI),
+                    pathResolution.handler.getName(),
+                    pathResolution.matchedPattern,
+                    pathResolution.matchValue, pathResolution.match, false);
             dispatcher = new RequestDispatcherImpl(pathResolution, requestInfo);
         }
         else
