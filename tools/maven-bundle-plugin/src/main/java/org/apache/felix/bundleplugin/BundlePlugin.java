@@ -1140,7 +1140,8 @@ public class BundlePlugin extends AbstractMojo
             }
 
             Attributes mainMavenAttributes = mavenManifest.getMainAttributes();
-            mainMavenAttributes.putValue( "Created-By", "Apache Maven Bundle Plugin" );
+            mainMavenAttributes.putValue( "Created-By", createdBy( "Apache Maven Bundle Plugin", "org.apache.felix",
+                                                                   "maven-bundle-plugin" ) );
 
             String[] removeHeaders = builder.getProperty( Constants.REMOVEHEADERS, "" ).split( "," );
 
@@ -1216,6 +1217,31 @@ public class BundlePlugin extends AbstractMojo
         builder.setJar( jar );
     }
 
+    private static String getCreatedByVersion( String groupId, String artifactId )
+    {
+        try
+        {
+            final Properties properties = PropertyUtils.loadProperties( MavenArchiver.class.getResourceAsStream(
+                "/META-INF/maven/" + groupId + "/" + artifactId + "/pom.properties" ) );
+    
+            return properties.getProperty( "version" );
+        }
+        catch ( IOException ioe )
+        {
+            return null;
+        }
+    }
+
+    private String createdBy( String description, String groupId, String artifactId )
+    {
+        String createdBy = description;
+        String version = getCreatedByVersion( groupId, artifactId );
+        if ( version != null )
+        {
+            createdBy += " " + version;
+        }
+        return createdBy;
+    }
 
     protected static void mergeManifest( Instructions instructions, Manifest... manifests ) throws IOException
     {
