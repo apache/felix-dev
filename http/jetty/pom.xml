@@ -274,7 +274,7 @@
                                 </Provide-Capability>
                                 <!-- We need to override this from the base configuration to exclude the ServiceLoader capabilities -->
                                 <Require-Capability>
-                                    osgi.contract;filter:="(&amp;(osgi.contract=JavaServlet)(version=3.1))"
+                                    osgi.contract;filter:="(&amp;(osgi.contract=JavaServlet)(version=4.0))"
                                 </Require-Capability>
                                 <!-- We need to override this from the base configuration to exclude the ServiceLoader resources -->
                                 <Include-Resource>
