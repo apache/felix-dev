@@ -565,7 +565,7 @@ public class ServletContextImpl implements ExtServletContext
 
     @Override
     public Dynamic addJspFile(final String servletName, final String jspFile) {
-        throw new IllegalStateException();
+        throw new UnsupportedOperationException();
     }
 
     @Override
