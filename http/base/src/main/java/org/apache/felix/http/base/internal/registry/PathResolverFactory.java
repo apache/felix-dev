@@ -306,9 +306,8 @@ public abstract class PathResolverFactory {
                 pr.handler = this.getServletHandler();
 
                 pr.matchedPattern = this.getPattern();
-                pr.match = MappingMatch.EXACT;
-                final int pos = uri.lastIndexOf("/");
-                pr.matchValue = uri.substring(pos + 1, uri.length());
+                pr.match = MappingMatch.PATH;
+                pr.matchValue = uri.length() > 0 ? uri.substring(1) : "";
 
                 return pr;
             }
@@ -322,8 +321,7 @@ public abstract class PathResolverFactory {
 
                 pr.matchedPattern = this.getPattern();
                 pr.match = MappingMatch.PATH;
-                final int pos = uri.lastIndexOf("/");
-                pr.matchValue = uri.substring(pos + 1, uri.length());
+                pr.matchValue = uri.substring(this.prefix.length(), uri.length());
 
                 return pr;
             }

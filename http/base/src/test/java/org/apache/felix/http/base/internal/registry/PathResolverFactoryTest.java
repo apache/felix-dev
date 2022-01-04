@@ -20,6 +20,8 @@ import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertNull;
 
+import javax.servlet.http.MappingMatch;
+
 import org.junit.Test;
 
 public class PathResolverFactoryTest {
@@ -27,7 +29,10 @@ public class PathResolverFactoryTest {
     private void assertResult(final PathResolver resolver,
             final String path,
             final String expectedServletPath,
-            final String expectedPathInfo)
+            final String expectedPathInfo,
+            final MappingMatch match,
+            final String matchPattern,
+            final String matchValue)
     {
         final PathResolution pr = resolver.resolve(path);
         assertNotNull(pr);
@@ -41,6 +46,9 @@ public class PathResolverFactoryTest {
         {
             assertEquals(expectedPathInfo, pr.pathInfo);
         }
+        assertEquals(match, pr.match);
+        assertEquals(matchPattern, pr.matchedPattern);
+        assertEquals(matchValue, pr.matchValue);
     }
 
     @Test public void testRootMatching()
@@ -48,8 +56,8 @@ public class PathResolverFactoryTest {
         final PathResolver pr = PathResolverFactory.createPatternMatcher(null, "");
         assertNotNull(pr);
 
-        assertResult(pr, "/", "", "/");
-        assertResult(pr, "", "", "/");
+        assertResult(pr, "/", "", "/", MappingMatch.CONTEXT_ROOT, "", "");
+        assertResult(pr, "", "", "/", MappingMatch.CONTEXT_ROOT, "", "");
 
         assertNull(pr.resolve("/foo"));
     }
@@ -59,20 +67,44 @@ public class PathResolverFactoryTest {
         final PathResolver pr = PathResolverFactory.createPatternMatcher(null, "/");
         assertNotNull(pr);
 
-        assertResult(pr, "/foo/bar", "/foo/bar", null);
-        assertResult(pr, "/foo", "/foo", null);
+        assertResult(pr, "/foo/bar", "/foo/bar", null, MappingMatch.DEFAULT, "/", "");
+        assertResult(pr, "/foo", "/foo", null, MappingMatch.DEFAULT, "/", "");
     }
 
-    @Test public void testPathMatcher()
+    @Test public void testPathMatcherRoot()
     {
         final PathResolver pr = PathResolverFactory.createPatternMatcher(null, "/*");
         assertNotNull(pr);
 
-        assertResult(pr, "/foo", "", "/foo");
-        assertResult(pr, "/foo/bar", "", "/foo/bar");
+        assertResult(pr, "/foo", "", "/foo", MappingMatch.PATH, "/*", "foo");
+        assertResult(pr, "/foo/bar", "", "/foo/bar", MappingMatch.PATH, "/*", "foo/bar");
 
-        assertResult(pr, "/", "", "/");
+        assertResult(pr, "/", "", "/", MappingMatch.PATH, "/*", "");
 
-        assertResult(pr, "", "", null);
+        assertResult(pr, "", "", null, MappingMatch.PATH, "/*", "");
+    }
+
+    @Test public void testPathMatcherSub()
+    {
+        final PathResolver pr = PathResolverFactory.createPatternMatcher(null, "/path/*");
+        assertNotNull(pr);
+
+        assertResult(pr, "/path/foo", "/path", "/foo", MappingMatch.PATH, "/path/*", "foo");
+    }
+
+    @Test public void testExactMatcher()
+    {
+        final PathResolver pr = PathResolverFactory.createPatternMatcher(null, "/MyServlet");
+        assertNotNull(pr);
+
+        assertResult(pr, "/MyServlet", "/MyServlet", null, MappingMatch.EXACT, "/MyServlet", "MyServlet");
+    }
+
+    @Test public void testExtensionMatcher()
+    {
+        final PathResolver pr = PathResolverFactory.createPatternMatcher(null, "*.extension");
+        assertNotNull(pr);
+
+        assertResult(pr, "/foo.extension", "/foo.extension", null, MappingMatch.EXTENSION, "*.extension", "foo");
     }
 }
