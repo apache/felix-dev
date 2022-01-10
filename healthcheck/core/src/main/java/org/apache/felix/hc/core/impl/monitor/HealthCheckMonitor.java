@@ -108,6 +108,9 @@ public class HealthCheckMonitor implements Runnable {
         @AttributeDefinition(name = "Log results", description = "What updates should be logged to regular log file (none, status changes, status changes and not ok results, all updates)")
         ChangeType logResults() default ChangeType.NONE;
         
+        @AttributeDefinition(name = "Log all results as INFO", description = "If logResults is enabled and this is enabled, all results will be logged with INFO log level. Otherwise WARN and INFO are used depending on the health state.")
+        boolean logAllResultsAsInfo() default false;
+
         @AttributeDefinition(name = "Resolve Tags (dynamic)", description = "In dynamic mode tags are resolved to a list of health checks that are monitored individually (this means events are sent/services are registered for name only, never for given tags). This mode allows to use '*' in tags to query for all health checks in system. It is also possible to query for all except certain tags by using '-', e.g. by configuring the values '*', '-tag1' and '-tag2' for tags.")
         boolean isDynamic() default false;
         
@@ -147,12 +150,14 @@ public class HealthCheckMonitor implements Runnable {
     private ChangeType sendEvents;
     private ChangeType logResults;
 
+    private boolean logAllResultsAsInfo;
+
     private BundleContext bundleContext;
     
     private String monitorId;
     
     private boolean isDynamic;
-    private ServiceListener healthCheckServiceListener = null;
+    private ServiceListener healthCheckServiceListener;
 
     @Activate
     protected final void activate(BundleContext bundleContext, Config config, ComponentContext componentContext) throws InvalidSyntaxException {
@@ -170,6 +175,7 @@ public class HealthCheckMonitor implements Runnable {
         this.treatWarnAsHealthy = config.treatWarnAsHealthy();
         this.sendEvents = config.sendEvents();
         this.logResults = config.logResults();
+        this.logAllResultsAsInfo = config.logAllResultsAsInfo();
 
         this.intervalInSec = config.intervalInSec();
         this.cronExpression = config.cronExpression();
@@ -311,7 +317,7 @@ public class HealthCheckMonitor implements Runnable {
     }
 
     void logResultItem(boolean isOk, String msg) {
-        if(isOk) {
+        if(isOk || this.logAllResultsAsInfo) {
             LOG.info(msg);
         } else {
             LOG.warn(msg);
