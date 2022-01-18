@@ -73,7 +73,7 @@ public class MethodPropertyVisitor extends AnnotationVisitor {
      * @param method : attached method.
      */
     public MethodPropertyVisitor(Element parent, String method) {
-        super(Opcodes.ASM5);
+        super(Opcodes.ASM7);
         m_parent = parent;
         m_method = method;
     }

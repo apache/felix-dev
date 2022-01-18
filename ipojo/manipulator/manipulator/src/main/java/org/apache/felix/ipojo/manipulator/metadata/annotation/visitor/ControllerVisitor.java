@@ -37,7 +37,7 @@ public class ControllerVisitor extends AnnotationVisitor {
     private String field;
 
     public ControllerVisitor(ComponentWorkbench workbench, String field) {
-        super(Opcodes.ASM5);
+        super(Opcodes.ASM7);
         this.workbench = workbench;
         this.field = field;
     }

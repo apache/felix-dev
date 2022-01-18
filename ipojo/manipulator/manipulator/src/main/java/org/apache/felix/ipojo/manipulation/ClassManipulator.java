@@ -19,17 +19,12 @@
 
 package org.apache.felix.ipojo.manipulation;
 
-import java.util.*;
-
 import org.apache.felix.ipojo.manipulation.ClassChecker.AnnotationDescriptor;
-import org.objectweb.asm.ClassVisitor;
-import org.objectweb.asm.FieldVisitor;
-import org.objectweb.asm.Label;
-import org.objectweb.asm.MethodVisitor;
-import org.objectweb.asm.Opcodes;
-import org.objectweb.asm.Type;
+import org.objectweb.asm.*;
 import org.objectweb.asm.commons.GeneratorAdapter;
 import org.objectweb.asm.tree.LocalVariableNode;
+
+import java.util.*;
 
 /**
  * iPOJO Class Adapter.
@@ -105,6 +100,11 @@ public class ClassManipulator extends ClassVisitor implements Opcodes {
     private Set<String> m_fields;
 
     /**
+     * Set of final fields detected in the class
+     */
+    private Set<String> m_finalFields;
+
+    /**
      * List of methods contained in the class.
      * This set contains method id.
      */
@@ -141,9 +141,10 @@ public class ClassManipulator extends ClassVisitor implements Opcodes {
      * @param manipulator : the manipulator having analyzed the class.
      */
     public ClassManipulator(ClassVisitor visitor, Manipulator manipulator) {
-        super(Opcodes.ASM5, visitor);
+        super(Opcodes.ASM7, visitor);
         m_manipulator = manipulator;
         m_fields = manipulator.getFields().keySet();
+        m_finalFields = manipulator.getFinalFields();
         m_visitedMethods = manipulator.getMethods();
     }
 
@@ -208,7 +209,7 @@ public class ClassManipulator extends ClassVisitor implements Opcodes {
 
             // Insert the new constructor
             MethodVisitor mv = super.visitMethod(ACC_PRIVATE, "<init>", newDesc, signature, exceptions);
-            return new ConstructorCodeAdapter(mv, m_owner, m_fields, ACC_PRIVATE, name, newDesc, m_superclass);
+            return new ConstructorCodeAdapter(mv, m_owner, m_fields, m_finalFields, ACC_PRIVATE, name, newDesc, m_superclass);
         }
 
         if ((access & ACC_SYNTHETIC) == ACC_SYNTHETIC && name.startsWith("access$")) {
@@ -274,7 +275,7 @@ public class ClassManipulator extends ClassVisitor implements Opcodes {
      */
     public FieldVisitor visitField(final int access, final String name, final String desc, final String signature, final Object value) {
         if ((access & ACC_STATIC) == 0) {
-            FieldVisitor flag = cv.visitField(Opcodes.ACC_PRIVATE, FIELD_FLAG_PREFIX + name, "Z", null, null);
+            FieldVisitor flag = cv.visitField(ACC_PRIVATE, FIELD_FLAG_PREFIX + name, "Z", null, null);
             flag.visitEnd();
 
             Type type = Type.getType(desc);
@@ -294,9 +295,8 @@ public class ClassManipulator extends ClassVisitor implements Opcodes {
 
                 // Generates setter method
                 String sDesc = "(" + desc + ")V";
-                createSimpleSetter(name, sDesc, type);
+                createSimpleSetter(access, name, sDesc, type);
             }
-
         }
         return cv.visitField(access, name, desc, signature, value);
     }
@@ -1045,13 +1045,15 @@ public class ClassManipulator extends ClassVisitor implements Opcodes {
 
     /**
      * Create the setter method for one property. The name of the method is _set+name of the field
+     * @param access
      * @param name : name of the field representing a property
      * @param desc : description of the setter method
      * @param type : type of the property
      */
-    private void createSimpleSetter(String name, String desc, Type type) {
+    private void createSimpleSetter(int access, String name, String desc, Type type) {
         MethodVisitor mv = cv.visitMethod(0, "__set" + name, desc, null, null);
         mv.visitCode();
+        boolean isFinal = (access & ACC_FINAL) == ACC_FINAL;
 
         switch (type.getSort()) {
             case Type.BOOLEAN:
@@ -1060,6 +1062,7 @@ public class ClassManipulator extends ClassVisitor implements Opcodes {
             case Type.SHORT:
             case Type.INT:
             case Type.FLOAT:
+
                 String internalName = ManipulationProperty.PRIMITIVE_BOXING_INFORMATION[type.getSort()][0];
                 String boxingType = ManipulationProperty.PRIMITIVE_BOXING_INFORMATION[type.getSort()][1];
 
@@ -1070,10 +1073,11 @@ public class ClassManipulator extends ClassVisitor implements Opcodes {
                 mv.visitFieldInsn(GETFIELD, m_owner, FIELD_FLAG_PREFIX + name, "Z");
                 Label l22 = new Label();
                 mv.visitJumpInsn(IFNE, l22);
-
-                mv.visitVarInsn(ALOAD, 0);
-                mv.visitVarInsn(type.getOpcode(ILOAD), 1);
-                mv.visitFieldInsn(PUTFIELD, m_owner, name, internalName);
+                if (!isFinal) {
+                    mv.visitVarInsn(ALOAD, 0);
+                    mv.visitVarInsn(type.getOpcode(ILOAD), 1);
+                    mv.visitFieldInsn(PUTFIELD, m_owner, name, internalName);
+                }
                 mv.visitInsn(RETURN);
                 mv.visitLabel(l22);
 
@@ -1082,6 +1086,7 @@ public class ClassManipulator extends ClassVisitor implements Opcodes {
                 mv.visitVarInsn(type.getOpcode(ILOAD), 1);
                 mv.visitMethodInsn(INVOKESPECIAL, boxingType, "<init>", "(" + internalName + ")V", false);
                 mv.visitVarInsn(ASTORE, 2);
+
 
                 Label l2 = new Label();
                 mv.visitLabel(l2);
@@ -1111,9 +1116,11 @@ public class ClassManipulator extends ClassVisitor implements Opcodes {
                 Label l23 = new Label();
                 mv.visitJumpInsn(IFNE, l23);
 
-                mv.visitVarInsn(ALOAD, 0);
-                mv.visitVarInsn(type.getOpcode(ILOAD), 1);
-                mv.visitFieldInsn(PUTFIELD, m_owner, name, internalName);
+                if(!isFinal) {
+                    mv.visitVarInsn(ALOAD, 0);
+                    mv.visitVarInsn(type.getOpcode(ILOAD), 1);
+                    mv.visitFieldInsn(PUTFIELD, m_owner, name, internalName);
+                }
                 mv.visitInsn(RETURN);
                 mv.visitLabel(l23);
 
@@ -1144,9 +1151,11 @@ public class ClassManipulator extends ClassVisitor implements Opcodes {
                 Label l24 = new Label();
                 mv.visitJumpInsn(IFNE, l24);
 
-                mv.visitVarInsn(ALOAD, 0);
-                mv.visitVarInsn(ALOAD, 1);
-                mv.visitFieldInsn(PUTFIELD, m_owner, name, "L" + type.getInternalName() + ";");
+                if (!isFinal) {
+                    mv.visitVarInsn(ALOAD, 0);
+                    mv.visitVarInsn(ALOAD, 1);
+                    mv.visitFieldInsn(PUTFIELD, m_owner, name, "L" + type.getInternalName() + ";");
+                }
                 mv.visitInsn(RETURN);
                 mv.visitLabel(l24);
 

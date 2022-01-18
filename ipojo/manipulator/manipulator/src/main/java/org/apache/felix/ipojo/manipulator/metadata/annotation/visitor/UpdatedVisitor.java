@@ -36,7 +36,7 @@ public class UpdatedVisitor extends AnnotationVisitor {
     private String name;
 
     public UpdatedVisitor(ComponentWorkbench workbench, String name) {
-        super(Opcodes.ASM5);
+        super(Opcodes.ASM7);
         this.workbench = workbench;
         this.name = name;
     }

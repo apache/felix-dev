@@ -46,7 +46,7 @@ public class FieldMetadataCollector extends FieldVisitor {
     private FieldNode node;
 
     public FieldMetadataCollector(ComponentWorkbench workbench, FieldNode node) {
-        super(Opcodes.ASM5);
+        super(Opcodes.ASM7);
         this.workbench = workbench;
         this.node = node;
         this.registry = workbench.getBindingRegistry();

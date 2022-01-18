@@ -45,7 +45,7 @@ public class ComponentVisitor extends AnnotationVisitor {
     private ComponentWorkbench workbench;
 
     public ComponentVisitor(ComponentWorkbench workbench, Reporter reporter) {
-        super(Opcodes.ASM5);
+        super(Opcodes.ASM7);
         this.workbench = workbench;
         this.reporter = reporter;
     }

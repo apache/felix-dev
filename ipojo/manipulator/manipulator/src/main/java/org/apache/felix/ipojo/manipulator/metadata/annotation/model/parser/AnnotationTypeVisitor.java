@@ -34,7 +34,7 @@ public class AnnotationTypeVisitor extends ClassVisitor {
     private AnnotationType annotationType;
 
     public AnnotationTypeVisitor() {
-        super(Opcodes.ASM5);
+        super(Opcodes.ASM7);
     }
 
     @Override

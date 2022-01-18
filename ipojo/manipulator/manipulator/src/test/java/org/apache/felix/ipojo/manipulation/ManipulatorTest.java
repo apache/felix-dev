@@ -69,6 +69,7 @@ public class ManipulatorTest extends TestCase {
         manipulator.prepare(origin);
         byte[] clazz = manipulator.manipulate(origin);
 
+
         ManipulatedClassLoader classloader = new ManipulatedClassLoader("test.frames.CryptoServiceSingleton", clazz);
 
         //Assert.assertNotNull(manipulator.getManipulationMetadata());
@@ -82,7 +83,9 @@ public class ManipulatorTest extends TestCase {
         Class cl = classloader.findClass("test.frames.CryptoServiceSingleton");
         Assert.assertNotNull(cl);
 
-        Object instance = cl.newInstance();
+        final var constructor = cl.getDeclaredConstructor();
+        constructor.setAccessible(true);
+        Object instance = constructor.newInstance();
 
         Method method = cl.getMethod("encryptAESWithCBC", String.class, String.class);
         final String salt = "0000000000000000";
@@ -94,6 +97,25 @@ public class ManipulatorTest extends TestCase {
 
         //Assert.assertNotNull(cl.newInstance());
 
+    }
+
+    public void testManipulatingPojoWithStaticInterface() throws Exception{
+        Manipulator manipulator = new Manipulator(this.getClass().getClassLoader());
+        byte[] origin = getBytesFromFile(new File("target/test-classes/test/PojoWithStaticInterface.class"));
+        manipulator.prepare(origin);
+        byte[] clazz = manipulator.manipulate(origin);
+        ManipulatedClassLoader classloader = new ManipulatedClassLoader("test.PojoWithStaticInterface", clazz);
+        Class cl = classloader.findClass("test.PojoWithStaticInterface");
+        Assert.assertNotNull(cl);
+        Assert.assertNotNull(manipulator.getManipulationMetadata());
+
+        final var constructor = cl.getDeclaredConstructor();
+        Assert.assertNotNull(constructor);
+        final var instance = constructor.newInstance();
+        Assert.assertNotNull(instance);
+
+        Method method = cl.getMethod("doSomething", new Class[0]);
+        Assert.assertEquals(((String) method.invoke(instance, new Object[0])),"test");
     }
 
     public void testManipulatingTheSimplePojo() throws Exception {

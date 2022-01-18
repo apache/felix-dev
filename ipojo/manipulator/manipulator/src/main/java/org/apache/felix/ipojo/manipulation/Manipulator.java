@@ -47,6 +47,11 @@ public class Manipulator {
     private Map<String, String> m_fields;
 
     /**
+     * Store th visited final fields
+     */
+    private Set<String> m_finalFields;
+
+    /**
      * Store the interface implemented by the class.
      */
     private List<String> m_interfaces;
@@ -101,6 +106,7 @@ public class Manipulator {
         is.close();
 
         m_fields = ck.getFields(); // Get visited fields (contains only POJO fields)
+        m_finalFields = ck.getFinalFields();
         m_className = ck.getClassName();
 
         // Get interfaces and super class.
@@ -217,6 +223,10 @@ public class Manipulator {
 
     public Map<String, String> getFields() {
         return m_fields;
+    }
+
+    public Set<String> getFinalFields(){
+        return m_finalFields;
     }
 
     public List<MethodDescriptor> getMethods() {

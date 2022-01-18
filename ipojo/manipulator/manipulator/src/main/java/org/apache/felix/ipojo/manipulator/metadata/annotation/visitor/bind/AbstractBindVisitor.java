@@ -36,7 +36,7 @@ public abstract class AbstractBindVisitor extends AnnotationVisitor {
     protected Action action;
 
     public AbstractBindVisitor(ComponentWorkbench workbench, Action action) {
-        super(Opcodes.ASM5);
+        super(Opcodes.ASM7);
         this.workbench = workbench;
         this.action = action;
     }

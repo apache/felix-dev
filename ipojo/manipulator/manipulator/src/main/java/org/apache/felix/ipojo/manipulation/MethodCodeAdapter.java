@@ -53,7 +53,7 @@ public class MethodCodeAdapter extends GeneratorAdapter implements Opcodes {
      * @param fields : Contained fields
      */
     public MethodCodeAdapter(final MethodVisitor mv, final String owner, int access, String name, String desc, Set<String> fields) {
-        super(Opcodes.ASM5, mv, access, name, desc);
+        super(Opcodes.ASM7, mv, access, name, desc);
         m_owner = owner;
         m_fields = fields;
     }

@@ -60,23 +60,30 @@ public class ConstructorCodeAdapter extends GeneratorAdapter implements Opcodes 
      */
     private Set<String> m_fields;
 
+    /**
+     * Set of contained final fields
+     */
+    private Set<String> m_finalFields;
+
 
     /**
      * PropertyCodeAdapter constructor.
      * A new FiledCodeAdapter should be create for each method visit.
      *
-     * @param mv     the MethodVisitor
-     * @param owner  the name of the class
-     * @param fields the list of contained fields
-     * @param access the constructor access
-     * @param desc   the constructor descriptor
-     * @param name   the name
+     * @param mv          the MethodVisitor
+     * @param owner       the name of the class
+     * @param fields      the list of contained fields
+     * @param finalFields the list of contained final fields
+     * @param access      the constructor access
+     * @param name        the name
+     * @param desc        the constructor descriptor
      */
-    public ConstructorCodeAdapter(final MethodVisitor mv, final String owner, Set<String> fields, int access, String name, String desc, String superClass) {
-        super(Opcodes.ASM5, mv, access, name, desc);
+    public ConstructorCodeAdapter(final MethodVisitor mv, final String owner, Set<String> fields, Set<String> finalFields, int access, String name, String desc, String superClass) {
+        super(Opcodes.ASM7, mv, access, name, desc);
         m_owner = owner;
         m_superDetected = false;
         m_fields = fields;
+        m_finalFields = finalFields;
         m_superClass = superClass;
     }
 
@@ -158,6 +165,12 @@ public class ConstructorCodeAdapter extends GeneratorAdapter implements Opcodes 
                 mv.visitMethodInsn(INVOKEVIRTUAL, owner, "__get" + name, gDesc, false);
                 return;
             } else if (opcode == PUTFIELD) {
+                if (m_finalFields.contains(name)) {
+                    mv.visitFieldInsn(PUTFIELD, owner, name, desc);
+                    mv.visitVarInsn(ALOAD, 0);
+                    mv.visitVarInsn(ALOAD, 0);
+                    mv.visitFieldInsn(GETFIELD, owner, name, desc);
+                }
                 String sDesc = "(" + desc + ")V";
                 mv.visitMethodInsn(INVOKEVIRTUAL, owner, "__set" + name, sDesc, false);
                 return;
@@ -200,7 +213,7 @@ public class ConstructorCodeAdapter extends GeneratorAdapter implements Opcodes 
                     "(Lorg/apache/felix/ipojo/InstanceManager;)V", false);
 
         } else {
-            if (opcode == INVOKEINTERFACE) {
+            if (opcode == INVOKEINTERFACE || (opcode == INVOKESTATIC && itf)) {
                 mv.visitMethodInsn(opcode, owner, name, desc, true);
             } else {
                 mv.visitMethodInsn(opcode, owner, name, desc, false);

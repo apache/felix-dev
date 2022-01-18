@@ -91,7 +91,7 @@ public class ClassCheckerTestCase extends TestCase {
         assertEquals(1, annotations.size());
         ClassChecker.AnnotationDescriptor annotationDescriptor = annotations.get(0);
         MethodVisitor mv = mock(MethodVisitor.class);
-        when(mv.visitAnnotation(desc, true)).thenReturn(new AnnotationVisitor(Opcodes.ASM5) {});
+        when(mv.visitAnnotation(desc, true)).thenReturn(new AnnotationVisitor(Opcodes.ASM7) {});
         annotationDescriptor.visitAnnotation(mv);
     }
 

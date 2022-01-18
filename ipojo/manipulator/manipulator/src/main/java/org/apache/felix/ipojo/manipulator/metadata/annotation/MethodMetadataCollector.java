@@ -47,7 +47,7 @@ public class MethodMetadataCollector extends MethodVisitor {
     private MethodNode node;
 
     public MethodMetadataCollector(ComponentWorkbench workbench, MethodNode node, Reporter reporter) {
-        super(Opcodes.ASM5);
+        super(Opcodes.ASM7);
         this.workbench = workbench;
         this.node = node;
         this.registry = workbench.getBindingRegistry();

@@ -38,7 +38,7 @@ public class InstantiateVisitor extends AnnotationVisitor {
     private ComponentWorkbench workbench;
 
     public InstantiateVisitor(ComponentWorkbench workbench) {
-        super(Opcodes.ASM5);
+        super(Opcodes.ASM7);
         this.workbench = workbench;
     }
 

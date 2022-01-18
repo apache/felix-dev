@@ -42,7 +42,7 @@ public class ProvidesVisitor extends AnnotationVisitor {
     private Element m_prov = new Element("provides", "");
 
     public ProvidesVisitor(ComponentWorkbench workbench) {
-        super(Opcodes.ASM5);
+        super(Opcodes.ASM7);
         this.workbench = workbench;
     }
 
@@ -75,7 +75,7 @@ public class ProvidesVisitor extends AnnotationVisitor {
         } else if (name.equals("properties")) {
             // Create a new simple visitor to visit the nested ServiceProperty annotations
             // Collected properties are collected in m_prov
-            return new AnnotationVisitor(Opcodes.ASM5) {
+            return new AnnotationVisitor(Opcodes.ASM7) {
                 public AnnotationVisitor visitAnnotation(String ignored, String desc) {
                     return new FieldPropertyVisitor(m_prov);
                 }
@@ -104,7 +104,7 @@ public class ProvidesVisitor extends AnnotationVisitor {
 
 
         public InterfaceArrayVisitor() {
-            super(Opcodes.ASM5);
+            super(Opcodes.ASM7);
         }
 
         /**

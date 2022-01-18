@@ -28,12 +28,12 @@
   </parent>
 
   <artifactId>ipojo-manipulator-bom</artifactId>
-    <version>1.12.2-SNAPSHOT</version>
+    <version>1.12.3</version>
   <name>Apache Felix iPOJO Manipulator BOM</name>
   <packaging>pom</packaging>
 
   <properties>
-    <asm.version>5.0.2</asm.version>
+    <asm.version>7.0</asm.version>
     <metadata.version>1.6.0</metadata.version>
   </properties>
 

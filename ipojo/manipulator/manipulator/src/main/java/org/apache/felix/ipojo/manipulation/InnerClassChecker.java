@@ -34,7 +34,7 @@ public class InnerClassChecker extends ClassVisitor implements Opcodes {
     private final Manipulator m_manipulator;
 
     public InnerClassChecker(String name, Manipulator manipulator) {
-        super(Opcodes.ASM5);
+        super(Opcodes.ASM7);
         m_name = name;
         m_manipulator = manipulator;
     }

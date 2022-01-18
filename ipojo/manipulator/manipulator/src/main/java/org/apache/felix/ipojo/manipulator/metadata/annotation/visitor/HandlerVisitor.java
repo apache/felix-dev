@@ -41,7 +41,7 @@ public class HandlerVisitor extends AnnotationVisitor {
     private Reporter reporter;
 
     public HandlerVisitor(ComponentWorkbench workbench, Reporter reporter) {
-        super(Opcodes.ASM5);
+        super(Opcodes.ASM7);
         this.workbench = workbench;
         this.reporter = reporter;
     }
