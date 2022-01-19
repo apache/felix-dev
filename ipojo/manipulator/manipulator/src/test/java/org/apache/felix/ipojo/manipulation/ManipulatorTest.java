@@ -19,23 +19,44 @@
 
 package org.apache.felix.ipojo.manipulation;
 
+import junit.framework.Assert;
+import junit.framework.TestCase;
+import org.apache.felix.ipojo.InstanceManager;
+import org.apache.felix.ipojo.Pojo;
+import org.mockito.Mockito;
+import org.objectweb.asm.ClassReader;
+import org.objectweb.asm.util.CheckClassAdapter;
+
 import java.io.*;
 import java.lang.reflect.Constructor;
 import java.lang.reflect.Field;
 import java.lang.reflect.Method;
 import java.util.Arrays;
 
-import junit.framework.Assert;
-import junit.framework.TestCase;
-
-import org.apache.felix.ipojo.InstanceManager;
-import org.apache.felix.ipojo.Pojo;
-import org.junit.Ignore;
-import org.mockito.Mockito;
-import org.objectweb.asm.ClassReader;
-import org.objectweb.asm.util.CheckClassAdapter;
-
 public class ManipulatorTest extends TestCase {
+
+    public static byte[] getBytesFromFile(File file) throws IOException {
+        InputStream is = new FileInputStream(file);
+        long length = file.length();
+        byte[] bytes = new byte[(int) length];
+
+        // Read in the bytes
+        int offset = 0;
+        int numRead = 0;
+        while (offset < bytes.length
+                && (numRead = is.read(bytes, offset, bytes.length - offset)) >= 0) {
+            offset += numRead;
+        }
+
+        // Ensure all the bytes have been read in
+        if (offset < bytes.length) {
+            throw new IOException("Could not completely read file " + file.getName());
+        }
+
+        // Close the input stream and return bytes
+        is.close();
+        return bytes;
+    }
 
     public void testClusterDaemon() throws Exception {
         Manipulator manipulator = new Manipulator(this.getClass().getClassLoader());
@@ -99,7 +120,7 @@ public class ManipulatorTest extends TestCase {
 
     }
 
-    public void testManipulatingPojoWithStaticInterface() throws Exception{
+    public void testManipulatingPojoWithStaticInterface() throws Exception {
         Manipulator manipulator = new Manipulator(this.getClass().getClassLoader());
         byte[] origin = getBytesFromFile(new File("target/test-classes/test/PojoWithStaticInterface.class"));
         manipulator.prepare(origin);
@@ -115,7 +136,27 @@ public class ManipulatorTest extends TestCase {
         Assert.assertNotNull(instance);
 
         Method method = cl.getMethod("doSomething", new Class[0]);
-        Assert.assertEquals(((String) method.invoke(instance, new Object[0])),"test");
+        Assert.assertEquals(((String) method.invoke(instance, new Object[0])), "test");
+    }
+
+    public void testManipulatingPojoWithFinalArray() throws Exception {
+        Manipulator manipulator = new Manipulator(this.getClass().getClassLoader());
+        byte[] origin = getBytesFromFile(new File("target/test-classes/test/PojoWithFinalArray.class"));
+        manipulator.prepare(origin);
+        byte[] clazz = manipulator.manipulate(origin);
+
+        ManipulatedClassLoader classloader = new ManipulatedClassLoader("test.PojoWithFinalArray", clazz);
+        Class cl = classloader.findClass("test.PojoWithFinalArray");
+        Assert.assertNotNull(cl);
+        Assert.assertNotNull(manipulator.getManipulationMetadata());
+
+        final var constructor = cl.getDeclaredConstructor();
+        Assert.assertNotNull(constructor);
+        final var instance = constructor.newInstance();
+        Assert.assertNotNull(instance);
+
+        Method method = cl.getMethod("doSomething", new Class[0]);
+        Assert.assertEquals(((String) method.invoke(instance, new Object[0])), "test");
     }
 
     public void testManipulatingTheSimplePojo() throws Exception {
@@ -139,7 +180,7 @@ public class ManipulatorTest extends TestCase {
         Constructor[] csts = cl.getDeclaredConstructors();
         for (int i = 0; i < csts.length; i++) {
             System.out.println(Arrays.asList(csts[i].getParameterTypes()));
-            if (csts[i].getParameterTypes().length == 1  &&
+            if (csts[i].getParameterTypes().length == 1 &&
                     csts[i].getParameterTypes()[0].equals(InstanceManager.class)) {
                 found = true;
                 cst = csts[i];
@@ -162,7 +203,7 @@ public class ManipulatorTest extends TestCase {
         Assert.assertTrue(Arrays.asList(cl.getInterfaces()).contains(Pojo.class));
 
         cst.setAccessible(true);
-        Object pojo = cst.newInstance(new Object[] {new InstanceManager()});
+        Object pojo = cst.newInstance(new Object[]{new InstanceManager()});
         Assert.assertNotNull(pojo);
         Assert.assertTrue(pojo instanceof Pojo);
 
@@ -193,7 +234,7 @@ public class ManipulatorTest extends TestCase {
         Constructor[] csts = cl.getDeclaredConstructors();
         for (int i = 0; i < csts.length; i++) {
             System.out.println(Arrays.asList(csts[i].getParameterTypes()));
-            if (csts[i].getParameterTypes().length == 1  &&
+            if (csts[i].getParameterTypes().length == 1 &&
                     csts[i].getParameterTypes()[0].equals(InstanceManager.class)) {
                 found = true;
                 cst = csts[i];
@@ -205,7 +246,7 @@ public class ManipulatorTest extends TestCase {
         Assert.assertTrue(Arrays.asList(cl.getInterfaces()).contains(Pojo.class));
 
         cst.setAccessible(true);
-        Object pojo = cst.newInstance(new Object[] {new InstanceManager()});
+        Object pojo = cst.newInstance(new Object[]{new InstanceManager()});
         Assert.assertNotNull(pojo);
         Assert.assertTrue(pojo instanceof Pojo);
 
@@ -230,7 +271,7 @@ public class ManipulatorTest extends TestCase {
         Constructor[] csts = cl.getDeclaredConstructors();
         for (int i = 0; i < csts.length; i++) {
             System.out.println(Arrays.asList(csts[i].getParameterTypes()));
-            if (csts[i].getParameterTypes().length == 1  &&
+            if (csts[i].getParameterTypes().length == 1 &&
                     csts[i].getParameterTypes()[0].equals(InstanceManager.class)) {
                 found = true;
                 cst = csts[i];
@@ -254,7 +295,7 @@ public class ManipulatorTest extends TestCase {
 
         InstanceManager im = (InstanceManager) Mockito.mock(InstanceManager.class);
         cst.setAccessible(true);
-        Object pojo = cst.newInstance(new Object[] {im});
+        Object pojo = cst.newInstance(new Object[]{im});
         Assert.assertNotNull(pojo);
         Assert.assertTrue(pojo instanceof Pojo);
 
@@ -278,7 +319,7 @@ public class ManipulatorTest extends TestCase {
         Constructor[] csts = cl.getDeclaredConstructors();
         for (int i = 0; i < csts.length; i++) {
             System.out.println(Arrays.asList(csts[i].getParameterTypes()));
-            if (csts[i].getParameterTypes().length == 1  &&
+            if (csts[i].getParameterTypes().length == 1 &&
                     csts[i].getParameterTypes()[0].equals(InstanceManager.class)) {
                 found = true;
                 cst = csts[i];
@@ -298,7 +339,7 @@ public class ManipulatorTest extends TestCase {
         Assert.assertTrue(found);
 
         // Check that we have the IM, Integer, String constructor too
-        Constructor cst2 = cl.getDeclaredConstructor(new Class[] { InstanceManager.class, Integer.TYPE, String.class });
+        Constructor cst2 = cl.getDeclaredConstructor(new Class[]{InstanceManager.class, Integer.TYPE, String.class});
         Assert.assertNotNull(cst2);
 
         // Check the POJO interface
@@ -308,7 +349,7 @@ public class ManipulatorTest extends TestCase {
         // Creation using cst
         InstanceManager im = (InstanceManager) Mockito.mock(InstanceManager.class);
         cst.setAccessible(true);
-        Object pojo = cst.newInstance(new Object[] {im});
+        Object pojo = cst.newInstance(new Object[]{im});
         Assert.assertNotNull(pojo);
         Assert.assertTrue(pojo instanceof Pojo);
 
@@ -318,7 +359,7 @@ public class ManipulatorTest extends TestCase {
         // Try to create using cst2
         im = (InstanceManager) Mockito.mock(InstanceManager.class);
         cst2.setAccessible(true);
-        pojo = cst2.newInstance(new Object[] {im, new Integer(2), "bariton"});
+        pojo = cst2.newInstance(new Object[]{im, new Integer(2), "bariton"});
         Assert.assertNotNull(pojo);
         Assert.assertTrue(pojo instanceof Pojo);
 
@@ -326,9 +367,7 @@ public class ManipulatorTest extends TestCase {
         Assert.assertEquals(10, ((Integer) method.invoke(pojo, new Object[0])).intValue());
 
 
-
     }
-
 
     public void testManipulatingWithNoValidConstructor() throws Exception {
         Manipulator manipulator = new Manipulator(this.getClass().getClassLoader());
@@ -351,7 +390,7 @@ public class ManipulatorTest extends TestCase {
         Constructor[] csts = cl.getDeclaredConstructors();
         for (int i = 0; i < csts.length; i++) {
             System.out.println(Arrays.asList(csts[i].getParameterTypes()));
-            if (csts[i].getParameterTypes().length == 1  &&
+            if (csts[i].getParameterTypes().length == 1 &&
                     csts[i].getParameterTypes()[0].equals(InstanceManager.class)) {
                 found = true;
                 cst = csts[i];
@@ -363,17 +402,17 @@ public class ManipulatorTest extends TestCase {
         Assert.assertTrue(Arrays.asList(cl.getInterfaces()).contains(Pojo.class));
 
         cst.setAccessible(true);
-        Object pojo = cst.newInstance(new Object[] {new InstanceManager()});
+        Object pojo = cst.newInstance(new Object[]{new InstanceManager()});
         Assert.assertNotNull(pojo);
         Assert.assertTrue(pojo instanceof Pojo);
 
     }
 
-     public void testConstructor() throws Exception {
-         Manipulator manipulator = new Manipulator(this.getClass().getClassLoader());
-         byte[] origin = getBytesFromFile(new File("target/test-classes/test/ConstructorCheck.class"));
-         manipulator.prepare(origin);
-         byte[] clazz = manipulator.manipulate(origin);
+    public void testConstructor() throws Exception {
+        Manipulator manipulator = new Manipulator(this.getClass().getClassLoader());
+        byte[] origin = getBytesFromFile(new File("target/test-classes/test/ConstructorCheck.class"));
+        manipulator.prepare(origin);
+        byte[] clazz = manipulator.manipulate(origin);
 
 //        File out = new File("target/ManipulatedConstructorCheck.class");
 //        FileOutputStream fos = new FileOutputStream(out);
@@ -387,13 +426,13 @@ public class ManipulatorTest extends TestCase {
 
         System.out.println(manipulator.getManipulationMetadata());
 
-        Constructor c = cl.getConstructor(new Class[] {String.class });
+        Constructor c = cl.getConstructor(new Class[]{String.class});
         Assert.assertNotNull(c);
 
         Object o = c.newInstance("toto");
         Field f = o.getClass().getField("m_foo");
         Assert.assertEquals("toto", f.get(o));
-     }
+    }
 
     /**
      * https://issues.apache.org/jira/browse/FELIX-3621
@@ -418,9 +457,9 @@ public class ManipulatorTest extends TestCase {
         boolean found = false;
         Constructor cst = null;
         Constructor[] csts = cl.getDeclaredConstructors();
-        for(int i = 0; i < csts.length; i++) {
+        for (int i = 0; i < csts.length; i++) {
             System.out.println(Arrays.asList(csts[i].getParameterTypes()));
-            if (csts[i].getParameterTypes().length == 1  &&
+            if (csts[i].getParameterTypes().length == 1 &&
                     csts[i].getParameterTypes()[0].equals(InstanceManager.class)) {
                 found = true;
                 cst = csts[i];
@@ -443,7 +482,7 @@ public class ManipulatorTest extends TestCase {
         Assert.assertTrue(Arrays.asList(cl.getInterfaces()).contains(Pojo.class));
 
         cst.setAccessible(true);
-        Object pojo = cst.newInstance(new Object[] {new InstanceManager()});
+        Object pojo = cst.newInstance(new Object[]{new InstanceManager()});
         Assert.assertNotNull(pojo);
         Assert.assertTrue(pojo instanceof Pojo);
 
@@ -451,32 +490,6 @@ public class ManipulatorTest extends TestCase {
         Assert.assertTrue(((Boolean) method.invoke(pojo, new Object[0])).booleanValue());
 
     }
-
-
-
-    public static byte[] getBytesFromFile(File file) throws IOException {
-        InputStream is = new FileInputStream(file);
-        long length = file.length();
-        byte[] bytes = new byte[(int)length];
-
-        // Read in the bytes
-        int offset = 0;
-        int numRead = 0;
-        while (offset < bytes.length
-               && (numRead=is.read(bytes, offset, bytes.length-offset)) >= 0) {
-            offset += numRead;
-        }
-
-        // Ensure all the bytes have been read in
-        if (offset < bytes.length) {
-            throw new IOException("Could not completely read file "+file.getName());
-        }
-
-        // Close the input stream and return bytes
-        is.close();
-        return bytes;
-    }
-
 
 
 }

@@ -286,7 +286,7 @@ public class ClassManipulator extends ClassVisitor implements Opcodes {
 
                 // Generates setter method
                 String sDesc = "(" + desc + ")V";
-                createArraySetter(name, sDesc);
+                createArraySetter(access, name, sDesc);
 
             } else {
                 // Generate the getter method
@@ -784,13 +784,14 @@ public class ClassManipulator extends ClassVisitor implements Opcodes {
 
     /**
      * Create a getter method for an array.
+     * @param access
      * @param name : field name
      * @param desc : method description
      */
-    private void createArraySetter(String name, String desc) {
+    private void createArraySetter(int access, String name, String desc) {
         MethodVisitor mv = cv.visitMethod(0, "__set" + name, desc, null, null);
         mv.visitCode();
-
+        boolean isFinal = (access & ACC_FINAL) == ACC_FINAL;
         String internalType = desc.substring(1);
         internalType = internalType.substring(0, internalType.length() - 2);
 
@@ -801,9 +802,11 @@ public class ClassManipulator extends ClassVisitor implements Opcodes {
         Label l2 = new Label();
         mv.visitJumpInsn(IFNE, l2);
 
-        mv.visitVarInsn(ALOAD, 0);
-        mv.visitVarInsn(ALOAD, 1);
-        mv.visitFieldInsn(PUTFIELD, m_owner, name, internalType);
+        if(!isFinal) {
+            mv.visitVarInsn(ALOAD, 0);
+            mv.visitVarInsn(ALOAD, 1);
+            mv.visitFieldInsn(PUTFIELD, m_owner, name, internalType);
+        }
         mv.visitInsn(RETURN);
         mv.visitLabel(l2);
 
