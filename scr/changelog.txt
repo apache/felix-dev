@@ -1,4 +1,13 @@
+Changes in 2.2.0
+-----------------
+** Improvement
+    * Build against final OSGi SCR API artifacts
+    * [FELIX-6458] Use ServiceReference.adaptTo(ServiceReferenceDTO)
+** Bug
+    * [FELIX-6501] Fixed issue with ConcurrentModificationException
+
 Changes in 2.2.0-RC1
+-----------------
 ** Improvement
     * Initial implementation of OSGi R8.  This version has all the fixes up to and including SCR version 2.1.30
 
