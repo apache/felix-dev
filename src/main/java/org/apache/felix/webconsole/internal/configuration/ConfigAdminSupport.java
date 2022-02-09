@@ -21,7 +21,6 @@ package org.apache.felix.webconsole.internal.configuration;
 
 import java.io.IOException;
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.Dictionary;
 import java.util.Enumeration;
 import java.util.HashMap;
@@ -67,6 +66,7 @@ class ConfigAdminSupport {
      * Create a new support instance
      * @param support The servlet support for logging and bundle context
      * @param service The configuration admin service
+     * @param handlers The list of configuration handlers
      *
      * @throws ClassCastException if {@code service} is not a ConfigurationAdmin instances
      */
@@ -91,48 +91,14 @@ class ConfigAdminSupport {
         return null;
     }
 
-    boolean shouldSet(final PropertyDescriptor ad, final String value, final boolean isUpdate) 
-    {
-        if ( this.configurationHandlers.isEmpty() && ad.hasMetatype() && !isUpdate )
-        {
-            if ( value.isEmpty() && ad.getDefaultValue() == null )
-            {
-                return false;
-            }
-            if ( ad.getDefaultValue() != null && value.equals(ad.getDefaultValue()[0]) )
-            {
-                return false;
-            }
-        }
-        return true;
-    }
-
-    boolean shouldSet(final PropertyDescriptor ad, final String[] values, final boolean isUpdate) 
-    {
-        if ( this.configurationHandlers.isEmpty() && ad.hasMetatype() && !isUpdate )
-        {
-            if ( ad.getDefaultValue() == null )
-            {
-                if ( values.length == 0 || (values.length == 1 && values[0].isEmpty() ) )
-                {
-                    return false;
-                }
-            }
-            if ( ad.getDefaultValue() != null && Arrays.equals(ad.getDefaultValue(), values) )
-            {
-                return false;
-            }
-        }
-        return true;
-    }
-
     /**
      * Apply the update to the configuration
      * @param request The request
-     * @param pid The pid 
+     * @param pid The pid
      * @param propertyList The list of properties
      * @param isUpdate {@code true} if this is a rest call, false if it is done via the webconsole UI
-     * @throws IOException
+     * @throws IOException If a problem occurs
+     * @throws ValidationException If the configuration is not valid
      */
     void applyConfiguration( final HttpServletRequest request, final String pid, final String[] propertyList, final boolean isUpdate )
             throws ValidationException, IOException
@@ -173,14 +139,7 @@ class ConfigAdminSupport {
                 if ( value != null
                     && ( attributeType != AttributeDefinition.PASSWORD || !MetaTypeSupport.PASSWORD_PLACEHOLDER_VALUE.equals( value ) ) )
                 {
-                    if ( shouldSet(ad, value, isUpdate) ) 
-                    {
-                        props.put( propName, value );
-                    }
-                    else
-                    {
-                        props.remove( propName );
-                    }
+                    props.put( propName, value );
                 }
             }
             else if ( ad.getCardinality() == 0 )
@@ -189,21 +148,14 @@ class ConfigAdminSupport {
                 final String value = request.getParameter( paramName );
                 if ( value != null )
                 {
-                    if ( shouldSet(ad, value, isUpdate) ) 
+                    try
                     {
-                        try
-                        {
-                            props.put( propName, MetaTypeSupport.toType( attributeType, value ) );
-                        }
-                        catch ( final NumberFormatException nfe )
-                        {
-                            // the value is put as a string, for example this could be a placeholder etc
-                            props.put( propName, value);
-                        }
+                        props.put( propName, MetaTypeSupport.toType( attributeType, value ) );
                     }
-                    else
+                    catch ( final NumberFormatException nfe )
                     {
-                        props.remove( propName );
+                        // the value is put as a string, for example this could be a placeholder etc
+                        props.put( propName, value);
                     }
                 }
             }
@@ -259,44 +211,32 @@ class ConfigAdminSupport {
 
                 // create array to compare
                 final String[] valueArray = new String[vec.size()];
-                for(int i=0; i<vec.size();i++) 
+                for(int i=0; i<vec.size();i++)
                 {
                     valueArray[i] = vec.get(i).toString();
                 }
-                
-                final boolean shouldSet = shouldSet(ad, valueArray, isUpdate);
 
                 if ( ad.getCardinality() < 0 )
                 {
                     // keep the vector, but only add if not empty
-                    if ( !shouldSet || vec.isEmpty() )
+                    if ( vec.isEmpty() )
                     {
                         props.remove( propName );
                     }
                     else
                     {
-                        if ( shouldSet )
-                        {
-                            props.put( propName, vec );
-                        }                        
+                        props.put( propName, vec );
                     }
                 }
                 else
                 {
-                    if ( shouldSet )
-                    {
-                        // convert to an array
-                        props.put( propName, MetaTypeSupport.toArray( formatError ? AttributeDefinition.STRING : attributeType, vec ) );
-                    }
-                    else
-                    {
-                        props.remove( propName );
-                    }
+                    // convert to an array
+                    props.put( propName, MetaTypeSupport.toArray( formatError ? AttributeDefinition.STRING : attributeType, vec ) );
                 }
             }
         }
 
-        if ( !isUpdate ) 
+        if ( !isUpdate )
         {
             // remove the properties that are not specified in the request
             final Dictionary<String, Object> updateProps = new Hashtable<>(props.size());
@@ -315,7 +255,7 @@ class ConfigAdminSupport {
         for(final ConfigurationHandler h : this.configurationHandlers) {
             h.updateConfiguration(factoryPid, pid, props);
         }
-  
+
         final String location = request.getParameter(ConfigManager.LOCATION);
         if ( location == null || location.trim().length() == 0 || ConfigManager.UNBOUND_LOCATION.equals(location) )
         {
@@ -332,7 +272,7 @@ class ConfigAdminSupport {
                     config.setBundleLocation( null );
                 }
             }
-        } 
+        }
         else
         {
             if ( config.getBundleLocation() == null || !config.getBundleLocation().equals(location) )
@@ -353,7 +293,7 @@ class ConfigAdminSupport {
                 }
                 config.delete();
             }
-        }            
+        }
     }
 
     public Configuration findConfiguration(final String pid) {
