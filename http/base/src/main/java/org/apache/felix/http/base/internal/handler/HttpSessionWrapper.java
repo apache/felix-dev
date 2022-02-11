@@ -272,7 +272,7 @@ public class HttpSessionWrapper implements HttpSession
     @Override
     public String getId()
     {
-        this.checkInvalid();
+        // no validity check conforming to the javadocs
         if ( this.config.isUniqueSessionId() )
         {
             return this.delegate.getId().concat("-").concat(this.sessionId);
@@ -304,12 +304,14 @@ public class HttpSessionWrapper implements HttpSession
     @Override
     public Object getValue(String name)
     {
+        this.checkInvalid();
         return this.getAttribute(name);
     }
 
     @Override
     public String[] getValueNames()
     {
+        this.checkInvalid();
         final List<String> names = new ArrayList<>();
         final Enumeration<String> e = this.getAttributeNames();
         while ( e.hasMoreElements() )
@@ -381,6 +383,7 @@ public class HttpSessionWrapper implements HttpSession
     @Override
     public void putValue(final String name, final Object value)
     {
+        this.checkInvalid();
         this.setAttribute(name, value);
     }
 
@@ -406,6 +409,7 @@ public class HttpSessionWrapper implements HttpSession
     @Override
     public void removeValue(final String name)
     {
+        this.checkInvalid();
         this.removeAttribute(name);
     }
 
@@ -451,12 +455,17 @@ public class HttpSessionWrapper implements HttpSession
     @Override
     public void setMaxInactiveInterval(final int interval)
     {
+        // no validity check conforming to the javadocs
         if ( this.delegate.getMaxInactiveInterval() < interval )
         {
             this.delegate.setMaxInactiveInterval(interval);
         }
         this.maxTimeout = interval;
-        this.delegate.setAttribute(ATTR_MAX_INACTIVE + this.sessionId, interval);
+        try {
+            this.delegate.setAttribute(ATTR_MAX_INACTIVE + this.sessionId, interval);
+        } catch ( final IllegalStateException iae) {
+            // this might throw if delegate is invalid
+        }
     }
 
     @Override
