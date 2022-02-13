@@ -55,7 +55,7 @@ class FileRequestLog {
         writer.setRetainDays(config.getRequestLogFileRetainDays());
         writer.setFilenameDateFormat(config.getRequestLogFilenameDateFormat());
 
-        delegate = new CustomRequestLog(writer, CustomRequestLog.EXTENDED_NCSA_FORMAT);
+        delegate = new CustomRequestLog(writer, config.getRequestLogFileFormat());
         delegate.setIgnorePaths(config.getRequestLogFileIgnorePaths());
     }
 

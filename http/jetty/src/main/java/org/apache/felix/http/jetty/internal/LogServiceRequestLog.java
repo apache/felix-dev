@@ -21,6 +21,7 @@ import java.util.Dictionary;
 import java.util.Hashtable;
 
 import org.apache.felix.http.base.internal.logger.SystemLogger;
+import org.apache.felix.http.base.internal.util.ServiceUtils;
 import org.eclipse.jetty.server.CustomRequestLog;
 import org.eclipse.jetty.server.RequestLog;
 import org.osgi.framework.BundleContext;
@@ -46,7 +47,7 @@ class LogServiceRequestLog extends CustomRequestLog {
                 public void write(String requestEntry) throws IOException {
                     SystemLogger.info(PREFIX.concat(requestEntry));
                 }
-            }, CustomRequestLog.NCSA_FORMAT);
+            },config.getRequestLogOSGiFormat());
         this.serviceName = config.getRequestLogOSGiServiceName();
     }
 
@@ -60,12 +61,14 @@ class LogServiceRequestLog extends CustomRequestLog {
     }
 
     public synchronized void unregister() {
-        try {
-            if (registration != null) {
+        if (registration != null) {
+            try {
                 registration.unregister();
+            } catch ( final IllegalStateException ignore ) {
+                // ignore
+            } finally {
+                registration = null;
             }
-        } finally {
-            registration = null;
         }
     }
 }
