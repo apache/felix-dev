@@ -591,7 +591,7 @@ public final class JettyConfig
     }
 
     public String getRequestLogOSGiFormat() {
-        return getProperty(FELIX_HTTP_REQUEST_LOG_FORMAT, CustomRequestLog.NCSA_FORMAT);
+        return getProperty(FELIX_HTTP_REQUEST_LOG_FORMAT, CustomRequestLog.EXTENDED_NCSA_FORMAT);
     }
 
     public String getRequestLogFilePath() {
