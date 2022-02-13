@@ -104,7 +104,7 @@ public class ManipulatorTest extends TestCase {
         Class cl = classloader.findClass("test.frames.CryptoServiceSingleton");
         Assert.assertNotNull(cl);
 
-        final var constructor = cl.getDeclaredConstructor();
+        final Constructor constructor = cl.getDeclaredConstructor();
         constructor.setAccessible(true);
         Object instance = constructor.newInstance();
 
@@ -130,9 +130,9 @@ public class ManipulatorTest extends TestCase {
         Assert.assertNotNull(cl);
         Assert.assertNotNull(manipulator.getManipulationMetadata());
 
-        final var constructor = cl.getDeclaredConstructor();
+        final Constructor constructor = cl.getDeclaredConstructor();
         Assert.assertNotNull(constructor);
-        final var instance = constructor.newInstance();
+        final Object instance = constructor.newInstance();
         Assert.assertNotNull(instance);
 
         Method method = cl.getMethod("doSomething", new Class[0]);
@@ -150,9 +150,9 @@ public class ManipulatorTest extends TestCase {
         Assert.assertNotNull(cl);
         Assert.assertNotNull(manipulator.getManipulationMetadata());
 
-        final var constructor = cl.getDeclaredConstructor();
+        final Constructor constructor = cl.getDeclaredConstructor();
         Assert.assertNotNull(constructor);
-        final var instance = constructor.newInstance();
+        final Object instance = constructor.newInstance();
         Assert.assertNotNull(instance);
 
         Method method = cl.getMethod("doSomething", new Class[0]);
