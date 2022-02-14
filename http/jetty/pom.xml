@@ -176,6 +176,7 @@
                             org.apache.commons.*
                         </Conditional-Package>
                         <Import-Package>
+                            sun.misc;resolution:=optional,
                             javax.imageio;resolution:=optional,
                             javax.sql;resolution:=optional,
                             org.slf4j.*;resolution:=optional,
