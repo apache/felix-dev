@@ -1,12 +1,8 @@
-# Apache Converter
+# Apache Converter Serializer and Schematizer
 
 ## Overview
 
-This is the home for the OSGi R7-compliant Converter. It is an implementation
-of the Converter Specification. For more details, see Chapter 707 of the
-OSGi Compendium.
-
-There are two other sister projects: Serializer and Schematizer.
+This project contains 2 projects relating to the OSGi Converter: Serializer and Schematizer.
 
 ## Serializer
 The Serializer, based heavily on the Converter, is useful for transforming a
