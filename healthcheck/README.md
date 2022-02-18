@@ -276,6 +276,7 @@ Property    | Type     | Default | Description
 `treatWarnAsHealthy` | boolean | true | `WARN` usually means [the system is usable](#semantic-meaning-of-health-check-results), hence WARN is treated as healthy by default. When set to false `WARN` is treated as `Unhealthy`
 `sendEvents` | enum `NONE`, `STATUS_CHANGES`, `STATUS_CHANGES_OR_NOT_OK` or `ALL` | `STATUS_CHANGES` | Whether to send events for health check status changes. See [below](#osgi-events-for-health-check-status-changes) for details.
 `logResults` | enum `NONE`, `STATUS_CHANGES`, `STATUS_CHANGES_OR_NOT_OK` or `ALL` | `NONE ` | Whether to log the result of the monitor to the regular log file
+`logAllResultsAsInfo` | boolean | false | If `logResults` is enabled and this is enabled, all results will be logged with INFO log level. Otherwise WARN and INFO are used depending on the health state.
 `isDynamic` | boolean | false | In dynamic mode all checks for names/tags are monitored individually (this means events are sent/services registered for name only, never for given tags). This mode allows to use `*` in tags to query for all health checks in system. It is also possible to query for all except certain tags by using `-`, e.g. by configuring the values `*`, `-tag1` and `-tag2` for `tags`.
 
 ### Marker Service to depend on a health status in SCR Components
