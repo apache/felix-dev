@@ -35,28 +35,29 @@
 
     <properties>
         <ipojo.import.packages>[1.12.1,2.0.0)</ipojo.import.packages>
+        <asm.version>9.2</asm.version>
     </properties>
 
     <dependencies>
         <dependency>
             <groupId>org.ow2.asm</groupId>
             <artifactId>asm</artifactId>
-            <version>7.0</version>
+            <version>${asm.version}</version>
         </dependency>
         <dependency>
             <groupId>org.ow2.asm</groupId>
             <artifactId>asm-tree</artifactId>
-            <version>7.0</version>
+            <version>${asm.version}</version>
         </dependency>
         <dependency>
             <groupId>org.ow2.asm</groupId>
             <artifactId>asm-commons</artifactId>
-            <version>7.0</version>
+            <version>${asm.version}</version>
         </dependency>
         <dependency>
             <groupId>org.ow2.asm</groupId>
             <artifactId>asm-util</artifactId>
-            <version>7.0</version>
+            <version>${asm.version}</version>
         </dependency>
         <dependency>
             <groupId>org.apache.felix</groupId>

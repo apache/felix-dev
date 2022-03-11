@@ -33,7 +33,7 @@
   <packaging>pom</packaging>
 
   <properties>
-    <asm.version>7.0</asm.version>
+    <asm.version>9.2</asm.version>
     <metadata.version>1.6.0</metadata.version>
   </properties>
 
