@@ -732,7 +732,7 @@ public class ComponentRegistry
             final Timer timer;
             synchronized ( this.changeCountTimerLock ) {
                 if ( this.changeCountTimer == null ) {
-                    this.changeCountTimer = new Timer();
+                    this.changeCountTimer = new Timer("SCR Component Registry", true);
                 }
                 timer = this.changeCountTimer;
             }
@@ -772,6 +772,13 @@ public class ComponentRegistry
                     "Service changecount Timer for {0} had a problem", e,
                     registration.getReference());
             }
+        }
+    }
+
+    public void shutdown() {
+        final Timer timer = changeCountTimer;
+        if (timer != null) {
+            timer.cancel();
         }
     }
 }
