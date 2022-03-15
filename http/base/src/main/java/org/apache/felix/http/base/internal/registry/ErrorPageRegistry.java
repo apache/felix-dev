@@ -36,10 +36,10 @@ import org.apache.felix.http.base.internal.handler.ServletHandler;
 import org.apache.felix.http.base.internal.runtime.ServletInfo;
 import org.apache.felix.http.base.internal.runtime.dto.BuilderConstants;
 import org.apache.felix.http.base.internal.runtime.dto.ErrorPageDTOBuilder;
-import org.osgi.service.http.runtime.dto.DTOConstants;
-import org.osgi.service.http.runtime.dto.ErrorPageDTO;
-import org.osgi.service.http.runtime.dto.FailedErrorPageDTO;
-import org.osgi.service.http.runtime.dto.ServletContextDTO;
+import org.osgi.service.servlet.whiteboard.runtime.dto.DTOConstants;
+import org.osgi.service.servlet.whiteboard.runtime.dto.ErrorPageDTO;
+import org.osgi.service.servlet.whiteboard.runtime.dto.FailedErrorPageDTO;
+import org.osgi.service.servlet.whiteboard.runtime.dto.ServletContextDTO;
 
 /**
  * The error page registry keeps tracks of the active/inactive servlets handling

@@ -20,7 +20,7 @@ package org.apache.felix.http.base.internal.runtime.dto;
 
 import org.apache.felix.http.base.internal.handler.ServletHandler;
 import org.apache.felix.http.base.internal.runtime.ServletInfo;
-import org.osgi.service.http.runtime.dto.BaseServletDTO;
+import org.osgi.service.servlet.whiteboard.runtime.dto.BaseServletDTO;
 
 abstract class BaseServletDTOBuilder
 {

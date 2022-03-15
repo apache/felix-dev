@@ -19,7 +19,7 @@ package org.apache.felix.http.base.internal.handler;
 import java.util.Enumeration;
 import java.util.HashMap;
 
-import javax.servlet.ServletContext;
+import jakarta.servlet.ServletContext;
 
 import org.junit.Assert;
 import org.junit.Before;

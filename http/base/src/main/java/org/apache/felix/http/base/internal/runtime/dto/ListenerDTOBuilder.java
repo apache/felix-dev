@@ -22,8 +22,8 @@ import java.util.Arrays;
 
 import org.apache.felix.http.base.internal.handler.ListenerHandler;
 import org.apache.felix.http.base.internal.runtime.ListenerInfo;
-import org.osgi.service.http.runtime.dto.FailedListenerDTO;
-import org.osgi.service.http.runtime.dto.ListenerDTO;
+import org.osgi.service.servlet.whiteboard.runtime.dto.FailedListenerDTO;
+import org.osgi.service.servlet.whiteboard.runtime.dto.ListenerDTO;
 
 public final class ListenerDTOBuilder
 {
@@ -32,7 +32,7 @@ public final class ListenerDTOBuilder
         final ListenerDTO dto = (reason == -1 ? new ListenerDTO() : new FailedListenerDTO());
 
         dto.serviceId = info.getServiceId();
-        dto.types = Arrays.copyOf(info.getListenerTypes(), info.getListenerTypes().length);
+        dto.types = Arrays.copyOf(info.getDTOListenerTypes(), info.getDTOListenerTypes().length);
 
         if ( reason != -1 )
         {

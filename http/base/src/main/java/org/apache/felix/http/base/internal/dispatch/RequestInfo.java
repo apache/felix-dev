@@ -16,8 +16,8 @@
  */
 package org.apache.felix.http.base.internal.dispatch;
 
-import javax.servlet.http.HttpServletMapping;
-import javax.servlet.http.MappingMatch;
+import jakarta.servlet.http.HttpServletMapping;
+import jakarta.servlet.http.MappingMatch;
 
 /**
  * Information about the request

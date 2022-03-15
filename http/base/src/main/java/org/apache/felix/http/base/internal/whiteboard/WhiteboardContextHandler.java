@@ -19,18 +19,17 @@ package org.apache.felix.http.base.internal.whiteboard;
 import java.util.HashMap;
 import java.util.Map;
 
-import javax.servlet.ServletContext;
-
 import org.apache.felix.http.base.internal.context.ExtServletContext;
 import org.apache.felix.http.base.internal.registry.HandlerRegistry;
 import org.apache.felix.http.base.internal.registry.PerContextHandlerRegistry;
 import org.apache.felix.http.base.internal.runtime.ServletContextHelperInfo;
-import org.apache.felix.http.base.internal.util.ServiceUtils;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 import org.osgi.framework.Bundle;
 import org.osgi.framework.BundleContext;
-import org.osgi.service.http.context.ServletContextHelper;
+import org.osgi.service.servlet.whiteboard.ServletContextHelper;
+
+import jakarta.servlet.ServletContext;
 
 /**
  * The whiteboard context handler provides some information and functionality for
@@ -83,6 +82,7 @@ public class WhiteboardContextHandler implements Comparable<WhiteboardContextHan
 
     /**
      * Activate this context.
+     * @param registry The handler registry
      * @return {@code true} if it succeeded.
      */
     public boolean activate(@NotNull final HandlerRegistry registry)
@@ -136,7 +136,7 @@ public class WhiteboardContextHandler implements Comparable<WhiteboardContextHan
             if ( holder == null )
             {
 
-                final ServletContextHelper service = ServiceUtils.safeGetServiceObjects(bundle.getBundleContext(), this.info.getServiceReference());
+                final ServletContextHelper service = this.info.getService(bundle.getBundleContext());
                 if ( service != null )
                 {
                     holder = new ContextHolder();
@@ -173,7 +173,7 @@ public class WhiteboardContextHandler implements Comparable<WhiteboardContextHan
                     if ( holder.servletContextHelper != null )
                     {
                         final BundleContext ctx = bundle.getBundleContext();
-                        ServiceUtils.safeUngetServiceObjects(ctx, this.info.getServiceReference(), holder.servletContextHelper);
+                        this.info.ungetService(ctx, holder.servletContextHelper);
                     }
                 }
             }

@@ -20,8 +20,8 @@ package org.apache.felix.http.base.internal.runtime.dto;
 
 import org.apache.felix.http.base.internal.handler.ServletHandler;
 import org.apache.felix.http.base.internal.runtime.ServletInfo;
-import org.osgi.service.http.runtime.dto.ErrorPageDTO;
-import org.osgi.service.http.runtime.dto.FailedErrorPageDTO;
+import org.osgi.service.servlet.whiteboard.runtime.dto.ErrorPageDTO;
+import org.osgi.service.servlet.whiteboard.runtime.dto.FailedErrorPageDTO;
 
 public final class ErrorPageDTOBuilder extends BaseServletDTOBuilder
 {

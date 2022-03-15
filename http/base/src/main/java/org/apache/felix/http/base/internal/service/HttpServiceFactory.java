@@ -18,25 +18,29 @@ package org.apache.felix.http.base.internal.service;
 
 import java.util.Hashtable;
 
-import org.jetbrains.annotations.NotNull;
-import javax.servlet.ServletContext;
-
 import org.apache.felix.http.base.internal.registry.HandlerRegistry;
+import org.jetbrains.annotations.NotNull;
 import org.osgi.framework.Bundle;
 import org.osgi.framework.BundleContext;
 import org.osgi.framework.Constants;
 import org.osgi.framework.ServiceFactory;
 import org.osgi.framework.ServiceRegistration;
 import org.osgi.service.http.HttpService;
-import org.osgi.service.http.runtime.HttpServiceRuntimeConstants;
+import org.osgi.service.servlet.whiteboard.runtime.HttpServiceRuntimeConstants;
 
+import jakarta.servlet.ServletContext;
+
+/**
+ * The http service factory
+ */
 public final class HttpServiceFactory
     implements ServiceFactory<HttpService>
 {
+    /** The name of the context for the http service. */
     public static final String HTTP_SERVICE_CONTEXT_NAME = "org.osgi.service.http";
 
+    /** The id of the context for the http service. */
     public static final long HTTP_SERVICE_CONTEXT_SERVICE_ID = -1;
-
 
     /**
      * Name of the Framework property indicating whether the servlet context

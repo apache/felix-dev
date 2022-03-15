@@ -20,18 +20,18 @@ package org.apache.felix.http.base.internal.runtime.dto;
 
 import static java.util.Arrays.copyOf;
 
-import org.osgi.service.http.runtime.dto.ErrorPageDTO;
-import org.osgi.service.http.runtime.dto.FailedErrorPageDTO;
-import org.osgi.service.http.runtime.dto.FailedFilterDTO;
-import org.osgi.service.http.runtime.dto.FailedListenerDTO;
-import org.osgi.service.http.runtime.dto.FailedResourceDTO;
-import org.osgi.service.http.runtime.dto.FailedServletContextDTO;
-import org.osgi.service.http.runtime.dto.FailedServletDTO;
-import org.osgi.service.http.runtime.dto.FilterDTO;
-import org.osgi.service.http.runtime.dto.ListenerDTO;
-import org.osgi.service.http.runtime.dto.ResourceDTO;
-import org.osgi.service.http.runtime.dto.ServletContextDTO;
-import org.osgi.service.http.runtime.dto.ServletDTO;
+import org.osgi.service.servlet.whiteboard.runtime.dto.ErrorPageDTO;
+import org.osgi.service.servlet.whiteboard.runtime.dto.FailedErrorPageDTO;
+import org.osgi.service.servlet.whiteboard.runtime.dto.FailedFilterDTO;
+import org.osgi.service.servlet.whiteboard.runtime.dto.FailedListenerDTO;
+import org.osgi.service.servlet.whiteboard.runtime.dto.FailedResourceDTO;
+import org.osgi.service.servlet.whiteboard.runtime.dto.FailedServletContextDTO;
+import org.osgi.service.servlet.whiteboard.runtime.dto.FailedServletDTO;
+import org.osgi.service.servlet.whiteboard.runtime.dto.FilterDTO;
+import org.osgi.service.servlet.whiteboard.runtime.dto.ListenerDTO;
+import org.osgi.service.servlet.whiteboard.runtime.dto.ResourceDTO;
+import org.osgi.service.servlet.whiteboard.runtime.dto.ServletContextDTO;
+import org.osgi.service.servlet.whiteboard.runtime.dto.ServletDTO;
 
 public abstract class BuilderConstants
 {

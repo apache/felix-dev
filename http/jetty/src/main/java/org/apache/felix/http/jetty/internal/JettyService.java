@@ -28,9 +28,6 @@ import java.util.Enumeration;
 import java.util.Hashtable;
 import java.util.List;
 
-import javax.servlet.SessionCookieConfig;
-import javax.servlet.SessionTrackingMode;
-
 import org.apache.felix.http.base.internal.HttpServiceController;
 import org.apache.felix.http.base.internal.logger.SystemLogger;
 import org.apache.felix.http.jetty.internal.webapp.WebAppBundleTracker;
@@ -66,6 +63,9 @@ import org.osgi.framework.InvalidSyntaxException;
 import org.osgi.framework.ServiceFactory;
 import org.osgi.framework.ServiceRegistration;
 import org.osgi.service.http.runtime.HttpServiceRuntimeConstants;
+
+import jakarta.servlet.SessionCookieConfig;
+import jakarta.servlet.SessionTrackingMode;
 
 public final class JettyService extends AbstractLifeCycle.AbstractLifeCycleListener
 {
@@ -262,7 +262,7 @@ public final class JettyService extends AbstractLifeCycle.AbstractLifeCycleListe
             } else {
                 this.server = new Server();
             }
-            this.server.addLifeCycleListener(this);
+            this.server.addEventListener(this);
 
             // FELIX-5931 : PropertyUserStore used as default by HashLoginService has changed in 9.4.12.v20180830
             //              and fails without a config, therefore using plain UserStore

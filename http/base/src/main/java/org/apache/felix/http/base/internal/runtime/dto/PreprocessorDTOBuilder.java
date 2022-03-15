@@ -21,8 +21,8 @@ package org.apache.felix.http.base.internal.runtime.dto;
 import org.jetbrains.annotations.NotNull;
 
 import org.apache.felix.http.base.internal.runtime.PreprocessorInfo;
-import org.osgi.service.http.runtime.dto.FailedPreprocessorDTO;
-import org.osgi.service.http.runtime.dto.PreprocessorDTO;
+import org.osgi.service.servlet.whiteboard.runtime.dto.FailedPreprocessorDTO;
+import org.osgi.service.servlet.whiteboard.runtime.dto.PreprocessorDTO;
 
 public final class PreprocessorDTOBuilder
 {

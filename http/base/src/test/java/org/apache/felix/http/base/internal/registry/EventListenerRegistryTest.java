@@ -25,9 +25,6 @@ import static org.mockito.Mockito.when;
 
 import java.util.EventListener;
 
-import javax.servlet.ServletContextListener;
-import javax.servlet.ServletException;
-
 import org.apache.felix.http.base.internal.context.ExtServletContext;
 import org.apache.felix.http.base.internal.handler.ListenerHandler;
 import org.apache.felix.http.base.internal.runtime.ListenerInfo;
@@ -40,7 +37,10 @@ import org.osgi.framework.Constants;
 import org.osgi.framework.InvalidSyntaxException;
 import org.osgi.framework.ServiceObjects;
 import org.osgi.framework.ServiceReference;
-import org.osgi.service.http.runtime.dto.ServletContextDTO;
+import org.osgi.service.servlet.whiteboard.runtime.dto.ServletContextDTO;
+
+import jakarta.servlet.ServletContextListener;
+import jakarta.servlet.ServletException;
 
 public class EventListenerRegistryTest {
 

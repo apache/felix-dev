@@ -31,17 +31,6 @@ import java.util.Hashtable;
 import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.TimeUnit;
 
-import javax.servlet.DispatcherType;
-import javax.servlet.Filter;
-import javax.servlet.FilterChain;
-import javax.servlet.FilterConfig;
-import javax.servlet.Servlet;
-import javax.servlet.ServletConfig;
-import javax.servlet.ServletContext;
-import javax.servlet.ServletException;
-import javax.servlet.ServletRequest;
-import javax.servlet.ServletResponse;
-
 import org.apache.felix.http.base.internal.HttpServiceController;
 import org.apache.felix.http.jetty.internal.webapp.WebAppBundleContext;
 import org.apache.felix.http.jetty.internal.webapp.WebAppBundleTracker.Deployment;
@@ -60,6 +49,17 @@ import org.osgi.framework.ServiceRegistration;
 import org.osgi.framework.Version;
 import org.osgi.service.http.context.ServletContextHelper;
 import org.osgi.service.http.runtime.HttpServiceRuntime;
+
+import jakarta.servlet.DispatcherType;
+import jakarta.servlet.Filter;
+import jakarta.servlet.FilterChain;
+import jakarta.servlet.FilterConfig;
+import jakarta.servlet.Servlet;
+import jakarta.servlet.ServletConfig;
+import jakarta.servlet.ServletContext;
+import jakarta.servlet.ServletException;
+import jakarta.servlet.ServletRequest;
+import jakarta.servlet.ServletResponse;
 
 public class JettyServiceTest
 {
@@ -152,8 +152,7 @@ public class JettyServiceTest
         final CountDownLatch testLatch = new CountDownLatch(2);
 
         //Add a Filter to test whether the osgi-bundlecontext is available at init
-        webAppBundleContext.addServlet(new ServletHolder(new Servlet()
-        {
+        webAppBundleContext.addServlet(new ServletHolder(new Servlet() {
             @Override
             public void service(ServletRequest request, ServletResponse response) throws ServletException, IOException
             {
@@ -189,8 +188,7 @@ public class JettyServiceTest
             }
         }), "/test1");
 
-        webAppBundleContext.addFilter(new FilterHolder(new Filter()
-        {
+        webAppBundleContext.addFilter(new FilterHolder(new Filter() {
             @Override
             public void init(FilterConfig filterConfig) throws ServletException
             {

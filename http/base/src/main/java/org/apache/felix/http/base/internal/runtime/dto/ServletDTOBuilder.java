@@ -21,8 +21,8 @@ package org.apache.felix.http.base.internal.runtime.dto;
 import org.apache.felix.http.base.internal.dispatch.MultipartConfig;
 import org.apache.felix.http.base.internal.handler.ServletHandler;
 import org.apache.felix.http.base.internal.runtime.ServletInfo;
-import org.osgi.service.http.runtime.dto.FailedServletDTO;
-import org.osgi.service.http.runtime.dto.ServletDTO;
+import org.osgi.service.servlet.whiteboard.runtime.dto.FailedServletDTO;
+import org.osgi.service.servlet.whiteboard.runtime.dto.ServletDTO;
 
 public final class ServletDTOBuilder extends BaseServletDTOBuilder
 {

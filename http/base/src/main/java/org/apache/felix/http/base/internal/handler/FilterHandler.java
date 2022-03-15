@@ -18,20 +18,18 @@ package org.apache.felix.http.base.internal.handler;
 
 import java.io.IOException;
 
-import javax.servlet.Filter;
-import javax.servlet.FilterChain;
-import javax.servlet.ServletException;
-import javax.servlet.ServletRequest;
-import javax.servlet.ServletResponse;
-
 import org.apache.felix.http.base.internal.context.ExtServletContext;
 import org.apache.felix.http.base.internal.logger.SystemLogger;
 import org.apache.felix.http.base.internal.runtime.FilterInfo;
-import org.apache.felix.http.base.internal.util.ServiceUtils;
 import org.jetbrains.annotations.NotNull;
 import org.osgi.framework.BundleContext;
-import org.osgi.framework.ServiceReference;
-import org.osgi.service.http.runtime.dto.DTOConstants;
+import org.osgi.service.servlet.whiteboard.runtime.dto.DTOConstants;
+
+import jakarta.servlet.Filter;
+import jakarta.servlet.FilterChain;
+import jakarta.servlet.ServletException;
+import jakarta.servlet.ServletRequest;
+import jakarta.servlet.ServletResponse;
 
 /**
  * The filter handler handles the initialization and destruction of filter
@@ -96,7 +94,7 @@ public class FilterHandler implements Comparable<FilterHandler>
             final Filter local = this.filter;
             if ( local != null )
             {
-                name = local.getClass().getName();
+                name = this.filterInfo.getClassName(local);
             }
         }
         return name;
@@ -114,8 +112,7 @@ public class FilterHandler implements Comparable<FilterHandler>
             return -1;
         }
 
-        final ServiceReference<Filter> serviceReference = getFilterInfo().getServiceReference();
-        this.filter = ServiceUtils.safeGetServiceObjects(this.bundleContext, serviceReference);
+        this.filter = getFilterInfo().getService(this.bundleContext);
 
         if (this.filter == null)
         {
@@ -129,9 +126,9 @@ public class FilterHandler implements Comparable<FilterHandler>
         catch (final Exception e)
         {
             SystemLogger.error(this.getFilterInfo().getServiceReference(),
-                    "Error during calling init() on filter " + this.filter,
+                    "Error during calling init() on filter " + this.filterInfo.getClassName(this.filter),
                     e);
-            ServiceUtils.safeUngetServiceObjects(this.bundleContext, serviceReference, this.getFilter());
+            getFilterInfo().ungetService(this.bundleContext, this.filter);
             return DTOConstants.FAILURE_REASON_EXCEPTION_ON_INIT;
         }
 
@@ -171,12 +168,11 @@ public class FilterHandler implements Comparable<FilterHandler>
                 {
                     // we ignore this
                     SystemLogger.error(this.getFilterInfo().getServiceReference(),
-                            "Error during calling destroy() on filter " + f,
+                            "Error during calling destroy() on filter " + this.getFilterInfo().getClassName(f),
                             ignore);
                 }
 
-                ServiceUtils.safeUngetServiceObjects(this.bundleContext,
-                        getFilterInfo().getServiceReference(), f);
+                getFilterInfo().ungetService(this.bundleContext, f);
 
                 return true;
             }

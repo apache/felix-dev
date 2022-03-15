@@ -26,8 +26,6 @@ import java.util.concurrent.Executors;
 import java.util.concurrent.ThreadFactory;
 import java.util.concurrent.TimeUnit;
 
-import javax.servlet.ServletContext;
-
 import org.apache.felix.http.base.internal.logger.SystemLogger;
 import org.apache.felix.http.jetty.internal.JettyConfig;
 import org.eclipse.jetty.server.handler.ContextHandlerCollection;
@@ -42,6 +40,8 @@ import org.osgi.util.tracker.BundleTracker;
 import org.osgi.util.tracker.BundleTrackerCustomizer;
 import org.osgi.util.tracker.ServiceTracker;
 import org.osgi.util.tracker.ServiceTrackerCustomizer;
+
+import jakarta.servlet.ServletContext;
 
 public final class WebAppBundleTracker extends AbstractLifeCycle.AbstractLifeCycleListener
 {

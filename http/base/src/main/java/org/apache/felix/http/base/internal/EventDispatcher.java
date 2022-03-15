@@ -18,9 +18,9 @@
  */
 package org.apache.felix.http.base.internal;
 
-import javax.servlet.http.HttpSessionEvent;
-import javax.servlet.http.HttpSessionIdListener;
-import javax.servlet.http.HttpSessionListener;
+import jakarta.servlet.http.HttpSessionEvent;
+import jakarta.servlet.http.HttpSessionIdListener;
+import jakarta.servlet.http.HttpSessionListener;
 
 /**
  * The <code>EventDispatcher</code> dispatches events sent from the servlet

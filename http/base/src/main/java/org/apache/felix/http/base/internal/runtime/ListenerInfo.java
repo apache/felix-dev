@@ -22,18 +22,18 @@ import java.util.EventListener;
 import java.util.HashSet;
 import java.util.Set;
 
-import javax.servlet.ServletContextAttributeListener;
-import javax.servlet.ServletContextListener;
-import javax.servlet.ServletRequestAttributeListener;
-import javax.servlet.ServletRequestListener;
-import javax.servlet.http.HttpSessionAttributeListener;
-import javax.servlet.http.HttpSessionIdListener;
-import javax.servlet.http.HttpSessionListener;
-
 import org.jetbrains.annotations.NotNull;
 import org.osgi.framework.Constants;
 import org.osgi.framework.ServiceReference;
-import org.osgi.service.http.whiteboard.HttpWhiteboardConstants;
+import org.osgi.service.servlet.whiteboard.HttpWhiteboardConstants;
+
+import jakarta.servlet.ServletContextAttributeListener;
+import jakarta.servlet.ServletContextListener;
+import jakarta.servlet.ServletRequestAttributeListener;
+import jakarta.servlet.ServletRequestListener;
+import jakarta.servlet.http.HttpSessionAttributeListener;
+import jakarta.servlet.http.HttpSessionIdListener;
+import jakarta.servlet.http.HttpSessionListener;
 
 /**
  * Info object for registered listeners.
@@ -52,18 +52,39 @@ public class ListenerInfo extends WhiteboardServiceInfo<EventListener>
         ALLOWED_INTERFACES.add(ServletRequestListener.class.getName());
     }
 
+    /** Is the listener enabled (per properties) */
     private final boolean enabled;
 
-    private final String[] types;
+    /** The service types */
+    private final Set<String> types;
+
+    /** The service types as reported through DTOs */
+    private final String[] dtoTypes;
 
     /**
-     * Constructor for http whiteboard
+     * Constructor
      * @param ref The service reference
      */
     public ListenerInfo(final ServiceReference<EventListener> ref)
     {
+        this(ref, getTypes(ref), null);
+    }
+
+    /**
+     * Constructor
+     * @param ref The service reference
+     * @param dtoTypes Optional dto types
+     * @param types The listener types
+     */
+    public ListenerInfo(final ServiceReference<EventListener> ref, final Set<String> types, final String[] dtos)
+    {
         super(ref);
         this.enabled = this.getBooleanProperty(ref, HttpWhiteboardConstants.HTTP_WHITEBOARD_LISTENER);
+        this.types = types;
+        this.dtoTypes = dtos == null ? types.toArray(new String[types.size()]) : dtos;
+    }
+
+    private static Set<String> getTypes(final ServiceReference<EventListener> ref) {
         final String[] objectClass = (String[])ref.getProperty(Constants.OBJECTCLASS);
         final Set<String> names = new HashSet<String>();
         for(final String name : objectClass)
@@ -73,7 +94,7 @@ public class ListenerInfo extends WhiteboardServiceInfo<EventListener>
                 names.add(name);
             }
         }
-        this.types = names.toArray(new String[names.size()]);
+        return names;
     }
 
     @Override
@@ -82,11 +103,20 @@ public class ListenerInfo extends WhiteboardServiceInfo<EventListener>
         return super.isValid() && this.enabled;
     }
 
-    public String[] getListenerTypes()
+    /**
+     * The types as reported through the DTOs
+     * @return Array of types
+     */
+    public @NotNull String[] getDTOListenerTypes()
     {
-        return this.types;
+        return this.dtoTypes;
     }
 
+    /**
+     * Is this listener of the required type?
+     * @param className The listener type
+     * @return {@code true} If the listener should be registered as that type
+     */
     public boolean isListenerType(@NotNull final String className)
     {
         for(final String t : this.types)
@@ -97,5 +127,18 @@ public class ListenerInfo extends WhiteboardServiceInfo<EventListener>
             }
         }
         return false;
+    }
+
+    /**
+     * Get the registered listener types
+     * @return The set of types
+     */
+    public @NotNull Set<String> getListenerTypes() {
+        return this.types;
+    }
+
+    @Override
+    public @NotNull String getType() {
+        return "Listener";
     }
 }

@@ -16,7 +16,7 @@
  */
 package org.apache.felix.http.base.internal.registry;
 
-import javax.servlet.http.MappingMatch;
+import jakarta.servlet.http.MappingMatch;
 
 /**
  * Resolution of a servlet based on the path

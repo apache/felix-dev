@@ -28,8 +28,8 @@ import org.jetbrains.annotations.NotNull;
 import org.apache.felix.http.base.internal.handler.ListenerHandler;
 import org.apache.felix.http.base.internal.runtime.ListenerInfo;
 import org.apache.felix.http.base.internal.runtime.dto.ListenerDTOBuilder;
-import org.osgi.service.http.runtime.dto.FailedListenerDTO;
-import org.osgi.service.http.runtime.dto.ListenerDTO;
+import org.osgi.service.servlet.whiteboard.runtime.dto.FailedListenerDTO;
+import org.osgi.service.servlet.whiteboard.runtime.dto.ListenerDTO;
 
 public class ListenerMap<T extends EventListener> {
 

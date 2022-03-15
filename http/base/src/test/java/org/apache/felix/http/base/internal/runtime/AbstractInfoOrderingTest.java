@@ -29,6 +29,7 @@ import java.util.Collection;
 import java.util.Collections;
 import java.util.List;
 
+import org.jetbrains.annotations.NotNull;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.junit.runners.Parameterized;
@@ -144,6 +145,11 @@ public class AbstractInfoOrderingTest
         public TestInfo(int ranking, long serviceId)
         {
             super(ranking, serviceId);
+        }
+
+        @Override
+        public @NotNull String getType() {
+            return "Test";
         }
     }
 }

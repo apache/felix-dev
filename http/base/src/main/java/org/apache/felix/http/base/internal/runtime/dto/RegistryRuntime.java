@@ -20,8 +20,8 @@ package org.apache.felix.http.base.internal.runtime.dto;
 
 import java.util.Collection;
 
-import org.osgi.service.http.runtime.dto.PreprocessorDTO;
-import org.osgi.service.http.runtime.dto.ServletContextDTO;
+import org.osgi.service.servlet.whiteboard.runtime.dto.PreprocessorDTO;
+import org.osgi.service.servlet.whiteboard.runtime.dto.ServletContextDTO;
 
 public final class RegistryRuntime
 {

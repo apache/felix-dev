@@ -31,11 +31,11 @@ import java.util.Hashtable;
 import java.util.List;
 import java.util.Map;
 
-import javax.servlet.Servlet;
-import javax.servlet.ServletException;
-import javax.servlet.http.HttpServlet;
-import javax.servlet.http.HttpServletRequest;
-import javax.servlet.http.HttpServletResponse;
+import jakarta.servlet.Servlet;
+import jakarta.servlet.ServletException;
+import jakarta.servlet.http.HttpServlet;
+import jakarta.servlet.http.HttpServletRequest;
+import jakarta.servlet.http.HttpServletResponse;
 
 import org.osgi.framework.BundleContext;
 import org.osgi.framework.Constants;
@@ -43,22 +43,22 @@ import org.osgi.framework.InvalidSyntaxException;
 import org.osgi.framework.ServiceReference;
 import org.osgi.framework.ServiceRegistration;
 import org.osgi.framework.dto.ServiceReferenceDTO;
-import org.osgi.service.http.runtime.HttpServiceRuntime;
-import org.osgi.service.http.runtime.dto.DTOConstants;
-import org.osgi.service.http.runtime.dto.ErrorPageDTO;
-import org.osgi.service.http.runtime.dto.FailedErrorPageDTO;
-import org.osgi.service.http.runtime.dto.FailedFilterDTO;
-import org.osgi.service.http.runtime.dto.FailedListenerDTO;
-import org.osgi.service.http.runtime.dto.FailedResourceDTO;
-import org.osgi.service.http.runtime.dto.FailedServletContextDTO;
-import org.osgi.service.http.runtime.dto.FailedServletDTO;
-import org.osgi.service.http.runtime.dto.FilterDTO;
-import org.osgi.service.http.runtime.dto.ListenerDTO;
-import org.osgi.service.http.runtime.dto.RequestInfoDTO;
-import org.osgi.service.http.runtime.dto.ResourceDTO;
-import org.osgi.service.http.runtime.dto.RuntimeDTO;
-import org.osgi.service.http.runtime.dto.ServletContextDTO;
-import org.osgi.service.http.runtime.dto.ServletDTO;
+import org.osgi.service.servlet.whiteboard.runtime.HttpServiceRuntime;
+import org.osgi.service.servlet.whiteboard.runtime.dto.DTOConstants;
+import org.osgi.service.servlet.whiteboard.runtime.dto.ErrorPageDTO;
+import org.osgi.service.servlet.whiteboard.runtime.dto.FailedErrorPageDTO;
+import org.osgi.service.servlet.whiteboard.runtime.dto.FailedFilterDTO;
+import org.osgi.service.servlet.whiteboard.runtime.dto.FailedListenerDTO;
+import org.osgi.service.servlet.whiteboard.runtime.dto.FailedResourceDTO;
+import org.osgi.service.servlet.whiteboard.runtime.dto.FailedServletContextDTO;
+import org.osgi.service.servlet.whiteboard.runtime.dto.FailedServletDTO;
+import org.osgi.service.servlet.whiteboard.runtime.dto.FilterDTO;
+import org.osgi.service.servlet.whiteboard.runtime.dto.ListenerDTO;
+import org.osgi.service.servlet.whiteboard.runtime.dto.RequestInfoDTO;
+import org.osgi.service.servlet.whiteboard.runtime.dto.ResourceDTO;
+import org.osgi.service.servlet.whiteboard.runtime.dto.RuntimeDTO;
+import org.osgi.service.servlet.whiteboard.runtime.dto.ServletContextDTO;
+import org.osgi.service.servlet.whiteboard.runtime.dto.ServletDTO;
 
 /**
  * This is a web console plugin.

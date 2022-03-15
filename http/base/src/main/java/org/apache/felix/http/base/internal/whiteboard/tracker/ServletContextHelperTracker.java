@@ -19,15 +19,14 @@ package org.apache.felix.http.base.internal.whiteboard.tracker;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 
-import org.jetbrains.annotations.NotNull;
-
 import org.apache.felix.http.base.internal.runtime.ServletContextHelperInfo;
 import org.apache.felix.http.base.internal.whiteboard.WhiteboardManager;
+import org.jetbrains.annotations.NotNull;
 import org.osgi.framework.BundleContext;
 import org.osgi.framework.Constants;
 import org.osgi.framework.InvalidSyntaxException;
 import org.osgi.framework.ServiceReference;
-import org.osgi.service.http.context.ServletContextHelper;
+import org.osgi.service.servlet.whiteboard.ServletContextHelper;
 import org.osgi.util.tracker.ServiceTracker;
 
 /**

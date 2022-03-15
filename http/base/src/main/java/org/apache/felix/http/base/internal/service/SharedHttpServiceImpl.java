@@ -20,23 +20,29 @@ import java.util.HashMap;
 import java.util.Iterator;
 import java.util.Map;
 
-import javax.servlet.Servlet;
-import javax.servlet.ServletException;
-
 import org.apache.felix.http.base.internal.context.ExtServletContext;
 import org.apache.felix.http.base.internal.handler.HttpServiceServletHandler;
 import org.apache.felix.http.base.internal.handler.ServletHandler;
+import org.apache.felix.http.base.internal.jakartawrappers.ServletWrapper;
 import org.apache.felix.http.base.internal.registry.HandlerRegistry;
 import org.apache.felix.http.base.internal.runtime.ServletInfo;
 import org.jetbrains.annotations.NotNull;
 import org.osgi.service.http.NamespaceException;
 
+/**
+ * Shared http service implementation
+ * This implementation is shared by all bundles using the http service.
+ */
 public final class SharedHttpServiceImpl
 {
     private final HandlerRegistry handlerRegistry;
 
     private final Map<String, ServletHandler> aliasMap = new HashMap<>();
 
+    /**
+     * Create a new implementation
+     * @param handlerRegistry The handler registry
+     */
     public SharedHttpServiceImpl(final HandlerRegistry handlerRegistry)
     {
         if (handlerRegistry == null)
@@ -49,11 +55,17 @@ public final class SharedHttpServiceImpl
 
     /**
      * Register a servlet
+     * @param alias The alias
+     * @param httpContext The servlet context
+     * @param servlet The servlet
+     * @param servletInfo The info for the servlet
+     * @throws javax.servlet.ServletException If registration fails
+     * @throws NamespaceException If a servlet for the same alias already exists
      */
     public void registerServlet(@NotNull final String alias,
             @NotNull final ExtServletContext httpContext,
-            @NotNull final Servlet servlet,
-            @NotNull final ServletInfo servletInfo) throws ServletException, NamespaceException
+            @NotNull final javax.servlet.Servlet servlet,
+            @NotNull final ServletInfo servletInfo) throws javax.servlet.ServletException, NamespaceException
     {
         final ServletHandler handler = new HttpServiceServletHandler(httpContext, servletInfo, servlet);
 
@@ -70,9 +82,12 @@ public final class SharedHttpServiceImpl
     }
 
     /**
+     * Unregister a servlet
+     * @param alias The alias
+     * @return The servlet or {@code null}
      * @see org.osgi.service.http.HttpService#unregister(java.lang.String)
      */
-    public Servlet unregister(final String alias)
+    public javax.servlet.Servlet unregister(final String alias)
     {
         synchronized (this.aliasMap)
         {
@@ -82,13 +97,33 @@ public final class SharedHttpServiceImpl
                 throw new IllegalArgumentException("Nothing registered at " + alias);
             }
 
-            final Servlet s = handler.getServlet();
+            final javax.servlet.Servlet s = getServlet(handler);
+            if ( handler.getServlet() instanceof HttpResourceServlet ) {
+                final HttpResourceServlet resource = (HttpResourceServlet)handler.getServlet();
+                resource.setWrapper(null);
+            }
             this.handlerRegistry.getRegistry(handler.getContextServiceId()).unregisterServlet(handler.getServletInfo(), true);
             return s;
         }
     }
 
-    public void unregisterServlet(final Servlet servlet)
+    private javax.servlet.Servlet getServlet(final ServletHandler handler) {
+        final javax.servlet.Servlet s;
+        if ( handler.getServlet() instanceof HttpResourceServlet ) {
+            final HttpResourceServlet resource = (HttpResourceServlet)handler.getServlet();
+            s = resource.getWrapper();
+            resource.setWrapper(null);
+        } else {
+            s = ((ServletWrapper)handler.getServlet()).getServlet();
+        }
+        return s;
+    }
+
+    /**
+     * Unregister a servlet
+     * @param servlet The servlet
+     */
+    public void unregisterServlet(final javax.servlet.Servlet servlet)
     {
         if (servlet != null)
         {
@@ -98,7 +133,8 @@ public final class SharedHttpServiceImpl
                 while (i.hasNext())
                 {
                     final Map.Entry<String, ServletHandler> entry = i.next();
-                    if (entry.getValue().getServlet() == servlet)
+                    final javax.servlet.Servlet s = getServlet(entry.getValue());
+                    if (s == servlet)
                     {
                         this.handlerRegistry.getRegistry(entry.getValue().getContextServiceId()).unregisterServlet(entry.getValue().getServletInfo(), false);
 
@@ -111,7 +147,11 @@ public final class SharedHttpServiceImpl
         }
     }
 
-	public HandlerRegistry getHandlerRegistry()
+    /**
+     * Get the handler registry
+     * @return The registry
+     */
+	public @NotNull HandlerRegistry getHandlerRegistry()
 	{
 		return this.handlerRegistry;
 	}

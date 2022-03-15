@@ -22,9 +22,6 @@ import static org.junit.Assert.assertTrue;
 
 import java.util.Collections;
 
-import javax.servlet.Servlet;
-import javax.servlet.ServletConfig;
-
 import org.apache.felix.http.base.internal.HttpConfig;
 import org.apache.felix.http.base.internal.handler.HttpServiceServletHandler;
 import org.apache.felix.http.base.internal.handler.ServletHandler;
@@ -33,8 +30,11 @@ import org.apache.felix.http.base.internal.runtime.dto.FailedDTOHolder;
 import org.apache.felix.http.base.internal.service.HttpServiceFactory;
 import org.junit.Test;
 import org.mockito.Mockito;
-import org.osgi.service.http.runtime.dto.ServletContextDTO;
-import org.osgi.service.http.runtime.dto.ServletDTO;
+import org.osgi.service.servlet.whiteboard.runtime.dto.ServletContextDTO;
+import org.osgi.service.servlet.whiteboard.runtime.dto.ServletDTO;
+
+import jakarta.servlet.Servlet;
+import jakarta.servlet.ServletConfig;
 
 
 public class HandlerRegistryTest
@@ -69,7 +69,7 @@ public class HandlerRegistryTest
 
         Servlet servlet = Mockito.mock(Servlet.class);
         final ServletInfo info = new ServletInfo("foo", "/foo", Collections.<String, String> emptyMap());
-        ServletHandler handler = new HttpServiceServletHandler(null, info, servlet);
+        ServletHandler handler = new HttpServiceServletHandler(-1, null, info, servlet);
 
         assertTrue(registry.getRuntimeInfo(dto, holder));
         assertEquals("Precondition", 0, dto.servletDTOs.length);
@@ -81,13 +81,13 @@ public class HandlerRegistryTest
         assertEquals(info.getServiceId(), dto.servletDTOs[0].serviceId);
 
         final ServletInfo info2 = new ServletInfo("bar", "/bar", Collections.<String, String> emptyMap());
-        ServletHandler handler2 = new HttpServiceServletHandler(null, info2, Mockito.mock(Servlet.class));
+        ServletHandler handler2 = new HttpServiceServletHandler(-1, null, info2, Mockito.mock(Servlet.class));
         registry.getRegistry(handler.getContextServiceId()).registerServlet(handler2);
         assertTrue(registry.getRuntimeInfo(dto, holder));
         assertEquals(2, dto.servletDTOs.length);
 
         final ServletInfo info3 = new ServletInfo("zar", "/foo", Collections.<String, String> emptyMap());
-        ServletHandler handler3 = new HttpServiceServletHandler(null,info3, Mockito.mock(Servlet.class));
+        ServletHandler handler3 = new HttpServiceServletHandler(-1, null,info3, Mockito.mock(Servlet.class));
         registry.getRegistry(handler.getContextServiceId()).registerServlet(handler3);
         assertTrue(registry.getRuntimeInfo(dto, holder));
         assertEquals(2, dto.servletDTOs.length);

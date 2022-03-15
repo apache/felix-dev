@@ -22,14 +22,16 @@ import java.util.Map;
 import java.util.regex.Pattern;
 import java.util.regex.PatternSyntaxException;
 
-import javax.servlet.DispatcherType;
-import javax.servlet.Filter;
-
+import org.apache.felix.http.base.internal.jakartawrappers.FilterWrapper;
 import org.apache.felix.http.base.internal.util.PatternUtil;
+import org.jetbrains.annotations.NotNull;
 import org.osgi.dto.DTO;
 import org.osgi.framework.ServiceReference;
-import org.osgi.service.http.runtime.dto.FilterDTO;
-import org.osgi.service.http.whiteboard.HttpWhiteboardConstants;
+import org.osgi.service.servlet.whiteboard.runtime.dto.FilterDTO;
+import org.osgi.service.servlet.whiteboard.HttpWhiteboardConstants;
+
+import jakarta.servlet.DispatcherType;
+import jakarta.servlet.Filter;
 
 /**
  * Provides registration information for a {@link Filter}, and is used to programmatically register {@link Filter}s.
@@ -37,7 +39,7 @@ import org.osgi.service.http.whiteboard.HttpWhiteboardConstants;
  * This class only provides information used at registration time, and as such differs slightly from {@link DTO}s like, {@link FilterDTO}.
  * </p>
  */
-public final class FilterInfo extends WhiteboardServiceInfo<Filter>
+public class FilterInfo extends WhiteboardServiceInfo<Filter>
 {
     /**
      * The name of the filter.
@@ -89,6 +91,10 @@ public final class FilterInfo extends WhiteboardServiceInfo<Filter>
      */
     private final Map<String, String> initParams;
 
+    /**
+     * new filter info
+     * @param ref filter service reference
+     */
     public FilterInfo(final ServiceReference<Filter> ref)
     {
         super(ref);
@@ -201,5 +207,22 @@ public final class FilterInfo extends WhiteboardServiceInfo<Filter>
     public Map<String, String> getInitParameters()
     {
         return initParams;
+    }
+
+    @Override
+    public @NotNull String getType() {
+        return "Filter";
+    }
+
+    /**
+     * Get the class name of the filter
+     * @param filter The filter
+     * @return The class name
+     */
+    public @NotNull String getClassName(@NotNull final Filter filter) {
+        if (filter instanceof FilterWrapper ) {
+            return ((FilterWrapper)filter).getFilter().getClass().getName();
+        }
+        return filter.getClass().getName();
     }
 }

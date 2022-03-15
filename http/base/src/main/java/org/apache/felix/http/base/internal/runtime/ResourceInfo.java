@@ -19,8 +19,9 @@
 package org.apache.felix.http.base.internal.runtime;
 
 import org.apache.felix.http.base.internal.util.PatternUtil;
+import org.jetbrains.annotations.NotNull;
 import org.osgi.framework.ServiceReference;
-import org.osgi.service.http.whiteboard.HttpWhiteboardConstants;
+import org.osgi.service.servlet.whiteboard.HttpWhiteboardConstants;
 
 /**
  * Info object for a resource registration
@@ -44,7 +45,7 @@ public final class ResourceInfo extends WhiteboardServiceInfo<Object>
         public ResourceServletInfo(ResourceInfo resource) {
             super(resource);
         }
-    };
+    }
 
     public ResourceInfo(final ServiceReference<Object> ref)
     {
@@ -85,5 +86,10 @@ public final class ResourceInfo extends WhiteboardServiceInfo<Object>
     public ServletInfo getServletInfo()
     {
         return this.servletInfo;
+    }
+
+    @Override
+    public @NotNull String getType() {
+        return "Resource";
     }
 }

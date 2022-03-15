@@ -35,12 +35,12 @@ import org.apache.felix.http.base.internal.runtime.dto.BuilderConstants;
 import org.apache.felix.http.base.internal.runtime.dto.ResourceDTOBuilder;
 import org.apache.felix.http.base.internal.runtime.dto.ServletDTOBuilder;
 import org.jetbrains.annotations.NotNull;
-import org.osgi.service.http.runtime.dto.DTOConstants;
-import org.osgi.service.http.runtime.dto.FailedResourceDTO;
-import org.osgi.service.http.runtime.dto.FailedServletDTO;
-import org.osgi.service.http.runtime.dto.ResourceDTO;
-import org.osgi.service.http.runtime.dto.ServletContextDTO;
-import org.osgi.service.http.runtime.dto.ServletDTO;
+import org.osgi.service.servlet.whiteboard.runtime.dto.DTOConstants;
+import org.osgi.service.servlet.whiteboard.runtime.dto.FailedResourceDTO;
+import org.osgi.service.servlet.whiteboard.runtime.dto.FailedServletDTO;
+import org.osgi.service.servlet.whiteboard.runtime.dto.ResourceDTO;
+import org.osgi.service.servlet.whiteboard.runtime.dto.ServletContextDTO;
+import org.osgi.service.servlet.whiteboard.runtime.dto.ServletDTO;
 
 /**
  * The servlet registry keeps the mappings for all servlets (by using their pattern)

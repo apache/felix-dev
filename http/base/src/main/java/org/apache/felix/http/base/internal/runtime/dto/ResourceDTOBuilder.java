@@ -21,8 +21,8 @@ package org.apache.felix.http.base.internal.runtime.dto;
 import org.apache.felix.http.base.internal.handler.ServletHandler;
 import org.apache.felix.http.base.internal.runtime.ResourceInfo;
 import org.apache.felix.http.base.internal.runtime.ServletInfo;
-import org.osgi.service.http.runtime.dto.FailedResourceDTO;
-import org.osgi.service.http.runtime.dto.ResourceDTO;
+import org.osgi.service.servlet.whiteboard.runtime.dto.FailedResourceDTO;
+import org.osgi.service.servlet.whiteboard.runtime.dto.ResourceDTO;
 
 public final class ResourceDTOBuilder
 {

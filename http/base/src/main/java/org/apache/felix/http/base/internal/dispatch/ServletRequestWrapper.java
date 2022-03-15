@@ -16,18 +16,18 @@
  */
 package org.apache.felix.http.base.internal.dispatch;
 
-import static javax.servlet.RequestDispatcher.FORWARD_CONTEXT_PATH;
-import static javax.servlet.RequestDispatcher.FORWARD_MAPPING;
-import static javax.servlet.RequestDispatcher.FORWARD_PATH_INFO;
-import static javax.servlet.RequestDispatcher.FORWARD_QUERY_STRING;
-import static javax.servlet.RequestDispatcher.FORWARD_REQUEST_URI;
-import static javax.servlet.RequestDispatcher.FORWARD_SERVLET_PATH;
-import static javax.servlet.RequestDispatcher.INCLUDE_CONTEXT_PATH;
-import static javax.servlet.RequestDispatcher.INCLUDE_MAPPING;
-import static javax.servlet.RequestDispatcher.INCLUDE_PATH_INFO;
-import static javax.servlet.RequestDispatcher.INCLUDE_QUERY_STRING;
-import static javax.servlet.RequestDispatcher.INCLUDE_REQUEST_URI;
-import static javax.servlet.RequestDispatcher.INCLUDE_SERVLET_PATH;
+import static jakarta.servlet.RequestDispatcher.FORWARD_CONTEXT_PATH;
+import static jakarta.servlet.RequestDispatcher.FORWARD_MAPPING;
+import static jakarta.servlet.RequestDispatcher.FORWARD_PATH_INFO;
+import static jakarta.servlet.RequestDispatcher.FORWARD_QUERY_STRING;
+import static jakarta.servlet.RequestDispatcher.FORWARD_REQUEST_URI;
+import static jakarta.servlet.RequestDispatcher.FORWARD_SERVLET_PATH;
+import static jakarta.servlet.RequestDispatcher.INCLUDE_CONTEXT_PATH;
+import static jakarta.servlet.RequestDispatcher.INCLUDE_MAPPING;
+import static jakarta.servlet.RequestDispatcher.INCLUDE_PATH_INFO;
+import static jakarta.servlet.RequestDispatcher.INCLUDE_QUERY_STRING;
+import static jakarta.servlet.RequestDispatcher.INCLUDE_REQUEST_URI;
+import static jakarta.servlet.RequestDispatcher.INCLUDE_SERVLET_PATH;
 import static org.apache.felix.http.base.internal.util.UriUtils.concat;
 
 import java.io.File;
@@ -42,30 +42,31 @@ import java.util.Collection;
 import java.util.Iterator;
 import java.util.List;
 
-import javax.servlet.AsyncContext;
-import javax.servlet.DispatcherType;
-import javax.servlet.RequestDispatcher;
-import javax.servlet.ServletContext;
-import javax.servlet.ServletException;
-import javax.servlet.ServletRequest;
-import javax.servlet.ServletRequestAttributeEvent;
-import javax.servlet.ServletResponse;
-import javax.servlet.http.HttpServletMapping;
-import javax.servlet.http.HttpServletRequest;
-import javax.servlet.http.HttpServletRequestWrapper;
-import javax.servlet.http.HttpSession;
-import javax.servlet.http.Part;
-
 import org.apache.commons.fileupload.FileItem;
+import org.apache.commons.fileupload.FileUpload;
+import org.apache.commons.fileupload.FileUploadBase;
 import org.apache.commons.fileupload.FileUploadException;
+import org.apache.commons.fileupload.RequestContext;
 import org.apache.commons.fileupload.disk.DiskFileItemFactory;
-import org.apache.commons.fileupload.servlet.ServletFileUpload;
-import org.apache.commons.fileupload.servlet.ServletRequestContext;
 import org.apache.felix.http.base.internal.context.ExtServletContext;
 import org.apache.felix.http.base.internal.handler.HttpSessionWrapper;
 import org.osgi.framework.Bundle;
 import org.osgi.service.http.HttpContext;
 import org.osgi.service.useradmin.Authorization;
+
+import jakarta.servlet.AsyncContext;
+import jakarta.servlet.DispatcherType;
+import jakarta.servlet.RequestDispatcher;
+import jakarta.servlet.ServletContext;
+import jakarta.servlet.ServletException;
+import jakarta.servlet.ServletRequest;
+import jakarta.servlet.ServletRequestAttributeEvent;
+import jakarta.servlet.ServletResponse;
+import jakarta.servlet.http.HttpServletMapping;
+import jakarta.servlet.http.HttpServletRequest;
+import jakarta.servlet.http.HttpServletRequestWrapper;
+import jakarta.servlet.http.HttpSession;
+import jakarta.servlet.http.Part;
 
 final class ServletRequestWrapper extends HttpServletRequestWrapper
 {
@@ -73,6 +74,11 @@ final class ServletRequestWrapper extends HttpServletRequestWrapper
             FORWARD_MAPPING, FORWARD_PATH_INFO, FORWARD_QUERY_STRING, FORWARD_REQUEST_URI, FORWARD_SERVLET_PATH,
             INCLUDE_CONTEXT_PATH, INCLUDE_MAPPING, INCLUDE_PATH_INFO, INCLUDE_QUERY_STRING, INCLUDE_REQUEST_URI,
             INCLUDE_SERVLET_PATH);
+
+    /**
+     * Constant for HTTP POST method.
+     */
+    private static final String POST_METHOD = "POST";
 
     private final DispatcherType type;
     private final RequestInfo requestInfo;
@@ -107,7 +113,7 @@ final class ServletRequestWrapper extends HttpServletRequestWrapper
         HttpServletRequest request = (HttpServletRequest) getRequest();
         if (isInclusionDispatcher() && !this.requestInfo.nameMatch)
         {
-            // The javax.servlet.include.* attributes refer to the information of the *included* request,
+            // The jakarta.servlet.include.* attributes refer to the information of the *included* request,
             // meaning that the request information comes from the *original* request...
             if (INCLUDE_REQUEST_URI.equals(name))
             {
@@ -136,7 +142,7 @@ final class ServletRequestWrapper extends HttpServletRequestWrapper
         }
         else if (isForwardingDispatcher() && !this.requestInfo.nameMatch)
         {
-            // The javax.servlet.forward.* attributes refer to the information of the *original* request,
+            // The jakarta.servlet.forward.* attributes refer to the information of the *original* request,
             // meaning that the request information comes from the *forwarded* request...
             if (FORWARD_REQUEST_URI.equals(name))
             {
@@ -377,11 +383,39 @@ final class ServletRequestWrapper extends HttpServletRequestWrapper
         return this.asyncSupported;
     }
 
+
     private Collection<Part> checkMultipart() throws IOException, ServletException
     {
         if ( parts == null )
         {
-            if ( ServletFileUpload.isMultipartContent(this) )
+            final RequestContext multipartContext;
+            if (!POST_METHOD.equalsIgnoreCase(this.getMethod())) {
+                multipartContext = null;
+            } else {
+                multipartContext = new RequestContext() {
+
+                    @Override
+                    public InputStream getInputStream() throws IOException {
+                        return ServletRequestWrapper.this.getInputStream();
+                    }
+
+                    @Override
+                    public String getContentType() {
+                        return ServletRequestWrapper.this.getContentType();
+                    }
+
+                    @Override
+                    public int getContentLength() {
+                        return ServletRequestWrapper.this.getContentLength();
+                    }
+
+                    @Override
+                    public String getCharacterEncoding() {
+                        return ServletRequestWrapper.this.getCharacterEncoding();
+                    }
+                };
+            }
+            if ( multipartContext != null && FileUploadBase.isMultipartContent(multipartContext) )
             {
                 if ( this.multipartConfig == null)
                 {
@@ -390,7 +424,7 @@ final class ServletRequestWrapper extends HttpServletRequestWrapper
 
                 if ( System.getSecurityManager() == null )
                 {
-                    handleMultipart();
+                    handleMultipart(multipartContext);
                 }
                 else
                 {
@@ -403,7 +437,7 @@ final class ServletRequestWrapper extends HttpServletRequestWrapper
                         {
                             try
                             {
-                                handleMultipart();
+                                handleMultipart(multipartContext);
                             }
                             catch ( final IOException ioe)
                             {
@@ -427,10 +461,10 @@ final class ServletRequestWrapper extends HttpServletRequestWrapper
         return parts;
     }
 
-    private void handleMultipart() throws IOException
+    private void handleMultipart(final RequestContext multipartContext) throws IOException
     {
         // Create a new file upload handler
-        final ServletFileUpload upload = new ServletFileUpload();
+        final FileUpload upload = new FileUpload();
         upload.setSizeMax(this.multipartConfig.multipartMaxRequestSize);
         upload.setFileSizeMax(this.multipartConfig.multipartMaxFileSize);
         upload.setFileItemFactory(new DiskFileItemFactory(this.multipartConfig.multipartThreshold,
@@ -440,7 +474,7 @@ final class ServletRequestWrapper extends HttpServletRequestWrapper
         List<FileItem> items = null;
         try
         {
-            items = upload.parseRequest(new ServletRequestContext(this));
+            items = upload.parseRequest(multipartContext);
         }
         catch (final FileUploadException fue)
         {

@@ -25,8 +25,6 @@ import static org.mockito.Mockito.when;
 
 import java.util.EventListener;
 
-import javax.servlet.ServletContextListener;
-
 import org.junit.Test;
 import org.mockito.ArgumentMatchers;
 import org.osgi.framework.Bundle;
@@ -35,7 +33,9 @@ import org.osgi.framework.Constants;
 import org.osgi.framework.Filter;
 import org.osgi.framework.InvalidSyntaxException;
 import org.osgi.framework.ServiceReference;
-import org.osgi.service.http.whiteboard.HttpWhiteboardConstants;
+import org.osgi.service.servlet.whiteboard.HttpWhiteboardConstants;
+
+import jakarta.servlet.ServletContextListener;
 
 public class ListenerInfoTest
 {

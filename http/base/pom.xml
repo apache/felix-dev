@@ -28,7 +28,7 @@
 
     <name>Apache Felix Http Base</name>
     <artifactId>org.apache.felix.http.base</artifactId>
-    <version>4.2.1-SNAPSHOT</version>
+    <version>5.0.0-SNAPSHOT</version>
     <packaging>jar</packaging>
 
     <scm>
@@ -39,7 +39,7 @@
   </scm>
 
     <properties>
-        <felix.java.version>8</felix.java.version>
+        <felix.java.version>11</felix.java.version>
     </properties>
 
     <dependencies>
@@ -49,8 +49,15 @@
             <version>4.0.1</version>
         </dependency>
         <dependency>
+            <groupId>jakarta.servlet</groupId>
+            <artifactId>jakarta.servlet-api</artifactId>
+            <version>5.0.0</version>
+            <scope>provided</scope>
+        </dependency>
+        <dependency>
             <groupId>org.osgi</groupId>
             <artifactId>osgi.core</artifactId>
+            <version>8.0.0</version>
         </dependency>
         <dependency>
             <groupId>org.osgi</groupId>

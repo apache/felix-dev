@@ -1,0 +1,5 @@
+This directory contains a proof of concept for a new version of the Apache Felix Http Service.
+
+It is based on Servlet API 5.
+
+This module contains code below the package org.osgi.service.servlet.whiteboard. The API in these packages is NOT official OSGi API, it is work in progress for a new OSGi specifications being worked in the [Eclipse OSGi working group](https://www.osgi.org/). The source is copied from the [design 381 branch](https://github.com/osgi/osgi/tree/design/381). This API might change in any way at any time.

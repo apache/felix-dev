@@ -16,24 +16,38 @@
  */
 package org.apache.felix.http.base.internal.handler;
 
-import javax.servlet.Servlet;
-
 import org.apache.felix.http.base.internal.context.ExtServletContext;
+import org.apache.felix.http.base.internal.jakartawrappers.ServletWrapper;
 import org.apache.felix.http.base.internal.runtime.ServletInfo;
 import org.apache.felix.http.base.internal.service.HttpServiceFactory;
+
+import jakarta.servlet.Servlet;
 
 /**
  * Servlet handler for servlets registered through the http service.
  */
 public final class HttpServiceServletHandler extends ServletHandler
 {
+    /**
+     * New handler
+     * @param context The context
+     * @param servletInfo The servlet info
+     * @param servlet The servlet
+     */
     public HttpServiceServletHandler(final ExtServletContext context,
             final ServletInfo servletInfo,
-            final Servlet servlet)
+            final javax.servlet.Servlet servlet)
     {
-        this(HttpServiceFactory.HTTP_SERVICE_CONTEXT_SERVICE_ID, context, servletInfo, servlet);
+        this(HttpServiceFactory.HTTP_SERVICE_CONTEXT_SERVICE_ID, context, servletInfo, ServletWrapper.getRegisteredServlet(servlet));
     }
 
+    /**
+     * New handler
+     * @param contextServiceId The context id
+     * @param context The context
+     * @param servletInfo The servlet info
+     * @param servlet The servlet
+     */
     public HttpServiceServletHandler(final long contextServiceId,
             final ExtServletContext context,
             final ServletInfo servletInfo,

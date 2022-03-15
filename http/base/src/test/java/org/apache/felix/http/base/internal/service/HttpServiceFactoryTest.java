@@ -20,7 +20,7 @@ package org.apache.felix.http.base.internal.service;
 
 import java.util.Hashtable;
 
-import javax.servlet.ServletContext;
+import jakarta.servlet.ServletContext;
 
 import org.apache.felix.http.base.internal.HttpConfig;
 import org.apache.felix.http.base.internal.registry.HandlerRegistry;

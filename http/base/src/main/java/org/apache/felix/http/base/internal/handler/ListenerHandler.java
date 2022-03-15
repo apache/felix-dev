@@ -20,10 +20,8 @@ import java.util.EventListener;
 
 import org.apache.felix.http.base.internal.context.ExtServletContext;
 import org.apache.felix.http.base.internal.runtime.ListenerInfo;
-import org.apache.felix.http.base.internal.util.ServiceUtils;
 import org.osgi.framework.BundleContext;
-import org.osgi.framework.ServiceReference;
-import org.osgi.service.http.runtime.dto.DTOConstants;
+import org.osgi.service.servlet.whiteboard.runtime.dto.DTOConstants;
 
 /**
  * The listener handler handles the initialization and destruction of listener
@@ -90,8 +88,7 @@ public class ListenerHandler implements Comparable<ListenerHandler>
             {
                 this.listener = null;
 
-                ServiceUtils.safeUngetServiceObjects(this.bundleContext,
-                        getListenerInfo().getServiceReference(), l);
+                this.getListenerInfo().ungetService(this.bundleContext, l);
 
                 return true;
             }
@@ -118,8 +115,7 @@ public class ListenerHandler implements Comparable<ListenerHandler>
             return -1;
         }
 
-        final ServiceReference<EventListener> serviceReference = getListenerInfo().getServiceReference();
-        this.listener = ServiceUtils.safeGetServiceObjects(this.bundleContext, serviceReference);
+        this.listener = getListenerInfo().getService(this.bundleContext);
 
         final int reason;
         if (this.listener == null)

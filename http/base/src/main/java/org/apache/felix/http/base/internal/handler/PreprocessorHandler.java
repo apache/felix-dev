@@ -18,20 +18,19 @@ package org.apache.felix.http.base.internal.handler;
 
 import java.io.IOException;
 
-import javax.servlet.FilterChain;
-import javax.servlet.ServletContext;
-import javax.servlet.ServletException;
-import javax.servlet.ServletRequest;
-import javax.servlet.ServletResponse;
-
 import org.apache.felix.http.base.internal.logger.SystemLogger;
 import org.apache.felix.http.base.internal.runtime.PreprocessorInfo;
-import org.apache.felix.http.base.internal.util.ServiceUtils;
 import org.jetbrains.annotations.NotNull;
 import org.osgi.framework.BundleContext;
 import org.osgi.framework.ServiceReference;
-import org.osgi.service.http.runtime.dto.DTOConstants;
-import org.osgi.service.http.whiteboard.Preprocessor;
+import org.osgi.service.servlet.whiteboard.runtime.dto.DTOConstants;
+import org.osgi.service.servlet.whiteboard.Preprocessor;
+
+import jakarta.servlet.FilterChain;
+import jakarta.servlet.ServletContext;
+import jakarta.servlet.ServletException;
+import jakarta.servlet.ServletRequest;
+import jakarta.servlet.ServletResponse;
 
 /**
  * The preprocessor handler handles the initialization and destruction of preprocessor
@@ -75,7 +74,7 @@ public class PreprocessorHandler implements Comparable<PreprocessorHandler>
     public int init()
     {
         final ServiceReference<Preprocessor> serviceReference = this.info.getServiceReference();
-        this.preprocessor = ServiceUtils.safeGetService(this.bundleContext, serviceReference);
+        this.preprocessor = this.getPreprocessorInfo().getService(this.bundleContext);
 
         if (this.preprocessor == null)
         {
@@ -91,11 +90,11 @@ public class PreprocessorHandler implements Comparable<PreprocessorHandler>
         catch (final Exception e)
         {
             SystemLogger.error(this.getPreprocessorInfo().getServiceReference(),
-                    "Error during calling init() on preprocessor " + this.preprocessor,
+                    "Error during calling init() on preprocessor " + this.info.getClassName(this.preprocessor),
                     e);
 
+            this.getPreprocessorInfo().ungetService(this.bundleContext, this.preprocessor);
             this.preprocessor = null;
-            ServiceUtils.safeUngetService(this.bundleContext, serviceReference);
 
             return DTOConstants.FAILURE_REASON_EXCEPTION_ON_INIT;
         }
@@ -118,11 +117,11 @@ public class PreprocessorHandler implements Comparable<PreprocessorHandler>
         {
             // we ignore this
             SystemLogger.error(this.getPreprocessorInfo().getServiceReference(),
-                    "Error during calling destroy() on preprocessor " + this.preprocessor,
+                    "Error during calling destroy() on preprocessor " + this.info.getClassName(this.preprocessor),
                     ignore);
         }
+        this.getPreprocessorInfo().ungetService(this.bundleContext, this.preprocessor);
         this.preprocessor = null;
-        ServiceUtils.safeUngetService(this.bundleContext, this.info.getServiceReference());
 
         return true;
     }

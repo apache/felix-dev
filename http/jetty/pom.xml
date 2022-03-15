@@ -30,7 +30,7 @@
     <description>This is an implementation of the R7 OSGi Http Service and the R7 OSGi Http Whiteboard Specification</description>
 
     <artifactId>org.apache.felix.http.jetty</artifactId>
-    <version>4.2.1-SNAPSHOT</version>
+    <version>5.0.0-SNAPSHOT</version>
     <packaging>bundle</packaging>
     
     <scm>
@@ -41,8 +41,8 @@
   </scm>
     
     <properties>
-        <felix.java.version>8</felix.java.version>
-	<jetty.version>9.4.45.v20220203</jetty.version>
+        <felix.java.version>11</felix.java.version>
+	<jetty.version>11.0.7</jetty.version>
     </properties>
 
     <build>
@@ -158,8 +158,8 @@
                             org.osgi.service.http.runtime,
                             org.osgi.service.http.runtime.dto,
                             org.osgi.service.http.whiteboard,
+                            !org.osgi.service.servlet.*,
                             !org.eclipse.jetty,
-                            !org.eclipse.jetty.util.log.jmx,
                             !org.eclipse.jetty.version,
                             org.eclipse.jetty.*,
                             org.apache.felix.http.jetty
@@ -168,18 +168,17 @@
                             org.apache.felix.http.base.*,
                             org.apache.felix.http.jetty.*,
                             org.eclipse.jetty,
-                            org.eclipse.jetty.security.authentication,
-                            org.eclipse.jetty.util.log.jmx,
-                            org.eclipse.jetty.version
+                            org.eclipse.jetty.version,
+                            org.osgi.service.servlet.*
                         </Private-Package>
                         <Conditional-Package>
                             org.apache.commons.*
                         </Conditional-Package>
                         <Import-Package>
                             sun.misc;resolution:=optional,
+                            sun.nio.ch;resolution:=optional,
                             javax.imageio;resolution:=optional,
                             javax.sql;resolution:=optional,
-                            org.slf4j.*;resolution:=optional,
                             org.ietf.jgss;resolution:=optional,
                             org.osgi.service.cm;resolution:=optional;version="[1.3,2)",                        	
                             org.osgi.service.event;resolution:=optional;version="[1.2,2)",
@@ -190,6 +189,7 @@
                             org.osgi.service.http.context;version="[1.1,1.2)",
                             org.osgi.service.http.runtime;version="[1.1,1.2)",
                             org.osgi.service.http.runtime.dto;version="[1.1,1.2)",
+                            org.slf4j;version="[1.0,3.0)", 
                             *
                         </Import-Package>
                         <DynamicImport-Package>
@@ -201,6 +201,8 @@
                         <Provide-Capability>
                             osgi.implementation;osgi.implementation="osgi.http";version:Version="1.1";
                             uses:="javax.servlet,javax.servlet.http,org.osgi.service.http.context,org.osgi.service.http.whiteboard",
+                            osgi.service;objectClass:List&lt;String&gt;="org.osgi.service.servlet.whiteboard.runtime.HttpServiceRuntime";
+                            uses:="org.osgi.service.servlet.whiteboard.runtime,org.osgi.service.servlet.whiteboard.runtime.dto",
                             osgi.service;objectClass:List&lt;String&gt;="org.osgi.service.http.runtime.HttpServiceRuntime";
                             uses:="org.osgi.service.http.runtime,org.osgi.service.http.runtime.dto",
                             osgi.service;objectClass:List&lt;String&gt;="org.osgi.service.http.HttpService";
@@ -245,11 +247,13 @@
                                     org.osgi.service.http.runtime,
                                     org.osgi.service.http.runtime.dto,
                                     org.osgi.service.http.whiteboard,
+                                    !org.osgi.service.servlet.*,
                                     org.apache.felix.http.jetty
                                 </Export-Package>
                                 <Private-Package>
                                     org.apache.felix.http.base.*,
-                                    org.apache.felix.http.jetty.*
+                                    org.apache.felix.http.jetty.*,
+                                    org.osgi.service.servlet.*
                                 </Private-Package>
                                 <Import-Package>
                                     org.osgi.service.cm;resolution:=optional;version="[1.3,2)",
@@ -268,6 +272,8 @@
                                 <Provide-Capability>
                                     osgi.implementation;osgi.implementation="osgi.http";version:Version="1.1";
                                     uses:="javax.servlet,javax.servlet.http,org.osgi.service.http.context,org.osgi.service.http.whiteboard",
+                                    osgi.service;objectClass:List&lt;String&gt;="org.osgi.service.servlet.whiteboard.runtime.HttpServiceRuntime";
+                                    uses:="org.osgi.service.servlet.whiteboard.runtime,org.osgi.service.servlet.whiteboard.runtime.dto",
                                     osgi.service;objectClass:List&lt;String&gt;="org.osgi.service.http.runtime.HttpServiceRuntime";
                                     uses:="org.osgi.service.http.runtime,org.osgi.service.http.runtime.dto",
                                     osgi.service;objectClass:List&lt;String&gt;="org.osgi.service.http.HttpService";
@@ -342,6 +348,11 @@
         </dependency>
         <dependency>
             <groupId>org.eclipse.jetty</groupId>
+            <artifactId>jetty-util-ajax</artifactId>
+            <version>${jetty.version}</version>
+        </dependency>
+        <dependency>
+            <groupId>org.eclipse.jetty</groupId>
             <artifactId>jetty-jmx</artifactId>
             <version>${jetty.version}</version>
         </dependency>
@@ -353,16 +364,6 @@
         <dependency>
             <groupId>org.eclipse.jetty</groupId>
             <artifactId>jetty-webapp</artifactId>
-            <version>${jetty.version}</version>
-        </dependency>
-        <dependency>
-            <groupId>org.eclipse.jetty.websocket</groupId>
-            <artifactId>websocket-servlet</artifactId>
-            <version>${jetty.version}</version>
-        </dependency>
-        <dependency>
-            <groupId>org.eclipse.jetty.websocket</groupId>
-            <artifactId>websocket-server</artifactId>
             <version>${jetty.version}</version>
         </dependency>
         <dependency>
@@ -400,7 +401,7 @@
         <dependency>
             <groupId>org.apache.felix</groupId>
             <artifactId>org.apache.felix.http.base</artifactId>
-            <version>4.2.0</version>
+            <version>5.0.0-SNAPSHOT</version>
         </dependency>
         <dependency>
             <groupId>commons-fileupload</groupId>
@@ -410,7 +411,7 @@
         <dependency>
             <groupId>commons-io</groupId>
             <artifactId>commons-io</artifactId>
-            <version>2.8.0</version>
+            <version>2.11.0</version>
         </dependency>
   <!-- Testing -->
         <dependency>

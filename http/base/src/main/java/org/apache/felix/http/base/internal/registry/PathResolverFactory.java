@@ -18,12 +18,12 @@ package org.apache.felix.http.base.internal.registry;
 
 import java.util.regex.Pattern;
 
-import javax.servlet.http.MappingMatch;
-
 import org.apache.felix.http.base.internal.handler.ServletHandler;
 import org.apache.felix.http.base.internal.service.HttpServiceFactory;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
+
+import jakarta.servlet.http.MappingMatch;
 
 /**
  * The path resolver factory creates a path resolver for a pattern.
