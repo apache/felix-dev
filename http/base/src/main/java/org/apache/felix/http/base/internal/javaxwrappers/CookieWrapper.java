@@ -53,7 +53,9 @@ public class CookieWrapper extends javax.servlet.http.Cookie {
         super(c.getName(), c.getValue());
         this.cookie = c;
         super.setComment(c.getComment());
-        super.setDomain(c.getDomain());
+        if ( c.getDomain() != null ) {
+            super.setDomain(c.getDomain());
+        }
         super.setHttpOnly(c.isHttpOnly());
         super.setMaxAge(c.getMaxAge());
         super.setPath(c.getPath());
