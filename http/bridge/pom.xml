@@ -63,7 +63,8 @@
                         </Export-Package>
                         <Private-Package>
                             org.apache.felix.http.base.*,
-                            org.apache.felix.http.bridge.internal.*
+                            org.apache.felix.http.bridge.internal.*,
+                            org.osgi.service.servlet.whiteboard.*
                         </Private-Package>
                         <Conditional-Package>
                             org.apache.commons.*
