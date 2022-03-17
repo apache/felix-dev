@@ -231,10 +231,10 @@ public final class WhiteboardManager
                         // nothing to do
                     }
                 }, props);
-        addTracker(new FilterTracker(this.httpBundleContext, this));
-        addTracker(new ListenersTracker(this.httpBundleContext, this));
+//        addTracker(new FilterTracker(this.httpBundleContext, this));
+//        addTracker(new ListenersTracker(this.httpBundleContext, this));
         addTracker(new PreprocessorTracker(this.httpBundleContext, this));
-        addTracker(new ServletTracker(this.httpBundleContext, this));
+//        addTracker(new ServletTracker(this.httpBundleContext, this));
         addTracker(new ResourceTracker(this.httpBundleContext, this));
         addTracker(new ServletContextHelperTracker(this.httpBundleContext, this));
         addTracker(new JavaxServletContextHelperTracker(httpBundleContext, this));
