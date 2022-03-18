@@ -1,3 +1,9 @@
+Changes from 1.1.4 to 1.1.6
+---------------------------
+Bug
+    [FELIX-6509] - Evaluation of subshell String results are wrong on Windows
+
+
 Changes from 1.1.2 to 1.1.4
 ---------------------------
 Improvement
