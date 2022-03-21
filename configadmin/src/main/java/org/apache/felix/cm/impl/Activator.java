@@ -171,7 +171,7 @@ public class Activator implements BundleActivator
         final Dictionary<String, Object> props = new Hashtable<>();
         props.put(Constants.SERVICE_DESCRIPTION, "Platform Filesystem Persistence Manager");
         props.put(Constants.SERVICE_VENDOR, "The Apache Software Foundation");
-        props.put(Constants.SERVICE_RANKING, new Integer(Integer.MIN_VALUE));
+        props.put(Constants.SERVICE_RANKING, Integer.valueOf(Integer.MIN_VALUE));
         props.put(PersistenceManager.PROPERTY_NAME, FilePersistenceManager.DEFAULT_PERSISTENCE_MANAGER_NAME);
 
         final ServiceFactory<PersistenceManager> factory = new ServiceFactory<PersistenceManager>()

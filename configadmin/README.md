@@ -187,6 +187,8 @@ The Apache Felix implementation is configurable with Framework properties. Here 
 |--|--|--|--|
 | `felix.cm.loglevel` | int | `2` | Logging level to use in the absence of an OSGi LogService. See the *Logging* section below. |
 | `felix.cm.dir` | String | `BundleContext.getDataFile("config")` | Location of the Configuration Admin configuration files. See the *Configuration Files* section below. |
+| `felix.cm.pm` | String | none | The name of the framework context property defining the persistence manager to be used. If this property is not set or empty, the built-in persistence manager (`name=file`) is used. If it is specified it refers to the `name` property of a persistence manager (`org.apache.felix.cm.PersistenceManager`) and that persistence manager needs to be registered. |
+| `felix.cm.config.plugins` | String[] | none | The name of the framework context property defining the required configuration plugins. If this property is specified it refers to the `config.plugin.id` property of a configuration plugin (`org.osgi.service.cm.ConfigurationPlugin`) and that configuration plugin must be registered and available. |
 
 ### Logging
 
