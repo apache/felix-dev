@@ -80,15 +80,8 @@ public class RequiredConfigurationPluginTrackerTest {
         };
         starter.setPersistenceManager(epm);
 
-        final ActivatorWorkerQueue queue = new ActivatorWorkerQueue() {
-
-            @Override
-            public void enqueue(Runnable r) {
-                r.run();
-            }
-        };
         final RequiredConfigurationPluginTracker tracker = new RequiredConfigurationPluginTracker(bundleContext,
-                queue, starter, pluginNames);
+                starter, pluginNames);
 
         final ServiceReference<ConfigurationPlugin> r1 = Mockito.mock(ServiceReference.class);
         Mockito.when(r1.getProperty(RequiredConfigurationPluginTracker.PROPERTY_NAME)).thenReturn("p1");

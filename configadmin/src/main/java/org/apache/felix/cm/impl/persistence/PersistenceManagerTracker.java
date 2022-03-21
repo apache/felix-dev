@@ -25,7 +25,6 @@ import java.util.List;
 
 import org.apache.felix.cm.NotCachablePersistenceManager;
 import org.apache.felix.cm.PersistenceManager;
-import org.apache.felix.cm.impl.ActivatorWorkerQueue;
 import org.apache.felix.cm.impl.ConfigurationAdminStarter;
 import org.osgi.framework.BundleContext;
 import org.osgi.framework.BundleException;
@@ -51,17 +50,13 @@ public class PersistenceManagerTracker
 
     private final BundleContext bundleContext;
 
-    private final ActivatorWorkerQueue workerQueue;
-
     private final ConfigurationAdminStarter starter;
 
     public PersistenceManagerTracker(final BundleContext bundleContext,
-            final ActivatorWorkerQueue workerQueue,
             final ConfigurationAdminStarter starter,
             final String pmName)
             throws BundleException, InvalidSyntaxException
     {
-        this.workerQueue = workerQueue;
         this.starter = starter;
         this.bundleContext = bundleContext;
         this.persistenceManagerTracker = new ServiceTracker<>(bundleContext,
@@ -108,22 +103,14 @@ public class PersistenceManagerTracker
                 Collections.sort(holders);
                 if ( holders.get(0) == holder )
                 {
-                    this.workerQueue.enqueue(new Runnable()
+                    if ( oldHolder != null )
                     {
-
-                        @Override
-                        public void run()
-                        {
-                            if ( oldHolder != null )
-                            {
-                                starter.unsetPersistenceManager();
-                            }
-                            if (!holder.isActivated()) {
-                                starter.setPersistenceManager(holder.getPersistenceManager());
-                                holder.activate();
-                            }
-                        }
-                    });
+                        starter.unsetPersistenceManager();
+                    }
+                    if (!holder.isActivated()) {
+                        starter.setPersistenceManager(holder.getPersistenceManager());
+                        holder.activate();
+                    }
                 }
             }
             return holder;
@@ -145,19 +132,11 @@ public class PersistenceManagerTracker
             Collections.sort(this.holders);
             if ( holders.get(0) == holder && oldHolder != null && oldHolder.compareTo(holder) != 0 )
             {
-                this.workerQueue.enqueue(new Runnable()
-                {
-
-                    @Override
-                    public void run()
-                    {
-                        starter.unsetPersistenceManager();
-                        if (!holder.isActivated()) {
-                            starter.setPersistenceManager(holder.getPersistenceManager());
-                            holder.activate();
-                        }
-                    }
-                });
+                starter.unsetPersistenceManager();
+                if (!holder.isActivated()) {
+                    starter.setPersistenceManager(holder.getPersistenceManager());
+                    holder.activate();
+                }
             }
         }
 
@@ -174,23 +153,15 @@ public class PersistenceManagerTracker
             this.holders.remove(holder);
             if ( deactivate )
             {
-                this.workerQueue.enqueue(new Runnable()
+                starter.unsetPersistenceManager();
+                if ( !holders.isEmpty() )
                 {
-
-                    @Override
-                    public void run()
-                    {
-                        starter.unsetPersistenceManager();
-                        if ( !holders.isEmpty() )
-                        {
-                            Holder h = holders.get(0);
-                            if (!h.isActivated()) {
-                                starter.setPersistenceManager(h.getPersistenceManager());
-                                h.activate();
-                            }
-                        }
+                    Holder h = holders.get(0);
+                    if (!h.isActivated()) {
+                        starter.setPersistenceManager(h.getPersistenceManager());
+                        h.activate();
                     }
-                });
+                }
             }
         }
     }
