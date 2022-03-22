@@ -169,7 +169,15 @@ public final class HttpServiceRuntimeImpl implements HttpServiceRuntime
         	}
         	this.serviceReg = null;
     	}
-    	this.serviceRefDTO = null;
+        synchronized ( changeCountTimerLock )
+        {
+            if ( this.changeCountTimer != null )
+            {
+                this.changeCountTimer.cancel();
+                this.changeCountTimer = null;
+            }
+        }
+        this.serviceRefDTO = null;
     }
 
     public ServiceReference<HttpServiceRuntime> getServiceReference()
@@ -206,7 +214,7 @@ public final class HttpServiceRuntimeImpl implements HttpServiceRuntime
                 final Timer timer;
                 synchronized ( this.changeCountTimerLock ) {
                     if ( this.changeCountTimer == null ) {
-                        this.changeCountTimer = new Timer();
+                        this.changeCountTimer = new Timer("Apache Felix Http Runtime Timer", true);
                     }
                     timer = this.changeCountTimer;
                 }
@@ -232,8 +240,11 @@ public final class HttpServiceRuntimeImpl implements HttpServiceRuntime
                                 {
                                     if ( changeCount.get() == count )
                                     {
-                                        changeCountTimer.cancel();
-                                        changeCountTimer = null;
+                                        if ( changeCountTimer != null ) 
+                                        {
+                                            changeCountTimer.cancel();
+                                            changeCountTimer = null;    
+                                        }
                                     }
                                 }
 

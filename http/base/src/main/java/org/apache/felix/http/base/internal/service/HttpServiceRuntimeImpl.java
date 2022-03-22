@@ -151,7 +151,15 @@ public final class HttpServiceRuntimeImpl implements HttpServiceRuntime
         	{
         		// we just ignore it
         	}
-        	this.serviceReg = null;
+            synchronized ( changeCountTimerLock )
+            {
+                if ( this.changeCountTimer != null )
+                {
+                    this.changeCountTimer.cancel();
+                    this.changeCountTimer = null;
+                }
+            }
+            this.serviceReg = null;
     	}
         if ( this.javaxServiceReg != null )
         {
@@ -181,7 +189,7 @@ public final class HttpServiceRuntimeImpl implements HttpServiceRuntime
     {
         final ServiceRegistration<HttpServiceRuntime> reg = this.serviceReg;
         final ServiceRegistration<org.osgi.service.http.runtime.HttpServiceRuntime> javaxReg = this.javaxServiceReg;
-        if ( reg != null )
+        if ( reg != null && javaxReg != null)
         {
             final long count = this.changeCount.incrementAndGet();
 
@@ -196,16 +204,13 @@ public final class HttpServiceRuntimeImpl implements HttpServiceRuntime
                 {
                     // we ignore this as this might happen on shutdown
                 }
-                if ( javaxReg != null )
+                try
                 {
-                    try
-                    {
-                        javaxReg.setProperties(attributes);
-                    }
-                    catch ( final IllegalStateException ise)
-                    {
-                        // we ignore this as this might happen on shutdown
-                    }
+                    javaxReg.setProperties(attributes);
+                }
+                catch ( final IllegalStateException ise)
+                {
+                    // we ignore this as this might happen on shutdown
                 }
             }
             else
@@ -213,7 +218,7 @@ public final class HttpServiceRuntimeImpl implements HttpServiceRuntime
                 final Timer timer;
                 synchronized ( this.changeCountTimerLock ) {
                     if ( this.changeCountTimer == null ) {
-                        this.changeCountTimer = new Timer();
+                        this.changeCountTimer = new Timer("Apache Felix Http Runtime Timer", true);
                     }
                     timer = this.changeCountTimer;
                 }
@@ -235,26 +240,25 @@ public final class HttpServiceRuntimeImpl implements HttpServiceRuntime
                                 {
                                     // we ignore this as this might happen on shutdown
                                 }
+                                try
+                                {
+                                    javaxReg.setProperties(attributes);
+                                }
+                                catch ( final IllegalStateException ise)
+                                {
+                                    // we ignore this as this might happen on shutdown
+                                }
                                 synchronized ( changeCountTimerLock )
                                 {
                                     if ( changeCount.get() == count )
                                     {
-                                        changeCountTimer.cancel();
-                                        changeCountTimer = null;
+                                        if ( changeCountTimer != null )
+                                        {
+                                            changeCountTimer.cancel();
+                                            changeCountTimer = null;    
+                                        }
                                     }
                                 }
-                                if ( javaxReg != null )
-                                {
-                                    try
-                                    {
-                                        javaxReg.setProperties(attributes);
-                                    }
-                                    catch ( final IllegalStateException ise)
-                                    {
-                                        // we ignore this as this might happen on shutdown
-                                    }
-                                }
-
                             }
                         }
                     }, this.updateChangeCountDelay);
