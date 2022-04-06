@@ -11,8 +11,9 @@ Supported sources:
 * Environment variables
 * Framework properties
 * System properties
+* Other properties within the same configuration (self references)
 
-## Usage with Secret Files
+## Interpolating Secret Files
 
 Usually secrets (for example when provided by Kubernetes) will surface as files at a certain mount point, e.g.:
 
@@ -51,7 +52,7 @@ com.my.userinfo:
 "greeting": "Hello $[env:USER]!"
 ```
 
-## Interpolating properties
+## Interpolating Framework/System properties
 
 Properties can also be interpolated in the configuration. The properties values are
 obtained through the `BundleContext.getProperty(key)` API, which will return the framework
@@ -59,6 +60,14 @@ property for the key. If the framework property is not specified, the system pro
 with this key is returned.
 
 Property values are obtained through the `$[prop:my.property]` syntax.
+
+## Interpolating configuration properties (self references)
+
+Interpolated values can also come from other values in the configuration itself.
+
+Configuration values are obtained through the `$[conf:my.property]` syntax.
+
+*Note:* Cycles are prevented and logged.
 
 ## Default Values
 

@@ -23,6 +23,7 @@ import java.io.IOException;
 import java.nio.charset.Charset;
 import java.nio.file.Files;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.Dictionary;
@@ -46,6 +47,8 @@ class InterpolationConfigurationPlugin implements ConfigurationPlugin {
     private static final String TYPE_PROP = "prop";
 
     private static final String TYPE_SECRET = "secret";
+
+    private static final String TYPE_CONF = "conf";
 
     private static final String DIRECTIVE_TYPE = "type";
 
@@ -126,7 +129,7 @@ class InterpolationConfigurationPlugin implements ConfigurationPlugin {
             String key = keys.nextElement();
             Object val = properties.get(key);
             if (val instanceof String) {
-                Object newVal = getNewValue(key, (String) val, pid);
+                Object newVal = getNewValue(key, (String) val, pid, properties);
                 if (newVal != null && !newVal.equals(val)) {
                     properties.put(key, newVal);
                     getLog().info("Replaced value of configuration property '{}' for PID {}", key, pid);
@@ -135,7 +138,7 @@ class InterpolationConfigurationPlugin implements ConfigurationPlugin {
                 String[] array = (String[]) val;
                 String[] newArray = null;
                 for (int i = 0; i < array.length; i++) {
-                    Object newVal = getNewValue(key, array[i], pid);
+                    Object newVal = getNewValue(key, array[i], pid, properties);
                     if (newVal != null && !newVal.equals(array[i])) {
                         if (newArray == null) {
                             newArray = new String[array.length];
@@ -152,15 +155,15 @@ class InterpolationConfigurationPlugin implements ConfigurationPlugin {
         }
     }
 
-    private Object getNewValue(final String key, final String value, final Object pid) {
-        final Object result = replace(key, value, pid);
+    private Object getNewValue(final String key, final String value, final Object pid, final Dictionary<String, Object> properties) {
+        final Object result = replace(key, value, pid, properties);
         if (value.equals(result)) {
             return null;
         }
         return result;
     }
 
-    Object replace(final String key, final String value, final Object pid) {
+    Object replace(final String key, final String value, final Object pid, final Dictionary<String, Object> properties) {
         final Object result = Interpolator.replace(value, (type, name, dir) -> {
             String v = null;
             if (TYPE_ENV.equals(type)) {
@@ -171,6 +174,9 @@ class InterpolationConfigurationPlugin implements ConfigurationPlugin {
 
             } else if (TYPE_SECRET.equals(type)) {
                 v = getVariableFromFile(key, name, pid);
+
+            } else if (TYPE_CONF.equals(type)) {
+                v = getVariableFromConfiguration(name, properties);
             }
             if (v == null) {
                 v = dir.get(DIRECTIVE_DEFAULT);
@@ -180,6 +186,40 @@ class InterpolationConfigurationPlugin implements ConfigurationPlugin {
             }
             return v;
         });
+        return result;
+    }
+
+    String getVariableFromConfiguration(final String name, final Dictionary<String, Object> properties) {
+        Object val = properties.get(name);
+        String result;
+        if (val.getClass().isArray()) {
+            if (val instanceof int[]) {
+                result = Arrays.toString((int[])val);
+            } else if (val instanceof long[]) {
+                result = Arrays.toString((long[])val);
+            } else if (val instanceof float[]) {
+                result = Arrays.toString((float[])val);
+            } else if (val instanceof double[]) {
+                result = Arrays.toString((double[])val);
+            } else if (val instanceof byte[]) {
+                result = Arrays.toString((byte[])val);
+            } else if (val instanceof short[]) {
+                result = Arrays.toString((short[])val);
+            } else if (val instanceof boolean[]) {
+                result = Arrays.toString((boolean[])val);
+            } else if (val instanceof char[]) {
+                result = Arrays.toString((char[])val);
+            } else {
+                result =Arrays.toString((Object[])val);
+            }
+        } else {
+            result = String.valueOf(val);
+        }
+        // prevent circular references
+        if (result.startsWith("$[conf:")) {
+            getLog().warn("There is a cycle in '{}' for PID {}, returning {}", name, properties.get(Constants.SERVICE_PID), name);
+            return name;
+        }
         return result;
     }
 
