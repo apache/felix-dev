@@ -27,7 +27,7 @@ import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 import org.osgi.framework.Bundle;
 import org.osgi.framework.BundleContext;
-import org.osgi.service.servlet.whiteboard.ServletContextHelper;
+import org.osgi.service.servlet.context.ServletContextHelper;
 
 import jakarta.servlet.ServletContext;
 

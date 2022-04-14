@@ -16,7 +16,7 @@
  * SPDX-License-Identifier: Apache-2.0 
  *******************************************************************************/
 
-package org.osgi.service.servlet.whiteboard;
+package org.osgi.service.servlet.context;
 
 import java.io.IOException;
 import java.net.URL;
@@ -29,6 +29,7 @@ import jakarta.servlet.http.HttpServletResponse;
 
 import org.osgi.annotation.versioning.ConsumerType;
 import org.osgi.framework.Bundle;
+import org.osgi.service.servlet.whiteboard.HttpWhiteboardConstants;
 
 /**
  * Helper service for a servlet context used by a Http Whiteboard implementation
@@ -97,7 +98,7 @@ import org.osgi.framework.Bundle;
  * </ul>
  * 
  * @ThreadSafe
- * @author $Id: b1080e8c428484d4f1e95c0a510099fa7ced3dc4 $
+ * @author $Id: 8c4c28cc8fd00c59d2a5b56dc5612d27b4ea7609 $
  * @see HttpWhiteboardConstants#HTTP_WHITEBOARD_CONTEXT_NAME
  * @see HttpWhiteboardConstants#HTTP_WHITEBOARD_CONTEXT_PATH
  */

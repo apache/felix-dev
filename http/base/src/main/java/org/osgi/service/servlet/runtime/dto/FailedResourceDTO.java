@@ -16,31 +16,23 @@
  * SPDX-License-Identifier: Apache-2.0 
  *******************************************************************************/
 
-package org.osgi.service.servlet.whiteboard.runtime.dto;
+package org.osgi.service.servlet.runtime.dto;
 
 /**
- * Represents a servlet context that is currently not used due to some problem.
- * 
- * The following fields return an empty array for a
- * {@code FailedServletContextDTO}:
- * <ul>
- * <li>{@link ServletContextDTO#servletDTOs}</li>
- * <li>{@link ServletContextDTO#resourceDTOs}</li>
- * <li>{@link ServletContextDTO#filterDTOs}</li>
- * <li>{@link ServletContextDTO#errorPageDTOs}</li>
- * <li>{@link ServletContextDTO#listenerDTOs}</li>
- * </ul>
+ * Represents a resource definition which is currently not being used by a
+ * servlet context due to a problem.
  * <p>
- * The method {@link ServletContextDTO#attributes} returns an empty map for a
- * {@code FailedServletContextDTO}.
- *
+ * As the resource represented by this DTO is not used due to a failure, the
+ * field {@link FailedResourceDTO#servletContextId} always returns {@code 0} and
+ * does not point to an existing servlet context.
+ * 
  * @NotThreadSafe
- * @author $Id: a34bc53757b13933cfb9748a70d76f6256eb8c6c $
+ * @author $Id: 5b5d69f64342b8481c971c9cea5a68c893acbf9a $
  */
-public class FailedServletContextDTO extends ServletContextDTO {
+public class FailedResourceDTO extends ResourceDTO {
 
 	/**
-	 * The reason why the servlet context represented by this DTO is not used.
+	 * The reason why the resource represented by this DTO is not used.
 	 * 
 	 * @see DTOConstants#FAILURE_REASON_UNKNOWN
 	 * @see DTOConstants#FAILURE_REASON_EXCEPTION_ON_INIT
@@ -50,4 +42,5 @@ public class FailedServletContextDTO extends ServletContextDTO {
 	 * @see DTOConstants#FAILURE_REASON_SHADOWED_BY_OTHER_SERVICE
 	 */
 	public int	failureReason;
+
 }

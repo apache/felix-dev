@@ -16,24 +16,31 @@
  * SPDX-License-Identifier: Apache-2.0 
  *******************************************************************************/
 
-package org.osgi.service.servlet.whiteboard.runtime.dto;
+package org.osgi.service.servlet.runtime.dto;
 
 /**
- * Represents a preprocessor service which is currently not being used due to a
- * problem.
+ * Represents a {@code jakarta.servlet.Servlet} service registered as an error
+ * page but currently not being used by a servlet context due to a problem.
+ * <p>
+ * As the servlet represented by this DTO is not used due to a failure, the
+ * field {@link FailedErrorPageDTO#servletContextId} always returns {@code 0}
+ * and does not point to an existing
+ * {@code org.osgi.service.servlet.context.ServletContextHelper}.
  * 
  * @NotThreadSafe
- * @author $Id: ab753c468cc54608ed9ff7df6df98601d50b761c $
- * @since 1.1
+ * @author $Id: d8aec200665b81725cb9b23822f9f05a300d47a8 $
  */
-public class FailedPreprocessorDTO extends PreprocessorDTO {
+public class FailedErrorPageDTO extends ErrorPageDTO {
 
 	/**
-	 * The reason why the preprocessor represented by this DTO is not used.
+	 * The reason why the servlet represented by this DTO is not used.
 	 * 
 	 * @see DTOConstants#FAILURE_REASON_UNKNOWN
 	 * @see DTOConstants#FAILURE_REASON_EXCEPTION_ON_INIT
+	 * @see DTOConstants#FAILURE_REASON_NO_SERVLET_CONTEXT_MATCHING
 	 * @see DTOConstants#FAILURE_REASON_SERVICE_NOT_GETTABLE
+	 * @see DTOConstants#FAILURE_REASON_SERVLET_CONTEXT_FAILURE
+	 * @see DTOConstants#FAILURE_REASON_SHADOWED_BY_OTHER_SERVICE
 	 */
 	public int	failureReason;
 

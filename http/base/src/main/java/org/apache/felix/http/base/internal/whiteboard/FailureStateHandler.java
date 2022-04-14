@@ -16,12 +16,12 @@
  */
 package org.apache.felix.http.base.internal.whiteboard;
 
-import static org.osgi.service.servlet.whiteboard.runtime.dto.DTOConstants.FAILURE_REASON_NO_SERVLET_CONTEXT_MATCHING;
-import static org.osgi.service.servlet.whiteboard.runtime.dto.DTOConstants.FAILURE_REASON_SERVICE_NOT_GETTABLE;
-import static org.osgi.service.servlet.whiteboard.runtime.dto.DTOConstants.FAILURE_REASON_SERVLET_CONTEXT_FAILURE;
-import static org.osgi.service.servlet.whiteboard.runtime.dto.DTOConstants.FAILURE_REASON_SHADOWED_BY_OTHER_SERVICE;
-import static org.osgi.service.servlet.whiteboard.runtime.dto.DTOConstants.FAILURE_REASON_UNKNOWN;
-import static org.osgi.service.servlet.whiteboard.runtime.dto.DTOConstants.FAILURE_REASON_VALIDATION_FAILED;
+import static org.osgi.service.servlet.runtime.dto.DTOConstants.FAILURE_REASON_NO_SERVLET_CONTEXT_MATCHING;
+import static org.osgi.service.servlet.runtime.dto.DTOConstants.FAILURE_REASON_SERVICE_NOT_GETTABLE;
+import static org.osgi.service.servlet.runtime.dto.DTOConstants.FAILURE_REASON_SERVLET_CONTEXT_FAILURE;
+import static org.osgi.service.servlet.runtime.dto.DTOConstants.FAILURE_REASON_SHADOWED_BY_OTHER_SERVICE;
+import static org.osgi.service.servlet.runtime.dto.DTOConstants.FAILURE_REASON_UNKNOWN;
+import static org.osgi.service.servlet.runtime.dto.DTOConstants.FAILURE_REASON_VALIDATION_FAILED;
 
 import java.util.HashSet;
 import java.util.Iterator;

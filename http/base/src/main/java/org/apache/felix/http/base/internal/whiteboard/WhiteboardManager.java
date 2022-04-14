@@ -16,10 +16,10 @@
  */
 package org.apache.felix.http.base.internal.whiteboard;
 
-import static org.osgi.service.servlet.whiteboard.runtime.dto.DTOConstants.FAILURE_REASON_NO_SERVLET_CONTEXT_MATCHING;
-import static org.osgi.service.servlet.whiteboard.runtime.dto.DTOConstants.FAILURE_REASON_SHADOWED_BY_OTHER_SERVICE;
-import static org.osgi.service.servlet.whiteboard.runtime.dto.DTOConstants.FAILURE_REASON_UNKNOWN;
-import static org.osgi.service.servlet.whiteboard.runtime.dto.DTOConstants.FAILURE_REASON_VALIDATION_FAILED;
+import static org.osgi.service.servlet.runtime.dto.DTOConstants.FAILURE_REASON_NO_SERVLET_CONTEXT_MATCHING;
+import static org.osgi.service.servlet.runtime.dto.DTOConstants.FAILURE_REASON_SHADOWED_BY_OTHER_SERVICE;
+import static org.osgi.service.servlet.runtime.dto.DTOConstants.FAILURE_REASON_UNKNOWN;
+import static org.osgi.service.servlet.runtime.dto.DTOConstants.FAILURE_REASON_VALIDATION_FAILED;
 
 import java.io.IOException;
 import java.util.ArrayList;
@@ -79,13 +79,13 @@ import org.osgi.framework.InvalidSyntaxException;
 import org.osgi.framework.ServiceFactory;
 import org.osgi.framework.ServiceReference;
 import org.osgi.framework.ServiceRegistration;
+import org.osgi.service.servlet.context.ServletContextHelper;
+import org.osgi.service.servlet.runtime.HttpServiceRuntimeConstants;
+import org.osgi.service.servlet.runtime.dto.DTOConstants;
+import org.osgi.service.servlet.runtime.dto.PreprocessorDTO;
+import org.osgi.service.servlet.runtime.dto.ServletContextDTO;
 import org.osgi.service.servlet.whiteboard.HttpWhiteboardConstants;
 import org.osgi.service.servlet.whiteboard.Preprocessor;
-import org.osgi.service.servlet.whiteboard.ServletContextHelper;
-import org.osgi.service.servlet.whiteboard.runtime.HttpServiceRuntimeConstants;
-import org.osgi.service.servlet.whiteboard.runtime.dto.DTOConstants;
-import org.osgi.service.servlet.whiteboard.runtime.dto.PreprocessorDTO;
-import org.osgi.service.servlet.whiteboard.runtime.dto.ServletContextDTO;
 import org.osgi.util.tracker.ServiceTracker;
 
 import jakarta.servlet.FilterChain;
@@ -231,10 +231,10 @@ public final class WhiteboardManager
                         // nothing to do
                     }
                 }, props);
-//        addTracker(new FilterTracker(this.httpBundleContext, this));
-//        addTracker(new ListenersTracker(this.httpBundleContext, this));
+        addTracker(new FilterTracker(this.httpBundleContext, this));
+        addTracker(new ListenersTracker(this.httpBundleContext, this));
         addTracker(new PreprocessorTracker(this.httpBundleContext, this));
-//        addTracker(new ServletTracker(this.httpBundleContext, this));
+        addTracker(new ServletTracker(this.httpBundleContext, this));
         addTracker(new ResourceTracker(this.httpBundleContext, this));
         addTracker(new ServletContextHelperTracker(this.httpBundleContext, this));
         addTracker(new JavaxServletContextHelperTracker(httpBundleContext, this));

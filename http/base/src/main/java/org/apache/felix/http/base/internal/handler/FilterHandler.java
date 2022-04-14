@@ -23,7 +23,7 @@ import org.apache.felix.http.base.internal.logger.SystemLogger;
 import org.apache.felix.http.base.internal.runtime.FilterInfo;
 import org.jetbrains.annotations.NotNull;
 import org.osgi.framework.BundleContext;
-import org.osgi.service.servlet.whiteboard.runtime.dto.DTOConstants;
+import org.osgi.service.servlet.runtime.dto.DTOConstants;
 
 import jakarta.servlet.Filter;
 import jakarta.servlet.FilterChain;

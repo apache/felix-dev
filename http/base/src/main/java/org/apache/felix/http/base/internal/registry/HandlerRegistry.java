@@ -30,7 +30,7 @@ import org.apache.felix.http.base.internal.runtime.ServletContextHelperInfo;
 import org.apache.felix.http.base.internal.runtime.dto.FailedDTOHolder;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
-import org.osgi.service.servlet.whiteboard.runtime.dto.ServletContextDTO;
+import org.osgi.service.servlet.runtime.dto.ServletContextDTO;
 
 /**
  * Registry for all services.

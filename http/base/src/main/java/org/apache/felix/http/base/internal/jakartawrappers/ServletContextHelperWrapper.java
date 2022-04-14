@@ -23,7 +23,7 @@ import java.util.Set;
 import org.apache.felix.http.base.internal.javaxwrappers.ServletRequestWrapper;
 import org.apache.felix.http.base.internal.javaxwrappers.ServletResponseWrapper;
 import org.jetbrains.annotations.NotNull;
-import org.osgi.service.servlet.whiteboard.ServletContextHelper;
+import org.osgi.service.servlet.context.ServletContextHelper;
 
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;

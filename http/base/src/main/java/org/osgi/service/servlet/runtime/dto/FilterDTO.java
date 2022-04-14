@@ -16,7 +16,7 @@
  * SPDX-License-Identifier: Apache-2.0 
  *******************************************************************************/
 
-package org.osgi.service.servlet.whiteboard.runtime.dto;
+package org.osgi.service.servlet.runtime.dto;
 
 import java.util.Map;
 

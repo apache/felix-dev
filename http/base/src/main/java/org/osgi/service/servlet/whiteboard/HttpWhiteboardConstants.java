@@ -18,14 +18,14 @@
 
 package org.osgi.service.servlet.whiteboard;
 
-import jakarta.servlet.Servlet;
-
 import org.osgi.framework.Filter;
+
+import jakarta.servlet.Servlet;
 
 /**
  * Defines standard constants for the Http Whiteboard services.
  * 
- * @author $Id: 42ca5b7dedd1df3b0c97199d1ee35b89a546e5a8 $
+ * @author $Id: 986fdabd5b705847f42d6306b8093659b9e7f68e $
  */
 public final class HttpWhiteboardConstants {
 	private HttpWhiteboardConstants() {
@@ -33,23 +33,22 @@ public final class HttpWhiteboardConstants {
 	}
 
 	/**
-	 * Service property specifying the name of an {@link ServletContextHelper}
-	 * service.
-	 * 
+	 * Service property specifying the name of an
+	 * {@link org.osgi.service.servlet.context.ServletContextHelper} service.
 	 * <p>
-	 * For {@link ServletContextHelper} services, this service property must be
-	 * specified. Context services without this service property are ignored.
-	 * 
+	 * For {@link org.osgi.service.servlet.context.ServletContextHelper}
+	 * services, this service property must be specified. Context services
+	 * without this service property are ignored.
 	 * <p>
 	 * Servlet, listener, servlet filter, and resource services might refer to a
-	 * specific {@link ServletContextHelper} service referencing the name with
-	 * the {@link #HTTP_WHITEBOARD_CONTEXT_SELECT} property.
-	 * 
+	 * specific {@link org.osgi.service.servlet.context.ServletContextHelper}
+	 * service referencing the name with the
+	 * {@link #HTTP_WHITEBOARD_CONTEXT_SELECT} property.
 	 * <p>
-	 * For {@link ServletContextHelper} services, the value of this service
-	 * property must be of type {@code String}. The value must follow the
-	 * "symbolic-name" specification from Section 1.3.2 of the OSGi Core
-	 * Specification.
+	 * For {@link org.osgi.service.servlet.context.ServletContextHelper}
+	 * services, the value of this service property must be of type
+	 * {@code String}. The value must follow the "symbolic-name" specification
+	 * from Section 1.3.2 of the OSGi Core Specification.
 	 * 
 	 * @see #HTTP_WHITEBOARD_CONTEXT_PATH
 	 * @see #HTTP_WHITEBOARD_CONTEXT_SELECT
@@ -58,33 +57,32 @@ public final class HttpWhiteboardConstants {
 	public static final String	HTTP_WHITEBOARD_CONTEXT_NAME				= "osgi.http.whiteboard.context.name";
 
 	/**
-	 * The name of the default {@link ServletContextHelper}. If a service is
-	 * registered with this property, it is overriding the default context with
-	 * a custom provided context.
+	 * The name of the default
+	 * {@link org.osgi.service.servlet.context.ServletContextHelper}. If a
+	 * service is registered with this property, it is overriding the default
+	 * context with a custom provided context.
 	 * 
 	 * @see #HTTP_WHITEBOARD_CONTEXT_NAME
 	 */
 	public static final String	HTTP_WHITEBOARD_DEFAULT_CONTEXT_NAME		= "default";
 
 	/**
-	 * Service property specifying the path of an {@link ServletContextHelper}
-	 * service.
-	 * 
+	 * Service property specifying the path of an
+	 * {@link org.osgi.service.servlet.context.ServletContextHelper} service.
 	 * <p>
-	 * For {@link ServletContextHelper} services this service property is
-	 * required. Context services without this service property are ignored.
-	 * 
+	 * For {@link org.osgi.service.servlet.context.ServletContextHelper}
+	 * services this service property is required. Context services without this
+	 * service property are ignored.
 	 * <p>
 	 * This property defines a context path under which all whiteboard services
 	 * associated with this context are registered. Having different contexts
 	 * with different paths allows to separate the URL space.
-	 * 
 	 * <p>
-	 * For {@link ServletContextHelper} services, the value of this service
-	 * property must be of type {@code String}. The value is either a slash for
-	 * the root or it must start with a slash but not end with a slash. Valid
-	 * characters are defined in rfc3986#section-3.3. Contexts with an invalid
-	 * path are ignored.
+	 * For {@link org.osgi.service.servlet.context.ServletContextHelper}
+	 * services, the value of this service property must be of type
+	 * {@code String}. The value is either a slash for the root or it must start
+	 * with a slash but not end with a slash. Valid characters are defined in
+	 * rfc3986#section-3.3. Contexts with an invalid path are ignored.
 	 * 
 	 * @see #HTTP_WHITEBOARD_CONTEXT_NAME
 	 * @see #HTTP_WHITEBOARD_CONTEXT_SELECT
@@ -92,34 +90,34 @@ public final class HttpWhiteboardConstants {
 	public static final String	HTTP_WHITEBOARD_CONTEXT_PATH				= "osgi.http.whiteboard.context.path";
 
 	/**
-	 * Service property prefix referencing a {@link ServletContextHelper}
-	 * service.
-	 * 
+	 * Service property prefix referencing a
+	 * {@link org.osgi.service.servlet.context.ServletContextHelper} service.
 	 * <p>
-	 * For {@link ServletContextHelper} services this prefix can be used for
-	 * service properties to mark them as initialization parameters which can be
-	 * retrieved from the associated servlet context. The prefix is removed from
-	 * the service property name to build the initialization parameter name.
-	 *
+	 * For {@link org.osgi.service.servlet.context.ServletContextHelper}
+	 * services this prefix can be used for service properties to mark them as
+	 * initialization parameters which can be retrieved from the associated
+	 * servlet context. The prefix is removed from the service property name to
+	 * build the initialization parameter name.
 	 * <p>
-	 * For {@link ServletContextHelper} services, the value of each
-	 * initialization parameter service property must be of type {@code String}.
-	 * 
+	 * For {@link org.osgi.service.servlet.context.ServletContextHelper}
+	 * services, the value of each initialization parameter service property
+	 * must be of type {@code String}.
 	 */
 	public static final String	HTTP_WHITEBOARD_CONTEXT_INIT_PARAM_PREFIX	= "context.init.";
 
 	/**
-	 * Service property referencing a {@link ServletContextHelper} service.
-	 * 
+	 * Service property referencing a
+	 * {@link org.osgi.service.servlet.context.ServletContextHelper} service.
 	 * <p>
 	 * For servlet, listener, servlet filter, or resource services, this service
-	 * property refers to the associated {@code ServletContextHelper} service.
+	 * property refers to the associated
+	 * {@code org.osgi.service.servlet.context.ServletContextHelper} service.
 	 * The value of this property is a filter expression which is matched
 	 * against the service registration properties of the
-	 * {@code ServletContextHelper} service. If this service property is not
-	 * specified, the default context is used. If there is no context service
-	 * matching, the servlet, listener, servlet filter, or resource service is
-	 * ignored.
+	 * {@code org.osgi.service.servlet.context.ServletContextHelper} service. If
+	 * this service property is not specified, the default context is used. If
+	 * there is no context service matching, the servlet, listener, servlet
+	 * filter, or resource service is ignored.
 	 * <p>
 	 * For example, if a whiteboard service wants to select a servlet context
 	 * helper with the name &quot;Admin&quot; the expression would be
@@ -150,7 +148,7 @@ public final class HttpWhiteboardConstants {
 	 * property to apply the filter to the servlet.
 	 * <p>
 	 * Servlet names should be unique among all servlet services associated with
-	 * a single {@link ServletContextHelper}.
+	 * a single {@link org.osgi.service.servlet.context.ServletContextHelper}.
 	 * <p>
 	 * The value of this service property must be of type {@code String}.
 	 */
@@ -299,17 +297,15 @@ public final class HttpWhiteboardConstants {
 	/**
 	 * Service property specifying the servlet filter name of a {@code Filter}
 	 * service.
-	 * 
 	 * <p>
 	 * This name is used as the value for the
 	 * {@code FilterConfig.getFilterName()} method. If this service property is
 	 * not specified, the fully qualified name of the service object's class is
 	 * used as the servlet filter name.
-	 * 
 	 * <p>
 	 * Servlet filter names should be unique among all servlet filter services
-	 * associated with a single {@link ServletContextHelper}.
-	 * 
+	 * associated with a single
+	 * {@link org.osgi.service.servlet.context.ServletContextHelper}.
 	 * <p>
 	 * The value of this service property must be of type {@code String}.
 	 */
@@ -540,7 +536,7 @@ public final class HttpWhiteboardConstants {
 	 * An Http Whiteboard implementation can define any number of service
 	 * properties which can be referenced by the target filter. The service
 	 * properties should always include the
-	 * {@link org.osgi.service.servlet.whiteboard.runtime.HttpServiceRuntimeConstants#HTTP_SERVICE_ENDPOINT
+	 * {@link org.osgi.service.servlet.runtime.HttpServiceRuntimeConstants#HTTP_SERVICE_ENDPOINT
 	 * osgi.http.endpoint} service property if the endpoint information is
 	 * known.
 	 * 

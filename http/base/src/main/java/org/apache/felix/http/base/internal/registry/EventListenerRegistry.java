@@ -38,9 +38,9 @@ import jakarta.servlet.http.HttpSessionListener;
 import org.apache.felix.http.base.internal.handler.ListenerHandler;
 import org.apache.felix.http.base.internal.logger.SystemLogger;
 import org.apache.felix.http.base.internal.runtime.ListenerInfo;
-import org.osgi.service.servlet.whiteboard.runtime.dto.FailedListenerDTO;
-import org.osgi.service.servlet.whiteboard.runtime.dto.ListenerDTO;
-import org.osgi.service.servlet.whiteboard.runtime.dto.ServletContextDTO;
+import org.osgi.service.servlet.runtime.dto.FailedListenerDTO;
+import org.osgi.service.servlet.runtime.dto.ListenerDTO;
+import org.osgi.service.servlet.runtime.dto.ServletContextDTO;
 
 /**
  * Per context event listener registry.

@@ -28,8 +28,8 @@ import jakarta.servlet.ServletContext;
 
 import org.apache.felix.http.base.internal.runtime.ServletContextHelperInfo;
 import org.osgi.dto.DTO;
-import org.osgi.service.servlet.whiteboard.runtime.dto.FailedServletContextDTO;
-import org.osgi.service.servlet.whiteboard.runtime.dto.ServletContextDTO;
+import org.osgi.service.servlet.runtime.dto.FailedServletContextDTO;
+import org.osgi.service.servlet.runtime.dto.ServletContextDTO;
 
 public final class ServletContextDTOBuilder
 {

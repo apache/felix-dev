@@ -23,7 +23,7 @@ import org.apache.felix.http.base.internal.runtime.PreprocessorInfo;
 import org.jetbrains.annotations.NotNull;
 import org.osgi.framework.BundleContext;
 import org.osgi.framework.ServiceReference;
-import org.osgi.service.servlet.whiteboard.runtime.dto.DTOConstants;
+import org.osgi.service.servlet.runtime.dto.DTOConstants;
 import org.osgi.service.servlet.whiteboard.Preprocessor;
 
 import jakarta.servlet.FilterChain;

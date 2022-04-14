@@ -18,23 +18,23 @@ package org.apache.felix.http.base.internal.javaxwrappers;
 
 import org.osgi.framework.ServiceReference;
 import org.osgi.framework.dto.ServiceReferenceDTO;
-import org.osgi.service.servlet.whiteboard.runtime.HttpServiceRuntime;
-import org.osgi.service.servlet.whiteboard.runtime.dto.ErrorPageDTO;
-import org.osgi.service.servlet.whiteboard.runtime.dto.FailedErrorPageDTO;
-import org.osgi.service.servlet.whiteboard.runtime.dto.FailedFilterDTO;
-import org.osgi.service.servlet.whiteboard.runtime.dto.FailedListenerDTO;
-import org.osgi.service.servlet.whiteboard.runtime.dto.FailedPreprocessorDTO;
-import org.osgi.service.servlet.whiteboard.runtime.dto.FailedResourceDTO;
-import org.osgi.service.servlet.whiteboard.runtime.dto.FailedServletContextDTO;
-import org.osgi.service.servlet.whiteboard.runtime.dto.FailedServletDTO;
-import org.osgi.service.servlet.whiteboard.runtime.dto.FilterDTO;
-import org.osgi.service.servlet.whiteboard.runtime.dto.ListenerDTO;
-import org.osgi.service.servlet.whiteboard.runtime.dto.PreprocessorDTO;
-import org.osgi.service.servlet.whiteboard.runtime.dto.RequestInfoDTO;
-import org.osgi.service.servlet.whiteboard.runtime.dto.ResourceDTO;
-import org.osgi.service.servlet.whiteboard.runtime.dto.RuntimeDTO;
-import org.osgi.service.servlet.whiteboard.runtime.dto.ServletContextDTO;
-import org.osgi.service.servlet.whiteboard.runtime.dto.ServletDTO;
+import org.osgi.service.servlet.runtime.HttpServiceRuntime;
+import org.osgi.service.servlet.runtime.dto.ErrorPageDTO;
+import org.osgi.service.servlet.runtime.dto.FailedErrorPageDTO;
+import org.osgi.service.servlet.runtime.dto.FailedFilterDTO;
+import org.osgi.service.servlet.runtime.dto.FailedListenerDTO;
+import org.osgi.service.servlet.runtime.dto.FailedPreprocessorDTO;
+import org.osgi.service.servlet.runtime.dto.FailedResourceDTO;
+import org.osgi.service.servlet.runtime.dto.FailedServletContextDTO;
+import org.osgi.service.servlet.runtime.dto.FailedServletDTO;
+import org.osgi.service.servlet.runtime.dto.FilterDTO;
+import org.osgi.service.servlet.runtime.dto.ListenerDTO;
+import org.osgi.service.servlet.runtime.dto.PreprocessorDTO;
+import org.osgi.service.servlet.runtime.dto.RequestInfoDTO;
+import org.osgi.service.servlet.runtime.dto.ResourceDTO;
+import org.osgi.service.servlet.runtime.dto.RuntimeDTO;
+import org.osgi.service.servlet.runtime.dto.ServletContextDTO;
+import org.osgi.service.servlet.runtime.dto.ServletDTO;
 
 /**
  * Wrapper for the service runtime

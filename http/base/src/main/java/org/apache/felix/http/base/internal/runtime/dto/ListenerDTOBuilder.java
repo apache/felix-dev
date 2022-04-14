@@ -22,8 +22,8 @@ import java.util.Arrays;
 
 import org.apache.felix.http.base.internal.handler.ListenerHandler;
 import org.apache.felix.http.base.internal.runtime.ListenerInfo;
-import org.osgi.service.servlet.whiteboard.runtime.dto.FailedListenerDTO;
-import org.osgi.service.servlet.whiteboard.runtime.dto.ListenerDTO;
+import org.osgi.service.servlet.runtime.dto.FailedListenerDTO;
+import org.osgi.service.servlet.runtime.dto.ListenerDTO;
 
 public final class ListenerDTOBuilder
 {

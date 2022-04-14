@@ -30,9 +30,9 @@ import org.apache.felix.http.base.internal.handler.FilterHandler;
 import org.apache.felix.http.base.internal.handler.ServletHandler;
 import org.apache.felix.http.base.internal.runtime.FilterInfo;
 import org.apache.felix.http.base.internal.runtime.dto.FilterDTOBuilder;
-import org.osgi.service.servlet.whiteboard.runtime.dto.FailedFilterDTO;
-import org.osgi.service.servlet.whiteboard.runtime.dto.FilterDTO;
-import org.osgi.service.servlet.whiteboard.runtime.dto.ServletContextDTO;
+import org.osgi.service.servlet.runtime.dto.FailedFilterDTO;
+import org.osgi.service.servlet.runtime.dto.FilterDTO;
+import org.osgi.service.servlet.runtime.dto.ServletContextDTO;
 
 /**
  * The filter registry keeps track of all filter mappings for a single servlet context.

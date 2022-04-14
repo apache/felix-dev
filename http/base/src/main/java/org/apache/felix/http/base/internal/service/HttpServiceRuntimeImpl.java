@@ -33,9 +33,9 @@ import org.osgi.framework.BundleContext;
 import org.osgi.framework.ServiceReference;
 import org.osgi.framework.ServiceRegistration;
 import org.osgi.framework.dto.ServiceReferenceDTO;
-import org.osgi.service.servlet.whiteboard.runtime.HttpServiceRuntime;
-import org.osgi.service.servlet.whiteboard.runtime.dto.RequestInfoDTO;
-import org.osgi.service.servlet.whiteboard.runtime.dto.RuntimeDTO;
+import org.osgi.service.servlet.runtime.HttpServiceRuntime;
+import org.osgi.service.servlet.runtime.dto.RequestInfoDTO;
+import org.osgi.service.servlet.runtime.dto.RuntimeDTO;
 
 public final class HttpServiceRuntimeImpl implements HttpServiceRuntime
 {

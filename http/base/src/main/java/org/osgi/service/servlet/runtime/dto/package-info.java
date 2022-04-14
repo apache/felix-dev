@@ -26,17 +26,17 @@
  * <p>
  * Example import for consumers using the API in this package:
  * <p>
- * {@code  Import-Package: org.osgi.service.servlet.whiteboard.runtime.dto; version="[2.0,3.0)"}
+ * {@code  Import-Package: org.osgi.service.servlet.runtime.dto; version="[2.0,3.0)"}
  * <p>
  * Example import for providers implementing the API in this package:
  * <p>
- * {@code  Import-Package: org.osgi.service.servlet.whiteboard.runtime.dto; version="[2.0,3.1)"}
+ * {@code  Import-Package: org.osgi.service.servlet.runtime.dto; version="[2.0,3.1)"}
  * 
  * @author $Id: ad5c4695782df6c27613e6e00daf7e20aff78a98 $
  */
 
 @Version(HTTP_WHITEBOARD_SPECIFICATION_VERSION + ".0")
-package org.osgi.service.servlet.whiteboard.runtime.dto;
+package org.osgi.service.servlet.runtime.dto;
 
 import static org.osgi.service.servlet.whiteboard.HttpWhiteboardConstants.HTTP_WHITEBOARD_SPECIFICATION_VERSION;
 

@@ -21,7 +21,7 @@ import java.util.EventListener;
 import org.apache.felix.http.base.internal.context.ExtServletContext;
 import org.apache.felix.http.base.internal.runtime.ListenerInfo;
 import org.osgi.framework.BundleContext;
-import org.osgi.service.servlet.whiteboard.runtime.dto.DTOConstants;
+import org.osgi.service.servlet.runtime.dto.DTOConstants;
 
 /**
  * The listener handler handles the initialization and destruction of listener

@@ -16,20 +16,20 @@
  * SPDX-License-Identifier: Apache-2.0 
  *******************************************************************************/
 
-package org.osgi.service.servlet.whiteboard.runtime.dto;
+package org.osgi.service.servlet.runtime.dto;
 
 /**
- * Represents a {@code jakarta.servlet.Servlet} service registered as an error
- * page but currently not being used by a servlet context due to a problem.
+ * Represents a {@code jakarta.servlet.Servlet} service which is currently not
+ * being used by a servlet context due to a problem.
  * <p>
  * As the servlet represented by this DTO is not used due to a failure, the
- * field {@link FailedErrorPageDTO#servletContextId} always returns {@code 0}
- * and does not point to an existing {@code ServletContextHelper}.
+ * field {@link FailedServletDTO#servletContextId} always returns {@code 0} and
+ * does not point to an existing servlet context.
  * 
  * @NotThreadSafe
- * @author $Id: 825431b9b203fc72787b0f59e94a69c09d3669dc $
+ * @author $Id: c38e5223a80f9dd52a669cc516b27ff1b6fdf953 $
  */
-public class FailedErrorPageDTO extends ErrorPageDTO {
+public class FailedServletDTO extends ServletDTO {
 
 	/**
 	 * The reason why the servlet represented by this DTO is not used.
@@ -40,7 +40,9 @@ public class FailedErrorPageDTO extends ErrorPageDTO {
 	 * @see DTOConstants#FAILURE_REASON_SERVICE_NOT_GETTABLE
 	 * @see DTOConstants#FAILURE_REASON_SERVLET_CONTEXT_FAILURE
 	 * @see DTOConstants#FAILURE_REASON_SHADOWED_BY_OTHER_SERVICE
+	 * @see DTOConstants#FAILURE_REASON_SERVLET_WRITE_TO_LOCATION_DENIED
+	 * @see DTOConstants#FAILURE_REASON_WHITEBOARD_WRITE_TO_DEFAULT_DENIED
+	 * @see DTOConstants#FAILURE_REASON_SERVLET_READ_FROM_DEFAULT_DENIED
 	 */
 	public int	failureReason;
-
 }

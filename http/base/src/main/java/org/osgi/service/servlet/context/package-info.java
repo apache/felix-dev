@@ -17,7 +17,7 @@
  *******************************************************************************/
 
 /**
- * Http Runtime Package Version 2.0.
+ * Http Context Package Version 2.0.
  * <p>
  * Bundles wishing to use this package must list the package in the
  * Import-Package header of the bundle's manifest. This package has two types of
@@ -26,17 +26,17 @@
  * <p>
  * Example import for consumers using the API in this package:
  * <p>
- * {@code  Import-Package: org.osgi.service.servlet.whiteboard.runtime; version="[2.0,3.0)"}
+ * {@code  Import-Package: org.osgi.service.servlet.context; version="[2.0,3.0)"}
  * <p>
  * Example import for providers implementing the API in this package:
  * <p>
- * {@code  Import-Package: org.osgi.service.servlet.whiteboard.runtime; version="[2.0,2.1)"}
+ * {@code  Import-Package: org.osgi.service.servlet.context; version="[2.0,2.1)"}
  * 
- * @author $Id: 0fe988614ef6019ea42a1e47e76863d722cbb948 $
+ * @author $Id: e46233b315016463a9b79188e11cfac678f56783 $
  */
 
 @Version(HTTP_WHITEBOARD_SPECIFICATION_VERSION + ".0")
-package org.osgi.service.servlet.whiteboard.runtime;
+package org.osgi.service.servlet.context;
 
 import static org.osgi.service.servlet.whiteboard.HttpWhiteboardConstants.HTTP_WHITEBOARD_SPECIFICATION_VERSION;
 

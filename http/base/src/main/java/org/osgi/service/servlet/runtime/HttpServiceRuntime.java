@@ -16,11 +16,11 @@
  * SPDX-License-Identifier: Apache-2.0 
  *******************************************************************************/
 
-package org.osgi.service.servlet.whiteboard.runtime;
+package org.osgi.service.servlet.runtime;
 
 import org.osgi.annotation.versioning.ProviderType;
-import org.osgi.service.servlet.whiteboard.runtime.dto.RequestInfoDTO;
-import org.osgi.service.servlet.whiteboard.runtime.dto.RuntimeDTO;
+import org.osgi.service.servlet.runtime.dto.RequestInfoDTO;
+import org.osgi.service.servlet.runtime.dto.RuntimeDTO;
 
 /**
  * The HttpServiceRuntime service represents the runtime information of an Http

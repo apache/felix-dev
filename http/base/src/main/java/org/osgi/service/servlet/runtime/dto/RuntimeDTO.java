@@ -16,7 +16,7 @@
  * SPDX-License-Identifier: Apache-2.0 
  *******************************************************************************/
 
-package org.osgi.service.servlet.whiteboard.runtime.dto;
+package org.osgi.service.servlet.runtime.dto;
 
 import org.osgi.dto.DTO;
 import org.osgi.framework.dto.ServiceReferenceDTO;
@@ -31,7 +31,7 @@ public class RuntimeDTO extends DTO {
 
 	/**
 	 * The DTO for the corresponding
-	 * {@code org.osgi.service.servlet.whiteboard.runtime.HttpServiceRuntime}.
+	 * {@code org.osgi.service.servlet.runtime.HttpServiceRuntime}.
 	 * This value is never {@code null}.
 	 */
 	public ServiceReferenceDTO			serviceDTO;

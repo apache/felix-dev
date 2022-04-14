@@ -16,7 +16,7 @@
  * SPDX-License-Identifier: Apache-2.0 
  *******************************************************************************/
 
-package org.osgi.service.servlet.whiteboard.runtime.dto;
+package org.osgi.service.servlet.runtime.dto;
 
 /**
  * Defines standard constants for the DTOs.
@@ -32,13 +32,14 @@ public final class DTOConstants {
 	public static final int	FAILURE_REASON_UNKNOWN						= 0;
 
 	/**
-	 * No matching {@code ServletContextHelper}.
+	 * No matching
+	 * {@code org.osgi.service.servlet.context.ServletContextHelper}.
 	 **/
 	public static final int	FAILURE_REASON_NO_SERVLET_CONTEXT_MATCHING	= 1;
 
 	/**
-	 * Matching {@code ServletContextHelper}, but the context is not used due to
-	 * a problem with the context.
+	 * Matching {@code org.osgi.service.servlet.context.ServletContextHelper},
+	 * but the context is not used due to a problem with the context.
 	 */
 	public static final int	FAILURE_REASON_SERVLET_CONTEXT_FAILURE		= 2;
 

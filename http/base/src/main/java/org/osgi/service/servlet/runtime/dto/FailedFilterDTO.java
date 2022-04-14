@@ -16,23 +16,23 @@
  * SPDX-License-Identifier: Apache-2.0 
  *******************************************************************************/
 
-package org.osgi.service.servlet.whiteboard.runtime.dto;
+package org.osgi.service.servlet.runtime.dto;
 
 /**
- * Represents a resource definition which is currently not being used by a
- * servlet context due to a problem.
+ * Represents a servlet {@code Filter} service which is currently not being used
+ * by a servlet context due to a problem.
  * <p>
- * As the resource represented by this DTO is not used due to a failure, the
- * field {@link FailedResourceDTO#servletContextId} always returns {@code 0} and
+ * As the service represented by this DTO is not used due to a failure, the
+ * field {@link FailedFilterDTO#servletContextId} always returns {@code 0} and
  * does not point to an existing servlet context.
  * 
  * @NotThreadSafe
- * @author $Id: 5b5d69f64342b8481c971c9cea5a68c893acbf9a $
+ * @author $Id: 731a48dc3e5862ed5105c6deb77f349eedea993b $
  */
-public class FailedResourceDTO extends ResourceDTO {
+public class FailedFilterDTO extends FilterDTO {
 
 	/**
-	 * The reason why the resource represented by this DTO is not used.
+	 * The reason why the servlet filter represented by this DTO is not used.
 	 * 
 	 * @see DTOConstants#FAILURE_REASON_UNKNOWN
 	 * @see DTOConstants#FAILURE_REASON_EXCEPTION_ON_INIT

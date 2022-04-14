@@ -21,16 +21,16 @@ package org.apache.felix.http.base.internal.runtime.dto;
 import java.util.Collection;
 
 import org.osgi.framework.dto.ServiceReferenceDTO;
-import org.osgi.service.servlet.whiteboard.runtime.dto.FailedErrorPageDTO;
-import org.osgi.service.servlet.whiteboard.runtime.dto.FailedFilterDTO;
-import org.osgi.service.servlet.whiteboard.runtime.dto.FailedListenerDTO;
-import org.osgi.service.servlet.whiteboard.runtime.dto.FailedPreprocessorDTO;
-import org.osgi.service.servlet.whiteboard.runtime.dto.FailedResourceDTO;
-import org.osgi.service.servlet.whiteboard.runtime.dto.FailedServletContextDTO;
-import org.osgi.service.servlet.whiteboard.runtime.dto.FailedServletDTO;
-import org.osgi.service.servlet.whiteboard.runtime.dto.PreprocessorDTO;
-import org.osgi.service.servlet.whiteboard.runtime.dto.RuntimeDTO;
-import org.osgi.service.servlet.whiteboard.runtime.dto.ServletContextDTO;
+import org.osgi.service.servlet.runtime.dto.FailedErrorPageDTO;
+import org.osgi.service.servlet.runtime.dto.FailedFilterDTO;
+import org.osgi.service.servlet.runtime.dto.FailedListenerDTO;
+import org.osgi.service.servlet.runtime.dto.FailedPreprocessorDTO;
+import org.osgi.service.servlet.runtime.dto.FailedResourceDTO;
+import org.osgi.service.servlet.runtime.dto.FailedServletContextDTO;
+import org.osgi.service.servlet.runtime.dto.FailedServletDTO;
+import org.osgi.service.servlet.runtime.dto.PreprocessorDTO;
+import org.osgi.service.servlet.runtime.dto.RuntimeDTO;
+import org.osgi.service.servlet.runtime.dto.ServletContextDTO;
 
 public final class RuntimeDTOBuilder
 {

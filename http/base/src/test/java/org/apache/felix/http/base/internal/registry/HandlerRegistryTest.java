@@ -30,8 +30,8 @@ import org.apache.felix.http.base.internal.runtime.dto.FailedDTOHolder;
 import org.apache.felix.http.base.internal.service.HttpServiceFactory;
 import org.junit.Test;
 import org.mockito.Mockito;
-import org.osgi.service.servlet.whiteboard.runtime.dto.ServletContextDTO;
-import org.osgi.service.servlet.whiteboard.runtime.dto.ServletDTO;
+import org.osgi.service.servlet.runtime.dto.ServletContextDTO;
+import org.osgi.service.servlet.runtime.dto.ServletDTO;
 
 import jakarta.servlet.Servlet;
 import jakarta.servlet.ServletConfig;

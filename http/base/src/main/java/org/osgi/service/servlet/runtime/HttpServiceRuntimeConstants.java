@@ -16,7 +16,7 @@
  * SPDX-License-Identifier: Apache-2.0 
  *******************************************************************************/
 
-package org.osgi.service.servlet.whiteboard.runtime;
+package org.osgi.service.servlet.runtime;
 
 /**
  * Defines standard names for Http Runtime Service constants.

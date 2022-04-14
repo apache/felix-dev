@@ -21,7 +21,7 @@
     <name>Apache Felix Servlet API</name>
     <description>Provides the Servlet API for use by applications</description>
     <artifactId>org.apache.felix.http.servlet-api</artifactId>
-    <version>1.2.1-SNAPSHOT</version>
+    <version>2.0.0-SNAPSHOT</version>
     <packaging>bundle</packaging>
 
     <scm>
@@ -60,14 +60,21 @@
                             javax.servlet.annotation;
                             javax.servlet.descriptor;
                             javax.servlet.http;
-                                version=4.0
+                                version=4.0,
+                            jakarta.servlet;
+                            jakarta.servlet.annotation;
+                            jakarta.servlet.descriptor;
+                            jakarta.servlet.http;
+                                version=5.0
                         </Export-Package>
                         <Import-Package>!*</Import-Package>
                         <Provide-Capability>
                             osgi.contract;osgi.contract="JavaServlet";version:List&lt;Version&gt;="2.6,3.0,3.1,4.0";
-                            uses:="javax.servlet,javax.servlet.http,javax.servlet.descriptor,javax.servlet.annotation"
+                            uses:="javax.servlet,javax.servlet.http,javax.servlet.descriptor,javax.servlet.annotation",
+                            osgi.contract;osgi.contract="JakartaServlet";version:List&lt;Version&gt;="5.0";
+                            uses:="jakarta.servlet,jakarta.servlet.http,jakarta.servlet.descriptor,jakarta.servlet.annotation"
                         </Provide-Capability>
-			<Embed-Dependency>tomcat-servlet-api;inline=true</Embed-Dependency>
+			<Embed-Dependency>tomcat-servlet-api;inline=true,jakarta.servlet-api;inline=true</Embed-Dependency>
                     </instructions>
                     <!-- Skip baselining -->
                     <skip>true</skip>
@@ -81,6 +88,11 @@
             <groupId>org.apache.tomcat</groupId>
             <artifactId>tomcat-servlet-api</artifactId>
             <version>9.0.56</version>
+        </dependency>
+        <dependency>
+            <groupId>jakarta.servlet</groupId>
+            <artifactId>jakarta.servlet-api</artifactId>
+            <version>5.0.0</version>
         </dependency>
     </dependencies>
 
