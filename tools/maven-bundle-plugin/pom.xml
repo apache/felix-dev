@@ -28,7 +28,7 @@
  <modelVersion>4.0.0</modelVersion>
 
  <artifactId>maven-bundle-plugin</artifactId>
- <version>5.1.5</version>
+ <version>5.1.6-SNAPSHOT</version>
  <packaging>maven-plugin</packaging>
 
  <name>Maven Bundle Plugin</name>
@@ -59,7 +59,7 @@
  <properties>
    <felix.java.version>8</felix.java.version>
    <maven.site.path>bundle-plugin-archives/bundle-plugin-LATEST</maven.site.path>
-   <project.build.outputTimestamp>1650605981</project.build.outputTimestamp>
+   <project.build.outputTimestamp>1650606149</project.build.outputTimestamp>
  </properties>
 
  <build>
