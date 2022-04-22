@@ -19,18 +19,28 @@
 package org.apache.felix.scr.impl.inject.internal;
 
 import java.util.Collection;
+import java.util.Collections;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 
 import org.apache.felix.scr.impl.logger.ComponentLogger;
 import org.apache.felix.scr.impl.logger.InternalLogger.Level;
+import org.osgi.framework.Bundle;
 import org.osgi.framework.BundleContext;
 import org.osgi.framework.ServiceReference;
+import org.osgi.framework.namespace.HostNamespace;
+import org.osgi.framework.namespace.PackageNamespace;
+import org.osgi.framework.wiring.BundleCapability;
+import org.osgi.framework.wiring.BundleRevision;
+import org.osgi.framework.wiring.BundleWire;
+import org.osgi.framework.wiring.BundleWiring;
+import org.osgi.framework.wiring.FrameworkWiring;
+import org.osgi.resource.Namespace;
+import org.osgi.resource.Requirement;
+import org.osgi.resource.Resource;
 import org.osgi.service.component.ComponentContext;
 import org.osgi.service.component.ComponentServiceObjects;
-import org.osgi.service.packageadmin.ExportedPackage;
-import org.osgi.service.packageadmin.PackageAdmin;
 import org.osgi.util.tracker.ServiceTracker;
 
 
@@ -40,10 +50,6 @@ import org.osgi.util.tracker.ServiceTracker;
 @SuppressWarnings("deprecation")
 public class ClassUtils
 {
-
-    // name of the PackageAdmin class (this is a string to not create a reference to the class)
-    private static final String PACKAGEADMIN_CLASS = "org.osgi.service.packageadmin.PackageAdmin";
-
     private static final Class<?> OBJECT_CLASS = Object.class;
 
     public static final Class<?> SERVICE_REFERENCE_CLASS = ServiceReference.class;
@@ -66,11 +72,7 @@ public class ClassUtils
     public static final String FORMATTER_LOGGER_CLASS = "org.osgi.service.log.FormatterLogger";
     public static final String LOGGER_FACTORY_CLASS = "org.osgi.service.log.LoggerFactory";
 
-
-    // this bundle's context
-    private static BundleContext m_context;
-    // the package admin service (see BindMethod.getParameterClass)
-    public static volatile ServiceTracker<?, ?> m_packageAdmin;
+    public static FrameworkWiring m_fwkWiring;
 
     /**
      * Returns the class object representing the class of the field reference
@@ -93,14 +95,14 @@ public class ClassUtils
         {
             logger.log(
                 Level.DEBUG,
-                "getReferenceClass: Looking for interface class {0} through loader of {1}", null,
+                "getClassFromComponentClassLoader: Looking for interface class {0} through loader of {1}", null,
                     className, componentClass.getName() );
         }
 
         try
         {
             // need the class loader of the target class, which may be the
-            // system classloader, which case getClassLoader may retur null
+            // system classloader, which case getClassLoader may return null
             ClassLoader loader = componentClass.getClassLoader();
             if ( loader == null )
             {
@@ -111,7 +113,7 @@ public class ClassUtils
             if (logger.isLogEnabled(Level.DEBUG))
             {
                 logger.log(Level.DEBUG,
-                    "getParameterClass: Found class {0}", null, referenceClass.getName() );
+                    "getClassFromComponentClassLoader: Found class {0}", null, referenceClass.getName() );
             }
             return referenceClass;
         }
@@ -124,54 +126,37 @@ public class ClassUtils
         if (logger.isLogEnabled(Level.DEBUG))
         {
             logger.log(Level.DEBUG,
-                "getParameterClass: Not found through component class, using PackageAdmin service", null );
+                "getClassFromComponentClassLoader: Not found through component class, using FrameworkWiring", null );
         }
 
-        // try to load the class with the help of the PackageAdmin service
-        PackageAdmin pa = ( PackageAdmin ) getPackageAdmin();
-        if ( pa != null )
+        // try to load the class with the help of the FrameworkWiring
+        Bundle exportingHost = getExporter(className, logger);
+        if ( exportingHost != null )
         {
-            final String referenceClassPackage = className.substring( 0, className
-                .lastIndexOf( '.' ) );
-            ExportedPackage[] pkg = pa.getExportedPackages( referenceClassPackage );
-            if ( pkg != null )
+            try
             {
-                for ( int i = 0; i < pkg.length; i++ )
+                if (logger.isLogEnabled(Level.DEBUG))
                 {
-                    try
-                    {
-                        if (logger.isLogEnabled(Level.DEBUG))
-                        {
-                            logger.log(
-                                Level.DEBUG,
-                                "getParameterClass: Checking Bundle {0}/{1}",
-                                null, pkg[i].getExportingBundle().getSymbolicName(), pkg[i].getExportingBundle().getBundleId() );
-                        }
-
-                        Class<?> referenceClass = pkg[i].getExportingBundle().loadClass( className );
-                        if (logger.isLogEnabled(Level.DEBUG))
-                        {
-                            logger.log(Level.DEBUG,
-                                    "getParameterClass: Found class {0}", null,referenceClass.getName() );
-                        }
-                        return referenceClass;
-                    }
-                    catch ( ClassNotFoundException cnfe )
-                    {
-                        // exported package does not provide the interface !!!!
-                    }
+                    logger.log(Level.DEBUG, "getClassFromComponentClassLoader: Checking Bundle {0}/{1}", null,
+                            exportingHost.getSymbolicName(), exportingHost.getBundleId());
                 }
-            }
-            else if (logger.isLogEnabled(Level.DEBUG))
+
+                Class<?> referenceClass = exportingHost.loadClass(className);
+                if (logger.isLogEnabled(Level.DEBUG))
+                {
+                    logger.log(Level.DEBUG, "getClassFromComponentClassLoader: Found class {0}", null,
+                            referenceClass.getName());
+                }
+                return referenceClass;
+            } catch (ClassNotFoundException cnfe)
             {
-                logger.log(Level.DEBUG,
-                    "getParameterClass: No bundles exporting package {0} found", null, referenceClassPackage );
+                // exported package does not provide the interface !!!!
             }
         }
         else if (logger.isLogEnabled(Level.DEBUG))
         {
             logger.log(Level.DEBUG,
-                "getParameterClass: PackageAdmin service not available, cannot find class", null );
+                    "getClassFromComponentClassLoader: No bundles exporting package {0} found", null, className );
         }
 
         // class cannot be found, neither through the component nor from an
@@ -179,45 +164,78 @@ public class ClassUtils
         if (logger.isLogEnabled(Level.DEBUG))
         {
             logger.log(Level.DEBUG,
-                "getParameterClass: No class found, falling back to class Object", null );
+                "getClassFromComponentClassLoader: No class found, falling back to class Object", null );
         }
         return OBJECT_CLASS;
     }
 
-    public static void setBundleContext( BundleContext bundleContext )
-    {
-        ClassUtils.m_context = bundleContext;
-    }
-
-    public static Object getPackageAdmin()
-    {
-        if (m_packageAdmin == null)
+    private static Bundle getExporter(String className, ComponentLogger logger) {
+        FrameworkWiring currentFwkWiring = m_fwkWiring;
+        if (currentFwkWiring != null)
         {
-            synchronized (ClassUtils.class)
+            String referenceClassPackage = className.substring(0, className.lastIndexOf( '.' ) );
+            Collection<BundleCapability> providers = currentFwkWiring.findProviders(getRequirement(referenceClassPackage));
+            for (BundleCapability provider : providers)
             {
-                if (m_packageAdmin == null)
+                BundleWiring wiring = provider.getRevision().getWiring();
+                if (wiring != null)
                 {
-                    m_packageAdmin = new ServiceTracker<>(m_context, PACKAGEADMIN_CLASS,
-                        null);
-                    m_packageAdmin.open();
+                    if ((provider.getRevision().getTypes() & BundleRevision.TYPE_FRAGMENT) != 0) {
+                        // for fragments just use the first host bundle
+                        List<BundleWire> hostWires = wiring.getRequiredWires(HostNamespace.HOST_NAMESPACE);
+                        if (hostWires != null && !hostWires.isEmpty()) {
+                            return hostWires.get(0).getProvider().getBundle();
+                        }
+                    }
+                    else
+                    {
+                        return wiring.getBundle();
+                    }
                 }
             }
         }
+        else if (logger.isLogEnabled(Level.DEBUG))
+        {
+            logger.log(Level.DEBUG,
+                "getClassFromComponentClassLoader: FrameworkWiring not available, cannot find class", null );
+        }
+        return null;
+	}
 
-        return m_packageAdmin.getService();
+	private static Requirement getRequirement(final String pkgName)
+    {
+        return new Requirement()
+        {
+            @Override
+            public Resource getResource()
+            {
+                return null;
+            }
+
+            @Override
+            public String getNamespace()
+            {
+                return PackageNamespace.PACKAGE_NAMESPACE;
+            }
+
+            @Override
+            public Map<String, String> getDirectives()
+            {
+                String filter = "(" + PackageNamespace.PACKAGE_NAMESPACE + "=" + pkgName + ")";
+                return Collections.singletonMap(Namespace.REQUIREMENT_FILTER_DIRECTIVE, filter);
+            }
+
+            @Override
+            public Map<String, Object> getAttributes()
+            {
+                return Collections.emptyMap();
+            }
+        };
     }
 
-    public static void close()
+    public static void setFrameworkWiring( FrameworkWiring fwkWiring )
     {
-        // close the PackageAdmin tracker now
-        if (m_packageAdmin != null)
-        {
-            m_packageAdmin.close();
-            m_packageAdmin = null;
-        }
-
-        // remove the reference to the component context
-        m_context = null;
+        ClassUtils.m_fwkWiring = fwkWiring;
     }
 
     /**

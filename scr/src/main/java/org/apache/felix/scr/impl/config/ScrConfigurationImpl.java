@@ -123,7 +123,7 @@ public class ScrConfigurationImpl implements ScrConfiguration
         // overriden by configuration admin later.
         // Note that if the managed service is registered first then it is random which will win since
         // configuration may be delivered asynchronously
-        configure( null, false );
+        configure( null, true );
 
         managedServiceRef = bundleContext.registerService("org.osgi.service.cm.ManagedService", new ScrManagedServiceServiceFactory(this),
                 msProps);
@@ -161,7 +161,7 @@ public class ScrConfigurationImpl implements ScrConfiguration
     }
 
     // Called from the ScrManagedService.updated method to reconfigure
-    void configure( Dictionary<String, ?> config, boolean fromConfig )
+    void configure( Dictionary<String, ?> config, boolean initialStart )
     {
         Boolean newGlobalExtender;
         Boolean oldGlobalExtender;
@@ -169,7 +169,7 @@ public class ScrConfigurationImpl implements ScrConfiguration
         {
             if ( config == null )
             {
-                if (!fromConfig)
+                if (initialStart)
                 {
                     if (this.bundleContext == null)
                     {
@@ -231,7 +231,7 @@ public class ScrConfigurationImpl implements ScrConfiguration
         activator.setLogger();
         if ( newGlobalExtender != oldGlobalExtender )
         {
-            activator.restart( newGlobalExtender );
+            activator.restart( newGlobalExtender, initialStart );
         }
     }
 
