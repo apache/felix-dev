@@ -190,6 +190,7 @@ public abstract class ComponentTestBase
                         mavenBundle( "org.apache.felix", "org.apache.felix.configadmin", felixCaVersion ) ),
                         mavenBundle( "org.osgi", "org.osgi.util.promise"),
                         mavenBundle( "org.osgi", "org.osgi.util.function"),
+                        mavenBundle( "org.osgi", "org.osgi.service.component"),
                         mavenBundle( "org.ops4j.pax.url", "pax-url-aether"),
                 junitBundles(), frameworkProperty( "org.osgi.framework.bsnversion" ).value( bsnVersionUniqueness ),
                 systemProperty( "ds.factory.enabled" ).value( Boolean.toString( NONSTANDARD_COMPONENT_FACTORY_BEHAVIOR ) ),
