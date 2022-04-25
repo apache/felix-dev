@@ -61,6 +61,7 @@ import org.osgi.framework.ServiceRegistration;
 import org.osgi.framework.wiring.BundleRevision;
 import org.osgi.framework.wiring.BundleWire;
 import org.osgi.framework.wiring.BundleWiring;
+import org.osgi.framework.wiring.FrameworkWiring;
 import org.osgi.namespace.extender.ExtenderNamespace;
 import org.osgi.service.component.ComponentConstants;
 import org.osgi.service.component.runtime.ServiceComponentRuntime;
@@ -121,8 +122,7 @@ public class Activator extends AbstractExtender
         m_context = context;
         m_bundle = context.getBundle();
         m_trueCondition = findTrueCondition(context);
-        // set bundle context for PackageAdmin tracker
-        ClassUtils.setBundleContext( context );
+        ClassUtils.setFrameworkWiring(context.getBundle(Constants.SYSTEM_BUNDLE_LOCATION).adapt(FrameworkWiring.class));
         // get the configuration
         m_configuration.start( m_context ); //this will call restart, which calls super.start.
     }
@@ -155,7 +155,7 @@ public class Activator extends AbstractExtender
         }
     }
 
-    public void restart(boolean globalExtender)
+    public void restart(boolean globalExtender, boolean initialStart)
     {
         m_componentMetadataStore = load(m_context, logger,
             m_configuration.cacheMetadata());
@@ -168,14 +168,14 @@ public class Activator extends AbstractExtender
         {
             m_globalContext = m_context;
         }
-        if ( ClassUtils.m_packageAdmin != null )
+        if (!initialStart)
         {
             logger.log(Level.INFO,
                 "Stopping to restart with new globalExtender setting: {0}", null,
                 globalExtender);
 
-            //this really is a restart, not the initial start
-            // the initial start where m_globalContext is null should skip this as m_packageAdmin should not yet be set.
+            // this really is a restart, not the initial start;
+            // first stop the extender
             try
             {
                 super.stop( context );
@@ -417,7 +417,7 @@ public class Activator extends AbstractExtender
             m_componentActor.terminate();
             m_componentActor = null;
         }
-        ClassUtils.close();
+        ClassUtils.setFrameworkWiring(null);
     }
 
     //---------- Component Management -----------------------------------------
