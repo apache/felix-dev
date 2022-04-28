@@ -17,7 +17,10 @@
  */
 package org.apache.felix.hc.generalchecks;
 
+import java.util.Arrays;
+import java.util.List;
 import java.util.Optional;
+import java.util.concurrent.atomic.AtomicLong;
 import java.util.regex.Pattern;
 
 import org.apache.felix.hc.annotation.HealthCheckService;
@@ -79,78 +82,85 @@ public class BundlesStartedCheck implements HealthCheck {
         this.includesRegex = Pattern.compile(config.includesRegex());
         this.excludesRegex = StringUtils.isNotBlank(config.excludesRegex()) ? Optional.of(Pattern.compile(config.excludesRegex())) : Optional.empty();
         this.useCriticalForInactive = config.useCriticalForInactive();
-        LOG.debug("Activated bundles started HC for includesRegex={} excludesRegex={}% useCriticalForInactive={}", includesRegex, excludesRegex, useCriticalForInactive);
+        LOG.info("Activated bundles started HC for includesRegex={} excludesRegex={}% useCriticalForInactive={}", includesRegex, excludesRegex, useCriticalForInactive);
     }
-
 
     @Override
     public Result execute() {
         FormattingResultLog log = new FormattingResultLog();
-
-        Bundle[] bundles = this.bundleContext.getBundles();
-        log.debug("Framwork has {} bundles in total", bundles.length);
-
-        int countExcluded = 0;
-        int relevantBundlesCount = 0;
-        int inactiveCount = 0;
-        for (Bundle bundle : bundles) {
-            String bundleSymbolicName = bundle.getSymbolicName();
-            int bundleState = bundle.getState();
-
-            if (!includesRegex.matcher(bundleSymbolicName).matches()) {
-                LOG.debug("Bundle {} not matched by {}", bundleSymbolicName, includesRegex);
-                continue;
-            }
-
-            if (excludesRegex.isPresent() && excludesRegex.get().matcher(bundleSymbolicName).matches()) {
-                LOG.debug("Bundle {} excluded {}", bundleSymbolicName, excludesRegex);
-                countExcluded ++;
-                continue;
-            }
-            relevantBundlesCount++;
-
-            boolean bundleIsLogged = false;
-            if (bundleState != Bundle.ACTIVE) {
-                // support lazy activation (https://www.osgi.org/developer/design/lazy-start/)
-                if (bundleState == Bundle.STARTING && isLazyActivation(bundle)) {
-                    LOG.debug("Ignoring lazily activated bundle {}", bundleSymbolicName);
-                } else  if (StringUtils.isNotBlank(bundle.getHeaders().get(Constants.FRAGMENT_HOST))) {
-                    LOG.debug("Ignoring bundle fragment: {}", bundleSymbolicName);
-                } else {
-                    String msg = "Inactive bundle {} {}: {}";
-                    Object[] msgObjs = new Object[] {bundle.getBundleId(), bundleSymbolicName, getStateLabel(bundleState)};
-                    LOG.debug(msg, msgObjs);
-                    if(useCriticalForInactive) {
-                        log.critical(msg, msgObjs);
-                    } else {
-                        log.warn(msg, msgObjs);
-                    }
-                    bundleIsLogged = true;
-                    inactiveCount++;
-                }
-            }
-            if(!bundleIsLogged) {
-                log.debug("Bundle {} {}: {}", bundle.getBundleId(), bundleSymbolicName, getStateLabel(bundleState));
-            }
-        }
-
-        String includeMsg = !includesRegex.pattern().equals(".*") ? " for pattern " + includesRegex.pattern(): "";
-        String baseMsg = relevantBundlesCount + " bundles" + includeMsg;
-        String excludedMsg = countExcluded > 0 ? " (" + countExcluded + " excluded via pattern " + excludesRegex.get().pattern() + ")" : "";
-        if (inactiveCount > 0) {
-            log.info("Found  " + inactiveCount + " inactive of " + baseMsg + excludedMsg);
-        } else {
-            log.info("All " + baseMsg + " are started" + excludedMsg);
-        }
-
+        List<Bundle> bundles = Arrays.asList(bundleContext.getBundles());
+        AtomicLong checkedBundles = new AtomicLong();
+        long activeBundles = bundles.stream()
+                .filter(this::isIncluded)
+                .filter(this::isNotExcluded)
+                .filter(this::isNotFragment)
+                .filter(this::isNotLazyStarting)
+                .peek(bundle -> checkedBundles.incrementAndGet())
+                .filter(bundle -> isActive(log, bundle))
+                .count();
+        log.info("Bundles total: {}, expected to be active: {}, active: {}.", bundles.size(), checkedBundles, activeBundles);
         return new Result(log);
     }
 
-    private static boolean isLazyActivation(Bundle b) {
+    private boolean isNotFragment(Bundle bundle) {
+        boolean isFragment = StringUtils.isNotBlank(bundle.getHeaders().get(Constants.FRAGMENT_HOST));
+        if (isFragment) {
+            LOG.debug("Ignoring bundle fragment: {}", bundle.getSymbolicName());
+        }
+        return !isFragment;
+    }
+    
+    private boolean isNotLazyStarting(Bundle bundle) {
+        // support lazy activation (https://www.osgi.org/developer/design/lazy-start/)
+        boolean isLazyStarting = bundle.getState() == Bundle.STARTING && isLazyActivation(bundle);
+        if (isLazyStarting) {
+            LOG.debug("Ignoring lazily activated bundle {}", bundle.getSymbolicName());
+        }
+        return !isLazyStarting;
+    }
+
+    private boolean isIncluded(Bundle bundle) {
+        boolean matches = includesRegex.matcher(bundle.getSymbolicName()).matches();
+        if (matches) {
+            LOG.debug("Bundle {} not matched by {}", bundle.getSymbolicName(), includesRegex);
+        }
+        return matches;
+    }
+    
+    private boolean isNotExcluded(Bundle bundle) {
+        boolean matches = excludesRegex.isPresent() ? excludesRegex.get().matcher(bundle.getSymbolicName()).matches() : false;
+        if (matches) {
+            LOG.debug("Bundle {} excluded {}", bundle.getSymbolicName(), excludesRegex);
+        }
+        return !matches;
+    }
+
+    private boolean isLazyActivation(Bundle b) {
         return Constants.ACTIVATION_LAZY.equals(b.getHeaders().get(Constants.BUNDLE_ACTIVATIONPOLICY));
     }
 
-    private static String getStateLabel(int state) {
+    private boolean isActive(FormattingResultLog log, Bundle bundle) {
+        boolean isActive = bundle.getState() == Bundle.ACTIVE;
+        String bundleInfo = getBundleInfo(bundle);
+        if (isActive) {
+            log.debug(bundleInfo);
+        } else {
+            String msg = "Inactive " + bundleInfo;
+            if (useCriticalForInactive) {
+                log.critical(msg);
+            } else {
+                log.warn(msg);
+            }
+        }
+        return isActive;
+    }
+
+    private String getBundleInfo(Bundle bundle) {
+        return String.format("bundle with id:%d, name:%s, state:%s)", bundle.getBundleId(), 
+                bundle.getSymbolicName(), getStateLabel(bundle.getState()));
+    }
+    
+    private String getStateLabel(int state) {
         switch(state) {
         case Bundle.UNINSTALLED: return "UNINSTALLED";
         case Bundle.INSTALLED: return "INSTALLED";
