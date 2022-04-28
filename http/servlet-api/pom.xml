@@ -1,12 +1,12 @@
-<!-- Licensed to the Apache Software Foundation (ASF) under one or more contributor 
-    license agreements. See the NOTICE file distributed with this work for additional 
-    information regarding copyright ownership. The ASF licenses this file to 
-    you under the Apache License, Version 2.0 (the "License"); you may not use 
-    this file except in compliance with the License. You may obtain a copy of 
-    the License at http://www.apache.org/licenses/LICENSE-2.0 Unless required 
-    by applicable law or agreed to in writing, software distributed under the 
-    License is distributed on an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS 
-    OF ANY KIND, either express or implied. See the License for the specific 
+<!-- Licensed to the Apache Software Foundation (ASF) under one or more contributor
+    license agreements. See the NOTICE file distributed with this work for additional
+    information regarding copyright ownership. The ASF licenses this file to
+    you under the Apache License, Version 2.0 (the "License"); you may not use
+    this file except in compliance with the License. You may obtain a copy of
+    the License at http://www.apache.org/licenses/LICENSE-2.0 Unless required
+    by applicable law or agreed to in writing, software distributed under the
+    License is distributed on an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS
+    OF ANY KIND, either express or implied. See the License for the specific
     language governing permissions and limitations under the License. -->
 <project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/maven-v4_0_0.xsd">
 
@@ -41,31 +41,26 @@
                 <configuration>
                     <instructions>
                         <Export-Package>
-                            javax.servlet;
-                            javax.servlet.annotation;
-                            javax.servlet.descriptor;
-                            javax.servlet.http;
-                                version=2.6,
-                            javax.servlet;
-                            javax.servlet.annotation;
-                            javax.servlet.descriptor;
-                            javax.servlet.http;
-                                version=3.0,
-                            javax.servlet;
-                            javax.servlet.annotation;
-                            javax.servlet.descriptor;
-                            javax.servlet.http;
-                                version=3.1,
-                            javax.servlet;
-                            javax.servlet.annotation;
-                            javax.servlet.descriptor;
-                            javax.servlet.http;
-                                version=4.0,
-                            jakarta.servlet;
-                            jakarta.servlet.annotation;
-                            jakarta.servlet.descriptor;
-                            jakarta.servlet.http;
-                                version=5.0
+                            javax.servlet;version=2.6;uses:="javax.servlet.annotation,javax.servlet.descriptor",
+                            javax.servlet.annotation;version=2.6;uses:="javax.servlet",
+                            javax.servlet.descriptor;version=2.6,
+                            javax.servlet.http;version=2.6;uses:="javax.servlet",
+                            javax.servlet;version=3.0;uses:="javax.servlet.annotation,javax.servlet.descriptor",
+                            javax.servlet.annotation;version=3.0;uses:="javax.servlet",
+                            javax.servlet.descriptor;version=3.0,
+                            javax.servlet.http;version=3.0;uses:="javax.servlet",
+                            javax.servlet;version=3.1;uses:="javax.servlet.annotation,javax.servlet.descriptor",
+                            javax.servlet.annotation;version=3.1;uses:="javax.servlet",
+                            javax.servlet.descriptor;version=3.1,
+                            javax.servlet.http;version=3.1;uses:="javax.servlet",
+                            javax.servlet;version=4.0;uses:="javax.servlet.annotation,javax.servlet.descriptor",
+                            javax.servlet.annotation;version=4.0;uses:="javax.servlet",
+                            javax.servlet.descriptor;version=4.0,
+                            javax.servlet.http;version=4.0;uses:="javax.servlet",
+                            jakarta.servlet;version=5.0;uses:="jakarta.servlet.annotation,jakarta.servlet.descriptor",
+                            jakarta.servlet.annotation;version=5.0;uses:="jakarta.servlet",
+                            jakarta.servlet.descriptor;version=5.0,
+                            jakarta.servlet.http;version=5.0;uses:="jakarta.servlet"
                         </Export-Package>
                         <Import-Package>!*</Import-Package>
                         <Provide-Capability>
@@ -74,7 +69,7 @@
                             osgi.contract;osgi.contract="JakartaServlet";version:List&lt;Version&gt;="5.0";
                             uses:="jakarta.servlet,jakarta.servlet.http,jakarta.servlet.descriptor,jakarta.servlet.annotation"
                         </Provide-Capability>
-			<Embed-Dependency>tomcat-servlet-api;inline=true,jakarta.servlet-api;inline=true</Embed-Dependency>
+                        <Embed-Dependency>tomcat-servlet-api;inline=true,jakarta.servlet-api;inline=true</Embed-Dependency>
                     </instructions>
                     <!-- Skip baselining -->
                     <skip>true</skip>
