@@ -198,7 +198,7 @@ public class ConfigManager extends SimpleWebConsolePlugin implements OsgiManager
         response.setCharacterEncoding( "UTF-8" ); //$NON-NLS-1$
         final Locale loc = Util.getLocale( request );
         final String locale = ( loc != null ) ? loc.toString() : null;
-        cas.getJsonSupport().printConfigurationJson( response.getWriter(), pid, config, pidFilter, locale );
+        cas.getJsonSupport().printConfigurationJson( response.getWriter(), pid, config, pidFilter, locale, spiTracker );
     }
 
 
@@ -305,7 +305,7 @@ public class ConfigManager extends SimpleWebConsolePlugin implements OsgiManager
                             {
                                 pw.print( ',' );
                             }
-                            ca.getJsonSupport().printConfigurationJson( pw, config.getPid(), config, null, locale );
+                            ca.getJsonSupport().printConfigurationJson( pw, config.getPid(), config, null, locale, spiTracker);
                             printComma = true;
                         }
                     }
@@ -399,7 +399,7 @@ public class ConfigManager extends SimpleWebConsolePlugin implements OsgiManager
         boolean hasConfigs = true;
         if ( cas != null )
         {
-            hasConfigs = cas.getJsonSupport().listConfigurations( jw, pidFilter, locale, loc );
+            hasConfigs = cas.getJsonSupport().listConfigurations( jw, pidFilter, locale, loc, spiTracker);
             cas.getJsonSupport().listFactoryConfigurations( jw, pidFilter, locale );
         }
         if ( !hasConfigs && !hasMetatype && cas != null ) {

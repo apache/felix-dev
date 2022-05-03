@@ -20,8 +20,10 @@ package org.apache.felix.webconsole.spi;
 
 import java.io.IOException;
 import java.util.Dictionary;
+import java.util.List;
 
 import org.osgi.annotation.versioning.ConsumerType;
+import org.osgi.service.cm.Configuration;
 
 /**
  * A configuration handler allows to hook into the processing of configurations for
@@ -68,4 +70,23 @@ public interface ConfigurationHandler {
      * @throws ValidationException if updating is not allowed
      */
     void updateConfiguration(String factoryPid, String pid, Dictionary<String, Object> props) throws ValidationException, IOException;
+
+    /**
+     * @param cfg a configuration object
+     * @return true if the configuration may be listed
+     * @throws IOException For an error
+     */
+    default boolean listConfiguration(Configuration cfg) throws IOException {
+        return true;
+    }
+
+    /**
+     * @param cfg a configuration object
+     * @return the filtered list
+     * @throws IOException For an error
+     */
+    default List<String> filterProperties(Configuration cfg, List<String> propertyNames) throws IOException {
+        return propertyNames;
+    }
+
 }
