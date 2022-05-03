@@ -20,12 +20,16 @@ package org.apache.felix.webconsole.internal.configuration;
 
 
 import java.io.IOException;
+import java.io.InputStream;
 import java.io.PrintWriter;
 import java.lang.reflect.Array;
+import java.util.ArrayList;
+import java.util.Collections;
 import java.util.Dictionary;
 import java.util.Enumeration;
 import java.util.Hashtable;
 import java.util.Iterator;
+import java.util.List;
 import java.util.Locale;
 import java.util.Map;
 import java.util.Map.Entry;
@@ -36,6 +40,7 @@ import java.util.regex.Matcher;
 import org.apache.felix.utils.json.JSONWriter;
 import org.apache.felix.webconsole.internal.Util;
 import org.apache.felix.webconsole.internal.misc.ServletSupport;
+import org.apache.felix.webconsole.spi.ConfigurationHandler;
 import org.osgi.framework.Bundle;
 import org.osgi.framework.Constants;
 import org.osgi.framework.Filter;
@@ -46,7 +51,9 @@ import org.osgi.service.cm.Configuration;
 import org.osgi.service.cm.ConfigurationAdmin;
 import org.osgi.service.cm.ManagedService;
 import org.osgi.service.cm.ManagedServiceFactory;
+import org.osgi.service.metatype.AttributeDefinition;
 import org.osgi.service.metatype.ObjectClassDefinition;
+import org.osgi.util.tracker.ServiceTracker;
 
 
 class ConfigJsonSupport {
@@ -66,14 +73,14 @@ class ConfigJsonSupport {
     }
 
     public void printConfigurationJson( final PrintWriter pw, final String pid, final Configuration config, final String pidFilter,
-            final String locale ) {
+            final String locale, ServiceTracker<ConfigurationHandler, ConfigurationHandler> serviceTracker) {
 
         final JSONWriter result = new JSONWriter( pw );
 
         if ( pid != null ) {
             try{
                 result.object();
-                this.configForm( result, pid, config, pidFilter, locale );
+                this.configForm( result, pid, config, pidFilter, locale, serviceTracker );
                 result.endObject();
             } catch ( final Exception e ) {
                 this.servletSupport.log( "Error reading configuration PID " + pid, e );
@@ -82,7 +89,7 @@ class ConfigJsonSupport {
 
     }
 
-    void configForm( final JSONWriter json, final String pid, final Configuration config, final String pidFilter, final String locale )
+    void configForm( final JSONWriter json, final String pid, final Configuration config, final String pidFilter, final String locale, ServiceTracker<ConfigurationHandler, ConfigurationHandler> serviceTracker )
     throws IOException {
         json.key( ConfigManager.PID );
         json.value( pid );
@@ -93,9 +100,25 @@ class ConfigJsonSupport {
         }
 
         Dictionary<String, Object> props = null;
+        List<String> filteredKeys = Collections.emptyList();
         if ( config != null ) {
             props = config.getProperties();
+            if (props != null && serviceTracker != null) {
+                Object[] services = serviceTracker.getServices();
+                if (services != null) {
+                    for(final Object o : services) {
+                        ConfigurationHandler handler = (ConfigurationHandler)o;
+                        List<String> allKeys = Collections.list(props.keys());
+                        filteredKeys = handler.filterProperties(config, allKeys);
+                        allKeys.removeAll(filteredKeys);
+                        for (String key : allKeys) {
+                            props.remove(key);
+                        }
+                    }
+                }
+            }
         }
+        final List<String> keys = filteredKeys;
         if ( props == null ) {
             props = new Hashtable<>();
         }
@@ -109,8 +132,46 @@ class ConfigJsonSupport {
             if ( ocd == null ) {
                 ocd = mtss.getObjectClassDefinition( pid, locale );
             }
+            ObjectClassDefinition filteredOcd = ocd;
             if ( ocd != null ) {
-                mtss.mergeWithMetaType( props, ocd, json, ConfigAdminSupport.CONFIG_PROPERTIES_HIDE );
+                final ObjectClassDefinition focd = ocd;
+                filteredOcd = new ObjectClassDefinition() {
+                    @Override
+                    public String getName() {
+                        return focd.getName();
+                    }
+
+                    @Override
+                    public String getID() {
+                        return focd.getID();
+                    }
+
+                    @Override
+                    public String getDescription() {
+                        return focd.getDescription();
+                    }
+
+                    @Override
+                    public AttributeDefinition[] getAttributeDefinitions(int i) {
+                        AttributeDefinition[] allDefinitions = focd.getAttributeDefinitions(i);
+                        if (allDefinitions != null) {
+                            ArrayList<AttributeDefinition> filteredDefinitions = new ArrayList<>();
+                            for (AttributeDefinition def : allDefinitions) {
+                                if (keys.contains(def.getID())) {
+                                    filteredDefinitions.add(def);
+                                }
+                            }
+                            return filteredDefinitions.toArray(new AttributeDefinition[0]);
+                        }
+                        return null;
+                    }
+
+                    @Override
+                    public InputStream getIcon(int i) throws IOException {
+                        return focd.getIcon(i);
+                    }
+                };
+                mtss.mergeWithMetaType( props, filteredOcd, json, ConfigAdminSupport.CONFIG_PROPERTIES_HIDE );
                 doSimpleMerge = false;
             }
         }
@@ -222,6 +283,10 @@ class ConfigJsonSupport {
     }
 
     final boolean listConfigurations( final JSONWriter jw, final String pidFilter, final String locale, final Locale loc ) {
+        return listConfigurations( jw, pidFilter, locale, loc, null );
+    }
+
+    final boolean listConfigurations(final JSONWriter jw, final String pidFilter, final String locale, final Locale loc , final ServiceTracker<ConfigurationHandler, ConfigurationHandler> serviceTracker ) {
         boolean hasConfigurations = false;
         try {
             // start with ManagedService instances
@@ -237,7 +302,6 @@ class ConfigJsonSupport {
             Configuration[] cfgs = this.configurationAdmin.listConfigurations(pidFilter);
             for (int i = 0; cfgs != null && i < cfgs.length; i++)
             {
-
                 // ignore configuration object if an entry already exists in the map
                 // or if it is invalid
                 final String pid = cfgs[i].getPid();
@@ -279,12 +343,26 @@ class ConfigJsonSupport {
                 String id = ii.next();
                 Object name = optionsPlain.get( id );
 
-                final Configuration config = ConfigurationUtil.findConfiguration( this.configurationAdmin, id );
-                jw.object();
-                jw.key("id").value( id ); //$NON-NLS-1$
-                jw.key( "name").value( name ); //$NON-NLS-1$
+                final Configuration c = ConfigurationUtil.findConfiguration( this.configurationAdmin, id );
+                Configuration config = c;
+                if (serviceTracker != null) {
+                    Object[] services = serviceTracker.getServices();
+                    if (services != null) {
+                        for(final Object o : services) {
+                            ConfigurationHandler handler = (ConfigurationHandler)o;
+                            if (!handler.listConfiguration(config)) {
+                                config = null;
+                                break;
+                            }
+                        }
+                    }
+                }
                 if ( null != config )
                 {
+                    jw.object();
+                    jw.key("id").value( id ); //$NON-NLS-1$
+                    jw.key( "name").value( name ); //$NON-NLS-1$
+
                     // FELIX-3848
                     jw.key("has_config").value( true ); //$NON-NLS-1$
 
@@ -304,9 +382,8 @@ class ConfigJsonSupport {
                         jw.key( "bundle").value( bundle.getBundleId() ); //$NON-NLS-1$
                         jw.key( "bundle_name").value( Util.getName( bundle, loc ) ); //$NON-NLS-1$
                     }
+                    jw.endObject();
                 }
-                jw.endObject();
-
             }
             jw.endArray();
         } catch (final Exception e) {
@@ -319,7 +396,7 @@ class ConfigJsonSupport {
      * Builds a "name hint" for factory configuration based on other property
      * values of the config and a "name hint template" defined as hidden
      * property in the service.
-     * @param props Service properties.
+     * @param config The factory configuration.
      * @return Name hint or null if none is defined.
      */
     private final String getConfigurationFactoryNameHint(Configuration config) {
