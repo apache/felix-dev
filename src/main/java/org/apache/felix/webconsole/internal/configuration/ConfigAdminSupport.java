@@ -21,6 +21,8 @@ package org.apache.felix.webconsole.internal.configuration;
 
 import java.io.IOException;
 import java.util.ArrayList;
+import java.util.Collection;
+import java.util.Collections;
 import java.util.Dictionary;
 import java.util.Enumeration;
 import java.util.HashMap;
@@ -79,7 +81,7 @@ class ConfigAdminSupport {
     }
 
     public ConfigJsonSupport getJsonSupport() {
-        return new ConfigJsonSupport(this.servletSupport, getMetaTypeSupport(), this.service);
+        return new ConfigJsonSupport(this.servletSupport, getMetaTypeSupport(), this.service, this.configurationHandlers);
     }
 
     MetaTypeServiceSupport getMetaTypeSupport() {
@@ -109,6 +111,17 @@ class ConfigAdminSupport {
         Dictionary<String, Object> props = config.getProperties();
         if ( props == null ) {
             props = new Hashtable<>();
+        }
+        // filter properties and keep filtered values
+        final List<String> allowedProperties = this.getJsonSupport().getPropertyNamesForForm(config.getFactoryPid(), config.getPid(), props);
+        final Map<String, Object> allowedValues = new HashMap<>();
+        final Dictionary<String, Object> origProps = config.getProperties();
+        if ( origProps != null ) {
+            for(final String name : Collections.list(props.keys())) {
+                if ( !allowedProperties.contains(name) ) {
+                    allowedValues.put(name, origProps.get(name));
+                }
+            }
         }
 
         final MetaTypeServiceSupport mtss = getMetaTypeSupport();
@@ -254,6 +267,11 @@ class ConfigAdminSupport {
         // call update handlers
         for(final ConfigurationHandler h : this.configurationHandlers) {
             h.updateConfiguration(factoryPid, pid, props);
+        }
+
+        // reapply allowed values
+        for(final Map.Entry<String, Object> allowed : allowedValues.entrySet()) {
+            props.put(allowed.getKey(), allowed.getValue());
         }
 
         final String location = request.getParameter(ConfigManager.LOCATION);
