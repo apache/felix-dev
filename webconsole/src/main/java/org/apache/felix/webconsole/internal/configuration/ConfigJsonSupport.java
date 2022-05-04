@@ -24,7 +24,6 @@ import java.io.InputStream;
 import java.io.PrintWriter;
 import java.lang.reflect.Array;
 import java.util.ArrayList;
-import java.util.Collection;
 import java.util.Collections;
 import java.util.Dictionary;
 import java.util.Enumeration;
@@ -93,7 +92,7 @@ class ConfigJsonSupport {
     /**
      * Get the list of property names for the form and filter the properties based on this list
      */
-    private List<String> getPropertyNamesForForm(final String factoryPid, final String pid,
+    List<String> getPropertyNamesForForm(final String factoryPid, final String pid,
         final Dictionary<String, Object> props,
         final ServiceTracker<ConfigurationHandler, ConfigurationHandler> serviceTracker) 
     throws IOException {
@@ -101,15 +100,16 @@ class ConfigJsonSupport {
         if (  serviceTracker != null && !names.isEmpty()) {
             final Object[] services = serviceTracker.getServices();
             if ( services != null ) {
+                // fill remove list with all names
+                final List<String> removeList = new ArrayList<>(names);
                 for(final Object o : services) {
                     final ConfigurationHandler handler = (ConfigurationHandler)o;
                     handler.filterProperties(factoryPid, pid, names);
                 }
-            }
-            final List<String> remove = new ArrayList<>(Collections.list(props.keys()));
-            remove.removeAll(names);
-            for(final String name : remove) {
-                props.remove(name);
+                // update remove list
+                removeList.removeAll(names);
+                // remove properties
+                removeList.forEach(props::remove);
             }
         }
         return names;
