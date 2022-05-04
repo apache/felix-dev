@@ -426,7 +426,7 @@ public class ManifestPlugin extends BundlePlugin
         try
         { // is pom.xml up-to-date?
             Path cacheData = getIncrementalDataPath(project);
-            long manifestLastModified = lastModified(cacheData);
+            long manifestLastModified = lastmod(cacheData);
             while (project != null)
             {
                 Path pom = project.getFile().toPath();
