@@ -23,6 +23,7 @@ import static org.junit.Assert.assertTrue;
 
 import java.io.IOException;
 import java.util.Collection;
+import java.util.Collections;
 import java.util.Dictionary;
 import java.util.Hashtable;
 import java.util.List;
@@ -30,21 +31,17 @@ import java.util.List;
 import org.apache.felix.webconsole.spi.ConfigurationHandler;
 import org.apache.felix.webconsole.spi.ValidationException;
 import org.junit.Test;
-import org.mockito.Mockito;
-import org.osgi.util.tracker.ServiceTracker;
 
 public class ConfigJsonSupportTest {
 
     @Test public void testGetPropertyNamesForFormNoHandler() throws IOException {
-        final ConfigJsonSupport support = new ConfigJsonSupport(null, null, null);
-        final ServiceTracker<ConfigurationHandler, ConfigurationHandler> tracker = Mockito.mock(ServiceTracker.class);
-        Mockito.when(tracker.getServices()).thenReturn(null);
+        final ConfigJsonSupport support = new ConfigJsonSupport(null, null, null, Collections.emptyList());
 
         final Dictionary<String, Object> dict = new Hashtable<>();
         dict.put("a", "1");
         dict.put("b", "2");
 
-        final List<String> names = support.getPropertyNamesForForm("f", "p", dict, tracker);
+        final List<String> names = support.getPropertyNamesForForm("f", "p", dict);
         assertEquals(2, names.size());
         assertTrue(names.contains("a"));
         assertTrue(names.contains("b"));
@@ -55,8 +52,6 @@ public class ConfigJsonSupportTest {
     }
 
     @Test public void testGetPropertyNamesForFormHandlerNoFiltering() throws IOException {
-        final ConfigJsonSupport support = new ConfigJsonSupport(null, null, null);
-        final ServiceTracker<ConfigurationHandler, ConfigurationHandler> tracker = Mockito.mock(ServiceTracker.class);
         final ConfigurationHandler handler = new ConfigurationHandler() {
 
             @Override
@@ -78,13 +73,13 @@ public class ConfigJsonSupportTest {
             }
             
         };
-        Mockito.when(tracker.getServices()).thenReturn(new Object[] {handler});
+        final ConfigJsonSupport support = new ConfigJsonSupport(null, null, null, Collections.singletonList(handler));
 
         final Dictionary<String, Object> dict = new Hashtable<>();
         dict.put("a", "1");
         dict.put("b", "2");
 
-        final List<String> names = support.getPropertyNamesForForm("f", "p", dict, tracker);
+        final List<String> names = support.getPropertyNamesForForm("f", "p", dict);
         assertEquals(2, names.size());
         assertTrue(names.contains("a"));
         assertTrue(names.contains("b"));
@@ -95,8 +90,6 @@ public class ConfigJsonSupportTest {
     }
 
     @Test public void testGetPropertyNamesForFormHandlerFiltering() throws IOException {
-        final ConfigJsonSupport support = new ConfigJsonSupport(null, null, null);
-        final ServiceTracker<ConfigurationHandler, ConfigurationHandler> tracker = Mockito.mock(ServiceTracker.class);
         final ConfigurationHandler handler = new ConfigurationHandler() {
 
             @Override
@@ -125,13 +118,13 @@ public class ConfigJsonSupportTest {
             }
             
         };
-        Mockito.when(tracker.getServices()).thenReturn(new Object[] {handler});
+        final ConfigJsonSupport support = new ConfigJsonSupport(null, null, null, Collections.singletonList(handler));
 
         final Dictionary<String, Object> dict = new Hashtable<>();
         dict.put("a", "1");
         dict.put("b", "2");
 
-        final List<String> names = support.getPropertyNamesForForm("f", "p", dict, tracker);
+        final List<String> names = support.getPropertyNamesForForm("f", "p", dict);
         assertEquals(1, names.size());
         assertTrue(names.contains("a"));
 

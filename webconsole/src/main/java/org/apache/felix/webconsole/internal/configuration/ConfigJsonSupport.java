@@ -53,7 +53,6 @@ import org.osgi.service.cm.ManagedService;
 import org.osgi.service.cm.ManagedServiceFactory;
 import org.osgi.service.metatype.AttributeDefinition;
 import org.osgi.service.metatype.ObjectClassDefinition;
-import org.osgi.util.tracker.ServiceTracker;
 
 
 class ConfigJsonSupport {
@@ -64,23 +63,27 @@ class ConfigJsonSupport {
     
     private final ConfigurationAdmin configurationAdmin;
 
+    private final List<ConfigurationHandler> configurationHandlers;
+
     public ConfigJsonSupport(final ServletSupport support, 
             final MetaTypeServiceSupport mtss, 
-            final ConfigurationAdmin cfgAdmin) {
+            final ConfigurationAdmin cfgAdmin,
+            final List<ConfigurationHandler> cfgHandlers) {
         this.servletSupport = support;
         this.mtss = mtss;
         this.configurationAdmin = cfgAdmin;
+        this.configurationHandlers = cfgHandlers;
     }
 
     public void printConfigurationJson( final PrintWriter pw, final String pid, final Configuration config, final String pidFilter,
-            final String locale, ServiceTracker<ConfigurationHandler, ConfigurationHandler> serviceTracker) {
+            final String locale) {
 
         final JSONWriter result = new JSONWriter( pw );
 
         if ( pid != null ) {
             try{
                 result.object();
-                this.configForm( result, pid, config, pidFilter, locale, serviceTracker );
+                this.configForm( result, pid, config, pidFilter, locale );
                 result.endObject();
             } catch ( final Exception e ) {
                 this.servletSupport.log( "Error reading configuration PID " + pid, e );
@@ -93,30 +96,24 @@ class ConfigJsonSupport {
      * Get the list of property names for the form and filter the properties based on this list
      */
     List<String> getPropertyNamesForForm(final String factoryPid, final String pid,
-        final Dictionary<String, Object> props,
-        final ServiceTracker<ConfigurationHandler, ConfigurationHandler> serviceTracker) 
+        final Dictionary<String, Object> props) 
     throws IOException {
         final List<String> names = new ArrayList<>(Collections.list(props.keys()));
-        if (  serviceTracker != null && !names.isEmpty()) {
-            final Object[] services = serviceTracker.getServices();
-            if ( services != null ) {
-                // fill remove list with all names
-                final List<String> removeList = new ArrayList<>(names);
-                for(final Object o : services) {
-                    final ConfigurationHandler handler = (ConfigurationHandler)o;
-                    handler.filterProperties(factoryPid, pid, names);
-                }
-                // update remove list
-                removeList.removeAll(names);
-                // remove properties
-                removeList.forEach(props::remove);
+        if (  !configurationHandlers.isEmpty() && !names.isEmpty()) {
+            // fill remove list with all names
+            final List<String> removeList = new ArrayList<>(names);
+            for(final ConfigurationHandler handler : configurationHandlers) {
+                handler.filterProperties(factoryPid, pid, names);
             }
+            // update remove list
+            removeList.removeAll(names);
+            // remove properties
+            removeList.forEach(props::remove);
         }
         return names;
     }
 
-    void configForm( final JSONWriter json, final String pid, final Configuration config, final String pidFilter, final String locale, 
-        final ServiceTracker<ConfigurationHandler, ConfigurationHandler> serviceTracker )
+    void configForm( final JSONWriter json, final String pid, final Configuration config, final String pidFilter, final String locale )
     throws IOException {
         json.key( ConfigManager.PID );
         json.value( pid );
@@ -133,7 +130,7 @@ class ConfigJsonSupport {
         if ( props == null ) {
             props = new Hashtable<>();
         }
-        final List<String> keys = getPropertyNamesForForm(config != null ? config.getFactoryPid() : null, pid, props, serviceTracker);
+        final List<String> keys = getPropertyNamesForForm(config != null ? config.getFactoryPid() : null, pid, props);
 
         boolean doSimpleMerge = true;
         if ( this.mtss != null ) {
@@ -294,11 +291,7 @@ class ConfigJsonSupport {
         return null;
     }
 
-    final boolean listConfigurations( final JSONWriter jw, final String pidFilter, final String locale, final Locale loc ) {
-        return listConfigurations( jw, pidFilter, locale, loc, null );
-    }
-
-    final boolean listConfigurations(final JSONWriter jw, final String pidFilter, final String locale, final Locale loc , final ServiceTracker<ConfigurationHandler, ConfigurationHandler> serviceTracker ) {
+    final boolean listConfigurations(final JSONWriter jw, final String pidFilter, final String locale, final Locale loc ) {
         boolean hasConfigurations = false;
         try {
             // start with ManagedService instances
@@ -357,15 +350,11 @@ class ConfigJsonSupport {
 
                 final Configuration c = ConfigurationUtil.findConfiguration( this.configurationAdmin, id );
                 Configuration config = c;
-                if (serviceTracker != null) {
-                    Object[] services = serviceTracker.getServices();
-                    if (services != null) {
-                        for(final Object o : services) {
-                            ConfigurationHandler handler = (ConfigurationHandler)o;
-                            if (!handler.listConfiguration(config.getFactoryPid(), config.getPid())) {
-                                config = null;
-                                break;
-                            }
+                if (!this.configurationHandlers.isEmpty()) {
+                    for(final ConfigurationHandler handler : this.configurationHandlers) {
+                        if (!handler.listConfiguration(config.getFactoryPid(), config.getPid())) {
+                            config = null;
+                            break;
                         }
                     }
                 }
