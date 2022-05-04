@@ -24,6 +24,7 @@ import java.io.InputStream;
 import java.io.PrintWriter;
 import java.lang.reflect.Array;
 import java.util.ArrayList;
+import java.util.Collection;
 import java.util.Collections;
 import java.util.Dictionary;
 import java.util.Enumeration;
@@ -89,7 +90,33 @@ class ConfigJsonSupport {
 
     }
 
-    void configForm( final JSONWriter json, final String pid, final Configuration config, final String pidFilter, final String locale, ServiceTracker<ConfigurationHandler, ConfigurationHandler> serviceTracker )
+    /**
+     * Get the list of property names for the form and filter the properties based on this list
+     */
+    private List<String> getPropertyNamesForForm(final String factoryPid, final String pid,
+        final Dictionary<String, Object> props,
+        final ServiceTracker<ConfigurationHandler, ConfigurationHandler> serviceTracker) 
+    throws IOException {
+        final List<String> names = new ArrayList<>(Collections.list(props.keys()));
+        if (  serviceTracker != null && !names.isEmpty()) {
+            final Object[] services = serviceTracker.getServices();
+            if ( services != null ) {
+                for(final Object o : services) {
+                    final ConfigurationHandler handler = (ConfigurationHandler)o;
+                    handler.filterProperties(factoryPid, pid, names);
+                }
+            }
+            final List<String> remove = new ArrayList<>(Collections.list(props.keys()));
+            remove.removeAll(names);
+            for(final String name : remove) {
+                props.remove(name);
+            }
+        }
+        return names;
+    }
+
+    void configForm( final JSONWriter json, final String pid, final Configuration config, final String pidFilter, final String locale, 
+        final ServiceTracker<ConfigurationHandler, ConfigurationHandler> serviceTracker )
     throws IOException {
         json.key( ConfigManager.PID );
         json.value( pid );
@@ -100,28 +127,13 @@ class ConfigJsonSupport {
         }
 
         Dictionary<String, Object> props = null;
-        List<String> filteredKeys = Collections.emptyList();
         if ( config != null ) {
             props = config.getProperties();
-            if (props != null && serviceTracker != null) {
-                Object[] services = serviceTracker.getServices();
-                if (services != null) {
-                    for(final Object o : services) {
-                        ConfigurationHandler handler = (ConfigurationHandler)o;
-                        List<String> allKeys = Collections.list(props.keys());
-                        filteredKeys = handler.filterProperties(config, allKeys);
-                        allKeys.removeAll(filteredKeys);
-                        for (String key : allKeys) {
-                            props.remove(key);
-                        }
-                    }
-                }
-            }
         }
-        final List<String> keys = filteredKeys;
         if ( props == null ) {
             props = new Hashtable<>();
         }
+        final List<String> keys = getPropertyNamesForForm(config != null ? config.getFactoryPid() : null, pid, props, serviceTracker);
 
         boolean doSimpleMerge = true;
         if ( this.mtss != null ) {
@@ -350,7 +362,7 @@ class ConfigJsonSupport {
                     if (services != null) {
                         for(final Object o : services) {
                             ConfigurationHandler handler = (ConfigurationHandler)o;
-                            if (!handler.listConfiguration(config)) {
+                            if (!handler.listConfiguration(config.getFactoryPid(), config.getPid())) {
                                 config = null;
                                 break;
                             }

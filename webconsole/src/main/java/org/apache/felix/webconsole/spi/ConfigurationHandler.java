@@ -19,11 +19,10 @@
 package org.apache.felix.webconsole.spi;
 
 import java.io.IOException;
+import java.util.Collection;
 import java.util.Dictionary;
-import java.util.List;
 
 import org.osgi.annotation.versioning.ConsumerType;
-import org.osgi.service.cm.Configuration;
 
 /**
  * A configuration handler allows to hook into the processing of configurations for
@@ -72,21 +71,27 @@ public interface ConfigurationHandler {
     void updateConfiguration(String factoryPid, String pid, Dictionary<String, Object> props) throws ValidationException, IOException;
 
     /**
-     * @param cfg a configuration object
+     * A configuration should be listed 
+     * @param factoryPid Optional factory pid
+     * @param pid The pid
      * @return true if the configuration may be listed
      * @throws IOException For an error
+     * @since 1.1
      */
-    default boolean listConfiguration(Configuration cfg) throws IOException {
+    default boolean listConfiguration(String factoryPid, String pid) throws IOException {
         return true;
     }
 
     /**
-     * @param cfg a configuration object
-     * @return the filtered list
+     * Filter the properties do be displayed. Properties that should be hidden can be removed from the passed in
+     * collection
+     * @param factoryPid Optional factory pid
+     * @param pid The pid
+     * @param propertyNames The mutable collection of property names
      * @throws IOException For an error
+     * @since 1.1
      */
-    default List<String> filterProperties(Configuration cfg, List<String> propertyNames) throws IOException {
-        return propertyNames;
+    default void filterProperties(String factoryPid, String pid, Collection<String> propertyNames) throws IOException {
+        // do nothing
     }
-
 }
