@@ -350,7 +350,7 @@ class ConfigJsonSupport {
 
                 final Configuration c = ConfigurationUtil.findConfiguration( this.configurationAdmin, id );
                 Configuration config = c;
-                if (!this.configurationHandlers.isEmpty()) {
+                if (null != config && !this.configurationHandlers.isEmpty()) {
                     for(final ConfigurationHandler handler : this.configurationHandlers) {
                         if (!handler.listConfiguration(config.getFactoryPid(), config.getPid())) {
                             config = null;
