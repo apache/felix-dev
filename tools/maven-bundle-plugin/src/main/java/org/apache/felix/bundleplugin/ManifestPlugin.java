@@ -424,8 +424,12 @@ public class ManifestPlugin extends BundlePlugin
             return false;
         }
         try
-        { // is pom.xml up-to-date?
+        { // has this project's or a parent's pom.xml been modified after the manifest was
+            // generated last?
             Path cacheData = getIncrementalDataPath(project);
+            if(!Files.isRegularFile(cacheData)) {
+                return false;
+            }
             long manifestLastModified = lastModified(cacheData);
             while (project != null)
             {
