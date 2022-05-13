@@ -97,7 +97,6 @@
                 <version>5.1.1</version>
                 <extensions>true</extensions>
                 <configuration>
-                    <skip>true</skip>
                     <instructions>
                         <Bundle-SymbolicName>
                             ${project.artifactId}
