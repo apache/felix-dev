@@ -152,7 +152,14 @@ public class BundleCacheTest extends TestCase
 
     public void testDirectoryReference() throws Exception
     {
-        testBundle("reference:" + archiveFile.toURI().toURL(), null);
+        BundleArchive archive = testBundle("reference:" + archiveFile.toURI().toURL(), null);
+        String path = "../../../../../../../../../../../../../../../../..".replace("/", File.separator);
+        assertFalse(archive.getCurrentRevision().getContent().hasEntry(path));
+        assertFalse(archive.getCurrentRevision().getContent().isDirectory(path));
+        assertNull(archive.getCurrentRevision().getContent().getEntryAsURL(path));
+        assertNull(archive.getCurrentRevision().getContent().getEntryAsBytes(path + jarFile.getAbsolutePath()));
+        assertNull(archive.getCurrentRevision().getContent().getEntryAsNativeLibrary(path + jarFile.getAbsolutePath()));
+        assertEquals(0L, archive.getCurrentRevision().getContent().getContentTime(path + jarFile.getAbsolutePath()));
     }
 
     public void testJarReference() throws Exception
@@ -170,7 +177,7 @@ public class BundleCacheTest extends TestCase
         testBundle("bla", jarFile);
     }
 
-    private void testBundle(String location, File file) throws Exception
+    private BundleArchive testBundle(String location, File file) throws Exception
     {
         BundleArchive archive = cache.create(1, 1, location, file != null ? new FileInputStream(file) : null, null);
 
@@ -211,6 +218,8 @@ public class BundleCacheTest extends TestCase
         assertFalse(new File(nativeLib).isFile());
         assertTrue(new File(nativeLib2).isFile());
         assertTrue(new File(nativeLib3).isFile());
+
+        return archive;
     }
 
     private void testRevision(BundleArchive archive) throws Exception
