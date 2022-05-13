@@ -115,7 +115,7 @@
                         </Export-Package>
                         <!-- Import-Package header is also used for the all bundle -->
                         <Import-Package>
-                            javax.servlet.*;version="[2.4,4)",
+                            javax.servlet.*;version="[2.4,5)",
                             !javax.portlet,
                             !org.apache.felix.bundlerepository,
                             !org.osgi.service.obr,
