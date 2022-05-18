@@ -1090,8 +1090,8 @@ public class Util
         return manifest;
     }
 
-    private static final List EMPTY_LIST = Collections.EMPTY_LIST;
-    private static final Map EMPTY_MAP = Collections.EMPTY_MAP;
+    private static final List EMPTY_LIST = Collections.unmodifiableList(Collections.EMPTY_LIST);
+    private static final Map EMPTY_MAP = Collections.unmodifiableMap(Collections.EMPTY_MAP);
 
     public static <T> List<T> newImmutableList(List<T> list)
     {
