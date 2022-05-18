@@ -19,7 +19,10 @@
 package org.apache.felix.framework.wiring;
 
 import java.util.Collections;
+import java.util.HashMap;
 import java.util.Map;
+import java.util.function.Function;
+
 import org.apache.felix.framework.capabilityset.CapabilitySet;
 import org.apache.felix.framework.capabilityset.SimpleFilter;
 import org.apache.felix.framework.util.Util;
@@ -36,6 +39,26 @@ public class BundleRequirementImpl implements BundleRequirement
     private final boolean m_optional;
     private final Map<String, String> m_dirs;
     private final Map<String, Object> m_attrs;
+
+    public static BundleRequirementImpl createFrom(BundleRequirementImpl requirement, Function<Object, Object> cache)
+    {
+        String namespaceI = (String) cache.apply(requirement.m_namespace);
+        Map<String, String> dirsI = new HashMap<>();
+        for (Map.Entry<String, String> entry : requirement.m_dirs.entrySet())
+        {
+            dirsI.put((String) cache.apply(entry.getKey()), (String) cache.apply(entry.getValue()));
+        }
+        dirsI = (Map<String, String>) cache.apply(dirsI);
+
+        Map<String, Object> attrsI = new HashMap<>();
+        for (Map.Entry<String, Object> entry : requirement.m_attrs.entrySet())
+        {
+            attrsI.put((String) cache.apply(entry.getKey()), cache.apply(entry.getValue()));
+        }
+        attrsI = (Map<String, Object>) cache.apply(attrsI);
+        SimpleFilter filterI = (SimpleFilter) cache.apply(requirement.m_filter);
+        return new BundleRequirementImpl(requirement.m_revision, namespaceI, dirsI, attrsI, filterI);
+    }
 
     public BundleRequirementImpl(
         BundleRevision revision, String namespace,
