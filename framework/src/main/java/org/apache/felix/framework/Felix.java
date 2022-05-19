@@ -2016,7 +2016,7 @@ public class Felix extends BundleImpl implements Framework
         // Get the entry enumeration from the revision content and
         // create a wrapper enumeration to filter it.
         Enumeration enumeration =
-            new EntryFilterEnumeration(revision, true, path, filePattern, recurse, true);
+            new EntryFilterEnumeration(revision, !(revision instanceof ExtensionManager.ExtensionManagerRevision), path, filePattern, recurse, true);
 
         // Return the enumeration if it has elements.
         return (!enumeration.hasMoreElements()) ? null : enumeration;
