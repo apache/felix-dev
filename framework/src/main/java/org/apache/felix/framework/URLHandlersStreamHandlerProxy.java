@@ -69,7 +69,8 @@ public class URLHandlersStreamHandlerProxy extends URLStreamHandler
     private static final Method SAME_FILE;
     private static final Method TO_EXTERNAL_FORM;
 
-    static {
+    static
+    {
         SecureAction action = new SecureAction();
 
         EQUALS = reflect(action, "equals",

@@ -16,7 +16,6 @@
  * specific language governing permissions and limitations
  * under the License.
  */
-
 package org.apache.felix.framework;
 
 import java.util.regex.Matcher;
@@ -26,14 +25,12 @@ import org.osgi.framework.Version;
 
 /**
  * Converts generic version identifiers to the {@link Version} instances.
- *
- * @author David Matejcek
  */
-public class VersionConverter {
+public class VersionConverter
+{
 
     private static final Pattern FUZZY_VERSION = Pattern.compile("(\\d+)(\\.(\\d+)(\\.(\\d+))?)?([^a-zA-Z0-9](.*))?",
         Pattern.DOTALL);
-
 
     /**
      * Converts generic version id to the {@link Version} instance. Examples:
@@ -50,45 +47,62 @@ public class VersionConverter {
      * @throws IllegalArgumentException If the numerical components are negative
      *         or the qualifier string is invalid.
      */
-    public static Version toOsgiVersion(String value) throws IllegalArgumentException {
+    public static Version toOsgiVersion(String value) throws IllegalArgumentException
+    {
         return new Version(cleanupVersion(value));
     }
 
-    private static String cleanupVersion(String version) {
+    private static String cleanupVersion(String version)
+    {
         StringBuilder result = new StringBuilder();
         Matcher m = FUZZY_VERSION.matcher(version);
-        if (m.matches()) {
+        if (m.matches())
+        {
             String major = m.group(1);
             String minor = m.group(3);
             String micro = m.group(5);
             String qualifier = m.group(7);
 
-            if (major != null) {
+            if (major != null)
+            {
                 result.append(major);
-                if (minor != null) {
+                if (minor != null)
+                {
                     result.append(".");
                     result.append(minor);
-                    if (micro != null) {
+                    if (micro != null)
+                    {
                         result.append(".");
                         result.append(micro);
-                        if (qualifier != null && !qualifier.isEmpty()) {
+                        if (qualifier != null && !qualifier.isEmpty())
+                        {
                             result.append(".");
                             cleanupModifier(result, qualifier);
                         }
-                    } else if (qualifier != null && !qualifier.isEmpty()) {
+                    }
+                    else if (qualifier != null && !qualifier.isEmpty())
+                    {
                         result.append(".0.");
                         cleanupModifier(result, qualifier);
-                    } else {
+                    }
+                    else
+                    {
                         result.append(".0");
                     }
-                } else if (qualifier != null && !qualifier.isEmpty()) {
+                }
+                else if (qualifier != null && !qualifier.isEmpty())
+                {
                     result.append(".0.0.");
                     cleanupModifier(result, qualifier);
-                } else {
+                }
+                else
+                {
                     result.append(".0.0");
                 }
             }
-        } else {
+        }
+        else
+        {
             result.append("0.0.0.");
             cleanupModifier(result, version);
         }
@@ -96,12 +110,17 @@ public class VersionConverter {
     }
 
 
-    private static void cleanupModifier(StringBuilder result, String modifier) {
-        for (int i = 0; i < modifier.length(); i++) {
+    private static void cleanupModifier(StringBuilder result, String modifier)
+    {
+        for (int i = 0; i < modifier.length(); i++)
+        {
             char c = modifier.charAt(i);
-            if ((c >= '0' && c <= '9') || (c >= 'a' && c <= 'z') || (c >= 'A' && c <= 'Z') || c == '_' || c == '-') {
+            if ((c >= '0' && c <= '9') || (c >= 'a' && c <= 'z') || (c >= 'A' && c <= 'Z') || c == '_' || c == '-')
+            {
                 result.append(c);
-            } else {
+            }
+            else
+            {
                 result.append('_');
             }
         }
