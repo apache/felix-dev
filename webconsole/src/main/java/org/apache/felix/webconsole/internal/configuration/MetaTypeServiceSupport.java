@@ -17,18 +17,9 @@
 package org.apache.felix.webconsole.internal.configuration;
 
 
-import java.io.IOException;
-import java.util.Arrays;
-import java.util.Collections;
-import java.util.Dictionary;
-import java.util.Enumeration;
 import java.util.HashMap;
-import java.util.HashSet;
-import java.util.List;
 import java.util.Map;
-import java.util.Set;
 
-import org.apache.felix.utils.json.JSONWriter;
 import org.osgi.framework.Bundle;
 import org.osgi.framework.BundleContext;
 import org.osgi.service.cm.Configuration;
@@ -158,7 +149,6 @@ class MetaTypeServiceSupport extends MetaTypeSupport
         return objectClassesDefinitions;
     }
 
-
     ObjectClassDefinition getObjectClassDefinition( Configuration config, String locale )
     {
         // if the configuration is bound, try to get the object class
@@ -262,59 +252,6 @@ class MetaTypeServiceSupport extends MetaTypeSupport
         }
         return adMap;
     }
-
-
-    void mergeWithMetaType( Dictionary<String, Object> props, ObjectClassDefinition ocd, JSONWriter json, Set<String> ignoreAttrIds )
-            throws IOException
-    {
-        json.key( "title" ).value( ocd.getName() ); //$NON-NLS-1$
-
-        if ( ocd.getDescription() != null )
-        {
-            json.key( "description" ).value( ocd.getDescription() ); //$NON-NLS-1$
-        }
-
-        AttributeDefinition[] ad = ocd.getAttributeDefinitions( ObjectClassDefinition.ALL );
-        AttributeDefinition[] optionalArray = ocd.getAttributeDefinitions( ObjectClassDefinition.OPTIONAL );
-        List<AttributeDefinition>optional = optionalArray == null ? Collections.emptyList() : Arrays.asList( optionalArray );
-        final Set<String> metatypeAttributes = new HashSet<>(ignoreAttrIds);
-        if ( ad != null )
-        {
-            json.key( "properties" ).object(); //$NON-NLS-1$
-            for ( int i = 0; i < ad.length; i++ )
-            {
-                final AttributeDefinition adi = ad[i];
-                final String attrId = adi.getID();
-                if (!ignoreAttrIds.contains(attrId)) {
-                    json.key( attrId );
-                    boolean isOptional = optional.contains( adi );
-                    attributeToJson( json, new MetatypePropertyDescriptor( adi, isOptional ), props.get( attrId ) );
-                }
-                metatypeAttributes.add( attrId );
-            }
-            json.endObject();
-        }
-        final StringBuffer sb = new StringBuffer();
-        final Enumeration<String> e = props.keys();
-        while ( e.hasMoreElements() )
-        {
-            String key = e.nextElement();
-            if ( !metatypeAttributes.contains(key) ) {
-                if ( sb.length() > 0 )
-                {
-                    sb.append(',');
-                }
-                sb.append(key);
-            }
-        }
-        if ( sb.length() > 0 )
-        {
-            json.key("additionalProperties").value(sb.toString());
-        }
-    }
-
-
-
 
     /**
      * The <code>IdGetter</code> interface is an internal helper to abstract

@@ -93,12 +93,12 @@ class ConfigAdminSupport {
     }
 
     private Map<String, Object> getAllowedValues(final Configuration config, final Dictionary<String, Object> props) throws IOException {
-        final List<String> allowedProperties = this.getJsonSupport().getPropertyNamesForForm(config.getFactoryPid(), config.getPid(), props);
+        this.getJsonSupport().filterConfigurationProperties(config.getFactoryPid(), config.getPid(), props);
         final Map<String, Object> allowedValues = new HashMap<>();
         final Dictionary<String, Object> origProps = config.getProperties();
         if ( origProps != null ) {
             for(final String name : Collections.list(origProps.keys())) {
-                if ( !allowedProperties.contains(name) ) {
+                if ( props.get(name) == null ) {
                     allowedValues.put(name, origProps.get(name));
                 }
             }
