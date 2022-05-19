@@ -2016,7 +2016,7 @@ public class Felix extends BundleImpl implements Framework
         // Get the entry enumeration from the revision content and
         // create a wrapper enumeration to filter it.
         Enumeration enumeration =
-            new EntryFilterEnumeration(revision, true, path, filePattern, recurse, true);
+            new EntryFilterEnumeration(revision, !(revision instanceof ExtensionManager.ExtensionManagerRevision), path, filePattern, recurse, true);
 
         // Return the enumeration if it has elements.
         return (!enumeration.hasMoreElements()) ? null : enumeration;
@@ -4905,7 +4905,7 @@ public class Felix extends BundleImpl implements Framework
         if ( !m_configMutableMap.containsKey(FelixConstants.FRAMEWORK_OS_VERSION))
         {
             m_configMutableMap.put(FelixConstants.FRAMEWORK_OS_VERSION,
-                NativeLibraryClause.normalizeOSVersion(System.getProperty("os.version")));
+                VersionConverter.toOsgiVersion(System.getProperty("os.version")).toString());
         }
         if (!m_configMutableMap.containsKey(FelixConstants.FRAMEWORK_LANGUAGE))
         {
@@ -4913,7 +4913,7 @@ public class Felix extends BundleImpl implements Framework
                 System.getProperty("user.language"));
         }
         m_configMutableMap.put(
-            FelixConstants.FELIX_VERSION_PROPERTY, getFrameworkVersion());
+            FelixConstants.FELIX_VERSION_PROPERTY, getFrameworkVersion().toString());
 
         Properties defaultProperties = Util.loadDefaultProperties(m_logger);
 
@@ -4959,7 +4959,7 @@ public class Felix extends BundleImpl implements Framework
      * Read the framework version from the property file.
      * @return the framework version as a string.
     **/
-    private static String getFrameworkVersion()
+    private static Version getFrameworkVersion()
     {
         // The framework version property.
         Properties props = new Properties();
@@ -4987,56 +4987,9 @@ public class Felix extends BundleImpl implements Framework
             }
         }
 
-        // Maven uses a '-' to separate the version qualifier,
-        // while OSGi uses a '.', so we need to convert to a '.'
-        StringBuilder sb =
-            new StringBuilder(
-                props.getProperty(
-                    FelixConstants.FELIX_VERSION_PROPERTY, "0.0.0"));
-        String toRet = cleanMavenVersion(sb);
-        if (toRet.indexOf("${pom") >= 0)
-        {
-            return "0.0.0";
-        }
-        else
-        {
-            return toRet;
-        }
+        return VersionConverter.toOsgiVersion(props.getProperty(FelixConstants.FELIX_VERSION_PROPERTY, "0.0.0"));
     }
 
-    /**
-     * The main purpose of this method is to turn a.b.c-SNAPSHOT into a.b.c.SNAPSHOT
-     * it can also deal with a.b-SNAPSHOT and turns it into a.b.0.SNAPSHOT and
-     * will leave the dash in a.b.c.something-else, as it's valid in that last example.
-     * In short this method attempts to map a Maven version to an OSGi version as well
-     * as possible.
-     * @param sb The version to be cleaned
-     * @return The cleaned version
-     */
-    private static String cleanMavenVersion(StringBuilder sb)
-    {
-        int dots = 0;
-        for (int i = 0; i < sb.length(); i++)
-        {
-            switch (sb.charAt(i))
-            {
-                case '.':
-                    dots++;
-                    break;
-                case '-':
-                    if (dots < 3)
-                    {
-                        sb.setCharAt(i, '.');
-                        for (int j = dots; j < 2; j++)
-                        {
-                            sb.insert(i, ".0");
-                        }
-                    }
-                    break;
-            }
-        }
-        return sb.toString();
-    }
 
     //
     // Private utility methods.

@@ -389,10 +389,15 @@ public class BundleWiringImpl implements BundleWiring
 
         if (System.getSecurityManager() != null)
         {
-            for (Iterator<BundleCapability> iter = capList.iterator();iter.hasNext();)
+            for (Iterator<BundleCapability> iter = capList.iterator(); iter.hasNext();)
             {
                 BundleCapability cap = iter.next();
-                if (cap.getNamespace().equals(BundleRevision.PACKAGE_NAMESPACE))
+                String bundleNamespace = cap.getNamespace();
+                if (bundleNamespace.isEmpty())
+                {
+                    iter.remove();
+                }
+                else if (bundleNamespace.equals(BundleRevision.PACKAGE_NAMESPACE))
                 {
                     if (!((BundleProtectionDomain) ((BundleRevisionImpl) cap.getRevision()).getProtectionDomain()).impliesDirect(
                             new PackagePermission((String) cap.getAttributes().get(BundleRevision.PACKAGE_NAMESPACE), PackagePermission.EXPORTONLY)))
@@ -400,11 +405,12 @@ public class BundleWiringImpl implements BundleWiring
                         iter.remove();
                     }
                 }
-                else if (!cap.getNamespace().equals(BundleRevision.HOST_NAMESPACE) && !cap.getNamespace().equals(BundleRevision.BUNDLE_NAMESPACE) &&
-                        !cap.getNamespace().equals("osgi.ee"))
+                else if (!bundleNamespace.equals(BundleRevision.HOST_NAMESPACE)
+                    && !bundleNamespace.equals(BundleRevision.BUNDLE_NAMESPACE)
+                    && !bundleNamespace.equals("osgi.ee"))
                 {
-                    if (!((BundleProtectionDomain) ((BundleRevisionImpl) cap.getRevision()).getProtectionDomain()).impliesDirect(
-                            new CapabilityPermission(cap.getNamespace(), CapabilityPermission.PROVIDE)))
+                    CapabilityPermission permission = new CapabilityPermission(bundleNamespace, CapabilityPermission.PROVIDE);
+                    if (!((BundleProtectionDomain) ((BundleRevisionImpl) cap.getRevision()).getProtectionDomain()).impliesDirect(permission))
                     {
                         iter.remove();
                     }

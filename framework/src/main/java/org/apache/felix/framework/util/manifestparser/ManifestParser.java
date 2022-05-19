@@ -38,6 +38,7 @@ import org.osgi.framework.wiring.BundleCapability;
 import org.osgi.framework.wiring.BundleRequirement;
 import org.osgi.framework.wiring.BundleRevision;
 
+import java.lang.ref.WeakReference;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.HashMap;
@@ -47,7 +48,12 @@ import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
+import java.util.Objects;
 import java.util.Set;
+import java.util.WeakHashMap;
+import java.util.concurrent.atomic.AtomicLong;
+import java.util.function.Function;
+import java.util.stream.Collectors;
 
 public class ManifestParser
 {
@@ -66,6 +72,32 @@ public class ManifestParser
     private volatile List<BundleRequirement> m_requirements;
     private volatile List<NativeLibraryClause> m_libraryClauses;
     private volatile boolean m_libraryHeadersOptional = false;
+
+    private static final Map<Object, WeakReference<Object>> objectCache = new WeakHashMap<>();
+    private static final Function<Object, Object> cache = (foo) ->
+    {
+        if (foo instanceof String)
+        {
+            return ((String) foo).intern();
+        }
+        else if (foo != null)
+        {
+            synchronized (objectCache)
+            {
+                WeakReference<Object> ref = objectCache.get(foo);
+                if (ref != null)
+                {
+                    Object refValue = ref.get();
+                    if (refValue != null)
+                    {
+                        return refValue;
+                    }
+                }
+                objectCache.put(foo, new WeakReference<>(foo));
+            }
+        }
+        return foo;
+    };
 
     public ManifestParser(Logger logger, Map<String, Object> configMap, BundleRevision owner, Map<String, Object> headerMap)
         throws BundleException
@@ -107,6 +139,8 @@ public class ManifestParser
                 m_bundleVersion = Version.emptyVersion;
             }
         }
+
+        m_bundleVersion = (Version) cache.apply(m_bundleVersion);
 
         //
         // Parse bundle symbolic name.
@@ -269,25 +303,25 @@ public class ManifestParser
         }
         
         List<BundleRequirement> nativeCodeReqs = convertNativeCode(owner, m_libraryClauses, m_libraryHeadersOptional);
-        
+
         // Combine all requirements.
         m_requirements = new ArrayList<BundleRequirement>(
             hostReqs.size() + importReqs.size() + rbReqs.size()
             + requireReqs.size() + dynamicReqs.size() + breeReqs.size());
-        m_requirements.addAll(hostReqs);
-        m_requirements.addAll(importReqs);
-        m_requirements.addAll(rbReqs);
-        m_requirements.addAll(requireReqs);
-        m_requirements.addAll(dynamicReqs);
-        m_requirements.addAll(breeReqs);
-        m_requirements.addAll(nativeCodeReqs);
+        m_requirements.addAll(hostReqs.stream().map(req -> BundleRequirementImpl.createFrom((BundleRequirementImpl) req, cache)).collect(Collectors.toList()));
+        m_requirements.addAll(importReqs.stream().map(req -> BundleRequirementImpl.createFrom((BundleRequirementImpl) req, cache)).collect(Collectors.toList()));
+        m_requirements.addAll(rbReqs.stream().map(req -> BundleRequirementImpl.createFrom((BundleRequirementImpl) req, cache)).collect(Collectors.toList()));
+        m_requirements.addAll(requireReqs.stream().map(req -> BundleRequirementImpl.createFrom((BundleRequirementImpl) req, cache)).collect(Collectors.toList()));
+        m_requirements.addAll(dynamicReqs.stream().map(req -> BundleRequirementImpl.createFrom((BundleRequirementImpl) req, cache)).collect(Collectors.toList()));
+        m_requirements.addAll(breeReqs.stream().map(req -> BundleRequirementImpl.createFrom((BundleRequirementImpl) req, cache)).collect(Collectors.toList()));
+        m_requirements.addAll(nativeCodeReqs.stream().map(req -> BundleRequirementImpl.createFrom((BundleRequirementImpl) req, cache)).collect(Collectors.toList()));
         
         // Combine all capabilities.
         m_capabilities = new ArrayList<BundleCapability>(
              capList.size() + exportCaps.size() + provideCaps.size());
-        m_capabilities.addAll(capList);
-        m_capabilities.addAll(exportCaps);
-        m_capabilities.addAll(provideCaps);
+        m_capabilities.addAll(capList.stream().map(cap -> BundleCapabilityImpl.createFrom((BundleCapabilityImpl) cap, cache)).collect(Collectors.toList()));
+        m_capabilities.addAll(exportCaps.stream().map(cap -> BundleCapabilityImpl.createFrom((BundleCapabilityImpl) cap, cache)).collect(Collectors.toList()));
+        m_capabilities.addAll(provideCaps.stream().map(cap -> BundleCapabilityImpl.createFrom((BundleCapabilityImpl) cap, cache)).collect(Collectors.toList()));
 
         //
         // Parse activation policy.

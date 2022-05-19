@@ -23,8 +23,6 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.util.Properties;
 
-import org.apache.commons.io.IOUtils;
-
 
 /**
  * The <code>DefaultBrandingPlugin</code> class is the default implementation
@@ -123,20 +121,12 @@ public class DefaultBrandingPlugin implements BrandingPlugin
         Properties props = new Properties();
 
         // try to load the branding properties
-        InputStream ins = getClass().getResourceAsStream( BRANDING_PROPERTIES );
-        if ( ins != null )
-        {
-            try
-            {
+        try (InputStream ins = getClass().getResourceAsStream( BRANDING_PROPERTIES )) {
+            if ( ins != null ) {
                 props.load( ins );
             }
-            catch ( IOException ignore )
-            { /* ignore - will use defaults */
-            }
-            finally
-            {
-                IOUtils.closeQuietly( ins );
-            }
+        } catch ( IOException ignore ) {
+            // ignore - will use defaults
         }
 
         // set the fields from the properties now

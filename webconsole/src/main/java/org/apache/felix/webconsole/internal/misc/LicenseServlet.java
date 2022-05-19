@@ -21,8 +21,12 @@ package org.apache.felix.webconsole.internal.misc;
 
 import java.io.IOException;
 import java.io.InputStream;
+import java.io.InputStreamReader;
+import java.io.Reader;
 import java.io.StringWriter;
+import java.io.Writer;
 import java.net.URL;
+import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
 import java.util.Enumeration;
 import java.util.Iterator;
@@ -35,7 +39,6 @@ import javax.servlet.ServletException;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 
-import org.apache.commons.io.IOUtils;
 import org.apache.felix.utils.json.JSONWriter;
 import org.apache.felix.utils.manifest.Clause;
 import org.apache.felix.utils.manifest.Parser;
@@ -124,11 +127,8 @@ public final class LicenseServlet extends SimpleWebConsolePlugin implements Osgi
         final JSONWriter jw = new JSONWriter(json);
         jw.array();
 
-        for (int i = 0; i < bundles.length; i++)
-        {
-            Bundle bundle = bundles[i];
-
-            List files = findResource(bundle, LICENSE_FILES);
+        for (final Bundle bundle : bundles) {
+            List<Entry> files = findResource(bundle, LICENSE_FILES);
             addLicensesFromHeader(bundle, files);
             if (!files.isEmpty())
             { // has resources
@@ -139,7 +139,7 @@ public final class LicenseServlet extends SimpleWebConsolePlugin implements Osgi
                 jw.object();
                 jw.key("__res__");
                 jw.array();
-                Iterator iter = files.iterator();
+                Iterator<Entry> iter = files.iterator();
                 while ( iter.hasNext() ) {
                     jw.object();
                     Entry entry = (Entry) iter.next();
@@ -167,7 +167,7 @@ public final class LicenseServlet extends SimpleWebConsolePlugin implements Osgi
         return path.substring( path.lastIndexOf( '/' ) + 1 );
     }
 
-    private static final void addLicensesFromHeader(Bundle bundle, List files)
+    private static final void addLicensesFromHeader(Bundle bundle, List<Entry> files)
     {
         String target = (String) bundle.getHeaders("").get("Bundle-License");
         if (target != null)
@@ -206,18 +206,18 @@ public final class LicenseServlet extends SimpleWebConsolePlugin implements Osgi
         }
     }
 
-    private static final List findResource( Bundle bundle, String[] patterns ) throws IOException
+    private static final List<Entry> findResource( Bundle bundle, String[] patterns ) throws IOException
     {
-        final List files = new ArrayList();
+        final List<Entry> files = new ArrayList<>();
 
         for ( int i = 0; i < patterns.length; i++ )
         {
-            Enumeration entries = bundle.findEntries( "/", patterns[i] + "*", true );
+            Enumeration<URL> entries = bundle.findEntries( "/", patterns[i] + "*", true );
             if ( entries != null )
             {
                 while ( entries.hasMoreElements() )
                 {
-                    URL url = ( URL ) entries.nextElement();
+                    URL url = entries.nextElement();
                     Entry entry = new Entry();
                     entry.path = url.getPath();
                     entry.url = getName( url.getPath() ) ;
@@ -226,18 +226,14 @@ public final class LicenseServlet extends SimpleWebConsolePlugin implements Osgi
             }
         }
 
-        Enumeration entries = bundle.findEntries( "/", "*.jar", true );
+        Enumeration<URL> entries = bundle.findEntries( "/", "*.jar", true );
         if ( entries != null )
         {
             while ( entries.hasMoreElements() )
             {
-                URL url = ( URL ) entries.nextElement();
+                URL url = entries.nextElement();
 
-                InputStream ins = null;
-                try
-                {
-                    ins = url.openStream();
-                    ZipInputStream zin = new ZipInputStream( ins );
+                try(ZipInputStream zin = new ZipInputStream( url.openStream() )) {
                     for ( ZipEntry zentry = zin.getNextEntry(); zentry != null; zentry = zin.getNextEntry() )
                     {
                         String name = zentry.getName();
@@ -263,11 +259,6 @@ public final class LicenseServlet extends SimpleWebConsolePlugin implements Osgi
                         }
                     }
                 }
-                finally
-                {
-                    IOUtils.closeQuietly( ins );
-                }
-
             }
         }
 
@@ -280,14 +271,12 @@ public final class LicenseServlet extends SimpleWebConsolePlugin implements Osgi
 
         final String name = pathInfo.licenseFile.substring( pathInfo.licenseFile.lastIndexOf( '/' ) + 1 );
         boolean isLicense = false;
-        for ( int i = 0; !isLicense && i < LICENSE_FILES.length; i++ )
-        {
+        for ( int i = 0; !isLicense && i < LICENSE_FILES.length; i++ ) {
             isLicense = name.startsWith( LICENSE_FILES[i] );
         }
 
         final Bundle bundle = getBundleContext().getBundle( pathInfo.bundleId );
-        if ( bundle == null )
-        {
+        if ( bundle == null ) {
             return false;
         }
 
@@ -295,62 +284,44 @@ public final class LicenseServlet extends SimpleWebConsolePlugin implements Osgi
         WebConsoleUtil.setNoCache( response );
         response.setContentType( "text/plain" );
 
-        if ( pathInfo.innerJar == null )
-        {
+        if ( pathInfo.innerJar == null ) {
             URL resource = bundle.getEntry( pathInfo.licenseFile );
-            if ( resource == null)
-            {
+            if ( resource == null) {
                 resource = bundle.getResource( pathInfo.licenseFile );
             }
 
-
-            if ( resource != null )
-            {
-                final InputStream input = resource.openStream();
-                try
-                {
-                    IOUtils.copy( input, response.getWriter() );
-                    return true;
+            if ( resource != null ){
+                try( InputStream input = resource.openStream()) {
+                    copy( input, response.getWriter() );
                 }
-                finally
-                {
-                    IOUtils.closeQuietly( input );
-                }
+                return true;
             }
-        }
-        else
-        {
+        } else {
             // license is in a nested JAR
             final URL zipResource = bundle.getResource( pathInfo.innerJar );
-            if ( zipResource != null )
-            {
-                final InputStream input = zipResource.openStream();
-                ZipInputStream zin = null;
-                try
-                {
-                    zin = new ZipInputStream( input );
-                    for ( ZipEntry zentry = zin.getNextEntry(); zentry != null; zentry = zin.getNextEntry() )
-                    {
-                        if ( pathInfo.licenseFile.equals( zentry.getName() ) )
-                        {
-                            IOUtils.copy( zin, response.getWriter() );
+            if ( zipResource != null ) {
+                try(final ZipInputStream zin = new ZipInputStream( zipResource.openStream() )) {
+                    for ( ZipEntry zentry = zin.getNextEntry(); zentry != null; zentry = zin.getNextEntry() ) {
+                        if ( pathInfo.licenseFile.equals( zentry.getName() ) ) {
+                            copy( zin, response.getWriter() );
                             return true;
                         }
                     }
                 }
-                finally
-                {
-
-                    IOUtils.closeQuietly( zin );
-                    IOUtils.closeQuietly( input );
-                }
             }
         }
 
-        // throw new ServletException("License file:" + url + " not found!");
         return false;
     }
 
+    private void copy(final InputStream in, final Writer out) throws IOException {
+        final Reader r = new InputStreamReader(in, StandardCharsets.UTF_8);
+        final char[] buf = new char[4096];
+        int l;
+        while ((l = r.read(buf)) > 0 ) {
+            out.write(buf, 0, l);
+        }
+    }
     // package private for unit testing of the parse method
     static class PathInfo
     {

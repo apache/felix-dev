@@ -20,18 +20,20 @@ package org.apache.felix.webconsole.internal.configuration;
 
 
 import java.io.IOException;
-import java.io.InputStream;
 import java.io.PrintWriter;
 import java.lang.reflect.Array;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Collections;
 import java.util.Dictionary;
 import java.util.Enumeration;
+import java.util.HashSet;
 import java.util.Hashtable;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Locale;
 import java.util.Map;
+import java.util.Set;
 import java.util.Map.Entry;
 import java.util.SortedMap;
 import java.util.TreeMap;
@@ -93,13 +95,12 @@ class ConfigJsonSupport {
     }
 
     /**
-     * Get the list of property names for the form and filter the properties based on this list
+     * Filter the configuration properties
      */
-    List<String> getPropertyNamesForForm(final String factoryPid, final String pid,
-        final Dictionary<String, Object> props) 
+    void filterConfigurationProperties(final String factoryPid, final String pid, final Dictionary<String, Object> props) 
     throws IOException {
-        final List<String> names = new ArrayList<>(Collections.list(props.keys()));
-        if (  !configurationHandlers.isEmpty() && !names.isEmpty()) {
+        if ( props != null && !configurationHandlers.isEmpty() && !props.isEmpty()) {
+            final List<String> names = new ArrayList<>(Collections.list(props.keys()));
             // fill remove list with all names
             final List<String> removeList = new ArrayList<>(names);
             for(final ConfigurationHandler handler : configurationHandlers) {
@@ -110,9 +111,45 @@ class ConfigJsonSupport {
             // remove properties
             removeList.forEach(props::remove);
         }
-        return names;
     }
 
+    /**
+     * Filter the attribute definitions
+     */
+    List<AttributeDefinition> filterAttributeDefinitions(final String factoryPid, final String pid, final AttributeDefinition[] ads) 
+    throws IOException {
+        final List<AttributeDefinition> result = new ArrayList<>();
+        if ( ads != null && ads.length > 0 ) {
+            final List<String> names = new ArrayList<>();
+            for(final AttributeDefinition ad : ads) {
+                names.add(ad.getID());
+            }
+            for(final ConfigurationHandler handler : configurationHandlers) {
+                handler.filterProperties(factoryPid, pid, names);
+            }
+            for(final AttributeDefinition ad : ads) {
+                if ( names.contains(ad.getID())) {
+                    result.add(ad);
+                }
+            }
+        }
+        return result;
+    }
+
+    ObjectClassDefinition getObjectClassDefinition( Configuration config, String pid, String locale ) {
+        ObjectClassDefinition ocd = null;
+        if ( this.mtss != null ) {
+            if ( config != null ) {
+                ocd = this.mtss.getObjectClassDefinition( config, locale );
+            }
+            if ( ocd == null ) {
+                ocd = this.mtss.getObjectClassDefinition( pid, locale );
+            }    
+        }
+        return ocd;
+    }
+
+    
     void configForm( final JSONWriter json, final String pid, final Configuration config, final String pidFilter, final String locale )
     throws IOException {
         json.key( ConfigManager.PID );
@@ -123,89 +160,72 @@ class ConfigJsonSupport {
             json.value( pidFilter );
         }
 
-        Dictionary<String, Object> props = null;
-        if ( config != null ) {
-            props = config.getProperties();
-        }
-        if ( props == null ) {
-            props = new Hashtable<>();
-        }
-        final List<String> keys = getPropertyNamesForForm(config != null ? config.getFactoryPid() : null, pid, props);
+        // get configuration properties and filter
+        final Dictionary<String, Object> props = config == null ? null : config.getProperties();
+        filterConfigurationProperties(config != null ? config.getFactoryPid() : null, pid, props);
 
-        boolean doSimpleMerge = true;
-        if ( this.mtss != null ) {
-            ObjectClassDefinition ocd = null;
-            if ( config != null ) {
-                ocd = mtss.getObjectClassDefinition( config, locale );
+        final ObjectClassDefinition ocd = this.getObjectClassDefinition(config, pid, locale);
+        if ( ocd != null ) {
+            json.key( "title" ).value( ocd.getName() ); //$NON-NLS-1$
+
+            if ( ocd.getDescription() != null ) {
+                json.key( "description" ).value( ocd.getDescription() ); //$NON-NLS-1$
             }
-            if ( ocd == null ) {
-                ocd = mtss.getObjectClassDefinition( pid, locale );
+    
+            final AttributeDefinition[] optionalArray = ocd.getAttributeDefinitions( ObjectClassDefinition.OPTIONAL );
+            final List<AttributeDefinition> optional = optionalArray == null ? Collections.emptyList() : Arrays.asList( optionalArray );
+            final List<AttributeDefinition> attributes = filterAttributeDefinitions(config != null ? config.getFactoryPid() : null, pid, ocd.getAttributeDefinitions( ObjectClassDefinition.ALL ));
+
+            final Set<String> metatypeAttributes = new HashSet<>( ConfigAdminSupport.CONFIG_PROPERTIES_HIDE );
+            json.key( "properties" ).object(); //$NON-NLS-1$
+            for(final AttributeDefinition adi : attributes) {
+                final String attrId = adi.getID();
+                if (! ConfigAdminSupport.CONFIG_PROPERTIES_HIDE.contains(attrId)) {
+                    json.key( attrId );
+                    final boolean isOptional = optional.contains( adi );
+                    MetaTypeServiceSupport.attributeToJson( json, new MetatypePropertyDescriptor( adi, isOptional ), props == null ? null : props.get( attrId ) );
+                }
+                metatypeAttributes.add( attrId );
             }
-            ObjectClassDefinition filteredOcd = ocd;
-            if ( ocd != null ) {
-                final ObjectClassDefinition focd = ocd;
-                filteredOcd = new ObjectClassDefinition() {
-                    @Override
-                    public String getName() {
-                        return focd.getName();
-                    }
-
-                    @Override
-                    public String getID() {
-                        return focd.getID();
-                    }
-
-                    @Override
-                    public String getDescription() {
-                        return focd.getDescription();
-                    }
-
-                    @Override
-                    public AttributeDefinition[] getAttributeDefinitions(int i) {
-                        AttributeDefinition[] allDefinitions = focd.getAttributeDefinitions(i);
-                        if (allDefinitions != null) {
-                            ArrayList<AttributeDefinition> filteredDefinitions = new ArrayList<>();
-                            for (AttributeDefinition def : allDefinitions) {
-                                if (keys.contains(def.getID())) {
-                                    filteredDefinitions.add(def);
-                                }
-                            }
-                            return filteredDefinitions.toArray(new AttributeDefinition[0]);
+            json.endObject();
+            if ( props != null ) {
+                final StringBuffer sb = new StringBuffer();
+                for(final String key : Collections.list(props.keys())) {
+                    if ( !metatypeAttributes.contains(key) ) {
+                        if ( sb.length() > 0 ) {
+                            sb.append(',');
                         }
-                        return null;
+                        sb.append(key);
                     }
-
-                    @Override
-                    public InputStream getIcon(int i) throws IOException {
-                        return focd.getIcon(i);
-                    }
-                };
-                mtss.mergeWithMetaType( props, filteredOcd, json, ConfigAdminSupport.CONFIG_PROPERTIES_HIDE );
-                doSimpleMerge = false;
+                }
+                if ( sb.length() > 0 ) {
+                    json.key("additionalProperties").value(sb.toString());
+                }    
             }
-        }
 
-        if (doSimpleMerge) {
+        } else {
             json.key( "title" ).value( pid ); //$NON-NLS-1$
             json.key( "description" ).value( //$NON-NLS-1$
                     "This form is automatically generated from existing properties because no property "
-                    + "descriptors are available for this configuration. This may be cause by the absence "
+                    + "descriptors are available for this configuration. This may be caused by the absence "
                     + "of the OSGi Metatype Service or the absence of a MetaType descriptor for this configuration." );
 
             json.key( "properties" ).object(); //$NON-NLS-1$
-            for ( Enumeration<String> pe = props.keys(); pe.hasMoreElements(); ) {
-                final String id = pe.nextElement();
-
-                // ignore well known special properties
-                if ( !id.equals( Constants.SERVICE_PID ) && !id.equals( Constants.SERVICE_DESCRIPTION )
-                        && !id.equals( Constants.SERVICE_ID ) && !id.equals( Constants.SERVICE_VENDOR )
-                        && !id.equals( ConfigurationAdmin.SERVICE_BUNDLELOCATION )
-                        && !id.equals( ConfigurationAdmin.SERVICE_FACTORYPID ) ) {
-                    final Object value = props.get( id );
-                    final PropertyDescriptor ad = MetaTypeServiceSupport.createAttributeDefinition( id, value );
-                    json.key( id );
-                    MetaTypeServiceSupport.attributeToJson( json, ad, value );
-                }
+            if ( props != null ) {
+                for ( Enumeration<String> pe = props.keys(); pe.hasMoreElements(); ) {
+                    final String id = pe.nextElement();
+    
+                    // ignore well known special properties
+                    if ( !id.equals( Constants.SERVICE_PID ) && !id.equals( Constants.SERVICE_DESCRIPTION )
+                            && !id.equals( Constants.SERVICE_ID ) && !id.equals( Constants.SERVICE_VENDOR )
+                            && !id.equals( ConfigurationAdmin.SERVICE_BUNDLELOCATION )
+                            && !id.equals( ConfigurationAdmin.SERVICE_FACTORYPID ) ) {
+                        final Object value = props.get( id );
+                        final PropertyDescriptor ad = MetaTypeServiceSupport.createAttributeDefinition( id, value );
+                        json.key( id );
+                        MetaTypeServiceSupport.attributeToJson( json, ad, value );
+                    }
+                }    
             }
             json.endObject();
         }
@@ -316,23 +336,11 @@ class ConfigJsonSupport {
                 }
 
                 // insert and entry for the PID
-                if ( mtss != null )
-                {
-                    try
-                    {
-                        ObjectClassDefinition ocd = mtss.getObjectClassDefinition( cfgs[i], locale );
-                        if ( ocd != null )
-                        {
-                            optionsPlain.put( pid, ocd.getName() );
-                            continue;
-                        }
-                    }
-                    catch ( IllegalArgumentException t )
-                    {
-                        // MetaTypeProvider.getObjectClassDefinition might throw illegal
-                        // argument exception. So we must catch it here, otherwise the
-                        // other configurations will not be shown
-                        // See https://issues.apache.org/jira/browse/FELIX-2390
+                if ( mtss != null ) {
+                    final ObjectClassDefinition ocd = mtss.getObjectClassDefinition( cfgs[i], locale );
+                    if ( ocd != null ) {
+                        optionsPlain.put( pid, ocd.getName() );
+                        continue;
                     }
                 }
 
@@ -342,46 +350,40 @@ class ConfigJsonSupport {
 
             jw.key("pids");//$NON-NLS-1$
             jw.array();
-            for ( Iterator<String> ii = optionsPlain.keySet().iterator(); ii.hasNext(); )
-            {
-                hasConfigurations = true;
-                String id = ii.next();
-                Object name = optionsPlain.get( id );
+            for ( final Map.Entry<String,String> entry : optionsPlain.entrySet() ) {
 
-                final Configuration c = ConfigurationUtil.findConfiguration( this.configurationAdmin, id );
-                Configuration config = c;
-                if (null != config && !this.configurationHandlers.isEmpty()) {
-                    for(final ConfigurationHandler handler : this.configurationHandlers) {
-                        if (!handler.listConfiguration(config.getFactoryPid(), config.getPid())) {
-                            config = null;
-                            break;
-                        }
+                final Configuration config = ConfigurationUtil.findConfiguration( this.configurationAdmin, entry.getKey());
+                boolean include = true;
+                for(final ConfigurationHandler handler : this.configurationHandlers) {
+                    if (!handler.listConfiguration(config != null ? config.getFactoryPid() : null, entry.getKey())) {
+                        include = false;
+                        break;
                     }
                 }
-                if ( null != config )
-                {
+
+                if ( include ) {
+                    hasConfigurations = true;
                     jw.object();
-                    jw.key("id").value( id ); //$NON-NLS-1$
-                    jw.key( "name").value( name ); //$NON-NLS-1$
+                    jw.key("id").value( entry.getKey() ); //$NON-NLS-1$
+                    jw.key( "name").value( entry.getValue() ); //$NON-NLS-1$
 
-                    // FELIX-3848
-                    jw.key("has_config").value( true ); //$NON-NLS-1$
+                    if ( null != config ) {
+                        // FELIX-3848
+                        jw.key("has_config").value( true ); //$NON-NLS-1$
 
-                    final String fpid = config.getFactoryPid();
-                    if ( null != fpid )
-                    {
-                        jw.key("fpid").value( fpid ); //$NON-NLS-1$
-                        final String val = getConfigurationFactoryNameHint(config);
-                        if ( val != null )
-                        {
-                            jw.key( "nameHint").value(val ); //$NON-NLS-1$
+                        if ( config.getFactoryPid() != null ) {
+                            jw.key("fpid").value( config.getFactoryPid() ); //$NON-NLS-1$
+                            final String val = getConfigurationFactoryNameHint(config);
+                            if ( val != null ) {
+                                jw.key( "nameHint").value(val ); //$NON-NLS-1$
+                            }
                         }
-                    }
 
-                    final Bundle bundle = getBoundBundle( config );
-                    if ( null != bundle ) {
-                        jw.key( "bundle").value( bundle.getBundleId() ); //$NON-NLS-1$
-                        jw.key( "bundle_name").value( Util.getName( bundle, loc ) ); //$NON-NLS-1$
+                        final Bundle bundle = getBoundBundle( config );
+                        if ( null != bundle ) {
+                            jw.key( "bundle").value( bundle.getBundleId() ); //$NON-NLS-1$
+                            jw.key( "bundle_name").value( Util.getName( bundle, loc ) ); //$NON-NLS-1$
+                        }
                     }
                     jw.endObject();
                 }
@@ -437,7 +439,7 @@ class ConfigJsonSupport {
             if (value == null) {
                 value = "";
             }
-            matcher.appendReplacement(sb, matcherQuoteReplacement(value));
+            matcher.appendReplacement(sb, Matcher.quoteReplacement(value));
         }
         matcher.appendTail(sb);
 
@@ -493,25 +495,7 @@ class ConfigJsonSupport {
         }
     }
 
-    /**
-     * Replacement for Matcher.quoteReplacement which is only available in JDK 1.5 and up.
-     * @param str Unquoted string
-     * @return Quoted string
-     */
-    private static String matcherQuoteReplacement(String str) {
-        StringBuffer sb = new StringBuffer();
-        for (int i = 0; i < str.length(); i++) {
-            char c = str.charAt(i);
-            if (c == '$' || c == '\\') {
-                sb.append('\\');
-            }
-            sb.append(c);
-        }
-        return sb.toString();
-    }
-
-    final void listFactoryConfigurations(JSONWriter jw, String pidFilter,
-            String locale) {
+    final void listFactoryConfigurations(final JSONWriter jw, final String pidFilter, final String locale) {
         try {
             final Map<String, String> optionsFactory = getServices(ManagedServiceFactory.class.getName(),
                     pidFilter, locale, true);
@@ -521,13 +505,20 @@ class ConfigJsonSupport {
             }
             jw.key("fpids");
             jw.array();
-            for ( Iterator<String> ii = optionsFactory.keySet().iterator(); ii.hasNext(); ) {
-                String id = ii.next();
-                Object name = optionsFactory.get( id );
-                jw.object();
-                jw.key("id").value(id ); //$NON-NLS-1$
-                jw.key("name").value( name ); //$NON-NLS-1$
-                jw.endObject();
+            for ( final Map.Entry<String, String> entry : optionsFactory.entrySet() ) {
+                boolean include = true;
+                for(final ConfigurationHandler handler : this.configurationHandlers) {
+                    if (!handler.listConfiguration(entry.getKey(), entry.getKey())) {
+                        include = false;
+                        break;
+                    }
+                }
+                if ( include ) {
+                    jw.object();
+                    jw.key("id").value( entry.getKey() ); //$NON-NLS-1$
+                    jw.key("name").value( entry.getValue() ); //$NON-NLS-1$
+                    jw.endObject();    
+                }
             }
             jw.endArray();
         } catch (final Exception e) {

@@ -336,6 +336,7 @@ public class BundleCache
                 // Otherwise, parse the value and add it to the map (we throw an
                 // exception if we don't have a key or the key already exist.
                 String value = new String(bytes, last, (current - last), "UTF-8");
+
                 if (key == null)
                 {
                     throw new Exception("Manifest error: Missing attribute name - " + value);

@@ -17,21 +17,33 @@
 package org.apache.felix.webconsole;
 
 
-import java.io.*;
-import java.lang.reflect.*;
+import java.io.IOException;
+import java.io.InputStream;
+import java.io.OutputStream;
+import java.io.PrintWriter;
+import java.io.StringWriter;
+import java.lang.reflect.InvocationTargetException;
+import java.lang.reflect.Method;
+import java.lang.reflect.Modifier;
 import java.net.URL;
 import java.net.URLConnection;
+import java.nio.charset.StandardCharsets;
 import java.security.AccessController;
 import java.security.PrivilegedActionException;
 import java.security.PrivilegedExceptionAction;
-import java.util.*;
+import java.util.Iterator;
+import java.util.Locale;
+import java.util.Map;
+import java.util.SortedMap;
+import java.util.TreeMap;
 
 import javax.servlet.ServletConfig;
 import javax.servlet.ServletContext;
 import javax.servlet.ServletException;
-import javax.servlet.http.*;
+import javax.servlet.http.HttpServlet;
+import javax.servlet.http.HttpServletRequest;
+import javax.servlet.http.HttpServletResponse;
 
-import org.apache.commons.io.IOUtils;
 import org.apache.felix.webconsole.internal.servlet.OsgiManager;
 import org.osgi.framework.Bundle;
 import org.osgi.framework.BundleContext;
@@ -518,10 +530,10 @@ public abstract class AbstractWebConsolePlugin extends HttpServlet
             // (java.lang.RuntimePermission "accessDeclaredMembers")
             // (java.lang.reflect.ReflectPermission "suppressAccessChecks")
             // See also https://issues.apache.org/jira/browse/FELIX-4652
-            final Boolean ret = (Boolean) AccessController.doPrivileged(new PrivilegedExceptionAction()
+            final Boolean ret = AccessController.doPrivileged(new PrivilegedExceptionAction<Boolean>()
             {
 
-                public Object run() throws Exception
+                public Boolean run() throws Exception
                 {
                     return spoolResource0(request, response) ? Boolean.TRUE : Boolean.FALSE;
                 }
@@ -546,15 +558,13 @@ public abstract class AbstractWebConsolePlugin extends HttpServlet
         }
 
         String pi = request.getPathInfo();
-        InputStream ins = null;
         try
         {
 
             // check for a resource, fail if none
             URL url = ( URL ) getResourceMethod.invoke( getResourceProvider(), new Object[]
                 { pi } );
-            if ( url == null )
-            {
+            if ( url == null ) {
                 return false;
             }
 
@@ -562,62 +572,52 @@ public abstract class AbstractWebConsolePlugin extends HttpServlet
             // to at least hint to close the connection because there is no
             // method to explicitly close the conneciton, unfortunately)
             URLConnection connection = url.openConnection();
-            ins = connection.getInputStream();
-
-            // FELIX-2017 Equinox may return an URL for a non-existing
-            // resource but then (instead of throwing) return null on
-            // getInputStream. We should account for this situation and
-            // just assume a non-existing resource in this case.
-            if (ins == null) {
-                return false;
-            }
-
-            // check whether we may return 304/UNMODIFIED
-            long lastModified = connection.getLastModified();
-            if ( lastModified > 0 )
-            {
-                long ifModifiedSince = request.getDateHeader( "If-Modified-Since" ); //$NON-NLS-1$
-                if ( ifModifiedSince >= ( lastModified / 1000 * 1000 ) )
-                {
-                    // Round down to the nearest second for a proper compare
-                    // A ifModifiedSince of -1 will always be less
-                    response.setStatus( HttpServletResponse.SC_NOT_MODIFIED );
-
-                    return true;
+            try ( InputStream ins = connection.getInputStream()) {
+                // FELIX-2017 Equinox may return an URL for a non-existing
+                // resource but then (instead of throwing) return null on
+                // getInputStream. We should account for this situation and
+                // just assume a non-existing resource in this case.
+                if (ins == null) {
+                    return false;
                 }
 
-                // have to send, so set the last modified header now
-                response.setDateHeader( "Last-Modified", lastModified ); //$NON-NLS-1$
+                // check whether we may return 304/UNMODIFIED
+                long lastModified = connection.getLastModified();
+                if ( lastModified > 0 )
+                {
+                    long ifModifiedSince = request.getDateHeader( "If-Modified-Since" ); //$NON-NLS-1$
+                    if ( ifModifiedSince >= ( lastModified / 1000 * 1000 ) )
+                    {
+                        // Round down to the nearest second for a proper compare
+                        // A ifModifiedSince of -1 will always be less
+                        response.setStatus( HttpServletResponse.SC_NOT_MODIFIED );
+
+                        return true;
+                    }
+
+                    // have to send, so set the last modified header now
+                    response.setDateHeader( "Last-Modified", lastModified ); //$NON-NLS-1$
+                }
+
+                // describe the contents
+                response.setContentType( getServletContext().getMimeType( pi ) );
+                response.setIntHeader( "Content-Length", connection.getContentLength() ); //$NON-NLS-1$
+
+                // spool the actual contents
+                OutputStream out = response.getOutputStream();
+                byte[] buf = new byte[2048];
+                int rd;
+                while ( ( rd = ins.read( buf ) ) >= 0 )
+                {
+                    out.write( buf, 0, rd );
+                }
+
+                // over and out ...
+                return true;
             }
 
-            // describe the contents
-            response.setContentType( getServletContext().getMimeType( pi ) );
-            response.setIntHeader( "Content-Length", connection.getContentLength() ); //$NON-NLS-1$
-
-            // spool the actual contents
-            OutputStream out = response.getOutputStream();
-            byte[] buf = new byte[2048];
-            int rd;
-            while ( ( rd = ins.read( buf ) ) >= 0 )
-            {
-                out.write( buf, 0, rd );
-            }
-
-            // over and out ...
-            return true;
-        }
-        catch ( IllegalAccessException iae )
-        {
+        } catch ( IllegalAccessException | InvocationTargetException ignore ) {
             // log or throw ???
-        }
-        catch ( InvocationTargetException ite )
-        {
-            // log or throw ???
-            // Throwable cause = ite.getTargetException();
-        }
-      finally
-        {
-            IOUtils.closeQuietly(ins);
         }
 
         return false;
@@ -935,32 +935,32 @@ public abstract class AbstractWebConsolePlugin extends HttpServlet
         return readTemplateFile( getClass(), templateFile );
     }
 
-    private final String readTemplateFile( final Class clazz, final String templateFile)
-    {
-        InputStream templateStream = clazz.getResourceAsStream( templateFile );
-        if ( templateStream != null )
+    private final String readTemplateFile( final Class clazz, final String templateFile) {
+        
+        try(InputStream templateStream = clazz.getResourceAsStream( templateFile )) {
+            if ( templateStream != null ) {
+                try ( final StringWriter w = new StringWriter()) {
+                    final byte[] buf = new byte[2048];
+                    int l;
+                    while ( ( l = templateStream.read(buf)) > 0 ) {
+                        w.write(new String(buf, 0, l, StandardCharsets.UTF_8));
+                    }
+                    String str = w.toString();
+                    switch ( str.charAt(0) )
+                    { // skip BOM
+                        case 0xFEFF: // UTF-16/UTF-32, big-endian
+                        case 0xFFFE: // UTF-16, little-endian
+                        case 0xEFBB: // UTF-8
+                            return str.substring(1);
+                    }
+                    return str;
+                    }
+            }
+        }
+        catch ( IOException e )
         {
-            try
-            {
-                String str = IOUtils.toString( templateStream, "UTF-8" ); //$NON-NLS-1$
-                switch ( str.charAt(0) )
-                { // skip BOM
-                    case 0xFEFF: // UTF-16/UTF-32, big-endian
-                    case 0xFFFE: // UTF-16, little-endian
-                    case 0xEFBB: // UTF-8
-                        return str.substring(1);
-                }
-                return str;
-            }
-            catch ( IOException e )
-            {
-                // don't use new Exception(message, cause) because cause is 1.4+
-                throw new RuntimeException( "readTemplateFile: Error loading " + templateFile + ": " + e ); //$NON-NLS-1$ //$NON-NLS-2$
-            }
-            finally
-            {
-                IOUtils.closeQuietly( templateStream );
-            }
+            // don't use new Exception(message, cause) because cause is 1.4+
+            throw new RuntimeException( "readTemplateFile: Error loading " + templateFile + ": " + e ); //$NON-NLS-1$ //$NON-NLS-2$
         }
 
         // template file does not exist, return an empty string
@@ -1015,7 +1015,7 @@ public abstract class AbstractWebConsolePlugin extends HttpServlet
 
     private SortedMap sortMenuCategoryMap( Map map, String appRoot )
     {
-        SortedMap sortedMap = new TreeMap( String.CASE_INSENSITIVE_ORDER );
+        SortedMap sortedMap = new TreeMap<>( String.CASE_INSENSITIVE_ORDER );
         Iterator keys = map.keySet().iterator();
         while ( keys.hasNext() )
         {
