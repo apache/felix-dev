@@ -20,11 +20,15 @@ package org.apache.felix.framework.wiring;
 
 import java.util.ArrayList;
 import java.util.Collections;
+import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
 import java.util.StringTokenizer;
+import java.util.function.Function;
+
+import org.apache.felix.framework.capabilityset.SimpleFilter;
 import org.apache.felix.framework.util.Util;
 import org.apache.felix.framework.util.manifestparser.ManifestParser;
 import org.osgi.framework.Constants;
@@ -41,6 +45,26 @@ public class BundleCapabilityImpl implements BundleCapability
     private final Map<String, Object> m_attrs;
     private final List<String> m_uses;
     private final Set<String> m_mandatory;
+
+    public static BundleCapabilityImpl createFrom(BundleCapabilityImpl capability, Function<Object, Object> cache)
+    {
+        String namespaceI = (String) cache.apply(capability.m_namespace);
+        Map<String, String> dirsI = new HashMap<>();
+        for (Map.Entry<String, String> entry : capability.m_dirs.entrySet())
+        {
+            dirsI.put((String) cache.apply(entry.getKey()), (String) cache.apply(entry.getValue()));
+        }
+        dirsI = (Map<String, String>) cache.apply(dirsI);
+
+        Map<String, Object> attrsI = new HashMap<>();
+        for (Map.Entry<String, Object> entry : capability.m_attrs.entrySet())
+        {
+            attrsI.put((String) cache.apply(entry.getKey()), cache.apply(entry.getValue()));
+        }
+        attrsI = (Map<String, Object>) cache.apply(attrsI);
+
+        return new BundleCapabilityImpl(capability.m_revision, namespaceI, dirsI, attrsI);
+    }
 
     public BundleCapabilityImpl(BundleRevision revision, String namespace,
         Map<String, String> dirs, Map<String, Object> attrs)
@@ -61,7 +85,7 @@ public class BundleCapabilityImpl implements BundleCapability
             uses = new ArrayList<>(tok.countTokens());
             while (tok.hasMoreTokens())
             {
-                uses.add(tok.nextToken().trim());
+                uses.add(tok.nextToken().trim().intern());
             }
         }
         m_uses = uses;
@@ -77,7 +101,7 @@ public class BundleCapabilityImpl implements BundleCapability
                 // If attribute exists, then record it as mandatory.
                 if (m_attrs.containsKey(name))
                 {
-                    mandatory.add(name);
+                    mandatory.add(name.intern());
                 }
                 // Otherwise, report an error.
                 else
