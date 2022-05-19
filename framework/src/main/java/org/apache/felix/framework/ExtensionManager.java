@@ -223,7 +223,7 @@ class ExtensionManager implements Content
 
         if( osVersion != null)
         {
-            attributes.put(NativeNamespace.CAPABILITY_OSVERSION_ATTRIBUTE, new Version(NativeLibraryClause.normalizeOSVersion(osVersion)));
+            attributes.put(NativeNamespace.CAPABILITY_OSVERSION_ATTRIBUTE, VersionConverter.toOsgiVersion(osVersion));
         }
 
         if( userLang != null)
