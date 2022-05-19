@@ -41,6 +41,8 @@ import org.osgi.framework.FrameworkUtil;
 import org.osgi.framework.Version;
 import org.osgi.framework.VersionRange;
 
+import static org.apache.felix.framework.VersionConverter.toOsgiVersion;
+
 public class NativeLibraryClause
 {
     private static final String OS_AIX = "aix";
@@ -317,7 +319,7 @@ public class NativeLibraryClause
     private boolean checkOSVersions(String osVersion, String[] osversions)
         throws BundleException
     {
-        Version currentOSVersion = Version.parseVersion(normalizeOSVersion(osVersion));
+        Version currentOSVersion = toOsgiVersion(osVersion);
         for (int i = 0; (osversions != null) && (i < osversions.length); i++)
         {
             try
@@ -760,8 +762,8 @@ public class NativeLibraryClause
                 String s = value.substring(1, value.length() - 1);
                 String vlo = s.substring(0, s.indexOf(',')).trim();
                 String vhi = s.substring(s.indexOf(',') + 1, s.length()).trim();
-                return new VersionRange(value.charAt(0), new Version(cleanupVersion(vlo)), new Version(
-                    cleanupVersion(vhi)), value.charAt(value.length() - 1)).toString();
+                return new VersionRange(value.charAt(0), toOsgiVersion(vlo), toOsgiVersion(vhi),
+                    value.charAt(value.length() - 1)).toString();
             }
 
             catch (Exception ex)
@@ -770,86 +772,16 @@ public class NativeLibraryClause
             }
         }
 
-        return normalizeOSVersion(value);
+        return toOsgiVersion(value).toString();
     }
 
+
+    /**
+     * @deprecated use {@link VersionConverter#toOsgiVersion(String)} instead, this method will be removed.
+     */
+    @Deprecated
     public static String normalizeOSVersion(String value)
     {
-        return new Version(cleanupVersion(value)).toString();
+        return toOsgiVersion(value).toString();
     }
-
-    private static final Pattern FUZZY_VERSION = Pattern.compile( "(\\d+)(\\.(\\d+)(\\.(\\d+))?)?([^a-zA-Z0-9](.*))?",
-        Pattern.DOTALL );
-
-    private static String cleanupVersion( String version )
-    {
-        StringBuilder result = new StringBuilder();
-        Matcher m = FUZZY_VERSION.matcher( version );
-        if ( m.matches() )
-        {
-            String major = m.group( 1 );
-            String minor = m.group( 3 );
-            String micro = m.group( 5 );
-            String qualifier = m.group( 7 );
-
-            if ( major != null )
-            {
-                result.append( major );
-                if ( minor != null )
-                {
-                    result.append( "." );
-                    result.append( minor );
-                    if ( micro != null )
-                    {
-                        result.append( "." );
-                        result.append( micro );
-                        if ( qualifier != null && qualifier.length() > 0 )
-                        {
-                            result.append( "." );
-                            cleanupModifier( result, qualifier );
-                        }
-                    }
-                    else if ( qualifier != null && qualifier.length() > 0)
-                    {
-                        result.append( ".0." );
-                        cleanupModifier( result, qualifier );
-                    }
-                    else
-                    {
-                        result.append( ".0" );
-                    }
-                }
-                else if ( qualifier != null && qualifier.length() > 0 )
-                {
-                    result.append( ".0.0." );
-                    cleanupModifier( result, qualifier );
-                }
-                else
-                {
-                    result.append( ".0.0" );
-                }
-            }
-        }
-        else
-        {
-            result.append( "0.0.0." );
-            cleanupModifier( result, version );
-        }
-        return result.toString();
-    }
-
-
-    private static void cleanupModifier( StringBuilder result, String modifier )
-    {
-        for ( int i = 0; i < modifier.length(); i++ )
-        {
-            char c = modifier.charAt( i );
-            if ( ( c >= '0' && c <= '9' ) || ( c >= 'a' && c <= 'z' ) || ( c >= 'A' && c <= 'Z' ) || c == '_'
-                || c == '-' )
-                result.append( c );
-            else
-                result.append( '_' );
-        }
-    }
-
 }
