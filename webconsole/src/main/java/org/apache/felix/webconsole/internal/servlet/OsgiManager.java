@@ -50,7 +50,6 @@ import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletRequestWrapper;
 import javax.servlet.http.HttpServletResponse;
 
-import org.apache.commons.io.FilenameUtils;
 import org.apache.felix.webconsole.AbstractWebConsolePlugin;
 import org.apache.felix.webconsole.BrandingPlugin;
 import org.apache.felix.webconsole.User;
@@ -1243,29 +1242,29 @@ public class OsgiManager extends GenericServlet
         return Collections.unmodifiableSet(values);
     }
 
-    private Map langMap;
+    private Map<String, String> langMap;
 
 
-    private final Map getLangMap()
+    private final Map<String, String> getLangMap()
     {
         if (null != langMap)
             return langMap;
-        final Map map = new HashMap();
+        final Map<String, String> map = new HashMap<>();
         final Bundle bundle = bundleContext.getBundle();
-        final Enumeration e = bundle.findEntries("res/flags", null, false); //$NON-NLS-1$
+        final Enumeration<URL> e = bundle.findEntries("res/flags", null, false); //$NON-NLS-1$
         while (e != null && e.hasMoreElements())
         {
-            final URL img = (URL) e.nextElement();
-            final String name = FilenameUtils.getBaseName(img.getFile());
-            try
-            {
+            final URL img = e.nextElement();
+            final String path = img.getPath();
+            try {
+                final int lastSlash = path.lastIndexOf('/');
+                final int dot = path.indexOf('.', lastSlash);
+                final String name = (dot == -1 ? path.substring(lastSlash+1) : path.substring(lastSlash + 1, dot));
                 final String locale = new Locale(name, "").getDisplayLanguage(); //$NON-NLS-1$
                 map.put(name, null != locale ? locale : name);
             }
-            catch (Throwable t)
-            {
-                t.printStackTrace();
-                /* ignore invalid locale? */
+            catch (Throwable t) {
+                // Ignore invalid locale?
             }
         }
         return langMap = map;

@@ -197,8 +197,8 @@
    <profiles>
        <!--
            The "all-in-one-bundle" profile builds a bundle including certain
-           3rd party libraries and classes, namely: Commons IO, Commons
-           FileUpload, and the OSGi ServiceTracker.
+           3rd party libraries and classes, namely: Commons IO (needed by 
+           Commons FileUpload), Commons FileUpload.
            The "all-in-one-bundle" can be used in deployments where these
            dependencies need not be deployed separately.
        -->

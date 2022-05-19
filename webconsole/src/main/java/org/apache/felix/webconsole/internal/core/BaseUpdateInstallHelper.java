@@ -28,7 +28,6 @@ import java.util.Collections;
 import java.util.Iterator;
 import java.util.List;
 
-import org.apache.commons.io.IOUtils;
 import org.apache.felix.webconsole.SimpleWebConsolePlugin;
 import org.osgi.framework.Bundle;
 import org.osgi.framework.BundleContext;
@@ -97,15 +96,8 @@ abstract class BaseUpdateInstallHelper implements Runnable
     protected Bundle doRun() throws Exception
     {
         // now deploy the resolved bundles
-        InputStream bundleStream = null;
-        try
-        {
-            bundleStream = new FileInputStream( bundleFile );
+        try( final InputStream bundleStream = new FileInputStream( bundleFile )) {
             return doRun( bundleStream );
-        }
-        finally
-        {
-            IOUtils.closeQuietly( bundleStream );
         }
     }
 
