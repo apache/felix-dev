@@ -35,9 +35,7 @@ import org.osgi.service.metatype.AttributeDefinition;
 
 
 /**
- * The <code>ConfigManagerBase</code> is the base class for the
- * ConfigurationAdmin support in the web console. It provides various helper
- * methods mostly with respect to using the MetaTypeService to access
+ * It provides various helper methods mostly with respect to using the MetaTypeService to access
  * configuration descriptions.
  */
 class MetaTypeSupport
@@ -48,19 +46,14 @@ class MetaTypeSupport
      */
     static final String PASSWORD_PLACEHOLDER_VALUE = "unmodified"; //$NON-NLS-1$
 
-    static Bundle getBundle( final BundleContext bundleContext, final String bundleLocation )
-    {
-        if ( bundleLocation == null )
-        {
+    static Bundle getBundle( final BundleContext bundleContext, final String bundleLocation ) {
+        if ( bundleLocation == null ) {
             return null;
         }
 
-        Bundle[] bundles = bundleContext.getBundles();
-        for ( int i = 0; i < bundles.length; i++ )
-        {
-            if ( bundleLocation.equals( bundles[i].getLocation() ) )
-            {
-                return bundles[i];
+        for ( final Bundle bundle : bundleContext.getBundles() ) {
+            if ( bundleLocation.equals( bundle.getLocation() ) ) {
+                return bundle;
             }
         }
 
