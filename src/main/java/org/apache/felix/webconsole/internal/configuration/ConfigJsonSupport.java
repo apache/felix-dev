@@ -20,7 +20,6 @@ package org.apache.felix.webconsole.internal.configuration;
 
 
 import java.io.IOException;
-import java.io.InputStream;
 import java.io.PrintWriter;
 import java.lang.reflect.Array;
 import java.util.ArrayList;
@@ -337,23 +336,11 @@ class ConfigJsonSupport {
                 }
 
                 // insert and entry for the PID
-                if ( mtss != null )
-                {
-                    try
-                    {
-                        ObjectClassDefinition ocd = mtss.getObjectClassDefinition( cfgs[i], locale );
-                        if ( ocd != null )
-                        {
-                            optionsPlain.put( pid, ocd.getName() );
-                            continue;
-                        }
-                    }
-                    catch ( IllegalArgumentException t )
-                    {
-                        // MetaTypeProvider.getObjectClassDefinition might throw illegal
-                        // argument exception. So we must catch it here, otherwise the
-                        // other configurations will not be shown
-                        // See https://issues.apache.org/jira/browse/FELIX-2390
+                if ( mtss != null ) {
+                    final ObjectClassDefinition ocd = mtss.getObjectClassDefinition( cfgs[i], locale );
+                    if ( ocd != null ) {
+                        optionsPlain.put( pid, ocd.getName() );
+                        continue;
                     }
                 }
 
@@ -452,7 +439,7 @@ class ConfigJsonSupport {
             if (value == null) {
                 value = "";
             }
-            matcher.appendReplacement(sb, matcherQuoteReplacement(value));
+            matcher.appendReplacement(sb, Matcher.quoteReplacement(value));
         }
         matcher.appendTail(sb);
 
@@ -506,23 +493,6 @@ class ConfigJsonSupport {
         } else {
             return value.toString();
         }
-    }
-
-    /**
-     * Replacement for Matcher.quoteReplacement which is only available in JDK 1.5 and up.
-     * @param str Unquoted string
-     * @return Quoted string
-     */
-    private static String matcherQuoteReplacement(String str) {
-        StringBuffer sb = new StringBuffer();
-        for (int i = 0; i < str.length(); i++) {
-            char c = str.charAt(i);
-            if (c == '$' || c == '\\') {
-                sb.append('\\');
-            }
-            sb.append(c);
-        }
-        return sb.toString();
     }
 
     final void listFactoryConfigurations(final JSONWriter jw, final String pidFilter, final String locale) {
