@@ -41,10 +41,7 @@ public class ConfigJsonSupportTest {
         dict.put("a", "1");
         dict.put("b", "2");
 
-        final List<String> names = support.getPropertyNamesForForm("f", "p", dict);
-        assertEquals(2, names.size());
-        assertTrue(names.contains("a"));
-        assertTrue(names.contains("b"));
+        support.filterConfigurationProperties("f", "p", dict);
 
         assertEquals(2, dict.size());
         assertEquals("1", dict.get("a"));
@@ -79,10 +76,7 @@ public class ConfigJsonSupportTest {
         dict.put("a", "1");
         dict.put("b", "2");
 
-        final List<String> names = support.getPropertyNamesForForm("f", "p", dict);
-        assertEquals(2, names.size());
-        assertTrue(names.contains("a"));
-        assertTrue(names.contains("b"));
+        support.filterConfigurationProperties("f", "p", dict);
 
         assertEquals(2, dict.size());
         assertEquals("1", dict.get("a"));
@@ -124,9 +118,7 @@ public class ConfigJsonSupportTest {
         dict.put("a", "1");
         dict.put("b", "2");
 
-        final List<String> names = support.getPropertyNamesForForm("f", "p", dict);
-        assertEquals(1, names.size());
-        assertTrue(names.contains("a"));
+        support.filterConfigurationProperties("f", "p", dict);
 
         assertEquals(1, dict.size());
         assertEquals("1", dict.get("a"));
