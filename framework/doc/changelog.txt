@@ -1,3 +1,16 @@
+Changes from 7.0.4 to 7.0.4
+---------------------------
+
+** Bug
+    * [FELIX-6522] - Empty name is not allowed in JDK17+
+    * [FELIX-6533] - Felix released as milestone version cannot parse it's own version id
+    * [FELIX-6534] - System bundle findEntries returns entries in case of fragments
+
+** Improvement
+    * [FELIX-6516] - Remove synchronization on Integer in Felix Framework
+    * [FELIX-6529] - Improve memory usage ManifestParser using String deduplication
+    * [FELIX-6535] - Cleanup path handling in DirectoryContent
+
 Changes from 7.0.1 to 7.0.3
 ---------------------------
 
