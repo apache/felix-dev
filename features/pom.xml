@@ -20,7 +20,7 @@
     </parent>
 
     <artifactId>org.apache.felix.feature</artifactId>
-    <version>0.9.5-SNAPSHOT</version>
+    <version>1.0.0</version>
     <packaging>jar</packaging>
 
     <name>OSGi Feature Model API</name>
@@ -29,12 +29,12 @@
       <connection>scm:git:https://github.com/apache/felix-dev.git</connection>
       <developerConnection>scm:git:https://github.com/apache/felix-dev.git</developerConnection>
       <url>https://gitbox.apache.org/repos/asf?p=felix-dev.git</url>
-      <tag>HEAD</tag>
+      <tag>org.apache.felix.feature-1.0.0</tag>
   </scm>
 
     <properties>
       <felix.java.version>8</felix.java.version>
-      <project.build.outputTimestamp>10</project.build.outputTimestamp>
+      <project.build.outputTimestamp>1653318039</project.build.outputTimestamp>
     </properties>
         
     <build>
