@@ -67,7 +67,7 @@ public class DirectoryContent implements Content
             throw new UncheckedIOException(e);
         }
         if (!canonicalPath.endsWith(File.separator)) {
-            canonicalPath = canonicalPath + "/";
+            canonicalPath = canonicalPath + File.separator;
         }
         m_canonicalRoot = canonicalPath;
     }
