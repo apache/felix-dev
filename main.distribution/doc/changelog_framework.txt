@@ -1,4 +1,10 @@
-Changes from 7.0.4 to 7.0.4
+Changes from 7.0.4 to 7.0.5
+---------------------------
+
+** Bug
+    * [FELIX-6536] - DirectoryRevision causes java.io.IOException: File outside the root on windows
+
+Changes from 7.0.3 to 7.0.4
 ---------------------------
 
 ** Bug
