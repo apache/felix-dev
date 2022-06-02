@@ -123,7 +123,7 @@ public class BundlesStartedCheck implements HealthCheck {
                     if(useCriticalForInactive) {
                         log.critical(msg, msgObjs);
                     } else {
-                        log.warn(msg, msgObjs);
+                        log.temporarilyUnavailable(msg, msgObjs);
                     }
                     bundleIsLogged = true;
                     inactiveCount++;
