@@ -85,7 +85,7 @@ public class BundlesStartedCheckTest {
         BundlesStartedCheck check = createCheck(emptyMap());
         Bundle bundle = mockBundle("mybundle", Bundle.RESOLVED);
         Result result = executeCheck(check, bundle);
-        assertThat(result.getStatus(), equalTo(Status.WARN));
+        assertThat(result.getStatus(), equalTo(Status.TEMPORARILY_UNAVAILABLE));
     }
     
     @Test
@@ -118,7 +118,7 @@ public class BundlesStartedCheckTest {
         BundlesStartedCheck check = createCheck(emptyMap());
         Bundle bundle = mockBundle("mybundle", Bundle.STARTING);
         Result result = executeCheck(check, bundle);
-        assertThat(result.getStatus(), equalTo(Status.WARN));
+        assertThat(result.getStatus(), equalTo(Status.TEMPORARILY_UNAVAILABLE));
         System.out.println(result);
     }
     
@@ -130,7 +130,7 @@ public class BundlesStartedCheckTest {
         Bundle bundle3 = mockBundle("stoppingbundle", Bundle.STOPPING);
         Bundle bundle4 = mockBundle("startunkownstatebundle", 50);
         Result result = executeCheck(check, bundle, bundle2, bundle3, bundle4);
-        assertThat(result.getStatus(), equalTo(Status.WARN));
+        assertThat(result.getStatus(), equalTo(Status.TEMPORARILY_UNAVAILABLE));
     }
 
     private Hashtable<String, String> withHeader(String key, String value) {
