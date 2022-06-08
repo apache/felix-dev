@@ -85,7 +85,7 @@ public class BundlesStartedCheckTest {
         BundlesStartedCheck check = createCheck(emptyMap());
         Bundle bundle = mockBundle("mybundle", Bundle.RESOLVED);
         Result result = executeCheck(check, bundle);
-        assertThat(result.getStatus(), equalTo(Status.TEMPORARILY_UNAVAILABLE));
+        assertThat(result.getStatus(), equalTo(Status.WARN));
     }
     
     @Test
@@ -114,7 +114,7 @@ public class BundlesStartedCheckTest {
     }
     
     @Test
-    public void testWarnResultWithStartingBundle() {
+    public void testTUResultWithStartingBundle() {
         BundlesStartedCheck check = createCheck(emptyMap());
         Bundle bundle = mockBundle("mybundle", Bundle.STARTING);
         Result result = executeCheck(check, bundle);
@@ -123,7 +123,7 @@ public class BundlesStartedCheckTest {
     }
     
     @Test
-    public void testWARNResultWithOtherStatuses() {
+    public void testTUResultWithOtherStatuses() {
         BundlesStartedCheck check = createCheck(emptyMap());
         Bundle bundle = mockBundle("mybundle", Bundle.INSTALLED);
         Bundle bundle2 = mockBundle("uninstalledbundle", Bundle.UNINSTALLED);
