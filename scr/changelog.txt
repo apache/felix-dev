@@ -1,3 +1,11 @@
+Changes in 2.2.2
+-----------------
+** Improvement
+    * Replace use of PackageAdmin with FrameworkWiring
+** Bug
+    * [FELIX-6521] Stop exporting org.osgi.service.component packages
+    * [FELIX-6511] Cancel the SCR Component Registry's changeCountTimer on deactivation.
+
 Changes in 2.2.0
 -----------------
 ** Improvement
