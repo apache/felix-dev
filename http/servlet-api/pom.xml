@@ -21,14 +21,14 @@
     <name>Apache Felix Servlet API</name>
     <description>Provides the Servlet API for use by applications</description>
     <artifactId>org.apache.felix.http.servlet-api</artifactId>
-    <version>2.0.0</version>
+    <version>2.0.1-SNAPSHOT</version>
     <packaging>bundle</packaging>
 
     <scm>
         <connection>scm:git:https://github.com/apache/felix-dev.git</connection>
         <developerConnection>scm:git:https://github.com/apache/felix-dev.git</developerConnection>
         <url>https://gitbox.apache.org/repos/asf?p=felix-dev.git</url>
-      <tag>org.apache.felix.http.servlet-api-2.0.0</tag>
+      <tag>HEAD</tag>
   </scm>
 
     <build>
