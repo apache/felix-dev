@@ -28,7 +28,7 @@
     </parent>
 
     <artifactId>org.apache.felix.healthcheck.generalchecks</artifactId>
-    <version>3.0.2</version>
+    <version>3.0.3-SNAPSHOT</version>
 
     <name>Apache Felix Health Check General Checks</name>
     <inceptionYear>2013</inceptionYear>
