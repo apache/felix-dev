@@ -75,7 +75,7 @@ public class ScriptedHealthCheck implements HealthCheck {
         @AttributeDefinition(name = "Tags", description = "List of tags for this health check, used to select subsets of health checks for execution e.g. by a composite health check.")
         String[] hc_tags() default {};
 
-        @AttributeDefinition(name = "Language", description = "The language the script is written in. To use e.g. 'groovy', ensure osgi bundle 'groovy-all' is available.")
+        @AttributeDefinition(name = "Language", description = "The language the script is written in. To use e.g. 'groovy', ensure osgi bundle 'groovy-jsr223' is available.")
         String language() default "groovy";
 
         @AttributeDefinition(name = "Script", description = "The script itself (either use 'script' or 'scriptUrl').")
