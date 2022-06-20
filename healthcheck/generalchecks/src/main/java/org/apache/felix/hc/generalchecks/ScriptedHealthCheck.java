@@ -57,7 +57,7 @@ public class ScriptedHealthCheck implements HealthCheck {
     public static final String HC_LABEL = "Health Check: Script";
     public static final String JCR_FILE_URL_PREFIX = "jcr:";
 
-    @ObjectClassDefinition(name = HC_LABEL, description = "Runs an arbitrary script in given scriping language (via javax.script). "
+    @ObjectClassDefinition(name = HC_LABEL, description = "Runs an arbitrary script in given scripting language (via javax.script). "
             + "The script has the following default bindings available: 'log', 'scriptHelper' and 'bundleContext'. "
             + "'log' is an instance of org.apache.felix.hc.api.FormattingResultLog and is used to define the result of the HC. "
             + "'scriptHelper.getService(classObj)' can be used as shortcut to retrieve a service."
