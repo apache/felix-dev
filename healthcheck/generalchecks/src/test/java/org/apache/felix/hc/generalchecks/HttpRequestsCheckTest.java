@@ -151,6 +151,21 @@ public class HttpRequestsCheckTest {
         ResponseCheckResult checkResult = responseTimeCheck.checkResponse(response, log);
         assertEquals("Expected "+expectedTrueOrFalse + " for expression ["+constraint+"] against json: "+time+"ms", expectedTrueOrFalse, !checkResult.contraintFailed);
     }
+
+    @Test
+    public void testCodeConstraint() {
+        assertCodeConstraint(200, "< 500", true);
+        assertCodeConstraint(403, "between 200 and 500", true);
+        assertCodeConstraint(503, "< 500", false);
+        assertCodeConstraint(201, "= 201", true);
+    }
+
+    private void assertCodeConstraint(int code, String constraint, boolean expectedTrueOrFalse) {
+        HttpRequestsCheck.ResponseCodeConstraintCheck responseTimeCheck = new HttpRequestsCheck.ResponseCodeConstraintCheck(constraint);
+        HttpRequestsCheck.Response response = new HttpRequestsCheck.Response(code, "OK", null, "", 1000);
+        ResponseCheckResult checkResult = responseTimeCheck.checkResponse(response, log);
+        assertEquals("Expected "+expectedTrueOrFalse + " for expression ["+constraint+"] against json: "+code, expectedTrueOrFalse, !checkResult.contraintFailed);
+    }
     
     @Test
     public void testSplitArgsRespectingQuotes() throws Exception {

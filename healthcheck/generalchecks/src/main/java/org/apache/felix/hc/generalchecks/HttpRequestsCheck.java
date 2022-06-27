@@ -89,17 +89,18 @@ public class HttpRequestsCheck implements HealthCheck {
 
         @AttributeDefinition(name = "Request Specs", description = "List of requests to be made. Requests specs have two parts: "
                 + "Before '=>' can be a simple URL/path with curl-syntax advanced options (e.g. setting a header with -H \"Test: Test val\"), "
-                + "after the '=>' it is a simple response code that can be followed ' && MATCHES <RegEx>' to match the response entity against or other matchers like HEADER, TIME or JSON (see defaults when creating a new configuration for examples).")
+                + "after the '=>' it is a simple response code that can be followed ' && MATCHES <RegEx>' to match the response entity against or other matchers like HEADER, TIME, JSON or CODE (see defaults when creating a new configuration for examples).")
         String[] requests() default {
             "/path/example.html",
             "/path/example.html => 200",
+            "/path/example.html => CODE < 500",
             "/protected/example.html => 401",
             "-u admin:admin /protected/example.html => 200",
             "/path/example.html => 200 && MATCHES <title>html title.*</title>",
             "/path/example.html => 200 && MATCHES <title>html title.*</title> && MATCHES anotherRegEx[a-z]",
             "/path/example.html => 200 && HEADER Content-Type MATCHES text/html.*",
             "/path/example.json => 200 && JSON root.arr[3].prop = myval",
-            "/path/example-timing-important.html => 200 && TIME < 2000",
+            "/path/example-timing-important.html => CODE = 200 && TIME < 2000",
             "-X GET -H \"Accept: application/javascript\" http://api.example.com/path/example.json => 200 && JSON root.arr[3].prop = myval",
             "-X HEAD --data \"{....}\" http://www.example.com/path/to/data.json => 303",
             "--proxy proxyhost:2000 /path/example-timing-important.html => 200 && TIME < 2000"
@@ -240,6 +241,8 @@ public class HttpRequestsCheck implements HealthCheck {
             for(String clause: responseAssertionArr) {
                 if(isNumeric(clause)) {
                     responseChecks.add(new ResponseCodeCheck(Integer.parseInt(clause)));
+                } else if(clause.toUpperCase().startsWith(ResponseCodeConstraintCheck.CODE)){
+                    responseChecks.add(new ResponseCodeConstraintCheck(clause.substring(ResponseCodeConstraintCheck.CODE.length())));
                 } else if(clause.toUpperCase().startsWith(ResponseTimeCheck.TIME)) {
                     responseChecks.add(new ResponseTimeCheck(clause.substring(ResponseTimeCheck.TIME.length())));
                 } else if(clause.toUpperCase().startsWith(ResponseEntityRegExCheck.MATCHES)) {
@@ -501,6 +504,27 @@ public class HttpRequestsCheck implements HealthCheck {
                 return new ResponseCheckResult(true, response.actualResponseCode + " (expected "+expectedResponseCode+")");
             } else {
                 return new ResponseCheckResult(false, "["+response.actualResponseCode + " "+response.actualResponseMessage+"]");
+            }
+        }
+    }
+
+    static class ResponseCodeConstraintCheck implements ResponseCheck {
+        final static String CODE = "CODE ";
+        private final String codeConstraint;
+        private final SimpleConstraintChecker simpleConstraintChecker;
+
+        public ResponseCodeConstraintCheck(String codeConstraint) {
+            this.codeConstraint = codeConstraint;
+            this.simpleConstraintChecker = new SimpleConstraintChecker();
+        }
+
+        @Override
+        public ResponseCheckResult checkResponse(Response response, FormattingResultLog log) {
+
+            if(!simpleConstraintChecker.check(response.actualResponseCode, codeConstraint)) {
+                return new ResponseCheckResult(true, "code [" + response.actualResponseCode + "] does not fulfil constraint ["+codeConstraint+"]");
+            } else {
+                return new ResponseCheckResult(false, "code ["+response.actualResponseCode + "] fulfils constraint ["+codeConstraint+"]");
             }
         }
     }
