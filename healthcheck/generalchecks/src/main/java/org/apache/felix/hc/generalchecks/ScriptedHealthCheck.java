@@ -57,7 +57,7 @@ public class ScriptedHealthCheck implements HealthCheck {
     public static final String HC_LABEL = "Health Check: Script";
     public static final String JCR_FILE_URL_PREFIX = "jcr:";
 
-    @ObjectClassDefinition(name = HC_LABEL, description = "Runs an arbitrary script in given scriping language (via javax.script). "
+    @ObjectClassDefinition(name = HC_LABEL, description = "Runs an arbitrary script in given scripting language (via javax.script). "
             + "The script has the following default bindings available: 'log', 'scriptHelper' and 'bundleContext'. "
             + "'log' is an instance of org.apache.felix.hc.api.FormattingResultLog and is used to define the result of the HC. "
             + "'scriptHelper.getService(classObj)' can be used as shortcut to retrieve a service."
@@ -75,7 +75,7 @@ public class ScriptedHealthCheck implements HealthCheck {
         @AttributeDefinition(name = "Tags", description = "List of tags for this health check, used to select subsets of health checks for execution e.g. by a composite health check.")
         String[] hc_tags() default {};
 
-        @AttributeDefinition(name = "Language", description = "The language the script is written in. To use e.g. 'groovy', ensure osgi bundle 'groovy-all' is available.")
+        @AttributeDefinition(name = "Language", description = "The language the script is written in. To use e.g. 'groovy', ensure osgi bundle 'groovy-jsr223' is available.")
         String language() default "groovy";
 
         @AttributeDefinition(name = "Script", description = "The script itself (either use 'script' or 'scriptUrl').")
