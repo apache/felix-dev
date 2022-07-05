@@ -28,7 +28,7 @@
  <modelVersion>4.0.0</modelVersion>
 
  <artifactId>maven-bundle-plugin</artifactId>
- <version>5.1.7-SNAPSHOT</version>
+ <version>5.1.7</version>
  <packaging>maven-plugin</packaging>
 
  <name>Maven Bundle Plugin</name>
@@ -45,7 +45,7 @@
      <connection>scm:git:https://github.com/apache/felix-dev.git</connection>
      <developerConnection>scm:git:https://github.com/apache/felix-dev.git</developerConnection>
      <url>https://gitbox.apache.org/repos/asf?p=felix-dev.git</url>
-   <tag>maven-bundle-plugin-5.1.6</tag>
+   <tag>maven-bundle-plugin-5.1.7</tag>
   </scm>
 
  <!-- Support for publishing the mvn site. -->
@@ -59,7 +59,7 @@
  <properties>
    <felix.java.version>8</felix.java.version>
    <maven.site.path>bundle-plugin-archives/bundle-plugin-LATEST</maven.site.path>
-   <project.build.outputTimestamp>1652201282</project.build.outputTimestamp>
+   <project.build.outputTimestamp>1657026989</project.build.outputTimestamp>
  </properties>
 
  <build>
