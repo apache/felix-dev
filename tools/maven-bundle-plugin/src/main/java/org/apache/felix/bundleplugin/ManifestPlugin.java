@@ -428,15 +428,27 @@ public class ManifestPlugin extends BundlePlugin
             // generated last?
             Path cacheData = getIncrementalDataPath(project);
             if(!Files.isRegularFile(cacheData)) {
+                getLog().debug("No cache data file found at '" + cacheData + "', generating manifest.");
                 return false;
             }
             long manifestLastModified = lastModified(cacheData);
             while (project != null)
             {
-                Path pom = project.getFile().toPath();
-                if (manifestLastModified < lastModified(pom))
-                {
-                    return false;
+                if (project.getFile() != null) {
+                    Path pom = project.getFile().toPath();
+                    if (manifestLastModified < lastModified(pom))
+                    {
+                        getLog().debug("File at  '" + pom + "' newer than cache data file, generating manifest.");
+                        return false;
+                    }
+                } else {
+                    if (project.getVersion().endsWith("-SNAPSHOT")) { // is it mutable?
+                        getLog().debug("pom.xml file not found for SNAPSHOT project'" + project + "', assume modification.");
+                        return false;
+                    } else {
+                        getLog().debug("pom.xml file not found for non-SNAPSHOT project'" + project + "', assume no modification.");
+                        break;
+                    }
                 }
                 project = project.getParent();
             }
