@@ -447,7 +447,6 @@ public class ManifestPlugin extends BundlePlugin
                         return false;
                     } else {
                         getLog().debug("POM file not accessible for non-SNAPSHOT project '" + project + "', assume no modification.");
-                        break;
                     }
                 }
                 project = project.getParent();
