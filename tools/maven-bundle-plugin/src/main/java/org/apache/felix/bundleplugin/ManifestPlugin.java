@@ -438,15 +438,15 @@ public class ManifestPlugin extends BundlePlugin
                     Path pom = project.getFile().toPath();
                     if (manifestLastModified < lastModified(pom))
                     {
-                        getLog().debug("File at  '" + pom + "' newer than cache data file, generating manifest.");
+                        getLog().debug("POM file at '" + pom + "' newer than cache data file, generating manifest.");
                         return false;
                     }
                 } else {
                     if (project.getVersion().endsWith("-SNAPSHOT")) { // is it mutable?
-                        getLog().debug("pom.xml file not found for SNAPSHOT project'" + project + "', assume modification.");
+                        getLog().debug("POM file not accessible for SNAPSHOT project '" + project + "', assume modification.");
                         return false;
                     } else {
-                        getLog().debug("pom.xml file not found for non-SNAPSHOT project'" + project + "', assume no modification.");
+                        getLog().debug("POM file not accessible for non-SNAPSHOT project '" + project + "', assume no modification.");
                         break;
                     }
                 }
