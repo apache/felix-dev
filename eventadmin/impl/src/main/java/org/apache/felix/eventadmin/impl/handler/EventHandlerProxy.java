@@ -449,20 +449,17 @@ public class EventHandlerProxy {
     {
     	if(!this.denied)
     	{
-            StringBuffer output = new StringBuffer(this.reference.toString()).append("| Bundle(").append(this.reference.getBundle())
-                    .append(")");
-
+            String output = this.reference + "| Bundle(" + this.reference.getBundle() + ")";
             if(this.handler != null){
-                output.append("| Handler(")
-                        .append(this.handler.getClass().getCanonicalName()).append(")");
+                output += "| Handler(" + this.handler.getClass().getCanonicalName() + ")";
             }
 
             LogWrapper.getLogger().log(
                     LogWrapper.LOG_ERROR,
-                    "Denying event handler from ServiceReference [" + output.toString() + "] due to timeout!");
-            this.denied = true;
-            // we can free the handler now.
-            this.release();
+                    String.format("Denying event handler from ServiceReference [%s] due to timeout!", output));
+	        this.denied = true;
+	        // we can free the handler now.
+	        this.release();
     	}
     }
 
