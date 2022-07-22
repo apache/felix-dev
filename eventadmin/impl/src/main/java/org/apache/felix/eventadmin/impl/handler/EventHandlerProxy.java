@@ -449,9 +449,9 @@ public class EventHandlerProxy {
     {
     	if(!this.denied)
     	{
-            String output = this.reference + "| Bundle(" + this.reference.getBundle() + ")";
+            String output = this.reference + " | Bundle(" + this.reference.getBundle() + ")";
             if(this.handler != null){
-                output += "| Handler(" + this.handler.getClass().getCanonicalName() + ")";
+                output += " | Handler(" + this.handler.getClass().getCanonicalName() + ")";
             }
 
             LogWrapper.getLogger().log(
