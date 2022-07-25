@@ -20,6 +20,7 @@ package org.apache.felix.eventadmin.impl.handler;
 
 import java.util.Collection;
 import java.util.Iterator;
+import java.util.concurrent.atomic.AtomicBoolean;
 
 import org.apache.felix.eventadmin.impl.security.PermissionsUtil;
 import org.apache.felix.eventadmin.impl.util.LogWrapper;
@@ -58,7 +59,7 @@ public class EventHandlerProxy {
     private volatile EventHandler handler;
 
     /** Is this handler denied? */
-    private volatile boolean denied;
+    private final AtomicBoolean denied = new AtomicBoolean();
 
     /** Use timeout. */
     private boolean useTimeout;
@@ -85,7 +86,7 @@ public class EventHandlerProxy {
      */
     public boolean update()
     {
-        this.denied = false;
+        this.denied.set(false);
         boolean valid = true;
         // First check, topic
         final Object topicObj = reference.getProperty(EventConstants.EVENT_TOPIC);
@@ -345,7 +346,7 @@ public class EventHandlerProxy {
      */
     public boolean canDeliver(final Event event)
     {
-        if ( this.denied )
+        if ( this.denied.get() )
         {
             return false;
         }
@@ -435,10 +436,9 @@ public class EventHandlerProxy {
             // The spec says that we must catch exceptions and log them:
             LogWrapper.getLogger().log(
                             this.reference,
-                            LogWrapper.LOG_WARNING,
-                            "Exception during event dispatch [" + event + " | "
-                                            + this.reference + " | Bundle("
-                                            + this.reference.getBundle() + ")]", e);
+                            LogWrapper.LOG_ERROR,
+                            String.format("Exception during event dispatch [%s | %s | Bundle(%s) | Handler(%s)]", 
+                                event, this.reference, this.reference.getBundle(), handlerService), e);
         }
     }
 
@@ -447,23 +447,21 @@ public class EventHandlerProxy {
      */
     public void denyEventHandler()
     {
-    	if(!this.denied)
-    	{
-            String output = this.reference + " | Bundle(" + this.reference.getBundle() + ")";
-            if(this.handler != null){
-                output += " | Handler(" + this.handler.getClass().getCanonicalName() + ")";
-            }
-
+        if ( this.denied.compareAndSet(false, true) ) {
+            final EventHandler handlerService = this.handler;
             LogWrapper.getLogger().log(
                     LogWrapper.LOG_ERROR,
-                    String.format("Denying event handler from ServiceReference [%s] due to timeout!", output));
-	        this.denied = true;
-	        // we can free the handler now.
-	        this.release();
+                    String.format("Denying event handler from ServiceReference [%s | Bundle(%s)%s] due to timeout!",
+                        this.reference,
+                        this.reference.getBundle(),
+                        handlerService == null ? "" : " | Handler(".concat(handlerService.getClass().getName()).concat(")")));
+
+            this.release();
     	}
     }
 
-    public boolean isDenied() {
-        return this.denied;
+    public boolean isDenied()
+    {
+        return this.denied.get();
     }
 }
