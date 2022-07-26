@@ -29,13 +29,13 @@
     <description>
 	    This bundle provides an implementation of the OSGi R7 EventAdmin service.
     </description>
-    <version>1.6.4</version>
+    <version>1.6.5-SNAPSHOT</version>
     <artifactId>org.apache.felix.eventadmin</artifactId>
     <scm>
       <connection>scm:git:https://github.com/apache/felix-dev.git</connection>
       <developerConnection>scm:git:https://github.com/apache/felix-dev.git</developerConnection>
       <url>https://gitbox.apache.org/repos/asf?p=felix-dev.git</url>
-      <tag>org.apache.felix.eventadmin-1.6.4</tag>
+      <tag>HEAD</tag>
   </scm>
     
     <properties>
