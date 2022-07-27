@@ -131,6 +131,7 @@ public class ManifestPlugin extends BundlePlugin
         }
         catch ( IOException e )
         {
+            getLog().error( e.getLocalizedMessage() );
             throw new MojoExecutionException( "Error trying to generate Manifest", e );
         }
         catch ( MojoFailureException e )
