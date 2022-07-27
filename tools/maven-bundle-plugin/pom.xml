@@ -127,7 +127,9 @@
     <configuration>
      <excludes>
       <exclude>**/*.mf</exclude>
+      <exclude>**/*.MF</exclude>
       <exclude>src/repo/**/*.pom</exclude>
+      <exclude>**/org.apache.felix_maven-bundle-plugin_manifest_xx</exclude>
      </excludes>
     </configuration>
    </plugin>
