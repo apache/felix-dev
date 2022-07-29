@@ -1,3 +1,9 @@
+Changes in 1.6.4
+----------------
+** Improvement
+    * [FELIX-6551] - OSGi event deny listing is not informative
+
+
 Changes in 1.6.2
 ----------------
 ** Bug
