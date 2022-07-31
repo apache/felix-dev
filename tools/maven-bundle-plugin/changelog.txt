@@ -1,3 +1,77 @@
+Changes from 5.1.7 to 5.1.8
+---------------------------
+
+* Bug
+    * [FELIX-6548] - NPE in org.apache.felix:maven-bundle-plugin:5.1.7:manifest when called without clean
+
+* Improvement
+    * [FELIX-6550] - Improve error messages for MojoExecutionException
+
+Changes from 5.1.6 to 5.1.7
+---------------------------
+
+* Bug
+    * [FELIX-6547] - maven-bundle-plugin uses outdated bndlib leading to invalid osgi.ee required capability
+
+* Improvement
+    * [FELIX-6491] - Extend List of niceManifest headers
+
+Changes from 5.1.5 to 5.1.6
+---------------------------
+
+* Bug
+    * [FELIX-6526] - The "manifest" goal does not work anymore in modules which are using aspectj-maven-plugin "compile" goal
+
+Changes from 5.1.4 to 5.1.5
+---------------------------
+
+* Bug
+    * [FELIX-6493] - Extend is-up-to-date logic of Manifest goal
+    * [FELIX-6496] - non-reproducible Export-Package and Private-Package values
+
+Changes from 5.1.3 to 5.1.4
+---------------------------
+
+* Bug
+    * [FELIX-6495] - bundle:manifest produces non reproducible Bnd-LastModified
+
+* Improvement
+    * [FELIX-6494] - add version to Created-By Manifest entry
+
+Changes from 5.1.2 to 5.1.3
+---------------------------
+
+* Bug
+    * [FELIX-6404] - bundle:bundle:5.1.2 add non-reproducible Built-By and Build-Jdk to MANIFEST.MF
+    * [FELIX-6460] - {maven-test-sources} not working as expected
+
+* Improvement
+    * [FELIX-6469] - automatically add _reproducible instruction if Reproducible Builds activated by project.build.outputTimestamp property
+    * [FELIX-6471] - make maven-bundle-plugin build reproducible
+
+Changes from 5.1.1 to 5.1.2
+---------------------------
+
+* Bug
+    * [FELIX-6312] - Maven Bundle Plugin removes entries from manifest since version 5
+    * [FELIX-6337] - Maven Bundle Plugin generates incorrect Provide-Capability
+
+Changes from 4.2.1 to 5.1.1
+---------------------------
+
+* Bug
+    * [FELIX-6259] - java.util.ConcurrentModificationException building Apache Commons CSV on Java 15-EA
+
+* Improvement
+    * [FELIX-6187] - Avoid overwriting the manifest if it has not changed
+    * [FELIX-6193] - Update maven-archiver + plexus-utils
+    * [FELIX-6203] - Make bundleplugin pom.proterties reproducible
+    * [FELIX-6235] - Disallow DTDs when reading OBR repository files
+    * [FELIX-6269] - bundle:manifest generates non-reproducible entries in MANIFEST.MF
+
+* Wish
+    * [FELIX-5795] - Maven Bundle Plugin Should Upgrade to Use Maven Dependency Tree 3.x
+
 Changes from 4.2.0 to 4.2.1
 ---------------------------
 
