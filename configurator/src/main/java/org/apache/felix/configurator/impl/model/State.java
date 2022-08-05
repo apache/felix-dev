@@ -25,23 +25,22 @@ import java.io.IOException;
 import java.io.ObjectInputStream;
 import java.io.ObjectOutputStream;
 import java.io.Serializable;
-import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Map;
 import java.util.Set;
+import java.util.concurrent.ConcurrentHashMap;
 
 public class State extends AbstractState implements Serializable {
 
     private static final long serialVersionUID = 1L;
 
     /** Serialization version. */
-    private static final int VERSION = 1;
+    private static final int VERSION = 2;
 
     public static final String FILE_NAME = "state.ser";
 
-    private Map<Long, Long> bundlesLastModified = new HashMap<>();
-
-    private Map<Long, Long> bundlesConfigAdminBundleId = new HashMap<>();
+    private Map<Long, Long> bundlesLastModified = new ConcurrentHashMap<>();
+    private Map<Long, Long> bundlesConfigAdminBundleId = new ConcurrentHashMap<>();
 
     private volatile Set<String> initialHashes;
 
@@ -72,9 +71,22 @@ public class State extends AbstractState implements Serializable {
         if ( version < 1 || version > VERSION ) {
             throw new ClassNotFoundException(this.getClass().getName());
         }
-        this.bundlesLastModified =(Map<Long, Long>) in.readObject();
-        this.bundlesConfigAdminBundleId = (Map<Long, Long>) in.readObject();
-        initialHashes = (Set<String>) in.readObject();
+        
+        // for older version, the 'bundlesLastModified', 'bundlesConfigAdminBundleId' are 
+        // stored as HashMaps, therefore, the map contents are copied to ConcurrentHashMaps 
+        // for concurrent access. Similarly, 'initialHashes' is stored as HashSet whose
+        // contents for version 2 onwards are copied to ConcurrentHashSet for thread safety.
+        if (version == 1) {
+            this.bundlesLastModified = new ConcurrentHashMap<>((Map<Long, Long>) in.readObject());
+            this.bundlesConfigAdminBundleId = new ConcurrentHashMap<>((Map<Long, Long>) in.readObject());
+            
+            this.initialHashes = ConcurrentHashMap.newKeySet();
+            this.initialHashes.addAll((Set<String>) in.readObject());
+        } else {
+            this.bundlesLastModified = (Map<Long, Long>) in.readObject();
+            this.bundlesConfigAdminBundleId = (Map<Long, Long>) in.readObject();
+            this.initialHashes = (Set<String>) in.readObject();
+        }
     }
 
     public static State createOrReadState(final File f)

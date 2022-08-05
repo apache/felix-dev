@@ -32,6 +32,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 import java.util.TreeMap;
+import java.util.concurrent.ConcurrentHashMap;
 
 import org.apache.felix.configurator.impl.json.BinUtil;
 import org.apache.felix.configurator.impl.json.BinaryManager;
@@ -223,7 +224,7 @@ public class Configurator {
             this.processRemoveBundle(-1);
         } else {
             // JSON or URLs ?
-            final Set<String> hashes = new HashSet<>();
+            final Set<String> hashes = ConcurrentHashMap.newKeySet();
             final Map<String, String> files = new TreeMap<>();
 
             if ( !initial.trim().startsWith("{") ) {
