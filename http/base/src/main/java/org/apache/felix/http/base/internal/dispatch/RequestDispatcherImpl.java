@@ -25,6 +25,7 @@ import jakarta.servlet.ServletException;
 import jakarta.servlet.ServletRequest;
 import jakarta.servlet.ServletResponse;
 import jakarta.servlet.http.HttpServletRequest;
+import jakarta.servlet.http.HttpServletResponse;
 
 import org.apache.felix.http.base.internal.handler.FilterHandler;
 import org.apache.felix.http.base.internal.registry.ServletResolution;
@@ -114,6 +115,6 @@ public final class RequestDispatcherImpl implements RequestDispatcher
         final FilterHandler[] filterHandlers = this.resolution.handlerRegistry.getFilterHandlers(this.resolution.handler, DispatcherType.INCLUDE, requestURI);
 
         final FilterChain filterChain = new InvocationChain(resolution.handler, filterHandlers);
-        filterChain.doFilter( req, response);
+        filterChain.doFilter( req, new IncludeResponseWrapper((HttpServletResponse)response));
     }
 }
