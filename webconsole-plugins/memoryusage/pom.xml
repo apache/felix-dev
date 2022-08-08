@@ -81,7 +81,7 @@
 
                             <!-- plug into the web console -->
                             javax.servlet;resolution:="optional";
-                            javax.servlet.http;version="[2.3,4)";resolution:="optional",
+                            javax.servlet.http;version="[2.3,5)";resolution:="optional",
                             org.apache.felix.webconsole;version="[3.0,4)";resolution:="optional",
 
                             <!-- plug into the traditional Felix shell -->
