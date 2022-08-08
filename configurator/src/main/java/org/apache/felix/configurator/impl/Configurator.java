@@ -288,7 +288,7 @@ public class Configurator {
                 processAddBundle(b);
             }
         }
-        for(final long id : state.getKnownBundleIds()) {
+        for(final long id : new HashSet<>(state.getKnownBundleIds())) {
             if ( !ids.contains(id) ) {
                 processRemoveBundle(id);
             }
