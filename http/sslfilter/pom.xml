@@ -49,7 +49,7 @@
                             org.apache.felix.http.sslfilter.internal.SslFilterActivator
                         </Bundle-Activator>
                         <Import-Package>
-                            javax.servlet.*;version=2.3,
+                            javax.servlet.*;version="[3,5)",
                             org.osgi.service.cm;resolution:=optional,
                             *
                         </Import-Package>
