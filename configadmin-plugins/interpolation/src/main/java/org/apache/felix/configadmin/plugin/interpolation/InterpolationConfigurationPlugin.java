@@ -20,6 +20,7 @@ import static java.util.stream.Collectors.toList;
 
 import java.io.File;
 import java.io.IOException;
+import java.lang.reflect.Array;
 import java.nio.charset.Charset;
 import java.nio.file.Files;
 import java.util.ArrayList;
@@ -136,19 +137,30 @@ class InterpolationConfigurationPlugin implements ConfigurationPlugin {
                 }
             } else if (val instanceof String[]) {
                 String[] array = (String[]) val;
-                String[] newArray = null;
+                List<String> newArray = null;
                 for (int i = 0; i < array.length; i++) {
                     Object newVal = getNewValue(key, array[i], pid, properties);
                     if (newVal != null && !newVal.equals(array[i])) {
                         if (newArray == null) {
-                            newArray = new String[array.length];
-                            System.arraycopy(array, 0, newArray, 0, array.length);
+                            newArray = new ArrayList<>();
+                            for(int m=0;m<i;m++) {
+                                newArray.add(array[m]);
+                            }
                         }
-                        newArray[i] = newVal.toString();
+                        if ( newVal.getClass().isArray() ) {
+                            for(int m=0;m<Array.getLength(newVal);m++ ) {
+                                newArray.add(Array.get(newVal, m).toString());
+                            }
+                        } else {
+                            newArray.add(newVal.toString());
+                        }
+                    } else if ( newArray != null ) {
+                        newArray.add(array[i]);
                     }
                 }
                 if (newArray != null) {
-                    properties.put(key, newArray);
+                    final String[] update = newArray.toArray(new String[newArray.size()]);
+                    properties.put(key, update);
                     getLog().info("Replaced value of configuration property '{}' for PID {}", key, pid);
                 }
             }

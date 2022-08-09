@@ -306,4 +306,18 @@ public class InterpolationConfigurationPluginTest {
         obj = plugin.convertType("String", "a,b", ",");
         assertEquals("a,b", obj);
     }
+
+    @Test
+    public void testModifyConfigurationWithArrayInArray() throws Exception {
+        BundleContext bc = Mockito.mock(BundleContext.class);
+        Mockito.when(bc.getProperty("foo")).thenReturn("2000,3000");
+        InterpolationConfigurationPlugin plugin = new InterpolationConfigurationPlugin(bc::getProperty, null, null);
+
+        Dictionary<String, Object> dict = new Hashtable<>();
+        dict.put("array", new String[] {"1000", "$[prop:foo;type=String[];delimiter=,]", "4000"});
+        plugin.modifyConfiguration(null, dict);
+
+        assertEquals(1, dict.size());
+        assertArrayEquals(new String[] {"1000", "2000", "3000", "4000"}, (String[])dict.get("array"));
+    }
 }

@@ -18,7 +18,6 @@ package org.apache.felix.configadmin.plugin.interpolation;
 
 import static org.junit.Assert.assertEquals;
 
-import java.util.HashMap;
 import java.util.Map;
 
 import org.apache.felix.configadmin.plugin.interpolation.Interpolator.Provider;
