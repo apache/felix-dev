@@ -115,7 +115,7 @@ class ConfigAdminSupport {
      * @throws IOException If a problem occurs
      * @throws ValidationException If the configuration is not valid
      */
-    void applyConfiguration( final HttpServletRequest request, final String pid, final String[] propertyList, final boolean isUpdate )
+    String applyConfiguration( final HttpServletRequest request, final String pid, final String[] propertyList, final boolean isUpdate )
             throws ValidationException, IOException
     {
         final String factoryPid = request.getParameter( ConfigManager.FACTORY_PID );
@@ -303,6 +303,7 @@ class ConfigAdminSupport {
             }
         }
         config.update( props );
+        return config.getPid();
     }
 
     public void deleteConfiguration(final String pid) throws ValidationException, IOException {

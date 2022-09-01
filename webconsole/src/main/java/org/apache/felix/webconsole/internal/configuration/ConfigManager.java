@@ -156,8 +156,7 @@ public class ConfigManager extends SimpleWebConsolePlugin implements OsgiManager
                 }
 
                 try {
-                    cas.applyConfiguration( request, pid, propertyList.split(","), ACTION_UPDATE.equals(request.getParameter(ACTION_APPLY)));
-                    String redirect = pid;
+                    String redirect = cas.applyConfiguration( request, pid, propertyList.split(","), ACTION_UPDATE.equals(request.getParameter(ACTION_APPLY)));
                     if (pidFilter != null) {
                         redirect = redirect.concat("?").concat(PID_FILTER).concat("=").concat(pidFilter);
                     }
