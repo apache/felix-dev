@@ -175,9 +175,9 @@
                     </includes>
                     <excludes>
                         <exclude>src/main/appended-resources/**</exclude>
-                        <exclude>src/main/resources/res/lib/jquery-3.5.1.js</exclude>
-                        <exclude>src/main/resources/res/lib/jquery-migrate-3.3.0.js</exclude>
-                        <exclude>src/main/resources/res/lib/jquery-ui-1.12.1.js</exclude>
+                        <exclude>src/main/resources/res/lib/jquery-3.6.1.js</exclude>
+                        <exclude>src/main/resources/res/lib/jquery-migrate-3.4.0.js</exclude>
+                        <exclude>src/main/resources/res/lib/jquery-ui-1.13.2.js</exclude>
                         <exclude>src/main/resources/res/lib/jquery-ui-i18n-1.12.1.js</exclude>
                         <exclude>src/main/resources/res/lib/autosize.min.js</exclude>
                         <exclude>src/main/resources/res/lib/jquery.cookies-2.2.0.js</exclude>
