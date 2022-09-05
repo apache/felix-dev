@@ -1,3 +1,45 @@
+Changes in 4.8.4
+----------------
+** Improvement
+    * [FELIX-6561] - Vulnerabilities in jquery-ui-1.12.1.js
+** Bug
+    * [FELIX-6563] - [Regression] Webconsole REST API doesn't return Confguration PID when creating a new configuration
+
+
+Changes in 4.8.2
+----------------
+** Improvement
+    * [FELIX-6532] - Remove dependency to commons-io
+    * [FELIX-6508] - Consume Servlet API Version Range (2.x,5] in WebConsole
+** Bug
+    * [FELIX-6531] - Web Console 4.8.0 does not generate metatype configurations for services
+
+Changes in 4.8.0
+----------------
+** Improvement
+    * [FELIX-6500] - Enhance configuration SPI to filter configurations
+** Bug
+    * [FELIX-6503] - Webconsole doesn't set configuration property to default value
+
+
+Changes in 4.7.2
+----------------
+** Improvement
+    * [FELIX-6319] - Expose all framework properties in a web console plugin
+    * [FELIX-6464] - Add Web Console plugin exposing Capabilities
+    * [FELIX-6040] - Configuration Manager does only expose OCD name which does not allow to disambiguate multiple designates pointing to the same OCD
+** Bug
+    * [FELIX-6466] - webconsole.configurationFactory.nameHint only detected via ConfigurationAdmin
+
+
+Changes in 4.7.0
+----------------
+** Improvement
+    * [FELIX-6367] - Provide SPI for configuration management
+** Bug
+    * [FELIX-6453] - Change in configuration handling introduced by FELIX-6436
+
+
 Changes in 4.6.2
 ----------------
 ** Improvement
