@@ -117,6 +117,10 @@ public class ServiceComponentRuntimeImpl implements ServiceComponentRuntime
         try
         {
             ComponentHolder<?> holder = getHolderFromDescription( description);
+            // the holder can also be null if the associated component is deregistered
+            if (holder == null) {
+                return Collections.emptyList();
+            }
             // Get a fully filled out valid description DTO
             description = holderToDescription(holder);
             if ( description == null)
@@ -146,6 +150,9 @@ public class ServiceComponentRuntimeImpl implements ServiceComponentRuntime
         try
         {
             ComponentHolder<?> holder = getHolderFromDescription( description);
+            if (holder == null) {
+                return false;
+            }
             return holder.isEnabled();
         }
         catch ( IllegalStateException ise)
@@ -163,6 +170,9 @@ public class ServiceComponentRuntimeImpl implements ServiceComponentRuntime
         try
         {
             final ComponentHolder<?> holder = getHolderFromDescription( description);
+            if (holder == null) {
+                throw new IllegalStateException("The component is not available in the runtime");
+            }
             final boolean doUpdate = !holder.isEnabled();
             final Promise<Void> result =  holder.enableComponents(true);
             if ( doUpdate ) {
@@ -185,6 +195,9 @@ public class ServiceComponentRuntimeImpl implements ServiceComponentRuntime
         try
         {
             final ComponentHolder<?> holder = getHolderFromDescription( description);
+            if (holder == null) {
+                throw new IllegalStateException("The component is not available in the runtime");
+            }
             final boolean doUpdate = holder.isEnabled();
             final Promise<Void> result = holder.disableComponents(true); //synchronous
             if ( doUpdate ) {
@@ -294,6 +307,10 @@ public class ServiceComponentRuntimeImpl implements ServiceComponentRuntime
         }
         long bundleId = description.bundle.id;
         Bundle b = context.getBundle(bundleId);
+        if (b == null) {
+            // the bundle is possibly uninstalled
+            return null;
+        }
         String name = description.name;
         return componentRegistry.getComponentHolder(b, name);
     }
