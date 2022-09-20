@@ -103,9 +103,9 @@
             <scope>provided</scope>
         </dependency>
         <dependency>
-            <groupId>org.apache.felix</groupId>
-            <artifactId>org.apache.felix.converter</artifactId>
-            <version>1.0.0</version>
+            <groupId>org.osgi</groupId>
+            <artifactId>org.osgi.util.converter</artifactId>
+            <version>1.0.9</version>
             <scope>provided</scope>
         </dependency>
         <dependency>
@@ -159,7 +159,7 @@
          <dependency>
             <groupId>org.apache.johnzon</groupId>
             <artifactId>johnzon-core</artifactId>
-            <version>1.2.3</version>
+            <version>1.2.19</version>
             <scope>test</scope>
         </dependency>
     </dependencies>
