@@ -60,6 +60,7 @@ import org.osgi.service.cm.ConfigurationPlugin;
 import org.osgi.service.cm.ManagedService;
 import org.osgi.service.cm.ManagedServiceFactory;
 import org.osgi.service.cm.SynchronousConfigurationListener;
+import org.osgi.service.coordinator.Coordinator;
 import org.osgi.service.log.LogService;
 import org.osgi.util.tracker.ServiceTracker;
 
@@ -782,7 +783,7 @@ public class ConfigurationManager implements BundleListener
         {
             r = new ManagedServiceUpdate( pid, sr, configs );
         }
-        if ( this.coordinator == null || !CoordinatorUtil.addToCoordination(this.coordinator, updateThread, r) )
+        if ( this.coordinator == null || ((Coordinator) this.coordinator).peek() == null)
         {
             updateThread.schedule( r );
         }

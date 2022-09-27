@@ -49,17 +49,14 @@ import org.osgi.service.coordinator.Coordinator;
 @RunWith(JUnit4TestRunner.class)
 public class CoordinatorIntegrationTest extends ConfigurationTestBase {
 
-    static
-    {
-        // uncomment to enable debugging of this test class
-        paxRunnerVmOption = DEBUG_VM_OPTION;
-    }
-
 	@Override
 	protected Option[] additionalConfiguration() {
 		return new Option [] {
+			/*
 			mavenBundle("org.eclipse.platform", "org.eclipse.equinox.supplement", "1.9.300"),
 			mavenBundle("org.eclipse.platform", "org.eclipse.equinox.coordinator", "1.3.500")
+			*/
+			mavenBundle("org.apache.felix", "org.apache.felix.coordinator", "1.0.2")
 		};
 	}
 
