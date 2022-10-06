@@ -40,10 +40,10 @@
     
     <modules>
         <module>servlet-api</module>
-    <!--    <module>base</module>
+        <module>base</module>
         <module>bridge</module>
         <module>jetty</module>
-   -->     <module>base-4.x</module>
+        <module>base-4.x</module>
         <module>bridge-4.x</module>
         <module>jetty-4.x</module>
         <module>parent</module>
