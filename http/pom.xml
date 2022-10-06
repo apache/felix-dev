@@ -45,10 +45,8 @@
         <module>jetty</module>
         <module>parent</module>
         <module>proxy</module>
-        <module>whiteboard</module>
         <module>cometd</module>
         <module>bundle</module>
-        <module>sslfilter</module>
         <module>itest</module>
         <module>samples/bridge</module>
         <module>samples/whiteboard</module>
