@@ -1,8 +1,0 @@
-{
-    "config.a" : {
-        "text" : "Hello World"
-    },
-    "config.b" : {
-        "port:Integer" : 8080
-    }
-}

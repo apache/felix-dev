@@ -1,6 +1,0 @@
-{
-    "a" : {
-              ":configurator:policy" : "force",
-              "foo" : "foo"
-          }
-}
