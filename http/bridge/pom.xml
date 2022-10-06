@@ -29,14 +29,14 @@
     <name>Apache Felix Http Bridge</name>
     <description>This is an implementation of the OSGi Http Service and the OSGi Http Whiteboard Specification used when run as a web application</description>
     <artifactId>org.apache.felix.http.bridge</artifactId>
-    <version>4.2.2</version>
+    <version>4.2.3-SNAPSHOT</version>
     <packaging>bundle</packaging>
 
     <scm>
         <connection>scm:git:https://github.com/apache/felix-dev.git</connection>
         <developerConnection>scm:git:https://github.com/apache/felix-dev.git</developerConnection>
         <url>https://gitbox.apache.org/repos/asf?p=felix-dev.git</url>
-      <tag>org.apache.felix.http.bridge-4.2.2</tag>
+      <tag>HEAD</tag>
   </scm>
 
     <properties>
