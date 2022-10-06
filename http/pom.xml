@@ -39,22 +39,11 @@
     </scm>
     
     <modules>
-        <module>servlet-api</module>
         <module>base</module>
         <module>bridge</module>
         <module>jetty</module>
-        <module>base-4.x</module>
-        <module>bridge-4.x</module>
-        <module>jetty-4.x</module>
-        <module>parent</module>
-        <module>proxy</module>
         <module>whiteboard</module>
-        <module>cometd</module>
-        <module>bundle</module>
         <module>sslfilter</module>
         <module>itest</module>
-        <module>samples/bridge</module>
-        <module>samples/whiteboard</module>
-        <module>samples/cometd</module>
     </modules>
 </project>
