@@ -22,6 +22,8 @@ import org.osgi.framework.Bundle;
 import org.osgi.framework.BundleContext;
 import org.osgi.util.tracker.ServiceTracker;
 
+import java.util.Collection;
+
 public class ConfigurationSupport {
 
     private final ServiceTracker<Object, Object> configAdminTracker;
@@ -73,4 +75,16 @@ public class ConfigurationSupport {
         }
         return false;
     }
+
+    /**
+     * Returns a Collection of IDs of Password Attributes Definitions for given bundle and configuration PIDs
+     * @param bundle The Bundle providing the component
+     * @param configurationPids A non-null configuration pid
+     * @return <code>Collection<String></code>
+     */
+    public Collection<String> getPasswordAttributeDefinitionIds(final Bundle bundle, final String[] configurationPids) {
+        Object metaTypeService = this.metatypeTracker.getService();
+        return new MetatypeSupport().getPasswordAttributeDefinitionIds(metaTypeService, bundle, configurationPids);
+    }
+
 }

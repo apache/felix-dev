@@ -19,8 +19,15 @@
 package org.apache.felix.webconsole.plugins.ds.internal;
 
 import org.osgi.framework.Bundle;
+import org.osgi.service.metatype.AttributeDefinition;
 import org.osgi.service.metatype.MetaTypeInformation;
 import org.osgi.service.metatype.MetaTypeService;
+import org.osgi.service.metatype.ObjectClassDefinition;
+
+import java.util.Collection;
+import java.util.Collections;
+import java.util.Set;
+import java.util.HashSet;
 
 public class MetatypeSupport
 {
@@ -39,4 +46,44 @@ public class MetatypeSupport
         }
         return false;
     }
+
+    public Collection<String> getPasswordAttributeDefinitionIds(final Object mts, final Bundle bundle, final String[] configurationPids) {
+        if (mts == null || bundle == null) {
+            return Collections.emptySet();
+        }
+        MetaTypeService metaTypeService = (MetaTypeService) mts;
+        MetaTypeInformation metaTypeInformation = metaTypeService.getMetaTypeInformation(bundle);
+        if (metaTypeInformation == null) {
+            return Collections.emptySet();
+        }
+
+        Set<String> allPasswordIds = new HashSet<>();
+        for(String configurationPid: configurationPids) {
+            allPasswordIds.addAll(getPasswordIds(metaTypeInformation, configurationPid));
+        }
+
+        return allPasswordIds;
+    }
+
+    private Set<String> getPasswordIds(MetaTypeInformation metaTypeInformation, String configurationPid) {
+        AttributeDefinition[] defs = null;
+        try {
+            ObjectClassDefinition ocd = metaTypeInformation.getObjectClassDefinition(configurationPid, null);
+            defs = ocd.getAttributeDefinitions(ObjectClassDefinition.ALL);
+        } catch (final IllegalArgumentException ignore) {
+            // just ignore this exception?
+        }
+
+        Set<String> passwordsDefIds = new HashSet<>();
+        if (defs != null) {
+            for (int i = 0; i < defs.length; i++) {
+                if (defs[i].getType() == AttributeDefinition.PASSWORD) {
+                    passwordsDefIds.add(defs[i].getID());
+                }
+            }
+        }
+
+        return passwordsDefIds;
+    }
+
 }
