@@ -23,6 +23,7 @@ import org.osgi.framework.BundleContext;
 import org.osgi.util.tracker.ServiceTracker;
 
 import java.util.Collection;
+import java.util.Collections;
 
 public class ConfigurationSupport {
 
@@ -84,6 +85,9 @@ public class ConfigurationSupport {
      */
     public Collection<String> getPasswordAttributeDefinitionIds(final Bundle bundle, final String[] configurationPids) {
         Object metaTypeService = this.metatypeTracker.getService();
+        if (metaTypeService == null) {
+            return Collections.emptySet();
+        }
         return new MetatypeSupport().getPasswordAttributeDefinitionIds(metaTypeService, bundle, configurationPids);
     }
 

@@ -48,12 +48,9 @@ public class MetatypeSupport
     }
 
     public Collection<String> getPasswordAttributeDefinitionIds(final Object mts, final Bundle bundle, final String[] configurationPids) {
-        if (mts == null || bundle == null) {
-            return Collections.emptySet();
-        }
         MetaTypeService metaTypeService = (MetaTypeService) mts;
         MetaTypeInformation metaTypeInformation = metaTypeService.getMetaTypeInformation(bundle);
-        if (metaTypeInformation == null) {
+        if (metaTypeInformation == null || bundle == null) {
             return Collections.emptySet();
         }
 
