@@ -85,7 +85,7 @@ public class ConfigurationSupport {
      */
     public Collection<String> getPasswordAttributeDefinitionIds(final Bundle bundle, final String[] configurationPids) {
         Object metaTypeService = this.metatypeTracker.getService();
-        if (metaTypeService == null) {
+        if (bundle == null || metaTypeService == null) {
             return Collections.emptySet();
         }
         return new MetatypeSupport().getPasswordAttributeDefinitionIds(metaTypeService, bundle, configurationPids);
