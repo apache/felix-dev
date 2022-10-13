@@ -477,6 +477,14 @@ class WebConsolePlugin extends SimpleWebConsolePlugin
     private void listProperties(JSONWriter jw, ComponentDescriptionDTO desc, ComponentConfigurationDTO component) throws IOException
     {
         Map<String, Object> props = component != null ? component.properties : desc.properties;
+
+        // Is this the right way to get bundle and configuration PID?
+        Bundle bundle = this.getBundleContext().getBundle(0).getBundleContext().getBundle(desc.bundle.id);
+        String[] configurationPids = desc.configurationPid;
+
+        Collection<String> passwordPropertyIds =
+                this.optionalSupport.getPasswordAttributeDefinitionIds(bundle, configurationPids);
+
         if (props != null)
         {
             jw.object();
@@ -491,9 +499,14 @@ class WebConsolePlugin extends SimpleWebConsolePlugin
                 final StringBuilder b = new StringBuilder();
                 b.append(key).append(" = ");
 
-                Object prop = props.get(key);
-                prop = WebConsoleUtil.toString(prop);
-                b.append(prop);
+                if (passwordPropertyIds.contains(key)) {
+                    b.append("********");
+                } else {
+                    Object prop = props.get(key);
+                    prop = WebConsoleUtil.toString(prop);
+                    b.append(prop);
+                }
+
                 jw.value(b.toString());
             }
             jw.endArray();
@@ -512,9 +525,14 @@ class WebConsolePlugin extends SimpleWebConsolePlugin
                 final StringBuilder b = new StringBuilder();
                 b.append(key).append(" = ");
 
-                Object prop = props.get(key);
-                prop = WebConsoleUtil.toString(prop);
-                b.append(prop);
+                if (passwordPropertyIds.contains(key)) {
+                    b.append("********");
+                } else {
+                    Object prop = props.get(key);
+                    prop = WebConsoleUtil.toString(prop);
+                    b.append(prop);
+                }
+
                 jw.value(b.toString());
             }
             jw.endArray();
