@@ -36,7 +36,7 @@ public class ConfigurationSupport {
         this.configAdminTracker = new ServiceTracker<Object, Object>(bundleContext, "org.osgi.service.cm.ConfigurationAdmin", null);
         this.metatypeTracker = new ServiceTracker<Object, Object>(bundleContext, "org.osgi.service.metatype.MetaTypeService", null);
 
-        configAdminTracker.open();
+        this.configAdminTracker.open();
         this.metatypeTracker.open();
     }
 

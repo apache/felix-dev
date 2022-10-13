@@ -70,7 +70,7 @@ class WebConsolePlugin extends SimpleWebConsolePlugin
     // templates
     private final String TEMPLATE;
 
-    private volatile ConfigurationSupport optionalSupport;
+    private volatile ConfigurationSupport support;
 
     private final ServiceComponentRuntime runtime;
 
@@ -87,10 +87,10 @@ class WebConsolePlugin extends SimpleWebConsolePlugin
 
     @Override
     public void deactivate() {
-        if ( this.optionalSupport != null )
+        if ( this.support != null )
         {
-            this.optionalSupport.close();
-            this.optionalSupport = null;
+            this.support.close();
+            this.support = null;
         }
         super.deactivate();
     }
@@ -100,7 +100,7 @@ class WebConsolePlugin extends SimpleWebConsolePlugin
     public void activate(final BundleContext bundleContext)
     {
         super.activate(bundleContext);
-        this.optionalSupport = new ConfigurationSupport(bundleContext);
+        this.support = new ConfigurationSupport(bundleContext);
     }
 
 
@@ -276,7 +276,8 @@ class WebConsolePlugin extends SimpleWebConsolePlugin
         }
         jw.key("pid"); //$NON-NLS-1$
         jw.value(pid);
-        if (this.optionalSupport.isConfigurable(
+        final ConfigurationSupport localSupport = this.support;
+        if (localSupport != null && localSupport.isConfigurable(
                 this.getBundleContext().getBundle(0).getBundleContext().getBundle(desc.bundle.id),
                 configurationPid))
         {
@@ -482,8 +483,9 @@ class WebConsolePlugin extends SimpleWebConsolePlugin
         Bundle bundle = this.getBundleContext().getBundle(0).getBundleContext().getBundle(desc.bundle.id);
         String[] configurationPids = desc.configurationPid;
 
-        Collection<String> passwordPropertyIds =
-                this.optionalSupport.getPasswordAttributeDefinitionIds(bundle, configurationPids);
+        final ConfigurationSupport localSupport = this.support;
+        Collection<String> passwordPropertyIds = localSupport != null ?
+                localSupport.getPasswordAttributeDefinitionIds(bundle, configurationPids) : Collections.emptyList();
 
         if (props != null)
         {
