@@ -30,54 +30,45 @@ import java.util.Locale;
 import java.util.Map;
 import java.util.Properties;
 import java.util.StringTokenizer;
+import java.util.concurrent.ConcurrentHashMap;
 
 import org.osgi.framework.Bundle;
 import org.osgi.service.metatype.MetaTypeService;
 
 
 /**
- * The <code>BundleResources</code> TODO
+ * The <code>BundleResources</code>
  *
  * @author <a href="mailto:dev@felix.apache.org">Felix Project Team</a>
  */
 public class BundleResources
 {
 
-    private Bundle bundle;
-    private long bundleLastModified;
+    private final Bundle bundle;
+    private volatile long bundleLastModified;
 
-    private Map resourcesByLocale;
+    private final Map<String, Resources> resourcesByLocale = new ConcurrentHashMap<>();
 
-    private static Map resourcesByBundle = null;
+    private static final Map<Long, BundleResources> resourcesByBundle = new ConcurrentHashMap<>();
 
 
-    public static Resources getResources( Bundle bundle, String basename, String locale )
+    public static Resources getResources( final Bundle bundle, final String basename, final String locale )
     {
-        BundleResources bundleResources = null;
-
-        if ( resourcesByBundle != null )
+        // the bundle has been uninstalled, ensure removed from the cache
+        // and return null (e.g. no resources now)
+        if ( bundle.getState() == Bundle.UNINSTALLED )
         {
-            // the bundle has been uninstalled, ensure removed from the cache
-            // and return null (e.g. no resources now)
-            if ( bundle.getState() == Bundle.UNINSTALLED )
-            {
-                resourcesByBundle.remove( new Long( bundle.getBundleId() ) );
-                return null;
-            }
+            resourcesByBundle.remove( bundle.getBundleId() );
+            return null;
+        }
 
-            // else check whether we know the bundle already
-            bundleResources = ( BundleResources ) resourcesByBundle.get( new Long( bundle.getBundleId() ) );
-        }
-        else
-        {
-            // create the cache to be used for a newly created BundleResources
-            resourcesByBundle = new HashMap();
-        }
+        // else check whether we know the bundle already
+        BundleResources bundleResources = resourcesByBundle.get( bundle.getBundleId() );
 
         if ( bundleResources == null )
         {
             bundleResources = new BundleResources( bundle );
-            resourcesByBundle.put( new Long( bundle.getBundleId() ), bundleResources );
+            resourcesByBundle.put( bundle.getBundleId(), bundleResources );
         }
 
         return bundleResources.getResources( basename, locale );
@@ -86,7 +77,7 @@ public class BundleResources
 
     public static void clearResourcesCache()
     {
-        resourcesByBundle = null;
+        resourcesByBundle.clear();
     }
 
 
@@ -94,7 +85,6 @@ public class BundleResources
     {
         this.bundle = bundle;
         this.bundleLastModified = bundle.getLastModified();
-        this.resourcesByLocale = new HashMap();
     }
 
 
@@ -117,7 +107,7 @@ public class BundleResources
         // check the cache, if the bundle has not changed
         if ( isUpToDate() )
         {
-            Resources res = ( Resources ) resourcesByLocale.get( key );
+            Resources res = resourcesByLocale.get( key );
             if ( res != null )
             {
                 return res;
@@ -125,18 +115,18 @@ public class BundleResources
         }
         else
         {
-            // otherwise clear the cache
+            // otherwise clear the cache and update last modified
             resourcesByLocale.clear();
+            this.bundleLastModified = bundle.getLastModified();
         }
 
         // get the list of potential resource names files
         Properties parentProperties = null;
-        List resList = createResourceList( locale );
-        for ( Iterator ri = resList.iterator(); ri.hasNext(); )
+        List<String> resList = createResourceList( locale );
+        for ( final String tmpLocale : resList)
         {
-            final String tmpLocale = ( String ) ri.next();
             final String tmpKey = basename + "-" + tmpLocale;
-            Resources res = ( Resources ) resourcesByLocale.get( tmpKey );
+            Resources res = resourcesByLocale.get( tmpKey );
             if ( res != null )
             {
                 parentProperties = res.getResources();
@@ -151,7 +141,7 @@ public class BundleResources
         }
 
         // just return from the cache again
-        return ( Resources ) resourcesByLocale.get( key );
+        return resourcesByLocale.get( key );
     }
 
 
@@ -177,28 +167,13 @@ public class BundleResources
 
         if ( resURL != null )
         {
-            InputStream ins = null;
-            try
+            try (final InputStream ins = resURL.openStream())
             {
-                ins = resURL.openStream();
                 props.load( ins );
             }
             catch ( IOException ex )
             {
                 // File doesn't exist, just continue loop
-            }
-            finally
-            {
-                if ( ins != null )
-                {
-                    try
-                    {
-                        ins.close();
-                    }
-                    catch ( IOException ignore )
-                    {
-                    }
-                }
             }
         }
 
@@ -206,12 +181,12 @@ public class BundleResources
     }
 
 
-    private List createResourceList( String locale )
+    private List<String> createResourceList( final String locale )
     {
-        List result = new ArrayList( 4 );
+        final List<String> result = new ArrayList<>( 4 );
 
         StringTokenizer tokens;
-        StringBuffer tempLocale = new StringBuffer();
+        final StringBuilder tempLocale = new StringBuilder();
 
         result.add( tempLocale.toString() );
 
