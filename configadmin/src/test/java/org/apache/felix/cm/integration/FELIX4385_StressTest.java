@@ -27,19 +27,19 @@ import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.TimeUnit;
 
-import junit.framework.Assert;
-import junit.framework.TestCase;
-
 import org.apache.felix.cm.integration.helper.Log;
+import org.junit.Assert;
 import org.junit.Test;
 import org.junit.runner.RunWith;
-import org.ops4j.pax.exam.junit.JUnit4TestRunner;
+import org.ops4j.pax.exam.junit.PaxExam;
 import org.osgi.framework.Constants;
 import org.osgi.framework.ServiceRegistration;
 import org.osgi.service.cm.Configuration;
 import org.osgi.service.cm.ConfigurationAdmin;
 import org.osgi.service.cm.ConfigurationException;
 import org.osgi.service.cm.ManagedService;
+
+import junit.framework.TestCase;
 
 /**
  * The <code>FELIX4385_StressTest</code> class tests the issue related to concurrency between configuration 
@@ -57,7 +57,7 @@ import org.osgi.service.cm.ManagedService;
  * <p>
  * @see <a href="https://issues.apache.org/jira/browse/FELIX-4385">FELIX-4385</a>
  */
-@RunWith(JUnit4TestRunner.class)
+@RunWith(PaxExam.class)
 public class FELIX4385_StressTest extends ConfigurationTestBase
 {
     final static int MAXWAIT = 10000;

@@ -26,7 +26,7 @@ import org.apache.felix.cm.integration.helper.SynchronousTestListener;
 import org.apache.felix.cm.integration.helper.TestListener;
 import org.junit.Test;
 import org.junit.runner.RunWith;
-import org.ops4j.pax.exam.junit.JUnit4TestRunner;
+import org.ops4j.pax.exam.junit.PaxExam;
 import org.osgi.framework.ServiceRegistration;
 import org.osgi.service.cm.Configuration;
 import org.osgi.service.cm.ConfigurationEvent;
@@ -34,7 +34,7 @@ import org.osgi.service.cm.ConfigurationListener;
 import org.osgi.service.cm.SynchronousConfigurationListener;
 
 
-@RunWith(JUnit4TestRunner.class)
+@RunWith(PaxExam.class)
 public class ConfigurationListenerTest extends ConfigurationTestBase
 {
 

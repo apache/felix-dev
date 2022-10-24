@@ -21,7 +21,6 @@ package org.apache.felix.cm.integration;
 
 import java.io.IOException;
 import java.util.Hashtable;
-import junit.framework.TestCase;
 
 import org.apache.felix.cm.integration.helper.ManagedServiceFactoryTestActivator;
 import org.apache.felix.cm.integration.helper.ManagedServiceFactoryTestActivator2;
@@ -29,7 +28,7 @@ import org.apache.felix.cm.integration.helper.ManagedServiceTestActivator;
 import org.apache.felix.cm.integration.helper.ManagedServiceTestActivator2;
 import org.junit.Test;
 import org.junit.runner.RunWith;
-import org.ops4j.pax.exam.junit.JUnit4TestRunner;
+import org.ops4j.pax.exam.junit.PaxExam;
 import org.osgi.framework.Bundle;
 import org.osgi.framework.BundleException;
 import org.osgi.framework.ServiceReference;
@@ -39,8 +38,10 @@ import org.osgi.service.cm.ConfigurationAdmin;
 import org.osgi.service.cm.ConfigurationEvent;
 import org.osgi.service.cm.ConfigurationListener;
 
+import junit.framework.TestCase;
 
-@RunWith(JUnit4TestRunner.class)
+
+@RunWith(PaxExam.class)
 public class ConfigurationBindingTest extends ConfigurationTestBase
 {
 

@@ -28,13 +28,11 @@ import java.util.Iterator;
 import java.util.List;
 import java.util.Vector;
 
-import junit.framework.TestCase;
-
 import org.apache.felix.cm.integration.helper.ManagedServiceFactoryTestActivator;
 import org.apache.felix.cm.integration.helper.ManagedServiceTestActivator;
 import org.junit.Test;
 import org.junit.runner.RunWith;
-import org.ops4j.pax.exam.junit.JUnit4TestRunner;
+import org.ops4j.pax.exam.junit.PaxExam;
 import org.osgi.framework.Bundle;
 import org.osgi.framework.BundleException;
 import org.osgi.framework.Constants;
@@ -42,8 +40,10 @@ import org.osgi.framework.InvalidSyntaxException;
 import org.osgi.service.cm.Configuration;
 import org.osgi.service.cm.ConfigurationAdmin;
 
+import junit.framework.TestCase;
 
-@RunWith(JUnit4TestRunner.class)
+
+@RunWith(PaxExam.class)
 public class ConfigurationBaseTest extends ConfigurationTestBase
 {
 
@@ -575,7 +575,7 @@ public class ConfigurationBaseTest extends ConfigurationTestBase
 
         TestCase.assertEquals("Expect first version to be 1", 1, config.getChangeCount());
 
-        config.update(new Hashtable(){{put("x", "x");}});
+        config.update(new Hashtable<String, Object>(){{put("x", "x");}});
         TestCase.assertEquals("Expect second version to be 2", 2, config.getChangeCount());
 
         // delete
@@ -870,7 +870,7 @@ public class ConfigurationBaseTest extends ConfigurationTestBase
         // 1. create a new Conf1 with pid1 and null location.
         // 2. Conf1#update(props) is called.
         final String pid = "test_listConfiguration";
-        final Configuration config = configure( pid, null, true );
+        configure( pid, null, true );
 
         // 3. bundleA will locationA registers ManagedServiceA with pid1.
         bundle = installBundle( pid );
@@ -1272,8 +1272,8 @@ public class ConfigurationBaseTest extends ConfigurationTestBase
         final Bundle cmBundle = getCmBundle();
         try
         {
-            final Vector v = new Vector( Arrays.asList( value ) );
-            getConfigurationAdmin().getConfiguration( pid ).update( new Hashtable()
+            final Vector<String> v = new Vector<>( Arrays.asList( value ) );
+            getConfigurationAdmin().getConfiguration( pid ).update( new Hashtable<String, Object>()
             {
                 {
                     put( "v", v );
@@ -1287,8 +1287,8 @@ public class ConfigurationBaseTest extends ConfigurationTestBase
             assertOrder( value, getConfigurationAdmin().getConfiguration( pid ).getProperties().get( "v" ) );
             getConfigurationAdmin().getConfiguration( pid, null ).delete();
 
-            final List l = Arrays.asList( value );
-            getConfigurationAdmin().getConfiguration( pid ).update( new Hashtable()
+            final List<String> l = Arrays.asList( value );
+            getConfigurationAdmin().getConfiguration( pid ).update( new Hashtable<String, Object>()
             {
                 {
                     put( "v", l );

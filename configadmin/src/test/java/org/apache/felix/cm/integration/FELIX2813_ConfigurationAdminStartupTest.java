@@ -23,11 +23,12 @@ import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Hashtable;
 import java.util.List;
+
 import org.apache.felix.cm.integration.helper.SynchronousTestListener;
 import org.apache.felix.cm.integration.helper.TestListener;
 import org.junit.Test;
 import org.junit.runner.RunWith;
-import org.ops4j.pax.exam.junit.JUnit4TestRunner;
+import org.ops4j.pax.exam.junit.PaxExam;
 import org.osgi.framework.Bundle;
 import org.osgi.framework.BundleException;
 import org.osgi.framework.Constants;
@@ -41,7 +42,7 @@ import org.osgi.service.cm.ConfigurationListener;
 import org.osgi.service.cm.SynchronousConfigurationListener;
 
 
-@RunWith(JUnit4TestRunner.class)
+@RunWith(PaxExam.class)
 public class FELIX2813_ConfigurationAdminStartupTest extends ConfigurationTestBase implements ServiceListener
 {
 
