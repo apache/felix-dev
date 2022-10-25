@@ -48,124 +48,121 @@ import org.osgi.service.coordinator.Coordinator;
 @RunWith(PaxExam.class)
 public class CoordinatorIntegrationTest extends ConfigurationTestBase {
 
-	@Override
-	protected Option[] additionalConfiguration() {
-		return new Option [] {
-			mavenBundle("org.apache.felix", "org.apache.felix.coordinator", "1.0.2")
-		};
-	}
+    @Override
+    protected Option[] additionalConfiguration() {
+        return new Option [] {
+            mavenBundle("org.apache.felix", "org.apache.felix.coordinator", "1.0.2")
+        };
+    }
 
-	<T> T getService(Class<T> cls) {
-		ServiceReference<T> sref = bundleContext.getServiceReference(cls);
-		if (sref == null)
-			return null;
+    Coordinator getCoordinatorService() {
+        final ServiceReference<Coordinator> sref = bundleContext.getServiceReference(Coordinator.class);
+        return bundleContext.getService(sref);
+    }
 
-		return bundleContext.getService(sref);
-	}
+    void sleep() throws InterruptedException {
+        TimeUnit.MILLISECONDS.sleep(3000);
+    }
 
-	void sleep() throws InterruptedException {
-		TimeUnit.MILLISECONDS.sleep(4000);
-	}
+    @Test
+    public void test_deliver_existing_Configuration_to_later_registered_ManagedService()
+    throws Exception {
+        final ConfigurationAdmin cm = this.getConfigurationAdmin();
+        final Coordinator c = this.getCoordinatorService();
+        final Coordination coord = c.begin("cm-test1", 0);
+        final List<String> events = new ArrayList<>();
 
-	@Test
-	public void test_deliver_existing_Configuration_to_later_registered_ManagedService()
-	throws Exception {
-		ConfigurationAdmin cm = getService(ConfigurationAdmin.class);
-		Coordinator c = getService(Coordinator.class);
-		Coordination coord = c.begin("cm-test1", 0);
-		final List<String> events = new ArrayList<>();
+        final String pid = getClass().getName() + ".mstestpid1";
 
-		String pid = getClass().getName() + ".mstestpid2";
+        try {
+            // create the configuration
+            final Dictionary<String,Object> props = new Hashtable<>();
+            props.put("key", "value");
 
-		try {
-			// create the configuration
-			Dictionary<String,Object> props = new Hashtable<>();
-			props.put("key", "value");
+            final Configuration conf = cm.getConfiguration(pid);
+            conf.update(props);
 
-			Configuration conf = cm.getConfiguration(pid);
-			conf.update(props);
+	        // add managed service
+            final Dictionary<String,Object> msProps = new Hashtable<>();
+            msProps.put(Constants.SERVICE_PID, pid);
 
-			// add managed service
-			Dictionary<String,Object> msProps = new Hashtable<>();
-			msProps.put(Constants.SERVICE_PID, pid);
+            bundleContext.registerService(ManagedService.class.getName(),
+                new ManagedService() {
 
-			bundleContext.registerService(ManagedService.class.getName(),
-					new ManagedService() {
+                    @Override
+                    public void updated(Dictionary<String, ? > properties)
+                    throws ConfigurationException {
+                        events.add((String)properties.get("key2"));
+                    }
 
-						@Override
-						public void updated(Dictionary<String, ? > properties)
-								throws ConfigurationException {
-							events.add((String)properties.get("key2"));
-						}
+                }, msProps);
 
-					}, msProps);
+            // update configuration
+            props.put("key2", "value2");
+            conf.update(props);
 
-			// update configuration
-			props.put("key2", "value2");
-			conf.update(props);
+            assertEquals(0, events.size());
+        } finally {
+            coord.end();
+        }
 
-			assertEquals(0, events.size());
-		} finally {
-			coord.end();
-		}
+        // wait and verify listener
+        sleep();
 
-		// wait and verify listener
-		sleep();
+        assertEquals(1, events.size());
+        // last update only
+        assertEquals("value2", events.get(0));
+    }
 
-		assertEquals(1, events.size());
-        // last update
-		assertEquals("value2", events.get(0));
-	}
+    @Test
+    public void test_create_managedservice_delete()
+    throws Exception {
+        final ConfigurationAdmin cm = this.getConfigurationAdmin();
+        final Coordinator c = this.getCoordinatorService();
+        final Coordination coord = c.begin("cm-test2", 0);
+        final List<Boolean> events = new ArrayList<>();
 
-	@Test
-	public void test_create_managedservice_delete()
-	throws Exception {
-		ConfigurationAdmin cm = getService(ConfigurationAdmin.class);
-		Coordinator c = getService(Coordinator.class);
-		Coordination coord = c.begin("cm-test1", 0);
-		final List<Boolean> events = new ArrayList<>();
+        final String pid = getClass().getName() + ".mstestpid2";
 
-		String pid = getClass().getName() + ".mstestpid3";
+        try {
+            // create the configuration
+            final Dictionary<String,Object> props = new Hashtable<>();
+            props.put("key", "value");
 
-		try {
-			// create the configuration
-			Dictionary<String,Object> props = new Hashtable<>();
-			props.put("key", "value");
+            final Configuration conf = cm.getConfiguration(pid);
+            conf.update(props);
 
-			Configuration conf = cm.getConfiguration(pid);
-			conf.update(props);
+            // add managed service
+            final Dictionary<String,Object> msProps = new Hashtable<>();
+            msProps.put(Constants.SERVICE_PID, pid);
 
-			// add managed service
-			Dictionary<String,Object> msProps = new Hashtable<>();
-			msProps.put(Constants.SERVICE_PID, pid);
+            bundleContext.registerService(ManagedService.class.getName(),
+                new ManagedService() {
 
-			bundleContext.registerService(ManagedService.class.getName(),
-					new ManagedService() {
+                    @Override
+                    public void updated(Dictionary<String, ? > properties)
+                    throws ConfigurationException {
+                        events.add(properties != null);
+                    }
 
-						@Override
-						public void updated(Dictionary<String, ? > properties)
-								throws ConfigurationException {
-							events.add(properties != null);
-						}
+                }, msProps);
 
-					}, msProps);
+            // update configuration
+            props.put("key2", "value2");
+            conf.update(props);
 
-			// update configuration
-			props.put("key2", "value2");
-			conf.update(props);
+            // delete configuration
+            conf.delete();
 
-			// delete configuration
-			conf.delete();
+            assertEquals(0, events.size());
+        } finally {
+            coord.end();
+        }
 
-			assertEquals(0, events.size());
-		} finally {
-			coord.end();
-		}
+        // wait and verify listener
+        sleep();
 
-		// wait and verify listener
-		sleep();
-
-		assertEquals(1, events.size());
-		assertFalse(events.get(0));// no configuration, update with null
-	}
+        assertEquals(1, events.size());
+        assertFalse(events.get(0));// no configuration, update with null
+    }
 }
