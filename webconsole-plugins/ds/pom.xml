@@ -20,7 +20,7 @@
 
     <artifactId>org.apache.felix.webconsole.plugins.ds</artifactId>
     <packaging>bundle</packaging>
-    <version>2.1.1-SNAPSHOT</version>
+    <version>2.2.0</version>
 
     <name>Apache Felix Web Console Service Component Runtime/Declarative Services Plugin</name>
     <description>
@@ -31,7 +31,8 @@
         <connection>scm:git:https://github.com/apache/felix-dev.git</connection>
        <developerConnection>scm:git:https://github.com/apache/felix-dev.git</developerConnection>
         <url>https://gitbox.apache.org/repos/asf?p=felix-dev.git</url>
-    </scm>
+      <tag>org.apache.felix.webconsole.plugins.ds-2.2.0</tag>
+  </scm>
 
     <build>
         <plugins>
