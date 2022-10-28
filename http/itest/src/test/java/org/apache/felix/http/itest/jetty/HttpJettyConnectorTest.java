@@ -16,13 +16,14 @@
  * specific language governing permissions and limitations
  * under the License.
  */
-package org.apache.felix.http.itest;
+package org.apache.felix.http.itest.jetty;
 
 import static org.junit.Assert.assertTrue;
 
 import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.TimeUnit;
 
+import org.apache.felix.http.itest.BaseIntegrationTest;
 import org.apache.felix.http.jetty.ConnectorFactory;
 import org.eclipse.jetty.server.Connector;
 import org.eclipse.jetty.server.LocalConnector;
@@ -35,35 +36,30 @@ import org.ops4j.pax.exam.spi.reactors.PerMethod;
 import org.osgi.framework.ServiceRegistration;
 
 /**
- * @author <a href="mailto:dev@felix.apache.org">Felix Project Team</a>
+ * Tests for the Jetty ConnectorFactory support
  */
 @RunWith(PaxExam.class)
 @ExamReactorStrategy(PerMethod.class)
-public class HttpJettyConnectorTest extends BaseIntegrationTest
-{
+public class HttpJettyConnectorTest extends BaseIntegrationTest {
+
     @Test
-    public void testRegisterConnectorFactoryOk() throws Exception
-    {
+    public void testRegisterConnectorFactoryOk() throws Exception{
         final CountDownLatch openLatch = new CountDownLatch(1);
         final CountDownLatch closeLatch = new CountDownLatch(1);
 
-        ConnectorFactory factory = new ConnectorFactory()
-        {
+        ConnectorFactory factory = new ConnectorFactory() {
             @Override
-            public Connector createConnector(Server server)
-            {
+            public Connector createConnector(Server server) {
                 return new LocalConnector(server)
                 {
                     @Override
-                    public void doStart() throws Exception
-                    {
+                    public void doStart() throws Exception {
                         openLatch.countDown();
                         super.doStart();
                     }
 
                     @Override
-                    public void doStop() throws Exception
-                    {
+                    public void doStop() throws Exception {
                         closeLatch.countDown();
                         super.doStop();
                     }
@@ -72,7 +68,7 @@ public class HttpJettyConnectorTest extends BaseIntegrationTest
             }
         };
 
-        ServiceRegistration reg = m_context.registerService(ConnectorFactory.class.getName(), factory, null);
+        ServiceRegistration<ConnectorFactory> reg = m_context.registerService(ConnectorFactory.class, factory, null);
 
         // Should be opened automatically when picked up by the Jetty implementation...
         assertTrue("Felix HTTP Jetty did not open the Connection or pick up the registered ConnectionFactory", openLatch.await(5, TimeUnit.SECONDS));

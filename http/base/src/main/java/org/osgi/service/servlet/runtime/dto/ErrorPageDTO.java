@@ -23,7 +23,7 @@ package org.osgi.service.servlet.runtime.dto;
  * being used by a servlet context.
  *
  * @NotThreadSafe
- * @author $Id: c31329ea4864f9cd8c29a21081f3b08d78f0b308 $
+ * @author $Id: 4808832fce1d344fd58f1af913cb1a85aa374487 $
  */
 public class ErrorPageDTO extends BaseServletDTO {
 	/**

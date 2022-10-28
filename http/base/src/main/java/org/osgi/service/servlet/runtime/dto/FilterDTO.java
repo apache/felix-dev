@@ -27,7 +27,7 @@ import org.osgi.dto.DTO;
  * used for by a servlet context.
  * 
  * @NotThreadSafe
- * @author $Id: 5f71f7f381920718225af356f1af58a9da3400c5 $
+ * @author $Id: a77d5c579edd2de46fadb7722fa2edd528984e3f $
  */
 public class FilterDTO extends DTO {
 	/**
@@ -86,7 +86,7 @@ public class FilterDTO extends DTO {
 
 	/**
 	 * Service property identifying the servlet filter. In the case of a servlet
-	 * filter registered in the service registry and picked up by a Http
+	 * filter registered in the service registry and picked up by a Servlet
 	 * Whiteboard Implementation, this value is not negative and corresponds to
 	 * the service id in the registry. If the servlet filter has not been
 	 * registered in the service registry, the value is negative and a unique

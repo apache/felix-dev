@@ -17,87 +17,63 @@
  * under the License.
  */
 
-package org.apache.felix.http.itest;
+package org.apache.felix.http.itest.servletapi5;
 
 import static java.util.Arrays.asList;
-import static org.junit.Assert.assertTrue;
-import static org.osgi.service.http.whiteboard.HttpWhiteboardConstants.HTTP_WHITEBOARD_CONTEXT_NAME;
-import static org.osgi.service.http.whiteboard.HttpWhiteboardConstants.HTTP_WHITEBOARD_CONTEXT_PATH;
-import static org.osgi.service.http.whiteboard.HttpWhiteboardConstants.HTTP_WHITEBOARD_CONTEXT_SELECT;
-import static org.osgi.service.http.whiteboard.HttpWhiteboardConstants.HTTP_WHITEBOARD_SERVLET_ERROR_PAGE;
-import static org.osgi.service.http.whiteboard.HttpWhiteboardConstants.HTTP_WHITEBOARD_SERVLET_NAME;
-import static org.osgi.service.http.whiteboard.HttpWhiteboardConstants.HTTP_WHITEBOARD_SERVLET_PATTERN;
+import static org.osgi.service.servlet.whiteboard.HttpWhiteboardConstants.HTTP_WHITEBOARD_CONTEXT_NAME;
+import static org.osgi.service.servlet.whiteboard.HttpWhiteboardConstants.HTTP_WHITEBOARD_CONTEXT_PATH;
+import static org.osgi.service.servlet.whiteboard.HttpWhiteboardConstants.HTTP_WHITEBOARD_CONTEXT_SELECT;
+import static org.osgi.service.servlet.whiteboard.HttpWhiteboardConstants.HTTP_WHITEBOARD_SERVLET_ERROR_PAGE;
+import static org.osgi.service.servlet.whiteboard.HttpWhiteboardConstants.HTTP_WHITEBOARD_SERVLET_NAME;
+import static org.osgi.service.servlet.whiteboard.HttpWhiteboardConstants.HTTP_WHITEBOARD_SERVLET_PATTERN;
 
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Dictionary;
 import java.util.Hashtable;
 import java.util.List;
-import java.util.concurrent.CountDownLatch;
-import java.util.concurrent.TimeUnit;
 
-import javax.servlet.Servlet;
-import javax.servlet.http.HttpServletRequest;
-import javax.servlet.http.HttpServletResponse;
-
-import org.junit.After;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.ops4j.pax.exam.junit.PaxExam;
 import org.ops4j.pax.exam.spi.reactors.ExamReactorStrategy;
 import org.ops4j.pax.exam.spi.reactors.PerMethod;
-import org.osgi.framework.ServiceRegistration;
 import org.osgi.service.http.context.ServletContextHelper;
+
+import jakarta.servlet.Servlet;
+import jakarta.servlet.http.HttpServletRequest;
+import jakarta.servlet.http.HttpServletResponse;
 
 @RunWith(PaxExam.class)
 @ExamReactorStrategy(PerMethod.class)
-public class ErrorPageTest extends BaseIntegrationTest
-{
-    private List<ServiceRegistration<?>> registrations = new ArrayList<ServiceRegistration<?>>();
-
-    private CountDownLatch initLatch;
-    private CountDownLatch destroyLatch;
-
-    public void setupLatches(int count)
-    {
-        initLatch = new CountDownLatch(count);
-        destroyLatch = new CountDownLatch(count);
-    }
+public class ErrorPageTest extends Servlet5BaseIntegrationTest {
 
     public void setupErrorServlet(final Integer errorCode,
         final Class<? extends RuntimeException> exceptionType,
-        String context) throws Exception
-    {
+        String context) 
+    throws Exception {
         Dictionary<String, Object> servletProps = new Hashtable<String, Object>();
         servletProps.put(HTTP_WHITEBOARD_SERVLET_NAME, "servlet");
         servletProps.put(HTTP_WHITEBOARD_SERVLET_PATTERN, asList("/test"));
-        if (context != null)
-        {
+        if (context != null) {
             servletProps.put(HTTP_WHITEBOARD_CONTEXT_SELECT, "(" + HTTP_WHITEBOARD_CONTEXT_NAME + "=" + context + ")");
         }
 
-        TestServlet servletWithErrorCode = new TestServlet(initLatch, destroyLatch)
-        {
+        TestServlet servletWithErrorCode = new TestServlet() {
             private static final long serialVersionUID = 1L;
 
             @Override
             protected void doGet(HttpServletRequest req, HttpServletResponse resp)
-                throws IOException
-            {
-                if (errorCode != null)
-                {
+            throws IOException {
+                if (errorCode != null) {
                     resp.sendError(errorCode);
                 }
 
-                if (exceptionType != null)
-                {
+                if (exceptionType != null) {
                     RuntimeException exception;
-                    try
-                    {
-                        exception = exceptionType.newInstance();
-                    }
-                    catch (Exception e)
-                    {
+                    try {
+                        exception = exceptionType.getDeclaredConstructor().newInstance();
+                    } catch (Exception e) {
                         throw new RuntimeException(e);
                     }
                     throw exception;
@@ -111,49 +87,42 @@ public class ErrorPageTest extends BaseIntegrationTest
     public void setupErrorPage(final Integer errorCode,
         final Class<? extends Throwable> exceptionType,
         final String name,
-        String context) throws Exception
-    {
-        TestServlet errorPage = new TestServlet(initLatch, destroyLatch)
-        {
+        String context) throws Exception {
+        TestServlet errorPage = new TestServlet() {
             private static final long serialVersionUID = 1L;
 
             @Override
             protected void doGet(HttpServletRequest req, HttpServletResponse resp)
-                throws IOException
-            {
+                throws IOException {
                 resp.getWriter().print(name);
                 resp.flushBuffer();
             }
         };
 
         List<String> errors = new ArrayList<String>();
-        if (errorCode != null)
-        {
+        if (errorCode != null) {
             errors.add(errorCode.toString());
         }
-        if (exceptionType != null)
-        {
+        if (exceptionType != null) {
             errors.add(exceptionType.getName());
         }
 
         Dictionary<String, Object> errorPageProps = new Hashtable<String, Object>();
         errorPageProps.put(HTTP_WHITEBOARD_SERVLET_NAME, name);
         errorPageProps.put(HTTP_WHITEBOARD_SERVLET_ERROR_PAGE, errors);
-        if (context != null)
-        {
+        if (context != null) {
             errorPageProps.put(HTTP_WHITEBOARD_CONTEXT_SELECT, "(" + HTTP_WHITEBOARD_CONTEXT_NAME + "=" + context + ")");
         }
 
         registrations.add(m_context.registerService(Servlet.class.getName(), errorPage, errorPageProps));
     }
 
-    private void registerContext(String name, String path) throws InterruptedException
-    {
+    private void registerContext(String name, String path) throws InterruptedException {
         Dictionary<String, ?> properties = createDictionary(
                 HTTP_WHITEBOARD_CONTEXT_NAME, name,
                 HTTP_WHITEBOARD_CONTEXT_PATH, path);
 
-        ServletContextHelper servletContextHelper = new ServletContextHelper(m_context.getBundle()){
+        ServletContextHelper servletContextHelper = new ServletContextHelper(m_context.getBundle()) {
             // test
         };
         registrations.add(m_context.registerService(ServletContextHelper.class.getName(), servletContextHelper, properties));
@@ -161,67 +130,49 @@ public class ErrorPageTest extends BaseIntegrationTest
         Thread.sleep(500);
     }
 
-    @After
-    public void unregisterServices() throws InterruptedException
-    {
-        for (ServiceRegistration<?> serviceRegistration : registrations)
-        {
-            serviceRegistration.unregister();
-        }
-
-        assertTrue(destroyLatch.await(5, TimeUnit.SECONDS));
-
-        Thread.sleep(500);
-    }
-
     @Test
-    public void errorPageForErrorCodeIsSent() throws Exception
-    {
+    public void errorPageForErrorCodeIsSent() throws Exception {
         setupLatches(2);
         setupErrorServlet(501, null, null);
         setupErrorPage(501, null, "Error page", null);
-        assertTrue(initLatch.await(5, TimeUnit.SECONDS));
+        waitForInit();
 
         assertContent(501, "Error page", createURL("/test"));
     }
 
     @Test
-    public void errorPageForExceptionIsSent() throws Exception
-    {
+    public void errorPageForExceptionIsSent() throws Exception {
         setupLatches(2);
         setupErrorServlet(null, NullPointerException.class, null);
         setupErrorPage(null, NullPointerException.class, "Error page", null);
-        assertTrue(initLatch.await(5, TimeUnit.SECONDS));
+        waitForInit();
 
         assertContent(500, "Error page", createURL("/test"));
     }
 
     @Test
-    public void errorPageForParentExceptionIsSent() throws Exception
-    {
+    public void errorPageForParentExceptionIsSent() throws Exception {
         setupLatches(2);
         setupErrorServlet(null, NullPointerException.class, null);
         setupErrorPage(null, RuntimeException.class, "Error page", null);
-        assertTrue(initLatch.await(5, TimeUnit.SECONDS));
+        waitForInit();
 
         assertContent(500, "Error page", createURL("/test"));
     }
 
     @Test
-    public void errorPageForExceptionIsPreferedOverErrorCode() throws Exception
-    {
+    public void errorPageForExceptionIsPreferedOverErrorCode() throws Exception {
         setupLatches(3);
         setupErrorServlet(null, NullPointerException.class, null);
         setupErrorPage(500, null, "Error page 2", null);
         setupErrorPage(null, NullPointerException.class, "Error page 1", null);
-        assertTrue(initLatch.await(5, TimeUnit.SECONDS));
+        waitForInit();
 
         assertContent(500, "Error page 1", createURL("/test"));
     }
 
     @Test
-    public void errorPageIsHandledPerContext() throws Exception
-    {
+    public void errorPageIsHandledPerContext() throws Exception {
         registerContext("context1", "/one");
         registerContext("context2", "/two");
 
@@ -229,14 +180,13 @@ public class ErrorPageTest extends BaseIntegrationTest
         setupErrorServlet(501, null, "context1");
         setupErrorPage(501, null, "Error page 1", "context2");
         setupErrorPage(501, null, "Error page 2", "context1");
-        assertTrue(initLatch.await(5, TimeUnit.SECONDS));
+        waitForInit();
 
         assertContent(501, "Error page 2", createURL("/one/test"));
     }
 
     @Test
-    public void errorPageIsShadowedByHigherRankingPage() throws Exception
-    {
+    public void errorPageIsShadowedByHigherRankingPage() throws Exception {
         registerContext("context1", "/one");
         registerContext("context2", "/two");
 
@@ -245,7 +195,7 @@ public class ErrorPageTest extends BaseIntegrationTest
         setupErrorServlet(501, null, "context1");
         setupErrorPage(501, null, "Error page 1", "context1");
         setupErrorPage(501, null, "Error page 2", "context1");
-        assertTrue(initLatch.await(5, TimeUnit.SECONDS));
+        waitForInit();
 
         assertContent(501, "Error page 1", createURL("/one/test"));
     }

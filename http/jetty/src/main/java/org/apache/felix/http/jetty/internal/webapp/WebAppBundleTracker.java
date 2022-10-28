@@ -29,7 +29,6 @@ import java.util.concurrent.TimeUnit;
 import org.apache.felix.http.base.internal.logger.SystemLogger;
 import org.apache.felix.http.jetty.internal.JettyConfig;
 import org.eclipse.jetty.server.handler.ContextHandlerCollection;
-import org.eclipse.jetty.util.component.AbstractLifeCycle;
 import org.eclipse.jetty.util.component.LifeCycle;
 import org.osgi.framework.Bundle;
 import org.osgi.framework.BundleContext;
@@ -43,7 +42,7 @@ import org.osgi.util.tracker.ServiceTrackerCustomizer;
 
 import jakarta.servlet.ServletContext;
 
-public final class WebAppBundleTracker extends AbstractLifeCycle.AbstractLifeCycleListener
+public final class WebAppBundleTracker implements LifeCycle.Listener
 {
     private static final String HEADER_WEB_CONTEXT_PATH = "Web-ContextPath";
 

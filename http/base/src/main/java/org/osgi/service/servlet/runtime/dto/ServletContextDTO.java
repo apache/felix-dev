@@ -29,7 +29,7 @@ import org.osgi.dto.DTO;
  * {@link org.osgi.service.servlet.context.ServletContextHelper} service.
  * 
  * @NotThreadSafe
- * @author $Id: ba70fe752e3b3c5187135e9e3e028c1902ee1e30 $
+ * @author $Id: edeab606739715e38fdab31edab148665874d68a $
  */
 public class ServletContextDTO extends DTO {
 	/**
@@ -74,7 +74,7 @@ public class ServletContextDTO extends DTO {
 	 * Service property identifying the servlet context. In the case of a
 	 * servlet context backed by a
 	 * {@code org.osgi.service.servlet.context.ServletContextHelper} registered
-	 * in the service registry and picked up by a Http Whiteboard
+	 * in the service registry and picked up by a Servlet Whiteboard
 	 * Implementation, this value is not negative and corresponds to the service
 	 * id in the registry. If the servlet context is not backed by a service
 	 * registered in the service registry, the value is negative and a unique

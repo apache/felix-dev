@@ -28,7 +28,7 @@ package org.osgi.service.servlet.runtime.dto;
  * {@code org.osgi.service.servlet.context.ServletContextHelper}.
  * 
  * @NotThreadSafe
- * @author $Id: d8aec200665b81725cb9b23822f9f05a300d47a8 $
+ * @author $Id: a5e20a56ba5bc30ba593c3eaf973c6ce4f1c0c52 $
  */
 public class FailedErrorPageDTO extends ErrorPageDTO {
 

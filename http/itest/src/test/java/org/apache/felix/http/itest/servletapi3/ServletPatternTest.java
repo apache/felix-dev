@@ -17,7 +17,7 @@
  * under the License.
  */
 
-package org.apache.felix.http.itest;
+package org.apache.felix.http.itest.servletapi3;
 
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertTrue;
@@ -43,7 +43,7 @@ import javax.servlet.Servlet;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 
-import org.apache.felix.http.itest.HttpServiceRuntimeTest.TestResource;
+import org.apache.felix.http.itest.servletapi3.HttpServiceRuntimeTest.TestResource;
 import org.junit.After;
 import org.junit.Test;
 import org.junit.runner.RunWith;
@@ -55,38 +55,33 @@ import org.osgi.service.http.context.ServletContextHelper;
 
 @RunWith(PaxExam.class)
 @ExamReactorStrategy(PerMethod.class)
-public class ServletPatternTest extends BaseIntegrationTest
-{
+public class ServletPatternTest extends Servlet3BaseIntegrationTest {
+
     private List<ServiceRegistration<?>> registrations = new ArrayList<>();
 
     private CountDownLatch initLatch;
     private CountDownLatch destroyLatch;
 
-    public void setupLatches(int count)
-    {
+    public void setupLatches(int count) {
         initLatch = new CountDownLatch(count);
         destroyLatch = new CountDownLatch(count);
     }
 
-    public void setupServlet(final String name, String[] path, int rank, String context) throws Exception
-    {
+    public void setupServlet(final String name, String[] path, int rank, String context) throws Exception {
         Dictionary<String, Object> servletProps = new Hashtable<>();
         servletProps.put(HTTP_WHITEBOARD_SERVLET_NAME, name);
         servletProps.put(HTTP_WHITEBOARD_SERVLET_PATTERN, path);
         servletProps.put(SERVICE_RANKING, rank);
-        if (context != null)
-        {
+        if (context != null) {
             servletProps.put(HTTP_WHITEBOARD_CONTEXT_SELECT, "(" + HTTP_WHITEBOARD_CONTEXT_NAME + "=" + context + ")");
         }
 
-        TestServlet servletWithErrorCode = new TestServlet(initLatch, destroyLatch)
-        {
+        TestServlet servletWithErrorCode = new TestServlet(initLatch, destroyLatch) {
             private static final long serialVersionUID = 1L;
 
             @Override
             protected void doGet(HttpServletRequest req, HttpServletResponse resp)
-                throws IOException
-            {
+                throws IOException {
                 resp.getWriter().print(name);
                 resp.flushBuffer();
             }
@@ -95,8 +90,7 @@ public class ServletPatternTest extends BaseIntegrationTest
         registrations.add(m_context.registerService(Servlet.class.getName(), servletWithErrorCode, servletProps));
     }
 
-    private void setupContext(String name, String path) throws InterruptedException
-    {
+    private void setupContext(String name, String path) throws InterruptedException {
         Dictionary<String, ?> properties = createDictionary(
                 HTTP_WHITEBOARD_CONTEXT_NAME, name,
                 HTTP_WHITEBOARD_CONTEXT_PATH, path);
@@ -110,10 +104,8 @@ public class ServletPatternTest extends BaseIntegrationTest
     }
 
     @After
-    public void unregisterServices() throws InterruptedException
-    {
-        for (ServiceRegistration<?> serviceRegistration : registrations)
-        {
+    public void unregisterServices() throws InterruptedException {
+        for (ServiceRegistration<?> serviceRegistration : registrations) {
             serviceRegistration.unregister();
         }
 
@@ -123,8 +115,7 @@ public class ServletPatternTest extends BaseIntegrationTest
     }
 
     @Test
-    public void testHighRankReplaces() throws Exception
-    {
+    public void testHighRankReplaces() throws Exception {
         setupLatches(2);
 
         setupServlet("lowRankServlet", new String[] { "/foo", "/bar" }, 1, null);
@@ -138,20 +129,17 @@ public class ServletPatternTest extends BaseIntegrationTest
     }
 
     @Test
-    public void testHttpServiceReplaces() throws Exception
-    {
+    public void testHttpServiceReplaces() throws Exception {
         setupLatches(2);
 
         setupContext("contextA", "/test");
         setupServlet("whiteboardServlet", new String[]{ "/foo", "/bar" }, Integer.MAX_VALUE, "contextA");
 
-        TestServlet httpServiceServlet = new TestServlet(initLatch, destroyLatch)
-        {
+        TestServlet httpServiceServlet = new TestServlet(initLatch, destroyLatch) {
             private static final long serialVersionUID = 1L;
 
             @Override
-            protected void doGet(HttpServletRequest req, HttpServletResponse resp) throws IOException
-            {
+            protected void doGet(HttpServletRequest req, HttpServletResponse resp) throws IOException {
                 resp.getWriter().print("httpServiceServlet");
                 resp.flushBuffer();
             }
@@ -159,22 +147,18 @@ public class ServletPatternTest extends BaseIntegrationTest
 
         register("/test/foo", httpServiceServlet);
 
-        try
-        {
+        try {
             assertTrue(initLatch.await(5, TimeUnit.SECONDS));
 
             assertContent("whiteboardServlet", createURL("/test/bar"));
             assertContent("whiteboardServlet", createURL("/test/bar"));
-        }
-        finally
-        {
+        } finally {
             unregister("/test/foo");
         }
     }
 
     @Test
-    public void testSameRankDoesNotReplace() throws Exception
-    {
+    public void testSameRankDoesNotReplace() throws Exception {
         setupLatches(2);
 
         setupServlet("servlet1", new String[]{ "/foo", "/bar" }, 2, null);
@@ -188,8 +172,7 @@ public class ServletPatternTest extends BaseIntegrationTest
     }
 
     @Test
-    public void testHighRankResourceReplaces() throws Exception
-    {
+    public void testHighRankResourceReplaces() throws Exception {
         setupLatches(1);
 
         setupServlet("lowRankServlet", new String[]{ "/foo" }, 1, null);
@@ -212,15 +195,13 @@ public class ServletPatternTest extends BaseIntegrationTest
         assertContent(getTestHtmlContent(), createURL("/foo"));
     }
 
-    private String getTestHtmlContent() throws IOException
-    {
+    private String getTestHtmlContent() throws IOException {
         InputStream resourceAsStream = this.getClass().getResourceAsStream("/resource/test.html");
         return slurpAsString(resourceAsStream);
     }
 
     @Test
-    public void contextWithLongerPrefixIsChosen() throws Exception
-    {
+    public void contextWithLongerPrefixIsChosen() throws Exception {
         setupLatches(2);
 
         setupContext("contextA", "/a");
@@ -239,8 +220,7 @@ public class ServletPatternTest extends BaseIntegrationTest
     }
 
     @Test
-    public void contextWithLongerPrefixIsChosenWithWildcard() throws Exception
-    {
+    public void contextWithLongerPrefixIsChosenWithWildcard() throws Exception {
         setupLatches(2);
 
         setupContext("contextA", "/a");
@@ -259,8 +239,7 @@ public class ServletPatternTest extends BaseIntegrationTest
     }
 
     @Test
-    public void pathMatchingTest() throws Exception
-    {
+    public void pathMatchingTest() throws Exception {
         setupLatches(1);
 
         setupContext("contextA", "/a");

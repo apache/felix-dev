@@ -23,9 +23,9 @@ import org.osgi.framework.Filter;
 import jakarta.servlet.Servlet;
 
 /**
- * Defines standard constants for the Http Whiteboard services.
+ * Defines standard constants for the Servlet Whiteboard services.
  * 
- * @author $Id: 986fdabd5b705847f42d6306b8093659b9e7f68e $
+ * @author $Id: a4e33f07e0968d7a92c5ea3b70c3cf57ae2a5b13 $
  */
 public final class HttpWhiteboardConstants {
 	private HttpWhiteboardConstants() {
@@ -228,7 +228,6 @@ public final class HttpWhiteboardConstants {
 	 * The value of this service property must be of type {@code Boolean}.
 	 *
 	 * @see "Java Servlet Specification Version 3.0, Section 8.1.5 @MultipartConfig"
-	 * @since 1.1
 	 */
 	public static final String	HTTP_WHITEBOARD_SERVLET_MULTIPART_ENABLED	= "osgi.http.whiteboard.servlet.multipart.enabled";
 
@@ -244,7 +243,6 @@ public final class HttpWhiteboardConstants {
 	 * The value of this service property must be of type {@code Integer}.
 	 *
 	 * @see "Java Servlet Specification Version 3.0, Section 14.4 Deployment Descriptor Diagram"
-	 * @since 1.1
 	 */
 	public static final String	HTTP_WHITEBOARD_SERVLET_MULTIPART_FILESIZETHRESHOLD	= "osgi.http.whiteboard.servlet.multipart.fileSizeThreshold";
 
@@ -260,7 +258,6 @@ public final class HttpWhiteboardConstants {
 	 * The value of this service property must be of type {@code String}.
 	 *
 	 * @see "Java Servlet Specification Version 3.0, Section 14.4 Deployment Descriptor Diagram"
-	 * @since 1.1
 	 */
 	public static final String	HTTP_WHITEBOARD_SERVLET_MULTIPART_LOCATION	= "osgi.http.whiteboard.servlet.multipart.location";
 
@@ -275,7 +272,6 @@ public final class HttpWhiteboardConstants {
 	 * The value of this service property must be of type {@code Long}.
 	 *
 	 * @see "Java Servlet Specification Version 3.0, Section 14.4 Deployment Descriptor Diagram"
-	 * @since 1.1
 	 */
 	public static final String	HTTP_WHITEBOARD_SERVLET_MULTIPART_MAXFILESIZE	= "osgi.http.whiteboard.servlet.multipart.maxFileSize";
 
@@ -290,7 +286,6 @@ public final class HttpWhiteboardConstants {
 	 * The value of this service property must be of type {@code Long}.
 	 *
 	 * @see "Java Servlet Specification Version 3.0, Section 14.4 Deployment Descriptor Diagram"
-	 * @since 1.1
 	 */
 	public static final String	HTTP_WHITEBOARD_SERVLET_MULTIPART_MAXREQUESTSIZE	= "osgi.http.whiteboard.servlet.multipart.maxRequestSize";
 
@@ -426,19 +421,17 @@ public final class HttpWhiteboardConstants {
 	 * <p>
 	 * For {@link Preprocessor} services, the value of each initialization
 	 * parameter service property must be of type {@code String}.
-	 * 
-	 * @since 1.1
 	 */
 	public static final String	HTTP_WHITEBOARD_PREPROCESSOR_INIT_PARAM_PREFIX		= "preprocessor.init.";
 
 	/**
 	 * Service property to mark a Listener service as a Whiteboard service.
 	 * Listener services with this property set to the string value "true" will
-	 * be treated as Whiteboard services opting in to being handled by the Http
-	 * Whiteboard implementation. If the value "false" is specified, the service
-	 * is opting out and this case is treated exactly the same as if this
-	 * property is missing. If an invalid value is specified this is treated as
-	 * a failure.
+	 * be treated as Whiteboard services opting in to being handled by the
+	 * Servlet Whiteboard implementation. If the value "false" is specified, the
+	 * service is opting out and this case is treated exactly the same as if
+	 * this property is missing. If an invalid value is specified this is
+	 * treated as a failure.
 	 * <p>
 	 * The value of this service property must be of type {@code String}. Valid
 	 * values are "true" and "false" ignoring case.
@@ -529,21 +522,18 @@ public final class HttpWhiteboardConstants {
 	public static final String	HTTP_WHITEBOARD_RESOURCE_PREFIX				= "osgi.http.whiteboard.resource.prefix";
 
 	/**
-	 * Service property specifying the target filter to select the Http
+	 * Service property specifying the target filter to select the Servlet
 	 * Whiteboard implementation to process the service.
-	 * 
 	 * <p>
-	 * An Http Whiteboard implementation can define any number of service
+	 * An Servlet Whiteboard implementation can define any number of service
 	 * properties which can be referenced by the target filter. The service
 	 * properties should always include the
 	 * {@link org.osgi.service.servlet.runtime.HttpServiceRuntimeConstants#HTTP_SERVICE_ENDPOINT
 	 * osgi.http.endpoint} service property if the endpoint information is
 	 * known.
-	 * 
 	 * <p>
-	 * If this service property is not specified, then all Http Whiteboard
+	 * If this service property is not specified, then all Servlet Whiteboard
 	 * implementations can process the service.
-	 * 
 	 * <p>
 	 * The value of this service property must be of type {@code String} and be
 	 * a valid {@link Filter filter string}.
@@ -551,43 +541,14 @@ public final class HttpWhiteboardConstants {
 	public static final String	HTTP_WHITEBOARD_TARGET						= "osgi.http.whiteboard.target";
 
 	/**
-	 * If a servlet filter, error page or listener wants to be registered with
-	 * the Http Context(s) managed by the Http Service, they can select the
-	 * contexts having this property.
-	 * <p>
-	 * Servlets or resources registered using this property are treated as an
-	 * invalid registration.
-	 * 
-	 * @see #HTTP_SERVICE_CONTEXT_FILTER
-	 * @since 1.1
-	 */
-	public static final String	HTTP_SERVICE_CONTEXT_PROPERTY						= "osgi.http.whiteboard.context.httpservice";
-
-	/**
-	 * If a servlet filter, error page or listener wants to be registered with
-	 * the Http Context(s) managed by the Http Service, they can select the
-	 * contexts having the {@link #HTTP_SERVICE_CONTEXT_PROPERTY} property using
-	 * this filter.
-	 *
-	 * @see #HTTP_SERVICE_CONTEXT_PROPERTY
-	 * @since 1.1
-	 */
-	public static final String	HTTP_SERVICE_CONTEXT_FILTER							= "("
-			+ HTTP_SERVICE_CONTEXT_PROPERTY + "=*)";
-
-	/**
-	 * The name of the implementation capability for the Http Whiteboard
+	 * The name of the implementation capability for the Servlet Whiteboard
 	 * specification
-	 * 
-	 * @since 1.1
 	 */
 	public static final String	HTTP_WHITEBOARD_IMPLEMENTATION						= "osgi.http";
 
 	/**
-	 * The version of the implementation capability for the Http Whiteboard
+	 * The version of the implementation capability for the Servlet Whiteboard
 	 * specification
-	 * 
-	 * @since 1.1
 	 */
 	public static final String	HTTP_WHITEBOARD_SPECIFICATION_VERSION				= "2.0";
 }

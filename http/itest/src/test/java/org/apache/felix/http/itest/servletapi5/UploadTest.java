@@ -17,31 +17,23 @@
  * under the License.
  */
 
-package org.apache.felix.http.itest;
+package org.apache.felix.http.itest.servletapi5;
 
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertTrue;
-import static org.osgi.service.http.whiteboard.HttpWhiteboardConstants.HTTP_WHITEBOARD_SERVLET_MULTIPART_ENABLED;
-import static org.osgi.service.http.whiteboard.HttpWhiteboardConstants.HTTP_WHITEBOARD_SERVLET_MULTIPART_MAXFILESIZE;
-import static org.osgi.service.http.whiteboard.HttpWhiteboardConstants.HTTP_WHITEBOARD_SERVLET_PATTERN;
+import static org.osgi.service.servlet.whiteboard.HttpWhiteboardConstants.HTTP_WHITEBOARD_SERVLET_MULTIPART_ENABLED;
+import static org.osgi.service.servlet.whiteboard.HttpWhiteboardConstants.HTTP_WHITEBOARD_SERVLET_MULTIPART_MAXFILESIZE;
+import static org.osgi.service.servlet.whiteboard.HttpWhiteboardConstants.HTTP_WHITEBOARD_SERVLET_PATTERN;
 
 import java.io.IOException;
 import java.net.URL;
-import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Dictionary;
 import java.util.HashMap;
 import java.util.Hashtable;
-import java.util.List;
 import java.util.Map;
 import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.TimeUnit;
-
-import javax.servlet.Servlet;
-import javax.servlet.ServletException;
-import javax.servlet.http.HttpServletRequest;
-import javax.servlet.http.HttpServletResponse;
-import javax.servlet.http.Part;
 
 import org.apache.http.HttpEntity;
 import org.apache.http.client.methods.CloseableHttpResponse;
@@ -52,61 +44,46 @@ import org.apache.http.entity.mime.content.StringBody;
 import org.apache.http.impl.client.CloseableHttpClient;
 import org.apache.http.impl.client.HttpClients;
 import org.apache.http.util.EntityUtils;
-import org.junit.After;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.ops4j.pax.exam.junit.PaxExam;
 import org.ops4j.pax.exam.spi.reactors.ExamReactorStrategy;
 import org.ops4j.pax.exam.spi.reactors.PerMethod;
-import org.osgi.framework.ServiceRegistration;
+
+import jakarta.servlet.Servlet;
+import jakarta.servlet.ServletException;
+import jakarta.servlet.http.HttpServletRequest;
+import jakarta.servlet.http.HttpServletResponse;
+import jakarta.servlet.http.Part;
 
 @RunWith(PaxExam.class)
 @ExamReactorStrategy(PerMethod.class)
-public class UploadTest extends BaseIntegrationTest
-{
+public class UploadTest extends Servlet5BaseIntegrationTest {
+
     private static final String PATH = "/post";
 
-    private List<ServiceRegistration<?>> registrations = new ArrayList<ServiceRegistration<?>>();
-
-    private CountDownLatch initLatch;
-    private CountDownLatch destroyLatch;
     private CountDownLatch receivedLatch;
 
-    public void setupLatches(int count)
-    {
-        initLatch = new CountDownLatch(count);
-        destroyLatch = new CountDownLatch(count);
-        receivedLatch = new CountDownLatch(count);
-    }
-
-    public void setupServlet(final Map<String, Long> contents) throws Exception
-    {
-        setupLatches(1);
-
+    public void setupServlet(final Map<String, Long> contents) throws Exception {
+        long counter = this.getRuntimeCounter();
         Dictionary<String, Object> servletProps = new Hashtable<String, Object>();
         servletProps.put(HTTP_WHITEBOARD_SERVLET_PATTERN, PATH);
         servletProps.put(HTTP_WHITEBOARD_SERVLET_MULTIPART_ENABLED, Boolean.TRUE);
         servletProps.put(HTTP_WHITEBOARD_SERVLET_MULTIPART_MAXFILESIZE, 1024L);
 
-        TestServlet servletWithErrorCode = new TestServlet(initLatch, destroyLatch)
-        {
+        TestServlet servletWithErrorCode = new TestServlet() {
             private static final long serialVersionUID = 1L;
 
             @Override
             protected void doPost(HttpServletRequest req, HttpServletResponse resp)
-                    throws IOException, ServletException
-            {
-                try
-                {
+                    throws IOException, ServletException {
+                try {
                     final Collection<Part> parts = req.getParts();
-                    for(final Part p : parts)
-                    {
+                    for(final Part p : parts) {
                         contents.put(p.getName(), p.getSize());
                     }
                     resp.setStatus(201);
-                }
-                finally
-                {
+                } finally{
                     receivedLatch.countDown();
                 }
 
@@ -114,32 +91,17 @@ public class UploadTest extends BaseIntegrationTest
         };
 
         registrations.add(m_context.registerService(Servlet.class.getName(), servletWithErrorCode, servletProps));
-
-        assertTrue(initLatch.await(5, TimeUnit.SECONDS));
+        this.waitForRuntime(counter);
     }
 
-    @After
-    public void unregisterServices() throws InterruptedException
-    {
-        for (ServiceRegistration<?> serviceRegistration : registrations)
-        {
-            serviceRegistration.unregister();
-        }
-
-        assertTrue(destroyLatch.await(5, TimeUnit.SECONDS));
-    }
-
-    private static void postContent(final char c, final long length, final int expectedRT) throws IOException
-    {
+    private void postContent(final char c, final long length, final int expectedRT) throws IOException {
         final URL url = createURL(PATH);
         final CloseableHttpClient httpclient = HttpClients.createDefault();
-        try
-        {
+        try {
             final HttpPost httppost = new HttpPost(url.toExternalForm());
 
             final StringBuilder sb = new StringBuilder();
-            for(int i=0;i<length;i++)
-            {
+            for(int i=0;i<length;i++) {
                 sb.append(c);
             }
             final StringBody text = new StringBody(sb.toString(), ContentType.TEXT_PLAIN);
@@ -165,9 +127,8 @@ public class UploadTest extends BaseIntegrationTest
     }
 
     @Test
-    public void testUpload() throws Exception
-    {
-        setupLatches(2);
+    public void testUpload() throws Exception {
+        this.receivedLatch = new CountDownLatch(1);
 
         final Map<String, Long> contents = new HashMap<>();
         setupServlet(contents);
@@ -179,9 +140,8 @@ public class UploadTest extends BaseIntegrationTest
     }
 
     @Test
-    public void testMaxFileSize() throws Exception
-    {
-        setupLatches(2);
+    public void testMaxFileSize() throws Exception {
+        this.receivedLatch = new CountDownLatch(1);
 
         final Map<String, Long> contents = new HashMap<>();
         setupServlet(contents);

@@ -24,7 +24,7 @@ import org.osgi.dto.DTO;
  * Represents the services used to process a specific request.
  * 
  * @NotThreadSafe
- * @author $Id: f3d9f6ac1f3f37783c0ac218974f4a4001b05e73 $
+ * @author $Id: 75e500211a981521d21f53c0e4d45ba66654c62c $
  */
 public class RequestInfoDTO extends DTO {
 	/**

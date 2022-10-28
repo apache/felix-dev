@@ -27,7 +27,7 @@ package org.osgi.service.servlet.runtime.dto;
  * and does not point to an existing servlet context.
  * 
  * @NotThreadSafe
- * @author $Id: 3bda6964deaf7ad0765b2d99b4c89e783e6e1555 $
+ * @author $Id: 5a73d733ebf74d656f037d039ecc9ad4716b7d46 $
  */
 public class FailedListenerDTO extends ListenerDTO {
 

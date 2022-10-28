@@ -16,7 +16,7 @@
  * specific language governing permissions and limitations
  * under the License.
  */
-package org.apache.felix.http.itest;
+package org.apache.felix.http.itest.servletapi3;
 
 import static javax.servlet.http.HttpServletResponse.SC_NOT_FOUND;
 import static javax.servlet.http.HttpServletResponse.SC_OK;
@@ -40,49 +40,36 @@ import org.ops4j.pax.exam.spi.reactors.ExamReactorStrategy;
 import org.ops4j.pax.exam.spi.reactors.PerMethod;
 import org.osgi.service.http.HttpContext;
 
-/**
- * @author <a href="mailto:dev@felix.apache.org">Felix Project Team</a>
- */
 @RunWith(PaxExam.class)
 @ExamReactorStrategy(PerMethod.class)
-public class ResourceTest extends BaseIntegrationTest
-{
+public class ResourceTest extends Servlet3BaseIntegrationTest {
 
     @Test
-    public void testHandleResourceRegistrationOk() throws Exception
-    {
+    public void testHandleResourceRegistrationOk() throws Exception {
         CountDownLatch initLatch = new CountDownLatch(1);
         CountDownLatch destroyLatch = new CountDownLatch(1);
 
-        HttpContext context = new HttpContext()
-        {
+        HttpContext context = new HttpContext() {
             @Override
-            public boolean handleSecurity(HttpServletRequest request, HttpServletResponse response) throws IOException
-            {
+            public boolean handleSecurity(HttpServletRequest request, HttpServletResponse response) throws IOException {
                 return true;
             }
 
             @Override
-            public URL getResource(String name)
-            {
-                try
-                {
+            public URL getResource(String name) {
+                try {
                     File f = new File("src/test/resources/" + name);
-                    if (f.exists())
-                    {
+                    if (f.exists()) {
                         return f.toURI().toURL();
                     }
-                }
-                catch (MalformedURLException e)
-                {
+                } catch (MalformedURLException e) {
                     fail();
                 }
                 return null;
             }
 
             @Override
-            public String getMimeType(String name)
-            {
+            public String getMimeType(String name) {
                 return null;
             }
         };

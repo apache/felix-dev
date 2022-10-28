@@ -23,8 +23,7 @@ package org.osgi.service.servlet.runtime.dto;
  * problem.
  * 
  * @NotThreadSafe
- * @author $Id: ab753c468cc54608ed9ff7df6df98601d50b761c $
- * @since 1.1
+ * @author $Id: 5c725e17192d4f85fa9c5f4a5c088d1a5be3db5a $
  */
 public class FailedPreprocessorDTO extends PreprocessorDTO {
 

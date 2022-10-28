@@ -17,39 +17,33 @@
  * under the License.
  */
 
-package org.apache.felix.http.itest;
+package org.apache.felix.http.itest.servletapi5;
 
-import static javax.servlet.http.HttpServletResponse.SC_FORBIDDEN;
-import static javax.servlet.http.HttpServletResponse.SC_OK;
-import static org.junit.Assert.assertFalse;
-import static org.junit.Assert.assertTrue;
+import static jakarta.servlet.http.HttpServletResponse.SC_FORBIDDEN;
+import static jakarta.servlet.http.HttpServletResponse.SC_OK;
 
 import java.io.IOException;
 import java.net.URL;
 import java.util.Dictionary;
 import java.util.Hashtable;
-import java.util.concurrent.CountDownLatch;
-import java.util.concurrent.TimeUnit;
-
-import javax.servlet.Filter;
-import javax.servlet.FilterChain;
-import javax.servlet.Servlet;
-import javax.servlet.ServletException;
-import javax.servlet.http.HttpServletRequest;
-import javax.servlet.http.HttpServletResponse;
 
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.ops4j.pax.exam.junit.PaxExam;
 import org.ops4j.pax.exam.spi.reactors.ExamReactorStrategy;
 import org.ops4j.pax.exam.spi.reactors.PerMethod;
-import org.osgi.framework.ServiceRegistration;
-import org.osgi.service.http.whiteboard.HttpWhiteboardConstants;
+import org.osgi.service.servlet.whiteboard.HttpWhiteboardConstants;
+
+import jakarta.servlet.Filter;
+import jakarta.servlet.FilterChain;
+import jakarta.servlet.Servlet;
+import jakarta.servlet.ServletException;
+import jakarta.servlet.http.HttpServletRequest;
+import jakarta.servlet.http.HttpServletResponse;
 
 @RunWith(PaxExam.class)
 @ExamReactorStrategy(PerMethod.class)
-public class HttpWhiteboardTargetTest extends BaseIntegrationTest
-{
+public class HttpWhiteboardTargetTest extends Servlet5BaseIntegrationTest {
 
 	private static final String SERVICE_HTTP_PORT = "org.osgi.service.http.port";
 
@@ -58,18 +52,13 @@ public class HttpWhiteboardTargetTest extends BaseIntegrationTest
 	 * is registered with the whiteboard
 	 */
 	@Test
-	public void testServletNoTargetProperty() throws Exception
-	{
-		CountDownLatch initLatch = new CountDownLatch(1);
-		CountDownLatch destroyLatch = new CountDownLatch(1);
-
-		TestServlet servlet = new TestServlet(initLatch, destroyLatch)
-		{
+	public void testServletNoTargetProperty() throws Exception {
+        long counter = this.getRuntimeCounter();
+		TestServlet servlet = new TestServlet() {
 			private static final long serialVersionUID = 1L;
 
 			@Override
-			protected void doGet(HttpServletRequest req, HttpServletResponse resp) throws IOException
-			{
+			protected void doGet(HttpServletRequest req, HttpServletResponse resp) throws IOException {
 				resp.getWriter().print("It works!");
 				resp.flushBuffer();
 			}
@@ -79,16 +68,11 @@ public class HttpWhiteboardTargetTest extends BaseIntegrationTest
 		props.put(HttpWhiteboardConstants.HTTP_WHITEBOARD_SERVLET_PATTERN, "/servletAlias");
 		props.put(HttpWhiteboardConstants.HTTP_WHITEBOARD_FILTER_INIT_PARAM_PREFIX + ".myname", "servletName");
 
-		ServiceRegistration<?> reg = m_context.registerService(Servlet.class.getName(), servlet, props);
+		this.registrations.add(m_context.registerService(Servlet.class.getName(), servlet, props));
+        counter = this.waitForRuntime(counter);
 
-		try {
-			assertTrue(initLatch.await(5, TimeUnit.SECONDS));
-			URL testURL = createURL("/servletAlias");
-            assertContent("It works!", testURL);
-		} finally {
-				reg.unregister();
-		}
-		assertTrue(destroyLatch.await(5, TimeUnit.SECONDS));
+        URL testURL = createURL("/servletAlias");
+        assertContent("It works!", testURL);
 	}
 
 	/**
@@ -100,18 +84,13 @@ public class HttpWhiteboardTargetTest extends BaseIntegrationTest
 	 *
 	 */
 	@Test
-	public void testServletTargetMatchPort() throws Exception
-	{
-		CountDownLatch initLatch = new CountDownLatch(1);
-		CountDownLatch destroyLatch = new CountDownLatch(1);
-
-		TestServlet servlet = new TestServlet(initLatch, destroyLatch)
-		{
+	public void testServletTargetMatchPort() throws Exception {
+        long counter = this.getRuntimeCounter();
+		TestServlet servlet = new TestServlet() {
 			private static final long serialVersionUID = 1L;
 
 			@Override
-			protected void doGet(HttpServletRequest req, HttpServletResponse resp) throws IOException
-			{
+			protected void doGet(HttpServletRequest req, HttpServletResponse resp) throws IOException {
 				resp.getWriter().print("matchingServlet");
 				resp.flushBuffer();
 			}
@@ -122,17 +101,11 @@ public class HttpWhiteboardTargetTest extends BaseIntegrationTest
 		props.put(HttpWhiteboardConstants.HTTP_WHITEBOARD_FILTER_INIT_PARAM_PREFIX + ".myname", "servletName");
 		props.put(HttpWhiteboardConstants.HTTP_WHITEBOARD_TARGET, "(" + SERVICE_HTTP_PORT + "=8080" + ")");
 
-		ServiceRegistration<?> reg = m_context.registerService(Servlet.class.getName(), servlet, props);
+		this.registrations.add(m_context.registerService(Servlet.class.getName(), servlet, props));
+        counter = this.waitForRuntime(counter);
 
-		try {
-			assertTrue(initLatch.await(5, TimeUnit.SECONDS));
-			URL testURL = createURL("/servletAlias");
-            assertContent("matchingServlet", testURL);
-		} finally {
-			reg.unregister();
-		}
-
-		assertTrue(destroyLatch.await(5, TimeUnit.SECONDS));
+        URL testURL = createURL("/servletAlias");
+        assertContent("matchingServlet", testURL);
 	}
 
 	/**
@@ -141,18 +114,13 @@ public class HttpWhiteboardTargetTest extends BaseIntegrationTest
 	 *
 	 */
 	@Test
-	public void testServletTargetNotMatchPort() throws Exception
-	{
-		CountDownLatch initLatch = new CountDownLatch(1);
-		CountDownLatch destroyLatch = new CountDownLatch(1);
-
-		TestServlet nonMatchingServlet = new TestServlet(initLatch, destroyLatch)
-		{
+	public void testServletTargetNotMatchPort() throws Exception {
+        long counter = this.getRuntimeCounter();
+		TestServlet nonMatchingServlet = new TestServlet() {
 			private static final long serialVersionUID = 1L;
 
 			@Override
-			protected void doGet(HttpServletRequest req, HttpServletResponse resp) throws IOException
-			{
+			protected void doGet(HttpServletRequest req, HttpServletResponse resp) throws IOException {
 				resp.getWriter().print("nonMatchingServlet");
 				resp.flushBuffer();
 			}
@@ -163,16 +131,12 @@ public class HttpWhiteboardTargetTest extends BaseIntegrationTest
 		props.put(HttpWhiteboardConstants.HTTP_WHITEBOARD_FILTER_INIT_PARAM_PREFIX + ".myname", "servletName");
 		props.put(HttpWhiteboardConstants.HTTP_WHITEBOARD_TARGET, "(" + SERVICE_HTTP_PORT + "=8282" + ")");
 
-		ServiceRegistration<?> reg = m_context.registerService(Servlet.class.getName(), nonMatchingServlet, props);
+		this.registrations.add(m_context.registerService(Servlet.class.getName(), nonMatchingServlet, props));
+        counter = this.waitForRuntime(counter);
 
-		try {
-			// the servlet will not be registered, its init method will not be called, await must return false due to timeout
-			assertFalse(initLatch.await(5, TimeUnit.SECONDS));
-			URL testURL = createURL("/servletAlias");
-			assertResponseCode(404, testURL);
-		} finally {
-			reg.unregister();
-		}
+        // the servlet will not be registered
+        URL testURL = createURL("/servletAlias");
+        assertResponseCode(404, testURL);
 	}
 
 	/**
@@ -180,18 +144,13 @@ public class HttpWhiteboardTargetTest extends BaseIntegrationTest
 	 *
 	 */
 	@Test
-	public void testFilterNoTargetProperty() throws Exception
-	{
-		CountDownLatch initLatch = new CountDownLatch(3);
-		CountDownLatch destroyLatch = new CountDownLatch(3);
-
-		TestServlet servlet1 = new TestServlet(initLatch, destroyLatch)
-		{
+	public void testFilterNoTargetProperty() throws Exception {
+        long counter = this.getRuntimeCounter();
+		TestServlet servlet1 = new TestServlet() {
 			private static final long serialVersionUID = 1L;
 
 			@Override
-			protected void doGet(HttpServletRequest req, HttpServletResponse resp) throws IOException
-			{
+			protected void doGet(HttpServletRequest req, HttpServletResponse resp) throws IOException {
 				resp.getWriter().print("servlet1");
 				resp.flushBuffer();
 			}
@@ -201,13 +160,11 @@ public class HttpWhiteboardTargetTest extends BaseIntegrationTest
 		props1.put(HttpWhiteboardConstants.HTTP_WHITEBOARD_FILTER_INIT_PARAM_PREFIX + ".myname", "servlet1");
 		props1.put(HttpWhiteboardConstants.HTTP_WHITEBOARD_TARGET, "(" + SERVICE_HTTP_PORT + "=8080" + ")");
 
-		TestServlet servlet2 = new TestServlet(initLatch, destroyLatch)
-		{
+		TestServlet servlet2 = new TestServlet() {
 			private static final long serialVersionUID = 1L;
 
 			@Override
-			protected void doGet(HttpServletRequest req, HttpServletResponse resp) throws IOException
-			{
+			protected void doGet(HttpServletRequest req, HttpServletResponse resp) throws IOException {
 				resp.getWriter().print("servlet2");
 				resp.flushBuffer();
 			}
@@ -217,20 +174,15 @@ public class HttpWhiteboardTargetTest extends BaseIntegrationTest
 		props2.put(HttpWhiteboardConstants.HTTP_WHITEBOARD_FILTER_INIT_PARAM_PREFIX + ".myname", "servle2");
 		props2.put(HttpWhiteboardConstants.HTTP_WHITEBOARD_TARGET, "(" + SERVICE_HTTP_PORT + "=8080" + ")");
 
-		TestFilter filter = new TestFilter(initLatch, destroyLatch)
-		{
+		TestFilter filter = new TestFilter() {
 			@Override
-			protected void filter(HttpServletRequest req, HttpServletResponse resp, FilterChain chain) throws IOException, ServletException
-			{
+			protected void filter(HttpServletRequest req, HttpServletResponse resp, FilterChain chain) throws IOException, ServletException {
 				String param = req.getParameter("param");
-				if("forbidden".equals(param))
-				{
+				if ("forbidden".equals(param)) {
 					resp.reset();
 					resp.sendError(SC_FORBIDDEN);
 					resp.flushBuffer();
-				}
-				else
-				{
+				} else {
 					chain.doFilter(req, resp);
 				}
 			}
@@ -240,11 +192,12 @@ public class HttpWhiteboardTargetTest extends BaseIntegrationTest
 		props.put(HttpWhiteboardConstants.HTTP_WHITEBOARD_FILTER_PATTERN, "/servlet/1");
 		props.put(HttpWhiteboardConstants.HTTP_WHITEBOARD_FILTER_INIT_PARAM_PREFIX + ".myname", "servletName");
 
-		ServiceRegistration<?> reg1 = m_context.registerService(Servlet.class.getName(), servlet1, props1);
-		ServiceRegistration<?> reg2 = m_context.registerService(Servlet.class.getName(), servlet2, props2);
-		ServiceRegistration<?> reg = m_context.registerService(Filter.class.getName(), filter, props);
-
-		assertTrue(initLatch.await(5, TimeUnit.SECONDS));
+		this.registrations.add(m_context.registerService(Servlet.class.getName(), servlet1, props1));
+        counter = this.waitForRuntime(counter);
+		this.registrations.add(m_context.registerService(Servlet.class.getName(), servlet2, props2));
+        counter = this.waitForRuntime(counter);
+		this.registrations.add(m_context.registerService(Filter.class.getName(), filter, props));
+        counter = this.waitForRuntime(counter);
 
 		assertResponseCode(SC_FORBIDDEN, createURL("/servlet/1?param=forbidden"));
 		assertContent("servlet1", createURL("/servlet/1?param=any"));
@@ -252,27 +205,16 @@ public class HttpWhiteboardTargetTest extends BaseIntegrationTest
 
 		assertResponseCode(SC_OK, createURL("/servlet/2?param=forbidden"));
 		assertContent("servlet2", createURL("/servlet/2?param=forbidden"));
-
-		reg1.unregister();
-		reg2.unregister();
-		reg.unregister();
-
-		assertTrue(destroyLatch.await(5, TimeUnit.SECONDS));
 	}
 
 	@Test
-	public void testFilterTargetMatchPort() throws Exception
-	{
-		CountDownLatch initLatch = new CountDownLatch(2);
-		CountDownLatch destroyLatch = new CountDownLatch(2);
-
-		TestServlet servlet = new TestServlet(initLatch, destroyLatch)
-		{
+	public void testFilterTargetMatchPort() throws Exception {
+        long counter = this.getRuntimeCounter();
+		TestServlet servlet = new TestServlet() {
 			private static final long serialVersionUID = 1L;
 
 			@Override
-			protected void doGet(HttpServletRequest req, HttpServletResponse resp) throws IOException
-			{
+			protected void doGet(HttpServletRequest req, HttpServletResponse resp) throws IOException {
 				resp.getWriter().print("servlet");
 				resp.flushBuffer();
 			}
@@ -282,20 +224,15 @@ public class HttpWhiteboardTargetTest extends BaseIntegrationTest
 		sprops.put(HttpWhiteboardConstants.HTTP_WHITEBOARD_FILTER_INIT_PARAM_PREFIX + ".myname", "servlet1");
 		sprops.put(HttpWhiteboardConstants.HTTP_WHITEBOARD_TARGET, "(" + SERVICE_HTTP_PORT + "=8080" + ")");
 
-		TestFilter filter = new TestFilter(initLatch, destroyLatch)
-		{
+		TestFilter filter = new TestFilter() {
 			@Override
-			protected void filter(HttpServletRequest req, HttpServletResponse resp, FilterChain chain) throws IOException, ServletException
-			{
+			protected void filter(HttpServletRequest req, HttpServletResponse resp, FilterChain chain) throws IOException, ServletException {
 				String param = req.getParameter("param");
-				if("forbidden".equals(param))
-				{
+				if("forbidden".equals(param)) {
 					resp.reset();
 					resp.sendError(SC_FORBIDDEN);
 					resp.flushBuffer();
-				}
-				else
-				{
+				} else {
 					chain.doFilter(req, resp);
 				}
 			}
@@ -306,37 +243,24 @@ public class HttpWhiteboardTargetTest extends BaseIntegrationTest
 		fprops.put(HttpWhiteboardConstants.HTTP_WHITEBOARD_FILTER_INIT_PARAM_PREFIX + ".myname", "servletName");
 		fprops.put(HttpWhiteboardConstants.HTTP_WHITEBOARD_TARGET, "(" + SERVICE_HTTP_PORT + "=8080" + ")");
 
-		ServiceRegistration<?> sreg = m_context.registerService(Servlet.class.getName(), servlet, sprops);
-		ServiceRegistration<?> freg = m_context.registerService(Filter.class.getName(), filter, fprops);
-
-		assertTrue(initLatch.await(5, TimeUnit.SECONDS));
+		this.registrations.add(m_context.registerService(Servlet.class.getName(), servlet, sprops));
+        counter = this.waitForRuntime(counter);
+		this.registrations.add(m_context.registerService(Filter.class.getName(), filter, fprops));
+        counter = this.waitForRuntime(counter);
 
 		assertResponseCode(SC_FORBIDDEN, createURL("/servlet?param=forbidden"));
 		assertContent("servlet", createURL("/servlet?param=any"));
 		assertContent("servlet", createURL("/servlet"));
-
-		sreg.unregister();
-		freg.unregister();
-
-		assertTrue(destroyLatch.await(5, TimeUnit.SECONDS));
 	}
 
 	@Test
-	public void testFilterTargetNotMatchPort() throws Exception
-	{
-		CountDownLatch servletInitLatch = new CountDownLatch(1);
-		CountDownLatch servletDestroyLatch = new CountDownLatch(1);
-
-		CountDownLatch filterInitLatch = new CountDownLatch(1);
-		CountDownLatch filterDestroyLatch = new CountDownLatch(1);
-
-		TestServlet servlet = new TestServlet(servletInitLatch, servletDestroyLatch)
-		{
+	public void testFilterTargetNotMatchPort() throws Exception {
+        long counter = this.getRuntimeCounter();
+		TestServlet servlet = new TestServlet() {
 			private static final long serialVersionUID = 1L;
 
 			@Override
-			protected void doGet(HttpServletRequest req, HttpServletResponse resp) throws IOException
-			{
+			protected void doGet(HttpServletRequest req, HttpServletResponse resp) throws IOException {
 				resp.getWriter().print("servlet");
 				resp.flushBuffer();
 			}
@@ -346,20 +270,15 @@ public class HttpWhiteboardTargetTest extends BaseIntegrationTest
 		sprops.put(HttpWhiteboardConstants.HTTP_WHITEBOARD_FILTER_INIT_PARAM_PREFIX + ".myname", "servlet1");
 		sprops.put(HttpWhiteboardConstants.HTTP_WHITEBOARD_TARGET, "(" + SERVICE_HTTP_PORT + "=8080" + ")");
 
-		TestFilter filter = new TestFilter(filterInitLatch, filterDestroyLatch)
-		{
+		TestFilter filter = new TestFilter() {
 			@Override
-			protected void filter(HttpServletRequest req, HttpServletResponse resp, FilterChain chain) throws IOException, ServletException
-			{
+			protected void filter(HttpServletRequest req, HttpServletResponse resp, FilterChain chain) throws IOException, ServletException {
 				String param = req.getParameter("param");
-				if("forbidden".equals(param))
-				{
+				if("forbidden".equals(param)) {
 					resp.reset();
 					resp.sendError(SC_FORBIDDEN);
 					resp.flushBuffer();
-				}
-				else
-				{
+				} else {
 					chain.doFilter(req, resp);
 				}
 			}
@@ -370,23 +289,16 @@ public class HttpWhiteboardTargetTest extends BaseIntegrationTest
 		fprops.put(HttpWhiteboardConstants.HTTP_WHITEBOARD_FILTER_INIT_PARAM_PREFIX + ".myname", "servletName");
 		fprops.put(HttpWhiteboardConstants.HTTP_WHITEBOARD_TARGET, "(" + SERVICE_HTTP_PORT + "=8181" + ")");
 
-		ServiceRegistration<?> sreg = m_context.registerService(Servlet.class.getName(), servlet, sprops);
-		ServiceRegistration<?> freg = m_context.registerService(Filter.class.getName(), filter, fprops);
+		this.registrations.add(m_context.registerService(Filter.class.getName(), filter, fprops));
+		this.registrations.add(m_context.registerService(Servlet.class.getName(), servlet, sprops));
+        counter = this.waitForRuntime(counter);
 
 		// servlet is registered
-		assertTrue(servletInitLatch.await(5, TimeUnit.SECONDS));
-		// fitler is not registered, timeout occurs
-		assertFalse(filterInitLatch.await(5, TimeUnit.SECONDS));
+		// fitler is not registered
 
 		assertResponseCode(SC_OK, createURL("/servlet?param=forbidden"));
 		assertContent("servlet", createURL("/servlet?param=forbidden"));
 		assertContent("servlet", createURL("/servlet?param=any"));
 		assertContent("servlet", createURL("/servlet"));
-
-		sreg.unregister();
-		freg.unregister();
-
-		assertTrue(servletDestroyLatch.await(5, TimeUnit.SECONDS));
-		assertFalse(filterDestroyLatch.await(5, TimeUnit.SECONDS));
 	}
 }

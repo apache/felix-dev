@@ -23,7 +23,7 @@ package org.osgi.service.servlet.runtime.dto;
  * context.
  * 
  * @NotThreadSafe
- * @author $Id: 296b28fed893e951c34a4d2e4edf27f720ff2f9a $
+ * @author $Id: 61a5c684d79094916514bd3ef1053763b5857121 $
  */
 public class ServletDTO extends BaseServletDTO {
 	/**
@@ -37,7 +37,6 @@ public class ServletDTO extends BaseServletDTO {
 
 	/**
 	 * Specifies whether multipart support is enabled.
-	 * @since 1.1
 	 */
 	public boolean				multipartEnabled;
 
@@ -46,7 +45,6 @@ public class ServletDTO extends BaseServletDTO {
 	 * disk. If multipart is not enabled for this servlet, {@code 0} is
 	 * returned.
 	 * 
-	 * @since 1.1
 	 * @see #multipartEnabled
 	 */
 	public int					multipartFileSizeThreshold;
@@ -55,7 +53,6 @@ public class ServletDTO extends BaseServletDTO {
 	 * Specifies the location where the files can be stored on disk. If
 	 * multipart is not enabled for this servlet, {@code null} is returned.
 	 * 
-	 * @since 1.1
 	 * @see #multipartEnabled
 	 */
 	public String				multipartLocation;
@@ -64,7 +61,6 @@ public class ServletDTO extends BaseServletDTO {
 	 * Specifies the maximum size of a file being uploaded. If multipart is not
 	 * enabled for this servlet, {@code 0} is returned.
 	 * 
-	 * @since 1.1
 	 * @see #multipartEnabled
 	 */
 	public long					multipartMaxFileSize;
@@ -73,7 +69,6 @@ public class ServletDTO extends BaseServletDTO {
 	 * Specifies the maximum request size. If multipart is not enabled for this
 	 * servlet, {@code 0} is returned.
 	 * 
-	 * @since 1.1
 	 * @see #multipartEnabled
 	 */
 	public long					multipartMaxRequestSize;

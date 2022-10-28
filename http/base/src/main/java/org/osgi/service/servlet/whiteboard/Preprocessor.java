@@ -48,7 +48,7 @@ import org.osgi.annotation.versioning.ConsumerType;
  * are passed as init parameters to this service.
  * 
  * @ThreadSafe
- * @author $Id: 2e23a38f538d8f19740c6819a346d0fef70c2128 $
+ * @author $Id: 05d8e702924b076e77ec08fe42817a983ca37a2c $
  */
 @ConsumerType
 public interface Preprocessor extends Filter {

@@ -25,7 +25,7 @@ import org.osgi.framework.dto.ServiceReferenceDTO;
  * Represents the state of a Http Service Runtime.
  * 
  * @NotThreadSafe
- * @author $Id: 2d4dff10956db843a122d231cff2f1fbceb568b3 $
+ * @author $Id: 47eaebcf0cc13755e836eec4e3cfa2987c4f155e $
  */
 public class RuntimeDTO extends DTO {
 
@@ -42,8 +42,6 @@ public class RuntimeDTO extends DTO {
 	 * the Http Service Runtime. The returned array may be empty if the Http
 	 * Service Runtime is currently not using any
 	 * {@code  org.osgi.service.servlet.whiteboard.Preprocessor} objects.
-	 * 
-	 * @since 1.1
 	 */
 	public PreprocessorDTO[]			preprocessorDTOs;
 
@@ -81,8 +79,6 @@ public class RuntimeDTO extends DTO {
 	 * {@code org.osgi.service.servlet.whiteboard.Preprocessor} services
 	 * associated with this runtime but currently not used due to some problem.
 	 * The returned array may be empty.
-	 *
-	 * @since 1.1
 	 */
 	public FailedPreprocessorDTO[]		failedPreprocessorDTOs;
 

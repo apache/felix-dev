@@ -35,7 +35,7 @@ package org.osgi.service.servlet.runtime.dto;
  * {@code FailedServletContextDTO}.
  *
  * @NotThreadSafe
- * @author $Id: a34bc53757b13933cfb9748a70d76f6256eb8c6c $
+ * @author $Id: 501844f35a0a350c765882eec19e283c93290002 $
  */
 public class FailedServletContextDTO extends ServletContextDTO {
 

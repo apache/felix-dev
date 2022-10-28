@@ -17,61 +17,48 @@
  * under the License.
  */
 
-package org.apache.felix.http.itest;
+package org.apache.felix.http.itest.servletapi5;
 
-import static javax.servlet.http.HttpServletResponse.SC_NOT_FOUND;
-import static javax.servlet.http.HttpServletResponse.SC_OK;
-import static org.junit.Assert.assertTrue;
+import static jakarta.servlet.http.HttpServletResponse.SC_NOT_FOUND;
+import static jakarta.servlet.http.HttpServletResponse.SC_OK;
 
 import java.io.IOException;
-import java.util.concurrent.CountDownLatch;
-import java.util.concurrent.TimeUnit;
 
-import javax.servlet.AsyncContext;
-import javax.servlet.DispatcherType;
-import javax.servlet.ServletException;
-import javax.servlet.http.HttpServletRequest;
-import javax.servlet.http.HttpServletResponse;
+import jakarta.servlet.AsyncContext;
+import jakarta.servlet.DispatcherType;
+import jakarta.servlet.Servlet;
+import jakarta.servlet.ServletException;
+import jakarta.servlet.http.HttpServletRequest;
+import jakarta.servlet.http.HttpServletResponse;
 
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.ops4j.pax.exam.junit.PaxExam;
 import org.ops4j.pax.exam.spi.reactors.ExamReactorStrategy;
 import org.ops4j.pax.exam.spi.reactors.PerMethod;
+import org.osgi.framework.ServiceRegistration;
 
-/**
- * @author <a href="mailto:dev@felix.apache.org">Felix Project Team</a>
- */
 @RunWith(PaxExam.class)
 @ExamReactorStrategy(PerMethod.class)
-public class AsyncTest extends BaseIntegrationTest
-{
+public class AsyncServletTest extends Servlet5BaseIntegrationTest {
 
     /**
      * Tests that we can use an asynchronous servlet (introduced in Servlet 3.0 spec).
      */
     @Test
-    public void testAsyncServletOk() throws Exception
-    {
-        CountDownLatch initLatch = new CountDownLatch(1);
-        CountDownLatch destroyLatch = new CountDownLatch(1);
-
-        TestServlet servlet = new TestServlet(initLatch, destroyLatch)
-        {
+    public void testAsyncServletOk() throws Exception {
+        this.setupLatches(1);
+        TestServlet servlet = new TestServlet() {
             private static final long serialVersionUID = 1L;
 
             @Override
-            protected void doGet(HttpServletRequest req, HttpServletResponse resp) throws ServletException, IOException
-            {
+            protected void doGet(HttpServletRequest req, HttpServletResponse resp) throws ServletException, IOException {
                 final AsyncContext asyncContext = req.startAsync(req, resp);
                 asyncContext.setTimeout(2000);
-                asyncContext.start(new Runnable()
-                {
+                asyncContext.start(new Runnable() {
                     @Override
-                    public void run()
-                    {
-                        try
-                        {
+                    public void run() {
+                        try {
                             // Simulate a long running process...
                             Thread.sleep(1000);
 
@@ -80,13 +67,9 @@ public class AsyncTest extends BaseIntegrationTest
                             response.getWriter().printf("Hello Async world!");
 
                             asyncContext.complete();
-                        }
-                        catch (InterruptedException e)
-                        {
+                        } catch (InterruptedException e) {
                             Thread.currentThread().interrupt();
-                        }
-                        catch (Exception e)
-                        {
+                        } catch (Exception e) {
                             e.printStackTrace();
                         }
                     }
@@ -94,15 +77,15 @@ public class AsyncTest extends BaseIntegrationTest
             }
         };
 
-        register("/test", servlet);
+        final ServiceRegistration<Servlet> reg = registerAsyncServlet("/test", servlet);
 
-        assertTrue(initLatch.await(5, TimeUnit.SECONDS));
+        this.waitForInit();
 
         assertContent("Hello Async world!", createURL("/test"));
 
-        unregister("/test");
+        unregister(reg);
 
-        assertTrue(destroyLatch.await(5, TimeUnit.SECONDS));
+        this.waitForDestroy();
 
         assertResponseCode(SC_NOT_FOUND, createURL("/test"));
     }
@@ -111,44 +94,32 @@ public class AsyncTest extends BaseIntegrationTest
      * Tests that we can use an asynchronous servlet (introduced in Servlet 3.0 spec) using the dispatching functionality.
      */
     @Test
-    public void testAsyncServletWithDispatchOk() throws Exception
-    {
-        CountDownLatch initLatch = new CountDownLatch(1);
-        CountDownLatch destroyLatch = new CountDownLatch(1);
-
-        TestServlet servlet = new TestServlet(initLatch, destroyLatch)
-        {
+    public void testAsyncServletWithDispatchOk() throws Exception {
+        this.setupLatches(1);
+        TestServlet servlet = new TestServlet() {
             private static final long serialVersionUID = 1L;
-
+ 
             @Override
-            protected void doGet(final HttpServletRequest req, HttpServletResponse resp) throws ServletException, IOException
-            {
+            protected void doGet(final HttpServletRequest req, HttpServletResponse resp) throws ServletException, IOException {
                 DispatcherType dispatcherType = req.getDispatcherType();
-                if (DispatcherType.REQUEST == dispatcherType)
-                {
+                if (DispatcherType.REQUEST == dispatcherType) {
                     final AsyncContext asyncContext = req.startAsync(req, resp);
-                    asyncContext.start(new Runnable()
-                    {
+                    asyncContext.start(new Runnable() {
                         @Override
-                        public void run()
-                        {
-                            try
-                            {
+                        public void run() {
+                            try {
                                 // Simulate a long running process...
                                 Thread.sleep(1000);
 
                                 asyncContext.getRequest().setAttribute("msg", "Hello Async world!");
                                 asyncContext.dispatch();
-                            }
-                            catch (InterruptedException e)
-                            {
+                            } catch (InterruptedException e) {
                                 Thread.currentThread().interrupt();
                             }
                         }
                     });
                 }
-                else if (DispatcherType.ASYNC == dispatcherType)
-                {
+                else if (DispatcherType.ASYNC == dispatcherType) {
                     String response = (String) req.getAttribute("msg");
                     resp.setStatus(SC_OK);
                     resp.getWriter().printf(response);
@@ -157,15 +128,15 @@ public class AsyncTest extends BaseIntegrationTest
             }
         };
 
-        register("/test", servlet);
+        final ServiceRegistration<Servlet> reg = registerAsyncServlet("/test", servlet);
 
-        assertTrue(initLatch.await(5, TimeUnit.SECONDS));
+        this.waitForInit();
 
         assertContent("Hello Async world!", createURL("/test"));
 
-        unregister("/test");
+        unregister(reg);
 
-        assertTrue(destroyLatch.await(5, TimeUnit.SECONDS));
+        this.waitForDestroy();
 
         assertResponseCode(SC_NOT_FOUND, createURL("/test"));
     }

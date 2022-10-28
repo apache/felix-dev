@@ -17,9 +17,8 @@
  * under the License.
  */
 
-package org.apache.felix.http.itest;
+package org.apache.felix.http.itest.servletapi3;
 
-import static javax.servlet.http.HttpServletResponse.SC_NOT_FOUND;
 import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertTrue;
@@ -32,7 +31,6 @@ import java.util.List;
 import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.TimeUnit;
 
-import javax.naming.directory.SearchControls;
 import javax.servlet.Filter;
 import javax.servlet.FilterChain;
 import javax.servlet.FilterConfig;
@@ -58,46 +56,39 @@ import org.osgi.service.http.runtime.HttpServiceRuntime;
 
 @RunWith(PaxExam.class)
 @ExamReactorStrategy(PerMethod.class)
-public class HttpServiceTest extends BaseIntegrationTest
-{
+public class HttpServiceTest extends Servlet3BaseIntegrationTest {
 
     private List<ServiceRegistration<?>> registrations = new ArrayList<ServiceRegistration<?>>();
 
     private CountDownLatch initLatch;
     private CountDownLatch destroyLatch;
 
-    public void setupLatches(int count)
-    {
+    public void setupLatches(int count) {
         initLatch = new CountDownLatch(count);
         destroyLatch = new CountDownLatch(count);
     }
 
-    public void setupOldWhiteboardFilter(final String pattern) throws Exception
-    {
+    public void setupOldWhiteboardFilter(final String pattern) throws Exception  {
         Dictionary<String, Object> servletProps = new Hashtable<String, Object>();
         servletProps.put("pattern", pattern);
 
-        final Filter f = new Filter()
-        {
+        final Filter f = new Filter() {
 
             @Override
-            public void init(FilterConfig filterConfig) throws ServletException
-            {
+            public void init(FilterConfig filterConfig) throws ServletException {
                 initLatch.countDown();
             }
 
             @Override
             public void doFilter(ServletRequest request, ServletResponse response, FilterChain chain)
-                    throws IOException, ServletException
-            {
+                    throws IOException, ServletException {
                 response.getWriter().print("FILTER-");
                 response.flushBuffer();
                 chain.doFilter(request, response);
             }
 
             @Override
-            public void destroy()
-            {
+            public void destroy() {
                 destroyLatch.countDown();
             }
         };
@@ -106,10 +97,8 @@ public class HttpServiceTest extends BaseIntegrationTest
     }
 
     @After
-    public void unregisterServices() throws InterruptedException
-    {
-        for (ServiceRegistration<?> serviceRegistration : registrations)
-        {
+    public void unregisterServices() throws InterruptedException {
+        for (ServiceRegistration<?> serviceRegistration : registrations) {
             serviceRegistration.unregister();
         }
 
@@ -119,17 +108,14 @@ public class HttpServiceTest extends BaseIntegrationTest
     }
 
     @Test
-    public void testServletAndOldWhiteboardFilter() throws Exception
-    {
+    public void testServletAndOldWhiteboardFilter() throws Exception  {
         final HttpService service = this.getHttpService();
-        service.registerServlet("/tesths", new TestServlet()
-        {
+        service.registerServlet("/tesths", new TestServlet() {
             private static final long serialVersionUID = 1L;
 
             @Override
             protected void doGet(HttpServletRequest req, HttpServletResponse resp)
-                throws IOException
-            {
+                throws IOException {
                 resp.getWriter().print("helloworld");
                 resp.flushBuffer();
             }
@@ -138,14 +124,11 @@ public class HttpServiceTest extends BaseIntegrationTest
         this.setupLatches(1);
         this.setupOldWhiteboardFilter(".*");
         assertTrue(initLatch.await(5, TimeUnit.SECONDS));
-        final HttpServiceRuntime rt = this.getService(HttpServiceRuntime.class.getName());
+        final HttpServiceRuntime rt = this.getService(HttpServiceRuntime.class);
         System.out.println(rt.getRuntimeDTO());
-        try
-        {
+        try {
             assertContent("FILTER-helloworld", createURL("/tesths"));
-        }
-        finally
-        {
+        } finally {
             service.unregister("/tesths");
         }
     }
@@ -154,8 +137,7 @@ public class HttpServiceTest extends BaseIntegrationTest
      * Tests the starting of Jetty.
      */
     @Test
-    public void testHttpServiceCapabiltiy() throws Exception
-    {
+    public void testHttpServiceCapabiltiy() throws Exception {
     	setupLatches(0);
     	
         Bundle httpJettyBundle = getHttpJettyBundle();
@@ -188,5 +170,4 @@ public class HttpServiceTest extends BaseIntegrationTest
 		
 		assertTrue("Missing HttpService capability", found);
     }
-    
 }

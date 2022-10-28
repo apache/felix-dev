@@ -26,7 +26,7 @@ import org.osgi.dto.DTO;
  * Represents common information about a {@code jakarta.servlet.Servlet} service.
  *
  * @NotThreadSafe
- * @author $Id: d032fb76a9922508ba7d4084ee20079eb6df8a8f $
+ * @author $Id: 72b16d073d8bba0a152c934949f613716a42f331 $
  */
 public abstract class BaseServletDTO extends DTO {
 	/**
@@ -66,7 +66,7 @@ public abstract class BaseServletDTO extends DTO {
 
 	/**
 	 * Service property identifying the servlet. In the case of a servlet
-	 * registered in the service registry and picked up by a Http Whiteboard
+	 * registered in the service registry and picked up by a Servlet Whiteboard
 	 * Implementation, this value is not negative and corresponds to the service
 	 * id in the registry. If the servlet has not been registered in the service
 	 * registry, the value is negative and a unique negative value is generated

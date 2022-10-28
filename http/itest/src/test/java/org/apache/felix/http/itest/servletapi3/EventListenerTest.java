@@ -16,7 +16,7 @@
  * specific language governing permissions and limitations
  * under the License.
  */
-package org.apache.felix.http.itest;
+package org.apache.felix.http.itest.servletapi3;
 
 import static javax.servlet.http.HttpServletResponse.SC_INTERNAL_SERVER_ERROR;
 import static javax.servlet.http.HttpServletResponse.SC_OK;
@@ -56,23 +56,19 @@ import org.osgi.service.http.whiteboard.HttpWhiteboardConstants;
 
 /**
  * Test cases for all supported event listeners.
- *
- * @author <a href="mailto:dev@felix.apache.org">Felix Project Team</a>
  */
 @RunWith(PaxExam.class)
 @ExamReactorStrategy(PerMethod.class)
-public class EventListenerTest extends BaseIntegrationTest
-{
-    private Dictionary<String, Object> getListenerProps()
-    {
+public class EventListenerTest extends Servlet3BaseIntegrationTest {
+
+    private Dictionary<String, Object> getListenerProps() {
         final Dictionary<String, Object> props = new Hashtable<String, Object>();
         props.put(HttpWhiteboardConstants.HTTP_WHITEBOARD_LISTENER, "true");
 
         return props;
     }
 
-    private Dictionary<String, Object> getServletProps(final String pattern)
-    {
+    private Dictionary<String, Object> getServletProps(final String pattern) {
         final Dictionary<String, Object> props = new Hashtable<String, Object>();
         props.put(HttpWhiteboardConstants.HTTP_WHITEBOARD_SERVLET_PATTERN, pattern);
 
@@ -83,33 +79,27 @@ public class EventListenerTest extends BaseIntegrationTest
      * Tests that {@link HttpSessionListener}s are called whenever a session is created or destroyed.
      */
     @Test
-    public void testHttpSessionListenerOldWhiteboardOk() throws Exception
-    {
+    public void testHttpSessionListenerOldWhiteboardOk() throws Exception {
         final CountDownLatch createdLatch = new CountDownLatch(1);
         final CountDownLatch destroyedLatch = new CountDownLatch(1);
 
-        HttpSessionListener listener = new HttpSessionListener()
-        {
+        HttpSessionListener listener = new HttpSessionListener() {
             @Override
-            public void sessionDestroyed(HttpSessionEvent se)
-            {
+            public void sessionDestroyed(HttpSessionEvent se) {
                 destroyedLatch.countDown();
             }
 
             @Override
-            public void sessionCreated(HttpSessionEvent se)
-            {
+            public void sessionCreated(HttpSessionEvent se) {
                 createdLatch.countDown();
             }
         };
 
         ServiceRegistration<HttpSessionListener> reg = m_context.registerService(HttpSessionListener.class, listener, null);
 
-        register("/session", new TestServlet()
-        {
+        register("/session", new TestServlet() {
             @Override
-            protected void doGet(HttpServletRequest req, HttpServletResponse resp) throws ServletException, IOException
-            {
+            protected void doGet(HttpServletRequest req, HttpServletResponse resp) throws ServletException, IOException {
                 HttpSession session = req.getSession();
                 session.setMaxInactiveInterval(2);
 
@@ -118,8 +108,7 @@ public class EventListenerTest extends BaseIntegrationTest
             }
         });
 
-        try
-        {
+        try {
             assertContent(SC_OK, null, createURL("/session"));
 
             // Session should been created...
@@ -129,9 +118,7 @@ public class EventListenerTest extends BaseIntegrationTest
 
             // Session should timeout automatically...
             assertTrue(destroyedLatch.await(50, TimeUnit.SECONDS));
-        }
-        finally
-        {
+        } finally {
             reg.unregister();
         }
     }
@@ -140,23 +127,19 @@ public class EventListenerTest extends BaseIntegrationTest
      * Tests that {@link HttpSessionAttributeListener}s are called whenever a session attribute is added, changed or removed.
      */
     @Test
-    public void testHttpSessionAttributeListenerOldWhiteboardOk() throws Exception
-    {
+    public void testHttpSessionAttributeListenerOldWhiteboardOk() throws Exception {
         final CountDownLatch addedLatch = new CountDownLatch(1);
         final CountDownLatch removedLatch = new CountDownLatch(1);
         final CountDownLatch replacedLatch = new CountDownLatch(1);
 
-        HttpSessionAttributeListener listener = new HttpSessionAttributeListener()
-        {
+        HttpSessionAttributeListener listener = new HttpSessionAttributeListener() {
             @Override
-            public void attributeAdded(HttpSessionBindingEvent event)
-            {
+            public void attributeAdded(HttpSessionBindingEvent event) {
                 addedLatch.countDown();
             }
 
             @Override
-            public void attributeRemoved(HttpSessionBindingEvent event)
-            {
+            public void attributeRemoved(HttpSessionBindingEvent event) {
                 removedLatch.countDown();
             }
 
@@ -169,13 +152,10 @@ public class EventListenerTest extends BaseIntegrationTest
 
         ServiceRegistration<HttpSessionAttributeListener> reg = m_context.registerService(HttpSessionAttributeListener.class, listener, null);
 
-        register("/session", new TestServlet()
-        {
+        register("/session", new TestServlet() {
             @Override
-            protected void doGet(HttpServletRequest req, HttpServletResponse resp) throws ServletException, IOException
-            {
-                try
-                {
+            protected void doGet(HttpServletRequest req, HttpServletResponse resp) throws ServletException, IOException {
+                try {
                     HttpSession session = req.getSession();
 
                     session.setAttribute("foo", "bar");
@@ -191,29 +171,20 @@ public class EventListenerTest extends BaseIntegrationTest
                     assertTrue(removedLatch.await(5, TimeUnit.SECONDS));
 
                     resp.setStatus(SC_OK);
-                }
-                catch (AssertionError ae)
-                {
+                } catch (AssertionError ae) {
                     resp.sendError(SC_INTERNAL_SERVER_ERROR, ae.getMessage());
                     throw ae;
-                }
-                catch (InterruptedException e)
-                {
+                } catch (InterruptedException e) {
                     resp.sendError(SC_SERVICE_UNAVAILABLE, e.getMessage());
-                }
-                finally
-                {
+                } finally {
                     resp.flushBuffer();
                 }
             }
         });
 
-        try
-        {
+        try {
             assertContent(SC_OK, null, createURL("/session"));
-        }
-        finally
-        {
+        } finally {
             reg.unregister();
         }
     }
@@ -222,33 +193,27 @@ public class EventListenerTest extends BaseIntegrationTest
      * Tests that {@link HttpSessionListener}s are called whenever a session is created or destroyed.
      */
     @Test
-    public void testHttpSessionListenerOk() throws Exception
-    {
+    public void testHttpSessionListenerOk() throws Exception {
         final CountDownLatch createdLatch = new CountDownLatch(1);
         final CountDownLatch destroyedLatch = new CountDownLatch(1);
 
-        HttpSessionListener listener = new HttpSessionListener()
-        {
+        HttpSessionListener listener = new HttpSessionListener() {
             @Override
-            public void sessionDestroyed(HttpSessionEvent se)
-            {
+            public void sessionDestroyed(HttpSessionEvent se) {
                 destroyedLatch.countDown();
             }
 
             @Override
-            public void sessionCreated(HttpSessionEvent se)
-            {
+            public void sessionCreated(HttpSessionEvent se) {
                 createdLatch.countDown();
             }
         };
 
         ServiceRegistration<HttpSessionListener> reg = m_context.registerService(HttpSessionListener.class, listener, getListenerProps());
         ServiceRegistration<Servlet> regS = m_context.registerService(Servlet.class,
-            new TestServlet()
-            {
+            new TestServlet() {
                 @Override
-                protected void doGet(HttpServletRequest req, HttpServletResponse resp) throws ServletException, IOException
-                {
+                protected void doGet(HttpServletRequest req, HttpServletResponse resp) throws ServletException, IOException {
                     HttpSession session = req.getSession();
                     session.setMaxInactiveInterval(2);
 
@@ -257,8 +222,7 @@ public class EventListenerTest extends BaseIntegrationTest
                 }
             }, getServletProps("/session"));
 
-        try
-        {
+        try {
             assertContent(SC_OK, null, createURL("/session"));
 
             // Session should been created...
@@ -268,9 +232,7 @@ public class EventListenerTest extends BaseIntegrationTest
 
             // Session should timeout automatically...
             assertTrue(destroyedLatch.await(50, TimeUnit.SECONDS));
-        }
-        finally
-        {
+        } finally {
             reg.unregister();
             regS.unregister();
         }
@@ -280,29 +242,24 @@ public class EventListenerTest extends BaseIntegrationTest
      * Tests that {@link HttpSessionAttributeListener}s are called whenever a session attribute is added, changed or removed.
      */
     @Test
-    public void testHttpSessionAttributeListenerOk() throws Exception
-    {
+    public void testHttpSessionAttributeListenerOk() throws Exception {
         final CountDownLatch addedLatch = new CountDownLatch(1);
         final CountDownLatch removedLatch = new CountDownLatch(1);
         final CountDownLatch replacedLatch = new CountDownLatch(1);
 
-        HttpSessionAttributeListener listener = new HttpSessionAttributeListener()
-        {
+        HttpSessionAttributeListener listener = new HttpSessionAttributeListener() {
             @Override
-            public void attributeAdded(HttpSessionBindingEvent event)
-            {
+            public void attributeAdded(HttpSessionBindingEvent event) {
                 addedLatch.countDown();
             }
 
             @Override
-            public void attributeRemoved(HttpSessionBindingEvent event)
-            {
+            public void attributeRemoved(HttpSessionBindingEvent event) {
                 removedLatch.countDown();
             }
 
             @Override
-            public void attributeReplaced(HttpSessionBindingEvent event)
-            {
+            public void attributeReplaced(HttpSessionBindingEvent event) {
                 replacedLatch.countDown();
             }
         };
@@ -310,13 +267,10 @@ public class EventListenerTest extends BaseIntegrationTest
         ServiceRegistration<HttpSessionAttributeListener> reg = m_context.registerService(HttpSessionAttributeListener.class, listener, getListenerProps());
 
         ServiceRegistration<Servlet> regS = m_context.registerService(Servlet.class,
-            new TestServlet()
-            {
+            new TestServlet() {
                 @Override
-                protected void doGet(HttpServletRequest req, HttpServletResponse resp) throws ServletException, IOException
-                {
-                    try
-                    {
+                protected void doGet(HttpServletRequest req, HttpServletResponse resp) throws ServletException, IOException {
+                    try {
                         HttpSession session = req.getSession();
 
                         session.setAttribute("foo", "bar");
@@ -332,30 +286,22 @@ public class EventListenerTest extends BaseIntegrationTest
                         assertTrue(removedLatch.await(5, TimeUnit.SECONDS));
 
                         resp.setStatus(SC_OK);
-                    }
-                    catch (AssertionError ae)
-                    {
+                    } catch (AssertionError ae) {
                         resp.sendError(SC_INTERNAL_SERVER_ERROR, ae.getMessage());
                         throw ae;
-                    }
-                    catch (InterruptedException e)
-                    {
+                    } catch (InterruptedException e) {
                         resp.sendError(SC_SERVICE_UNAVAILABLE, e.getMessage());
-                    }
-                    finally
-                    {
+                    } finally {
                         resp.flushBuffer();
                     }
                 }
             }, getServletProps("/session"));
 
-        try
-        {
+        try {
             assertContent(SC_OK, null, createURL("/session"));
-        }
-        finally
-        {
+        } finally {
             reg.unregister();
+            regS.unregister();
         }
     }
 
@@ -363,23 +309,20 @@ public class EventListenerTest extends BaseIntegrationTest
      * Tests {@link ServletContextListener}s
      */
     @Test
-    public void testServletContextListener() throws Exception
-    {
+    public void testServletContextListener() throws Exception {
+
         final CountDownLatch initLatch = new CountDownLatch(1);
         final CountDownLatch destroyLatch = new CountDownLatch(1);
 
-        final ServletContextListener listener = new ServletContextListener()
-        {
+        final ServletContextListener listener = new ServletContextListener() {
 
             @Override
-            public void contextInitialized(final ServletContextEvent sce)
-            {
+            public void contextInitialized(final ServletContextEvent sce) {
                 initLatch.countDown();
             }
 
             @Override
-            public void contextDestroyed(final ServletContextEvent sce)
-            {
+            public void contextDestroyed(final ServletContextEvent sce) {
                 destroyLatch.countDown();
             }
         };
@@ -387,12 +330,9 @@ public class EventListenerTest extends BaseIntegrationTest
         // register with default context
         final ServiceRegistration<ServletContextListener> reg = m_context.registerService(ServletContextListener.class, listener, getListenerProps());
 
-        try
-        {
+        try{
             assertTrue(initLatch.await(5, TimeUnit.SECONDS));
-        }
-        finally
-        {
+        } finally {
             reg.unregister();
         }
         assertTrue(destroyLatch.await(5, TimeUnit.SECONDS));
@@ -402,22 +342,18 @@ public class EventListenerTest extends BaseIntegrationTest
      * Tests {@link ServletRequestListener}s
      */
     @Test
-    public void testServletRequestListener() throws Exception
-    {
+    public void testServletRequestListener() throws Exception {
         final List<String> list = new ArrayList<>();
 
-        final ServletRequestListener listener = new ServletRequestListener()
-        {
+        final ServletRequestListener listener = new ServletRequestListener() {
 
             @Override
-            public void requestDestroyed(ServletRequestEvent arg0)
-            {
+            public void requestDestroyed(ServletRequestEvent arg0) {
                 list.add("DESTROY");
             }
 
             @Override
-            public void requestInitialized(ServletRequestEvent arg0)
-            {
+            public void requestInitialized(ServletRequestEvent arg0) {
                 list.add("INIT");
             }
         };
@@ -429,26 +365,21 @@ public class EventListenerTest extends BaseIntegrationTest
 
         // register test servlet with default context
         ServiceRegistration<Servlet> regS = m_context.registerService(Servlet.class,
-                new TestServlet()
-                {
+                new TestServlet() {
                     @Override
-                    protected void doGet(HttpServletRequest req, HttpServletResponse resp) throws ServletException, IOException
-                    {
+                    protected void doGet(HttpServletRequest req, HttpServletResponse resp) throws ServletException, IOException {
                         resp.setStatus(SC_OK);
                         resp.flushBuffer();
                     }
                 }, getServletProps("/test"));
 
-        try
-        {
+        try {
             assertEquals(0, list.size());
             assertContent(SC_OK, null, createURL("/test"));
             assertEquals(2, list.size());
             assertEquals("INIT", list.get(0));
             assertEquals("DESTROY", list.get(1));
-        }
-        finally
-        {
+        } finally {
             reg1.unregister();
             reg2.unregister();
             regS.unregister();
@@ -459,22 +390,18 @@ public class EventListenerTest extends BaseIntegrationTest
      * Tests {@link ServletRequestListener}s
      */
     @Test
-    public void testServletRequestListenerWithHttpAdmin() throws Exception
-    {
+    public void testServletRequestListenerWithHttpAdmin() throws Exception {
         final List<String> list = new ArrayList<>();
 
-        final ServletRequestListener listener = new ServletRequestListener()
-        {
+        final ServletRequestListener listener = new ServletRequestListener() {
 
             @Override
-            public void requestDestroyed(ServletRequestEvent arg0)
-            {
+            public void requestDestroyed(ServletRequestEvent arg0) {
                 list.add("DESTROY");
             }
 
             @Override
-            public void requestInitialized(ServletRequestEvent arg0)
-            {
+            public void requestInitialized(ServletRequestEvent arg0) {
                 list.add("INIT");
             }
         };
@@ -488,18 +415,15 @@ public class EventListenerTest extends BaseIntegrationTest
         final ServiceRegistration<ServletRequestListener> reg2 = m_context.registerService(ServletRequestListener.class, listener, null);
 
         // register test servlet with http service
-        getHttpService().registerServlet("/test", new TestServlet()
-                {
+        getHttpService().registerServlet("/test", new TestServlet() {
                     @Override
-                    protected void doGet(HttpServletRequest req, HttpServletResponse resp) throws ServletException, IOException
-                    {
+                    protected void doGet(HttpServletRequest req, HttpServletResponse resp) throws ServletException, IOException {
                         resp.setStatus(SC_OK);
                         resp.flushBuffer();
                     }
                 }, null, null);
 
-        try
-        {
+        try {
             assertEquals(0, list.size());
             assertContent(SC_OK, null, createURL("/test"));
             assertEquals(4, list.size());
@@ -507,9 +431,7 @@ public class EventListenerTest extends BaseIntegrationTest
             assertEquals("INIT", list.get(1));
             assertEquals("DESTROY", list.get(2));
             assertEquals("DESTROY", list.get(3));
-        }
-        finally
-        {
+        } finally {
             reg.unregister();
             reg2.unregister();
             getHttpService().unregister("/test");

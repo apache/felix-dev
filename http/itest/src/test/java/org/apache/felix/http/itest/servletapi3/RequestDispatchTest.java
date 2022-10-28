@@ -16,7 +16,7 @@
  * specific language governing permissions and limitations
  * under the License.
  */
-package org.apache.felix.http.itest;
+package org.apache.felix.http.itest.servletapi3;
 
 import static javax.servlet.RequestDispatcher.FORWARD_CONTEXT_PATH;
 import static javax.servlet.RequestDispatcher.FORWARD_PATH_INFO;
@@ -49,32 +49,25 @@ import org.ops4j.pax.exam.spi.reactors.ExamReactorStrategy;
 import org.ops4j.pax.exam.spi.reactors.PerMethod;
 import org.osgi.service.http.NamespaceException;
 
-/**
- * @author <a href="mailto:dev@felix.apache.org">Felix Project Team</a>
- */
 @RunWith(PaxExam.class)
 @ExamReactorStrategy(PerMethod.class)
-public class RequestDispatchTest extends BaseIntegrationTest
-{
+public class RequestDispatchTest extends Servlet3BaseIntegrationTest {
+
     /**
      * Tests that we can forward content from other servlets using the {@link RequestDispatcher} service.
      */
     @Test
-    public void testDispatchForwardToAbsoluteURIOk() throws Exception
-    {
+    public void testDispatchForwardToAbsoluteURIOk() throws Exception {
         CountDownLatch initLatch = new CountDownLatch(2);
         CountDownLatch destroyLatch = new CountDownLatch(2);
 
-        TestServlet forward = new TestServlet(initLatch, destroyLatch)
-        {
+        TestServlet forward = new TestServlet(initLatch, destroyLatch) {
             private static final long serialVersionUID = 1L;
 
             @Override
-            protected void doGet(HttpServletRequest req, HttpServletResponse resp) throws ServletException, IOException
-            {
+            protected void doGet(HttpServletRequest req, HttpServletResponse resp) throws ServletException, IOException {
                 Object includeContextPath = req.getAttribute(FORWARD_CONTEXT_PATH);
-                if (includeContextPath != null)
-                {
+                if (includeContextPath != null) {
                     assertEquals("", req.getContextPath());
                     assertEquals("/forward", req.getServletPath());
                     assertEquals(null, req.getPathInfo());
@@ -86,9 +79,7 @@ public class RequestDispatchTest extends BaseIntegrationTest
                     assertEquals("/foo", req.getAttribute(FORWARD_PATH_INFO));
                     assertEquals("/test/foo", req.getAttribute(FORWARD_REQUEST_URI));
                     assertEquals("bar=qux&quu", req.getAttribute(FORWARD_QUERY_STRING));
-                }
-                else
-                {
+                } else {
                     assertEquals("", req.getContextPath());
                     assertEquals("/forward", req.getServletPath());
                     assertEquals("/bar", req.getPathInfo());
@@ -100,13 +91,11 @@ public class RequestDispatchTest extends BaseIntegrationTest
             }
         };
 
-        TestServlet servlet = new TestServlet(initLatch, destroyLatch)
-        {
+        TestServlet servlet = new TestServlet(initLatch, destroyLatch) {
             private static final long serialVersionUID = 1L;
 
             @Override
-            protected void doGet(HttpServletRequest req, HttpServletResponse resp) throws ServletException, IOException
-            {
+            protected void doGet(HttpServletRequest req, HttpServletResponse resp) throws ServletException, IOException {
                 assertEquals("", req.getContextPath());
                 assertEquals("/test", req.getServletPath());
                 assertEquals("/foo", req.getPathInfo());
@@ -137,21 +126,17 @@ public class RequestDispatchTest extends BaseIntegrationTest
      * Tests that we can forward content from other servlets using the {@link RequestDispatcher} service.
      */
     @Test
-    public void testDispatchForwardToRelativeURIOk() throws Exception
-    {
+    public void testDispatchForwardToRelativeURIOk() throws Exception {
         CountDownLatch initLatch = new CountDownLatch(1);
         CountDownLatch destroyLatch = new CountDownLatch(1);
 
-        TestServlet servlet = new TestServlet(initLatch, destroyLatch)
-        {
+        TestServlet servlet = new TestServlet(initLatch, destroyLatch) {
             private static final long serialVersionUID = 1L;
 
             @Override
-            protected void doGet(HttpServletRequest req, HttpServletResponse resp) throws ServletException, IOException
-            {
+            protected void doGet(HttpServletRequest req, HttpServletResponse resp) throws ServletException, IOException {
                 Object contextPathAttr = req.getAttribute(FORWARD_CONTEXT_PATH);
-                if (contextPathAttr != null)
-                {
+                if (contextPathAttr != null) {
                     assertEquals("", req.getContextPath());
                     assertEquals("/test", req.getServletPath());
                     assertEquals("/forward", req.getPathInfo());
@@ -165,9 +150,7 @@ public class RequestDispatchTest extends BaseIntegrationTest
                     assertEquals("bar=qux&quu", req.getAttribute(FORWARD_QUERY_STRING));
 
                     resp.getWriter().print("FORWARD\n");
-                }
-                else
-                {
+                } else {
                     assertEquals("", req.getContextPath());
                     assertEquals("/test", req.getServletPath());
                     assertEquals("/foo", req.getPathInfo());
@@ -204,21 +187,17 @@ public class RequestDispatchTest extends BaseIntegrationTest
      * Tests that we can include content from other servlets using the {@link RequestDispatcher} service.
      */
     @Test
-    public void testDispatchIncludeAbsoluteURIOk() throws Exception
-    {
+    public void testDispatchIncludeAbsoluteURIOk() throws Exception {
         CountDownLatch initLatch = new CountDownLatch(2);
         CountDownLatch destroyLatch = new CountDownLatch(2);
 
-        TestServlet include = new TestServlet(initLatch, destroyLatch)
-        {
+        TestServlet include = new TestServlet(initLatch, destroyLatch) {
             private static final long serialVersionUID = 1L;
 
             @Override
-            protected void doGet(HttpServletRequest req, HttpServletResponse resp) throws ServletException, IOException
-            {
+            protected void doGet(HttpServletRequest req, HttpServletResponse resp) throws ServletException, IOException {
                 Object includeContextPath = req.getAttribute(INCLUDE_CONTEXT_PATH);
-                if (includeContextPath != null)
-                {
+                if (includeContextPath != null) {
                     assertEquals("", req.getContextPath());
                     assertEquals("/test", req.getServletPath());
                     assertEquals("/foo", req.getPathInfo());
@@ -230,9 +209,7 @@ public class RequestDispatchTest extends BaseIntegrationTest
                     assertEquals(null, req.getAttribute(INCLUDE_PATH_INFO));
                     assertEquals("/include", req.getAttribute(INCLUDE_REQUEST_URI));
                     assertEquals(null, req.getAttribute(INCLUDE_QUERY_STRING));
-                }
-                else
-                {
+                } else {
                     assertEquals("", req.getContextPath());
                     assertEquals("/include", req.getServletPath());
                     assertEquals("/bar", req.getPathInfo());
@@ -244,13 +221,11 @@ public class RequestDispatchTest extends BaseIntegrationTest
             }
         };
 
-        TestServlet servlet = new TestServlet(initLatch, destroyLatch)
-        {
+        TestServlet servlet = new TestServlet(initLatch, destroyLatch) {
             private static final long serialVersionUID = 1L;
 
             @Override
-            protected void doGet(HttpServletRequest req, HttpServletResponse resp) throws ServletException, IOException
-            {
+            protected void doGet(HttpServletRequest req, HttpServletResponse resp) throws ServletException, IOException {
                 assertEquals("", req.getContextPath());
                 assertEquals("/test", req.getServletPath());
                 assertEquals("/foo", req.getPathInfo());
@@ -281,21 +256,17 @@ public class RequestDispatchTest extends BaseIntegrationTest
      * Tests that we can include content from other servlets using the {@link RequestDispatcher} service.
      */
     @Test
-    public void testDispatchIncludeRelativeURIOk() throws Exception
-    {
+    public void testDispatchIncludeRelativeURIOk() throws Exception {
         CountDownLatch initLatch = new CountDownLatch(1);
         CountDownLatch destroyLatch = new CountDownLatch(1);
 
-        TestServlet servlet = new TestServlet(initLatch, destroyLatch)
-        {
+        TestServlet servlet = new TestServlet(initLatch, destroyLatch) {
             private static final long serialVersionUID = 1L;
 
             @Override
-            protected void doGet(HttpServletRequest req, HttpServletResponse resp) throws ServletException, IOException
-            {
+            protected void doGet(HttpServletRequest req, HttpServletResponse resp) throws ServletException, IOException {
                 Object contextPathAttr = req.getAttribute(INCLUDE_CONTEXT_PATH);
-                if (contextPathAttr != null)
-                {
+                if (contextPathAttr != null) {
                     assertEquals("", req.getContextPath());
                     assertEquals("/foo", req.getPathInfo());
                     assertEquals("/test", req.getServletPath());
@@ -309,9 +280,7 @@ public class RequestDispatchTest extends BaseIntegrationTest
                     assertEquals(null, req.getAttribute(INCLUDE_QUERY_STRING));
 
                     resp.getWriter().print("INCLUDE\n");
-                }
-                else
-                {
+                } else {
                     assertEquals("", req.getContextPath());
                     assertEquals("/test", req.getServletPath());
                     //                    assertEquals("/foo", req.getPathInfo());
@@ -348,38 +317,30 @@ public class RequestDispatchTest extends BaseIntegrationTest
      * Tests that we can forward content from other servlets using the {@link RequestDispatcher} service.
      */
     @Test
-    public void testDispatchOnNonRootContextPathOk() throws Exception
-    {
+    public void testDispatchOnNonRootContextPathOk() throws Exception {
         // Configure HTTP on a different context path...
         configureHttpService(createDictionary("org.apache.felix.http.context_path", "/context", "org.osgi.service.http.port", "8080"));
 
-        try
-        {
+        try {
             // Include two tests in one as to keep tests a little easier to read...
             doTestForwardAbsoluteURI();
             doTestIncludeAbsoluteURI();
-        }
-        finally
-        {
+        } finally {
             configureHttpService(null);
         }
     }
 
-    private void doTestForwardAbsoluteURI() throws ServletException, NamespaceException, InterruptedException, IOException
-    {
+    private void doTestForwardAbsoluteURI() throws ServletException, NamespaceException, InterruptedException, IOException {
         CountDownLatch initLatch = new CountDownLatch(2);
         CountDownLatch destroyLatch = new CountDownLatch(2);
 
-        TestServlet forward = new TestServlet(initLatch, destroyLatch)
-        {
+        TestServlet forward = new TestServlet(initLatch, destroyLatch) {
             private static final long serialVersionUID = 1L;
 
             @Override
-            protected void doGet(HttpServletRequest req, HttpServletResponse resp) throws ServletException, IOException
-            {
+            protected void doGet(HttpServletRequest req, HttpServletResponse resp) throws ServletException, IOException {
                 Object includeContextPath = req.getAttribute(FORWARD_CONTEXT_PATH);
-                if (includeContextPath != null)
-                {
+                if (includeContextPath != null) {
                     assertEquals("/context", req.getContextPath());
                     assertEquals("/forward", req.getServletPath());
                     assertEquals(null, req.getPathInfo());
@@ -391,9 +352,7 @@ public class RequestDispatchTest extends BaseIntegrationTest
                     assertEquals("/foo", req.getAttribute(FORWARD_PATH_INFO));
                     assertEquals("/context/test/foo", req.getAttribute(FORWARD_REQUEST_URI));
                     assertEquals("bar=qux&quu", req.getAttribute(FORWARD_QUERY_STRING));
-                }
-                else
-                {
+                } else {
                     assertEquals("/context", req.getContextPath());
                     assertEquals("/forward", req.getServletPath());
                     assertEquals("/bar", req.getPathInfo());
@@ -405,13 +364,11 @@ public class RequestDispatchTest extends BaseIntegrationTest
             }
         };
 
-        TestServlet servlet = new TestServlet(initLatch, destroyLatch)
-        {
+        TestServlet servlet = new TestServlet(initLatch, destroyLatch) {
             private static final long serialVersionUID = 1L;
 
             @Override
-            protected void doGet(HttpServletRequest req, HttpServletResponse resp) throws ServletException, IOException
-            {
+            protected void doGet(HttpServletRequest req, HttpServletResponse resp) throws ServletException, IOException {
                 assertEquals("/context", req.getContextPath());
                 assertEquals("/test", req.getServletPath());
                 assertEquals("/foo", req.getPathInfo());
@@ -441,21 +398,17 @@ public class RequestDispatchTest extends BaseIntegrationTest
     /**
      * Tests that we can include content from other servlets using the {@link RequestDispatcher} service.
      */
-    private void doTestIncludeAbsoluteURI() throws Exception
-    {
+    private void doTestIncludeAbsoluteURI() throws Exception {
         CountDownLatch initLatch = new CountDownLatch(2);
         CountDownLatch destroyLatch = new CountDownLatch(2);
 
-        TestServlet include = new TestServlet(initLatch, destroyLatch)
-        {
+        TestServlet include = new TestServlet(initLatch, destroyLatch) {
             private static final long serialVersionUID = 1L;
 
             @Override
-            protected void doGet(HttpServletRequest req, HttpServletResponse resp) throws ServletException, IOException
-            {
+            protected void doGet(HttpServletRequest req, HttpServletResponse resp) throws ServletException, IOException {
                 Object includeContextPath = req.getAttribute(INCLUDE_CONTEXT_PATH);
-                if (includeContextPath != null)
-                {
+                if (includeContextPath != null) {
                     assertEquals("/context", req.getContextPath());
                     assertEquals("/test", req.getServletPath());
                     assertEquals("/foo", req.getPathInfo());
@@ -467,9 +420,7 @@ public class RequestDispatchTest extends BaseIntegrationTest
                     assertEquals(null, req.getAttribute(INCLUDE_PATH_INFO));
                     assertEquals("/context/include", req.getAttribute(INCLUDE_REQUEST_URI));
                     assertEquals(null, req.getAttribute(INCLUDE_QUERY_STRING));
-                }
-                else
-                {
+                } else {
                     assertEquals("/context", req.getContextPath());
                     assertEquals("/include", req.getServletPath());
                     assertEquals("/bar", req.getPathInfo());
@@ -481,13 +432,11 @@ public class RequestDispatchTest extends BaseIntegrationTest
             }
         };
 
-        TestServlet servlet = new TestServlet(initLatch, destroyLatch)
-        {
+        TestServlet servlet = new TestServlet(initLatch, destroyLatch) {
             private static final long serialVersionUID = 1L;
 
             @Override
-            protected void doGet(HttpServletRequest req, HttpServletResponse resp) throws ServletException, IOException
-            {
+            protected void doGet(HttpServletRequest req, HttpServletResponse resp) throws ServletException, IOException {
                 assertEquals("/context", req.getContextPath());
                 assertEquals("/test", req.getServletPath());
                 assertEquals("/foo", req.getPathInfo());

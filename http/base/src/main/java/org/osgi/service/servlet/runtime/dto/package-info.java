@@ -32,7 +32,7 @@
  * <p>
  * {@code  Import-Package: org.osgi.service.servlet.runtime.dto; version="[2.0,3.1)"}
  * 
- * @author $Id: ad5c4695782df6c27613e6e00daf7e20aff78a98 $
+ * @author $Id: f2bf99409b188c36f7363fd2cfc6471cca178ccc $
  */
 
 @Version(HTTP_WHITEBOARD_SPECIFICATION_VERSION + ".0")

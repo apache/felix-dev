@@ -17,7 +17,7 @@
  * under the License.
  */
 
-package org.apache.felix.http.itest;
+package org.apache.felix.http.itest.servletapi3;
 
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
@@ -67,62 +67,51 @@ import org.osgi.service.http.context.ServletContextHelper;
 
 @RunWith(PaxExam.class)
 @ExamReactorStrategy(PerMethod.class)
-public class SessionHandlingTest extends BaseIntegrationTest
-{
+public class SessionHandlingTest extends Servlet3BaseIntegrationTest {
+
     private List<ServiceRegistration<?>> registrations = new ArrayList<>();
 
     private CountDownLatch initLatch;
     private CountDownLatch destroyLatch;
 
-    private void setupLatches(int count)
-    {
+    private void setupLatches(int count) {
         initLatch = new CountDownLatch(count);
         destroyLatch = new CountDownLatch(count);
     }
 
-    private void setupServlet(final String name, String[] path, int rank, final String context) throws Exception
-    {
+    private void setupServlet(final String name, String[] path, int rank, final String context) throws Exception {
         Dictionary<String, Object> servletProps = new Hashtable<>();
         servletProps.put(HTTP_WHITEBOARD_SERVLET_NAME, name);
         servletProps.put(HTTP_WHITEBOARD_SERVLET_PATTERN, path);
         servletProps.put(SERVICE_RANKING, rank);
-        if (context != null)
-        {
+        if (context != null) {
             servletProps.put(HTTP_WHITEBOARD_CONTEXT_SELECT, "(" + HTTP_WHITEBOARD_CONTEXT_NAME + "=" + context + ")");
         }
 
-        Servlet sessionServlet = new TestServlet(initLatch, destroyLatch)
-        {
+        Servlet sessionServlet = new TestServlet(initLatch, destroyLatch) {
             private static final long serialVersionUID = 1L;
 
             @Override
             protected void doGet(HttpServletRequest req, HttpServletResponse resp)
-                    throws IOException
-            {
+                    throws IOException {
                 final boolean create = req.getParameter("create") != null;
-                if ( create )
-                {
+                if ( create ) {
                     req.getSession();
                 }
                 final boolean destroy = req.getParameter("destroy") != null;
-                if ( destroy )
-                {
+                if ( destroy ) {
                     req.getSession().invalidate();
                 }
                 final HttpSession s = req.getSession(false);
-                if ( s != null )
-                {
+                if ( s != null ) {
                     s.setAttribute("value", context);
                 }
 
                 final PrintWriter pw = resp.getWriter();
                 pw.println("{");
-                if ( s == null )
-                {
+                if ( s == null ) {
                     pw.println(" \"session\" : false");
-                }
-                else
-                {
+                } else {
                     pw.println(" \"session\" : true,");
                     pw.println(" \"sessionId\" : \"" + s.getId() + "\",");
                     pw.println(" \"value\" : \"" + s.getAttribute("value") + "\",");
@@ -135,13 +124,12 @@ public class SessionHandlingTest extends BaseIntegrationTest
         registrations.add(m_context.registerService(Servlet.class.getName(), sessionServlet, servletProps));
     }
 
-    private void setupContext(String name, String path) throws InterruptedException
-    {
+    private void setupContext(String name, String path) throws InterruptedException {
         Dictionary<String, ?> properties = createDictionary(
                 HTTP_WHITEBOARD_CONTEXT_NAME, name,
                 HTTP_WHITEBOARD_CONTEXT_PATH, path);
 
-        ServletContextHelper servletContextHelper = new ServletContextHelper(m_context.getBundle()){
+        ServletContextHelper servletContextHelper = new ServletContextHelper(m_context.getBundle()) {
             // test helper
         };
         registrations.add(m_context.registerService(ServletContextHelper.class.getName(), servletContextHelper, properties));
@@ -150,10 +138,8 @@ public class SessionHandlingTest extends BaseIntegrationTest
     }
 
     @After
-    public void unregisterServices() throws InterruptedException
-    {
-        for (ServiceRegistration<?> serviceRegistration : registrations)
-        {
+    public void unregisterServices() throws InterruptedException {
+        for (ServiceRegistration<?> serviceRegistration : registrations) {
             serviceRegistration.unregister();
         }
 
@@ -162,8 +148,7 @@ public class SessionHandlingTest extends BaseIntegrationTest
         Thread.sleep(500);
     }
 
-    private JsonObject getJSONResponse(final CloseableHttpClient client, final String path) throws IOException
-    {
+    private JsonObject getJSONResponse(final CloseableHttpClient client, final String path) throws IOException {
         final HttpGet httpGet = new HttpGet(createURL(path).toExternalForm().toString());
         CloseableHttpResponse response1 = client.execute(httpGet);
 
@@ -178,8 +163,7 @@ public class SessionHandlingTest extends BaseIntegrationTest
 
     }
     @Test
-    public void testSessionAttributes() throws Exception
-    {
+    public void testSessionAttributes() throws Exception {
         setupContext("test1", "/");
         setupContext("test2", "/");
 
@@ -191,7 +175,7 @@ public class SessionHandlingTest extends BaseIntegrationTest
         assertTrue(initLatch.await(5, TimeUnit.SECONDS));
 
         RequestConfig globalConfig = RequestConfig.custom()
-                .setCookieSpec(CookieSpecs.BEST_MATCH)
+                .setCookieSpec(CookieSpecs.DEFAULT)
                 .build();
         final CloseableHttpClient httpclient = HttpClients.custom().setDefaultRequestConfig(globalConfig)
                 .setDefaultCookieStore(new BasicCookieStore())

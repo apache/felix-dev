@@ -51,7 +51,6 @@ import org.eclipse.jetty.server.session.HouseKeeper;
 import org.eclipse.jetty.server.session.SessionHandler;
 import org.eclipse.jetty.servlet.ServletContextHandler;
 import org.eclipse.jetty.servlet.ServletHolder;
-import org.eclipse.jetty.util.component.AbstractLifeCycle;
 import org.eclipse.jetty.util.component.LifeCycle;
 import org.eclipse.jetty.util.ssl.SslContextFactory;
 import org.eclipse.jetty.util.thread.QueuedThreadPool;
@@ -67,7 +66,7 @@ import org.osgi.service.http.runtime.HttpServiceRuntimeConstants;
 import jakarta.servlet.SessionCookieConfig;
 import jakarta.servlet.SessionTrackingMode;
 
-public final class JettyService extends AbstractLifeCycle.AbstractLifeCycleListener
+public final class JettyService implements LifeCycle.Listener
 {
     /** PID for configuration of the HTTP service. */
     public static final String PID = "org.apache.felix.http";

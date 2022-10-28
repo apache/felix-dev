@@ -16,7 +16,7 @@
  * specific language governing permissions and limitations
  * under the License.
  */
-package org.apache.felix.http.itest;
+package org.apache.felix.http.itest.servletapi3;
 
 import static javax.servlet.http.HttpServletResponse.SC_NOT_FOUND;
 import static javax.servlet.http.HttpServletResponse.SC_OK;
@@ -52,20 +52,15 @@ import org.ops4j.pax.exam.spi.reactors.PerMethod;
 import org.osgi.framework.Bundle;
 import org.osgi.service.http.HttpContext;
 
-/**
- * @author <a href="mailto:dev@felix.apache.org">Felix Project Team</a>
- */
 @RunWith(PaxExam.class)
 @ExamReactorStrategy(PerMethod.class)
-public class HttpJettyTest extends BaseIntegrationTest
-{
+public class HttpJettyTest extends Servlet3BaseIntegrationTest {
 
     /**
      * Tests the starting of Jetty.
      */
     @Test
-    public void test00_StartJettyOk() throws Exception
-    {
+    public void test00_StartJettyOk() throws Exception {
         assertTrue(getHttpJettyBundle().getState() == Bundle.ACTIVE);
 
         assertResponseCode(SC_NOT_FOUND, createURL("/"));
@@ -75,8 +70,7 @@ public class HttpJettyTest extends BaseIntegrationTest
      * Tests the starting of Jetty.
      */
     @Test
-    public void test00_StopJettyOk() throws Exception
-    {
+    public void test00_StopJettyOk() throws Exception {
         Bundle bundle = getHttpJettyBundle();
 
         assertTrue(bundle.getState() == Bundle.ACTIVE);
@@ -96,13 +90,10 @@ public class HttpJettyTest extends BaseIntegrationTest
 
         assertFalse(destroyLatch.await(5, TimeUnit.SECONDS));
 
-        try
-        {
+        try {
             createURL("/test").openStream();
             fail("Could connect to stopped Jetty instance?!");
-        }
-        catch (ConnectException e)
-        {
+        } catch (ConnectException e) {
             // Ok; expected...
         }
 
@@ -114,39 +105,31 @@ public class HttpJettyTest extends BaseIntegrationTest
     }
 
     @Test
-    public void testCorrectPathInfoInHttpContextOk() throws Exception
-    {
+    public void testCorrectPathInfoInHttpContextOk() throws Exception {
         CountDownLatch initLatch = new CountDownLatch(1);
         CountDownLatch destroyLatch = new CountDownLatch(1);
 
-        HttpContext context = new HttpContext()
-        {
+        HttpContext context = new HttpContext() {
             @Override
-            public String getMimeType(String name)
-            {
+            public String getMimeType(String name) {
                 return null;
             }
 
             @Override
-            public URL getResource(String name)
-            {
+            public URL getResource(String name) {
                 return null;
             }
 
             @Override
-            public boolean handleSecurity(HttpServletRequest request, HttpServletResponse response) throws IOException
-            {
-                try
-                {
+            public boolean handleSecurity(HttpServletRequest request, HttpServletResponse response) throws IOException {
+                try {
                     assertEquals("", request.getContextPath());
                     assertEquals("/foo", request.getServletPath());
                     assertEquals("/bar", request.getPathInfo());
                     assertEquals("/foo/bar", request.getRequestURI());
                     assertEquals("qux=quu", request.getQueryString());
                     return true;
-                }
-                catch (Exception e)
-                {
+                } catch (Exception e) {
                     e.printStackTrace();
                 }
                 return false;
@@ -174,8 +157,7 @@ public class HttpJettyTest extends BaseIntegrationTest
      * Tests that we can register a servlet with Jetty and that its lifecycle is correctly controlled.
      */
     @Test
-    public void testRegisterServletLifecycleOk() throws Exception
-    {
+    public void testRegisterServletLifecycleOk() throws Exception {
         CountDownLatch initLatch = new CountDownLatch(1);
         CountDownLatch destroyLatch = new CountDownLatch(1);
 
@@ -194,25 +176,21 @@ public class HttpJettyTest extends BaseIntegrationTest
      * Tests that initialization parameters are properly passed.
      */
     @Test
-    public void testInitParametersOk() throws Exception
-    {
+    public void testInitParametersOk() throws Exception {
         final CountDownLatch initLatch = new CountDownLatch(1);
 
-        Servlet servlet = new HttpServlet()
-        {
+        Servlet servlet = new HttpServlet() {
             @Override
-            public void init(ServletConfig config) throws ServletException
-            {
+            public void init(ServletConfig config) throws ServletException {
                 String value1 = config.getInitParameter("key1");
                 String value2 = config.getInitParameter("key2");
-                if ("value1".equals(value1) && "value2".equals(value2))
-                {
+                if ("value1".equals(value1) && "value2".equals(value2)) {
                     initLatch.countDown();
                 }
             }
         };
 
-        Dictionary params = new Hashtable();
+        Dictionary<String, Object> params = new Hashtable<>();
         params.put("key1", "value1");
         params.put("key2", "value2");
 
@@ -224,60 +202,46 @@ public class HttpJettyTest extends BaseIntegrationTest
     }
 
     @Test
-    public void testUseServletContextOk() throws Exception
-    {
+    public void testUseServletContextOk() throws Exception {
         CountDownLatch initLatch = new CountDownLatch(1);
         CountDownLatch destroyLatch = new CountDownLatch(1);
 
-        HttpContext context = new HttpContext()
-        {
+        HttpContext context = new HttpContext() {
             @Override
-            public String getMimeType(String name)
-            {
+            public String getMimeType(String name) {
                 return null;
             }
 
             @Override
-            public URL getResource(String name)
-            {
-                try
-                {
+            public URL getResource(String name) {
+                try {
                     File f = new File("src/test/resources/resource/" + name);
-                    if (f.exists())
-                    {
+                    if (f.exists()) {
                         return f.toURI().toURL();
                     }
-                }
-                catch (MalformedURLException e)
-                {
+                } catch (MalformedURLException e) {
                     fail();
                 }
                 return null;
             }
 
             @Override
-            public boolean handleSecurity(HttpServletRequest request, HttpServletResponse response) throws IOException
-            {
+            public boolean handleSecurity(HttpServletRequest request, HttpServletResponse response) throws IOException  {
                 return true;
             }
         };
 
-        TestServlet servlet = new TestServlet(initLatch, destroyLatch)
-        {
+        TestServlet servlet = new TestServlet(initLatch, destroyLatch)  {
             private static final long serialVersionUID = 1L;
 
             @Override
-            public void init(ServletConfig config) throws ServletException
-            {
+            public void init(ServletConfig config) throws ServletException {
                 ServletContext context = config.getServletContext();
-                try
-                {
+                try {
                     assertEquals("", context.getContextPath());
                     assertNotNull(context.getResource("test.html"));
                     assertNotNull(context.getRealPath("test.html"));
-                }
-                catch (MalformedURLException e)
-                {
+                } catch (MalformedURLException e) {
                     fail();
                 }
 

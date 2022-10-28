@@ -24,7 +24,7 @@ import org.osgi.dto.DTO;
  * Represents a resource definition currently being used by a servlet context.
  * 
  * @NotThreadSafe
- * @author $Id: 3b8730c2185679aaf164b22ddb7884a61172cfbb $
+ * @author $Id: 6c99e33f1664cb933f0a3333deb05f4e1ee37d9c $
  */
 public class ResourceDTO extends DTO {
 	/**
@@ -43,7 +43,7 @@ public class ResourceDTO extends DTO {
 
 	/**
 	 * Service property identifying the resource. In the case of a resource
-	 * registered in the service registry and picked up by a Http Whiteboard
+	 * registered in the service registry and picked up by a Servlet Whiteboard
 	 * Implementation, this value is not negative and corresponds to the service
 	 * id in the registry. If the resource has not been registered in the
 	 * service registry, the value is negative and a unique negative value is

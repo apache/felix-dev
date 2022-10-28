@@ -24,7 +24,7 @@ import org.osgi.dto.DTO;
  * Represents a listener currently being used by a servlet context.
  * 
  * @NotThreadSafe
- * @author $Id: d774ac5b249f95b9f5f684830f3854ce225835cf $
+ * @author $Id: d806ecaf21b6be83a7cd50ae19b897072565e5a5 $
  */
 public class ListenerDTO extends DTO {
 
@@ -35,7 +35,7 @@ public class ListenerDTO extends DTO {
 
 	/**
 	 * Service property identifying the listener. In the case of a Listener
-	 * registered in the service registry and picked up by a Http Whiteboard
+	 * registered in the service registry and picked up by a Servlet Whiteboard
 	 * Implementation, this value is not negative and corresponds to the service
 	 * id in the registry. If the listener has not been registered in the
 	 * service registry, the value is negative and a unique negative value is

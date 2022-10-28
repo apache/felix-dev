@@ -159,7 +159,7 @@ public final class WhiteboardManager
         // runtime service gets the same props for now
         this.serviceRuntime.setAllAttributes(httpServiceProps);
 
-        this.serviceRuntime.setAttribute(HttpServiceRuntimeConstants.HTTP_SERVICE_ID,
+        this.serviceRuntime.setAttribute(org.osgi.service.http.runtime.HttpServiceRuntimeConstants.HTTP_SERVICE_ID,
                 Collections.singletonList(this.httpServiceFactory.getHttpServiceServiceId()));
         this.serviceRuntime.register(this.httpBundleContext);
 
@@ -591,7 +591,7 @@ public final class WhiteboardManager
                     final Map<String, String> props = new HashMap<>();
                     props.put(HttpWhiteboardConstants.HTTP_WHITEBOARD_CONTEXT_NAME, h.getContextInfo().getName());
                     props.put(HttpWhiteboardConstants.HTTP_WHITEBOARD_CONTEXT_PATH, h.getContextInfo().getPath());
-                    props.put(HttpWhiteboardConstants.HTTP_SERVICE_CONTEXT_PROPERTY, h.getContextInfo().getName());
+                    props.put(org.osgi.service.http.whiteboard.HttpWhiteboardConstants.HTTP_SERVICE_CONTEXT_PROPERTY, h.getContextInfo().getName());
 
                     if ( info.getContextSelectionFilter().matches(props) )
                     {
@@ -697,13 +697,13 @@ public final class WhiteboardManager
             // we need still support servlet/resource registrations not using the
             // 1.1 HTTP_SERVICE_CONTEXT_PROPERTY property. (contains is not the best check but
             // it should do the trick)
-          	if ( info instanceof ResourceInfo && info.getContextSelection().contains(HttpWhiteboardConstants.HTTP_SERVICE_CONTEXT_PROPERTY))
+          	if ( info instanceof ResourceInfo && info.getContextSelection().contains(org.osgi.service.http.whiteboard.HttpWhiteboardConstants.HTTP_SERVICE_CONTEXT_PROPERTY))
         	    {
                 this.failureStateHandler.addFailure(info, HttpServiceFactory.HTTP_SERVICE_CONTEXT_SERVICE_ID, DTOConstants.FAILURE_REASON_VALIDATION_FAILED);
 
                 return DTOConstants.FAILURE_REASON_VALIDATION_FAILED;
             }
-        	    else if ( info instanceof ServletInfo && info.getContextSelection().contains(HttpWhiteboardConstants.HTTP_SERVICE_CONTEXT_PROPERTY))
+        	    else if ( info instanceof ServletInfo && info.getContextSelection().contains(org.osgi.service.http.whiteboard.HttpWhiteboardConstants.HTTP_SERVICE_CONTEXT_PROPERTY))
         	    {
         		    final ServletInfo servletInfo = (ServletInfo)info;
         		    final boolean nameIsEmpty = servletInfo.getName() == null || servletInfo.getName().isEmpty();
