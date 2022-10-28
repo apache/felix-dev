@@ -21,6 +21,7 @@ package org.apache.felix.http.sslfilter.internal;
 import static org.apache.felix.http.sslfilter.internal.SslFilterConstants.HDR_LOCATION;
 import static org.apache.felix.http.sslfilter.internal.SslFilterConstants.HDR_X_FORWARDED_PROTO;
 import static org.apache.felix.http.sslfilter.internal.SslFilterConstants.HDR_X_FORWARDED_SSL;
+import static org.apache.felix.http.sslfilter.internal.SslFilterConstants.HDR_X_FORWARDED_SSL_CERTIFICATE;
 import static org.apache.felix.http.sslfilter.internal.SslFilterConstants.HTTP;
 import static org.apache.felix.http.sslfilter.internal.SslFilterConstants.HTTPS;
 import static org.junit.Assert.assertEquals;
@@ -33,11 +34,11 @@ import java.net.MalformedURLException;
 import java.net.URL;
 import java.util.EnumSet;
 
-import javax.servlet.DispatcherType;
-import javax.servlet.ServletException;
-import javax.servlet.http.HttpServlet;
-import javax.servlet.http.HttpServletRequest;
-import javax.servlet.http.HttpServletResponse;
+import jakarta.servlet.DispatcherType;
+import jakarta.servlet.ServletException;
+import jakarta.servlet.http.HttpServlet;
+import jakarta.servlet.http.HttpServletRequest;
+import jakarta.servlet.http.HttpServletResponse;
 
 import org.eclipse.jetty.server.Server;
 import org.eclipse.jetty.servlet.FilterHolder;
@@ -46,9 +47,9 @@ import org.eclipse.jetty.servlet.ServletHolder;
 import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
+import org.mockito.Mockito;
 
-public class SslFilterJettyTest
-{
+public class SslFilterJettyTest {
     private InetSocketAddress serverAddress;
 
     private Server server;
@@ -56,13 +57,18 @@ public class SslFilterJettyTest
     private boolean originalFollowRedirects;
 
     @Before
-    public void setupServer() throws Exception
-    {
+    public void setupServer() throws Exception {
+        final SslFilter.Config config = Mockito.mock(SslFilter.Config.class);
+        Mockito.when(config.rewrite_absolute_urls()).thenReturn(false);
+        Mockito.when(config.ssl_forward_header()).thenReturn(HDR_X_FORWARDED_SSL);
+        Mockito.when(config.ssl_forward_value()).thenReturn("on");
+        Mockito.when(config.ssl_forward_cert_header()).thenReturn(HDR_X_FORWARDED_SSL_CERTIFICATE);
+
         this.serverAddress = new InetSocketAddress("localhost", 8080);
 
         this.context = new ServletContextHandler(ServletContextHandler.SESSIONS);
         this.context.setContextPath("/");
-        this.context.addFilter(new FilterHolder(new SslFilter()), "/*", EnumSet.of(DispatcherType.REQUEST));
+        this.context.addFilter(new FilterHolder(new SslFilter(config)), "/*", EnumSet.of(DispatcherType.REQUEST));
 
         this.server = new Server(this.serverAddress);
         this.server.setHandler(this.context);
@@ -72,19 +78,16 @@ public class SslFilterJettyTest
     }
 
     @After
-    public void tearDown() throws Exception
-    {
+    public void tearDown() throws Exception {
         HttpURLConnection.setFollowRedirects(this.originalFollowRedirects);
 
-        if (this.server != null)
-        {
+        if (this.server != null) {
             this.server.stop();
         }
     }
 
     @Test
-    public void testSslFilterWithRelativeRedirectURL() throws Exception
-    {
+    public void testSslFilterWithRelativeRedirectURL() throws Exception {
         String servletPath = "/test";
         String redirectPath = "/foo";
 
@@ -99,8 +102,7 @@ public class SslFilterJettyTest
     }
 
     @Test
-    public void testSslFilterWithAbsoluteRedirectURL() throws Exception
-    {
+    public void testSslFilterWithAbsoluteRedirectURL() throws Exception {
         String servletPath = "/test";
         String redirectPath = String.format("http://%s:%d/foo", this.serverAddress.getHostName(), this.serverAddress.getPort());
 
@@ -116,8 +118,7 @@ public class SslFilterJettyTest
     }
 
     @Test
-    public void testSslFilterWithAbsoluteRedirectURLWithoutScheme() throws Exception
-    {
+    public void testSslFilterWithAbsoluteRedirectURLWithoutScheme() throws Exception {
         String servletPath = "/test";
         String redirectPath = String.format("//%s:%d/foo", this.serverAddress.getHostName(), this.serverAddress.getPort());
 
@@ -133,8 +134,7 @@ public class SslFilterJettyTest
     }
 
     @Test
-    public void testSslFilterWithAbsoluteRedirectURLWithHttpsScheme() throws Exception
-    {
+    public void testSslFilterWithAbsoluteRedirectURLWithHttpsScheme() throws Exception {
         String servletPath = "/test";
         String redirectPath = String.format("https://%s:%d/foo", this.serverAddress.getHostName(), this.serverAddress.getPort());
 
@@ -149,8 +149,7 @@ public class SslFilterJettyTest
         assertTrue(location, location.startsWith(HTTPS));
     }
 
-    private HttpURLConnection openConnection(URL url) throws IOException
-    {
+    private HttpURLConnection openConnection(URL url) throws IOException {
         HttpURLConnection conn = (HttpURLConnection) url.openConnection();
         conn.setRequestProperty(HDR_X_FORWARDED_PROTO, HTTPS);
         conn.setRequestProperty(HDR_X_FORWARDED_SSL, "on");
@@ -158,23 +157,19 @@ public class SslFilterJettyTest
         return conn;
     }
 
-    private URL createURL(String path) throws MalformedURLException
-    {
+    private URL createURL(String path) throws MalformedURLException {
         return new URL(HTTP, this.serverAddress.getHostName(), this.serverAddress.getPort(), path);
     }
 
-    private static class RedirectServlet extends HttpServlet
-    {
+    private static class RedirectServlet extends HttpServlet {
         private final String redirectPath;
 
-        private RedirectServlet(String redirectPath)
-        {
+        private RedirectServlet(String redirectPath) {
             this.redirectPath = redirectPath;
         }
 
         @Override
-        protected void doGet(HttpServletRequest req, HttpServletResponse resp) throws ServletException, IOException
-        {
+        protected void doGet(HttpServletRequest req, HttpServletResponse resp) throws ServletException, IOException {
             resp.sendRedirect(redirectPath);
             assertEquals(HTTPS, req.getScheme());
         }

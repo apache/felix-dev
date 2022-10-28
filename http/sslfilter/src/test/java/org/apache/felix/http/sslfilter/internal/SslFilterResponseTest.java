@@ -18,8 +18,9 @@
  */
 package org.apache.felix.http.sslfilter.internal;
 
-import static junit.framework.Assert.assertEquals;
+import static org.junit.Assert.assertEquals;
 import static org.apache.felix.http.sslfilter.internal.SslFilterConstants.HDR_X_FORWARDED_PROTO;
+import static org.apache.felix.http.sslfilter.internal.SslFilterConstants.HDR_X_FORWARDED_SSL_CERTIFICATE;
 import static org.apache.felix.http.sslfilter.internal.SslFilterConstants.HTTP;
 import static org.apache.felix.http.sslfilter.internal.SslFilterConstants.HTTPS;
 import static org.mockito.Mockito.mock;
@@ -33,12 +34,11 @@ import java.util.HashMap;
 import java.util.Locale;
 import java.util.Map;
 
-import javax.servlet.ServletOutputStream;
-import javax.servlet.http.Cookie;
-import javax.servlet.http.HttpServletRequest;
-import javax.servlet.http.HttpServletResponse;
+import jakarta.servlet.ServletOutputStream;
+import jakarta.servlet.http.Cookie;
+import jakarta.servlet.http.HttpServletRequest;
+import jakarta.servlet.http.HttpServletResponse;
 
-import org.apache.felix.http.sslfilter.internal.SslFilter.ConfigHolder;
 import org.junit.Test;
 
 public class SslFilterResponseTest
@@ -56,11 +56,15 @@ public class SslFilterResponseTest
     private static final String LOCATION = "Location";
 
     @Test
-    public void testSetHttpLocationHeaderToNullValue() throws Exception
-    {
+    public void testSetHttpLocationHeaderToNullValue() throws Exception {
         TestHttpServletResponse resp = createServletResponse();
         HttpServletRequest req = createServletRequest(BACKEND_SERVER, PATH);
-        ConfigHolder cfg = new ConfigHolder(HDR_X_FORWARDED_PROTO, "https", null, false);
+
+        final SslFilter.Config cfg = mock(SslFilter.Config.class);
+        when(cfg.rewrite_absolute_urls()).thenReturn(false);
+        when(cfg.ssl_forward_header()).thenReturn(HDR_X_FORWARDED_PROTO);
+        when(cfg.ssl_forward_value()).thenReturn("https");
+        when(cfg.ssl_forward_cert_header()).thenReturn(HDR_X_FORWARDED_SSL_CERTIFICATE);
 
         SslFilterResponse sresp = new SslFilterResponse(resp, req, cfg);
 
@@ -70,13 +74,16 @@ public class SslFilterResponseTest
     }
 
     @Test
-    public void testSetHttpsLocationHeaderToOriginalRequestURI() throws Exception
-    {
+    public void testSetHttpsLocationHeaderToOriginalRequestURI() throws Exception {
         String location, expected;
 
         TestHttpServletResponse resp = createServletResponse();
         HttpServletRequest req = createServletRequest(BACKEND_SERVER, PATH);
-        ConfigHolder cfg = new ConfigHolder(HDR_X_FORWARDED_PROTO, "https", null, false);
+        final SslFilter.Config cfg = mock(SslFilter.Config.class);
+        when(cfg.rewrite_absolute_urls()).thenReturn(false);
+        when(cfg.ssl_forward_header()).thenReturn(HDR_X_FORWARDED_PROTO);
+        when(cfg.ssl_forward_value()).thenReturn("https");
+        when(cfg.ssl_forward_cert_header()).thenReturn(HDR_X_FORWARDED_SSL_CERTIFICATE);
 
         SslFilterResponse sresp = new SslFilterResponse(resp, req, cfg);
 
@@ -88,7 +95,8 @@ public class SslFilterResponseTest
         assertEquals(expected, resp.getHeader(LOCATION));
 
         req = createServletRequest(BACKEND_SERVER, PATH);
-        cfg = new ConfigHolder(HDR_X_FORWARDED_PROTO, "https", null, true);
+
+        when(cfg.rewrite_absolute_urls()).thenReturn(true);
 
         sresp = new SslFilterResponse(resp, req, cfg);
 
@@ -101,14 +109,17 @@ public class SslFilterResponseTest
     }
 
     @Test
-    public void testSetHttpLocationHeaderToOriginalRequestURI() throws Exception
-    {
+    public void testSetHttpLocationHeaderToOriginalRequestURI() throws Exception {
         String location, expected;
 
         TestHttpServletResponse resp = createServletResponse();
         HttpServletRequest req = createServletRequest(BACKEND_SERVER, PATH);
 
-        ConfigHolder cfg = new ConfigHolder(HDR_X_FORWARDED_PROTO, "https", null, false);
+        final SslFilter.Config cfg = mock(SslFilter.Config.class);
+        when(cfg.rewrite_absolute_urls()).thenReturn(false);
+        when(cfg.ssl_forward_header()).thenReturn(HDR_X_FORWARDED_PROTO);
+        when(cfg.ssl_forward_value()).thenReturn("https");
+        when(cfg.ssl_forward_cert_header()).thenReturn(HDR_X_FORWARDED_SSL_CERTIFICATE);
 
         SslFilterResponse sresp = new SslFilterResponse(resp, req, cfg);
 
@@ -119,7 +130,7 @@ public class SslFilterResponseTest
 
         assertEquals(expected, resp.getHeader(LOCATION));
 
-        cfg = new ConfigHolder(HDR_X_FORWARDED_PROTO, "https", null, true);
+        when(cfg.rewrite_absolute_urls()).thenReturn(true);
 
         sresp = new SslFilterResponse(resp, req, cfg);
 
@@ -132,13 +143,17 @@ public class SslFilterResponseTest
     }
 
     @Test
-    public void testSetHttpLocationHeaderToOriginalRequestWithExplicitPort() throws Exception
-    {
+    public void testSetHttpLocationHeaderToOriginalRequestWithExplicitPort() throws Exception {
         String location, expected;
 
         TestHttpServletResponse resp = createServletResponse();
         HttpServletRequest req = createServletRequest(BACKEND_SERVER, PATH);
-        ConfigHolder cfg = new ConfigHolder(HDR_X_FORWARDED_PROTO, "https", null, false);
+
+        final SslFilter.Config cfg = mock(SslFilter.Config.class);
+        when(cfg.rewrite_absolute_urls()).thenReturn(false);
+        when(cfg.ssl_forward_header()).thenReturn(HDR_X_FORWARDED_PROTO);
+        when(cfg.ssl_forward_value()).thenReturn("https");
+        when(cfg.ssl_forward_cert_header()).thenReturn(HDR_X_FORWARDED_SSL_CERTIFICATE);
 
         SslFilterResponse sresp = new SslFilterResponse(resp, req, cfg);
 
@@ -151,7 +166,7 @@ public class SslFilterResponseTest
 
         resp = createServletResponse();
         req = createServletRequest(BACKEND_SERVER, PATH);
-        cfg = new ConfigHolder(HDR_X_FORWARDED_PROTO, "https", null, true);
+        when(cfg.rewrite_absolute_urls()).thenReturn(true);
 
         sresp = new SslFilterResponse(resp, req, cfg);
 
@@ -164,13 +179,16 @@ public class SslFilterResponseTest
     }
 
     @Test
-    public void testSetHttpLocationHeaderToOriginalRequestWithForwardedPort() throws Exception
-    {
+    public void testSetHttpLocationHeaderToOriginalRequestWithForwardedPort() throws Exception {
         String location, expected;
 
         TestHttpServletResponse resp = createServletResponse();
         HttpServletRequest req = createServletRequest(BACKEND_SERVER, DEFAULT_HTTP_PORT, HTTPS, ALT_HTTPS_PORT, PATH);
-        ConfigHolder cfg = new ConfigHolder(HDR_X_FORWARDED_PROTO, "https", null, false);
+        final SslFilter.Config cfg = mock(SslFilter.Config.class);
+        when(cfg.rewrite_absolute_urls()).thenReturn(false);
+        when(cfg.ssl_forward_header()).thenReturn(HDR_X_FORWARDED_PROTO);
+        when(cfg.ssl_forward_value()).thenReturn("https");
+        when(cfg.ssl_forward_cert_header()).thenReturn(HDR_X_FORWARDED_SSL_CERTIFICATE);
 
         SslFilterResponse sresp = new SslFilterResponse(resp, req, cfg);
 
@@ -183,7 +201,7 @@ public class SslFilterResponseTest
 
         resp = createServletResponse();
         req = createServletRequest(BACKEND_SERVER, DEFAULT_HTTP_PORT, HTTPS, ALT_HTTPS_PORT, PATH);
-        cfg = new ConfigHolder(HDR_X_FORWARDED_PROTO, "https", null, true);
+        when(cfg.rewrite_absolute_urls()).thenReturn(true);
 
         sresp = new SslFilterResponse(resp, req, cfg);
 
@@ -196,13 +214,16 @@ public class SslFilterResponseTest
     }
 
     @Test
-    public void testSetHttpLocationHeaderToOriginalRequestWithDifferentPort() throws Exception
-    {
+    public void testSetHttpLocationHeaderToOriginalRequestWithDifferentPort() throws Exception {
         String location, expected;
 
         TestHttpServletResponse resp = createServletResponse();
         HttpServletRequest req = createServletRequest(BACKEND_SERVER, PATH);
-        ConfigHolder cfg = new ConfigHolder(HDR_X_FORWARDED_PROTO, "https", null, false);
+        final SslFilter.Config cfg = mock(SslFilter.Config.class);
+        when(cfg.rewrite_absolute_urls()).thenReturn(false);
+        when(cfg.ssl_forward_header()).thenReturn(HDR_X_FORWARDED_PROTO);
+        when(cfg.ssl_forward_value()).thenReturn("https");
+        when(cfg.ssl_forward_cert_header()).thenReturn(HDR_X_FORWARDED_SSL_CERTIFICATE);
 
         SslFilterResponse sresp = new SslFilterResponse(resp, req, cfg);
 
@@ -215,7 +236,7 @@ public class SslFilterResponseTest
 
         resp = createServletResponse();
         req = createServletRequest(BACKEND_SERVER, PATH);
-        cfg = new ConfigHolder(HDR_X_FORWARDED_PROTO, "https", null, true);
+        when(cfg.rewrite_absolute_urls()).thenReturn(true);
 
         sresp = new SslFilterResponse(resp, req, cfg);
 
@@ -228,11 +249,14 @@ public class SslFilterResponseTest
     }
 
     @Test
-    public void testSetHttpLocationHeaderToOtherRequestURI() throws Exception
-    {
+    public void testSetHttpLocationHeaderToOtherRequestURI() throws Exception {
         TestHttpServletResponse resp = createServletResponse();
         HttpServletRequest req = createServletRequest(BACKEND_SERVER, PATH);
-        ConfigHolder cfg = new ConfigHolder(HDR_X_FORWARDED_PROTO, "https", null, false);
+        final SslFilter.Config cfg = mock(SslFilter.Config.class);
+        when(cfg.rewrite_absolute_urls()).thenReturn(false);
+        when(cfg.ssl_forward_header()).thenReturn(HDR_X_FORWARDED_PROTO);
+        when(cfg.ssl_forward_value()).thenReturn("https");
+        when(cfg.ssl_forward_cert_header()).thenReturn(HDR_X_FORWARDED_SSL_CERTIFICATE);
 
         SslFilterResponse sresp = new SslFilterResponse(resp, req,cfg);
 
@@ -245,7 +269,7 @@ public class SslFilterResponseTest
 
         resp = createServletResponse();
         req = createServletRequest(BACKEND_SERVER, PATH);
-        cfg = new ConfigHolder(HDR_X_FORWARDED_PROTO, "https", null, true);
+        when(cfg.rewrite_absolute_urls()).thenReturn(true);
 
         sresp = new SslFilterResponse(resp, req,cfg);
 
@@ -258,33 +282,33 @@ public class SslFilterResponseTest
     }
 
     @Test
-    public void testFragment() throws Exception
-    {
+    public void testFragment() throws Exception {
         test("/foo#abc");
     }
 
     @Test
-    public void testQueryString() throws Exception
-    {
+    public void testQueryString() throws Exception {
         final String queryString = "?resource=%2Fen.html%3FpbOpen%3Dtrue&$$login$$=%24%24login%24%24&j_reason=errors.login.account.not.found";
         test("/" + queryString);
     }
 
     @Test
-    public void testPathEncoding() throws Exception
-    {
+    public void testPathEncoding() throws Exception {
         test("/apps/test/content/%E4%B8%83%E6%9C%88%E5%8F%B7.redirect");
     }
 
 
-    private void test(final String path) throws Exception
-    {
+    private void test(final String path) throws Exception {
         TestHttpServletResponse response = createServletResponse();
         HttpServletRequest req = createServletRequest(BACKEND_SERVER, PATH);
 
         // test - don't rewrite absolute urls / absolute http url / sendRedirect
         // expected: no rewrite
-        ConfigHolder cfg = new ConfigHolder(HDR_X_FORWARDED_PROTO, "https", null, false);
+        SslFilter.Config cfg = mock(SslFilter.Config.class);
+        when(cfg.rewrite_absolute_urls()).thenReturn(false);
+        when(cfg.ssl_forward_header()).thenReturn(HDR_X_FORWARDED_PROTO);
+        when(cfg.ssl_forward_value()).thenReturn("https");
+        when(cfg.ssl_forward_cert_header()).thenReturn(HDR_X_FORWARDED_SSL_CERTIFICATE);
         SslFilterResponse sresp = new SslFilterResponse(response, req, cfg);
 
         sresp.sendRedirect("http://" + BACKEND_SERVER + path);
@@ -292,7 +316,10 @@ public class SslFilterResponseTest
 
         // test - don't rewrite absolute urls / absolute http url / setHeader
         // expected: no rewrite
-        cfg = new ConfigHolder(HDR_X_FORWARDED_PROTO, "https", null, false);
+        when(cfg.rewrite_absolute_urls()).thenReturn(false);
+        when(cfg.ssl_forward_header()).thenReturn(HDR_X_FORWARDED_PROTO);
+        when(cfg.ssl_forward_value()).thenReturn("https");
+        when(cfg.ssl_forward_cert_header()).thenReturn(HDR_X_FORWARDED_SSL_CERTIFICATE);
         sresp = new SslFilterResponse(response, req, cfg);
 
         sresp.setHeader(SslFilterConstants.HDR_LOCATION, "http://" + BACKEND_SERVER + path);
@@ -300,7 +327,10 @@ public class SslFilterResponseTest
 
         // test - don't rewrite absolute urls / absolute https url / sendRedirect
         // expected: no rewrite
-        cfg = new ConfigHolder(HDR_X_FORWARDED_PROTO, "https", null, false);
+        when(cfg.rewrite_absolute_urls()).thenReturn(false);
+        when(cfg.ssl_forward_header()).thenReturn(HDR_X_FORWARDED_PROTO);
+        when(cfg.ssl_forward_value()).thenReturn("https");
+        when(cfg.ssl_forward_cert_header()).thenReturn(HDR_X_FORWARDED_SSL_CERTIFICATE);
         sresp = new SslFilterResponse(response, req, cfg);
 
         sresp.sendRedirect("https://" + BACKEND_SERVER + path);
@@ -308,7 +338,10 @@ public class SslFilterResponseTest
 
         // test - don't rewrite absolute urls / absolute https url / setHeader
         // expected: no rewrite
-        cfg = new ConfigHolder(HDR_X_FORWARDED_PROTO, "https", null, false);
+        when(cfg.rewrite_absolute_urls()).thenReturn(false);
+        when(cfg.ssl_forward_header()).thenReturn(HDR_X_FORWARDED_PROTO);
+        when(cfg.ssl_forward_value()).thenReturn("https");
+        when(cfg.ssl_forward_cert_header()).thenReturn(HDR_X_FORWARDED_SSL_CERTIFICATE);
         sresp = new SslFilterResponse(response, req, cfg);
 
         sresp.setHeader(SslFilterConstants.HDR_LOCATION, "https://" + BACKEND_SERVER + path);
@@ -316,7 +349,10 @@ public class SslFilterResponseTest
 
         // test - rewrite absolute urls / absolute http url / sendRedirect
         // expected: rewrite
-        cfg = new ConfigHolder(HDR_X_FORWARDED_PROTO, "https", null, true);
+        when(cfg.rewrite_absolute_urls()).thenReturn(true);
+        when(cfg.ssl_forward_header()).thenReturn(HDR_X_FORWARDED_PROTO);
+        when(cfg.ssl_forward_value()).thenReturn("https");
+        when(cfg.ssl_forward_cert_header()).thenReturn(HDR_X_FORWARDED_SSL_CERTIFICATE);
         sresp = new SslFilterResponse(response, req, cfg);
 
         sresp.sendRedirect("http://" + BACKEND_SERVER + path);
@@ -324,7 +360,10 @@ public class SslFilterResponseTest
 
         // test - rewrite absolute urls / absolute http url / setHeader
         // expected: rewrite
-        cfg = new ConfigHolder(HDR_X_FORWARDED_PROTO, "https", null, true);
+        when(cfg.rewrite_absolute_urls()).thenReturn(true);
+        when(cfg.ssl_forward_header()).thenReturn(HDR_X_FORWARDED_PROTO);
+        when(cfg.ssl_forward_value()).thenReturn("https");
+        when(cfg.ssl_forward_cert_header()).thenReturn(HDR_X_FORWARDED_SSL_CERTIFICATE);
         sresp = new SslFilterResponse(response, req, cfg);
 
         sresp.setHeader(SslFilterConstants.HDR_LOCATION, "http://" + BACKEND_SERVER + path);
@@ -332,7 +371,10 @@ public class SslFilterResponseTest
 
         // test - rewrite absolute urls / absolute https url / sendRedirect
         // expected: no rewrite
-        cfg = new ConfigHolder(HDR_X_FORWARDED_PROTO, "https", null, true);
+        when(cfg.rewrite_absolute_urls()).thenReturn(true);
+        when(cfg.ssl_forward_header()).thenReturn(HDR_X_FORWARDED_PROTO);
+        when(cfg.ssl_forward_value()).thenReturn("https");
+        when(cfg.ssl_forward_cert_header()).thenReturn(HDR_X_FORWARDED_SSL_CERTIFICATE);
         sresp = new SslFilterResponse(response, req, cfg);
 
         sresp.sendRedirect("https://" + BACKEND_SERVER + path);
@@ -340,7 +382,10 @@ public class SslFilterResponseTest
 
         // test - rewrite absolute urls / absolute https url / setHeader
         // expected: no rewrite
-        cfg = new ConfigHolder(HDR_X_FORWARDED_PROTO, "https", null, true);
+        when(cfg.rewrite_absolute_urls()).thenReturn(true);
+        when(cfg.ssl_forward_header()).thenReturn(HDR_X_FORWARDED_PROTO);
+        when(cfg.ssl_forward_value()).thenReturn("https");
+        when(cfg.ssl_forward_cert_header()).thenReturn(HDR_X_FORWARDED_SSL_CERTIFICATE);
         sresp = new SslFilterResponse(response, req, cfg);
 
         sresp.setHeader(SslFilterConstants.HDR_LOCATION, "https://" + BACKEND_SERVER + path);
@@ -348,7 +393,10 @@ public class SslFilterResponseTest
 
         // test - don't rewrite absolute urls / relative path / setHeader
         // expected: rewrite
-        cfg = new ConfigHolder(HDR_X_FORWARDED_PROTO, "https", null, false);
+        when(cfg.rewrite_absolute_urls()).thenReturn(false);
+        when(cfg.ssl_forward_header()).thenReturn(HDR_X_FORWARDED_PROTO);
+        when(cfg.ssl_forward_value()).thenReturn("https");
+        when(cfg.ssl_forward_cert_header()).thenReturn(HDR_X_FORWARDED_SSL_CERTIFICATE);
         sresp = new SslFilterResponse(response, req, cfg);
 
         sresp.sendRedirect(path);
@@ -356,20 +404,21 @@ public class SslFilterResponseTest
 
         // test - rewrite absolute urls / relative path / sendRedirect
         // expected: rewrite
-        cfg = new ConfigHolder(HDR_X_FORWARDED_PROTO, "https", null, true);
+        when(cfg.rewrite_absolute_urls()).thenReturn(true);
+        when(cfg.ssl_forward_header()).thenReturn(HDR_X_FORWARDED_PROTO);
+        when(cfg.ssl_forward_value()).thenReturn("https");
+        when(cfg.ssl_forward_cert_header()).thenReturn(HDR_X_FORWARDED_SSL_CERTIFICATE);
         sresp = new SslFilterResponse(response, req, cfg);
 
         sresp.setHeader(SslFilterConstants.HDR_LOCATION, path);
         assertEquals("https://" + BACKEND_SERVER + path, sresp.getHeader(SslFilterConstants.HDR_LOCATION));
     }
 
-    private HttpServletRequest createServletRequest(String serverName, String requestURL)
-    {
+    private HttpServletRequest createServletRequest(String serverName, String requestURL) {
         return createServletRequest(serverName, DEFAULT_HTTP_PORT, HTTPS, DEFAULT_HTTPS_PORT, requestURL);
     }
 
-    private HttpServletRequest createServletRequest(String serverName, String serverPort, String forwardedProto, String forwardedPort, String requestURL)
-    {
+    private HttpServletRequest createServletRequest(String serverName, String serverPort, String forwardedProto, String forwardedPort, String requestURL) {
         HttpServletRequest req = mock(HttpServletRequest.class);
         when(req.getServerName()).thenReturn(serverName);
         when(req.getServerPort()).thenReturn(Integer.parseInt(serverPort));
@@ -379,239 +428,200 @@ public class SslFilterResponseTest
         return req;
     }
 
-    private TestHttpServletResponse createServletResponse()
-    {
+    private TestHttpServletResponse createServletResponse() {
         return new TestHttpServletResponse();
     }
 
-    private static class TestHttpServletResponse implements HttpServletResponse
-    {
+    private static class TestHttpServletResponse implements HttpServletResponse {
         private final Map<String, String> headers = new HashMap<String, String>();
         private int status = -1;
         private boolean committed = false;
 
         @Override
-        public void setLocale(Locale loc)
-        {
+        public void setLocale(Locale loc) {
             throw new UnsupportedOperationException();
         }
 
         @Override
-        public void setContentType(String type)
-        {
+        public void setContentType(String type) {
             throw new UnsupportedOperationException();
         }
 
         @Override
-        public void setContentLength(int len)
-        {
+        public void setContentLength(int len) {
             throw new UnsupportedOperationException();
         }
 
         @Override
-        public void setContentLengthLong(long len)
-        {
+        public void setContentLengthLong(long len) {
             throw new UnsupportedOperationException();
         }
 
         @Override
-        public void setCharacterEncoding(String charset)
-        {
+        public void setCharacterEncoding(String charset) {
             throw new UnsupportedOperationException();
         }
 
         @Override
-        public void setBufferSize(int size)
-        {
+        public void setBufferSize(int size) {
             throw new UnsupportedOperationException();
         }
 
         @Override
-        public void resetBuffer()
-        {
+        public void resetBuffer() {
         }
 
         @Override
-        public void reset()
-        {
+        public void reset() {
         }
 
         @Override
-        public boolean isCommitted()
-        {
+        public boolean isCommitted() {
             return this.committed;
         }
 
         @Override
-        public PrintWriter getWriter() throws IOException
-        {
+        public PrintWriter getWriter() throws IOException {
             throw new UnsupportedOperationException();
         }
 
         @Override
-        public ServletOutputStream getOutputStream() throws IOException
-        {
+        public ServletOutputStream getOutputStream() throws IOException {
             throw new UnsupportedOperationException();
         }
 
         @Override
-        public Locale getLocale()
-        {
+        public Locale getLocale() {
             throw new UnsupportedOperationException();
         }
 
         @Override
-        public String getContentType()
-        {
+        public String getContentType() {
             throw new UnsupportedOperationException();
         }
 
         @Override
-        public String getCharacterEncoding()
-        {
+        public String getCharacterEncoding() {
             throw new UnsupportedOperationException();
         }
 
         @Override
-        public int getBufferSize()
-        {
+        public int getBufferSize() {
             throw new UnsupportedOperationException();
         }
 
         @Override
-        public void flushBuffer() throws IOException
-        {
+        public void flushBuffer() throws IOException {
             committed = true;
         }
 
         @SuppressWarnings("deprecation")
         @Override
-        public void setStatus(int sc, String sm)
-        {
+        public void setStatus(int sc, String sm) {
             status = sc;
             committed = true;
         }
 
         @Override
-        public void setStatus(int sc)
-        {
+        public void setStatus(int sc) {
             status = sc;
             committed = true;
         }
 
         @Override
-        public void setIntHeader(String name, int value)
-        {
+        public void setIntHeader(String name, int value) {
             headers.put(name, Integer.toString(value));
         }
 
         @Override
-        public void setHeader(String name, String value)
-        {
+        public void setHeader(String name, String value) {
             headers.put(name, value);
         }
 
         @Override
-        public void setDateHeader(String name, long date)
-        {
+        public void setDateHeader(String name, long date) {
             throw new UnsupportedOperationException();
         }
 
         @Override
-        public void sendRedirect(String location) throws IOException
-        {
+        public void sendRedirect(String location) throws IOException {
             this.setHeader(SslFilterConstants.HDR_LOCATION, location);
         }
 
         @Override
-        public void sendError(int sc, String msg) throws IOException
-        {
+        public void sendError(int sc, String msg) throws IOException {
             throw new UnsupportedOperationException();
         }
 
         @Override
-        public void sendError(int sc) throws IOException
-        {
+        public void sendError(int sc) throws IOException {
             throw new UnsupportedOperationException();
         }
 
         @Override
-        public int getStatus()
-        {
+        public int getStatus() {
             return status;
         }
 
         @Override
-        public Collection<String> getHeaders(String name)
-        {
+        public Collection<String> getHeaders(String name) {
             return Collections.singleton(headers.get(name));
         }
 
         @Override
-        public Collection<String> getHeaderNames()
-        {
+        public Collection<String> getHeaderNames() {
             return headers.keySet();
         }
 
         @Override
-        public String getHeader(String name)
-        {
+        public String getHeader(String name) {
             return headers.get(name);
         }
 
         @SuppressWarnings("deprecation")
         @Override
-        public String encodeUrl(String url)
-        {
+        public String encodeUrl(String url) {
             throw new UnsupportedOperationException();
         }
 
         @Override
-        public String encodeURL(String url)
-        {
+        public String encodeURL(String url) {
             throw new UnsupportedOperationException();
         }
 
         @SuppressWarnings("deprecation")
         @Override
-        public String encodeRedirectUrl(String url)
-        {
+        public String encodeRedirectUrl(String url) {
             throw new UnsupportedOperationException();
         }
 
         @Override
-        public String encodeRedirectURL(String url)
-        {
+        public String encodeRedirectURL(String url) {
             throw new UnsupportedOperationException();
         }
 
         @Override
-        public boolean containsHeader(String name)
-        {
+        public boolean containsHeader(String name) {
             return headers.containsKey(name);
         }
 
         @Override
-        public void addIntHeader(String name, int value)
-        {
+        public void addIntHeader(String name, int value) {
             throw new UnsupportedOperationException();
         }
 
         @Override
-        public void addHeader(String name, String value)
-        {
+        public void addHeader(String name, String value) {
             throw new UnsupportedOperationException();
         }
 
         @Override
-        public void addDateHeader(String name, long date)
-        {
+        public void addDateHeader(String name, long date) {
             throw new UnsupportedOperationException();
         }
 
         @Override
-        public void addCookie(Cookie cookie)
-        {
+        public void addCookie(Cookie cookie) {
             throw new UnsupportedOperationException();
         }
     }

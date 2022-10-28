@@ -33,11 +33,10 @@ import java.security.cert.X509Certificate;
 import java.util.Collection;
 import java.util.regex.Pattern;
 
-import javax.servlet.http.HttpServletRequest;
-import javax.servlet.http.HttpServletRequestWrapper;
+import jakarta.servlet.http.HttpServletRequest;
+import jakarta.servlet.http.HttpServletRequestWrapper;
 
-class SslFilterRequest extends HttpServletRequestWrapper
-{
+class SslFilterRequest extends HttpServletRequestWrapper {
     // The HTTP scheme prefix in an URL
     private static final String HTTP_SCHEME_PREFIX = "http://";
 
@@ -46,77 +45,63 @@ class SslFilterRequest extends HttpServletRequestWrapper
     private static final Pattern HEADER_TO_CERT = Pattern.compile("(?! CERTIFICATE)(?= ) ");
 
     @SuppressWarnings("unchecked")
-    SslFilterRequest(HttpServletRequest request, String clientCertHeader) throws CertificateException
-    {
+    SslFilterRequest(final HttpServletRequest request, final String clientCertHeader) throws CertificateException {
         super(request);
 
         // TODO jawi: perhaps we should make this class a little smarter wrt the given request:
         // it now always assumes it should rewrite its URL, while this might not always be the
         // case...
 
-        if (clientCertHeader != null && !"".equals(clientCertHeader.trim()))
-        {
+        if (clientCertHeader != null && !"".equals(clientCertHeader.trim())) {
             final String clientCert = HEADER_TO_CERT.matcher(clientCertHeader).replaceAll("\n");
 
-            try
-            {
+            try {
                 CertificateFactory fac = CertificateFactory.getInstance(X_509);
 
                 InputStream instream = new ByteArrayInputStream(clientCert.getBytes(UTF_8));
 
                 Collection<X509Certificate> certs = (Collection<X509Certificate>) fac.generateCertificates(instream);
                 request.setAttribute(ATTR_SSL_CERTIFICATE, certs.toArray(new X509Certificate[certs.size()]));
-            }
-            catch (UnsupportedEncodingException e)
-            {
+            } catch (UnsupportedEncodingException e) {
                 // Any JRE should support UTF-8...
                 throw new InternalError("UTF-8 not supported?!");
             }
         }
     }
 
-    void done()
-    {
+    void done() {
         getRequest().removeAttribute(ATTR_SSL_CERTIFICATE);
     }
 
     @Override
-    public String getScheme()
-    {
+    public String getScheme() {
         return HTTPS;
     }
 
     @Override
-    public boolean isSecure()
-    {
+    public boolean isSecure() {
         return true;
     }
 
     @Override
-    public StringBuffer getRequestURL()
-    {
+    public StringBuffer getRequestURL() {
         StringBuffer tmp = new StringBuffer(super.getRequestURL());
         // In case the request happened over http, simply insert an additional 's'
         // to make the request appear to be done over https...
-        if (tmp.indexOf(HTTP_SCHEME_PREFIX) == 0)
-        {
+        if (tmp.indexOf(HTTP_SCHEME_PREFIX) == 0) {
             tmp.insert(4, 's');
         }
         return tmp;
     }
 
     @Override
-    public int getServerPort()
-    {
+    public int getServerPort() {
         int port;
 
-        try
-        {
+        try {
             String fwdPort = getHeader(HDR_X_FORWARDED_PORT);
             port = Integer.parseInt(fwdPort);
-        }
-        catch (Exception e)
-        {
+        } catch (Exception e) {
             // Use default port
             port = 443;
         }

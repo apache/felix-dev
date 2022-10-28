@@ -23,173 +23,113 @@ import static org.apache.felix.http.sslfilter.internal.SslFilterConstants.HDR_X_
 
 import java.io.IOException;
 import java.security.cert.CertificateException;
-import java.util.Dictionary;
 
-import javax.servlet.Filter;
-import javax.servlet.FilterChain;
-import javax.servlet.FilterConfig;
-import javax.servlet.ServletException;
-import javax.servlet.ServletRequest;
-import javax.servlet.ServletResponse;
-import javax.servlet.http.HttpServletRequest;
-import javax.servlet.http.HttpServletResponse;
+import jakarta.servlet.FilterChain;
+import jakarta.servlet.FilterConfig;
+import jakarta.servlet.ServletException;
+import jakarta.servlet.ServletRequest;
+import jakarta.servlet.ServletResponse;
+import jakarta.servlet.http.HttpServletRequest;
+import jakarta.servlet.http.HttpServletResponse;
 
-import org.osgi.service.cm.ConfigurationException;
-import org.osgi.service.http.whiteboard.Preprocessor;
-import org.osgi.service.log.LogService;
+import org.osgi.service.component.annotations.Activate;
+import org.osgi.service.component.annotations.Component;
+import org.osgi.service.component.annotations.Modified;
+import org.osgi.service.metatype.annotations.AttributeDefinition;
+import org.osgi.service.metatype.annotations.Designate;
+import org.osgi.service.metatype.annotations.ObjectClassDefinition;
+import org.osgi.service.servlet.whiteboard.HttpWhiteboardConstants;
+import org.osgi.service.servlet.whiteboard.Preprocessor;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
-@SuppressWarnings("rawtypes")
-public class SslFilter implements  Preprocessor
-{
-    public static final String PID = "org.apache.felix.http.sslfilter.SslFilter";
+@Designate(ocd = SslFilter.Config.class)
+@Component( service = Preprocessor.class,
+    configurationPid = "org.apache.felix.http.sslfilter.Configuration",
+    property = {
+        HttpWhiteboardConstants.HTTP_WHITEBOARD_CONTEXT_SELECT + "=(" + HttpWhiteboardConstants.HTTP_WHITEBOARD_CONTEXT_NAME + "=*)",
+        HttpWhiteboardConstants.HTTP_WHITEBOARD_FILTER_PATTERN + "=/"
+    })
+public class SslFilter implements  Preprocessor {
 
-    private static final String DEFAULT_SSL_HEADER = HDR_X_FORWARDED_SSL;
-    private static final String DEFAULT_SSL_VALUE = "on";
-    private static final String DEFAULT_CERT_HEADER = HDR_X_FORWARDED_SSL_CERTIFICATE;
-    private static final boolean DEFAULT_REWRITE_ABSOLUTE_URLS = false;
+    private final Logger logger = LoggerFactory.getLogger(this.getClass());
 
-    private static final String PROP_SSL_HEADER = "ssl-forward.header";
-    private static final String PROP_SSL_VALUE = "ssl-forward.value";
-    private static final String PROP_SSL_CERT_KEY = "ssl-forward-cert.header";
-    private static final String PROP_REWRITE_ABSOLUTE_URLS = "rewrite.absolute.urls";
+    @ObjectClassDefinition(name = "Apache Felix Http Service SSL Filter",
+        description = "Configuration for the Http Service SSL Filter. Please consult the documentation of your proxy for the actual headers and values to use.")
+    public @interface Config {
 
-    private volatile ConfigHolder config;
+        @AttributeDefinition(name = "SSL forward header",
+            description = "HTTP Request header name that indicates a request is a SSL request terminated at a" +
+                          " proxy between the client and the originating server. The default value is 'X-Forwarded-SSL' as is " +
+                          "customarily used in the wild. Other commonly used names are: 'X-Forwarded-Proto' (Amazon ELB), " +
+                          "'X-Forwarded-Protocol' (alternative), and 'Front-End-Https' (Microsoft IIS).")
+        String ssl_forward_header() default HDR_X_FORWARDED_SSL ;
+        
+        @AttributeDefinition(name = "SSL forward value",
+            description = "HTTP Request header value that indicates a request is a SSL request terminated at a proxy. " +
+                          "The default value is 'on'. Another commonly used value is 'https'.")
+        String ssl_forward_value() default "on";
 
-    SslFilter()
-    {
-        this.config = new ConfigHolder(DEFAULT_SSL_HEADER,
-                DEFAULT_SSL_VALUE,
-                DEFAULT_CERT_HEADER,
-                DEFAULT_REWRITE_ABSOLUTE_URLS);
+        @AttributeDefinition(name = "SSL client header",
+            description = "HTTP Request header name that contains the client certificate forwarded by a proxy. The default " +
+                          "value is 'X-Forwarded-SSL-Certificate'. Another commonly used value is 'X-Forwarded-SSL-Client-Cert'.")
+        String ssl_forward_cert_header() default HDR_X_FORWARDED_SSL_CERTIFICATE;
+
+        @AttributeDefinition(name = "Rewrite Absolute URLs",
+            description = "If enabled, absolute URLs passed to either sendRedirect or by setting the location header are rewritten as well.")
+        boolean rewrite_absolute_urls() default false;
+    }
+
+    private volatile Config config;
+
+    @Activate
+    public SslFilter(final Config config) {
+        updateConfig(config);
+    }
+
+    @Modified
+    public void updateConfig(final Config config) {
+        this.config = config;
+        logger.info("SSL filter (re)configured with: " +
+            "rewrite absolute urls = {}; SSL forward header = '{}'; SSL forward value = '{}'; SSL certificate header = '{}'",
+            config.rewrite_absolute_urls(), config.ssl_forward_header(), config.ssl_forward_value(), config.ssl_forward_cert_header());
     }
 
     @Override
-    public void destroy()
-    {
+    public void init(final FilterConfig config) {
+        // No explicit init needed...
+    }
+
+    @Override
+    public void destroy() {
         // No explicit destroy needed...
     }
 
     @Override
-    public void doFilter(ServletRequest req, ServletResponse res, FilterChain chain) throws IOException, ServletException
-    {
-        final ConfigHolder cfg = this.config;
+    public void doFilter(final ServletRequest req, final ServletResponse res, final FilterChain chain)
+    throws IOException, ServletException {
+        final Config cfg = this.config;
 
         HttpServletRequest httpReq = (HttpServletRequest) req;
         HttpServletResponse httpResp = (HttpServletResponse) res;
 
-        if (cfg.sslValue.equalsIgnoreCase(httpReq.getHeader(cfg.sslHeader)))
-        {
-            try
-            {
+        if (cfg.ssl_forward_value().equalsIgnoreCase(httpReq.getHeader(cfg.ssl_forward_header()))) {
+            try {
                 httpResp = new SslFilterResponse(httpResp, httpReq, cfg);
                 // In case this fails, we fall back to the original HTTP request, which is better than nothing...
-                httpReq = new SslFilterRequest(httpReq, httpReq.getHeader(cfg.certHeader));
-            }
-            catch (CertificateException e)
-            {
-                SystemLogger.log(LogService.LOG_WARNING, "Failed to create SSL filter request! Problem parsing client certificates?! Client certificate will *not* be forwarded...", e);
+                httpReq = new SslFilterRequest(httpReq, httpReq.getHeader(cfg.ssl_forward_cert_header()));
+            } catch (final CertificateException e) {
+                logger.warn("Failed to create SSL filter request! Problem parsing client certificates?! Client certificate will *not* be forwarded...", e);
             }
         }
 
         // forward the request making sure any certificate is removed again after the request processing gets back here
-        try
-        {
+        try {
             chain.doFilter(httpReq, httpResp);
-        }
-        finally
-        {
-            if (httpReq instanceof SslFilterRequest)
-            {
+        } finally {
+            if (httpReq instanceof SslFilterRequest) {
                 ((SslFilterRequest) httpReq).done();
             }
-        }
-    }
-
-    @Override
-    public void init(FilterConfig config)
-    {
-        // make sure there is some configuration
-    }
-
-    void configure(Dictionary properties) throws ConfigurationException
-    {
-        String certHeader = DEFAULT_CERT_HEADER;
-        String sslHeader = DEFAULT_SSL_HEADER;
-        String sslValue = DEFAULT_SSL_VALUE;
-        boolean rewriteUrls = DEFAULT_REWRITE_ABSOLUTE_URLS;
-
-        if (properties != null)
-        {
-            certHeader = getOptionalString(properties, PROP_SSL_CERT_KEY);
-            sslHeader = getMandatoryString(properties, PROP_SSL_HEADER);
-            sslValue = getMandatoryString(properties, PROP_SSL_VALUE);
-            rewriteUrls = getOptionalBoolean(properties, PROP_REWRITE_ABSOLUTE_URLS, rewriteUrls);
-        }
-
-        this.config = new ConfigHolder(sslHeader, sslValue, certHeader, rewriteUrls);
-
-        SystemLogger.log(LogService.LOG_INFO, "SSL filter (re)configured with: " + "SSL forward header = '" + sslHeader + "'; SSL forward value = '" + sslValue + "'; SSL certificate header = '"
-            + certHeader + "'.");
-    }
-
-    private boolean getOptionalBoolean(Dictionary properties,
-            String key,
-            boolean defaultValue) throws ConfigurationException
-    {
-        Object raw = properties.get(key);
-        if (raw == null)
-        {
-            return defaultValue;
-        }
-        if ( raw instanceof Boolean )
-        {
-            return (Boolean)raw;
-        }
-        if (!(raw instanceof String))
-        {
-            throw new ConfigurationException(key, "invalid value");
-        }
-        return Boolean.valueOf((String)raw);
-    }
-
-    private String getOptionalString(Dictionary properties, String key) throws ConfigurationException
-    {
-        Object raw = properties.get(key);
-        if (raw == null || "".equals(((String) raw).trim()))
-        {
-            return null;
-        }
-        if (!(raw instanceof String))
-        {
-            throw new ConfigurationException(key, "invalid value");
-        }
-        return ((String) raw).trim();
-    }
-
-    private String getMandatoryString(Dictionary properties, String key) throws ConfigurationException
-    {
-        String value = getOptionalString(properties, key);
-        if (value == null)
-        {
-            throw new ConfigurationException(key, "missing value");
-        }
-        return value;
-    }
-
-    static class ConfigHolder
-    {
-        final String certHeader;
-        final String sslHeader;
-        final String sslValue;
-        final boolean rewriteAbsoluteUrls;
-
-        public ConfigHolder(String sslHeader, String sslValue, String certHeader,
-                boolean rewriteAbsoluteUrls)
-        {
-            this.sslHeader = sslHeader;
-            this.sslValue = sslValue;
-            this.certHeader = certHeader;
-            this.rewriteAbsoluteUrls = rewriteAbsoluteUrls;
         }
     }
 }

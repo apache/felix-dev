@@ -33,17 +33,16 @@ import java.net.URI;
 import java.net.URISyntaxException;
 import java.net.URL;
 
-import javax.servlet.http.HttpServletRequest;
-import javax.servlet.http.HttpServletResponse;
-import javax.servlet.http.HttpServletResponseWrapper;
+import jakarta.servlet.http.HttpServletRequest;
+import jakarta.servlet.http.HttpServletResponse;
+import jakarta.servlet.http.HttpServletResponseWrapper;
 
-import org.apache.felix.http.sslfilter.internal.SslFilter.ConfigHolder;
+import org.apache.felix.http.sslfilter.internal.SslFilter.Config;
 
 /**
  * Provides a custom {@link HttpServletResponse} for use in SSL filter.
  */
-class SslFilterResponse extends HttpServletResponseWrapper
-{
+class SslFilterResponse extends HttpServletResponseWrapper {
     private final URL requestURL;
     private final String serverName;
     private final String serverProto;
@@ -53,8 +52,7 @@ class SslFilterResponse extends HttpServletResponseWrapper
 
     private final boolean rewriteAbsoluteUrls;
 
-    public SslFilterResponse(HttpServletResponse response, HttpServletRequest request, ConfigHolder config) throws MalformedURLException
-    {
+    public SslFilterResponse(final HttpServletResponse response, final HttpServletRequest request, final Config config) throws MalformedURLException {
         super(response);
 
         this.requestURL = new URL(request.getRequestURL().toString());
@@ -63,49 +61,40 @@ class SslFilterResponse extends HttpServletResponseWrapper
         this.serverName = request.getServerName();
         this.serverPort = request.getServerPort();
 
-        String value = request.getHeader(config.sslHeader);
+        String value = request.getHeader(config.ssl_forward_header());
 
-        if ((HDR_X_FORWARDED_PROTO.equalsIgnoreCase(config.sslHeader) && HTTP.equalsIgnoreCase(value)) ||
-                (HDR_X_FORWARDED_SSL.equalsIgnoreCase(config.sslHeader) && !config.sslValue.equalsIgnoreCase(value)))
-        {
+        if ((HDR_X_FORWARDED_PROTO.equalsIgnoreCase(config.ssl_forward_header()) && HTTP.equalsIgnoreCase(value)) ||
+                (HDR_X_FORWARDED_SSL.equalsIgnoreCase(config.ssl_forward_header()) && !config.ssl_forward_value().equalsIgnoreCase(value))) {
             // Not really a useful scenario: client is talking HTTP to proxy, and we should rewrite all HTTPS-based URLs...
             this.clientProto = HTTP;
             this.serverProto = HTTPS;
-        }
-        else
-        {
+        } else {
             // Client is talking HTTPS to proxy, so we should rewrite all HTTP-based URLs...
             this.clientProto = HTTPS;
             this.serverProto = HTTP;
         }
 
         int port;
-        try
-        {
+        try {
             String fwdPort = request.getHeader(HDR_X_FORWARDED_PORT);
             port = Integer.valueOf(fwdPort);
-        }
-        catch (Exception e)
-        {
+        } catch (Exception e) {
             // Use default port for the used protocol...
             port = -1;
         }
         // Normalize the protocol port...
-        if ((port > 0) && ((HTTPS.equals(this.clientProto) && (port == HTTPS_PORT)) || (HTTP.equals(this.clientProto) && (port == HTTP_PORT))))
-        {
+        if ((port > 0) && ((HTTPS.equals(this.clientProto) && (port == HTTPS_PORT)) || (HTTP.equals(this.clientProto) && (port == HTTP_PORT)))) {
             // Port is the default one, do not use it...
             port = -1;
         }
 
         this.clientPort = port;
-        this.rewriteAbsoluteUrls = config.rewriteAbsoluteUrls;
+        this.rewriteAbsoluteUrls = config.rewrite_absolute_urls();
     }
 
     @Override
-    public void setHeader(String name, String value)
-    {
-        if (HDR_LOCATION.equalsIgnoreCase(name))
-        {
+    public void setHeader(String name, String value) {
+        if (HDR_LOCATION.equalsIgnoreCase(name)) {
         	String rewritten = null;
         	try {
         		rewritten = rewriteUrlIfNeeded(value);
@@ -113,8 +102,7 @@ class SslFilterResponse extends HttpServletResponseWrapper
         		// ignore
         	}
             // Trying to set a redirect location to the original client-side URL, which should be https...
-            if (rewritten != null)
-            {
+            if (rewritten != null) {
                 value = rewritten;
             }
         }
@@ -122,65 +110,52 @@ class SslFilterResponse extends HttpServletResponseWrapper
     }
 
     @Override
-    public void sendRedirect(String location) throws IOException
-    {
+    public void sendRedirect(String location) throws IOException {
     	String rewritten = null;
     	try {
     		rewritten = rewriteUrlIfNeeded(location);
     	} catch (URISyntaxException e) {
     		throw new IOException (e);
     	}
-        if (rewritten != null)
-        {
+        if (rewritten != null) {
             location = rewritten;
         }
         super.sendRedirect(location);
     }
 
-    private int normalizePort(String protocol, int port)
-    {
-        if (port > 0)
-        {
+    private int normalizePort(String protocol, int port) {
+        if (port > 0) {
             return port;
         }
-        if (HTTPS.equalsIgnoreCase(protocol))
-        {
+        if (HTTPS.equalsIgnoreCase(protocol)) {
             return HTTPS_PORT;
         }
         return HTTP_PORT;
     }
 
-    private String rewriteUrlIfNeeded(String value) throws URISyntaxException
-    {
-        if (value == null || (!this.rewriteAbsoluteUrls && value.contains("://")) )
-        {
+    private String rewriteUrlIfNeeded(String value) throws URISyntaxException {
+        if (value == null || (!this.rewriteAbsoluteUrls && value.contains("://")) ) {
             return null;
         }
 
-        try
-        {
+        try {           
             URI uri;
-            if (value.startsWith(this.serverProto.concat("://")))
-            {
+            if (value.startsWith(this.serverProto.concat("://"))) {
 
                 uri = new URI (value);
-            }
-            else
-            {
+            } else {
                 URL url = new URL(this.requestURL, value);
                 uri = url.toURI();
             }
 
             String actualProto = uri.getScheme();
 
-            if (!this.serverName.equals(uri.getHost()))
-            {
+            if (!this.serverName.equals(uri.getHost())) {
                 // going to a different host
                 return null;
             }
 
-            if (normalizePort(this.serverProto, this.serverPort) != normalizePort(actualProto, uri.getPort()))
-            {
+            if (normalizePort(this.serverProto, this.serverPort) != normalizePort(actualProto, uri.getPort())) {
                 // not to default port
                 return null;
             }
@@ -189,33 +164,24 @@ class SslFilterResponse extends HttpServletResponseWrapper
             sb.append(this.clientProto);
             sb.append("://");
             sb.append(this.serverName);
-            if ( this.clientPort != -1 )
-            {
+            if ( this.clientPort != -1 ) {
                 sb.append(':');
                 sb.append(this.clientPort);
             }
-            if ( uri.getRawPath() != null )
-            {
+            if ( uri.getRawPath() != null ) {
                 sb.append(uri.getRawPath());
             }
-            if ( uri.getRawQuery() != null )
-            {
+            if ( uri.getRawQuery() != null ) {
                 sb.append('?');
                 sb.append(uri.getRawQuery());
             }
-            if ( uri.getRawFragment() != null )
-            {
+            if ( uri.getRawFragment() != null ) {
                 sb.append('#');
                 sb.append(uri.getRawFragment());
             }
             return sb.toString();
-        }
-        catch (MalformedURLException e)
-        {
+        } catch (MalformedURLException e) {
             return null;
         }
     }
-
-
-
 }
