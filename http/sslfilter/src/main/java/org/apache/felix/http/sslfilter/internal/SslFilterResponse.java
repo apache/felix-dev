@@ -61,7 +61,7 @@ class SslFilterResponse extends HttpServletResponseWrapper {
         this.serverName = request.getServerName();
         this.serverPort = request.getServerPort();
 
-        String value = request.getHeader(config.ssl_forward_header());
+        final String value = request.getHeader(config.ssl_forward_header());
 
         if ((HDR_X_FORWARDED_PROTO.equalsIgnoreCase(config.ssl_forward_header()) && HTTP.equalsIgnoreCase(value)) ||
                 (HDR_X_FORWARDED_SSL.equalsIgnoreCase(config.ssl_forward_header()) && !config.ssl_forward_value().equalsIgnoreCase(value))) {

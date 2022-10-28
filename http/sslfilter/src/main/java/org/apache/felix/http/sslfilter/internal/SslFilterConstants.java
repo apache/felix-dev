@@ -21,8 +21,7 @@ package org.apache.felix.http.sslfilter.internal;
 /**
  * Provides constants used in the SSL filter.
  */
-interface SslFilterConstants
-{
+interface SslFilterConstants {
     /**
      * If there is an SSL certificate associated with the request, it must be exposed by the servlet container to the
      * servlet programmer as an array of objects of type java.security.cert.X509Certificate and accessible via a
@@ -59,6 +58,7 @@ interface SslFilterConstants
      * HTTP protocol/scheme.
      */
     String HTTP = "http";
+
     /**
      * Default port used for HTTP.
      */
@@ -68,11 +68,16 @@ interface SslFilterConstants
      * HTTPS protocol/scheme.
      */
     String HTTPS = "https";
+
     /**
      * Default port used for HTTPS.
      */
     int HTTPS_PORT = 443;
 
-    String UTF_8 = "UTF-8";
     String X_509 = "X.509";
+
+    /**
+     * The HTTP scheme prefix in an URL
+     */
+    String HTTP_SCHEME_PREFIX = "http://";
 }

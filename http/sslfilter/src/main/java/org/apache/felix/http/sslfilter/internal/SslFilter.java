@@ -22,7 +22,6 @@ import static org.apache.felix.http.sslfilter.internal.SslFilterConstants.HDR_X_
 import static org.apache.felix.http.sslfilter.internal.SslFilterConstants.HDR_X_FORWARDED_SSL_CERTIFICATE;
 
 import java.io.IOException;
-import java.security.cert.CertificateException;
 
 import jakarta.servlet.FilterChain;
 import jakarta.servlet.FilterConfig;
@@ -52,7 +51,7 @@ import org.slf4j.LoggerFactory;
     })
 public class SslFilter implements  Preprocessor {
 
-    private final Logger logger = LoggerFactory.getLogger(this.getClass());
+    public static final Logger LOGGER = LoggerFactory.getLogger(SslFilter.class);
 
     @ObjectClassDefinition(name = "Apache Felix Http Service SSL Filter",
         description = "Configuration for the Http Service SSL Filter. Please consult the documentation of your proxy for the actual headers and values to use.")
@@ -90,7 +89,7 @@ public class SslFilter implements  Preprocessor {
     @Modified
     public void updateConfig(final Config config) {
         this.config = config;
-        logger.info("SSL filter (re)configured with: " +
+        LOGGER.info("SSL filter (re)configured with: " +
             "rewrite absolute urls = {}; SSL forward header = '{}'; SSL forward value = '{}'; SSL certificate header = '{}'",
             config.rewrite_absolute_urls(), config.ssl_forward_header(), config.ssl_forward_value(), config.ssl_forward_cert_header());
     }
@@ -114,13 +113,8 @@ public class SslFilter implements  Preprocessor {
         HttpServletResponse httpResp = (HttpServletResponse) res;
 
         if (cfg.ssl_forward_value().equalsIgnoreCase(httpReq.getHeader(cfg.ssl_forward_header()))) {
-            try {
-                httpResp = new SslFilterResponse(httpResp, httpReq, cfg);
-                // In case this fails, we fall back to the original HTTP request, which is better than nothing...
-                httpReq = new SslFilterRequest(httpReq, httpReq.getHeader(cfg.ssl_forward_cert_header()));
-            } catch (final CertificateException e) {
-                logger.warn("Failed to create SSL filter request! Problem parsing client certificates?! Client certificate will *not* be forwarded...", e);
-            }
+            httpResp = new SslFilterResponse(httpResp, httpReq, cfg);
+            httpReq = new SslFilterRequest(httpReq, httpReq.getHeader(cfg.ssl_forward_cert_header()));
         }
 
         // forward the request making sure any certificate is removed again after the request processing gets back here

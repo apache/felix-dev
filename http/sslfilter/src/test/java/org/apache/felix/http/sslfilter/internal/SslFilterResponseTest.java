@@ -515,7 +515,6 @@ public class SslFilterResponseTest
             committed = true;
         }
 
-        @SuppressWarnings("deprecation")
         @Override
         public void setStatus(int sc, String sm) {
             status = sc;
@@ -578,7 +577,6 @@ public class SslFilterResponseTest
             return headers.get(name);
         }
 
-        @SuppressWarnings("deprecation")
         @Override
         public String encodeUrl(String url) {
             throw new UnsupportedOperationException();
@@ -589,7 +587,6 @@ public class SslFilterResponseTest
             throw new UnsupportedOperationException();
         }
 
-        @SuppressWarnings("deprecation")
         @Override
         public String encodeRedirectUrl(String url) {
             throw new UnsupportedOperationException();

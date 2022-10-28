@@ -72,12 +72,10 @@ public class SslFilterRequestTest
         when(req.getRequestURL()).thenReturn(new StringBuffer("http://some/page"));
         assertEquals("http://some/page", req.getRequestURL().toString());
         assertEquals("https://some/page", sreq.getRequestURL().toString());
-        assertEquals("http://some/page", req.getRequestURL().toString());
 
         when(req.getRequestURL()).thenReturn(new StringBuffer("https://some/page"));
         assertEquals("https://some/page", req.getRequestURL().toString());
         assertEquals("https://some/page", sreq.getRequestURL().toString());
-        assertEquals("https://some/page", req.getRequestURL().toString());
     }
     
     @Test

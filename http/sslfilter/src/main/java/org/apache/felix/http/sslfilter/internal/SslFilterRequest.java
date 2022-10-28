@@ -21,12 +21,14 @@ package org.apache.felix.http.sslfilter.internal;
 import static org.apache.felix.http.sslfilter.internal.SslFilterConstants.ATTR_SSL_CERTIFICATE;
 import static org.apache.felix.http.sslfilter.internal.SslFilterConstants.HDR_X_FORWARDED_PORT;
 import static org.apache.felix.http.sslfilter.internal.SslFilterConstants.HTTPS;
-import static org.apache.felix.http.sslfilter.internal.SslFilterConstants.UTF_8;
+import static org.apache.felix.http.sslfilter.internal.SslFilterConstants.HTTPS_PORT;
+import static org.apache.felix.http.sslfilter.internal.SslFilterConstants.HTTP_SCHEME_PREFIX;
 import static org.apache.felix.http.sslfilter.internal.SslFilterConstants.X_509;
 
 import java.io.ByteArrayInputStream;
+import java.io.IOException;
 import java.io.InputStream;
-import java.io.UnsupportedEncodingException;
+import java.nio.charset.StandardCharsets;
 import java.security.cert.CertificateException;
 import java.security.cert.CertificateFactory;
 import java.security.cert.X509Certificate;
@@ -37,34 +39,26 @@ import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletRequestWrapper;
 
 class SslFilterRequest extends HttpServletRequestWrapper {
-    // The HTTP scheme prefix in an URL
-    private static final String HTTP_SCHEME_PREFIX = "http://";
 
     // pattern to convert the header to a PEM certificate for parsing
     // by replacing spaces with line breaks
     private static final Pattern HEADER_TO_CERT = Pattern.compile("(?! CERTIFICATE)(?= ) ");
 
     @SuppressWarnings("unchecked")
-    SslFilterRequest(final HttpServletRequest request, final String clientCertHeader) throws CertificateException {
+    SslFilterRequest(final HttpServletRequest request, final String clientCertHeader) {
         super(request);
 
-        // TODO jawi: perhaps we should make this class a little smarter wrt the given request:
-        // it now always assumes it should rewrite its URL, while this might not always be the
-        // case...
-
-        if (clientCertHeader != null && !"".equals(clientCertHeader.trim())) {
+        if (clientCertHeader != null && clientCertHeader.trim().length() > 0) {
             final String clientCert = HEADER_TO_CERT.matcher(clientCertHeader).replaceAll("\n");
 
-            try {
-                CertificateFactory fac = CertificateFactory.getInstance(X_509);
-
-                InputStream instream = new ByteArrayInputStream(clientCert.getBytes(UTF_8));
-
-                Collection<X509Certificate> certs = (Collection<X509Certificate>) fac.generateCertificates(instream);
-                request.setAttribute(ATTR_SSL_CERTIFICATE, certs.toArray(new X509Certificate[certs.size()]));
-            } catch (UnsupportedEncodingException e) {
-                // Any JRE should support UTF-8...
-                throw new InternalError("UTF-8 not supported?!");
+            try (InputStream instream = new ByteArrayInputStream(clientCert.getBytes(StandardCharsets.UTF_8))) {
+                 final CertificateFactory fac = CertificateFactory.getInstance(X_509);
+                 Collection<X509Certificate> certs = (Collection<X509Certificate>) fac.generateCertificates(instream);
+                    request.setAttribute(ATTR_SSL_CERTIFICATE, certs.toArray(new X509Certificate[certs.size()]));    
+            } catch ( final IOException ignore) {
+                    // ignore - can only happen on close
+            } catch ( final CertificateException ce) {
+                SslFilter.LOGGER.warn("Failed to create SSL filter request! Problem parsing client certificates?! Client certificate will *not* be forwarded...", ce);
             }
         }
     }
@@ -85,13 +79,13 @@ class SslFilterRequest extends HttpServletRequestWrapper {
 
     @Override
     public StringBuffer getRequestURL() {
-        StringBuffer tmp = new StringBuffer(super.getRequestURL());
+        final StringBuffer result = super.getRequestURL();
         // In case the request happened over http, simply insert an additional 's'
         // to make the request appear to be done over https...
-        if (tmp.indexOf(HTTP_SCHEME_PREFIX) == 0) {
-            tmp.insert(4, 's');
+        if (result.indexOf(HTTP_SCHEME_PREFIX) == 0) {
+            result.insert(4, 's');
         }
-        return tmp;
+        return result;
     }
 
     @Override
@@ -99,11 +93,10 @@ class SslFilterRequest extends HttpServletRequestWrapper {
         int port;
 
         try {
-            String fwdPort = getHeader(HDR_X_FORWARDED_PORT);
-            port = Integer.parseInt(fwdPort);
-        } catch (Exception e) {
+            port = Integer.parseInt(getHeader(HDR_X_FORWARDED_PORT));
+        } catch (final Exception e) {
             // Use default port
-            port = 443;
+            port = HTTPS_PORT;
         }
         return port;
     }
