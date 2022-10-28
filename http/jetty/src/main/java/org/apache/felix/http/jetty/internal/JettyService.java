@@ -30,7 +30,6 @@ import java.util.List;
 
 import org.apache.felix.http.base.internal.HttpServiceController;
 import org.apache.felix.http.base.internal.logger.SystemLogger;
-import org.apache.felix.http.jetty.internal.webapp.WebAppBundleTracker;
 import org.eclipse.jetty.alpn.server.ALPNServerConnectionFactory;
 import org.eclipse.jetty.http.HttpVersion;
 import org.eclipse.jetty.http2.server.HTTP2ServerConnectionFactory;
@@ -51,7 +50,6 @@ import org.eclipse.jetty.server.session.HouseKeeper;
 import org.eclipse.jetty.server.session.SessionHandler;
 import org.eclipse.jetty.servlet.ServletContextHandler;
 import org.eclipse.jetty.servlet.ServletHolder;
-import org.eclipse.jetty.util.component.LifeCycle;
 import org.eclipse.jetty.util.ssl.SslContextFactory;
 import org.eclipse.jetty.util.thread.QueuedThreadPool;
 import org.eclipse.jetty.util.thread.ThreadPool;
@@ -66,7 +64,7 @@ import org.osgi.service.http.runtime.HttpServiceRuntimeConstants;
 import jakarta.servlet.SessionCookieConfig;
 import jakarta.servlet.SessionTrackingMode;
 
-public final class JettyService implements LifeCycle.Listener
+public final class JettyService
 {
     /** PID for configuration of the HTTP service. */
     public static final String PID = "org.apache.felix.http";
@@ -87,7 +85,6 @@ public final class JettyService implements LifeCycle.Listener
     private volatile CustomizerWrapper customizerWrapper;
     private boolean registerManagedService = true;
     private final String jettyVersion;
-    volatile WebAppBundleTracker webAppTracker;
 
     public JettyService(final BundleContext context,
             final HttpServiceController controller)
@@ -135,15 +132,6 @@ public final class JettyService implements LifeCycle.Listener
 	                    }
 	                }, props);
         }
-
-        try {
-            this.webAppTracker = new WebAppBundleTracker(context, config);
-        } catch (Throwable t) {
-            SystemLogger.error("WebApp Bundle support not available: " + t.getMessage(), null);
-        }
-        if (this.webAppTracker != null) {
-            this.webAppTracker.start(parent);
-        }
     }
 
     public void stop() throws Exception
@@ -152,11 +140,6 @@ public final class JettyService implements LifeCycle.Listener
         {
             this.configServiceReg.unregister();
             this.configServiceReg = null;
-        }
-        if (this.webAppTracker != null)
-        {
-            this.webAppTracker.stop();
-            this.webAppTracker = null;
         }
 
         // FELIX-4422: stop Jetty synchronously...
@@ -261,7 +244,6 @@ public final class JettyService implements LifeCycle.Listener
             } else {
                 this.server = new Server();
             }
-            this.server.addEventListener(this);
 
             // FELIX-5931 : PropertyUserStore used as default by HashLoginService has changed in 9.4.12.v20180830
             //              and fails without a config, therefore using plain UserStore
@@ -759,21 +741,5 @@ public final class JettyService implements LifeCycle.Listener
         }
         props.put(HttpServiceRuntimeConstants.HTTP_SERVICE_ENDPOINT,
                 endpoints.toArray(new String[endpoints.size()]));
-    }
-
-    @Override
-    public void lifeCycleStarted(final LifeCycle event)
-    {
-        if (this.webAppTracker != null) {
-            this.webAppTracker.lifeCycleStarted(event);
-        }
-    }
-
-    @Override
-    public void lifeCycleStopping(final LifeCycle event)
-    {
-        if (this.webAppTracker != null) {
-            this.webAppTracker.lifeCycleStopping(event);
-        }
     }
 }
