@@ -51,7 +51,7 @@ import org.apache.commons.fileupload.disk.DiskFileItemFactory;
 import org.apache.felix.http.base.internal.context.ExtServletContext;
 import org.apache.felix.http.base.internal.handler.HttpSessionWrapper;
 import org.osgi.framework.Bundle;
-import org.osgi.service.http.HttpContext;
+import org.osgi.service.servlet.context.ServletContextHelper;
 import org.osgi.service.useradmin.Authorization;
 
 import jakarta.servlet.AsyncContext;
@@ -178,7 +178,7 @@ final class ServletRequestWrapper extends HttpServletRequestWrapper
     @Override
     public String getAuthType()
     {
-        String authType = (String) getAttribute(HttpContext.AUTHENTICATION_TYPE);
+        String authType = (String) getAttribute(ServletContextHelper.AUTHENTICATION_TYPE);
         if (authType == null)
         {
             authType = super.getAuthType();
@@ -219,7 +219,7 @@ final class ServletRequestWrapper extends HttpServletRequestWrapper
     @Override
     public String getRemoteUser()
     {
-        String remoteUser = (String) getAttribute(HttpContext.REMOTE_USER);
+        String remoteUser = (String) getAttribute(ServletContextHelper.REMOTE_USER);
         if (remoteUser != null)
         {
             return remoteUser;
@@ -296,10 +296,10 @@ final class ServletRequestWrapper extends HttpServletRequestWrapper
     @Override
     public boolean isUserInRole(String role)
     {
-        Authorization authorization = (Authorization) getAttribute(HttpContext.AUTHORIZATION);
-        if (authorization != null)
+        final Object authorization = getAttribute(ServletContextHelper.AUTHORIZATION);
+        if (authorization instanceof Authorization )
         {
-            return authorization.hasRole(role);
+            return ((Authorization)authorization).hasRole(role);
         }
 
         return super.isUserInRole(role);
