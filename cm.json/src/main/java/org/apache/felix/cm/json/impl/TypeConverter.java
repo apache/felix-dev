@@ -30,6 +30,7 @@ import javax.json.Json;
 import javax.json.JsonArrayBuilder;
 import javax.json.JsonValue;
 
+import org.osgi.util.converter.ConversionException;
 import org.osgi.util.converter.Converters;
 import org.osgi.util.converter.TypeReference;
 
@@ -127,7 +128,13 @@ public class TypeConverter {
         }
         final Class<?> typeClass = TYPE_MAP.get(typeInfo);
         if ( typeClass != null ) {
-            Object result = Converters.standardConverter().convert(value).defaultValue(null).to(typeClass);
+            Object result = null;
+            try {
+                result = Converters.standardConverter()
+                    .convert(value).defaultValue(null).to(typeClass);
+            } catch ( final ConversionException ce) {
+                // ignore
+            }
             if (result == null && value != null) {
                 result = CONVERSION_FAILED;
             }
@@ -138,7 +145,13 @@ public class TypeConverter {
             if (value == null) {
                 return Collections.EMPTY_LIST;
             }
-            Object result = Converters.standardConverter().convert(value).defaultValue(null).to(typeReference);
+            Object result = null;
+            try {
+                result = Converters.standardConverter()
+                    .convert(value).defaultValue(null).to(typeReference);
+            } catch ( final ConversionException ce) {
+                // ignore
+            }
             if (result == null) {
                 result = CONVERSION_FAILED;
             }
