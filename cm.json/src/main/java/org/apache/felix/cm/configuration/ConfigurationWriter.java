@@ -16,13 +16,13 @@
  * specific language governing permissions and limitations
  * under the License.
  */
-package org.apache.felix.cm.json;
+package org.apache.felix.cm.configuration;
 
 import java.io.IOException;
 import java.io.Writer;
 import java.util.Dictionary;
 
-import javax.json.stream.JsonGenerator;
+import jakarta.json.stream.JsonGenerator;
 
 import org.osgi.annotation.versioning.ProviderType;
 

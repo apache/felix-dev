@@ -16,7 +16,7 @@
  * specific language governing permissions and limitations
  * under the License.
  */
-package org.apache.felix.cm.json.impl;
+package org.apache.felix.cm.configuration.impl;
 
 import java.lang.reflect.Array;
 import java.util.ArrayList;
@@ -26,9 +26,9 @@ import java.util.Iterator;
 import java.util.LinkedHashMap;
 import java.util.Map;
 
-import javax.json.Json;
-import javax.json.JsonArrayBuilder;
-import javax.json.JsonValue;
+import jakarta.json.Json;
+import jakarta.json.JsonArrayBuilder;
+import jakarta.json.JsonValue;
 
 import org.osgi.util.converter.ConversionException;
 import org.osgi.util.converter.Converters;

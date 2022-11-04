@@ -16,7 +16,7 @@
  * specific language governing permissions and limitations
  * under the License.
  */
-package org.apache.felix.cm.json.impl;
+package org.apache.felix.cm.configuration.impl;
 
 import java.io.Serializable;
 import java.util.AbstractSet;
@@ -36,7 +36,7 @@ import java.util.Set;
  * Actually this class is a simple adapter from the Dictionary interface
  * to a synchronized LinkedHashMap
  */
-public class OrderedDictionary extends Hashtable<String, Object> implements Serializable {
+public class OrderedDictionary extends Hashtable<String, Object> {
 
     private static final long serialVersionUID = -525111601546803041L;
 

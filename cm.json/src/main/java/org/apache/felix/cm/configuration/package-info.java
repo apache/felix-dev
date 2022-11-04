@@ -16,7 +16,7 @@
  * specific language governing permissions and limitations
  * under the License.
  */
-@Version("1.0.2")
-package org.apache.felix.cm.json;
+@Version("1.0.0")
+package org.apache.felix.cm.configuration;
 
 import org.osgi.annotation.versioning.Version;

@@ -16,7 +16,7 @@
  * specific language governing permissions and limitations
  * under the License.
  */
-package org.apache.felix.cm.json.impl;
+package org.apache.felix.cm.configuration.impl;
 
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotNull;
@@ -33,7 +33,7 @@ import java.util.Dictionary;
 import java.util.Hashtable;
 import java.util.Map;
 
-import javax.json.JsonException;
+import jakarta.json.JsonException;
 
 import org.junit.Test;
 

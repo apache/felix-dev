@@ -16,18 +16,18 @@
  * specific language governing permissions and limitations
  * under the License.
  */
-package org.apache.felix.cm.json;
+package org.apache.felix.cm.configuration;
 
 import java.io.IOException;
 import java.io.Reader;
 import java.util.Hashtable;
 
-import javax.json.JsonValue;
+import org.apache.felix.cm.configuration.impl.ConfigurationReaderImpl;
+import org.apache.felix.cm.configuration.impl.ConfigurationWriterImpl;
+import org.apache.felix.cm.configuration.impl.JsonSupport;
+import org.apache.felix.cm.configuration.impl.OrderedDictionary;
 
-import org.apache.felix.cm.json.impl.ConfigurationReaderImpl;
-import org.apache.felix.cm.json.impl.ConfigurationWriterImpl;
-import org.apache.felix.cm.json.impl.JsonSupport;
-import org.apache.felix.cm.json.impl.OrderedDictionary;
+import jakarta.json.JsonValue;
 
 /**
  * Factory class for JSON and configuration support

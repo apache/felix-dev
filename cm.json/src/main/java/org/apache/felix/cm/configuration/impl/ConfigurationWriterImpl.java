@@ -16,7 +16,7 @@
  * specific language governing permissions and limitations
  * under the License.
  */
-package org.apache.felix.cm.json.impl;
+package org.apache.felix.cm.configuration.impl;
 
 import java.io.FilterWriter;
 import java.io.IOException;
@@ -27,13 +27,13 @@ import java.util.Enumeration;
 import java.util.Hashtable;
 import java.util.Map;
 
-import javax.json.Json;
-import javax.json.JsonException;
-import javax.json.JsonValue;
-import javax.json.stream.JsonGenerator;
+import org.apache.felix.cm.configuration.ConfigurationResource;
+import org.apache.felix.cm.configuration.ConfigurationWriter;
 
-import org.apache.felix.cm.json.ConfigurationResource;
-import org.apache.felix.cm.json.ConfigurationWriter;
+import jakarta.json.Json;
+import jakarta.json.JsonException;
+import jakarta.json.JsonValue;
+import jakarta.json.stream.JsonGenerator;
 
 public class ConfigurationWriterImpl
         implements ConfigurationWriter, ConfigurationWriter.Builder {

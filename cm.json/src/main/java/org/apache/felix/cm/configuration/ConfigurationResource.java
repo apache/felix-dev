@@ -16,7 +16,7 @@
  * specific language governing permissions and limitations
  * under the License.
  */
-package org.apache.felix.cm.json;
+package org.apache.felix.cm.configuration;
 
 import java.util.Hashtable;
 import java.util.LinkedHashMap;
