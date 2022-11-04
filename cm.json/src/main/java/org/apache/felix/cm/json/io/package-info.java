@@ -17,6 +17,6 @@
  * under the License.
  */
 @Version("1.0.0")
-package org.apache.felix.cm.configuration;
+package org.apache.felix.cm.json.io;
 
 import org.osgi.annotation.versioning.Version;

@@ -16,7 +16,7 @@
  * specific language governing permissions and limitations
  * under the License.
  */
-package org.apache.felix.cm.configuration.impl;
+package org.apache.felix.cm.json.io.impl;
 
 import static org.junit.Assert.assertArrayEquals;
 import static org.junit.Assert.assertEquals;
@@ -32,7 +32,7 @@ import jakarta.json.JsonArrayBuilder;
 import jakarta.json.JsonObjectBuilder;
 import jakarta.json.JsonValue;
 
-import org.apache.felix.cm.configuration.Configurations;
+import org.apache.felix.cm.json.io.Configurations;
 import org.junit.Test;
 
 /**

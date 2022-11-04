@@ -16,7 +16,7 @@
  * specific language governing permissions and limitations
  * under the License.
  */
-package org.apache.felix.cm.configuration.impl;
+package org.apache.felix.cm.json.io.impl;
 
 import java.lang.reflect.Array;
 import java.util.ArrayList;

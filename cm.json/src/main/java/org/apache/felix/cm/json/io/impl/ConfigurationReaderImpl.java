@@ -16,7 +16,7 @@
  * specific language governing permissions and limitations
  * under the License.
  */
-package org.apache.felix.cm.configuration.impl;
+package org.apache.felix.cm.json.io.impl;
 
 import java.io.IOException;
 import java.io.Reader;
@@ -30,9 +30,9 @@ import jakarta.json.JsonObject;
 import jakarta.json.JsonValue;
 import jakarta.json.JsonValue.ValueType;
 
-import org.apache.felix.cm.configuration.ConfigurationReader;
-import org.apache.felix.cm.configuration.ConfigurationResource;
-import org.apache.felix.cm.configuration.Configurations;
+import org.apache.felix.cm.json.io.ConfigurationReader;
+import org.apache.felix.cm.json.io.ConfigurationResource;
+import org.apache.felix.cm.json.io.Configurations;
 import org.osgi.service.configurator.ConfiguratorConstants;
 import org.osgi.util.converter.ConversionException;
 import org.osgi.util.converter.Converters;

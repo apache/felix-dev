@@ -16,7 +16,7 @@
  * specific language governing permissions and limitations
  * under the License.
  */
-package org.apache.felix.cm.configuration;
+package org.apache.felix.cm.json.io;
 
 import java.io.IOException;
 import java.io.Writer;

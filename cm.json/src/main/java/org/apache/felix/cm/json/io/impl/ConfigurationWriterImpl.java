@@ -16,7 +16,7 @@
  * specific language governing permissions and limitations
  * under the License.
  */
-package org.apache.felix.cm.configuration.impl;
+package org.apache.felix.cm.json.io.impl;
 
 import java.io.FilterWriter;
 import java.io.IOException;
@@ -27,8 +27,8 @@ import java.util.Enumeration;
 import java.util.Hashtable;
 import java.util.Map;
 
-import org.apache.felix.cm.configuration.ConfigurationResource;
-import org.apache.felix.cm.configuration.ConfigurationWriter;
+import org.apache.felix.cm.json.io.ConfigurationResource;
+import org.apache.felix.cm.json.io.ConfigurationWriter;
 
 import jakarta.json.Json;
 import jakarta.json.JsonException;
