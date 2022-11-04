@@ -25,7 +25,7 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
-import org.apache.felix.cm.json.ConfigurationReader.BinaryHandler;
+import org.apache.felix.cm.json.io.ConfigurationReader.BinaryHandler;
 import org.apache.felix.configurator.impl.json.JSONUtil.Report;
 
 public class BinaryManager implements BinaryHandler {
