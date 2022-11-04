@@ -34,6 +34,7 @@ import org.apache.felix.cm.json.ConfigurationReader;
 import org.apache.felix.cm.json.ConfigurationResource;
 import org.apache.felix.cm.json.Configurations;
 import org.osgi.service.configurator.ConfiguratorConstants;
+import org.osgi.util.converter.ConversionException;
 import org.osgi.util.converter.Converters;
 
 public class ConfigurationReaderImpl
@@ -171,7 +172,12 @@ public class ConfigurationReaderImpl
         final Object version = JsonSupport
                 .convertToObject(this.jsonObject.get(ConfiguratorConstants.PROPERTY_RESOURCE_VERSION));
         if (version != null) {
-            final int v = Converters.standardConverter().convert(version).defaultValue(-1).to(Integer.class);
+            int v = -1;
+            try {
+                v = Converters.standardConverter().convert(version).defaultValue(-1).to(Integer.class);
+            } catch ( final ConversionException ce ) {
+                // ignore
+            }
             if (v == -1) {
                 throwIOException("Invalid resource version information : ".concat(version.toString()));
             }
