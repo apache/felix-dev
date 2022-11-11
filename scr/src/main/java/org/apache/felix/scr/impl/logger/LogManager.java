@@ -51,6 +51,7 @@ class LogManager extends ServiceTracker<Object, Object> implements BundleListene
     private static final String LOGGER_FACTORY_CLASS_NAME = "org.osgi.service.log.LoggerFactory";
 
     final BundleContext scrContext;
+    final BundleContext systemContext;
     final AtomicBoolean closed = new AtomicBoolean(false);
 
     /*
@@ -150,6 +151,7 @@ class LogManager extends ServiceTracker<Object, Object> implements BundleListene
     {
         super(context, LOGGER_FACTORY_CLASS_NAME, null);
         this.scrContext = context;
+        this.systemContext = context.getBundle(Constants.SYSTEM_BUNDLE_LOCATION).getBundleContext();
         this.config = config;
     }
     
@@ -174,7 +176,10 @@ class LogManager extends ServiceTracker<Object, Object> implements BundleListene
     {
         if (!config.isLogExtensionEnabled()) 
         {
-            scrContext.addBundleListener(this);
+            // Use system context to do cleanup of domains.
+            // This ensures we always can cleanup even when the SCR context
+            // cannot see the bundle.
+            systemContext.addBundleListener(this);
         }
         this.open();
     }
@@ -305,7 +310,7 @@ class LogManager extends ServiceTracker<Object, Object> implements BundleListene
         {
             lock.close();
             super.close();
-            this.context.removeBundleListener(this);
+            this.systemContext.removeBundleListener(this);
         }
     }
 
