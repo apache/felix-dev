@@ -27,7 +27,7 @@
     </parent>
 
     <name>Apache Felix Http Bridge</name>
-    <description>This is an implementation of the OSGi Http Service and the OSGi Http Whiteboard Specification used when run as a web application</description>
+    <description>This is an implementation of the OSGi Servlet Service, the OSGi Http Service and the OSGi Http Whiteboard Specification used when run as a web application</description>
     <artifactId>org.apache.felix.http.bridge</artifactId>
     <version>5.0.0-SNAPSHOT</version>
     <packaging>bundle</packaging>
