@@ -431,19 +431,19 @@ public class SharedServletContextImpl implements ServletContext
     @Override
     public void log(final Exception cause, final String message)
     {
-        SystemLogger.error(message, cause);
+        SystemLogger.LOGGER.error(message, cause);
     }
 
     @Override
     public void log(final String message)
     {
-        SystemLogger.info(message);
+        SystemLogger.LOGGER.info(message);
     }
 
     @Override
     public void log(final String message, final Throwable cause)
     {
-        SystemLogger.error(message, cause);
+        SystemLogger.LOGGER.error(message, cause);
     }
 
     @Override

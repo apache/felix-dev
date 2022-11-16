@@ -63,7 +63,7 @@ class FileRequestLog {
         File logFile = new File(logFilePath).getAbsoluteFile();
         File logFileDir = logFile.getParentFile();
         if (logFileDir != null && !logFileDir.isDirectory()) {
-            SystemLogger.info("Creating directory " + logFileDir.getAbsolutePath());
+            SystemLogger.LOGGER.info("Creating directory {}", logFileDir.getAbsolutePath());
             Files.createDirectories(logFileDir.toPath(), PosixFilePermissions.asFileAttribute(PosixFilePermissions.fromString("rwx------")));
         }
 
@@ -77,7 +77,7 @@ class FileRequestLog {
             svcProps.put(SVC_PROP_FILEPATH, logFilePath);
             registration = context.registerService(RequestLog.class, delegate, svcProps);
         } catch (Exception e) {
-            SystemLogger.error("Error starting File Request Log", e);
+            SystemLogger.LOGGER.error("Error starting File Request Log", e);
         }
     }
 
@@ -88,7 +88,7 @@ class FileRequestLog {
             }
             delegate.stop();
         } catch (Exception e) {
-            SystemLogger.error("Error shutting down File Request Log", e);
+            SystemLogger.LOGGER.error("Error shutting down File Request Log", e);
         } finally {
             registration = null;
         }

@@ -116,16 +116,16 @@ public final class PerContextHandlerRegistry implements Comparable<PerContextHan
     @Override
     public int compareTo(@NotNull final PerContextHandlerRegistry other)
     {
-        final int result = new Integer(other.path.length()).compareTo(this.path.length());
+        final int result = Integer.valueOf(other.path.length()).compareTo(this.path.length());
         if ( result == 0 ) {
             if (this.ranking == other.ranking)
             {
                 // Service id's can be negative. Negative id's follow the reverse natural ordering of integers.
                 int reverseOrder = ( this.serviceId <= 0 && other.serviceId <= 0 ) ? -1 : 1;
-                return reverseOrder * new Long(this.serviceId).compareTo(other.serviceId);
+                return reverseOrder * Long.valueOf(this.serviceId).compareTo(other.serviceId);
             }
 
-            return new Integer(other.ranking).compareTo(this.ranking);
+            return Integer.valueOf(other.ranking).compareTo(this.ranking);
         }
         return result;
     }

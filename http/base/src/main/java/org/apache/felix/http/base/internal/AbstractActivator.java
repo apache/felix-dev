@@ -16,35 +16,29 @@
  */
 package org.apache.felix.http.base.internal;
 
-import org.apache.felix.http.base.internal.logger.SystemLogger;
 import org.osgi.framework.BundleActivator;
 import org.osgi.framework.BundleContext;
 
 public abstract class AbstractActivator
-    implements BundleActivator
-{
+    implements BundleActivator {
+
     private volatile BundleContext context;
 
-    protected final BundleContext getBundleContext()
-    {
+    protected final BundleContext getBundleContext() {
         return this.context;
     }
 
     @Override
     public final void start(final BundleContext context)
-        throws Exception
-    {
+        throws Exception {
         this.context = context;
-        SystemLogger.init(context);
         doStart();
     }
 
     @Override
     public final void stop(final BundleContext context)
-        throws Exception
-    {
+        throws Exception {
         doStop();
-        SystemLogger.destroy();
     }
 
     protected abstract void doStart()

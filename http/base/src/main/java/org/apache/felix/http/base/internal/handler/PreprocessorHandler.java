@@ -22,7 +22,6 @@ import org.apache.felix.http.base.internal.logger.SystemLogger;
 import org.apache.felix.http.base.internal.runtime.PreprocessorInfo;
 import org.jetbrains.annotations.NotNull;
 import org.osgi.framework.BundleContext;
-import org.osgi.framework.ServiceReference;
 import org.osgi.service.servlet.runtime.dto.DTOConstants;
 import org.osgi.service.servlet.whiteboard.Preprocessor;
 
@@ -73,7 +72,6 @@ public class PreprocessorHandler implements Comparable<PreprocessorHandler>
 
     public int init()
     {
-        final ServiceReference<Preprocessor> serviceReference = this.info.getServiceReference();
         this.preprocessor = this.getPreprocessorInfo().getService(this.bundleContext);
 
         if (this.preprocessor == null)
@@ -89,9 +87,8 @@ public class PreprocessorHandler implements Comparable<PreprocessorHandler>
         }
         catch (final Exception e)
         {
-            SystemLogger.error(this.getPreprocessorInfo().getServiceReference(),
-                    "Error during calling init() on preprocessor " + this.info.getClassName(this.preprocessor),
-                    e);
+            SystemLogger.LOGGER.error(SystemLogger.formatMessage(this.getPreprocessorInfo().getServiceReference(),
+                    "Error during calling init() on preprocessor ".concat(this.info.getClassName(this.preprocessor))), e);
 
             this.getPreprocessorInfo().ungetService(this.bundleContext, this.preprocessor);
             this.preprocessor = null;
@@ -116,9 +113,8 @@ public class PreprocessorHandler implements Comparable<PreprocessorHandler>
         catch ( final Exception ignore )
         {
             // we ignore this
-            SystemLogger.error(this.getPreprocessorInfo().getServiceReference(),
-                    "Error during calling destroy() on preprocessor " + this.info.getClassName(this.preprocessor),
-                    ignore);
+            SystemLogger.LOGGER.error(SystemLogger.formatMessage(this.getPreprocessorInfo().getServiceReference(),
+                    "Error during calling destroy() on preprocessor ".concat(this.info.getClassName(this.preprocessor))), ignore);
         }
         this.getPreprocessorInfo().ungetService(this.bundleContext, this.preprocessor);
         this.preprocessor = null;

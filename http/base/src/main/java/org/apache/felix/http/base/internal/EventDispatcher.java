@@ -26,11 +26,7 @@ import jakarta.servlet.http.HttpSessionListener;
  * The <code>EventDispatcher</code> dispatches events sent from the servlet
  * container (embedded Jetty or container in which the framework is running
  * in bridged mode) to any {@link HttpSessionListener} or
- * {@link HttpSessionListener} services.
- *
- * TODO - only HttpSessionIdListener and HttpSessionListener should be
- *        required; HttpSessionListener only for getting notified of
- *        terminated session.
+ * {@link HttpSessionIdListener} services.
  */
 public class EventDispatcher implements HttpSessionListener, HttpSessionIdListener
 {

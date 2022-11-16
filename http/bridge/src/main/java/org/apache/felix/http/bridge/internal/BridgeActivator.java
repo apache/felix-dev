@@ -103,6 +103,6 @@ public final class BridgeActivator extends AbstractHttpActivator
         props.put(Constants.SERVICE_VENDOR, VENDOR);
         getBundleContext().registerService(EventListener.class.getName(), dispatcher, props);
 
-        SystemLogger.info("Started bridged http services");
+        SystemLogger.LOGGER.info("Started bridged http services");
     }
 }

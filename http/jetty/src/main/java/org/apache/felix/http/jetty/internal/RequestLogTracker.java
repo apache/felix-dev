@@ -98,8 +98,8 @@ class RequestLogTracker extends ServiceTracker<RequestLog, RequestLog>  implemen
      * error limit.
      */
     private void processError(ServiceReference<?> reference, Exception e) {
-        SystemLogger.error(reference, String.format("Error dispatching to request log service ID %d from bundle %s:%s",
-                reference.getProperty(Constants.SERVICE_ID), reference.getBundle().getSymbolicName(), reference.getBundle().getVersion()), e);
+        SystemLogger.LOGGER.error(SystemLogger.formatMessage(reference, String.format("Error dispatching to request log service ID %d from bundle %s:%s",
+                reference.getProperty(Constants.SERVICE_ID), reference.getBundle().getSymbolicName(), reference.getBundle().getVersion())), e);
 
         int naughty = naughtyStep.merge(reference, 1, Integer::sum);
         if (naughty >= MAX_ERROR_COUNT) {
@@ -107,8 +107,8 @@ class RequestLogTracker extends ServiceTracker<RequestLog, RequestLog>  implemen
             // so we will not invoke the service again.
             logSvcs.remove(reference);
             naughtyStep.remove(reference);
-            SystemLogger.error(reference, String.format("RequestLog service ID %d from bundle %s:%s threw too many errors, it will no longer be invoked.",
-                    reference.getProperty(Constants.SERVICE_ID), reference.getBundle().getSymbolicName(), reference.getBundle().getVersion()), null);
+            SystemLogger.LOGGER.error(SystemLogger.formatMessage(reference, String.format("RequestLog service ID %d from bundle %s:%s threw too many errors, it will no longer be invoked.",
+                    reference.getProperty(Constants.SERVICE_ID), reference.getBundle().getSymbolicName(), reference.getBundle().getVersion())));
         }
     }
 }

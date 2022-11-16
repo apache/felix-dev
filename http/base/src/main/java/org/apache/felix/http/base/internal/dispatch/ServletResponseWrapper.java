@@ -32,8 +32,6 @@ import jakarta.servlet.http.HttpServletResponseWrapper;
 import org.apache.felix.http.base.internal.handler.FilterHandler;
 import org.apache.felix.http.base.internal.handler.ServletHandler;
 import org.apache.felix.http.base.internal.registry.PerContextHandlerRegistry;
-import org.jetbrains.annotations.NotNull;
-import org.jetbrains.annotations.Nullable;
 
 final class ServletResponseWrapper extends HttpServletResponseWrapper
 {
@@ -101,7 +99,7 @@ final class ServletResponseWrapper extends HttpServletResponseWrapper
 
                         final String servletPath = null;
                         final String pathInfo = request.getRequestURI();
-                        final String queryString = null; // XXX
+                        final String queryString = null;
 
                         final RequestInfo requestInfo = new RequestInfo(servletPath, pathInfo, queryString, pathInfo,
                                 request.getHttpServletMapping().getServletName(),

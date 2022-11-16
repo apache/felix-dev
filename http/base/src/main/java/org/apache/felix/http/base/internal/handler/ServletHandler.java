@@ -178,8 +178,8 @@ public abstract class ServletHandler implements Comparable<ServletHandler>
         }
         catch (final Exception e)
         {
-            SystemLogger.error(this.getServletInfo().getServiceReference(),
-                    "Error during calling init() on servlet " + this.servletInfo.getClassName(this.servlet),
+            SystemLogger.LOGGER.error(SystemLogger.formatMessage(this.getServletInfo().getServiceReference(),
+                    "Error during calling init() on servlet ".concat(this.servletInfo.getClassName(this.servlet))),
                     e);
             return DTOConstants.FAILURE_REASON_EXCEPTION_ON_INIT;
         }
@@ -205,9 +205,8 @@ public abstract class ServletHandler implements Comparable<ServletHandler>
             catch ( final Exception ignore )
             {
                 // we ignore this
-                SystemLogger.error(this.getServletInfo().getServiceReference(),
-                        "Error during calling destroy() on servlet " + this.servletInfo.getClassName(this.servlet),
-                        ignore);
+                SystemLogger.LOGGER.error(SystemLogger.formatMessage(this.getServletInfo().getServiceReference(),
+                        "Error during calling destroy() on servlet ".concat(this.servletInfo.getClassName(this.servlet))), ignore);
             }
 
             servlet = null;

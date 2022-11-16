@@ -125,9 +125,8 @@ public class FilterHandler implements Comparable<FilterHandler>
         }
         catch (final Exception e)
         {
-            SystemLogger.error(this.getFilterInfo().getServiceReference(),
-                    "Error during calling init() on filter " + this.filterInfo.getClassName(this.filter),
-                    e);
+            SystemLogger.LOGGER.error(SystemLogger.formatMessage(this.getFilterInfo().getServiceReference(),
+                    "Error during calling init() on filter ".concat(this.filterInfo.getClassName(this.filter))), e);
             getFilterInfo().ungetService(this.bundleContext, this.filter);
             return DTOConstants.FAILURE_REASON_EXCEPTION_ON_INIT;
         }
@@ -167,9 +166,8 @@ public class FilterHandler implements Comparable<FilterHandler>
                 catch ( final Exception ignore )
                 {
                     // we ignore this
-                    SystemLogger.error(this.getFilterInfo().getServiceReference(),
-                            "Error during calling destroy() on filter " + this.getFilterInfo().getClassName(f),
-                            ignore);
+                    SystemLogger.LOGGER.error(SystemLogger.formatMessage(this.getFilterInfo().getServiceReference(),
+                            "Error during calling destroy() on filter ".concat(this.getFilterInfo().getClassName(f))), ignore);
                 }
 
                 getFilterInfo().ungetService(this.bundleContext, f);

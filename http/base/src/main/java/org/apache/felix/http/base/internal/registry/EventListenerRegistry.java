@@ -210,7 +210,7 @@ public final class EventListenerRegistry implements
             }
             catch (final Throwable t)
             {
-                SystemLogger.error(null, "Exception while calling listener " + l, t);
+                SystemLogger.LOGGER.error("Exception while calling listener {}", l, t);
             }
         }
     }
@@ -226,7 +226,7 @@ public final class EventListenerRegistry implements
             }
             catch (final Throwable t)
             {
-                SystemLogger.error(null, "Exception while calling listener " + l, t);
+                SystemLogger.LOGGER.error("Exception while calling listener {}", l, t);
             }
         }
     }
@@ -242,7 +242,7 @@ public final class EventListenerRegistry implements
             }
             catch (final Throwable t)
             {
-                SystemLogger.error(null, "Exception while calling listener " + l, t);
+                SystemLogger.LOGGER.error("Exception while calling listener {}", l, t);
             }
         }
     }
@@ -258,7 +258,7 @@ public final class EventListenerRegistry implements
             }
             catch (final Throwable t)
             {
-                SystemLogger.error(null, "Exception while calling listener " + l, t);
+                SystemLogger.LOGGER.error("Exception while calling listener {}", l, t);
             }
         }
     }
@@ -274,7 +274,7 @@ public final class EventListenerRegistry implements
             }
             catch (final Throwable t)
             {
-                SystemLogger.error(null, "Exception while calling listener " + l, t);
+                SystemLogger.LOGGER.error("Exception while calling listener {}", l, t);
             }
         }
     }
@@ -290,7 +290,7 @@ public final class EventListenerRegistry implements
             }
             catch (final Throwable t)
             {
-                SystemLogger.error(null, "Exception while calling listener " + l, t);
+                SystemLogger.LOGGER.error("Exception while calling listener {}", l, t);
             }
         }
     }
@@ -306,7 +306,7 @@ public final class EventListenerRegistry implements
             }
             catch (final Throwable t)
             {
-                SystemLogger.error(null, "Exception while calling listener " + l, t);
+                SystemLogger.LOGGER.error("Exception while calling listener {}", l, t);
             }
         }
     }
@@ -322,7 +322,7 @@ public final class EventListenerRegistry implements
             }
             catch (final Throwable t)
             {
-                SystemLogger.error(null, "Exception while calling listener " + l, t);
+                SystemLogger.LOGGER.error("Exception while calling listener {}", l, t);
             }
         }
     }
@@ -338,7 +338,7 @@ public final class EventListenerRegistry implements
             }
             catch (final Throwable t)
             {
-                SystemLogger.error(null, "Exception while calling listener " + l, t);
+                SystemLogger.LOGGER.error("Exception while calling listener {}", l, t);
             }
         }
     }
@@ -354,7 +354,7 @@ public final class EventListenerRegistry implements
             }
             catch (final Throwable t)
             {
-                SystemLogger.error(null, "Exception while calling listener " + l, t);
+                SystemLogger.LOGGER.error("Exception while calling listener {}", l, t);
             }
         }
     }
@@ -370,7 +370,7 @@ public final class EventListenerRegistry implements
             }
             catch (final Throwable t)
             {
-                SystemLogger.error(null, "Exception while calling listener " + l, t);
+                SystemLogger.LOGGER.error("Exception while calling listener {}", l, t);
             }
         }
     }
@@ -386,7 +386,7 @@ public final class EventListenerRegistry implements
             }
             catch (final Throwable t)
             {
-                SystemLogger.error(null, "Exception while calling listener " + l, t);
+                SystemLogger.LOGGER.error("Exception while calling listener {}", l, t);
             }
         }
     }
@@ -402,7 +402,7 @@ public final class EventListenerRegistry implements
             }
             catch (final Throwable t)
             {
-                SystemLogger.error(null, "Exception while calling listener " + l, t);
+                SystemLogger.LOGGER.error("Exception while calling listener {}", l, t);
             }
         }
     }
@@ -420,7 +420,7 @@ public final class EventListenerRegistry implements
             }
             catch (final Throwable t)
             {
-                SystemLogger.error(null, "Exception while calling listener " + l, t);
+                SystemLogger.LOGGER.error("Exception while calling listener {}", l, t);
             }
         }
     }
@@ -453,7 +453,7 @@ public final class EventListenerRegistry implements
         }
         catch (final Throwable t)
         {
-            SystemLogger.error(info.getServiceReference(), "Exception while calling servlet context listener.", t);
+            SystemLogger.LOGGER.error(SystemLogger.formatMessage(info.getServiceReference(), "Exception while calling servlet context listener."), t);
         }
     }
 
@@ -468,7 +468,7 @@ public final class EventListenerRegistry implements
         }
         catch (final Throwable t)
         {
-            SystemLogger.error(info.getServiceReference(), "Exception while calling servlet context listener.", t);
+            SystemLogger.LOGGER.error(SystemLogger.formatMessage(info.getServiceReference(), "Exception while calling servlet context listener."), t);
         }
     }
 }

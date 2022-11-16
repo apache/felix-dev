@@ -121,7 +121,7 @@ public final class FailedDTOHolder
         }
         else
         {
-            SystemLogger.error("Unsupported info type: " + info.getClass(), null);
+            SystemLogger.LOGGER.error("Unsupported info type: {}", info.getClass());
         }
     }
 }

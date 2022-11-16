@@ -78,6 +78,7 @@ public class RequestLogTrackerTest {
             }
         };
         ServiceReference<RequestLog> mockSvcRef = mock(ServiceReference.class);
+        when(mockSvcRef.getPropertyKeys()).thenReturn(new String[0]);
         Bundle mockBundle = mock(Bundle.class);
         when(mockSvcRef.getBundle()).thenReturn(mockBundle);
         when(mockBundle.getSymbolicName()).thenReturn("org.example");

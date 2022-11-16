@@ -44,7 +44,7 @@ class LogServiceRequestLog extends CustomRequestLog {
 
                 @Override
                 public void write(String requestEntry) throws IOException {
-                    SystemLogger.info(PREFIX.concat(requestEntry));
+                    SystemLogger.LOGGER.info(PREFIX.concat(requestEntry));
                 }
             },config.getRequestLogOSGiFormat());
         this.serviceName = config.getRequestLogOSGiServiceName();

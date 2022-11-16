@@ -427,19 +427,19 @@ public class ServletContextImpl implements ExtServletContext
     @Override
     public void log(Exception cause, String message)
     {
-        SystemLogger.error(message, cause);
+        SystemLogger.LOGGER.error(message, cause);
     }
 
     @Override
     public void log(String message)
     {
-        SystemLogger.info(message);
+        SystemLogger.LOGGER.info(message);
     }
 
     @Override
     public void log(String message, Throwable cause)
     {
-        SystemLogger.error(message, cause);
+        SystemLogger.LOGGER.error(message, cause);
     }
 
     @Override

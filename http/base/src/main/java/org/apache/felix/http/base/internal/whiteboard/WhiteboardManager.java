@@ -80,7 +80,6 @@ import org.osgi.framework.ServiceFactory;
 import org.osgi.framework.ServiceReference;
 import org.osgi.framework.ServiceRegistration;
 import org.osgi.service.servlet.context.ServletContextHelper;
-import org.osgi.service.servlet.runtime.HttpServiceRuntimeConstants;
 import org.osgi.service.servlet.runtime.dto.DTOConstants;
 import org.osgi.service.servlet.runtime.dto.PreprocessorDTO;
 import org.osgi.service.servlet.runtime.dto.ServletContextDTO;
@@ -874,7 +873,7 @@ public final class WhiteboardManager
             else
             {
                 // This should never happen, but we log anyway
-                SystemLogger.error("Unknown whiteboard service " + info.getServiceReference(), null);
+                SystemLogger.LOGGER.error("Unknown whiteboard service {}", info.getServiceReference());
             }
             if ( failureCode != -1 )
             {
@@ -920,7 +919,7 @@ public final class WhiteboardManager
         }
         catch (final Exception e)
         {
-            SystemLogger.error("Exception while unregistering whiteboard service " + info.getServiceReference(), e);
+            SystemLogger.LOGGER.error("Exception while unregistering whiteboard service {}", info.getServiceReference(), e);
         }
 
     }
@@ -942,7 +941,7 @@ public final class WhiteboardManager
             catch ( final InvalidSyntaxException ise)
             {
                 // log and ignore service
-                SystemLogger.error("Invalid target filter expression for " + info.getServiceReference() + " : " + target, ise);
+                SystemLogger.LOGGER.error("Invalid target filter expression for {} : {}", info.getServiceReference(), target, ise);
                 return false;
             }
         }

@@ -78,31 +78,31 @@ public class FailureStateHandler {
         }
         if ( reason == FAILURE_REASON_NO_SERVLET_CONTEXT_MATCHING )
         {
-            SystemLogger.debug(ref, "Ignoring unmatching " + type + " service" + serviceInfo);
+            SystemLogger.LOGGER.debug(SystemLogger.formatMessage(ref, "Ignoring unmatching " + type + " service" + serviceInfo));
         }
         else if ( reason == FAILURE_REASON_SHADOWED_BY_OTHER_SERVICE )
         {
-            SystemLogger.debug(ref, "Ignoring shadowed " + type + " service" + serviceInfo);
+            SystemLogger.LOGGER.debug(SystemLogger.formatMessage(ref, "Ignoring shadowed " + type + " service" + serviceInfo));
         }
         else if ( reason == FAILURE_REASON_SERVICE_NOT_GETTABLE )
         {
-            SystemLogger.error(ref, "Ignoring ungettable " + type + " service" + serviceInfo, ex);
+            SystemLogger.LOGGER.error(SystemLogger.formatMessage(ref, "Ignoring ungettable " + type + " service" + serviceInfo), ex);
         }
         else if ( reason == FAILURE_REASON_VALIDATION_FAILED )
         {
-            SystemLogger.debug(ref, "Ignoring invalid " + type + " service" + serviceInfo);
+            SystemLogger.LOGGER.debug(SystemLogger.formatMessage(ref, "Ignoring invalid " + type + " service" + serviceInfo));
         }
         else if ( reason == FAILURE_REASON_NO_SERVLET_CONTEXT_MATCHING )
         {
-            SystemLogger.debug(ref, "Ignoring unmatched " + type + " service" + serviceInfo);
+            SystemLogger.LOGGER.debug(SystemLogger.formatMessage(ref, "Ignoring unmatched " + type + " service" + serviceInfo));
         }
         else if ( reason == FAILURE_REASON_SERVLET_CONTEXT_FAILURE )
         {
-            SystemLogger.debug(ref,  "Servlet context " + String.valueOf(contextId) + " failure: Ignoring " + type + " service" + serviceInfo);
+            SystemLogger.LOGGER.debug(SystemLogger.formatMessage(ref,  "Servlet context " + String.valueOf(contextId) + " failure: Ignoring " + type + " service" + serviceInfo));
         }
         else if ( reason == FAILURE_REASON_UNKNOWN)
         {
-            SystemLogger.error(ref, "Exception while registering " + type + " service" + serviceInfo, ex);
+            SystemLogger.LOGGER.error(SystemLogger.formatMessage(ref, "Exception while registering " + type + " service" + serviceInfo), ex);
         }
 
         FailureStatus status = serviceFailures.get(info);

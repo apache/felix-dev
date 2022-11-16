@@ -60,7 +60,7 @@ public class ConnectorFactoryTracker extends ServiceTracker<ConnectorFactory, Co
                 connector.start();
                 return connector;
             } catch (Exception e) {
-                SystemLogger.error("Failed starting connector '" + connector + "' provided by " + reference, e);
+                SystemLogger.LOGGER.error("Failed starting connector '{}' provided by {}", connector, reference, e);
             }
             // connector failed to start, don't continue tracking
             ServiceUtils.safeUngetService(context, reference);
@@ -80,7 +80,7 @@ public class ConnectorFactoryTracker extends ServiceTracker<ConnectorFactory, Co
             }
             catch (Exception e)
             {
-                SystemLogger.info("Failed stopping connector '" + connector + "' provided by " + reference + ": " + e);
+                SystemLogger.LOGGER.info("Failed stopping connector '{}' provided by {}", connector, reference, e);
             }
         }
         this.server.removeConnector(connector);

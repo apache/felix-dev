@@ -847,7 +847,7 @@ public final class JettyConfig
         }
         catch (IOException e)
         {
-            SystemLogger.debug("Unable to bind to port: " + i);
+            SystemLogger.LOGGER.debug("Unable to bind to port: {}", i);
         }
         finally
         {

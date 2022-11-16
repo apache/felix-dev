@@ -158,7 +158,7 @@ public final class Dispatcher
                     if ( e instanceof ServletExceptionWrapper ) {
                         e = ((ServletExceptionWrapper)e).getException();
                     }
-		            SystemLogger.error("Exception while processing request to " + requestURI, e);
+		            SystemLogger.LOGGER.error("Exception while processing request to " + requestURI, e);
 		            req.setAttribute(RequestDispatcher.ERROR_EXCEPTION, e);
 		            req.setAttribute(RequestDispatcher.ERROR_EXCEPTION_TYPE, e.getClass().getName());
 

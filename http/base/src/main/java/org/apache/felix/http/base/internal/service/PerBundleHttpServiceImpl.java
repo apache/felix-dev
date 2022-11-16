@@ -107,7 +107,7 @@ public final class PerBundleHttpServiceImpl implements HttpService
         }
         catch (javax.servlet.ServletException e)
         {
-            SystemLogger.error("Failed to register resources", e);
+            SystemLogger.LOGGER.error("Failed to register resources", e);
         }
     }
 

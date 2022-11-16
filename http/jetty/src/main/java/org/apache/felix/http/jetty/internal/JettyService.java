@@ -175,7 +175,7 @@ public final class JettyService
         }
         catch (Exception e)
         {
-            SystemLogger.error("Exception while initializing Jetty.", e);
+            SystemLogger.LOGGER.error("Exception while initializing Jetty", e);
         }
     }
 
@@ -218,11 +218,11 @@ public final class JettyService
             {
                 this.server.stop();
                 this.server = null;
-                SystemLogger.info("Stopped Jetty.");
+                SystemLogger.LOGGER.info("Stopped Jetty");
             }
             catch (Exception e)
             {
-                SystemLogger.error("Exception while stopping Jetty.", e);
+                SystemLogger.LOGGER.error("Exception while stopping Jetty", e);
             }
 
             if (this.mbeanServerTracker != null)
@@ -356,13 +356,13 @@ public final class JettyService
                 }
                 message.append("]");
 
-                SystemLogger.info(message.toString());
+                SystemLogger.LOGGER.info(message.toString());
                 this.controller.register(context.getServletContext(), getServiceProperties());
             }
             else
             {
                 this.stopJetty();
-                SystemLogger.error("Jetty stopped (no connectors available)", null);
+                SystemLogger.LOGGER.error("Jetty stopped (no connectors available)");
             }
 
             try {
@@ -370,24 +370,24 @@ public final class JettyService
                 this.requestLogTracker.open();
                 this.server.setRequestLog(requestLogTracker);
             } catch (InvalidSyntaxException e) {
-                SystemLogger.error("Invalid filter syntax in request log tracker", e);
+                SystemLogger.LOGGER.error("Invalid filter syntax in request log tracker", e);
             }
 
             if (this.config.isRequestLogOSGiEnabled()) {
                 this.osgiRequestLog = new LogServiceRequestLog(this.config);
                 this.osgiRequestLog.register(this.context);
-                SystemLogger.info("Directing Jetty request logs to the OSGi Log Service");
+                SystemLogger.LOGGER.info("Directing Jetty request logs to the OSGi Log Service");
             }
 
             if (this.config.getRequestLogFilePath() != null && !this.config.getRequestLogFilePath().isEmpty()) {
                 this.fileRequestLog = new FileRequestLog(config);
                 this.fileRequestLog.start(this.context);
-                SystemLogger.info("Directing Jetty request logs to " + this.config.getRequestLogFilePath());
+                SystemLogger.LOGGER.info("Directing Jetty request logs to {}", this.config.getRequestLogFilePath());
             }
         }
         else
         {
-            SystemLogger.warning("Jetty not started (HTTP and HTTPS disabled)", null);
+            SystemLogger.LOGGER.warn("Jetty not started (HTTP and HTTPS disabled)");
         }
     }
 
@@ -601,7 +601,7 @@ public final class JettyService
         catch (Exception e)
         {
             this.server.removeConnector(connector);
-            SystemLogger.error("Failed to start Connector: " + connector, e);
+            SystemLogger.LOGGER.error("Failed to start Connector: {}", connector, e);
         }
 
         return false;
