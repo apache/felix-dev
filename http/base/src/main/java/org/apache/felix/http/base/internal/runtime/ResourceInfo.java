@@ -58,7 +58,6 @@ public final class ResourceInfo extends WhiteboardServiceInfo<Object>
     @Override
     public boolean isValid()
     {
-        // TODO - do we need to check the prefix?
         boolean valid = super.isValid() && !isEmpty(this.patterns) && !isEmpty(this.prefix);
         if ( valid ) {
             for(final String p : patterns)

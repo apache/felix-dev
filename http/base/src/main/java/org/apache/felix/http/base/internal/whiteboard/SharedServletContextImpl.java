@@ -320,7 +320,6 @@ public class SharedServletContextImpl implements ServletContext
         	final ServletResolution resolution = new ServletResolution();
         	resolution.handler = servletHandler;
             resolution.handlerRegistry = this.registry;
-            // TODO - what is the path of a named servlet?
             final RequestInfo requestInfo = new RequestInfo("", null, null, null, name, "", "", MappingMatch.EXACT, true);
             dispatcher = new RequestDispatcherImpl(resolution, requestInfo);
         }
@@ -347,7 +346,6 @@ public class SharedServletContextImpl implements ServletContext
             query = path.substring(q + 1);
             path = path.substring(0, q);
         }
-        // TODO remove path parameters...
         final String encodedRequestURI = path == null ? "" : removeDotSegments(path);
         final String requestURI = decodePath(encodedRequestURI);
 

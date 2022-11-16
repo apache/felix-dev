@@ -71,7 +71,6 @@ public class ServletContextHelperInfo extends AbstractInfo<ServletContextHelper>
             {
                 return true;
             }
-            // TODO we need more validation
             if (path.startsWith("/") && !path.endsWith("/"))
             {
                 return true;

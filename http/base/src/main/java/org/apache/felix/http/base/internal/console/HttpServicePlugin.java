@@ -63,7 +63,6 @@ import org.osgi.service.servlet.runtime.dto.ServletDTO;
 /**
  * This is a web console plugin.
  */
-@SuppressWarnings("serial")
 public class HttpServicePlugin extends HttpServlet
 {
     private static final String ATTR_TEST = "test";

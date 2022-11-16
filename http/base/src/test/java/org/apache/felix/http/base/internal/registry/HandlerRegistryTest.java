@@ -128,7 +128,6 @@ public class HandlerRegistryTest
         {
             hr.addServlet(null, handler);
 
-            // TODO
 //            fail("Should not have allowed the servlet to be added as it was already "
 //                    + "added before init was finished");
 

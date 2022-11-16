@@ -78,7 +78,6 @@ public final class ServletRegistry
             final PathResolution pr = entry.resolve(relativeRequestURI);
             if ( pr != null )
             {
-                // TODO - we should have all patterns under which this servlet is actively registered
                 pr.patterns = new String[] {entry.getPattern()};
                 pr.matchedPattern = entry.getPattern();
                 return pr;

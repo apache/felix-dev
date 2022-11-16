@@ -20,7 +20,6 @@ import jakarta.servlet.ServletException;
 
 import org.apache.felix.http.base.internal.runtime.WhiteboardServiceInfo;
 
-@SuppressWarnings("serial")
 public class RegistrationFailureException extends ServletException
 {
     private final WhiteboardServiceInfo<?> info;
