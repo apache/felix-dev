@@ -33,7 +33,6 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
-import org.apache.felix.http.base.internal.console.HttpServicePlugin;
 import org.apache.felix.http.base.internal.context.ExtServletContext;
 import org.apache.felix.http.base.internal.handler.FilterHandler;
 import org.apache.felix.http.base.internal.handler.HttpServiceServletHandler;
@@ -111,8 +110,6 @@ public final class WhiteboardManager
 
     private final List<ServiceTracker<?, ?>> trackers = new ArrayList<>();
 
-    private final HttpServicePlugin plugin;
-
     /** A map containing all servlet context registrations. Mapped by context name */
     private final Map<String, List<WhiteboardContextHandler>> contextMap = new HashMap<>();
 
@@ -146,7 +143,6 @@ public final class WhiteboardManager
         this.httpServiceFactory = httpServiceFactory;
         this.registry = registry;
         this.serviceRuntime = new HttpServiceRuntimeImpl(registry, this, bundleContext);
-        this.plugin = new HttpServicePlugin(bundleContext, this.serviceRuntime);
     }
 
     /**
@@ -241,8 +237,6 @@ public final class WhiteboardManager
         addTracker(new JavaxServletTracker(httpBundleContext, this));
         addTracker(new JavaxListenersTracker(httpBundleContext, this));
         addTracker(new JavaxPreprocessorTracker(httpBundleContext, this));
-
-        this.plugin.register();
     }
 
     /**
@@ -260,7 +254,6 @@ public final class WhiteboardManager
      */
     public void stop()
     {
-        this.plugin.unregister();
         for(final ServiceTracker<?, ?> t : this.trackers)
         {
             t.close();

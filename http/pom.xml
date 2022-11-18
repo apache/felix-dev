@@ -46,7 +46,9 @@
         <module>parent</module>
         <module>proxy</module>
         <module>itest</module>
-        <module>samples/bridge</module>
+        <module>webconsoleplugin</module>
+        <module>inventoryprinter</module>
+        <module>sslfilter</module>
         <module>samples/whiteboard</module>
     </modules>
 </project>
