@@ -27,7 +27,6 @@ import java.util.Set;
 import org.apache.felix.http.base.internal.HttpConfig;
 import org.apache.felix.http.base.internal.context.ExtServletContext;
 import org.apache.felix.http.base.internal.registry.PerContextHandlerRegistry;
-import org.apache.felix.http.base.internal.util.MimeTypes;
 import org.osgi.framework.Bundle;
 import org.osgi.framework.wiring.BundleWiring;
 import org.osgi.service.servlet.context.ServletContextHelper;
@@ -131,9 +130,6 @@ public class PerBundleServletContextImpl implements ExtServletContext {
         return this.bundle.adapt(BundleWiring.class).getClassLoader();
     }
 
-    /**
-     * @see jakarta.servlet.ServletContext#getResource(java.lang.String)
-     */
     @Override
     public URL getResource(final String path)
     {
@@ -143,12 +139,7 @@ public class PerBundleServletContextImpl implements ExtServletContext {
     @Override
     public String getMimeType(final String name)
     {
-        String type = this.contextHelper.getMimeType(name);
-        if (type != null) {
-            return type;
-        }
-
-        return MimeTypes.get().getByFile(name);
+        return this.contextHelper.getMimeType(name);
     }
 
     @Override
