@@ -63,7 +63,9 @@ public class AbstractInfoOrderingTest
                 { 1, 0, 0, -2, 1 },
                 { 1, 0, 0, -1, 2 },
                 { 1, 0, 0, -1, 1 },
-                { 1, 0, 0, -2, -1 }
+                { 1, 0, 0, -2, -1 },
+                { 1, Integer.MIN_VALUE, 0, Integer.MIN_VALUE, 4},
+                { 1, Integer.MIN_VALUE, Integer.MIN_VALUE, Integer.MIN_VALUE, 5}
            });
     }
 

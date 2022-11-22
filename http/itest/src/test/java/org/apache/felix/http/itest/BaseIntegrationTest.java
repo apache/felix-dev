@@ -274,7 +274,7 @@ public abstract class BaseIntegrationTest {
 
     protected Bundle getHttpJettyBundle() {
         Bundle b = findBundle(ORG_APACHE_FELIX_HTTP_JETTY);
-        assertNotNull("Filestore bundle not found?!", b);
+        assertNotNull("Apache Felix Jetty bundle not found?!", b);
         return b;
     }
 

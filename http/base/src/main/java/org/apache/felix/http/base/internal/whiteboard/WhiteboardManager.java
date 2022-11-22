@@ -27,7 +27,6 @@ import java.util.Collection;
 import java.util.Collections;
 import java.util.Dictionary;
 import java.util.HashMap;
-import java.util.Hashtable;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
@@ -45,6 +44,7 @@ import org.apache.felix.http.base.internal.logger.SystemLogger;
 import org.apache.felix.http.base.internal.registry.EventListenerRegistry;
 import org.apache.felix.http.base.internal.registry.HandlerRegistry;
 import org.apache.felix.http.base.internal.runtime.AbstractInfo;
+import org.apache.felix.http.base.internal.runtime.DefaultServletContextHelperInfo;
 import org.apache.felix.http.base.internal.runtime.FilterInfo;
 import org.apache.felix.http.base.internal.runtime.ListenerInfo;
 import org.apache.felix.http.base.internal.runtime.PreprocessorInfo;
@@ -70,19 +70,14 @@ import org.apache.felix.http.base.internal.whiteboard.tracker.ResourceTracker;
 import org.apache.felix.http.base.internal.whiteboard.tracker.ServletContextHelperTracker;
 import org.apache.felix.http.base.internal.whiteboard.tracker.ServletTracker;
 import org.jetbrains.annotations.NotNull;
-import org.osgi.framework.Bundle;
 import org.osgi.framework.BundleContext;
 import org.osgi.framework.Constants;
 import org.osgi.framework.Filter;
 import org.osgi.framework.InvalidSyntaxException;
-import org.osgi.framework.ServiceFactory;
 import org.osgi.framework.ServiceReference;
-import org.osgi.framework.ServiceRegistration;
-import org.osgi.service.servlet.context.ServletContextHelper;
 import org.osgi.service.servlet.runtime.dto.DTOConstants;
 import org.osgi.service.servlet.runtime.dto.PreprocessorDTO;
 import org.osgi.service.servlet.runtime.dto.ServletContextDTO;
-import org.osgi.service.servlet.whiteboard.HttpWhiteboardConstants;
 import org.osgi.service.servlet.whiteboard.Preprocessor;
 import org.osgi.util.tracker.ServiceTracker;
 
@@ -124,10 +119,6 @@ public final class WhiteboardManager
 
     private volatile ServletContext webContext;
 
-    private volatile ServiceRegistration<ServletContextHelper> defaultContextRegistration;
-
-    private volatile ServiceRegistration<org.osgi.service.http.context.ServletContextHelper> defaultJavaxContextRegistration;
-
     /**
      * Create a new whiteboard http manager
      *
@@ -160,72 +151,19 @@ public final class WhiteboardManager
 
         this.webContext = containerContext;
 
-
         // add context for http service
-        final List<WhiteboardContextHandler> list = new ArrayList<>();
-        final ServletContextHelperInfo info = new ServletContextHelperInfo(Integer.MAX_VALUE,
+        final List<WhiteboardContextHandler> httpContextList = new ArrayList<>();
+        final ServletContextHelperInfo httpInfo = new ServletContextHelperInfo(Integer.MAX_VALUE,
                 HttpServiceFactory.HTTP_SERVICE_CONTEXT_SERVICE_ID,
                 HttpServiceFactory.HTTP_SERVICE_CONTEXT_NAME, "/", null);
-        list.add(new HttpServiceContextHandler(info, registry.getRegistry(HttpServiceFactory.HTTP_SERVICE_CONTEXT_SERVICE_ID),
+        httpContextList.add(new HttpServiceContextHandler(httpInfo, registry.getRegistry(HttpServiceFactory.HTTP_SERVICE_CONTEXT_SERVICE_ID),
                 httpServiceFactory, webContext, this.httpBundleContext.getBundle()));
-        this.contextMap.put(HttpServiceFactory.HTTP_SERVICE_CONTEXT_NAME, list);
+        this.contextMap.put(HttpServiceFactory.HTTP_SERVICE_CONTEXT_NAME, httpContextList);
 
-        // register default context
-        final Dictionary<String, Object> props = new Hashtable<>();
-        props.put(HttpWhiteboardConstants.HTTP_WHITEBOARD_CONTEXT_NAME, HttpWhiteboardConstants.HTTP_WHITEBOARD_DEFAULT_CONTEXT_NAME);
-        props.put(HttpWhiteboardConstants.HTTP_WHITEBOARD_CONTEXT_PATH, "/");
-        props.put(Constants.SERVICE_RANKING, Integer.MIN_VALUE);
-        this.defaultContextRegistration = httpBundleContext.registerService(
-                ServletContextHelper.class,
-                new ServiceFactory<ServletContextHelper>()
-                {
+        // Add default context
+        this.addContextHelper(new DefaultServletContextHelperInfo());
 
-                    @Override
-                    public ServletContextHelper getService(
-                            final Bundle bundle,
-                            final ServiceRegistration<ServletContextHelper> registration)
-                    {
-                        return new ServletContextHelper(bundle)
-                        {
-                            // nothing to override
-                        };
-                    }
-
-                    @Override
-                    public void ungetService(
-                            final Bundle bundle,
-                            final ServiceRegistration<ServletContextHelper> registration,
-                            final ServletContextHelper service)
-                    {
-                        // nothing to do
-                    }
-                }, props);
-        // register default context for javax whiteboard
-        this.defaultJavaxContextRegistration = httpBundleContext.registerService(
-                org.osgi.service.http.context.ServletContextHelper.class,
-                new ServiceFactory<org.osgi.service.http.context.ServletContextHelper>()
-                {
-
-                    @Override
-                    public org.osgi.service.http.context.ServletContextHelper getService(
-                            final Bundle bundle,
-                            final ServiceRegistration<org.osgi.service.http.context.ServletContextHelper> registration)
-                    {
-                        return new org.osgi.service.http.context.ServletContextHelper(bundle)
-                        {
-                            // nothing to override
-                        };
-                    }
-
-                    @Override
-                    public void ungetService(
-                            final Bundle bundle,
-                            final ServiceRegistration<org.osgi.service.http.context.ServletContextHelper> registration,
-                            final org.osgi.service.http.context.ServletContextHelper service)
-                    {
-                        // nothing to do
-                    }
-                }, props);
+        // Start tracker
         addTracker(new FilterTracker(this.httpBundleContext, this));
         addTracker(new ListenersTracker(this.httpBundleContext, this));
         addTracker(new PreprocessorTracker(this.httpBundleContext, this));
@@ -268,15 +206,6 @@ public final class WhiteboardManager
         this.failureStateHandler.clear();
         this.registry.reset();
 
-        if ( this.defaultJavaxContextRegistration != null ) {
-            this.defaultJavaxContextRegistration.unregister();
-            this.defaultJavaxContextRegistration = null;
-        }
-        if (this.defaultContextRegistration != null)
-        {
-            this.defaultContextRegistration.unregister();
-            this.defaultContextRegistration = null;
-        }
         this.webContext = null;
     }
 
@@ -569,27 +498,9 @@ public final class WhiteboardManager
                     // we ignore this and treat it as an invisible service
                 }
             }
-            if ( visible )
+            if ( visible && h.getContextInfo().match(info) )
             {
-                if ( h.getContextInfo().getServiceReference() != null )
-                {
-                    if ( info.getContextSelectionFilter().match(h.getContextInfo().getServiceReference()) )
-                    {
-                        result.add(h);
-                    }
-                }
-                else
-                {
-                    final Map<String, String> props = new HashMap<>();
-                    props.put(HttpWhiteboardConstants.HTTP_WHITEBOARD_CONTEXT_NAME, h.getContextInfo().getName());
-                    props.put(HttpWhiteboardConstants.HTTP_WHITEBOARD_CONTEXT_PATH, h.getContextInfo().getPath());
-                    props.put(org.osgi.service.http.whiteboard.HttpWhiteboardConstants.HTTP_SERVICE_CONTEXT_PROPERTY, h.getContextInfo().getName());
-
-                    if ( info.getContextSelectionFilter().matches(props) )
-                    {
-                        result.add(h);
-                    }
-                }
+                result.add(h);
             }
         }
         return result;
