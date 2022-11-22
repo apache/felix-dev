@@ -30,14 +30,14 @@
     <description>This is an implementation of the R8.1 OSGi Servlet Service, the R7 OSGi Http Service and the R7 OSGi Http Whiteboard Specification</description>
 
     <artifactId>org.apache.felix.http.jetty</artifactId>
-    <version>5.0.0-RC2</version>
+    <version>5.0.0-RC3-SNAPSHOT</version>
     <packaging>bundle</packaging>
 
     <scm>
         <connection>scm:git:https://github.com/apache/felix-dev.git</connection>
         <developerConnection>scm:git:https://github.com/apache/felix-dev.git</developerConnection>
         <url>https://gitbox.apache.org/repos/asf?p=felix-dev.git</url>
-      <tag>org.apache.felix.http.jetty-5.0.0-RC2</tag>
+      <tag>HEAD</tag>
   </scm>
 
     <properties>
