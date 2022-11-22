@@ -28,7 +28,7 @@
 
     <name>Apache Felix Http Base</name>
     <artifactId>org.apache.felix.http.base</artifactId>
-    <version>5.0.0-RC2</version>
+    <version>5.0.0-RC3-SNAPSHOT</version>
     <packaging>jar</packaging>
 
     <scm>
