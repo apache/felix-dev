@@ -32,6 +32,11 @@ import org.osgi.service.startlevel.StartLevel;
 
 class FrameworkStartLevelImpl implements FrameworkStartLevel, Runnable
 {
+    // poor mans debugging
+    static void debug(String msg) {
+        Felix.debug("[FrameworkStartLevelImpl]", msg);
+    }
+ 
     static final String THREAD_NAME = "FelixStartLevel";
 
     private final Felix m_felix;
@@ -64,6 +69,7 @@ class FrameworkStartLevelImpl implements FrameworkStartLevel, Runnable
             m_thread = new Thread(this, THREAD_NAME);
             m_thread.setDaemon(true);
             m_thread.start();
+            debug("startThread: thread started");
         }
     }
 
@@ -88,6 +94,7 @@ class FrameworkStartLevelImpl implements FrameworkStartLevel, Runnable
 
                 // Wake up the thread, if it is currently in the wait() state
                 // for more work.
+                debug ("stop: m_requests.notifyAll");
                 m_requests.notifyAll();
             }
         }
@@ -126,7 +133,12 @@ class FrameworkStartLevelImpl implements FrameworkStartLevel, Runnable
                 throw new IllegalStateException("No inital startlevel yet");
             }
             // Queue request.
-            m_requests.add(new StartLevelRequest(null, startlevel, listeners));
+            // m_requests.add(new StartLevelRequest(null, startlevel, listeners));
+            StartLevelRequest request = new StartLevelRequest(null, startlevel, listeners);
+            m_requests.add(request);
+            debug("setStartLevel: m_requests.added request: " + request);
+
+            debug ("setStartLevel: m_requests.notifyAll");
             m_requests.notifyAll();
         }
     }
@@ -148,11 +160,13 @@ class FrameworkStartLevelImpl implements FrameworkStartLevel, Runnable
                 startThread();
                 // Queue request.
                 m_requests.add(request);
+                debug("setStartLevelAndWait: m_requests.added: request: " + request);
                 m_requests.notifyAll();
             }
 
             try
             {
+                debug("setStartLevelAndWait: request.wait");
                 request.wait();
             }
             catch (InterruptedException ex)
@@ -261,16 +275,19 @@ class FrameworkStartLevelImpl implements FrameworkStartLevel, Runnable
             synchronized (m_requests)
             {
                 // Wait for a request.
+                debug("run: m_requests.size: " + m_requests.size());
                 while (m_requests.isEmpty())
                 {
                     // Terminate the thread if requested to do so (see stop()).
                     if (m_thread == null)
                     {
+                        debug("run: thread stopped");
                         return;
                     }
 
                     try
                     {
+                        debug("run: m_requests.wait");
                         m_requests.wait();
                     }
                     catch (InterruptedException ex)
@@ -281,6 +298,7 @@ class FrameworkStartLevelImpl implements FrameworkStartLevel, Runnable
 
                 // Get the requested start level.
                 request = m_requests.remove(0);
+                debug("run: m_requests.remove request: " + request);
             }
 
             // If the request object has no bundle, then the request
@@ -310,6 +328,7 @@ class FrameworkStartLevelImpl implements FrameworkStartLevel, Runnable
                         synchronized (m_requests)
                         {
                             m_requests.add(0, request);
+                            debug("run: m_requests.added request: " + request);
                             previousRequest = request;
                         }
                     }
@@ -328,6 +347,7 @@ class FrameworkStartLevelImpl implements FrameworkStartLevel, Runnable
             // Notify any waiting thread that this request is done.
             synchronized (request)
             {
+                debug("run: request.notifyAll");
                 request.notifyAll();
             }
         }
@@ -363,6 +383,10 @@ class FrameworkStartLevelImpl implements FrameworkStartLevel, Runnable
         public FrameworkListener[] getListeners()
         {
             return m_listeners;
+        }
+
+        public String toString() {
+            return "StartLevelRequest(" + m_bundle + ", " + m_startLevel + ")";
         }
     }
 }

@@ -110,6 +110,18 @@ import java.util.concurrent.locks.ReentrantLock;
 
 public class Felix extends BundleImpl implements Framework
 {
+    // poor mans debugging
+    static final boolean SHOW_DEBUG = true; 
+    static void debug(String msg) {
+        debug("[Felix]", msg);
+    }
+    static void debug(String className, String msg) {
+        if (! SHOW_DEBUG) return;
+        String thread = Thread.currentThread().toString().substring(6);
+        String logMsg = String.format("%-25s %-25s %s", thread, className, msg);
+        System.out.println(logMsg);
+    }
+
     // The secure action used to do privileged calls
     static final SecureAction m_secureAction = new SecureAction();
 
@@ -179,6 +191,13 @@ public class Felix extends BundleImpl implements Framework
     // Keep track of bundles currently being processed by start level thread.
     private final SortedSet<StartLevelTuple> m_startLevelBundles =
         new TreeSet<StartLevelTuple>();
+
+    private void debugStartLevelBundles(String msg) {
+        debug("dumpStartLevelBundles: " + msg);
+        for (StartLevelTuple t : m_startLevelBundles) {
+            debug("  tuple: " + t);
+        }
+    }
 
     // Local bundle cache.
     private BundleCache m_cache = null;
@@ -1466,6 +1485,7 @@ public class Felix extends BundleImpl implements Framework
                                 (BundleImpl) b,
                                 ((BundleImpl) b).getStartLevel(
                                     getInitialBundleStartLevel())));
+                        debugStartLevelBundles("setActiveStartLevel: m_startLevelBundles.added bundle " + b.toString());
                     }
                     bundlesRemaining = !m_startLevelBundles.isEmpty();
                 }
@@ -1510,6 +1530,9 @@ public class Felix extends BundleImpl implements Framework
                     }
                 }
 
+                debug("setActiveStartLevel: process next tuple: " + tuple 
+                    + ", m_activeStartLevel: " + m_activeStartLevel);
+
                 // Ignore the system bundle, since its start() and
                 // stop() methods get called explicitly in Felix.start()
                 // and Felix.stop(), respectively.
@@ -1537,6 +1560,7 @@ public class Felix extends BundleImpl implements Framework
                             synchronized (m_startLevelBundles)
                             {
                                 m_startLevelBundles.remove(tuple);
+                                debugStartLevelBundles("setActiveStartLevel: m_startLevelBundles.removed " + tuple.toString());
                                 bundlesRemaining = !m_startLevelBundles.isEmpty();
                             }
                         }
@@ -1602,6 +1626,7 @@ public class Felix extends BundleImpl implements Framework
                 synchronized (m_startLevelBundles)
                 {
                     m_startLevelBundles.remove(tuple);
+                    debugStartLevelBundles("setActiveStartLevel: m_startLevelBundles.remove tuple " + tuple.toString());
                     bundlesRemaining = !m_startLevelBundles.isEmpty();
                 }
             }
@@ -2217,6 +2242,8 @@ public class Felix extends BundleImpl implements Framework
             // queued but processed synchronously.
             // Note: Don't queue starts from the start level thread, otherwise
             // we'd never get anything started.
+            debug("startBundle: bundle: " + bundle.getSymbolicName() + ", level: " + bundleLevel
+                + ", check thread: " + Thread.currentThread().getName()+ ", fw: " + FrameworkStartLevelImpl.THREAD_NAME);
             if (!Thread.currentThread().getName().equals(FrameworkStartLevelImpl.THREAD_NAME))
             {
                 synchronized (m_startLevelBundles)
@@ -2263,6 +2290,7 @@ public class Felix extends BundleImpl implements Framework
                         if (!found)
                         {
                             m_startLevelBundles.add(new StartLevelTuple(bundle, bundleLevel));
+                            debugStartLevelBundles("startBundle: m_startLevelBundles.added bundle " + bundle + ", " + bundleLevel);
                         }
 
                         // Note that although we queued the transiently started
@@ -5394,6 +5422,10 @@ public class Felix extends BundleImpl implements Framework
             }
 
             return result;
+        }
+
+        public String toString() {
+            return "StartLevelTuple(" + m_bundle + ", " + m_level + ")";
         }
     }
 

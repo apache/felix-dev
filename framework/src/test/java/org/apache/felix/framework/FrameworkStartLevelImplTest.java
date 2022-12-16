@@ -19,10 +19,12 @@
 package org.apache.felix.framework;
 
 import java.io.ByteArrayInputStream;
+import java.io.ByteArrayOutputStream;
 import java.io.File;
 import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
+import java.io.PrintStream;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.jar.JarOutputStream;
@@ -41,6 +43,18 @@ import org.osgi.framework.startlevel.FrameworkStartLevel;
 
 import static org.osgi.framework.Constants.SYSTEM_BUNDLE_ID;
 
+/*
+How to test:
+
+git clone -b feature/test-startlevel-impl https://github.com/JochenHiller/felix-dev
+cd felix-dev
+cd framework
+mvn clean compile
+mvn test -Dtest=FrameworkStartLevelImplTest
+
+See as well:
+* https://issues.apache.org/jira/browse/FELIX-6586
+*/
 public class FrameworkStartLevelImplTest extends TestCase {
 
     /**
@@ -49,6 +63,8 @@ public class FrameworkStartLevelImplTest extends TestCase {
      * levels in order of C, B, A.
      */
     public void testStartLevelStraight() throws Exception {
+        redirectSystemOut();
+
         File tmpDir = createTmpDir("generated-bundles");
         File cacheDir = createTmpDir("felix-cache");
         File fileA = createBundle("A", tmpDir, TestNoisyBundleActivator.class);
@@ -84,7 +100,18 @@ public class FrameworkStartLevelImplTest extends TestCase {
         deleteTmpDir(cacheDir);
         deleteTmpDir(tmpDir);
 
-        Thread.sleep(1000);
+        restoreSystemOut();
+
+        System.out.println(getSystemOut()); // enable on demand
+
+        String[] lines = getSystemOutAsArray();
+
+        assertTrue(lines[0].startsWith("Bundle C [3]: start() ==> bundleStartLevel: 20, frameworkStartLevel: 20"));
+        assertTrue(lines[1].startsWith("Bundle B [2]: start() ==> bundleStartLevel: 30, frameworkStartLevel: 30"));
+        assertTrue(lines[2].startsWith("Bundle A [1]: start() ==> bundleStartLevel: 40, frameworkStartLevel: 40"));
+        assertTrue(lines[3].startsWith("Bundle A [1]: stop() ==> bundleStartLevel: 40, frameworkStartLevel: 40"));
+        assertTrue(lines[4].startsWith("Bundle B [2]: stop() ==> bundleStartLevel: 30, frameworkStartLevel: 30"));
+        assertTrue(lines[5].startsWith("Bundle C [3]: stop() ==> bundleStartLevel: 20, frameworkStartLevel: 20"));
     }
 
     /**
@@ -95,6 +122,8 @@ public class FrameworkStartLevelImplTest extends TestCase {
      * start order should be C, B, A.
      */
     public void testStartLevelManipulatedByBundle() throws Exception {
+        redirectSystemOut();
+
         int initialBundleStartLevel = 12; // 12, 25, 37 does fail, >40 does work
 
         File tmpDir = createTmpDir("generated-bundles");
@@ -132,16 +161,64 @@ public class FrameworkStartLevelImplTest extends TestCase {
 
         frameworkStartLevel.setStartLevel(100);
 
-        Thread.sleep(1000);
+        Thread.sleep(100);  // give chance to startup
 
         framework.stop();
         deleteTmpDir(cacheDir);
         deleteTmpDir(tmpDir);
 
-        Thread.sleep(1000);
+        restoreSystemOut();
+
+        System.out.println(getSystemOut()); // enable on demand
+
+        String[] lines = getSystemOutAsArray();
+        assertTrue(lines[0].startsWith("Bundle M [4]: start() ==> bundleStartLevel: 10"));
+
+        // @formatter:off
+        // Bundle A [1]: manipulateStartLevel() ==> bundleStartLevel: old: 12, new: 40, frameworkStartLevel: 10,
+        // Bundle B [2]: manipulateStartLevel() ==> bundleStartLevel: old: 12, new: 30, frameworkStartLevel: 10,
+        // Bundle C [3]: manipulateStartLevel() ==> bundleStartLevel: old: 12, new: 20, frameworkStartLevel: 10,
+        // @formatter:on 
+
+        assertTrue(lines[4].startsWith("Bundle C [3]: start() ==> bundleStartLevel: 20, frameworkStartLevel: 20"));
+        assertTrue(lines[5].startsWith("Bundle B [2]: start() ==> bundleStartLevel: 30, frameworkStartLevel: 30"));
+        assertTrue(lines[6].startsWith("Bundle A [1]: start() ==> bundleStartLevel: 40, frameworkStartLevel: 40"));
+        assertTrue(lines[7].startsWith("Bundle A [1]: stop() ==> bundleStartLevel: 40, frameworkStartLevel: 40"));
+        assertTrue(lines[8].startsWith("Bundle B [2]: stop() ==> bundleStartLevel: 30, frameworkStartLevel: 30"));
+        assertTrue(lines[9].startsWith("Bundle C [3]: stop() ==> bundleStartLevel: 20, frameworkStartLevel: 20"));
+        assertTrue(lines[10].startsWith("Bundle M [4]: stop() ==> bundleStartLevel: 10, frameworkStartLevel: 10"));
     }
 
     // helper methods
+
+    PrintStream oldSystemOut = null;
+    PrintStream oldSystemErr = null;
+    ByteArrayOutputStream redirectedSystemOut = null;
+    private void redirectSystemOut() {
+        // Create a stream to hold the output
+        redirectedSystemOut = new ByteArrayOutputStream();
+        PrintStream ps = new PrintStream(redirectedSystemOut);
+        oldSystemOut = System.out;
+        oldSystemErr = System.err;
+        System.setOut(ps);
+        System.setErr(ps);
+    }
+
+    private void restoreSystemOut() {
+        System.setErr(oldSystemErr);
+        System.setOut(oldSystemOut);
+    }
+
+    private String getSystemOut() {
+        String s = redirectedSystemOut.toString();
+        return s;
+    }
+
+    private String[] getSystemOutAsArray() {
+        String s = redirectedSystemOut.toString();
+        String[] lines = s.split("\\R");
+        return lines;
+    }
 
     private File createTmpDir(String prefix) throws IOException {
         File tmpDir = File.createTempFile(prefix, ".dir");
@@ -239,8 +316,6 @@ public class FrameworkStartLevelImplTest extends TestCase {
                     FrameworkStartLevel frameworkStartLevel = framework.adapt(FrameworkStartLevel.class);
                     System.out.print("frameworkStartLevel: "
                             + frameworkStartLevel.getStartLevel() + ", ");
-                    System.out.print("initialBundleStartLevel: "
-                            + frameworkStartLevel.getInitialBundleStartLevel() + ", ");
                     System.out.println();
                 }
             }
@@ -284,8 +359,6 @@ public class FrameworkStartLevelImplTest extends TestCase {
             FrameworkStartLevel frameworkStartLevel = framework.adapt(FrameworkStartLevel.class);
             System.out.print("frameworkStartLevel: "
                     + frameworkStartLevel.getStartLevel() + ", ");
-            System.out.print("initialBundleStartLevel: "
-                    + frameworkStartLevel.getInitialBundleStartLevel() + ", ");
             System.out.println();
         }
     }
