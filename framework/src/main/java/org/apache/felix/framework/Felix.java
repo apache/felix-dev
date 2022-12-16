@@ -1760,6 +1760,39 @@ public class Felix extends BundleImpl implements Framework
                 // the start level impl because the spec requires it to be
                 // done synchronously.
 
+                // We need to check if the bundle start level set here
+                // is already in list of start level tuples.
+                // if so we have to update the start level tuples and re-sort
+                // the new start level tuple in right start order
+                // TODO what does happen when new start level is less than
+                // current framework start level?
+                synchronized (m_startLevelBundles) {
+                    debug("setBundleStartLevel: check to sync m_startLevelBundles: bundle" + bundle
+                            + ", new level: " + startLevel);
+                    StartLevelTuple foundTuple = null;
+                    for (StartLevelTuple tuple : m_startLevelBundles) {
+                        if (tuple.m_bundle == bundle) {
+                            debug("setBundleStartLevel: found bundle to sync: " + bundle + ", old: "
+                                    + tuple.m_level + ", new: " + startLevel);
+                            if (tuple.m_level != startLevel) {
+                                debug("setBundleStartLevel: found bundle to sync: start levels are different " + bundle + ", old: "
+                                    + tuple.m_level + ", new: " + startLevel);
+                                foundTuple = tuple;
+                            }
+                        }
+                    }
+                    if (foundTuple != null) {
+                        // update means: remove and add entry to get it in right sort order
+                        debug("setBundleStartLevel: m_startLevelBundles.remove: " + foundTuple);
+                        m_startLevelBundles.remove(foundTuple);
+                        StartLevelTuple updatedTuple = new StartLevelTuple(foundTuple.m_bundle, startLevel);
+                        m_startLevelBundles.add(new StartLevelTuple(foundTuple.m_bundle, startLevel));
+                        debug("setBundleStartLevel: m_startLevelBundles.added: " + updatedTuple);                        
+                    }
+                    debugStartLevelBundles("setBundleStartLevel: synced m_startLevelBundles");
+                }
+
+
                 try
                 {
                     // Start the bundle if necessary.
