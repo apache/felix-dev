@@ -248,24 +248,17 @@ class FrameworkStartLevelImpl implements FrameworkStartLevel, Runnable
                 // Synchronously persists the start level.
                 m_bundle.setStartLevel(startlevel);
 
-                // if the bundle start level will be changed from FrameworkStartLevel thread,
-                // we need to process this synchronously, as current thread is busy in a
-                // bundle activator processing at the moment
-                if (Thread.currentThread().getName().equals(FrameworkStartLevelImpl.THREAD_NAME)) {
-                    // process Synchronously
-                    debug("BundleStartLevelImpl.setStartLevel: synchronous processing setBundleStartLevel: " 
-                        + m_bundle.getBundle() + ", level: " + startlevel);
-                    m_felix.setBundleStartLevel(m_bundle.getBundle(), startlevel);
-                } else {
-                    // Queue request.
-                    // m_requests.add(new StartLevelRequest(m_bundle, startlevel));
-                    StartLevelRequest request = new StartLevelRequest(m_bundle, startlevel);
-                    m_requests.add(request);
-                    debug("BundleStartLevelImpl.setStartLevel: m_requests.added: request: " + request);
+                // Queue request.
+                // m_requests.add(new StartLevelRequest(m_bundle, startlevel));
+                // m_requests.notifyAll();
 
-                    debug("BundleStartLevelImpl.setStartLevel: m_requests.notifyAll");
-                    m_requests.notifyAll();
-                }
+                // Queue request.
+                StartLevelRequest request = new StartLevelRequest(m_bundle, startlevel);
+                m_requests.add(request);
+                debug("BundleStartLevelImpl.setStartLevel: m_requests.added: request: " + request);
+
+                debug("BundleStartLevelImpl.setStartLevel: m_requests.notifyAll");
+                m_requests.notifyAll();
             }
         }
 

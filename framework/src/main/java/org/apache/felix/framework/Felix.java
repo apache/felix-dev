@@ -1760,39 +1760,6 @@ public class Felix extends BundleImpl implements Framework
                 // the start level impl because the spec requires it to be
                 // done synchronously.
 
-                // We need to check if the bundle start level set here
-                // is already in list of start level tuples.
-                // if so we have to update the start level tuples and re-sort
-                // the new start level tuple in right start order
-                // TODO what does happen when new start level is less than
-                // current framework start level?
-                synchronized (m_startLevelBundles) {
-                    debug("setBundleStartLevel: check to sync m_startLevelBundles: bundle" + bundle
-                            + ", new level: " + startLevel);
-                    StartLevelTuple foundTuple = null;
-                    for (StartLevelTuple tuple : m_startLevelBundles) {
-                        if (tuple.m_bundle == bundle) {
-                            debug("setBundleStartLevel: found bundle to sync: " + bundle + ", old: "
-                                    + tuple.m_level + ", new: " + startLevel);
-                            if (tuple.m_level != startLevel) {
-                                debug("setBundleStartLevel: found bundle to sync: start levels are different " + bundle + ", old: "
-                                    + tuple.m_level + ", new: " + startLevel);
-                                foundTuple = tuple;
-                            }
-                        }
-                    }
-                    if (foundTuple != null) {
-                        // update means: remove and add entry to get it in right sort order
-                        debug("setBundleStartLevel: m_startLevelBundles.remove: " + foundTuple);
-                        m_startLevelBundles.remove(foundTuple);
-                        StartLevelTuple updatedTuple = new StartLevelTuple(foundTuple.m_bundle, startLevel);
-                        m_startLevelBundles.add(new StartLevelTuple(foundTuple.m_bundle, startLevel));
-                        debug("setBundleStartLevel: m_startLevelBundles.added: " + updatedTuple);                        
-                    }
-                    debugStartLevelBundles("setBundleStartLevel: synced m_startLevelBundles");
-                }
-
-
                 try
                 {
                     // Start the bundle if necessary.
@@ -2256,12 +2223,19 @@ public class Felix extends BundleImpl implements Framework
             int bundleLevel = bundle.getStartLevel(getInitialBundleStartLevel());
             if (isTransient && (bundleLevel > m_activeStartLevel))
             {
-                // Throw an exception for transient starts.
-                throw new BundleException(
-                    "Cannot start bundle " + bundle + " because its start level is "
-                    + bundleLevel
-                    + ", which is greater than the framework's start level of "
-                    + m_activeStartLevel + ".", BundleException.START_TRANSIENT_ERROR);
+                // This can happen if a bundle's start level has been changed when framework is 
+                // starting to framework start level. 
+                // When framework start level has been reached, the start order will be recalculated
+                // and meanwhile changed start order will be updated.
+                // This is NOT an ERROR, we simply log an INFO messages as maybe the way start levels
+                // will be changed needs to be verified
+                m_logger.log(
+                    Logger.LOG_INFO, 
+                        "Will not start bundle " + bundle + " because its start level is "
+                        + bundleLevel
+                        + ", which is greater than the framework's start level of "
+                        + m_activeStartLevel + ".");
+                return;
             }
             else if (bundleLevel > m_targetStartLevel)
             {
