@@ -62,7 +62,7 @@ public class FrameworkStartLevelImplTest extends TestCase {
      * start
      * levels in order of C, B, A.
      */
-    public void _testStartLevelStraight() throws Exception {
+    public void testStartLevelStraight() throws Exception {
         redirectSystemOut();
 
         File tmpDir = createTmpDir("generated-bundles");
@@ -102,7 +102,7 @@ public class FrameworkStartLevelImplTest extends TestCase {
 
         restoreSystemOut();
 
-        System.out.println(getSystemOut()); // enable on demand
+        // System.out.println(getSystemOut()); // enable on demand
 
         String[] lines = getSystemOutAsArray();
 
@@ -178,7 +178,7 @@ public class FrameworkStartLevelImplTest extends TestCase {
 
         restoreSystemOut();
 
-        System.out.println(getSystemOut()); // enable on demand
+        // System.out.println(getSystemOut()); // enable on demand
 
         String[] lines = getSystemOutAsArray();
         assertTrue(lines[0].startsWith("Bundle M [4]: start() ==> bundleStartLevel: 10"));
