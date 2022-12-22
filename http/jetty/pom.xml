@@ -42,7 +42,7 @@
 
     <properties>
         <felix.java.version>11</felix.java.version>
-        <jetty.version>11.0.12</jetty.version>
+	<jetty.version>11.0.13</jetty.version>
     </properties>
 
     <build>
@@ -409,7 +409,7 @@
         <dependency>
             <groupId>org.apache.felix</groupId>
             <artifactId>org.apache.felix.http.base</artifactId>
-            <version>5.0.0-SNAPSHOT</version>
+            <version>5.0.0</version>
         </dependency>
         <dependency>
             <groupId>commons-fileupload</groupId>
