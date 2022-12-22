@@ -28,14 +28,14 @@
 
     <name>Apache Felix Http Base</name>
     <artifactId>org.apache.felix.http.base</artifactId>
-    <version>5.0.0-SNAPSHOT</version>
+    <version>5.0.0</version>
     <packaging>jar</packaging>
 
     <scm>
          <connection>scm:git:https://github.com/apache/felix-dev.git</connection>
          <developerConnection>scm:git:https://github.com/apache/felix-dev.git</developerConnection>
          <url>https://gitbox.apache.org/repos/asf?p=felix-dev.git</url>
-      <tag>org.apache.felix.http.base-5.0.0-RC2</tag>
+      <tag>org.apache.felix.http.base-5.0.0</tag>
   </scm>
 
     <properties>
