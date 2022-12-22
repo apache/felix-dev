@@ -28,14 +28,15 @@
 
     <name>Apache Felix Http Inventory Printer</name>
     <artifactId>org.apache.felix.http.inventoryprinter</artifactId>
-    <version>1.0.0-SNAPSHOT</version>
+    <version>1.0.0</version>
     <packaging>bundle</packaging>
 
     <scm>
         <connection>scm:git:https://github.com/apache/felix-dev.git</connection>
         <developerConnection>scm:git:https://github.com/apache/felix-dev.git</developerConnection>
         <url>https://gitbox.apache.org/repos/asf?p=felix-dev.git</url>
-    </scm>
+      <tag>org.apache.felix.http.inventoryprinter-1.0.0</tag>
+  </scm>
 
     <build>
         <plugins>
