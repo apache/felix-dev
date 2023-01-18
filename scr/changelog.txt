@@ -1,3 +1,13 @@
+Changes in 2.2.6
+-----------------
+** Bug
+    * [FELIX-6581] - use system context to clean up logger domains
+
+Changes in 2.2.4
+-----------------
+** Bug
+    * [FELIX-6564] Fixed NPE while retrieving component descriptions from SCR
+
 Changes in 2.2.2
 -----------------
 ** Improvement
