@@ -17,15 +17,23 @@
  */
 package org.apache.felix.hc.core.impl.servlet;
 
+import static org.osgi.service.http.whiteboard.HttpWhiteboardConstants.HTTP_WHITEBOARD_CONTEXT_SELECT;
+import static org.osgi.service.http.whiteboard.HttpWhiteboardConstants.HTTP_WHITEBOARD_SERVLET_PATTERN;
+
 import java.io.IOException;
 import java.io.PrintWriter;
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Dictionary;
+import java.util.HashMap;
+import java.util.Hashtable;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Map.Entry;
 import java.util.TreeMap;
 
+import javax.servlet.Servlet;
 import javax.servlet.ServletException;
 import javax.servlet.http.HttpServlet;
 import javax.servlet.http.HttpServletRequest;
@@ -38,12 +46,14 @@ import org.apache.felix.hc.api.execution.HealthCheckExecutor;
 import org.apache.felix.hc.api.execution.HealthCheckSelector;
 import org.apache.felix.hc.core.impl.executor.CombinedExecutionResult;
 import org.apache.felix.hc.core.impl.util.lang.StringUtils;
+import org.osgi.dto.DTO;
+import org.osgi.framework.BundleContext;
+import org.osgi.framework.ServiceRegistration;
 import org.osgi.service.component.annotations.Activate;
 import org.osgi.service.component.annotations.Component;
 import org.osgi.service.component.annotations.ConfigurationPolicy;
 import org.osgi.service.component.annotations.Deactivate;
 import org.osgi.service.component.annotations.Reference;
-import org.osgi.service.http.HttpService;
 import org.osgi.service.metatype.annotations.Designate;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -127,25 +137,24 @@ public class HealthCheckExecutorServlet extends HttpServlet {
     private static final String CACHE_CONTROL_KEY = "Cache-control";
     private static final String CACHE_CONTROL_VALUE = "no-cache";
     private static final String CORS_ORIGIN_HEADER_NAME = "Access-Control-Allow-Origin";
-
-    private String[] servletPaths;
-
+    
     private String servletPath;
 
     private String corsAccessControlAllowOrigin;
 
     private Map<Result.Status, Integer> defaultStatusMapping;
     
+    // Key: Servlet Path | Value: Servlet Registration
+    private Map<String, ServiceRegistration<Servlet>> servletRegistrations;
+    
+    private BundleContext bundleContext;
     private long servletDefaultTimeout;
     private String[] servletDefaultTags;
     private String defaultFormat;
     private String[] allowedFormats;
     private boolean defaultCombineTagsWithOr;
     private boolean disableRequestConfiguration;
-
-    @Reference
-    private HttpService httpService;
-
+    
     @Reference
     HealthCheckExecutor healthCheckExecutor;
 
@@ -162,7 +171,10 @@ public class HealthCheckExecutorServlet extends HttpServlet {
     ResultTxtVerboseSerializer verboseTxtSerializer;
 
     @Activate
-    protected final void activate(final HealthCheckExecutorServletConfiguration configuration) {
+    protected final void activate(final HealthCheckExecutorServletConfiguration configuration, final BundleContext bundleContext) {
+    	this.bundleContext = bundleContext;
+    	this.servletRegistrations = new HashMap<>();
+    	
         this.servletPath = configuration.servletPath();
         this.defaultStatusMapping = getStatusMapping(configuration.httpStatusMapping());
         this.servletDefaultTimeout = configuration.timeout();
@@ -183,7 +195,6 @@ public class HealthCheckExecutorServlet extends HttpServlet {
         this.disableRequestConfiguration = configuration.disable_request_configuration();
         
         if ( configuration.disabled() ) {
-            this.servletPaths = null;
             LOG.info("Health Check Servlet is disabled by configuration");
             return;
         }
@@ -193,7 +204,7 @@ public class HealthCheckExecutorServlet extends HttpServlet {
             servletPath, defaultStatusMapping, servletDefaultTimeout, 
             servletDefaultTags!=null ? Arrays.asList(servletDefaultTags): "<none>", defaultCombineTagsWithOr, defaultFormat, 
             Arrays.toString(this.allowedFormats), corsAccessControlAllowOrigin);
-        
+
         Map<String, HttpServlet> servletsToRegister = new LinkedHashMap<String, HttpServlet>();
         servletsToRegister.put(this.servletPath, this);
         if ( isFormatAllowed(FORMAT_HTML) ) {
@@ -214,30 +225,38 @@ public class HealthCheckExecutorServlet extends HttpServlet {
 
         for (final Map.Entry<String, HttpServlet> servlet : servletsToRegister.entrySet()) {
             try {
-                LOG.info("Registering HC servlet {} to path {}", getClass().getSimpleName(), servlet.getKey());
-                this.httpService.registerServlet(servlet.getKey(), servlet.getValue(), null, null);
+                LOG.info("Registering HC Servlet > Name: '{}', Path: '{}'", getClass().getSimpleName(),
+                	    servlet.getKey());
+                ServletInfoDTO servletInfo = new ServletInfoDTO(configuration.servletContextName(),
+                        servlet.getKey(), servlet.getValue());
+                registerServlet(servletInfo);
             } catch (Exception e) {
                 LOG.error("Could not register health check servlet: " + e, e);
             }
         }
-        this.servletPaths = servletsToRegister.keySet().toArray(new String[0]);
     }
 
     @Deactivate
     public void deactivate() {
-        if (this.servletPaths == null) {
-            return;
-        }
-
-        for (final String servletPath : this.servletPaths) {
+        for (final Entry<String, ServiceRegistration<Servlet>> entry : servletRegistrations.entrySet()) {
             try {
-                LOG.info("Unregistering HC Servlet {} from path {}", getClass().getSimpleName(), servletPath);
-                this.httpService.unregister(servletPath);
+                LOG.info("Unregistering HC Servlet {} from path {}", getClass().getSimpleName(), entry.getKey());
+                entry.getValue().unregister();
             } catch (Exception e) {
-                LOG.error("Could not unregister health check servlet: " + e, e);
+                LOG.error("Could not unregister health check servlet", e);
             }
         }
-        this.servletPaths = null;
+        servletRegistrations.clear();
+    }
+
+    private void registerServlet(final ServletInfoDTO servletInfo) {
+    	final Dictionary<String, Object> properties = new Hashtable<>();
+
+    	properties.put(HTTP_WHITEBOARD_CONTEXT_SELECT, servletInfo.contextName);
+    	properties.put(HTTP_WHITEBOARD_SERVLET_PATTERN, servletInfo.servletPath);
+    	
+    	final ServiceRegistration<Servlet> registration = bundleContext.registerService(Servlet.class, servletInfo.servlet, properties);
+    	servletRegistrations.put(servletPath, registration);
     }
 
     /**
@@ -455,6 +474,18 @@ public class HealthCheckExecutorServlet extends HttpServlet {
         @Override
         protected void doGet(HttpServletRequest req, HttpServletResponse resp) throws ServletException, IOException {
             HealthCheckExecutorServlet.this.doGet(req, resp, null, format);
+        }
+    }
+    
+    private static class ServletInfoDTO extends DTO {
+    	String contextName;
+    	String servletPath;
+    	Servlet servlet;
+    	
+        public ServletInfoDTO(String contextName, String servletPath, Servlet servlet) {
+            this.contextName = contextName;
+            this.servletPath = servletPath;
+            this.servlet = servlet;
         }
     }
 
