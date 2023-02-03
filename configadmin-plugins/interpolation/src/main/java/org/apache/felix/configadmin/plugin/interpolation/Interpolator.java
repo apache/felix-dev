@@ -136,7 +136,7 @@ public class Interpolator {
             final Map<String, String> directives;
             final String name;
             if (dirPos != -1) {
-                directives = parseDirectives(postfix.substring(dirPos + 1));
+                directives = parseDirectives(replace(postfix.substring(dirPos + 1), provider).toString());
                 name = postfix.substring(0, dirPos);
             } else {
                 directives = Collections.emptyMap();
