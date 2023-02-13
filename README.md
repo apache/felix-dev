@@ -11,6 +11,11 @@ Directly related projects:
 
 - **main** `/main*` - provides an executable jar that launches the Felix framework.
 
+## OSGi Core
+
+- [**Log Service**](https://docs.osgi.org/specification/osgi.core/8.0.0/service.log.html) `/log*`
+- [**Resolver**](https://osgi.org/specification/osgi.core/7.0.0/service.resolver.html) `/resolver`
+
 ## OSGi Compendium
 
 Several sub-projects cover various [**OSGi Compendium**](https://osgi.org/specification/osgi.cmpn/7.0.0/) specifications such as:
@@ -26,10 +31,8 @@ Several sub-projects cover various [**OSGi Compendium**](https://osgi.org/specif
 - [**Http Service**](https://osgi.org/specification/osgi.cmpn/7.0.0/service.http.html) `/http`
 - [**Http Whiteboard**](https://osgi.org/specification/osgi.cmpn/7.0.0/service.http.whiteboard.html) `/http`
 - [**IO**](https://osgi.org/specification/osgi.cmpn/7.0.0/service.io.html) `/io`
-- [**Log Service**](https://osgi.org/specification/osgi.cmpn/7.0.0/service.log.html) `/log*`
 - [**Metatype**](https://osgi.org/specification/osgi.cmpn/7.0.0/service.metatype.html) `/metatype`
 - [**Preferences**](https://osgi.org/specification/osgi.cmpn/7.0.0/service.prefs.html) `/prefs`
-- [**Resolver**](https://osgi.org/specification/osgi.core/7.0.0/service.resolver.html) `/resolver`
 - [**UPnP**](https://osgi.org/specification/osgi.cmpn/7.0.0/service.upnp.html) `/upnp`
 - [**User Admin**](https://osgi.org/specification/osgi.cmpn/7.0.0/service.useradmin.html) `/useradmin`
 - [**Wire Admin**](https://osgi.org/specification/osgi.cmpn/7.0.0/service.wireadmin.html) `/wireadmin`
