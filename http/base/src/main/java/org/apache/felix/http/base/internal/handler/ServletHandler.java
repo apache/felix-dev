@@ -83,8 +83,9 @@ public abstract class ServletHandler implements Comparable<ServletHandler>
             this.mpConfig = new MultipartConfig(origConfig.multipartThreshold,
                     location,
                     origConfig.multipartMaxFileSize,
-                    origConfig.multipartMaxRequestSize);
-        }
+                    origConfig.multipartMaxRequestSize,
+                    origConfig.multipartMaxFileCount);
+            }
         else
         {
             this.mpConfig = null;
