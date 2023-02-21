@@ -97,7 +97,8 @@ public class ServletInfo extends WhiteboardServiceInfo<Servlet>
                 cfg = new MultipartConfig(getIntProperty(ref, HttpWhiteboardConstants.HTTP_WHITEBOARD_SERVLET_MULTIPART_FILESIZETHRESHOLD),
                         getStringProperty(ref, HttpWhiteboardConstants.HTTP_WHITEBOARD_SERVLET_MULTIPART_LOCATION),
                         getLongProperty(ref, HttpWhiteboardConstants.HTTP_WHITEBOARD_SERVLET_MULTIPART_MAXFILESIZE),
-                        getLongProperty(ref, HttpWhiteboardConstants.HTTP_WHITEBOARD_SERVLET_MULTIPART_MAXREQUESTSIZE));
+                        getLongProperty(ref, HttpWhiteboardConstants.HTTP_WHITEBOARD_SERVLET_MULTIPART_MAXREQUESTSIZE),
+                        getLongProperty(ref, "osgi.http.whiteboard.servlet.multipart.maxFileCount"));
             }
             catch (final IllegalArgumentException iae)
             {

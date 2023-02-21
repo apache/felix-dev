@@ -469,7 +469,7 @@ final class ServletRequestWrapper extends HttpServletRequestWrapper
         upload.setFileSizeMax(this.multipartConfig.multipartMaxFileSize);
         upload.setFileItemFactory(new DiskFileItemFactory(this.multipartConfig.multipartThreshold,
                 new File(this.multipartConfig.multipartLocation)));
-
+        upload.setFileCountMax(this.multipartConfig.multipartMaxFileCount);
         // Parse the request
         List<FileItem> items = null;
         try
