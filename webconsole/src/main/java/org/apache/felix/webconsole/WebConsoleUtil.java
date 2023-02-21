@@ -130,7 +130,7 @@ public final class WebConsoleUtil
         }
 
         // check, whether we already have the parameters
-        Map params = ( Map ) request.getAttribute( AbstractWebConsolePlugin.ATTR_FILEUPLOAD );
+        Map<String, FileItem[]> params = ( Map<String, FileItem[]> ) request.getAttribute( AbstractWebConsolePlugin.ATTR_FILEUPLOAD );
         if ( params == null )
         {
             // parameters not read yet, read now
@@ -147,15 +147,16 @@ public final class WebConsoleUtil
             // Create a new file upload handler
             ServletFileUpload upload = new ServletFileUpload( factory );
             upload.setSizeMax( -1 );
+            upload.setFileCountMax(50);
 
             // Parse the request
-            params = new HashMap();
+            params = new HashMap<>();
             try
             {
-                List items = upload.parseRequest( request );
-                for ( Iterator fiter = items.iterator(); fiter.hasNext(); )
+                final List<FileItem> items = upload.parseRequest( request );
+                for ( final Iterator<FileItem> fiter = items.iterator(); fiter.hasNext(); )
                 {
-                    FileItem fi = ( FileItem ) fiter.next();
+                    final FileItem fi = fiter.next();
                     FileItem[] current = ( FileItem[] ) params.get( fi.getFieldName() );
                     if ( current == null )
                     {
