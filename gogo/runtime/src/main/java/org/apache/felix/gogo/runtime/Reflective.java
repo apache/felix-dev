@@ -23,12 +23,15 @@ import java.lang.reflect.Array;
 import java.lang.reflect.Field;
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
+import java.lang.reflect.Modifier;
 import java.util.AbstractList;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
+import java.util.Collections;
 import java.util.HashSet;
 import java.util.List;
+import java.util.LinkedHashSet;
 import java.util.Locale;
 import java.util.Map;
 import java.util.Set;
@@ -63,7 +66,6 @@ public final class Reflective
     public static Object invoke(CommandSession session, Object target, String name,
         List<Object> args) throws Exception
     {
-        Method[] methods = target.getClass().getMethods();
         name = name.toLowerCase(Locale.ENGLISH);
 
         String org = name;
@@ -76,19 +78,15 @@ public final class Reflective
             name = "_" + name;
         }
 
-        if (target instanceof Class<?>)
-        {
-            Method[] staticMethods = ((Class<?>) target).getMethods();
-            for (Method m : staticMethods)
-            {
-                String mname = m.getName().toLowerCase(Locale.ENGLISH);
-                if (mname.equals(name) || mname.equals(get) || mname.equals(set)
-                    || mname.equals(is) || mname.equals(MAIN))
-                {
-                    methods = staticMethods;
-                    break;
-                }
-            }
+        Set<Class<?>> publicClasses = new LinkedHashSet<>();
+        Set<Class<?>> nonPublicClasses = new LinkedHashSet<>();
+        getClassAndAncestors(publicClasses, nonPublicClasses, target.getClass());
+        List<Method> methods = new ArrayList<>();
+        for (Class<?> cl : publicClasses) {
+            Collections.addAll(methods, cl.getMethods());
+        }
+        for (Class<?> cl : nonPublicClasses) {
+            Collections.addAll(methods, cl.getMethods());
         }
 
         Method bestMethod = null;
@@ -203,6 +201,26 @@ public final class Reflective
 
             throw new IllegalArgumentException(String.format(
                 "Cannot coerce %s(%s) to any of %s", name, params, list));
+        }
+    }
+
+    private static void getClassAndAncestors(Set<Class<?>> publicClasses, Set<Class<?>> nonPublicClasses, Class<?> aClass)
+    {
+        for (Class<?> itf : aClass.getInterfaces())
+        {
+            getClassAndAncestors(publicClasses, nonPublicClasses, itf);
+        }
+        if (aClass.getSuperclass() != null)
+        {
+            getClassAndAncestors(publicClasses, nonPublicClasses, aClass.getSuperclass());
+        }
+        if (Modifier.isPublic(aClass.getModifiers()))
+        {
+            publicClasses.add(aClass);
+        }
+        else
+        {
+            nonPublicClasses.add(aClass);
         }
     }
 
