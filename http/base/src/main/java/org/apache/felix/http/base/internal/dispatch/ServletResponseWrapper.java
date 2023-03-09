@@ -29,6 +29,7 @@ import javax.servlet.http.HttpServletResponseWrapper;
 
 import org.apache.felix.http.base.internal.handler.FilterHandler;
 import org.apache.felix.http.base.internal.handler.ServletHandler;
+import org.apache.felix.http.base.internal.registry.MappingType;
 import org.apache.felix.http.base.internal.registry.PerContextHandlerRegistry;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
@@ -101,12 +102,22 @@ final class ServletResponseWrapper extends HttpServletResponseWrapper
                         final String pathInfo = request.getRequestURI();
                         final String queryString = null; // XXX
 
-                        final RequestInfo requestInfo = new RequestInfo(servletPath, pathInfo, queryString, pathInfo,
-                                request.getHttpServletMapping().getServletName(),
-                                request.getHttpServletMapping().getPattern(),
-                                request.getHttpServletMapping().getMatchValue(),
-                                request.getHttpServletMapping().getMappingMatch(),
-                                false);
+                        final RequestInfo requestInfo;
+                        if (request.getServletContext().getEffectiveMajorVersion() > 3) {
+                            requestInfo = new RequestInfo(servletPath, pathInfo, queryString, pathInfo,
+                            request.getHttpServletMapping().getServletName(),
+                            request.getHttpServletMapping().getPattern(),
+                            request.getHttpServletMapping().getMatchValue(),
+                            MappingType.values()[request.getHttpServletMapping().getMappingMatch().ordinal()],
+                            false);
+                        } else {
+                            requestInfo = new RequestInfo(servletPath, pathInfo, queryString, pathInfo,
+                            null,
+                            null,
+                            null,
+                            null,
+                            false);
+                        }
 
                         final FilterHandler[] filterHandlers = errorRegistry.getFilterHandlers(errorResolution, DispatcherType.ERROR, request.getRequestURI());
 

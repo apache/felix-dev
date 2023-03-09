@@ -560,6 +560,6 @@ final class ServletRequestWrapper extends HttpServletRequestWrapper
 
     @Override
     public HttpServletMapping getHttpServletMapping() {
-        return this.requestInfo;
+        return new HttpServletMappingImpl(this.requestInfo);
     }
 }

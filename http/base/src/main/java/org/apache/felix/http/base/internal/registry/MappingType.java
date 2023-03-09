@@ -16,22 +16,10 @@
  */
 package org.apache.felix.http.base.internal.registry;
 
-/**
- * Resolution of a servlet based on the path
- */
-public class PathResolution extends ServletResolution {
-
-    public String servletPath;
-
-    public String pathInfo;
-
-    public String requestURI;
-
-    public String[] patterns;
-
-    public String matchedPattern;
-
-    public MappingType mappingType;
-
-    public String matchValue;
+public enum MappingType {
+    CONTEXT_ROOT,
+    DEFAULT,
+    EXACT,
+    EXTENSION,
+    PATH
 }

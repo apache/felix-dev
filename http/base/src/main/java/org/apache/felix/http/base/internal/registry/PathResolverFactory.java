@@ -18,8 +18,6 @@ package org.apache.felix.http.base.internal.registry;
 
 import java.util.regex.Pattern;
 
-import javax.servlet.http.MappingMatch;
-
 import org.apache.felix.http.base.internal.handler.ServletHandler;
 import org.apache.felix.http.base.internal.service.HttpServiceFactory;
 import org.jetbrains.annotations.NotNull;
@@ -158,7 +156,7 @@ public abstract class PathResolverFactory {
                 pr.handler = this.getServletHandler();
 
                 pr.matchedPattern = this.getPattern();
-                pr.match = MappingMatch.CONTEXT_ROOT;
+                pr.mappingType = MappingType.CONTEXT_ROOT;
                 pr.matchValue = this.getPattern();
 
                 return pr;
@@ -183,7 +181,7 @@ public abstract class PathResolverFactory {
             pr.handler = this.getServletHandler();
 
             pr.matchedPattern = this.getPattern();
-            pr.match = MappingMatch.DEFAULT;
+            pr.mappingType = MappingType.DEFAULT;
             pr.matchValue = "";
 
             return pr;
@@ -214,7 +212,7 @@ public abstract class PathResolverFactory {
                 pr.handler = this.getServletHandler();
 
                 pr.matchedPattern = this.getPattern();
-                pr.match = MappingMatch.EXACT;
+                pr.mappingType = MappingType.EXACT;
                 final int pos = uri.lastIndexOf("/");
                 pr.matchValue = uri.substring(pos + 1, uri.length());
 
@@ -229,7 +227,7 @@ public abstract class PathResolverFactory {
                 pr.handler = this.getServletHandler();
 
                 pr.matchedPattern = this.getPattern();
-                pr.match = MappingMatch.PATH;
+                pr.mappingType = MappingType.PATH;
                 final int pos = uri.lastIndexOf("/");
                 pr.matchValue = uri.substring(pos + 1, uri.length());
 
@@ -266,7 +264,7 @@ public abstract class PathResolverFactory {
                 pr.handler = this.getServletHandler();
 
                 pr.matchedPattern = this.getPattern();
-                pr.match = MappingMatch.EXACT;
+                pr.mappingType = MappingType.EXACT;
                 final int pos = uri.lastIndexOf("/");
                 pr.matchValue = uri.substring(pos + 1, uri.length());
 
@@ -306,7 +304,7 @@ public abstract class PathResolverFactory {
                 pr.handler = this.getServletHandler();
 
                 pr.matchedPattern = this.getPattern();
-                pr.match = MappingMatch.PATH;
+                pr.mappingType = MappingType.PATH;
                 pr.matchValue = uri.length() > 0 ? uri.substring(1) : "";
 
                 return pr;
@@ -320,7 +318,7 @@ public abstract class PathResolverFactory {
                 pr.handler = this.getServletHandler();
 
                 pr.matchedPattern = this.getPattern();
-                pr.match = MappingMatch.PATH;
+                pr.mappingType = MappingType.PATH;
                 pr.matchValue = uri.substring(this.prefix.length(), uri.length());
 
                 return pr;
@@ -356,7 +354,7 @@ public abstract class PathResolverFactory {
                 pr.handler = this.getServletHandler();
 
                 pr.matchedPattern = this.getPattern();
-                pr.match = MappingMatch.EXTENSION;
+                pr.mappingType = MappingType.EXTENSION;
                 final int pos = uri.lastIndexOf("/");
                 pr.matchValue = uri.substring(pos + 1, uri.length() - this.extension.length());
 
@@ -393,7 +391,7 @@ public abstract class PathResolverFactory {
 
                 // regex is not supported by servlet spec, we use PATH matching
                 pr.matchedPattern = this.getPattern();
-                pr.match = MappingMatch.PATH;
+                pr.mappingType = MappingType.PATH;
                 pr.matchValue = uri;
 
                 return pr;

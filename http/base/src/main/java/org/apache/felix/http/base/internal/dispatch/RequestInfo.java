@@ -16,13 +16,12 @@
  */
 package org.apache.felix.http.base.internal.dispatch;
 
-import javax.servlet.http.HttpServletMapping;
-import javax.servlet.http.MappingMatch;
+import org.apache.felix.http.base.internal.registry.MappingType;
 
 /**
  * Information about the request
  */
-public final class RequestInfo implements HttpServletMapping
+public final class RequestInfo
 {
     final String servletPath;
     final String pathInfo;
@@ -31,7 +30,7 @@ public final class RequestInfo implements HttpServletMapping
     private final String matchServletName;
     private final String matchPattern;
     private final String matchValue;
-    private final MappingMatch match;
+    private final MappingType mappingType;
     final boolean nameMatch;
 
     /**
@@ -43,7 +42,7 @@ public final class RequestInfo implements HttpServletMapping
      * @param matchServletName The servlet name
      * @param matchPattern The servlet pattern
      * @param matchValue The value matching
-     * @param match The match type
+     * @param mappingType The mapping type
      * @param nameMatch Is named dispatcher
      */
     public RequestInfo(final String servletPath,
@@ -53,7 +52,7 @@ public final class RequestInfo implements HttpServletMapping
             final String matchServletName,
             final String matchPattern,
             final String matchValue,
-            final MappingMatch match,
+            final MappingType mappingType,
             final boolean nameMatch)
     {
         this.servletPath = servletPath;
@@ -63,30 +62,26 @@ public final class RequestInfo implements HttpServletMapping
         this.matchServletName = matchServletName;
         this.matchPattern = matchPattern;
         this.matchValue = matchValue;
-        this.match = match;
+        this.mappingType = mappingType;
         this.nameMatch = nameMatch;
     }
 
-    @Override
     public String getMatchValue() {
         return this.matchValue;
     }
 
-    @Override
     public String getPattern() {
         return this.matchPattern;
     }
 
-    @Override
     public String getServletName() {
         return this.matchServletName;
     }
 
-    @Override
-    public MappingMatch getMappingMatch() {
-        return this.match;
+    public MappingType getMappingType() {
+        return this.mappingType;
     }
-
+ 
     @Override
     public String toString()
     {

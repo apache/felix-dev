@@ -48,7 +48,6 @@ import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 import javax.servlet.http.HttpSessionAttributeListener;
 import javax.servlet.http.HttpSessionListener;
-import javax.servlet.http.MappingMatch;
 
 import org.apache.felix.http.base.internal.HttpConfig;
 import org.apache.felix.http.base.internal.context.ExtServletContext;
@@ -56,6 +55,7 @@ import org.apache.felix.http.base.internal.dispatch.RequestDispatcherImpl;
 import org.apache.felix.http.base.internal.dispatch.RequestInfo;
 import org.apache.felix.http.base.internal.handler.ServletHandler;
 import org.apache.felix.http.base.internal.logger.SystemLogger;
+import org.apache.felix.http.base.internal.registry.MappingType;
 import org.apache.felix.http.base.internal.registry.PathResolution;
 import org.apache.felix.http.base.internal.registry.PerContextHandlerRegistry;
 import org.apache.felix.http.base.internal.registry.ServletResolution;
@@ -511,7 +511,7 @@ public class ServletContextImpl implements ExtServletContext
             resolution.handlerRegistry = this.handlerRegistry;
             // TODO - what is the path of a named servlet?
             final RequestInfo requestInfo = new RequestInfo("", null, null, null, name,
-                    "", "", MappingMatch.EXACT, true);
+                    "", "", MappingType.EXACT, true);
             dispatcher = new RequestDispatcherImpl(resolution, requestInfo);
         }
         else
@@ -552,7 +552,7 @@ public class ServletContextImpl implements ExtServletContext
                     UriUtils.concat(this.getContextPath(), encodedRequestURI),
                     pathResolution.handler.getName(),
                     pathResolution.matchedPattern,
-                    pathResolution.matchValue, pathResolution.match, false);
+                    pathResolution.matchValue, pathResolution.mappingType, false);
             dispatcher = new RequestDispatcherImpl(pathResolution, requestInfo);
         }
         else

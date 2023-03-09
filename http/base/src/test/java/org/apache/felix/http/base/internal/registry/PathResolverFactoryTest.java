@@ -20,8 +20,6 @@ import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertNull;
 
-import javax.servlet.http.MappingMatch;
-
 import org.junit.Test;
 
 public class PathResolverFactoryTest {
@@ -30,7 +28,7 @@ public class PathResolverFactoryTest {
             final String path,
             final String expectedServletPath,
             final String expectedPathInfo,
-            final MappingMatch match,
+            final MappingType match,
             final String matchPattern,
             final String matchValue)
     {
@@ -46,7 +44,7 @@ public class PathResolverFactoryTest {
         {
             assertEquals(expectedPathInfo, pr.pathInfo);
         }
-        assertEquals(match, pr.match);
+        assertEquals(match, pr.mappingType);
         assertEquals(matchPattern, pr.matchedPattern);
         assertEquals(matchValue, pr.matchValue);
     }
@@ -56,8 +54,8 @@ public class PathResolverFactoryTest {
         final PathResolver pr = PathResolverFactory.createPatternMatcher(null, "");
         assertNotNull(pr);
 
-        assertResult(pr, "/", "", "/", MappingMatch.CONTEXT_ROOT, "", "");
-        assertResult(pr, "", "", "/", MappingMatch.CONTEXT_ROOT, "", "");
+        assertResult(pr, "/", "", "/", MappingType.CONTEXT_ROOT, "", "");
+        assertResult(pr, "", "", "/", MappingType.CONTEXT_ROOT, "", "");
 
         assertNull(pr.resolve("/foo"));
     }
@@ -67,8 +65,8 @@ public class PathResolverFactoryTest {
         final PathResolver pr = PathResolverFactory.createPatternMatcher(null, "/");
         assertNotNull(pr);
 
-        assertResult(pr, "/foo/bar", "/foo/bar", null, MappingMatch.DEFAULT, "/", "");
-        assertResult(pr, "/foo", "/foo", null, MappingMatch.DEFAULT, "/", "");
+        assertResult(pr, "/foo/bar", "/foo/bar", null, MappingType.DEFAULT, "/", "");
+        assertResult(pr, "/foo", "/foo", null, MappingType.DEFAULT, "/", "");
     }
 
     @Test public void testPathMatcherRoot()
@@ -76,12 +74,12 @@ public class PathResolverFactoryTest {
         final PathResolver pr = PathResolverFactory.createPatternMatcher(null, "/*");
         assertNotNull(pr);
 
-        assertResult(pr, "/foo", "", "/foo", MappingMatch.PATH, "/*", "foo");
-        assertResult(pr, "/foo/bar", "", "/foo/bar", MappingMatch.PATH, "/*", "foo/bar");
+        assertResult(pr, "/foo", "", "/foo", MappingType.PATH, "/*", "foo");
+        assertResult(pr, "/foo/bar", "", "/foo/bar", MappingType.PATH, "/*", "foo/bar");
 
-        assertResult(pr, "/", "", "/", MappingMatch.PATH, "/*", "");
+        assertResult(pr, "/", "", "/", MappingType.PATH, "/*", "");
 
-        assertResult(pr, "", "", null, MappingMatch.PATH, "/*", "");
+        assertResult(pr, "", "", null, MappingType.PATH, "/*", "");
     }
 
     @Test public void testPathMatcherSub()
@@ -89,7 +87,7 @@ public class PathResolverFactoryTest {
         final PathResolver pr = PathResolverFactory.createPatternMatcher(null, "/path/*");
         assertNotNull(pr);
 
-        assertResult(pr, "/path/foo", "/path", "/foo", MappingMatch.PATH, "/path/*", "foo");
+        assertResult(pr, "/path/foo", "/path", "/foo", MappingType.PATH, "/path/*", "foo");
     }
 
     @Test public void testExactMatcher()
@@ -97,7 +95,7 @@ public class PathResolverFactoryTest {
         final PathResolver pr = PathResolverFactory.createPatternMatcher(null, "/MyServlet");
         assertNotNull(pr);
 
-        assertResult(pr, "/MyServlet", "/MyServlet", null, MappingMatch.EXACT, "/MyServlet", "MyServlet");
+        assertResult(pr, "/MyServlet", "/MyServlet", null, MappingType.EXACT, "/MyServlet", "MyServlet");
     }
 
     @Test public void testExtensionMatcher()
@@ -105,6 +103,6 @@ public class PathResolverFactoryTest {
         final PathResolver pr = PathResolverFactory.createPatternMatcher(null, "*.extension");
         assertNotNull(pr);
 
-        assertResult(pr, "/foo.extension", "/foo.extension", null, MappingMatch.EXTENSION, "*.extension", "foo");
+        assertResult(pr, "/foo.extension", "/foo.extension", null, MappingType.EXTENSION, "*.extension", "foo");
     }
 }
