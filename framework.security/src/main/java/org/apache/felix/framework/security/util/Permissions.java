@@ -50,7 +50,7 @@ import org.osgi.service.packageadmin.PackageAdmin;
 import org.osgi.service.permissionadmin.PermissionInfo;
 
 /**
- * A permission cache that uses permisssion infos as keys. Permission are
+ * A permission cache that uses permission infos as keys. Permission are
  * created from the parent classloader or any exported package.
  */
 // TODO: maybe use bundle events instead of soft/weak references
@@ -126,21 +126,18 @@ public final class Permissions
     {
         cleanUp(m_permissionsQueue, m_permissions);
 
-        Permissions result = null;
+        Permissions result;
         synchronized (m_permissions)
         {
             result = (Permissions) m_permissions.get(new Entry(permissionInfos));
-        }
-        if (result == null)
-        {
-			//permissionInfos may not be referenced by the new Permissions, as
-			//otherwise the reference in m_permissions prevents the key from
-			//being garbage collectable.
-            PermissionInfo[] permissionInfosClone = new PermissionInfo[permissionInfos.length];
-            System.arraycopy(permissionInfos, 0, permissionInfosClone, 0, permissionInfos.length);
-            result = new Permissions(permissionInfosClone, m_context, m_action);
-            synchronized (m_permissions)
+            if (result == null)
             {
+                //permissionInfos may not be referenced by the new Permissions, as
+                //otherwise the reference in m_permissions prevents the key from
+                //being garbage collectable.
+                PermissionInfo[] permissionInfosClone = new PermissionInfo[permissionInfos.length];
+                System.arraycopy(permissionInfos, 0, permissionInfosClone, 0, permissionInfos.length);
+                result = new Permissions(permissionInfosClone, m_context, m_action);
                 m_permissions.put(
                     new Entry(permissionInfos, m_permissionsQueue), result);
             }
@@ -152,21 +149,27 @@ public final class Permissions
     {
         private final int m_hashCode;
 
+        // Replace with Arrays.hashCode(Object[]) by supporting Java 5+.
+        private static int hashCode(Object[] array)
+        {
+            int hash = 0;
+            for (int i = 0; i < array.length; ++i)
+            {
+                Object element = array[i];
+                hash = hash * 31 + ((element == null) ? 0 : element.hashCode());
+            }
+            return hash;
+        }
+
         Entry(Object entry, ReferenceQueue queue)
         {
             super(entry, queue);
-            m_hashCode = entry.hashCode();
+            m_hashCode = entry instanceof Object[] ? hashCode((Object[]) entry): entry.hashCode();
         }
 
         Entry(Object entry)
         {
-            super(entry);
-            m_hashCode = entry.hashCode();
-        }
-
-        public Object get()
-        {
-            return super.get();
+            this(entry, null);
         }
 
         public int hashCode()
@@ -186,12 +189,12 @@ public final class Permissions
                 return true;
             }
 
-            Object entry = super.get();
+            final Object entry = get();
 
             if (o instanceof Entry)
             {
 
-                Object otherEntry = ((Entry) o).get();
+                final Object otherEntry = ((Entry) o).get();
 				if (entry == null)
 				{
 					return otherEntry == null;
@@ -208,7 +211,7 @@ public final class Permissions
 				{
 					return Arrays.equals((Object[])entry, (Object[])otherEntry);
 				}		
-                return entry.equals(((Entry) o).get());
+                return entry.equals(otherEntry);
             }
             else
             {
@@ -384,18 +387,16 @@ public final class Permissions
 
         try
         {
-            SoftReference collectionEntry = null;
-
             PermissionCollection collection = null;
 
             synchronized (m_cache)
             {
-                collectionEntry = (SoftReference) m_cache.get(targetClass);
-            }
+                final SoftReference collectionEntry = (SoftReference) m_cache.get(targetClass);
 
-            if (collectionEntry != null)
-            {
-                collection = (PermissionCollection) collectionEntry.get();
+                if (collectionEntry != null)
+                {
+                    collection = (PermissionCollection) collectionEntry.get();
+                }
             }
 
             if (collection == null)
