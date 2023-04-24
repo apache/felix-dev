@@ -1,3 +1,9 @@
+Changes from 2.8.3 to 2.8.4
+---------------------------
+
+** Bug
+    * [FELIX-6591] - Fix a memory leak in Felix Framework Security extension
+
 Changes from 2.8.1 to 2.8.3
 ---------------------------
 
