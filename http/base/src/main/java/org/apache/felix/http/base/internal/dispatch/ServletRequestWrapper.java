@@ -39,8 +39,12 @@ import java.security.PrivilegedAction;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
+import java.util.Collections;
+import java.util.Enumeration;
+import java.util.HashSet;
 import java.util.Iterator;
 import java.util.List;
+import java.util.Set;
 
 import javax.servlet.AsyncContext;
 import javax.servlet.DispatcherType;
@@ -69,10 +73,11 @@ import org.osgi.service.useradmin.Authorization;
 
 final class ServletRequestWrapper extends HttpServletRequestWrapper
 {
-    private static final List<String> FORBIDDEN_ATTRIBUTES = Arrays.asList(FORWARD_CONTEXT_PATH,
-            FORWARD_MAPPING, FORWARD_PATH_INFO, FORWARD_QUERY_STRING, FORWARD_REQUEST_URI, FORWARD_SERVLET_PATH,
-            INCLUDE_CONTEXT_PATH, INCLUDE_MAPPING, INCLUDE_PATH_INFO, INCLUDE_QUERY_STRING, INCLUDE_REQUEST_URI,
-            INCLUDE_SERVLET_PATH);
+    private static final List<String> FORWARD_ATTRIBUTES = Arrays.asList(FORWARD_CONTEXT_PATH,
+        FORWARD_MAPPING, FORWARD_PATH_INFO, FORWARD_QUERY_STRING, FORWARD_REQUEST_URI, FORWARD_SERVLET_PATH);
+
+    private static final List<String> INCLUDE_ATTRIBUTES = Arrays.asList(INCLUDE_CONTEXT_PATH, 
+        INCLUDE_MAPPING, INCLUDE_PATH_INFO, INCLUDE_QUERY_STRING, INCLUDE_REQUEST_URI, INCLUDE_SERVLET_PATH);
 
     private final DispatcherType type;
     private final RequestInfo requestInfo;
@@ -133,9 +138,11 @@ final class ServletRequestWrapper extends HttpServletRequestWrapper
             {
                 return this.requestInfo;
             }
-        }
-        else if (isForwardingDispatcher() && !this.requestInfo.nameMatch)
-        {
+            // include might be contained within a forward, allow forward attributes
+            else if (FORWARD_ATTRIBUTES.contains(name) ) {
+                return super.getAttribute(name);
+            }
+        } else if (isForwardingDispatcher() && !this.requestInfo.nameMatch) {
             // The javax.servlet.forward.* attributes refer to the information of the *original* request,
             // meaning that the request information comes from the *forwarded* request...
             if (FORWARD_REQUEST_URI.equals(name))
@@ -163,10 +170,25 @@ final class ServletRequestWrapper extends HttpServletRequestWrapper
                 return super.getHttpServletMapping();
             }
         }
-        if ( FORBIDDEN_ATTRIBUTES.contains(name) ) {
+        // block all special attributes
+        if (INCLUDE_ATTRIBUTES.contains(name) || FORWARD_ATTRIBUTES.contains(name)) {
             return null;
         }
         return super.getAttribute(name);
+    }
+
+    @Override
+    public Enumeration<String> getAttributeNames() {
+        if ( isForwardingDispatcher() || isInclusionDispatcher() ) {
+            final Set<String> allNames = new HashSet<>(Collections.list(super.getAttributeNames()));
+            if ( isForwardingDispatcher() ) {
+                allNames.addAll(FORWARD_ATTRIBUTES);
+            } else {
+                allNames.addAll(INCLUDE_ATTRIBUTES);
+            }
+            return Collections.enumeration(allNames);
+        }
+        return super.getAttributeNames();
     }
 
     @Override

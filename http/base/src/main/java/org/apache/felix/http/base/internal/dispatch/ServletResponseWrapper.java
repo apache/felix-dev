@@ -124,7 +124,7 @@ final class ServletResponseWrapper extends HttpServletResponseWrapper
                         final ServletRequestWrapper reqWrapper = new ServletRequestWrapper(request,
                                 errorResolution.getContext(),
                                 requestInfo,
-                                null,
+                                DispatcherType.ERROR,
                                 false,
                                 null,
                                 null);

@@ -35,7 +35,7 @@
         <pax.exam.version>4.13.1</pax.exam.version>
         <pax.url.aether.version>2.6.2</pax.url.aether.version>
         <http.servlet.api.version>2.0.0</http.servlet.api.version>
-        <http.jetty.version>4.2.11-SNAPSHOT</http.jetty.version>
+        <http.jetty.version>4.2.13-SNAPSHOT</http.jetty.version>
     </properties>
 
     <build>
