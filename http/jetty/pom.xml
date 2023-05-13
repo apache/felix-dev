@@ -42,7 +42,7 @@
 
     <properties>
         <felix.java.version>11</felix.java.version>
-	<jetty.version>11.0.13</jetty.version>
+	<jetty.version>11.0.15</jetty.version>
     </properties>
 
     <build>
