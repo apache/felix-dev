@@ -53,11 +53,13 @@ import org.osgi.service.log.LogService;
 class PluginHolder implements ServiceListener
 {
 
+    private final OsgiManager osgiManager;
+
     // The Web Console's bundle context to access the plugin services
     private final BundleContext bundleContext;
 
-    // registered plugins (Map<String label, Plugin plugin>)
-    private final Map plugins;
+    // registered plugins
+    private final Map<String, Plugin> plugins;
 
     // The servlet context used to initialize plugin services
     private ServletContext servletContext;
@@ -66,10 +68,12 @@ class PluginHolder implements ServiceListener
     private String defaultPluginLabel;
 
 
-    PluginHolder( final BundleContext context )
+
+    PluginHolder( final OsgiManager osgiManager, final BundleContext context )
     {
+        this.osgiManager = osgiManager;
         this.bundleContext = context;
-        this.plugins = new HashMap();
+        this.plugins = new HashMap<>();
     }
 
 
@@ -95,7 +99,7 @@ class PluginHolder implements ServiceListener
 
         try
         {
-            ServiceReference[] refs = bundleContext.getServiceReferences( WebConsoleConstants.SERVICE_NAME, null );
+            ServiceReference<?>[] refs = bundleContext.getServiceReferences( WebConsoleConstants.SERVICE_NAME, null );
             if ( refs != null )
             {
                 for ( int i = 0; i < refs.length; i++ )
@@ -151,33 +155,20 @@ class PluginHolder implements ServiceListener
         this.defaultPluginLabel = defaultPluginLabel;
     }
 
-    void addInternalPlugin( final OsgiManager osgiManager, final String pluginClassName, final String label)
+    void addInternalPlugin( final String pluginClassName, final String label)
     {
         final Plugin plugin = new InternalPlugin(this, osgiManager, pluginClassName, label);
         addPlugin( label, plugin );
     }
 
     /**
-     * Adds an internal Web Console plugin
-     * @param consolePlugin The internal Web Console plugin to add
-     */
-    void addOsgiManagerPlugin( final AbstractWebConsolePlugin consolePlugin )
-    {
-        final String label = consolePlugin.getLabel();
-        final Plugin plugin = new Plugin( this, consolePlugin, label );
-        addPlugin( label, plugin );
-    }
-
-
-    /**
      * Remove the internal Web Console plugin registered under the given label
      * @param label The label of the Web Console internal plugin to remove
      */
-    void removeOsgiManagerPlugin( final String label )
+    void removeInternalPlugin( final String label )
     {
         removePlugin( label );
     }
-
 
     /**
      * Returns the plugin registered under the given label or <code>null</code>
@@ -197,7 +188,7 @@ class PluginHolder implements ServiceListener
             final Plugin plugin;
             synchronized ( plugins )
             {
-                plugin = ( Plugin ) plugins.get( label );
+                plugin = plugins.get( label );
             }
 
             if ( plugin != null )
@@ -402,7 +393,7 @@ class PluginHolder implements ServiceListener
     }
 
 
-    private void serviceAdded( final ServiceReference serviceReference )
+    private void serviceAdded( final ServiceReference<?> serviceReference )
     {
         final String label = getProperty( serviceReference, WebConsoleConstants.PLUGIN_LABEL );
         if ( label != null )
@@ -412,7 +403,7 @@ class PluginHolder implements ServiceListener
     }
 
 
-    private void serviceRemoved( final ServiceReference serviceReference )
+    private void serviceRemoved( final ServiceReference<?> serviceReference )
     {
         final String label = getProperty( serviceReference, WebConsoleConstants.PLUGIN_LABEL );
         if ( label != null )
@@ -426,6 +417,20 @@ class PluginHolder implements ServiceListener
     {
         synchronized ( plugins )
         {
+            plugins.compute( label, (key, oldPlugin) -> {
+                if (oldPlugin != null) {
+                    if (plugin.compareTo(oldPlugin) > 0) {
+                        osgiManager.log(LogService.LOG_WARNING, "Overwriting existing plugin " + oldPlugin.doGetConsolePlugin().getClass().getName() 
+                                + " having label " + key + " with new plugin " + plugin.doGetConsolePlugin().getClass().getName()
+                                + " due to higher ranking " );
+                    } else {
+                        osgiManager.log(LogService.LOG_WARNING, "Ignoring new plugin " + plugin.doGetConsolePlugin().getClass().getName()
+                                + " having existing label " + key + " due to lower ranking than old plugin " +  oldPlugin.doGetConsolePlugin().getClass().getName() );
+                        return oldPlugin;
+                    }
+                }
+                return plugin;
+            });
             plugins.put( label, plugin );
         }
     }
@@ -436,7 +441,7 @@ class PluginHolder implements ServiceListener
         final Plugin oldPlugin;
         synchronized ( plugins )
         {
-            oldPlugin = ( Plugin ) plugins.remove( label );
+            oldPlugin = plugins.remove( label );
         }
 
         if ( oldPlugin != null )
@@ -450,12 +455,12 @@ class PluginHolder implements ServiceListener
     {
         synchronized ( plugins )
         {
-            return ( Plugin[] ) plugins.values().toArray( new Plugin[plugins.size()] );
+            return plugins.values().toArray( new Plugin[plugins.size()] );
         }
     }
 
 
-    static String getProperty( final ServiceReference service, final String propertyName )
+    static String getProperty( final ServiceReference<?> service, final String propertyName )
     {
         final Object property = service.getProperty( propertyName );
         if ( property instanceof String )
@@ -466,43 +471,26 @@ class PluginHolder implements ServiceListener
         return null;
     }
 
-    private static class Plugin implements ServletConfig
+    private abstract static class Plugin implements ServletConfig, Comparable<Plugin>
     {
         private final PluginHolder holder;
+        protected final ServiceReference<?> serviceReference; // used for comparing conflicting services
         private final String label;
         private String title;
-        private AbstractWebConsolePlugin consolePlugin;
 
-        protected Plugin( final PluginHolder holder, final String label )
+        protected Plugin( final PluginHolder holder, final ServiceReference<?> serviceReference, final String label )
         {
             this.holder = holder;
+            this.serviceReference = serviceReference;
             this.label = label;
         }
 
 
-        protected Plugin( final PluginHolder holder, final AbstractWebConsolePlugin plugin, final String label )
-        {
-            this( holder, label );
-
-            if ( plugin == null )
-            {
-                throw new NullPointerException( "plugin" );
-            }
-
-            this.consolePlugin = plugin;
-        }
-
         void init() throws ServletException {
-            if (consolePlugin != null) {
-                consolePlugin.init( this );
-            }
         }
 
         void destroy()
         {
-            if (consolePlugin != null) {
-                consolePlugin.destroy();
-            }
         }
 
         /**
@@ -512,20 +500,20 @@ class PluginHolder implements ServiceListener
          */
         final void dispose()
         {
-            if ( consolePlugin != null )
-            {
-                try
-                {
-                    consolePlugin.destroy();
-                }
-                catch ( Exception e )
-                {
-                    // TODO: handle
-                }
+        }
 
-                doUngetConsolePlugin( consolePlugin );
-
-                consolePlugin = null;
+        @Override
+        public int compareTo(Plugin o)
+        {
+            // serviceReference = null means internal (i.e. highest rank)
+            if (this.serviceReference == null && o.serviceReference != null) {
+                return 1;
+            } else if (this.serviceReference != null && o.serviceReference == null) {
+                return -1;
+            } else if (this.serviceReference == null && o.serviceReference == null) {
+                return 0;
+            } else {
+                return this.serviceReference.compareTo(o.serviceReference);
             }
         }
 
@@ -589,24 +577,19 @@ class PluginHolder implements ServiceListener
 
         final AbstractWebConsolePlugin getConsolePlugin()
         {
-            if ( consolePlugin == null )
+            final AbstractWebConsolePlugin consolePlugin = doGetConsolePlugin();
+            if ( consolePlugin != null )
             {
-                final AbstractWebConsolePlugin consolePlugin = doGetConsolePlugin();
-                if ( consolePlugin != null )
+                try
                 {
-                    try
-                    {
-                        this.consolePlugin = consolePlugin;
-                        init();
-                    }
-                    catch ( ServletException se )
-                    {
-                        // TODO: log
-                        this.consolePlugin = null;
-                    }
-                } else {
-                    // TODO: log !!
+                    init();
                 }
+                catch ( ServletException se )
+                {
+                    // TODO: log
+                }
+            } else {
+                // TODO: log !!
             }
             return consolePlugin;
         }
@@ -615,10 +598,7 @@ class PluginHolder implements ServiceListener
             return true;
         }
 
-        protected AbstractWebConsolePlugin doGetConsolePlugin()
-        {
-            return consolePlugin;
-        }
+        protected abstract AbstractWebConsolePlugin doGetConsolePlugin();
 
 
         protected void doUngetConsolePlugin( AbstractWebConsolePlugin consolePlugin )
@@ -634,9 +614,9 @@ class PluginHolder implements ServiceListener
         }
 
 
-        public Enumeration getInitParameterNames()
+        public Enumeration<?> getInitParameterNames()
         {
-            return new Enumeration()
+            return new Enumeration<Object>()
             {
                 public boolean hasMoreElements()
                 {
@@ -668,17 +648,11 @@ class PluginHolder implements ServiceListener
 
     private static class ServletPlugin extends Plugin
     {
-        private final ServiceReference serviceReference;
 
-
-        ServletPlugin( final PluginHolder holder, final ServiceReference serviceReference, final String label )
+        ServletPlugin( final PluginHolder holder, final ServiceReference<?> serviceReference, final String label )
         {
-            super(holder, label);
-            this.serviceReference = serviceReference;
+            super(holder, serviceReference, label);
         }
-
-
-
 
         Bundle getBundle()
         {
@@ -753,10 +727,10 @@ class PluginHolder implements ServiceListener
         }
 
 
-        public Enumeration getInitParameterNames()
+        public Enumeration<?> getInitParameterNames()
         {
             final String[] keys = serviceReference.getPropertyKeys();
-            return new Enumeration()
+            return new Enumeration<Object>()
             {
                 int idx = 0;
 
@@ -790,7 +764,7 @@ class PluginHolder implements ServiceListener
 
         protected InternalPlugin(PluginHolder holder, OsgiManager osgiManager, String pluginClassName, String label)
         {
-            super(holder, label);
+            super(holder, null, label);
             this.osgiManager = osgiManager;
             this.pluginClassName = pluginClassName;
         }
@@ -815,7 +789,7 @@ class PluginHolder implements ServiceListener
 
                 try
                 {
-                    Class pluginClass = getClass().getClassLoader().loadClass(pluginClassName);
+                    Class<?> pluginClass = getClass().getClassLoader().loadClass(pluginClassName);
                     plugin = (AbstractWebConsolePlugin) pluginClass.newInstance();
 
                     if (plugin instanceof OsgiManagerPlugin)
