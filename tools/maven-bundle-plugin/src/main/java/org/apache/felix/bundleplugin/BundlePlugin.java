@@ -324,6 +324,9 @@ public class BundlePlugin extends AbstractMojo
 
     @Component
     protected BuildContext buildContext;
+
+    @Parameter(defaultValue = "false", property = "bundle.skip")
+    private boolean skip = false;
     
     private static final String MAVEN_SYMBOLICNAME = "maven-symbolicname";
     private static final String MAVEN_RESOURCES = "{maven-resources}";
@@ -362,6 +365,10 @@ public class BundlePlugin extends AbstractMojo
      */
     public void execute() throws MojoExecutionException
     {
+        if (skip) {
+            getLog().info("Skipping Bundle plugin");
+            return;
+        }
         String projectType = getProject().getArtifact().getType();
 
         // ignore unsupported project types, useful when bundleplugin is configured in parent pom

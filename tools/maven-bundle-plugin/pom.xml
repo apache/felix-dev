@@ -45,7 +45,6 @@
      <connection>scm:git:https://github.com/apache/felix-dev.git</connection>
      <developerConnection>scm:git:https://github.com/apache/felix-dev.git</developerConnection>
      <url>https://gitbox.apache.org/repos/asf?p=felix-dev.git</url>
-   <tag>maven-bundle-plugin-5.1.6</tag>
   </scm>
 
  <!-- Support for publishing the mvn site. -->
@@ -192,14 +191,28 @@
     <version>1.6.0</version>
   </dependency>
   <dependency>
-   <groupId>org.apache.maven</groupId>
-   <artifactId>maven-core</artifactId>
-   <version>3.3.9</version>
+    <groupId>org.apache.maven</groupId>
+    <artifactId>maven-core</artifactId>
+    <version>3.3.9</version>
+    <scope>provided</scope>
+  </dependency>
+  <dependency>
+    <groupId>org.apache.maven</groupId>
+    <artifactId>maven-model</artifactId>
+    <version>3.3.9</version>
+    <scope>provided</scope>
+  </dependency>
+  <dependency>
+    <groupId>org.apache.maven</groupId>
+    <artifactId>maven-artifact</artifactId>
+    <version>3.3.9</version>
+    <scope>provided</scope>
   </dependency>
   <dependency>
     <groupId>org.apache.maven</groupId>
     <artifactId>maven-compat</artifactId>
     <version>3.3.9</version>
+    <scope>provided</scope>
   </dependency>
   <dependency>
     <groupId>org.apache.maven.reporting</groupId>
