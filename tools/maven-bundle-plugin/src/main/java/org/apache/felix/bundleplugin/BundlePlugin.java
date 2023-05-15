@@ -1938,6 +1938,7 @@ public class BundlePlugin extends AbstractMojo
             scanner.scan();
 
             String[] paths = scanner.getIncludedFiles();
+            Arrays.sort( paths );
             for ( int i = 0; i < paths.length; i++ )
             {
                 packages.put( analyzer.getPackageRef( getPackageName( paths[i] ) ) );
@@ -2076,7 +2077,9 @@ public class BundlePlugin extends AbstractMojo
                 scanner.addDefaultExcludes();
                 scanner.scan();
 
-                List<String> includedFiles = Arrays.asList( scanner.getIncludedFiles() );
+                String[] f = scanner.getIncludedFiles();
+                Arrays.sort( f );
+                List<String> includedFiles = Arrays.asList( f );
 
                 for ( Iterator<String> j = includedFiles.iterator(); j.hasNext(); )
                 {
