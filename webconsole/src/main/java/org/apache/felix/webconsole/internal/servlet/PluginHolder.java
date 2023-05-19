@@ -503,18 +503,44 @@ class PluginHolder implements ServiceListener
         }
 
         @Override
-        public int compareTo(Plugin o)
+        public int compareTo(Plugin other)
         {
-            // serviceReference = null means internal (i.e. highest rank)
-            if (this.serviceReference == null && o.serviceReference != null) {
-                return 1;
-            } else if (this.serviceReference != null && o.serviceReference == null) {
-                return -1;
-            } else if (this.serviceReference == null && o.serviceReference == null) {
-                return 0;
-            } else {
-                return this.serviceReference.compareTo(o.serviceReference);
+            // serviceReference = null means internal (i.e. service.ranking=0 and service.id=0)
+            // mostly a copy from org.apache.felix.framework.ServiceRegistrationImpl.ServiceReferenceImpl
+
+            Long id = serviceReference != null ? (Long) serviceReference.getProperty(Constants.SERVICE_ID) : 0;
+            Long otherId = other.serviceReference != null ? (Long) other.serviceReference.getProperty(Constants.SERVICE_ID) : 0;
+
+            if (id.equals(otherId))
+            {
+                return 0; // same service
             }
+
+            Object rankObj = serviceReference != null ? serviceReference.getProperty(Constants.SERVICE_RANKING) : null;
+            Object otherObj = other.serviceReference != null ? other.serviceReference.getProperty(Constants.SERVICE_RANKING) : null;
+
+            // If no rank, then spec says it defaults to zero.
+            rankObj = (rankObj == null) ? new Integer(0) : rankObj;
+            otherObj = (otherObj == null) ? new Integer(0) : otherObj;
+
+            // If rank is not Integer, then spec says it defaults to zero.
+            Integer rank = (rankObj instanceof Integer)
+                ? (Integer) rankObj : new Integer(0);
+            Integer otherRank = (otherObj instanceof Integer)
+                ? (Integer) otherObj : new Integer(0);
+
+            // Sort by rank in ascending order.
+            if (rank.compareTo(otherRank) < 0)
+            {
+                return -1; // lower rank
+            }
+            else if (rank.compareTo(otherRank) > 0)
+            {
+                return 1; // higher rank
+            }
+
+            // If ranks are equal, then sort by service id in descending order.
+            return (id.compareTo(otherId) < 0) ? 1 : -1;
         }
 
 
