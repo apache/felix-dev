@@ -50,6 +50,14 @@
       <version>2.10.0</version>
       <scope>provided</scope>
     </dependency>
+    
+    <!-- solution for "Missing artifact org.eclipse.osgi:org.eclipse.osgi:jar:3.7.0.v20110124-0830" error -->
+    <dependency>
+      <groupId>org.eclipse.osgi</groupId>
+      <artifactId>org.eclipse.osgi</artifactId>
+      <version>3.7.1</version>
+      <scope>provided</scope>
+    </dependency>
   </dependencies>
 
   <build>
