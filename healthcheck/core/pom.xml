@@ -162,7 +162,7 @@
         <dependency>
             <groupId>javax.servlet</groupId>
             <artifactId>javax.servlet-api</artifactId>
-            <version>3.1.0</version>
+            <version>4.0.1</version>
             <scope>provided</scope>
             <!-- servlet api optional: only add configs for servlets/filters your setup includes the servlet runtime! -->
             <optional>true</optional>
