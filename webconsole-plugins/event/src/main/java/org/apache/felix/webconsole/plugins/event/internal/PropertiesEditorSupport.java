@@ -20,7 +20,7 @@ import java.util.Dictionary;
 import java.util.Hashtable;
 import java.util.StringTokenizer;
 
-import javax.servlet.http.HttpServletRequest;
+import jakarta.servlet.http.HttpServletRequest;
 
 /**
  * Java support for propeditor.js handling.

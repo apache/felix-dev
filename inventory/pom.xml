@@ -65,12 +65,12 @@
                             org.apache.felix.inventory.impl.Activator
                         </Bundle-Activator>
                         <Import-Package>
-                            javax.servlet;resolution:=optional,
-                            javax.servlet.http;resolution:=optional,
+                            jakarta.servlet;resolution:=optional,
+                            jakarta.servlet.http;resolution:=optional,
                             *
                         </Import-Package>
                         <DynamicImport-Package>
-                            javax.servlet, javax.servlet.http
+                            jakarta.servlet, jakarta.servlet.http
                         </DynamicImport-Package>
                     </instructions>
                 </configuration>
@@ -98,9 +98,9 @@
             <scope>provided</scope>
         </dependency>
         <dependency>
-            <groupId>javax.servlet</groupId>
-            <artifactId>javax.servlet-api</artifactId>
-            <version>4.0.1</version>
+            <groupId>jakarta.servlet</groupId>
+            <artifactId>jakarta.servlet-api</artifactId>
+            <version>5.0.0</version>
             <scope>provided</scope>
         </dependency>
         <dependency>
