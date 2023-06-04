@@ -78,7 +78,7 @@ public class Activator implements BundleActivator
 
         //Registering a ServiceFactory to avoid dependency on Servlet API
         //on startup
-        context.registerService("javax.servlet.Servlet", new PluginServiceFactory(), props);
+        context.registerService("jakarta.servlet.Servlet", new PluginServiceFactory(), props);
     }
 
     private class PluginServiceFactory implements ServiceFactory {

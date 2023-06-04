@@ -92,7 +92,7 @@ public class OptionalFeaturesHandler
     }
 
     /**
-     * @see javax.servlet.GenericServlet#destroy()
+     * @see jakarta.servlet.GenericServlet#destroy()
      */
     public void destroy()
     {
