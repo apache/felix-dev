@@ -274,14 +274,14 @@ public class OsgiManager extends GenericServlet
     public OsgiManager(BundleContext bundleContext)
     {
         this.bundleContext = bundleContext;
-        this.holder = new PluginHolder(bundleContext);
+        this.holder = new PluginHolder(this, bundleContext);
 
         // new plugins setup
         for (int i = 0; i < PLUGIN_MAP.length; i++)
         {
             final String pluginClassName = PLUGIN_MAP[i++];
             final String label = PLUGIN_MAP[i];
-            holder.addInternalPlugin(this, pluginClassName, label);
+            holder.addInternalPlugin(pluginClassName, label);
         }
 
         // setup the included plugins
@@ -1192,14 +1192,14 @@ public class OsgiManager extends GenericServlet
             {
                 if (active)
                 {
-                    holder.removeOsgiManagerPlugin(label);
+                    holder.removeInternalPlugin(label);
                 }
             }
             else
             {
                 if (!active)
                 {
-                    holder.addInternalPlugin(this, pluginClassName, label);
+                    holder.addInternalPlugin(pluginClassName, label);
                 }
             }
         }
