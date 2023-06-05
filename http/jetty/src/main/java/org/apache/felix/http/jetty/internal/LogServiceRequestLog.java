@@ -20,14 +20,15 @@ import java.io.IOException;
 import java.util.Dictionary;
 import java.util.Hashtable;
 
-import org.apache.felix.http.base.internal.logger.SystemLogger;
 import org.eclipse.jetty.server.CustomRequestLog;
 import org.eclipse.jetty.server.RequestLog;
 import org.osgi.framework.BundleContext;
 import org.osgi.framework.ServiceRegistration;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 /**
- * A RequestLog that logs to the OSGi LogService when present. Not registered by default.
+ * A RequestLog that logs via SLF4J when present. Not registered by default.
  */
 class LogServiceRequestLog extends CustomRequestLog {
 
@@ -39,15 +40,24 @@ class LogServiceRequestLog extends CustomRequestLog {
 
     private volatile ServiceRegistration<RequestLog> registration;
 
+    
     LogServiceRequestLog(JettyConfig config) {
-        super(new RequestLog.Writer() {
-
-                @Override
-                public void write(String requestEntry) throws IOException {
-                    SystemLogger.LOGGER.info(PREFIX.concat(requestEntry));
-                }
-            },config.getRequestLogOSGiFormat());
+        super(new Slf4JRequestLogWriter(config.getRequestLogOsgiSlf4JLoggerName()), config.getRequestLogOSGiFormat());
         this.serviceName = config.getRequestLogOSGiServiceName();
+    }
+
+    private static final class Slf4JRequestLogWriter implements RequestLog.Writer {
+
+        private final Logger logger;
+
+        public Slf4JRequestLogWriter(String name) {
+            this.logger = LoggerFactory.getLogger(name);
+        }
+
+        @Override
+        public void write(String requestEntry) throws IOException {
+            logger.info(PREFIX.concat(requestEntry));
+        }
     }
 
     public synchronized void register(BundleContext context) throws IllegalStateException {
