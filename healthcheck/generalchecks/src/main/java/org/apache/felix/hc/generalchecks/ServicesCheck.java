@@ -180,6 +180,8 @@ public class ServicesCheck implements HealthCheck {
         }
 
         public boolean present() {
+            // getService() is used as this a) ensures the service is really available (e.g. in case of lazy DS components)
+            // and b) the result of getService() is cached; causing the least performance impact
             return this.stracker.getService() != null;
         }
 
