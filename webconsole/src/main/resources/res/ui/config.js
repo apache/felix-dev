@@ -625,6 +625,22 @@ function navigateAfterConfigurationClose() {
 	return false;
 }
 
+function filterEmptySerializedKeyValues(serializedData) {
+    if (!serializedData) {
+        return '';
+    }
+    var filteredData = '';
+    serializedData.split('&').forEach(function (field, index, array) {
+        var keyValue = field.split('=');
+        var fieldKey = decodeURIComponent(keyValue[0]);
+        var fieldValue = decodeURIComponent(keyValue[1]);
+        if (fieldValue !== '') {
+            filteredData += fieldKey + '=' + fieldValue + (index === array.length - 1 ? '' : '&');
+        }
+    });
+    return filteredData;
+}
+
 $(document).ready(function() {
 	configContent = $('#configContent');
 	// config table list
@@ -674,7 +690,7 @@ $(document).ready(function() {
 		$.ajax({
 			type     : 'POST',
 			url      : pluginRoot + '/' + $(this).attr('__pid'),
-			data     : $(this).find('form').serialize(),
+			data     : filterEmptySerializedKeyValues($(this).find('form').serialize()),
 			success  : function () {
 			  // reload on success - prevents AJAX errors - see FELIX-3116
 			  if(!navigateAfterConfigurationClose()) document.location.href = pluginRoot; 

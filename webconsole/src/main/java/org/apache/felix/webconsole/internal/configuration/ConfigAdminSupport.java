@@ -152,9 +152,9 @@ class ConfigAdminSupport {
 
             if ( ad.getCardinality() == 0 && ( attributeType == AttributeDefinition.STRING || attributeType == AttributeDefinition.PASSWORD ) )
             {
-                final String value = request.getParameter( paramName );
-                if ( value != null
-                    && ( attributeType != AttributeDefinition.PASSWORD || !MetaTypeSupport.PASSWORD_PLACEHOLDER_VALUE.equals( value ) ) )
+                String value = request.getParameter( paramName );
+                value = value == null ? "" : value;
+                if ( attributeType != AttributeDefinition.PASSWORD || !MetaTypeSupport.PASSWORD_PLACEHOLDER_VALUE.equals( value ) )
                 {
                     props.put( propName, value );
                 }
