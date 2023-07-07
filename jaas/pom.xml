@@ -106,8 +106,8 @@
               org.apache.felix.jaas.internal.Activator
             </Bundle-Activator>
             <DynamicImport-Package>
-              jakarta.servlet,
-              jakarta.servlet.http
+              javax.servlet,
+              javax.servlet.http
             </DynamicImport-Package>
             <_removeheaders>
               Embed-Dependency,Private-Package,Include-Resource
@@ -217,9 +217,9 @@
       <scope>provided</scope>
     </dependency>
     <dependency>
-      <groupId>jakarta.servlet</groupId>
-      <artifactId>jakarta.servlet-api</artifactId>
-      <version>5.0.0</version>
+      <groupId>javax.servlet</groupId>
+      <artifactId>servlet-api</artifactId>
+      <version>2.3</version>
       <optional>true</optional>
     </dependency>
     <dependency>

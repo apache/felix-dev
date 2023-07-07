@@ -21,7 +21,7 @@ package org.apache.felix.systemready.impl.servlet;
 import java.io.IOException;
 import java.io.PrintWriter;
 
-import jakarta.servlet.http.HttpServletResponse;
+import javax.servlet.http.HttpServletResponse;
 
 import org.apache.felix.systemready.CheckStatus;
 import org.apache.felix.systemready.StateType;

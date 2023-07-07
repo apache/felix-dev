@@ -20,7 +20,7 @@
 package org.apache.felix.jaas.integration;
 
 import javax.inject.Inject;
-import jakarta.servlet.Servlet;
+import javax.servlet.Servlet;
 
 import org.junit.Rule;
 import org.junit.Test;
