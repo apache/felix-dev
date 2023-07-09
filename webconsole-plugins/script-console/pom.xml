@@ -196,19 +196,16 @@
       <version>4.0.1</version>
       <scope>provided</scope>
     </dependency>
-
     <dependency>
       <groupId>commons-io</groupId>
       <artifactId>commons-io</artifactId>
       <version>2.11.0</version>
       <scope>provided</scope>
     </dependency>
-
-    <!-- TODO: change to refer to latest version available from workspace -->
     <dependency>
       <groupId>org.apache.felix</groupId>
       <artifactId>org.apache.felix.webconsole</artifactId>
-      <version>4.3.12</version>
+      <version>5.0.0-SNAPSHOT</version>
       <scope>provided</scope>
     </dependency>
     <dependency>
@@ -276,12 +273,10 @@
       <version>1.6.0</version>
       <scope>test</scope>
     </dependency>
-
-    <!-- TODO: change to refer to latest version available from workspace -->
     <dependency>
       <groupId>org.apache.felix</groupId>
       <artifactId>org.apache.felix.http.jetty</artifactId>
-      <version>2.2.0</version>
+      <version>5.0.5-SNAPSHOT</version>
       <scope>test</scope>
     </dependency>
     <dependency>
@@ -291,7 +286,6 @@
       <scope>test</scope>
     </dependency>
   </dependencies>
-
 
   <profiles>
     <!--

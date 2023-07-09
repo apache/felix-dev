@@ -15,7 +15,7 @@
     <parent>
         <groupId>org.apache.felix</groupId>
         <artifactId>org.apache.felix.http.parent</artifactId>
-        <version>13</version>
+        <version>15-SNAPSHOT</version>
         <relativePath>../parent/pom.xml</relativePath>
     </parent>
 
@@ -34,7 +34,7 @@
         <felix.java.version>11</felix.java.version>
         <pax.exam.version>4.13.1</pax.exam.version>
         <pax.url.aether.version>2.6.2</pax.url.aether.version>
-        <http.servlet.api.version>2.1.0</http.servlet.api.version>
+        <http.servlet.api.version>3.0.0-SNAPSHOT</http.servlet.api.version>
         <http.jetty.version>5.0.5-SNAPSHOT</http.jetty.version>
     </properties>
 
@@ -87,17 +87,20 @@
             <version>1.0.0</version>
             <scope>provided</scope>
         </dependency>
+        <!-- TODO: add 'jakarta.servlet-api' if 'org.apache.felix.http.servlet-api' is dropped -->
         <dependency>
             <groupId>org.apache.felix</groupId>
             <artifactId>org.apache.felix.http.servlet-api</artifactId>
             <version>${http.servlet.api.version}</version>
         </dependency>
+        <!-- TODO: remove this - only 'org.osgi.service.servlet' is used --> 
         <dependency>
             <groupId>org.osgi</groupId>
             <artifactId>org.osgi.service.http</artifactId>
             <version>1.2.1</version>
            <scope>provided</scope>
         </dependency>
+        <!-- TODO: remove this - only 'org.osgi.service.servlet' is used --> 
         <dependency>
             <groupId>org.osgi</groupId>
             <artifactId>org.osgi.service.http.whiteboard</artifactId>

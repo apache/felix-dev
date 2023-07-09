@@ -22,7 +22,7 @@
     <parent>
         <groupId>org.apache.felix</groupId>
         <artifactId>org.apache.felix.http.parent</artifactId>
-        <version>13</version>
+        <version>15-SNAPSHOT</version>
         <relativePath>../parent/pom.xml</relativePath>
     </parent>
 
@@ -36,8 +36,8 @@
         <connection>scm:git:https://github.com/apache/felix-dev.git</connection>
         <developerConnection>scm:git:https://github.com/apache/felix-dev.git</developerConnection>
         <url>https://gitbox.apache.org/repos/asf?p=felix-dev.git</url>
-      <tag>HEAD</tag>
-  </scm>
+        <tag>HEAD</tag>
+    </scm>
 
     <properties>
         <felix.java.version>11</felix.java.version>
@@ -138,18 +138,21 @@
             <version>2.0.0</version>
             <scope>provided</scope>
         </dependency>
+        <!-- TODO: remove this - only 'org.osgi.service.servlet' is used --> 
         <dependency>
             <groupId>org.osgi</groupId>
             <artifactId>org.osgi.service.http</artifactId>
             <version>1.2.1</version>
            <scope>provided</scope>
         </dependency>
+        <!-- TODO: remove this - only 'org.osgi.service.servlet' is used -->
         <dependency>
             <groupId>org.osgi</groupId>
             <artifactId>org.osgi.service.http.whiteboard</artifactId>
             <version>1.1.0</version>
             <scope>provided</scope>
         </dependency>
+        <!-- TODO: change to 2.x version of 'commons-fileupload' once released (or use snapshot instead) --> 
         <dependency>
             <groupId>commons-fileupload</groupId>
             <artifactId>commons-fileupload</artifactId>
