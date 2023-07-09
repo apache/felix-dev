@@ -21,7 +21,7 @@
 
 	<artifactId>org.apache.felix.webconsole.plugins.deppack</artifactId>
 	<packaging>bundle</packaging>
-	<version>1.0.0-SNAPSHOT</version>
+	<version>2.0.0-SNAPSHOT</version>
 
 	<name>Apache Felix Web Console Deployment Packages Plugin</name>
 	<description>
@@ -103,11 +103,21 @@
 
 	<dependencies>
         <dependency>
+            <groupId>jakarta.servlet</groupId>
+            <artifactId>jakarta.servlet-api</artifactId>
+            <version>5.0.0</version>
+            <scope>provided</scope>
+        </dependency>
+
+        <!-- TODO: remove this - only 'jakarta.servlet-api' is used -->
+        <dependency>
             <groupId>javax.servlet</groupId>
             <artifactId>javax.servlet-api</artifactId>
             <version>4.0.1</version>
             <scope>provided</scope>
         </dependency>
+
+        <!-- TODO: change to 2.x version of 'commons-fileupload' once released (or use snapshot instead) -->
 		<dependency>
 			<groupId>commons-fileupload</groupId>
 			<artifactId>commons-fileupload</artifactId>
@@ -127,6 +137,8 @@
 			<version>4.1.0</version>
 			<scope>provided</scope>
 		</dependency>
+
+		<!-- TODO: change to refer to latest version available from workspace -->
 		<dependency>
 			<groupId>org.apache.felix</groupId>
 			<artifactId>org.apache.felix.webconsole</artifactId>

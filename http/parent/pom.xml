@@ -29,9 +29,8 @@
 
     <name>Apache Felix Http Parent POM</name>
     <artifactId>org.apache.felix.http.parent</artifactId>
-    <version>14-SNAPSHOT</version>
+    <version>15-SNAPSHOT</version>
     <packaging>pom</packaging>
-
 
     <properties>
     	<servlet.version>5.0.0</servlet.version>

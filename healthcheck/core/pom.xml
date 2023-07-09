@@ -28,7 +28,7 @@
     </parent>
 
     <artifactId>org.apache.felix.healthcheck.core</artifactId>
-    <version>2.0.15-SNAPSHOT</version>
+    <version>3.0.0-SNAPSHOT</version>
 
     <name>Apache Felix Health Check Core</name>
     <inceptionYear>2013</inceptionYear>
@@ -38,7 +38,7 @@
     </description>
 
     <properties>
-        <felix.java.version>8</felix.java.version>
+        <felix.java.version>11</felix.java.version>
         <pax-exam.version>4.13.4</pax-exam.version>
         <pax-link.version>2.6.7</pax-link.version>
         <org.ops4j.pax.logging.DefaultServiceLog.level>INFO</org.ops4j.pax.logging.DefaultServiceLog.level>
@@ -159,6 +159,16 @@
             <scope>provided</scope>
         </dependency>
 
+        <dependency>
+            <groupId>jakarta.servlet</groupId>
+            <artifactId>jakarta.servlet-api</artifactId>
+            <version>5.0.0</version>
+            <scope>provided</scope>
+            <!-- servlet api optional: only add configs for servlets/filters your setup includes the servlet runtime! -->
+            <optional>true</optional>
+        </dependency>
+
+        <!-- TODO: remove this - 'jakarta.servlet-api' is used instead --> 
         <dependency>
             <groupId>javax.servlet</groupId>
             <artifactId>javax.servlet-api</artifactId>

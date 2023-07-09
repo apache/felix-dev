@@ -29,7 +29,7 @@
     <name>Apache Felix Http Samples - Whiteboard</name>
     <description>This example shows how to register servlets and filters using the Servlet Whiteboard Service.</description>
     <artifactId>org.apache.felix.http.samples.whiteboard</artifactId>
-    <version>3.0.0-SNAPSHOT</version>
+    <version>4.0.0-SNAPSHOT</version>
     <packaging>bundle</packaging>
 
     <scm>
@@ -37,6 +37,10 @@
         <developerConnection>scm:git:https://github.com/apache/felix-dev.git</developerConnection>
         <url>https://gitbox.apache.org/repos/asf?p=felix-dev.git</url>
     </scm>
+
+    <properties>
+        <felix.java.version>11</felix.java.version>
+    </properties>
 
     <build>
         <plugins>

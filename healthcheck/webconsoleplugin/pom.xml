@@ -28,7 +28,7 @@
     </parent>
 
     <artifactId>org.apache.felix.healthcheck.webconsoleplugin</artifactId>
-    <version>2.0.3-SNAPSHOT</version>
+    <version>3.0.0-SNAPSHOT</version>
 
     <name>Apache Felix Health Check Webconsole Plugin</name>
     <inceptionYear>2013</inceptionYear>
@@ -38,7 +38,7 @@
     </description>
     
     <properties>
-        <felix.java.version>8</felix.java.version>
+        <felix.java.version>11</felix.java.version>
     </properties>
     <scm>
         <connection>scm:git:ssh://git@github.com/apache/felix-dev.git</connection>
