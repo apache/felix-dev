@@ -20,8 +20,8 @@ package org.apache.felix.hc.api;
 import java.text.NumberFormat;
 import java.util.Locale;
 
+import org.apache.felix.hc.api.util.FormatUtil;
 import org.osgi.annotation.versioning.ProviderType;
-import org.slf4j.helpers.MessageFormatter;
 
 /** Utility that provides a logging-like facade on a ResultLog. */
 @ProviderType
@@ -131,10 +131,10 @@ public class FormattingResultLog extends ResultLog {
         
 
     private ResultLog.Entry createEntry(Result.Status status, String message, Object... args) {
-        return new ResultLog.Entry(status, MessageFormatter.arrayFormat(message, args).getMessage());
+        return new ResultLog.Entry(status, FormatUtil.format(message, args));
     }
     
     private ResultLog.Entry createEntry(boolean isDebug, String message, Object... args) {
-        return new ResultLog.Entry(MessageFormatter.arrayFormat(message, args).getMessage(), isDebug);
+        return new ResultLog.Entry(FormatUtil.format(message, args), isDebug);
     }
 }
