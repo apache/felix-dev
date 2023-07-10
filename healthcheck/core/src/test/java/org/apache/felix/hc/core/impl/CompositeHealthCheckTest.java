@@ -27,6 +27,7 @@ import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
 import java.util.Arrays;
+import java.util.Dictionary;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Set;
@@ -40,9 +41,6 @@ import org.apache.felix.hc.api.execution.HealthCheckMetadata;
 import org.apache.felix.hc.api.execution.HealthCheckSelector;
 import org.apache.felix.hc.core.impl.executor.ExecutionResult;
 import org.apache.felix.hc.core.impl.util.HealthCheckFilter;
-import org.hamcrest.Description;
-import org.hamcrest.Matcher;
-import org.hamcrest.TypeSafeMatcher;
 import org.junit.Before;
 import org.junit.Test;
 import org.mockito.ArgumentMatcher;
@@ -230,7 +228,7 @@ public class CompositeHealthCheckTest {
         }
     };
 
-    private static class DummyHcServiceReference implements ServiceReference {
+    private static class DummyHcServiceReference implements ServiceReference<Object> {
 
         private long id;
         private String name;
@@ -290,5 +288,14 @@ public class CompositeHealthCheckTest {
             throw new UnsupportedOperationException();
         }
 
+        @Override
+        public Dictionary getProperties() {
+            throw new UnsupportedOperationException();
+        }
+
+        @Override
+        public Object adapt(Class type) {
+            throw new UnsupportedOperationException();
+        }
     }
 }

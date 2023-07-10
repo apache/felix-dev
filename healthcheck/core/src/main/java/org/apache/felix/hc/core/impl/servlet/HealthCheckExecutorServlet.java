@@ -17,19 +17,18 @@
  */
 package org.apache.felix.hc.core.impl.servlet;
 
+import static org.osgi.service.servlet.whiteboard.HttpWhiteboardConstants.HTTP_WHITEBOARD_SERVLET_PATTERN;
+
 import java.io.IOException;
 import java.io.PrintWriter;
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Dictionary;
+import java.util.Hashtable;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.TreeMap;
-
-import javax.servlet.ServletException;
-import javax.servlet.http.HttpServlet;
-import javax.servlet.http.HttpServletRequest;
-import javax.servlet.http.HttpServletResponse;
 
 import org.apache.felix.hc.api.Result;
 import org.apache.felix.hc.api.execution.HealthCheckExecutionOptions;
@@ -38,15 +37,23 @@ import org.apache.felix.hc.api.execution.HealthCheckExecutor;
 import org.apache.felix.hc.api.execution.HealthCheckSelector;
 import org.apache.felix.hc.core.impl.executor.CombinedExecutionResult;
 import org.apache.felix.hc.core.impl.util.lang.StringUtils;
+import org.osgi.framework.BundleContext;
+import org.osgi.framework.ServiceRegistration;
 import org.osgi.service.component.annotations.Activate;
 import org.osgi.service.component.annotations.Component;
 import org.osgi.service.component.annotations.ConfigurationPolicy;
 import org.osgi.service.component.annotations.Deactivate;
 import org.osgi.service.component.annotations.Reference;
-import org.osgi.service.http.HttpService;
 import org.osgi.service.metatype.annotations.Designate;
+import org.osgi.service.servlet.whiteboard.annotations.RequireHttpWhiteboard;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+
+import jakarta.servlet.Servlet;
+import jakarta.servlet.ServletException;
+import jakarta.servlet.http.HttpServlet;
+import jakarta.servlet.http.HttpServletRequest;
+import jakarta.servlet.http.HttpServletResponse;
 
 /** Servlet that triggers the health check executor to return results via http.
  *
@@ -63,6 +70,7 @@ import org.slf4j.LoggerFactory;
  * CRITICAL 503 and HEALTH_CHECK_ERROR also 503). By default all requests answer with an http status of 200.
  * <p>
  * Useful in combination with load balancers. */
+@RequireHttpWhiteboard
 @Component(configurationPolicy = ConfigurationPolicy.REQUIRE)
 @Designate(ocd = HealthCheckExecutorServletConfiguration.class, factory=true)
 public class HealthCheckExecutorServlet extends HttpServlet {
@@ -128,7 +136,7 @@ public class HealthCheckExecutorServlet extends HttpServlet {
     private static final String CACHE_CONTROL_VALUE = "no-cache";
     private static final String CORS_ORIGIN_HEADER_NAME = "Access-Control-Allow-Origin";
 
-    private String[] servletPaths;
+    private final List<ServiceRegistration<Servlet>> servletRegistrations = new ArrayList<>();
 
     private String servletPath;
 
@@ -144,9 +152,6 @@ public class HealthCheckExecutorServlet extends HttpServlet {
     private boolean disableRequestConfiguration;
 
     @Reference
-    private HttpService httpService;
-
-    @Reference
     HealthCheckExecutor healthCheckExecutor;
 
     @Reference
@@ -160,9 +165,12 @@ public class HealthCheckExecutorServlet extends HttpServlet {
 
     @Reference
     ResultTxtVerboseSerializer verboseTxtSerializer;
+    
+    private BundleContext bundleContext;
 
     @Activate
-    protected final void activate(final HealthCheckExecutorServletConfiguration configuration) {
+    protected final void activate(final HealthCheckExecutorServletConfiguration configuration, final BundleContext bundleContext) {
+        this.bundleContext = bundleContext;
         this.servletPath = configuration.servletPath();
         this.defaultStatusMapping = getStatusMapping(configuration.httpStatusMapping());
         this.servletDefaultTimeout = configuration.timeout();
@@ -183,7 +191,6 @@ public class HealthCheckExecutorServlet extends HttpServlet {
         this.disableRequestConfiguration = configuration.disable_request_configuration();
         
         if ( configuration.disabled() ) {
-            this.servletPaths = null;
             LOG.info("Health Check Servlet is disabled by configuration");
             return;
         }
@@ -215,30 +222,33 @@ public class HealthCheckExecutorServlet extends HttpServlet {
         for (final Map.Entry<String, HttpServlet> servlet : servletsToRegister.entrySet()) {
             try {
                 LOG.info("Registering HC servlet {} to path {}", getClass().getSimpleName(), servlet.getKey());
-                this.httpService.registerServlet(servlet.getKey(), servlet.getValue(), null, null);
+
+                final Dictionary<String, Object> servletProps = new Hashtable<>();
+                servletProps.put(HTTP_WHITEBOARD_SERVLET_PATTERN, servlet.getKey());
+                
+                servletRegistrations.add(this.bundleContext.registerService(Servlet.class, servlet.getValue(), servletProps));
             } catch (Exception e) {
                 LOG.error("Could not register health check servlet: " + e, e);
             }
         }
-        this.servletPaths = servletsToRegister.keySet().toArray(new String[0]);
     }
-
+    
     @Deactivate
     public void deactivate() {
-        if (this.servletPaths == null) {
+        if (this.servletRegistrations.isEmpty()) {
             return;
         }
-
-        for (final String servletPath : this.servletPaths) {
+        
+        for (ServiceRegistration<Servlet> servletRegistration : servletRegistrations) {
             try {
-                LOG.info("Unregistering HC Servlet {} from path {}", getClass().getSimpleName(), servletPath);
-                this.httpService.unregister(servletPath);
+                LOG.info("Unregistering HC Servlet {} from path {}", getClass().getSimpleName(), servletRegistration.getReference().getProperty(HTTP_WHITEBOARD_SERVLET_PATTERN));
+                servletRegistration.unregister();
             } catch (Exception e) {
-                LOG.error("Could not unregister health check servlet: " + e, e);
+                // already unregistered
             }
         }
-        this.servletPaths = null;
-    }
+        servletRegistrations.clear();
+    }    
 
     /**
      * Check if the format is allowed
