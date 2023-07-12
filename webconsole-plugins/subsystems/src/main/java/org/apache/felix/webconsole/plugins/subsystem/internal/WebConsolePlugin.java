@@ -27,11 +27,7 @@ import java.util.Collection;
 import java.util.List;
 import java.util.Map;
 
-import javax.servlet.ServletException;
-import javax.servlet.http.HttpServletRequest;
-import javax.servlet.http.HttpServletResponse;
-
-import org.apache.commons.fileupload.FileItem;
+import org.apache.commons.fileupload2.FileItem;
 import org.apache.felix.utils.json.JSONWriter;
 import org.apache.felix.webconsole.AbstractWebConsolePlugin;
 import org.apache.felix.webconsole.DefaultVariableResolver;
@@ -43,6 +39,10 @@ import org.osgi.framework.ServiceReference;
 import org.osgi.service.log.LogService;
 import org.osgi.service.subsystem.Subsystem;
 import org.osgi.service.subsystem.SubsystemConstants;
+
+import jakarta.servlet.ServletException;
+import jakarta.servlet.http.HttpServletRequest;
+import jakarta.servlet.http.HttpServletResponse;
 
 public class WebConsolePlugin extends SimpleWebConsolePlugin
 {

@@ -22,7 +22,7 @@ package org.apache.felix.webconsole.plugins.obr.internal;
 import java.io.IOException;
 import java.io.StringWriter;
 
-import javax.servlet.ServletException;
+import jakarta.servlet.ServletException;
 
 import org.apache.felix.bundlerepository.Capability;
 import org.apache.felix.bundlerepository.Property;

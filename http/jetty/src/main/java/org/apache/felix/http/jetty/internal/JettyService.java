@@ -59,7 +59,7 @@ import org.osgi.framework.Constants;
 import org.osgi.framework.InvalidSyntaxException;
 import org.osgi.framework.ServiceFactory;
 import org.osgi.framework.ServiceRegistration;
-import org.osgi.service.http.runtime.HttpServiceRuntimeConstants;
+import org.osgi.service.servlet.runtime.HttpServiceRuntimeConstants;
 
 import jakarta.servlet.SessionCookieConfig;
 import jakarta.servlet.SessionTrackingMode;

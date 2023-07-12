@@ -28,9 +28,9 @@ public interface WebConsoleConstants
 
     /**
      * The name of the service to register as to be used as a "plugin" for
-     * the OSGi Manager (value is "javax.servlet.Servlet").
+     * the OSGi Manager (value is "jakarta.servlet.Servlet").
      */
-    public static final String SERVICE_NAME = "javax.servlet.Servlet"; //$NON-NLS-1$
+    public static final String SERVICE_NAME = "jakarta.servlet.Servlet"; //$NON-NLS-1$
 
     /**
      * The URI address label under which the OSGi Manager plugin is called by
@@ -158,7 +158,7 @@ public interface WebConsoleConstants
      * The name of the request attribute providing a mapping of labels to page
      * titles of registered console plugins (value is "felix.webconsole.labelMap").
      * This map may be used to render a navigation of the console plugins as the
-     * {@link AbstractWebConsolePlugin#renderTopNavigation(javax.servlet.http.HttpServletRequest, java.io.PrintWriter)}
+     * {@link AbstractWebConsolePlugin#renderTopNavigation(jakarta.servlet.http.HttpServletRequest, java.io.PrintWriter)}
      * method does.
      * <p>
      * The type of this request attribute is <code>Map&lt;String, String&gt;</code>.
@@ -172,8 +172,8 @@ public interface WebConsoleConstants
      * for the request (value is "felix.webconsole.variable.resolver").
      *
      * @see VariableResolver
-     * @see WebConsoleUtil#getVariableResolver(javax.servlet.ServletRequest)
-     * @see WebConsoleUtil#setVariableResolver(javax.servlet.ServletRequest, VariableResolver)
+     * @see WebConsoleUtil#getVariableResolver(jakarta.servlet.ServletRequest)
+     * @see WebConsoleUtil#setVariableResolver(jakarta.servlet.ServletRequest, VariableResolver)
      * @since 3.0
      */
     static final String ATTR_CONSOLE_VARIABLE_RESOLVER = "felix.webconsole.variable.resolver"; //$NON-NLS-1$

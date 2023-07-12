@@ -95,6 +95,7 @@
             <version>1.1.0</version>
             <scope>provided</scope>
         </dependency>
+        <!-- TODO: change to 2.x version of 'commons-fileupload' once released (or use snapshot instead) -->
         <dependency>
             <groupId>commons-fileupload</groupId>
             <artifactId>commons-fileupload</artifactId>

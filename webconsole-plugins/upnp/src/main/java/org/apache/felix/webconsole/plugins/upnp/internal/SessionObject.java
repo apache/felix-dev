@@ -22,8 +22,8 @@ import java.util.HashMap;
 import java.util.Hashtable;
 import java.util.Map;
 
-import javax.servlet.http.HttpSessionBindingEvent;
-import javax.servlet.http.HttpSessionBindingListener;
+import jakarta.servlet.http.HttpSessionBindingEvent;
+import jakarta.servlet.http.HttpSessionBindingListener;
 
 import org.osgi.framework.BundleContext;
 import org.osgi.framework.InvalidSyntaxException;
@@ -59,7 +59,7 @@ final class SessionObject implements HttpSessionBindingListener, UPnPEventListen
     }
 
     /**
-     * @see javax.servlet.http.HttpSessionBindingListener#valueBound(javax.servlet.http.HttpSessionBindingEvent)
+     * @see jakarta.servlet.http.HttpSessionBindingListener#valueBound(jakarta.servlet.http.HttpSessionBindingEvent)
      */
     public void valueBound(HttpSessionBindingEvent event)
     {
@@ -67,7 +67,7 @@ final class SessionObject implements HttpSessionBindingListener, UPnPEventListen
     }
 
     /**
-     * @see javax.servlet.http.HttpSessionBindingListener#valueUnbound(javax.servlet.http.HttpSessionBindingEvent)
+     * @see jakarta.servlet.http.HttpSessionBindingListener#valueUnbound(jakarta.servlet.http.HttpSessionBindingEvent)
      */
     public final void valueUnbound(HttpSessionBindingEvent event)
     {

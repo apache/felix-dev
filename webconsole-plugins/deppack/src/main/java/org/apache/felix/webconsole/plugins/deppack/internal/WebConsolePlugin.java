@@ -21,11 +21,11 @@ import java.io.PrintWriter;
 import java.io.StringWriter;
 import java.util.Map;
 
-import javax.servlet.ServletException;
-import javax.servlet.http.HttpServletRequest;
-import javax.servlet.http.HttpServletResponse;
+import jakarta.servlet.ServletException;
+import jakarta.servlet.http.HttpServletRequest;
+import jakarta.servlet.http.HttpServletResponse;
 
-import org.apache.commons.fileupload.FileItem;
+import org.apache.commons.fileupload2.FileItem;
 import org.apache.felix.webconsole.AbstractWebConsolePlugin;
 import org.apache.felix.webconsole.DefaultVariableResolver;
 import org.apache.felix.webconsole.SimpleWebConsolePlugin;
@@ -73,7 +73,7 @@ class WebConsolePlugin extends SimpleWebConsolePlugin
     }
 
     /**
-     * @see javax.servlet.http.HttpServlet#doPost(javax.servlet.http.HttpServletRequest, javax.servlet.http.HttpServletResponse)
+     * @see jakarta.servlet.http.HttpServlet#doPost(jakarta.servlet.http.HttpServletRequest, jakarta.servlet.http.HttpServletResponse)
      */
     protected void doPost(HttpServletRequest req, HttpServletResponse resp)
         throws ServletException, IOException
@@ -156,7 +156,7 @@ class WebConsolePlugin extends SimpleWebConsolePlugin
     }
 
     /**
-     * @see org.apache.felix.webconsole.AbstractWebConsolePlugin#renderContent(javax.servlet.http.HttpServletRequest, javax.servlet.http.HttpServletResponse)
+     * @see org.apache.felix.webconsole.AbstractWebConsolePlugin#renderContent(jakarta.servlet.http.HttpServletRequest, jakarta.servlet.http.HttpServletResponse)
      */
     protected void renderContent(HttpServletRequest request, HttpServletResponse response)
         throws ServletException, IOException

@@ -24,9 +24,9 @@
         Import Service org.osgi.service.log.LogService
     </require>
     <require extend="false"
-        filter="(service=javax.servlet.Servlet)"
+        filter="(service=jakarta.servlet.Servlet)"
         multiple="true" name="service" optional="true">
-        Import Service javax.servlet.Servlet
+        Import Service jakarta.servlet.Servlet
     </require>
     <require extend="false"
         filter="(service=org.apache.felix.webconsole.Render)"
@@ -37,11 +37,6 @@
         filter="(service=org.apache.felix.webconsole.Action)"
         multiple="true" name="service" optional="true">
         Import Service org.apache.felix.webconsole.Action
-    </require>
-    <require extend="false"
-        filter="(service=org.osgi.service.http.HttpService)"
-        multiple="false" name="service" optional="false">
-        Import Service org.osgi.service.http.HttpService
     </require>
     <capability name="service">
         <p n="service" v="org.osgi.service.cm.ManagedService" />

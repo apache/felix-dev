@@ -69,7 +69,7 @@
                             ${project.artifactId}
                         </Bundle-SymbolicName>
                         <Import-Package>
-                           javax.servlet.*;version=2.3,
+                           jakarta.servlet.*;version="[5.0,6)",
                            org.apache.commons.io; version="[1.4,3)",
                            *
                         </Import-Package>
@@ -165,35 +165,19 @@
     <dependency>
       <groupId>org.apache.felix</groupId>
       <artifactId>org.apache.felix.framework</artifactId>
-      <version>5.4.0</version>
+      <version>7.0.5</version>
       <scope>test</scope>
     </dependency>
-
     <dependency>
       <groupId>org.osgi</groupId>
-      <artifactId>org.osgi.core</artifactId>
-      <version>4.2.0</version>
+      <artifactId>osgi.core</artifactId>
+      <version>8.0.0</version>
       <scope>provided</scope>
     </dependency>
-    <dependency>
-      <groupId>org.osgi</groupId>
-      <artifactId>org.osgi.compendium</artifactId>
-      <version>4.2.0</version>
-      <scope>provided</scope>
-    </dependency>
-
     <dependency>
       <groupId>jakarta.servlet</groupId>
       <artifactId>jakarta.servlet-api</artifactId>
       <version>5.0.0</version>
-      <scope>provided</scope>
-    </dependency>    
-
-    <!-- TODO: remove this - only 'jakarta.servlet-api' is used -->    
-    <dependency>
-      <groupId>javax.servlet</groupId>
-      <artifactId>javax.servlet-api</artifactId>
-      <version>4.0.1</version>
       <scope>provided</scope>
     </dependency>
     <dependency>
@@ -214,12 +198,10 @@
       <version>1.11.8</version>
       <scope>provided</scope>
     </dependency>
-
-    <!-- TODO: change to 2.x version of 'commons-fileupload' once released (or use snapshot instead) -->
     <dependency>
-      <groupId>commons-fileupload</groupId>
-      <artifactId>commons-fileupload</artifactId>
-      <version>1.5</version>
+      <groupId>org.apache.commons</groupId>
+      <artifactId>commons-fileupload2</artifactId>
+      <version>2.0-SNAPSHOT</version>
       <scope>provided</scope>
     </dependency>
 

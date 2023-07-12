@@ -20,6 +20,7 @@ package org.apache.felix.hc.core.impl.servlet;
 import org.osgi.service.metatype.annotations.AttributeDefinition;
 import org.osgi.service.metatype.annotations.ObjectClassDefinition;
 import org.osgi.service.metatype.annotations.Option;
+import org.osgi.service.servlet.whiteboard.HttpWhiteboardConstants;
 
 @ObjectClassDefinition(name = "Apache Felix Health Check Executor Servlet", description = "Serializes health check results into html, json or txt format")
 @interface HealthCheckExecutorServletConfiguration {
@@ -29,7 +30,13 @@ import org.osgi.service.metatype.annotations.Option;
     @AttributeDefinition(name = "Path", description = "Servlet path (defaults to " + SERVLET_PATH_DEFAULT
             + " in order to not be accessible via Apache/Internet)")
     String servletPath() default SERVLET_PATH_DEFAULT;
+    
+    @AttributeDefinition(name = "Servlet Context Filter", description = "Needs to be set to correct whiteboard servlet context helper service filter expression (e.g. '(osgi.http.whiteboard.context.name=default)'")
+    String osgi_http_whiteboard_context_select() default "(" + HttpWhiteboardConstants.HTTP_WHITEBOARD_CONTEXT_NAME + "=*)";
 
+    @AttributeDefinition(name = "Servlet Whiteboard Filter", description = "Needs to be set to correct servlet whiteboard filter expression")
+    String osgi_http_whiteboard_target();    
+    
     @AttributeDefinition(name = "Http Status Mapping", description = "Maps HC result status values to http response codes. Can be overwritten via request parameter 'httpStatus'")
     String httpStatusMapping() default "OK:200,WARN:200,CRITICAL:503,TEMPORARILY_UNAVAILABLE:503,HEALTH_CHECK_ERROR:500";
 

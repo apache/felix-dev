@@ -28,7 +28,7 @@ import java.util.Map;
  * default implementation of the {@link VariableResolver} interface. It may
  * be used by plugins to implement the interface for the request and is also
  * used by the
- * {@link WebConsoleUtil#getVariableResolver(javax.servlet.ServletRequest)}
+ * {@link WebConsoleUtil#getVariableResolver(jakarta.servlet.ServletRequest)}
  * as the variable resolver if none has yet been assigned to the request.
  */
 public class DefaultVariableResolver extends HashMap implements VariableResolver

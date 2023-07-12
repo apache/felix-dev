@@ -18,25 +18,25 @@
  */
 package org.apache.felix.webconsole.internal.servlet;
 
+import static org.junit.Assert.assertEquals;
+
+import java.lang.reflect.Method;
+
 import org.apache.felix.webconsole.WebConsoleSecurityProvider;
 import org.junit.Test;
 import org.mockito.Mockito;
 import org.osgi.framework.BundleContext;
-import org.osgi.service.http.HttpService;
-
-import java.lang.reflect.Method;
-
-import static org.junit.Assert.assertEquals;
 
 public class OsgiManagerHttpContextTest {
+    
     @Test
     public void testAuthenticate() throws Exception {
         BundleContext bc = Mockito.mock(BundleContext.class);
-        HttpService svc = Mockito.mock(HttpService.class);
-        OsgiManagerHttpContext ctx = new OsgiManagerHttpContext(svc, null, "blah");
 
-        Method authenticateMethod = OsgiManagerHttpContext.class.getDeclaredMethod(
-                "authenticate", new Class [] {WebConsoleSecurityProvider.class, String.class, byte[].class});
+        OsgiManagerHttpContext ctx = new OsgiManagerHttpContext(bc.getBundle(), null, "blah");
+
+        Method authenticateMethod = OsgiManagerHttpContext.class.getDeclaredMethod("authenticate",
+                new Class[] { WebConsoleSecurityProvider.class, String.class, byte[].class });
         authenticateMethod.setAccessible(true);
 
         BasicWebConsoleSecurityProvider lastResortSp = new BasicWebConsoleSecurityProvider(bc, "foo", "bar", "blah");
@@ -45,8 +45,8 @@ public class OsgiManagerHttpContextTest {
 
         WebConsoleSecurityProvider sp = new TestSecurityProvider();
         assertEquals(true, authenticateMethod.invoke(ctx, sp, "xxx", "yyy".getBytes()));
-        assertEquals("The default username and password should not be accepted with security provider",
-                false, authenticateMethod.invoke(ctx, sp, "foo", "bar".getBytes()));
+        assertEquals("The default username and password should not be accepted with security provider", false,
+                authenticateMethod.invoke(ctx, sp, "foo", "bar".getBytes()));
     }
 
     @Test
@@ -54,15 +54,15 @@ public class OsgiManagerHttpContextTest {
         BundleContext bc = Mockito.mock(BundleContext.class);
         Mockito.when(bc.getProperty(OsgiManager.FRAMEWORK_PROP_SECURITY_PROVIDERS)).thenReturn("a");
 
-        HttpService svc = Mockito.mock(HttpService.class);
-        OsgiManagerHttpContext ctx = new OsgiManagerHttpContext(svc, null, "blah");
+        OsgiManagerHttpContext ctx = new OsgiManagerHttpContext(bc.getBundle(), null, "blah");
 
-        Method authenticateMethod = OsgiManagerHttpContext.class.getDeclaredMethod(
-                "authenticate", new Class [] {WebConsoleSecurityProvider.class, String.class, byte[].class});
+        Method authenticateMethod = OsgiManagerHttpContext.class.getDeclaredMethod("authenticate",
+                new Class[] { WebConsoleSecurityProvider.class, String.class, byte[].class });
         authenticateMethod.setAccessible(true);
 
-        assertEquals("A required security provider is configured, logging in using "
-                + "username and password should be disabled",
+        assertEquals(
+                "A required security provider is configured, logging in using "
+                        + "username and password should be disabled",
                 false, authenticateMethod.invoke(ctx, null, "foo", "bar".getBytes()));
         assertEquals(false, authenticateMethod.invoke(ctx, null, "foo", "blah".getBytes()));
         assertEquals(false, authenticateMethod.invoke(ctx, null, "blah", "bar".getBytes()));

@@ -18,10 +18,8 @@
  */
 package org.apache.felix.webconsole;
 
-import javax.servlet.http.HttpServletRequest;
-import javax.servlet.http.HttpServletResponse;
-
-import org.osgi.service.http.HttpContext;
+import jakarta.servlet.http.HttpServletRequest;
+import jakarta.servlet.http.HttpServletResponse;
 
 /**
  * The <code>WebConsoleSecurityProvider3</code> extends the

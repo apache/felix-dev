@@ -25,7 +25,7 @@ package org.apache.felix.webconsole;
  * variables in the generated content.
  * <p>
  * Plugins should call the
- * {@link WebConsoleUtil#setVariableResolver(javax.servlet.ServletRequest, VariableResolver)}
+ * {@link WebConsoleUtil#setVariableResolver(jakarta.servlet.ServletRequest, VariableResolver)}
  * method to provide their implementation for variable resolution.
  * <p>
  * The main use of such a variable resolver is when a plugin is using a static
@@ -37,8 +37,8 @@ package org.apache.felix.webconsole;
  * <code>ServletRequest.getWriter()</code> method. Otherwise the variable
  * resolver will not be used for resolving variables.
  *
- * @see WebConsoleUtil#getVariableResolver(javax.servlet.ServletRequest)
- * @see WebConsoleUtil#setVariableResolver(javax.servlet.ServletRequest, VariableResolver)
+ * @see WebConsoleUtil#getVariableResolver(jakarta.servlet.ServletRequest)
+ * @see WebConsoleUtil#setVariableResolver(jakarta.servlet.ServletRequest, VariableResolver)
  */
 public interface VariableResolver
 {

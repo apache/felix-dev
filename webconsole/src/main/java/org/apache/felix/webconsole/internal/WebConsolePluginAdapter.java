@@ -22,9 +22,9 @@ package org.apache.felix.webconsole.internal;
 import java.io.IOException;
 import java.util.*;
 
-import javax.servlet.*;
-import javax.servlet.http.HttpServletRequest;
-import javax.servlet.http.HttpServletResponse;
+import jakarta.servlet.*;
+import jakarta.servlet.http.HttpServletRequest;
+import jakarta.servlet.http.HttpServletResponse;
 
 import org.apache.felix.webconsole.AbstractWebConsolePlugin;
 import org.apache.felix.webconsole.WebConsoleConstants;
@@ -115,7 +115,7 @@ public class WebConsolePluginAdapter extends AbstractWebConsolePlugin
      * Call the plugin servlet's service method to render the content of this
      * page.
      *
-     * @see org.apache.felix.webconsole.AbstractWebConsolePlugin#renderContent(javax.servlet.http.HttpServletRequest, javax.servlet.http.HttpServletResponse)
+     * @see org.apache.felix.webconsole.AbstractWebConsolePlugin#renderContent(jakarta.servlet.http.HttpServletRequest, jakarta.servlet.http.HttpServletResponse)
      */
     protected void renderContent( HttpServletRequest req, HttpServletResponse res ) throws ServletException,
         IOException
@@ -142,7 +142,7 @@ public class WebConsolePluginAdapter extends AbstractWebConsolePlugin
     /**
      * Initializes this servlet as well as the plugin servlet.
      *
-     * @see javax.servlet.GenericServlet#init(javax.servlet.ServletConfig)
+     * @see jakarta.servlet.GenericServlet#init(jakarta.servlet.ServletConfig)
      */
     public void init( ServletConfig config ) throws ServletException
     {
@@ -179,7 +179,7 @@ public class WebConsolePluginAdapter extends AbstractWebConsolePlugin
      * method is called without any decorations and without setting any
      * response headers.
      *
-     * @see org.apache.felix.webconsole.AbstractWebConsolePlugin#isHtmlRequest(javax.servlet.http.HttpServletRequest)
+     * @see org.apache.felix.webconsole.AbstractWebConsolePlugin#isHtmlRequest(jakarta.servlet.http.HttpServletRequest)
      */
     protected boolean isHtmlRequest( final HttpServletRequest request )
     {
@@ -201,7 +201,7 @@ public class WebConsolePluginAdapter extends AbstractWebConsolePlugin
      * {@link #renderContent(HttpServletRequest, HttpServletResponse)}
      * method.
      *
-     * @see javax.servlet.http.HttpServlet#service(javax.servlet.ServletRequest, javax.servlet.ServletResponse)
+     * @see jakarta.servlet.http.HttpServlet#service(jakarta.servlet.ServletRequest, jakarta.servlet.ServletResponse)
      */
     public void service( ServletRequest req, ServletResponse resp ) throws ServletException, IOException
     {
@@ -221,7 +221,7 @@ public class WebConsolePluginAdapter extends AbstractWebConsolePlugin
     /**
      * Destroys this servlet as well as the plugin servlet.
      *
-     * @see javax.servlet.GenericServlet#destroy()
+     * @see jakarta.servlet.GenericServlet#destroy()
      */
     public void destroy()
     {

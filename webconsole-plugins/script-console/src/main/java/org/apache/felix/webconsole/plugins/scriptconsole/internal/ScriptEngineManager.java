@@ -204,8 +204,8 @@ class ScriptEngineManager implements BundleListener, ServiceTrackerCustomizer
             {
                 try
                 {
-                    Class<ScriptEngineFactory> clazz = bundle.loadClass(className);
-                    ScriptEngineFactory spi = clazz.newInstance();
+                    Class<?> clazz = bundle.loadClass(className);
+                    ScriptEngineFactory spi = (ScriptEngineFactory) clazz.getDeclaredConstructor().newInstance();
                     registerFactory(mgr, spi, null);
                     extensions.addAll(spi.getExtensions());
                 }

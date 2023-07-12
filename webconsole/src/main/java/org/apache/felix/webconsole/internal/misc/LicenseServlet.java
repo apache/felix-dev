@@ -35,9 +35,9 @@ import java.util.Locale;
 import java.util.zip.ZipEntry;
 import java.util.zip.ZipInputStream;
 
-import javax.servlet.ServletException;
-import javax.servlet.http.HttpServletRequest;
-import javax.servlet.http.HttpServletResponse;
+import jakarta.servlet.ServletException;
+import jakarta.servlet.http.HttpServletRequest;
+import jakarta.servlet.http.HttpServletResponse;
 
 import org.apache.felix.utils.json.JSONWriter;
 import org.apache.felix.utils.manifest.Clause;
@@ -86,7 +86,7 @@ public final class LicenseServlet extends SimpleWebConsolePlugin implements Osgi
     }
 
     /**
-     * @see org.apache.felix.webconsole.AbstractWebConsolePlugin#doGet(javax.servlet.http.HttpServletRequest, javax.servlet.http.HttpServletResponse)
+     * @see org.apache.felix.webconsole.AbstractWebConsolePlugin#doGet(jakarta.servlet.http.HttpServletRequest, jakarta.servlet.http.HttpServletResponse)
      */
     protected void doGet(HttpServletRequest request, HttpServletResponse response)
             throws ServletException, IOException
@@ -107,7 +107,7 @@ public final class LicenseServlet extends SimpleWebConsolePlugin implements Osgi
 
 
     /**
-     * @see org.apache.felix.webconsole.AbstractWebConsolePlugin#renderContent(javax.servlet.http.HttpServletRequest, javax.servlet.http.HttpServletResponse)
+     * @see org.apache.felix.webconsole.AbstractWebConsolePlugin#renderContent(jakarta.servlet.http.HttpServletRequest, jakarta.servlet.http.HttpServletResponse)
      */
     protected void renderContent( HttpServletRequest request, HttpServletResponse res ) throws IOException
     {

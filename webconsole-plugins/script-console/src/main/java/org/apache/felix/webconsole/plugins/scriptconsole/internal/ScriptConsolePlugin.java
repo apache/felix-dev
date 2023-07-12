@@ -18,7 +18,28 @@
  */
 package org.apache.felix.webconsole.plugins.scriptconsole.internal;
 
-import org.apache.commons.fileupload.FileItem;
+import java.io.IOException;
+import java.io.InputStream;
+import java.io.PrintWriter;
+import java.io.Reader;
+import java.io.StringReader;
+import java.io.StringWriter;
+import java.io.Writer;
+import java.util.ArrayList;
+import java.util.Dictionary;
+import java.util.Hashtable;
+import java.util.List;
+import java.util.Map;
+
+import javax.script.Bindings;
+import javax.script.ScriptContext;
+import javax.script.ScriptEngine;
+import javax.script.ScriptEngineFactory;
+import javax.script.ScriptException;
+import javax.script.SimpleBindings;
+import javax.script.SimpleScriptContext;
+
+import org.apache.commons.fileupload2.FileItem;
 import org.apache.commons.io.IOUtils;
 import org.apache.felix.utils.json.JSONWriter;
 import org.apache.felix.webconsole.AbstractWebConsolePlugin;
@@ -30,16 +51,10 @@ import org.osgi.framework.Constants;
 import org.osgi.framework.ServiceRegistration;
 import org.osgi.service.log.LogService;
 
-import javax.script.*;
-import javax.servlet.Servlet;
-import javax.servlet.ServletException;
-import javax.servlet.http.HttpServletRequest;
-import javax.servlet.http.HttpServletResponse;
-import java.io.*;
-import java.util.ArrayList;
-import java.util.List;
-import java.util.Map;
-import java.util.Properties;
+import jakarta.servlet.Servlet;
+import jakarta.servlet.ServletException;
+import jakarta.servlet.http.HttpServletRequest;
+import jakarta.servlet.http.HttpServletResponse;
 
 class ScriptConsolePlugin extends SimpleWebConsolePlugin
 {
@@ -52,7 +67,7 @@ class ScriptConsolePlugin extends SimpleWebConsolePlugin
     private final String TEMPLATE;
     private final Logger log;
     private final ScriptEngineManager scriptEngineManager;
-    private final ServiceRegistration registration;
+    private final ServiceRegistration<Servlet> registration;
 
     public ScriptConsolePlugin(BundleContext bundleContext, Logger logger, ScriptEngineManager scriptEngineManager)
     {
@@ -62,16 +77,14 @@ class ScriptConsolePlugin extends SimpleWebConsolePlugin
         TEMPLATE = readTemplateFile("/templates/script-console.html");
         super.activate(bundleContext);
 
-        Properties props = new Properties();
-        props.put(Constants.SERVICE_VENDOR, "Apache Software Foundation");
-        props.put(Constants.SERVICE_DESCRIPTION, "Script Console Web Console Plugin");
-        props.put("felix.webconsole.label", ScriptConsolePlugin.NAME);
-        props.put("felix.webconsole.title", "Script Console");
-
-        registration = getBundleContext().registerService(Servlet.class.getName(), this,
-            props);
+        final Dictionary<String, Object> servletProps = new Hashtable<>();
+        servletProps.put(Constants.SERVICE_VENDOR, "Apache Software Foundation");
+        servletProps.put(Constants.SERVICE_DESCRIPTION, "Script Console Web Console Plugin");
+        servletProps.put("felix.webconsole.label", ScriptConsolePlugin.NAME);
+        servletProps.put("felix.webconsole.title", "Script Console");        
+        
+        registration = getBundleContext().registerService(Servlet.class, this, servletProps);
     }
-
 
     public String getCategory()
     {

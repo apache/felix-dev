@@ -33,7 +33,7 @@ import java.util.Set;
 import java.util.Vector;
 import java.util.regex.Pattern;
 
-import javax.servlet.http.HttpServletRequest;
+import jakarta.servlet.http.HttpServletRequest;
 
 import org.apache.felix.webconsole.internal.misc.ServletSupport;
 import org.apache.felix.webconsole.spi.ConfigurationHandler;

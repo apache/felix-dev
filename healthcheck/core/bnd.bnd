@@ -10,7 +10,7 @@ Bundle-Vendor: The Apache Software Foundation
 
 Import-Package:\
   org.quartz*;resolution:=optional,\
-  javax.servlet*;resolution:=optional,\
+  jakarta.servlet*;resolution:=optional,\
   *
 
 Conditional-Package: org.apache.felix.utils.*

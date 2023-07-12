@@ -24,8 +24,8 @@ import java.util.Comparator;
 import java.util.Enumeration;
 import java.util.Locale;
 
-import javax.servlet.http.HttpServletRequest;
-import javax.servlet.http.HttpServletResponse;
+import jakarta.servlet.http.HttpServletRequest;
+import jakarta.servlet.http.HttpServletResponse;
 
 import org.osgi.framework.Bundle;
 import org.osgi.framework.Constants;

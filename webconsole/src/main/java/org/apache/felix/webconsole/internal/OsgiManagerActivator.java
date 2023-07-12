@@ -22,12 +22,14 @@ package org.apache.felix.webconsole.internal;
 import org.apache.felix.webconsole.internal.servlet.OsgiManager;
 import org.osgi.framework.BundleActivator;
 import org.osgi.framework.BundleContext;
+import org.osgi.service.servlet.whiteboard.annotations.RequireHttpWhiteboard;
 
 
 /**
  * This is the main, starting class of the Bundle. It initializes and disposes
  * the Apache Web Console upon bundle lifecycle requests.
  */
+@RequireHttpWhiteboard
 public class OsgiManagerActivator implements BundleActivator
 {
 
@@ -45,8 +47,8 @@ public class OsgiManagerActivator implements BundleActivator
         osgiManager = new OsgiManager( bundleContext );
         try
         {
-            final Class activatorClass = bundleContext.getBundle().loadClass(STATUS_ACTIVATOR);
-            this.statusActivator = (BundleActivator) activatorClass.newInstance();
+            final Class<?> activatorClass = bundleContext.getBundle().loadClass(STATUS_ACTIVATOR);
+            this.statusActivator = (BundleActivator) activatorClass.getDeclaredConstructor().newInstance();
 
         }
         catch (Throwable t)

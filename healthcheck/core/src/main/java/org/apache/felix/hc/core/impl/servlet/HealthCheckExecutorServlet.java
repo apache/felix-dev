@@ -17,7 +17,9 @@
  */
 package org.apache.felix.hc.core.impl.servlet;
 
+import static org.osgi.service.servlet.whiteboard.HttpWhiteboardConstants.HTTP_WHITEBOARD_CONTEXT_SELECT;
 import static org.osgi.service.servlet.whiteboard.HttpWhiteboardConstants.HTTP_WHITEBOARD_SERVLET_PATTERN;
+import static org.osgi.service.servlet.whiteboard.HttpWhiteboardConstants.HTTP_WHITEBOARD_TARGET;
 
 import java.io.IOException;
 import java.io.PrintWriter;
@@ -139,6 +141,10 @@ public class HealthCheckExecutorServlet extends HttpServlet {
     private final List<ServiceRegistration<Servlet>> servletRegistrations = new ArrayList<>();
 
     private String servletPath;
+    
+    private String whiteboardContextSelect;
+    
+    private String whiteboardTarget;    
 
     private String corsAccessControlAllowOrigin;
 
@@ -150,6 +156,8 @@ public class HealthCheckExecutorServlet extends HttpServlet {
     private String[] allowedFormats;
     private boolean defaultCombineTagsWithOr;
     private boolean disableRequestConfiguration;
+    
+    private BundleContext bundleContext;
 
     @Reference
     HealthCheckExecutor healthCheckExecutor;
@@ -166,12 +174,12 @@ public class HealthCheckExecutorServlet extends HttpServlet {
     @Reference
     ResultTxtVerboseSerializer verboseTxtSerializer;
     
-    private BundleContext bundleContext;
-
     @Activate
     protected final void activate(final HealthCheckExecutorServletConfiguration configuration, final BundleContext bundleContext) {
         this.bundleContext = bundleContext;
         this.servletPath = configuration.servletPath();
+        this.whiteboardContextSelect = configuration.osgi_http_whiteboard_context_select();
+        this.whiteboardTarget = configuration.osgi_http_whiteboard_target();
         this.defaultStatusMapping = getStatusMapping(configuration.httpStatusMapping());
         this.servletDefaultTimeout = configuration.timeout();
         this.servletDefaultTags = configuration.tags();
@@ -225,8 +233,15 @@ public class HealthCheckExecutorServlet extends HttpServlet {
 
                 final Dictionary<String, Object> servletProps = new Hashtable<>();
                 servletProps.put(HTTP_WHITEBOARD_SERVLET_PATTERN, servlet.getKey());
-                
-                servletRegistrations.add(this.bundleContext.registerService(Servlet.class, servlet.getValue(), servletProps));
+                if (this.whiteboardContextSelect != null) {
+                    servletProps.put(HTTP_WHITEBOARD_CONTEXT_SELECT, this.whiteboardContextSelect);
+                }
+                if (this.whiteboardTarget != null) {
+                    servletProps.put(HTTP_WHITEBOARD_TARGET, this.whiteboardTarget);
+                }
+
+                servletRegistrations
+                        .add(this.bundleContext.registerService(Servlet.class, servlet.getValue(), servletProps));
             } catch (Exception e) {
                 LOG.error("Could not register health check servlet: " + e, e);
             }

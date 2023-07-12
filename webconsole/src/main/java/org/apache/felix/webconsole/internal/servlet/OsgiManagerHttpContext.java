@@ -24,53 +24,42 @@ import static org.apache.felix.webconsole.internal.servlet.BasicWebConsoleSecuri
 import java.io.IOException;
 import java.net.URL;
 
-import javax.servlet.http.HttpServletRequest;
-import javax.servlet.http.HttpServletResponse;
-
 import org.apache.felix.webconsole.User;
 import org.apache.felix.webconsole.WebConsoleSecurityProvider;
 import org.apache.felix.webconsole.WebConsoleSecurityProvider2;
-import org.osgi.service.http.HttpContext;
-import org.osgi.service.http.HttpService;
+import org.osgi.framework.Bundle;
+import org.osgi.service.servlet.context.ServletContextHelper;
 import org.osgi.util.tracker.ServiceTracker;
 
+import jakarta.servlet.http.HttpServletRequest;
+import jakarta.servlet.http.HttpServletResponse;
 
-final class OsgiManagerHttpContext implements HttpContext
+final class OsgiManagerHttpContext extends ServletContextHelper
 {
-
-    private final HttpContext base;
-
     private final ServiceTracker<WebConsoleSecurityProvider, WebConsoleSecurityProvider> tracker;
 
     private final String realm;
 
-    OsgiManagerHttpContext(final HttpService httpService,
+    OsgiManagerHttpContext(final Bundle bundle,
             final ServiceTracker<WebConsoleSecurityProvider, WebConsoleSecurityProvider> tracker,
             final String realm)
     {
+        super(bundle);
         this.tracker = tracker;
         this.realm = realm;
-        this.base = httpService.createDefaultHttpContext();
-    }
+    }    
 
-
-    public String getMimeType( String name )
-    {
-        return this.base.getMimeType( name );
-    }
-
-
+    @Override
     public URL getResource( String name )
     {
-        URL url = this.base.getResource( name );
+        URL url = super.getResource( name );
         if ( url == null && name.endsWith( "/" ) )
         {
-            return this.base.getResource( name.substring( 0, name.length() - 1 ) );
+            return super.getResource( name.substring( 0, name.length() - 1 ) );
         }
         return url;
     }
-
-
+    
     /**
      * Checks the <code>Authorization</code> header of the request for Basic
      * authentication user name and password. If contained, the credentials are
@@ -85,6 +74,7 @@ final class OsgiManagerHttpContext implements HttpContext
      *            if authentication is required but not satisfied.
      * @return {@code} true if authentication is required and not satisfied by the request.
      */
+    @Override
     public boolean handleSecurity( final HttpServletRequest request, final HttpServletResponse response ) {
         final WebConsoleSecurityProvider provider = tracker.getService();
 
@@ -156,8 +146,8 @@ final class OsgiManagerHttpContext implements HttpContext
                         if ( authenticate( provider, username, userPass[1] ) )
                         {
                             // as per the spec, set attributes
-                            request.setAttribute( HttpContext.AUTHENTICATION_TYPE, HttpServletRequest.BASIC_AUTH );
-                            request.setAttribute( HttpContext.REMOTE_USER, username );
+                            request.setAttribute( ServletContextHelper.AUTHENTICATION_TYPE, HttpServletRequest.BASIC_AUTH );
+                            request.setAttribute( ServletContextHelper.REMOTE_USER, username );
 
                             // set web console user attribute
                             request.setAttribute( WebConsoleSecurityProvider2.USER_ATTRIBUTE, username );

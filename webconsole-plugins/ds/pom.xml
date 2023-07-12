@@ -99,17 +99,10 @@
             <scope>provided</scope>
         </dependency>
 
-        <!-- TODO: remove this - only 'jakarta.servlet-api' is used -->
-        <dependency>
-            <groupId>javax.servlet</groupId>
-            <artifactId>javax.servlet-api</artifactId>
-            <version>4.0.1</version>
-            <scope>provided</scope>
-        </dependency>
         <dependency>
             <groupId>org.osgi</groupId>
             <artifactId>osgi.core</artifactId>
-            <version>6.0.0</version>
+            <version>8.0.0</version>
             <scope>provided</scope>
         </dependency>
         <dependency>
@@ -127,7 +120,7 @@
         <dependency>
             <groupId>org.osgi</groupId>
             <artifactId>org.osgi.service.metatype</artifactId>
-            <version>1.3.0</version>
+            <version>1.4.1</version>
             <scope>provided</scope>
         </dependency>
         <dependency>
@@ -151,7 +144,7 @@
         <dependency>
             <groupId>org.apache.felix</groupId>
             <artifactId>org.apache.felix.utils</artifactId>
-            <version>1.9.0</version>
+            <version>1.11.8</version>
             <scope>provided</scope>
         </dependency>
     </dependencies>

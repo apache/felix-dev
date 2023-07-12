@@ -21,7 +21,7 @@ package org.apache.felix.webconsole.plugins.obr.internal;
 
 import java.io.IOException;
 
-import javax.servlet.ServletException;
+import jakarta.servlet.ServletException;
 import org.apache.felix.webconsole.AbstractWebConsolePlugin;
 import org.osgi.framework.Bundle;
 import org.osgi.framework.BundleContext;

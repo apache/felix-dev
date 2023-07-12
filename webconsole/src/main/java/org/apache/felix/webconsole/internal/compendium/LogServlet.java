@@ -23,9 +23,9 @@ import java.io.PrintStream;
 import java.io.PrintWriter;
 import java.util.Enumeration;
 
-import javax.servlet.ServletException;
-import javax.servlet.http.HttpServletRequest;
-import javax.servlet.http.HttpServletResponse;
+import jakarta.servlet.ServletException;
+import jakarta.servlet.http.HttpServletRequest;
+import jakarta.servlet.http.HttpServletResponse;
 
 import org.apache.felix.utils.json.JSONWriter;
 import org.apache.felix.webconsole.SimpleWebConsolePlugin;
@@ -64,7 +64,7 @@ public class LogServlet extends SimpleWebConsolePlugin implements OsgiManagerPlu
 
 
     /**
-     * @see javax.servlet.http.HttpServlet#doPost(javax.servlet.http.HttpServletRequest, javax.servlet.http.HttpServletResponse)
+     * @see jakarta.servlet.http.HttpServlet#doPost(jakarta.servlet.http.HttpServletRequest, jakarta.servlet.http.HttpServletResponse)
      */
     protected void doPost( HttpServletRequest req, HttpServletResponse resp ) throws IOException
     {
@@ -119,7 +119,7 @@ public class LogServlet extends SimpleWebConsolePlugin implements OsgiManagerPlu
 
 
     /**
-     * @see org.apache.felix.webconsole.AbstractWebConsolePlugin#doGet(javax.servlet.http.HttpServletRequest, javax.servlet.http.HttpServletResponse)
+     * @see org.apache.felix.webconsole.AbstractWebConsolePlugin#doGet(jakarta.servlet.http.HttpServletRequest, jakarta.servlet.http.HttpServletResponse)
      */
     protected void doGet( HttpServletRequest request, HttpServletResponse response ) throws ServletException,
     IOException
@@ -140,7 +140,7 @@ public class LogServlet extends SimpleWebConsolePlugin implements OsgiManagerPlu
 
 
     /**
-     * @see org.apache.felix.webconsole.AbstractWebConsolePlugin#renderContent(javax.servlet.http.HttpServletRequest, javax.servlet.http.HttpServletResponse)
+     * @see org.apache.felix.webconsole.AbstractWebConsolePlugin#renderContent(jakarta.servlet.http.HttpServletRequest, jakarta.servlet.http.HttpServletResponse)
      */
     protected void renderContent( HttpServletRequest request, HttpServletResponse response ) throws IOException
     {

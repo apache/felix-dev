@@ -23,9 +23,9 @@ import java.io.IOException;
 import java.io.PrintWriter;
 import java.util.ResourceBundle;
 
-import javax.servlet.ServletRequest;
-import javax.servlet.http.HttpServletResponse;
-import javax.servlet.http.HttpServletResponseWrapper;
+import jakarta.servlet.ServletRequest;
+import jakarta.servlet.http.HttpServletResponse;
+import jakarta.servlet.http.HttpServletResponseWrapper;
 
 import org.apache.felix.webconsole.VariableResolver;
 import org.apache.felix.webconsole.WebConsoleUtil;
@@ -77,7 +77,7 @@ public class FilteringResponseWrapper extends HttpServletResponseWrapper
      * strings enclosed in <code>${}</code> according to the resource bundle
      * configured for this response.
      *
-     * @see javax.servlet.ServletResponseWrapper#getWriter()
+     * @see jakarta.servlet.ServletResponseWrapper#getWriter()
      */
     public PrintWriter getWriter() throws IOException
     {

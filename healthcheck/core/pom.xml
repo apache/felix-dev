@@ -51,12 +51,11 @@
         <connection>scm:git:https://github.com/apache/felix-dev.git</connection>
         <developerConnection>scm:git:https://github.com/apache/felix-dev.git</developerConnection>
         <url>https://gitbox.apache.org/repos/asf?p=felix-dev.git</url>
-      <tag>HEAD</tag>
-  </scm>
+        <tag>HEAD</tag>
+    </scm>
 
     <build>
         <plugins>
-
             <plugin>
                 <groupId>biz.aQute.bnd</groupId>
                 <artifactId>bnd-maven-plugin</artifactId>
@@ -106,7 +105,6 @@
                     </execution>
                 </executions>
             </plugin>
-
             <plugin>
                 <groupId>org.apache.maven.plugins</groupId>
                 <artifactId>maven-failsafe-plugin</artifactId>
@@ -269,9 +267,10 @@
         <dependency>
             <groupId>org.apache.felix</groupId>
             <artifactId>org.apache.felix.framework</artifactId>
-            <version>6.0.5</version>
+            <version>7.0.5</version>
             <scope>test</scope>
         </dependency>
+        
         <!-- END test scope dependencies -->
 
     </dependencies>

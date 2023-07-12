@@ -19,12 +19,12 @@ package org.apache.felix.webconsole.internal.servlet;
 import java.io.IOException;
 import java.io.UnsupportedEncodingException;
 
-import javax.servlet.http.HttpServletRequest;
-import javax.servlet.http.HttpServletResponse;
+import jakarta.servlet.http.HttpServletRequest;
+import jakarta.servlet.http.HttpServletResponse;
 
 import org.apache.felix.webconsole.WebConsoleSecurityProvider2;
 import org.osgi.framework.BundleContext;
-import org.osgi.service.http.HttpContext;
+import org.osgi.service.servlet.context.ServletContextHelper;
 
 /**
  * Basic implementation of WebConsoleSecurityProvider to replace logic that
@@ -103,8 +103,8 @@ public class BasicWebConsoleSecurityProvider implements WebConsoleSecurityProvid
                         if ( authenticate( username, toString(userPass[1]) ) != null )
                         {
                             // as per the spec, set attributes
-                            request.setAttribute( HttpContext.AUTHENTICATION_TYPE, HttpServletRequest.BASIC_AUTH );
-                            request.setAttribute( HttpContext.REMOTE_USER, username );
+                            request.setAttribute( ServletContextHelper.AUTHENTICATION_TYPE, HttpServletRequest.BASIC_AUTH );
+                            request.setAttribute( ServletContextHelper.REMOTE_USER, username );
 
                             // set web console user attribute
                             request.setAttribute( WebConsoleSecurityProvider2.USER_ATTRIBUTE, username );

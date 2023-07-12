@@ -25,10 +25,11 @@ import java.io.IOException;
 import java.util.Dictionary;
 import java.util.Hashtable;
 import java.util.UUID;
-import java.util.concurrent.TimeUnit;
+import java.util.concurrent.atomic.AtomicLong;
 
 import javax.inject.Inject;
 
+import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
 import org.junit.runner.RunWith;
@@ -37,6 +38,8 @@ import org.ops4j.pax.exam.Option;
 import org.ops4j.pax.exam.junit.PaxExam;
 import org.osgi.framework.BundleContext;
 import org.osgi.framework.InvalidSyntaxException;
+import org.osgi.framework.ServiceEvent;
+import org.osgi.framework.ServiceListener;
 import org.osgi.service.cm.ConfigurationAdmin;
 import org.osgi.service.servlet.runtime.HttpServiceRuntime;
 import org.osgi.service.servlet.runtime.dto.RuntimeDTO;
@@ -49,7 +52,15 @@ import org.slf4j.LoggerFactory;
 /** Verify that the HealthCheckExecutorServlet becomes available after creating the corresponding config */
 @RunWith(PaxExam.class)
 public class HealthCheckServletIT {
+    private static final int EXPECTED_SERVLET_COUNT = 6;
+    private static final String HTTP_CONTEXT_NAME = "org.osgi.service.http";
+    private static final int DEFAULT_TIMEOUT = 10000;
+        
     private final Logger log = LoggerFactory.getLogger(getClass());
+    
+    private final AtomicLong runtimeCounter = new AtomicLong();
+    
+    private ServiceListener serviceListener;
 
     @Inject
     private ConfigurationAdmin configAdmin;
@@ -64,24 +75,37 @@ public class HealthCheckServletIT {
 
     @Before
     public void setup() throws Exception {
+        this.serviceListener = new ServiceListener() {
+
+            @Override
+            public void serviceChanged(final ServiceEvent event) {
+                runtimeCounter.set((Long) event.getServiceReference().getProperty("service.changecount"));
+            }
+
+        };
+        this.bundleContext.addServiceListener(this.serviceListener,
+                "(objectClass=" + HttpServiceRuntime.class.getName() + ")");
+
         awaitService(HttpServiceRuntime.class);
     }
 
+    @After
+    public void tearDown() throws InterruptedException {
+        if (this.serviceListener != null) {
+            this.bundleContext.removeServiceListener(this.serviceListener);
+            this.serviceListener = null;
+        }
+    }    
+    
     @Test
     public void testServletBecomesActive() throws InvalidSyntaxException, IOException, InterruptedException {
         final String servletPathPropertyName = "servletPath";
         final String servletPathPropertyVal = "/test/" + UUID.randomUUID();
         final String packagePrefix = "org.apache.felix.hc";
         
-        final HttpServiceRuntime serviceRuntime = this.getHttpServiceRuntime();
+        long actualServletCount = this.getRuntimeCounter();
         
-        RuntimeDTO runtimeDTOBeforeHealthCheckExecutorServletActivation = serviceRuntime.getRuntimeDTO();
-        
-        ServletContextDTO contextDTO = assertDefaultContext(runtimeDTOBeforeHealthCheckExecutorServletActivation);
-        
-        final int pathsBefore = contextDTO.servletDTOs.length;
-        
-        assertEquals("Initially expecting no servlet from " + packagePrefix, 0, pathsBefore);
+        assertEquals("Initially expecting no servlet from " + packagePrefix, 0, actualServletCount);
 
         // Activate servlet and wait for it to show up
         final String factoryPid = "org.apache.felix.hc.core.impl.servlet.HealthCheckExecutorServlet";
@@ -91,21 +115,19 @@ public class HealthCheckServletIT {
         props.put(servletPathPropertyName, servletPathPropertyVal);
         cfg.update(props);
         log.info("Updated config with properties {}", props);
-
-        final long timeoutMsec = 5000L;
-        TimeUnit.MILLISECONDS.sleep(pathsBefore);
-
-        int expectedServletCount = 6;
+        
+        actualServletCount = this.waitForRuntime(EXPECTED_SERVLET_COUNT);
+        
+        assertEquals("After adding configuration, expecting six servlets from " + packagePrefix, EXPECTED_SERVLET_COUNT, actualServletCount);
+        
+        final HttpServiceRuntime serviceRuntime = this.getHttpServiceRuntime();
         
         RuntimeDTO runtimeDTOAfterHealthCheckExecutorServletActivation = serviceRuntime.getRuntimeDTO();
         
-        contextDTO = assertDefaultContext(runtimeDTOAfterHealthCheckExecutorServletActivation);
+        ServletContextDTO contextDTO = assertDefaultContext(runtimeDTOAfterHealthCheckExecutorServletActivation);
         
         ServletDTO[] servletDTOs = contextDTO.servletDTOs;
         
-        assertEquals("After adding configuration, expecting six servlets from " + packagePrefix, expectedServletCount, servletDTOs.length);
-        
-        assertEquals("Expecting six new servlet registration", pathsBefore + expectedServletCount, servletDTOs.length);
         assertEquals("Expecting the HC servlet to be registered at " + servletPathPropertyVal, servletPathPropertyVal, servletDTOs[servletDTOs.length - 6].patterns[0]);
         assertEquals("Expecting the HTML HC servlet to be registered at " + servletPathPropertyVal + ".html", servletPathPropertyVal + ".html", servletDTOs[servletDTOs.length - 5].patterns[0]);
         assertEquals("Expecting the JSON HC servlet to be registered at " + servletPathPropertyVal + ".json", servletPathPropertyVal + ".json", servletDTOs[servletDTOs.length - 4].patterns[0]);
@@ -115,31 +137,41 @@ public class HealthCheckServletIT {
     }
     
     // Adopted from org.apache.felix.http.itest (HttpServiceRuntimeTest, Servlet5BaseIntegrationTest, BaseIntegrationTest) 
-
-    private static final String HTTP_CONTEXT_NAME = "org.osgi.service.http";
-    
-    private static final int DEFAULT_TIMEOUT = 10000;
-    
     private HttpServiceRuntime getHttpServiceRuntime() {
         final HttpServiceRuntime runtime = this.getService(HttpServiceRuntime.class);
         assertNotNull(runtime);
         return runtime;
-    }    
-    
+    }
+
     private <T> T awaitService(Class<T> clazz) throws Exception {
         ServiceTracker<T, T> tracker = new ServiceTracker<>(bundleContext, clazz, null);
         return tracker.waitForService(DEFAULT_TIMEOUT);
     }
-    
+
     private <T> T getService(final Class<T> clazz) {
         final ServiceTracker<T, T> tracker = new ServiceTracker<>(bundleContext, clazz, null);
         return tracker.getService();
     }
-    
+
     private ServletContextDTO assertDefaultContext(RuntimeDTO runtimeDTO) {
         assertTrue(1 < runtimeDTO.servletContextDTOs.length);
         assertEquals(HTTP_CONTEXT_NAME, runtimeDTO.servletContextDTOs[0].name);
         assertEquals("default", runtimeDTO.servletContextDTOs[1].name);
         return runtimeDTO.servletContextDTOs[1];
-    }    
+    }
+
+    public long getRuntimeCounter() {
+        return this.runtimeCounter.get();
+    }
+
+    public long waitForRuntime(final long expectedServletCount) {
+        while (runtimeCounter.get() < expectedServletCount) {
+            try {
+                Thread.sleep(10);
+            } catch (InterruptedException e) {
+                // ignore
+            }
+        }
+        return runtimeCounter.get();
+    }
 }

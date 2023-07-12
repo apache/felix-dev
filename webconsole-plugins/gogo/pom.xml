@@ -88,19 +88,13 @@
         <dependency>
             <groupId>org.apache.felix</groupId>
             <artifactId>org.apache.felix.gogo.runtime</artifactId>
-            <version>0.6.1</version>
+            <version>1.1.6</version>
             <scope>provided</scope>
-        </dependency>
+        </dependency>        
         <dependency>
             <groupId>org.osgi</groupId>
-            <artifactId>org.osgi.core</artifactId>
-            <version>4.0.0</version>
-            <scope>provided</scope>
-        </dependency>
-        <dependency>
-            <groupId>org.osgi</groupId>
-            <artifactId>org.osgi.compendium</artifactId>
-            <version>4.0.0</version>
+            <artifactId>osgi.core</artifactId>
+            <version>8.0.0</version>
             <scope>provided</scope>
         </dependency>
         <dependency>
@@ -113,14 +107,6 @@
             <groupId>jakarta.servlet</groupId>
             <artifactId>jakarta.servlet-api</artifactId>
             <version>5.0.0</version>
-            <scope>provided</scope>
-        </dependency>
-
-        <!-- TODO: remove this - only 'jakarta.servlet-api' is used -->        
-        <dependency>
-            <groupId>javax.servlet</groupId>
-            <artifactId>javax.servlet-api</artifactId>
-            <version>4.0.1</version>
             <scope>provided</scope>
         </dependency>
  	</dependencies>

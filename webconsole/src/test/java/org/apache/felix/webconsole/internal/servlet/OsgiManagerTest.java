@@ -19,9 +19,8 @@
 package org.apache.felix.webconsole.internal.servlet;
 
 import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertFalse;
+import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertNull;
-import static org.junit.Assert.assertSame;
 import static org.junit.Assert.assertTrue;
 
 import java.lang.reflect.Field;
@@ -47,8 +46,7 @@ import org.osgi.framework.Filter;
 import org.osgi.framework.FrameworkUtil;
 import org.osgi.framework.InvalidSyntaxException;
 import org.osgi.framework.ServiceReference;
-import org.osgi.service.http.HttpContext;
-import org.osgi.service.http.HttpService;
+import org.osgi.framework.ServiceRegistration;
 import org.osgi.util.tracker.ServiceTrackerCustomizer;
 
 public class OsgiManagerTest {
@@ -156,7 +154,6 @@ public class OsgiManagerTest {
         assertEquals("added:blah!", invocations.get(1));
     }
 
-
     @SuppressWarnings("serial")
     @Test
     public void testUpdateRegistrationStateNoRequiredProviders() throws Exception {
@@ -165,12 +162,12 @@ public class OsgiManagerTest {
         final List<String> invocations = new ArrayList<String>();
         OsgiManager mgr = new OsgiManager(bc) {
             @Override
-            protected synchronized void registerHttpService() {
+            protected synchronized void registerServices() {
                 invocations.add("register");
             }
 
             @Override
-            protected synchronized void unregisterHttpService() {
+            protected synchronized void unregisterServices() {
                 invocations.add("unregister");
             }
         };
@@ -179,15 +176,15 @@ public class OsgiManagerTest {
         mgr.updateRegistrationState();
         assertEquals(Collections.singletonList("unregister"), invocations);
 
-        // HTTP Service present, no required providers, no registered providers -> register
+        // BundleContext present, but no required providers, no registered providers -> register
         invocations.clear();
         mgr.registeredSecurityProviders.clear();
         mgr.requiredSecurityProviders.clear();
-        setPrivateField(OsgiManager.class, mgr, "httpService", Mockito.mock(HttpService.class));
+        setPrivateField(OsgiManager.class, mgr, "bundleContext", bc);
         mgr.updateRegistrationState();
         assertEquals(Collections.singletonList("register"), invocations);
     }
-
+    
     @SuppressWarnings("serial")
     @Test
     public void testUpdateRegistrationStateSomeRequiredProviders() throws Exception {
@@ -198,186 +195,85 @@ public class OsgiManagerTest {
         final List<String> invocations = new ArrayList<String>();
         OsgiManager mgr = new OsgiManager(bc) {
             @Override
-            protected synchronized void registerHttpService() {
+            protected synchronized void registerServices() {
                 invocations.add("register");
             }
 
             @Override
-            protected synchronized void unregisterHttpService() {
+            protected synchronized void unregisterServices() {
                 invocations.add("unregister");
             }
         };
 
-        // HTTP Service present, some required providers, no registered providers -> unregister
+        // BundleContext present, some required providers, no registered providers -> unregister
         invocations.clear();
         mgr.registeredSecurityProviders.clear();
-        setPrivateField(OsgiManager.class, mgr, "httpService", Mockito.mock(HttpService.class));
+        setPrivateField(OsgiManager.class, mgr, "bundleContext", bc);
         mgr.updateRegistrationState();
         assertEquals(Collections.singletonList("unregister"), invocations);
 
-        // HTTP Service present, some required providers, more registered ones -> register
+        // BundleContext present, some required providers, more registered ones -> register
         invocations.clear();
         mgr.registeredSecurityProviders.addAll(Arrays.asList("foo", "bar", "blah"));
-        setPrivateField(OsgiManager.class, mgr, "httpService", Mockito.mock(HttpService.class));
+        setPrivateField(OsgiManager.class, mgr, "bundleContext", bc);
         mgr.updateRegistrationState();
         assertEquals(Collections.singletonList("register"), invocations);
 
-        // HTTP Service present, some required providers, different registered ones -> unregister
+        // BundleContext present, some required providers, different registered ones -> unregister
         invocations.clear();
         mgr.registeredSecurityProviders.clear();
         mgr.registeredSecurityProviders.addAll(Arrays.asList("foo", "bar"));
-        setPrivateField(OsgiManager.class, mgr, "httpService", Mockito.mock(HttpService.class));
+        setPrivateField(OsgiManager.class, mgr, "bundleContext", bc);
         mgr.updateRegistrationState();
         assertEquals(Collections.singletonList("unregister"), invocations);
 
-        // HTTP Service not present, some required providers, more registered ones -> unregister
+        // BundleContext not present, some required providers, more registered ones -> unregister
         invocations.clear();
         mgr.registeredSecurityProviders.addAll(Arrays.asList("foo", "bar", "blah"));
-        setPrivateField(OsgiManager.class, mgr, "httpService", null);
+        setPrivateField(OsgiManager.class, mgr, "bundleContext", null);
         mgr.updateRegistrationState();
         assertEquals(Collections.singletonList("unregister"), invocations);
     }
-
-    @SuppressWarnings("serial")
+    
     @Test
-    public void testBindService() throws Exception {
-        BundleContext bc = mockBundleContext();
-
-        final List<Boolean> updateCalled = new ArrayList<Boolean>();
-        OsgiManager mgr = new OsgiManager(bc) {
-            @Override
-            void updateRegistrationState() {
-                updateCalled.add(true);
-            }
-        };
-
-        assertEquals("Precondition", 0, updateCalled.size());
-
-        HttpService svc = Mockito.mock(HttpService.class);
-        mgr.bindHttpService(svc);
-        assertSame(svc, getPrivateField(OsgiManager.class, mgr, "httpService"));
-        assertEquals(1, updateCalled.size());
-
-        updateCalled.clear();
-        mgr.bindHttpService(null);
-        assertSame(svc, getPrivateField(OsgiManager.class, mgr, "httpService"));
-        assertEquals(0, updateCalled.size());
-    }
-
-    @SuppressWarnings("serial")
-    @Test
-    public void testUnbindService() throws Exception {
-        BundleContext bc = mockBundleContext();
-
-        final List<Boolean> updateCalled = new ArrayList<Boolean>();
-        final List<Boolean> unregisterCalled = new ArrayList<Boolean>();
-        OsgiManager mgr = new OsgiManager(bc) {
-            @Override
-            void updateRegistrationState() {
-                updateCalled.add(true);
-            }
-
-            @Override
-            synchronized void unregisterHttpService() {
-                try {
-                    if (getPrivateField(OsgiManager.class, this, "httpService") != null) {
-                        unregisterCalled.add(true);
-                    }
-                } catch (Exception e) {
-                }
-            }
-        };
-
-        HttpService svc = Mockito.mock(HttpService.class);
-        mgr.bindHttpService(svc);
-        assertSame(svc, getPrivateField(OsgiManager.class, mgr, "httpService"));
-        assertEquals(1, updateCalled.size());
-        assertEquals(0, unregisterCalled.size());
-
-        updateCalled.clear();
-        mgr.unbindHttpService(null);
-        assertEquals(0, updateCalled.size());
-        assertSame(svc, getPrivateField(OsgiManager.class, mgr, "httpService"));
-        assertEquals(0, unregisterCalled.size());
-
-        updateCalled.clear();
-        // unbind a different service, this should be ignored
-        mgr.unbindHttpService(Mockito.mock(HttpService.class));
-        assertEquals(0, updateCalled.size());
-        assertSame(svc, getPrivateField(OsgiManager.class, mgr, "httpService"));
-        assertEquals(0, unregisterCalled.size());
-
-        updateCalled.clear();
-        // unbind the bound service, this should remove it
-        mgr.unbindHttpService(svc);
-        assertEquals(0, updateCalled.size());
-        assertEquals(1, unregisterCalled.size());
-        assertNull(getPrivateField(OsgiManager.class, mgr, "httpService"));
-    }
-
-    @Test
-    public void testRegisterHttpService() throws Exception {
+    public void testRegisterServices() throws Exception {
         BundleContext bc = mockBundleContext();
         OsgiManager mgr = new OsgiManager(bc);
 
-        HttpService httpSvc = Mockito.mock(HttpService.class);
-        setPrivateField(OsgiManager.class, mgr, "httpService", httpSvc);
+        setPrivateField(OsgiManager.class, mgr, "bundleContext", bc);
 
-        assertFalse((Boolean) getPrivateField(OsgiManager.class, mgr, "httpServletRegistered"));
-        assertFalse((Boolean) getPrivateField(OsgiManager.class, mgr, "httpResourcesRegistered"));
-        mgr.registerHttpService();
-        assertTrue((Boolean) getPrivateField(OsgiManager.class, mgr, "httpServletRegistered"));
-        assertTrue((Boolean) getPrivateField(OsgiManager.class, mgr, "httpResourcesRegistered"));
+        assertNull(getPrivateField(OsgiManager.class, mgr, "servletContextHelperRegistration"));
+        assertNull(getPrivateField(OsgiManager.class, mgr, "servletRegistration"));
+        assertNull(getPrivateField(OsgiManager.class, mgr, "resourcesRegistration"));
 
-        Mockito.verify(httpSvc, Mockito.times(1)).registerServlet(Mockito.eq("/system/console"), Mockito.same(mgr),
-                Mockito.isA(Dictionary.class),
-                Mockito.isA(HttpContext.class));
-        Mockito.verify(httpSvc, Mockito.times(1)).registerResources(Mockito.eq("/system/console/res"), Mockito.eq("/res"),
-                Mockito.isA(HttpContext.class));
+        mgr.registerServices();
 
-        mgr.registerHttpService();
-
-        // Should not re-register the services, as they were already registered
-        Mockito.verify(httpSvc, Mockito.times(1)).registerServlet(Mockito.eq("/system/console"), Mockito.same(mgr),
-                Mockito.isA(Dictionary.class),
-                Mockito.isA(HttpContext.class));
-        Mockito.verify(httpSvc, Mockito.times(1)).registerResources(Mockito.eq("/system/console/res"), Mockito.eq("/res"),
-                Mockito.isA(HttpContext.class));
+        assertNotNull(getPrivateField(OsgiManager.class, mgr, "servletContextHelperRegistration"));
+        assertNotNull(getPrivateField(OsgiManager.class, mgr, "servletRegistration"));
+        assertNotNull(getPrivateField(OsgiManager.class, mgr, "resourcesRegistration"));
     }
 
     @Test
-    public void testUnregisterHttpService() throws Exception {
+    public void testUnregisterServices() throws Exception {
         BundleContext bc = mockBundleContext();
         OsgiManager mgr = new OsgiManager(bc);
 
-        HttpService httpSvc = Mockito.mock(HttpService.class);
-        setPrivateField(OsgiManager.class, mgr, "httpService", httpSvc);
-        setPrivateField(OsgiManager.class, mgr, "httpServletRegistered", true);
-        setPrivateField(OsgiManager.class, mgr, "httpResourcesRegistered", true);
+        setPrivateField(OsgiManager.class, mgr, "bundleContext", bc);
 
-        mgr.unregisterHttpService();
-        assertFalse((Boolean) getPrivateField(OsgiManager.class, mgr, "httpServletRegistered"));
-        assertFalse((Boolean) getPrivateField(OsgiManager.class, mgr, "httpResourcesRegistered"));
+        setPrivateField(OsgiManager.class, mgr, "servletContextHelperRegistration",
+                Mockito.mock(ServiceRegistration.class));
+        setPrivateField(OsgiManager.class, mgr, "servletRegistration", Mockito.mock(ServiceRegistration.class));
+        setPrivateField(OsgiManager.class, mgr, "resourcesRegistration", Mockito.mock(ServiceRegistration.class));
 
-        Mockito.verify(httpSvc, Mockito.times(1)).unregister("/system/console");
-        Mockito.verify(httpSvc, Mockito.times(1)).unregister("/system/console/res");
+        assertNotNull(getPrivateField(OsgiManager.class, mgr, "servletContextHelperRegistration"));
+        assertNotNull(getPrivateField(OsgiManager.class, mgr, "servletRegistration"));
+        assertNotNull(getPrivateField(OsgiManager.class, mgr, "resourcesRegistration"));
 
-        mgr.unregisterHttpService();
-        assertFalse((Boolean) getPrivateField(OsgiManager.class, mgr, "httpServletRegistered"));
-        assertFalse((Boolean) getPrivateField(OsgiManager.class, mgr, "httpResourcesRegistered"));
+        mgr.unregisterServices();
 
-        Mockito.verify(httpSvc, Mockito.times(1)).unregister("/system/console");
-        Mockito.verify(httpSvc, Mockito.times(1)).unregister("/system/console/res");
-
-        // Unset the http service
-        setPrivateField(OsgiManager.class, mgr, "httpService", null);
-
-        mgr.unregisterHttpService();
-        assertFalse((Boolean) getPrivateField(OsgiManager.class, mgr, "httpServletRegistered"));
-        assertFalse((Boolean) getPrivateField(OsgiManager.class, mgr, "httpResourcesRegistered"));
-
-        Mockito.verify(httpSvc, Mockito.times(1)).unregister("/system/console");
-        Mockito.verify(httpSvc, Mockito.times(1)).unregister("/system/console/res");
+        assertNull(getPrivateField(OsgiManager.class, mgr, "servletContextHelperRegistration"));
+        assertNull(getPrivateField(OsgiManager.class, mgr, "servletRegistration"));
+        assertNull(getPrivateField(OsgiManager.class, mgr, "resourcesRegistration"));
     }
 
     private Object getPrivateField(Class<?> cls, Object obj, String field) throws Exception {

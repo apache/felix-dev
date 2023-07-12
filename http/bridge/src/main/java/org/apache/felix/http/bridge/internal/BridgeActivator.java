@@ -33,7 +33,7 @@ import org.apache.felix.http.base.internal.AbstractHttpActivator;
 import org.apache.felix.http.base.internal.EventDispatcher;
 import org.apache.felix.http.base.internal.logger.SystemLogger;
 import org.osgi.framework.Constants;
-import org.osgi.service.http.runtime.HttpServiceRuntimeConstants;
+import org.osgi.service.servlet.runtime.HttpServiceRuntimeConstants;
 
 public final class BridgeActivator extends AbstractHttpActivator
 {

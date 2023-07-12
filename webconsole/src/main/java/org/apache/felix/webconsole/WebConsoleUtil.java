@@ -28,16 +28,16 @@ import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 
-import javax.servlet.ServletRequest;
-import javax.servlet.http.HttpServletRequest;
-import javax.servlet.http.HttpServletResponse;
+import org.apache.commons.fileupload2.FileItem;
+import org.apache.commons.fileupload2.FileUploadBase;
+import org.apache.commons.fileupload2.FileUploadException;
+import org.apache.commons.fileupload2.disk.DiskFileItemFactory;
+import org.apache.commons.fileupload2.jaksrvlt.JakSrvltFileUpload;
+import org.apache.commons.fileupload2.jaksrvlt.JakSrvltRequestContext;
 
-import org.apache.commons.fileupload.FileItem;
-import org.apache.commons.fileupload.FileUploadBase;
-import org.apache.commons.fileupload.FileUploadException;
-import org.apache.commons.fileupload.disk.DiskFileItemFactory;
-import org.apache.commons.fileupload.servlet.ServletFileUpload;
-import org.apache.commons.fileupload.servlet.ServletRequestContext;
+import jakarta.servlet.ServletRequest;
+import jakarta.servlet.http.HttpServletRequest;
+import jakarta.servlet.http.HttpServletResponse;
 
 
 /**
@@ -124,7 +124,7 @@ public final class WebConsoleUtil
     public static final String getParameter( HttpServletRequest request, String name )
     {
         // just get the parameter if not a multipart/form-data POST
-        if ( !FileUploadBase.isMultipartContent( new ServletRequestContext( request ) ) )
+        if ( !FileUploadBase.isMultipartContent( new JakSrvltRequestContext( request ) ) )
         {
             return request.getParameter( name );
         }
@@ -145,7 +145,7 @@ public final class WebConsoleUtil
             }
 
             // Create a new file upload handler
-            ServletFileUpload upload = new ServletFileUpload( factory );
+            JakSrvltFileUpload upload = new JakSrvltFileUpload( factory );
             upload.setSizeMax( -1 );
             upload.setFileCountMax(50);
 

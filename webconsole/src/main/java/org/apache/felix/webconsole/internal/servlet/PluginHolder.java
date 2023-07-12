@@ -26,10 +26,10 @@ import java.util.Map;
 import java.util.NoSuchElementException;
 import java.util.ResourceBundle;
 
-import javax.servlet.Servlet;
-import javax.servlet.ServletConfig;
-import javax.servlet.ServletContext;
-import javax.servlet.ServletException;
+import jakarta.servlet.Servlet;
+import jakarta.servlet.ServletConfig;
+import jakarta.servlet.ServletContext;
+import jakarta.servlet.ServletException;
 
 import org.apache.felix.webconsole.AbstractWebConsolePlugin;
 import org.apache.felix.webconsole.WebConsoleConstants;
@@ -815,8 +815,8 @@ class PluginHolder implements ServiceListener
 
                 try
                 {
-                    Class pluginClass = getClass().getClassLoader().loadClass(pluginClassName);
-                    plugin = (AbstractWebConsolePlugin) pluginClass.newInstance();
+                    Class<?> pluginClass = getClass().getClassLoader().loadClass(pluginClassName);
+                    plugin = (AbstractWebConsolePlugin) pluginClass.getDeclaredConstructor().newInstance();
 
                     if (plugin instanceof OsgiManagerPlugin)
                     {

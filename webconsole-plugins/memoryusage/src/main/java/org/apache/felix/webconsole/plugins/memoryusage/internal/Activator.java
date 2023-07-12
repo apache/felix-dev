@@ -51,7 +51,7 @@ public class Activator implements BundleActivator
         Dictionary<String, Object> pluginProps = new Hashtable<String, Object>();
         pluginProps.put("felix.webconsole.label", MemoryUsageConstants.LABEL);
         pluginProps.put("felix.webconsole.category", MemoryUsageConstants.CATEGORY);
-        new AbstractServiceFactory(bundleContext, pluginProps, "javax.servlet.Servlet",
+        new AbstractServiceFactory(bundleContext, pluginProps, "jakarta.servlet.Servlet",
             "org.apache.felix.webconsole.ConfigurationPrinter")
         {
             @Override

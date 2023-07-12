@@ -116,7 +116,7 @@
                         </Export-Package>
                         <!-- Import-Package header is also used for the all bundle -->
                         <Import-Package>
-                            javax.servlet.*;version="[2.4,5)",
+                            jakarta.servlet.*;version="[5.0,6)",
                             !javax.portlet,
                             !org.apache.felix.bundlerepository,
                             !org.osgi.service.obr,
@@ -227,10 +227,14 @@
                                            ${project.version}-all
                                        </Bundle-Version>
                                        <Export-Package>
-                                           org.apache.commons.fileupload,
-                                           org.apache.commons.fileupload.disk,
-                                           org.apache.commons.fileupload.servlet,
-                                           org.apache.commons.fileupload.util,
+                                           org.apache.commons.fileupload2,
+                                           org.apache.commons.fileupload2.disk,
+                                           org.apache.commons.fileupload2.impl,
+                                           org.apache.commons.fileupload2.jaksrvlt,
+                                           org.apache.commons.fileupload2.pub,
+                                           org.apache.commons.fileupload2.servlet,
+                                           org.apache.commons.fileupload2.util,
+                                           org.apache.commons.fileupload2.util.mime,
                                            org.apache.commons.io.*,
                                            org.apache.felix.inventory,
                                            ${webconsole.exports}
@@ -240,7 +244,7 @@
                                            org.apache.felix.utils;inline=org/apache/felix/utils/manifest/**,
                                            org.apache.felix.utils;inline=org/apache/felix/utils/json/**,
                                            org.apache.felix.inventory;inline=true,
-                                           commons-fileupload;inline=true,
+                                           commons-fileupload2;inline=true,
                                            commons-io;inline=true
                                        </Embed-Dependency>
                                        <_removeheaders>
@@ -344,54 +348,64 @@
     <dependencies>
         <dependency>
             <groupId>org.osgi</groupId>
-            <artifactId>org.osgi.annotation.versioning</artifactId>
-            <version>1.1.0</version>
+            <artifactId>osgi.core</artifactId>
+            <version>8.0.0</version>
             <scope>provided</scope>
         </dependency>
-
+        <dependency>
+            <groupId>org.osgi</groupId>
+            <artifactId>org.osgi.annotation.versioning</artifactId>
+            <version>1.1.2</version>
+            <scope>provided</scope>
+        </dependency>
+        <dependency>
+            <groupId>org.osgi</groupId>
+            <artifactId>org.osgi.service.cm</artifactId>
+            <version>1.6.0</version>
+            <scope>provided</scope>
+        </dependency>
+        <dependency>
+            <groupId>org.osgi</groupId>
+            <artifactId>org.osgi.service.metatype</artifactId>
+            <version>1.4.1</version>
+            <scope>provided</scope>
+        </dependency>
+        <dependency>
+            <groupId>org.osgi</groupId>
+            <artifactId>org.osgi.service.prefs</artifactId>
+            <version>1.1.2</version>
+            <scope>provided</scope>
+        </dependency>
+        <dependency>
+            <groupId>org.osgi</groupId>
+            <artifactId>org.osgi.service.servlet</artifactId>
+            <version>2.0.0</version>
+            <scope>provided</scope>
+        </dependency>
+        <dependency>
+            <groupId>org.osgi</groupId>
+            <artifactId>org.osgi.service.wireadmin</artifactId>
+            <version>1.0.2</version>
+            <scope>provided</scope>
+        </dependency>
         <dependency>
             <groupId>jakarta.servlet</groupId>
             <artifactId>jakarta.servlet-api</artifactId>
             <version>5.0.0</version>
             <scope>provided</scope>
         </dependency>
-
-        <!-- TODO: remove this - only 'jakarta.servlet-api' is used -->
         <dependency>
-            <groupId>javax.servlet</groupId>
-            <artifactId>javax.servlet-api</artifactId>
-            <version>4.0.1</version>
+            <groupId>org.apache.commons</groupId>
+            <artifactId>commons-fileupload2</artifactId>
+            <version>2.0-SNAPSHOT</version>
             <scope>provided</scope>
         </dependency>
-
-        <!-- TODO: change to 2.x version of 'commons-fileupload' once released (or use snapshot instead) -->
-        <dependency>
-            <groupId>commons-fileupload</groupId>
-            <artifactId>commons-fileupload</artifactId>
-            <version>1.5</version>
-            <scope>provided</scope>
-        </dependency>
-
         <dependency>
             <groupId>commons-io</groupId>
             <artifactId>commons-io</artifactId>
             <version>2.11.0</version>
             <scope>provided</scope>
         </dependency>
-
-        <dependency>
-            <groupId>org.osgi</groupId>
-            <artifactId>osgi.core</artifactId>
-            <version>6.0.0</version>
-            <scope>provided</scope>
-        </dependency>
-        <dependency>
-            <groupId>org.osgi</groupId>
-            <artifactId>osgi.cmpn</artifactId>
-            <version>6.0.0</version>
-            <scope>provided</scope>
-        </dependency>
-
         <dependency>
             <groupId>org.apache.felix</groupId>
             <artifactId>org.apache.felix.shell</artifactId>
@@ -403,7 +417,7 @@
         <dependency>
             <groupId>org.apache.felix</groupId>
             <artifactId>org.apache.felix.utils</artifactId>
-            <version>1.11.4</version>
+            <version>1.11.8</version>
             <scope>provided</scope>
             <optional>true</optional>
         </dependency>

@@ -229,7 +229,7 @@ public abstract class SimpleWebConsolePlugin extends AbstractWebConsolePlugin
             {
                 props.put( WebConsoleConstants.PLUGIN_CATEGORY, getCategory() );
             }
-            reg = bc.registerService( "javax.servlet.Servlet", this, props ); //$NON-NLS-1$
+            reg = bc.registerService( "jakarta.servlet.Servlet", this, props ); //$NON-NLS-1$
         }
         return this;
     }

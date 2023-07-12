@@ -83,15 +83,13 @@
                             org.osgi.service.cm;version="[1.2,2)";resolution:="optional",
                             org.osgi.service.metatype;version="[1.1,2)";resolution:="optional",
                             
-                            <!-- TODO: import jakarta servlet -->
-
                             <!-- plug into the web console -->
-                            javax.servlet;resolution:="optional";
-                            javax.servlet.http;version="[2.3,5)";resolution:="optional",
+                            jakarta.servlet;version="[5.0,6)";resolution:="optional";
+                            jakarta.servlet.http;version="[5.0,6)";resolution:="optional",
                             org.apache.felix.webconsole;version="[5.0,6)";resolution:="optional",
 
                             <!-- plug into the traditional Felix shell -->
-                            org.apache.felix.shell;version="[1.0,1.1)";resolution:="optional"
+                            org.apache.felix.shell;version="[1.0,1.5)";resolution:="optional"
                         </Import-Package>
                         <Private-Package>
                             org.apache.felix.webconsole.plugins.memoryusage.*
@@ -120,20 +118,14 @@
     <dependencies>
         <dependency>
             <groupId>org.osgi</groupId>
-            <artifactId>org.osgi.core</artifactId>
-            <version>4.0.0</version>
-            <scope>provided</scope>
-        </dependency>
-        <dependency>
-            <groupId>org.osgi</groupId>
-            <artifactId>org.osgi.compendium</artifactId>
-            <version>4.0.0</version>
+            <artifactId>osgi.core</artifactId>
+            <version>8.0.0</version>
             <scope>provided</scope>
         </dependency>
         <dependency>
             <groupId>org.apache.felix</groupId>
             <artifactId>org.apache.felix.shell</artifactId>
-            <version>1.0.0</version>
+            <version>1.4.3</version>
             <scope>provided</scope>
         </dependency>
         <dependency>
@@ -146,14 +138,6 @@
             <groupId>jakarta.servlet</groupId>
             <artifactId>jakarta.servlet-api</artifactId>
             <version>5.0.0</version>
-            <scope>provided</scope>
-        </dependency>
-
-        <!-- TODO: remove this - only 'jakarta.servlet-api' is used -->    
-        <dependency>
-            <groupId>javax.servlet</groupId>
-            <artifactId>javax.servlet-api</artifactId>
-            <version>4.0.1</version>
             <scope>provided</scope>
         </dependency>
     </dependencies>

@@ -22,6 +22,7 @@ import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
 
 import java.util.ArrayList;
+import java.util.Dictionary;
 import java.util.List;
 
 import org.apache.felix.http.jetty.LoadBalancerCustomizerFactory;
@@ -232,5 +233,14 @@ public class LoadBalancerCustomizerFactoryTrackerTest
             return 0;
         }
 
+        @Override
+        public Dictionary<String, Object> getProperties() {
+            return null;
+        }
+
+        @Override
+        public <A> A adapt(Class<A> type) {
+            return null;
+        }
     };
 }
