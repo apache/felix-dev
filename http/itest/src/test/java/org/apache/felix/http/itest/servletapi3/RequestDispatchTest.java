@@ -42,6 +42,7 @@ import javax.servlet.ServletException;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 
+import org.junit.Ignore;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.ops4j.pax.exam.junit.PaxExam;
@@ -49,6 +50,7 @@ import org.ops4j.pax.exam.spi.reactors.ExamReactorStrategy;
 import org.ops4j.pax.exam.spi.reactors.PerMethod;
 import org.osgi.service.http.NamespaceException;
 
+@Ignore("JavaServlet is no longer supported - only Jakarta Servlet; this class will be removed soon")
 @RunWith(PaxExam.class)
 @ExamReactorStrategy(PerMethod.class)
 public class RequestDispatchTest extends Servlet3BaseIntegrationTest {

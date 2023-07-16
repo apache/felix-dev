@@ -23,7 +23,9 @@ import static org.junit.Assert.assertTrue;
 
 import java.io.IOException;
 import java.util.Dictionary;
+import java.util.HashMap;
 import java.util.Hashtable;
+import java.util.Map;
 import java.util.UUID;
 import java.util.concurrent.atomic.AtomicLong;
 
@@ -55,11 +57,13 @@ public class HealthCheckServletIT {
     private static final int EXPECTED_SERVLET_COUNT = 6;
     private static final String HTTP_CONTEXT_NAME = "org.osgi.service.http";
     private static final int DEFAULT_TIMEOUT = 10000;
-        
+
     private final Logger log = LoggerFactory.getLogger(getClass());
-    
+
+    private final Map<String, ServiceTracker<?, ?>> trackers = new HashMap<>();
+
     private final AtomicLong runtimeCounter = new AtomicLong();
-    
+
     private ServiceListener serviceListener;
 
     @Inject
@@ -83,6 +87,7 @@ public class HealthCheckServletIT {
             }
 
         };
+
         this.bundleContext.addServiceListener(this.serviceListener,
                 "(objectClass=" + HttpServiceRuntime.class.getName() + ")");
 
@@ -90,21 +95,34 @@ public class HealthCheckServletIT {
     }
 
     @After
-    public void tearDown() throws InterruptedException {
+    public void tearDown() throws Exception {
+        synchronized (trackers) {
+            for (final ServiceTracker<?, ?> entry : trackers.values()) {
+                entry.close();
+            }
+            trackers.clear();
+        }
+
         if (this.serviceListener != null) {
             this.bundleContext.removeServiceListener(this.serviceListener);
             this.serviceListener = null;
         }
-    }    
+    }
     
     @Test
     public void testServletBecomesActive() throws InvalidSyntaxException, IOException, InterruptedException {
         final String servletPathPropertyName = "servletPath";
         final String servletPathPropertyVal = "/test/" + UUID.randomUUID();
         final String packagePrefix = "org.apache.felix.hc";
-        
-        long actualServletCount = this.getRuntimeCounter();
-        
+
+        final HttpServiceRuntime serviceRuntime = this.getHttpServiceRuntime();
+
+        RuntimeDTO runtimeDTOBeforeHealthCheckExecutorServletActivation = serviceRuntime.getRuntimeDTO();
+
+        ServletContextDTO contextDTO = assertDefaultContext(runtimeDTOBeforeHealthCheckExecutorServletActivation);
+
+        int actualServletCount = contextDTO.servletDTOs.length;
+
         assertEquals("Initially expecting no servlet from " + packagePrefix, 0, actualServletCount);
 
         // Activate servlet and wait for it to show up
@@ -115,25 +133,33 @@ public class HealthCheckServletIT {
         props.put(servletPathPropertyName, servletPathPropertyVal);
         cfg.update(props);
         log.info("Updated config with properties {}", props);
-        
-        actualServletCount = this.waitForRuntime(EXPECTED_SERVLET_COUNT);
-        
-        assertEquals("After adding configuration, expecting six servlets from " + packagePrefix, EXPECTED_SERVLET_COUNT, actualServletCount);
-        
-        final HttpServiceRuntime serviceRuntime = this.getHttpServiceRuntime();
-        
+
+        this.waitForRuntimeCounterIncrease(EXPECTED_SERVLET_COUNT);
+
         RuntimeDTO runtimeDTOAfterHealthCheckExecutorServletActivation = serviceRuntime.getRuntimeDTO();
-        
-        ServletContextDTO contextDTO = assertDefaultContext(runtimeDTOAfterHealthCheckExecutorServletActivation);
-        
+
+        contextDTO = assertDefaultContext(runtimeDTOAfterHealthCheckExecutorServletActivation);
+
         ServletDTO[] servletDTOs = contextDTO.servletDTOs;
-        
-        assertEquals("Expecting the HC servlet to be registered at " + servletPathPropertyVal, servletPathPropertyVal, servletDTOs[servletDTOs.length - 6].patterns[0]);
-        assertEquals("Expecting the HTML HC servlet to be registered at " + servletPathPropertyVal + ".html", servletPathPropertyVal + ".html", servletDTOs[servletDTOs.length - 5].patterns[0]);
-        assertEquals("Expecting the JSON HC servlet to be registered at " + servletPathPropertyVal + ".json", servletPathPropertyVal + ".json", servletDTOs[servletDTOs.length - 4].patterns[0]);
-        assertEquals("Expecting the JSONP HC servlet to be registered at " + servletPathPropertyVal + ".jsonp", servletPathPropertyVal + ".jsonp", servletDTOs[servletDTOs.length - 3].patterns[0]);
-        assertEquals("Expecting the TXT HC servlet to be registered at " + servletPathPropertyVal + ".txt", servletPathPropertyVal + ".txt", servletDTOs[servletDTOs.length - 2].patterns[0]);
-        assertEquals("Expecting the verbose TXT HC servlet to be registered at " + servletPathPropertyVal + ".verbose.txt", servletPathPropertyVal + ".verbose.txt", servletDTOs[servletDTOs.length - 1].patterns[0]);        
+
+        actualServletCount = contextDTO.servletDTOs.length;
+
+        assertEquals("After adding configuration, expecting six servlets from " + packagePrefix, EXPECTED_SERVLET_COUNT,
+                actualServletCount);
+
+        assertEquals("Expecting the HC servlet to be registered at " + servletPathPropertyVal, servletPathPropertyVal,
+                servletDTOs[servletDTOs.length - 6].patterns[0]);
+        assertEquals("Expecting the HTML HC servlet to be registered at " + servletPathPropertyVal + ".html",
+                servletPathPropertyVal + ".html", servletDTOs[servletDTOs.length - 5].patterns[0]);
+        assertEquals("Expecting the JSON HC servlet to be registered at " + servletPathPropertyVal + ".json",
+                servletPathPropertyVal + ".json", servletDTOs[servletDTOs.length - 4].patterns[0]);
+        assertEquals("Expecting the JSONP HC servlet to be registered at " + servletPathPropertyVal + ".jsonp",
+                servletPathPropertyVal + ".jsonp", servletDTOs[servletDTOs.length - 3].patterns[0]);
+        assertEquals("Expecting the TXT HC servlet to be registered at " + servletPathPropertyVal + ".txt",
+                servletPathPropertyVal + ".txt", servletDTOs[servletDTOs.length - 2].patterns[0]);
+        assertEquals(
+                "Expecting the verbose TXT HC servlet to be registered at " + servletPathPropertyVal + ".verbose.txt",
+                servletPathPropertyVal + ".verbose.txt", servletDTOs[servletDTOs.length - 1].patterns[0]);
     }
     
     // Adopted from org.apache.felix.http.itest (HttpServiceRuntimeTest, Servlet5BaseIntegrationTest, BaseIntegrationTest) 
@@ -142,17 +168,30 @@ public class HealthCheckServletIT {
         assertNotNull(runtime);
         return runtime;
     }
-
-    private <T> T awaitService(Class<T> clazz) throws Exception {
-        ServiceTracker<T, T> tracker = new ServiceTracker<>(bundleContext, clazz, null);
+    
+    protected <T> T awaitService(Class<T> clazz) throws Exception {
+        ServiceTracker<T, T> tracker = null;
+        tracker = getTracker(clazz);
         return tracker.waitForService(DEFAULT_TIMEOUT);
     }
 
-    private <T> T getService(final Class<T> clazz) {
-        final ServiceTracker<T, T> tracker = new ServiceTracker<>(bundleContext, clazz, null);
+    protected <T> T getService(final Class<T> clazz) {
+        final ServiceTracker<T, T> tracker = getTracker(clazz);
         return tracker.getService();
-    }
-
+    }    
+    
+    private <T> ServiceTracker<T, T> getTracker(Class<T> clazz) {
+        synchronized ( this.trackers ) {
+            ServiceTracker<T, T> tracker = (ServiceTracker<T, T>) trackers.get(clazz.getName());
+            if ( tracker == null ) {
+                tracker = new ServiceTracker<>(bundleContext, clazz, null);
+                trackers.put(clazz.getName(), tracker);
+                tracker.open();
+            }
+            return tracker;
+        }
+    }    
+    
     private ServletContextDTO assertDefaultContext(RuntimeDTO runtimeDTO) {
         assertTrue(1 < runtimeDTO.servletContextDTOs.length);
         assertEquals(HTTP_CONTEXT_NAME, runtimeDTO.servletContextDTOs[0].name);
@@ -163,8 +202,8 @@ public class HealthCheckServletIT {
     public long getRuntimeCounter() {
         return this.runtimeCounter.get();
     }
-
-    public long waitForRuntime(final long expectedServletCount) {
+    
+    public void waitForRuntimeCounterIncrease(final long expectedServletCount) {
         while (runtimeCounter.get() < expectedServletCount) {
             try {
                 Thread.sleep(10);
@@ -172,6 +211,5 @@ public class HealthCheckServletIT {
                 // ignore
             }
         }
-        return runtimeCounter.get();
     }
 }

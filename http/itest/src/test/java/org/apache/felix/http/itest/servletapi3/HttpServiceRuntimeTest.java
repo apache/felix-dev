@@ -73,6 +73,7 @@ import javax.servlet.http.HttpSessionListener;
 
 import org.junit.After;
 import org.junit.Before;
+import org.junit.Ignore;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.ops4j.pax.exam.junit.PaxExam;
@@ -92,6 +93,7 @@ import org.osgi.service.http.runtime.dto.RuntimeDTO;
 import org.osgi.service.http.runtime.dto.ServletContextDTO;
 import org.osgi.service.http.runtime.dto.ServletDTO;
 
+@Ignore("JavaServlet is no longer supported - only Jakarta Servlet; this class will be removed soon")
 @RunWith(PaxExam.class)
 @ExamReactorStrategy(PerMethod.class)
 public class HttpServiceRuntimeTest extends Servlet3BaseIntegrationTest {

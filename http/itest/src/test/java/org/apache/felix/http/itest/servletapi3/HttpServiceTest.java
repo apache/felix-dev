@@ -41,6 +41,7 @@ import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 
 import org.junit.After;
+import org.junit.Ignore;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.ops4j.pax.exam.junit.PaxExam;
@@ -54,6 +55,7 @@ import org.osgi.framework.wiring.BundleWiring;
 import org.osgi.service.http.HttpService;
 import org.osgi.service.http.runtime.HttpServiceRuntime;
 
+@Ignore("JavaServlet is no longer supported - only Jakarta Servlet; this class will be removed soon")
 @RunWith(PaxExam.class)
 @ExamReactorStrategy(PerMethod.class)
 public class HttpServiceTest extends Servlet3BaseIntegrationTest {

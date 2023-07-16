@@ -46,6 +46,7 @@ import javax.servlet.http.HttpSessionBindingEvent;
 import javax.servlet.http.HttpSessionEvent;
 import javax.servlet.http.HttpSessionListener;
 
+import org.junit.Ignore;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.ops4j.pax.exam.junit.PaxExam;
@@ -57,6 +58,7 @@ import org.osgi.service.http.whiteboard.HttpWhiteboardConstants;
 /**
  * Test cases for all supported event listeners.
  */
+@Ignore("JavaServlet is no longer supported - only Jakarta Servlet; this class will be removed soon")
 @RunWith(PaxExam.class)
 @ExamReactorStrategy(PerMethod.class)
 public class EventListenerTest extends Servlet3BaseIntegrationTest {
