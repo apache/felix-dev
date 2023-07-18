@@ -87,7 +87,6 @@ public class HealthCheckWebconsolePlugin extends HttpServlet {
     protected void activate(BundleContext bundleContext) {
         this.bundleContext = bundleContext;
     }
-
     
     /** Serve static resource if applicable, and return true in that case */
     private boolean getStaticResource(final HttpServletRequest req, final HttpServletResponse resp) throws ServletException, IOException {
@@ -132,6 +131,7 @@ public class HealthCheckWebconsolePlugin extends HttpServlet {
         final String overrideGlobalTimeoutStr = getParam(req, PARAM_OVERRIDE_GLOBAL_TIMEOUT, "");
 
         final PrintWriter pw = resp.getWriter();
+        final WebConsoleHelper c = new WebConsoleHelper(pw);
 
         if(Boolean.valueOf(req.getParameter(PARAM_SHOWLIST))) {
             doHealthCheckList(pw);
@@ -169,7 +169,6 @@ public class HealthCheckWebconsolePlugin extends HttpServlet {
                 }
 
             }
-            final WebConsoleHelper c = new WebConsoleHelper(resp.getWriter());
             c.titleHtml("Summary", total + " HealthCheck executed, " + failed + " failures");
             pw.println("</table>");
             pw.println("<br/><br/>");
@@ -195,11 +194,11 @@ public class HealthCheckWebconsolePlugin extends HttpServlet {
 
         c.tr();
         c.tdContent();
-        c.writer().print(c.escapeHtml(status.toString()));
+        c.writer().print(c.escapeHtmlContent(status.toString()));
         c.writer().print("<br/>Result: <span class='resultOk");
         c.writer().print(result.isOk());
         c.writer().print("'>");
-        c.writer().print(result.getStatus().toString());
+        c.writer().print(c.escapeHtmlContent(result.getStatus().toString()));
         c.writer().print("</span>");
         c.closeTd();
         c.closeTr();
@@ -213,12 +212,12 @@ public class HealthCheckWebconsolePlugin extends HttpServlet {
             c.writer().print("<div class='log");
             c.writer().print(e.isDebug() ? "DEBUG" : e.getStatus().toString());
             c.writer().print("'>");
-            c.writer().print(e.getStatus().toString());
+            c.writer().print(c.escapeHtmlContent(e.getStatus().toString()));
             c.writer().print(' ');
-            c.writer().print(c.escapeHtml(e.getMessage()));
+            c.writer().print(c.escapeHtmlContent(e.getMessage()));
             if (e.getException() != null) {
                 c.writer().print(" ");
-                c.writer().print(c.escapeHtml(e.getException().toString()));
+                c.writer().print(c.escapeHtmlContent(e.getException().toString()));
             }
             c.writer().println("</div>");
         }
@@ -226,7 +225,7 @@ public class HealthCheckWebconsolePlugin extends HttpServlet {
     }
 
     private void doHealthCheckList(final PrintWriter pw) throws IOException {
-        
+        final WebConsoleHelper c = new WebConsoleHelper(pw);    
         try {
 
             pw.println("<br/>");
@@ -238,12 +237,18 @@ public class HealthCheckWebconsolePlugin extends HttpServlet {
                 HealthCheckMetadata metadata = new HealthCheckMetadata(serviceReference);
                 
                 pw.println("<tr>");
-                pw.println("<td>"+metadata.getTitle()+"</td>");
+                pw.print("<td>");
+                pw.print(c.escapeHtmlContent(metadata.getTitle()));
+                pw.println("</td>");
 
                 pw.println("<td>");
                 for(String tag: metadata.getTags()) {
-                    String link = LABEL+"?tags="+tag;
-                    pw.println("<a href=\""+link+"\">"+tag+"</a><br/>");
+                    final String link = LABEL+"?tags="+tag;
+                    pw.print("<a href=\"");
+                    pw.print(c.escapeHtmlAttr(link));
+                    pw.print("\">");
+                    pw.print(c.escapeHtmlContent(tag));
+                    pw.println("</a><br/>");
                 }
                 pw.println("</td>");
                 
@@ -266,22 +271,23 @@ public class HealthCheckWebconsolePlugin extends HttpServlet {
                         }
                         if(HealthCheck.MBEAN_NAME.equals(propertyKey)) {
                             String link = "jmx/org.apache.felix.healthcheck%3Aname%3D"+value+"%2Ctype%3DHealthCheck";
-                            links.add("<a href=\""+link+"\">JMX Bean "+value+"</a>");
+                            links.add("<a href=\"".concat(c.escapeHtmlAttr(link)).concat("\">JMX Bean ").concat(c.escapeHtmlContent(value.toString())).concat("</a>"));
                             continue;
                         }
                         if(ComponentConstants.COMPONENT_NAME.equals(propertyKey)) {
-                            String link = "components/"+value;
-                            links.add("<a href=\""+link+"\">Component "+value+"</a>");
+                            String link = "components/".concat(value.toString());
+                            links.add("<a href=\"".concat(c.escapeHtmlAttr(link)).concat("\">Component ").concat(c.escapeHtmlContent(value.toString())).concat("</a>"));
                             continue;
                         }
                         if(Constants.SERVICE_ID.equals(propertyKey)) {
                             String link = "services/"+value;
-                            links.add("<a href=\""+link+"\">Service "+value+"</a>");
+                            links.add("<a href=\"".concat(c.escapeHtmlAttr(link)).concat("\">Service ").concat(c.escapeHtmlContent(value.toString())).concat("</a>"));
                             continue;
                         } else if(propertyKey.startsWith("service.")) {
                             continue;
                         }
-                        pw.println(propertyKey+" = "+value+"<br/>");
+                        pw.print(c.escapeHtmlContent(propertyKey+" = "+value));
+                        pw.println("<br/>");
                     }
                 }
                 pw.println("</td>");
@@ -290,7 +296,7 @@ public class HealthCheckWebconsolePlugin extends HttpServlet {
                 pw.println("<td>");
                 String symbolicBundleName = serviceReference.getBundle().getSymbolicName();
                 String link = "bundles/"+symbolicBundleName;
-                pw.println("<a href=\""+link+"\">"+symbolicBundleName+"</a><br/>");
+                pw.println("<a href=\"".concat(c.escapeHtmlAttr(link)).concat("\">").concat(c.escapeHtmlContent(symbolicBundleName)).concat("</a>"));
                 pw.println("</td>");
 
                 pw.println("</tr>");
@@ -301,7 +307,6 @@ public class HealthCheckWebconsolePlugin extends HttpServlet {
         } catch (InvalidSyntaxException e) {
             throw new IllegalStateException("Could not render list of health checks: "+e, e);
         }
-
     }
 
     private void doForm(final PrintWriter pw,
@@ -322,7 +327,7 @@ public class HealthCheckWebconsolePlugin extends HttpServlet {
         c.tdContent();
         c.writer().print("<input type='text' name='" + PARAM_TAGS + "' value='");
         if ( tags != null ) {
-            c.writer().print(c.escapeHtml(tags));
+            c.writer().print(c.escapeHtmlAttr(tags));
         }
         c.writer().println("' class='input' size='80'> <a href='"+LABEL+"?"+PARAM_SHOWLIST+"=true'>Show list</a>");
         c.closeTd();
@@ -373,19 +378,17 @@ public class HealthCheckWebconsolePlugin extends HttpServlet {
         c.writer().print("<td>Force instant execution (no cache, async checks are executed)</td>");
         c.writer().print("</tr>");
         
-        
         c.writer().print("<tr>");
         c.writer().print("<td colspan='4'>Override global timeout ");
         c.writer().print("<input type='text' name='" + PARAM_OVERRIDE_GLOBAL_TIMEOUT + "' value='");
         if (overrideGlobalTimeoutStr != null) {
-            c.writer().print(c.escapeHtml(overrideGlobalTimeoutStr));
+            c.writer().print(c.escapeHtmlAttr(overrideGlobalTimeoutStr));
         }
         c.writer().println("' class='input' size='10'> ms");
         c.writer().print("</td>");
 
         c.writer().print("</tr>");
 
-        
         c.writer().print("</table>");
         
         c.closeTd();

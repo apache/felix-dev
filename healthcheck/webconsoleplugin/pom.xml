@@ -23,7 +23,7 @@
     <parent>
         <groupId>org.apache.felix</groupId>
         <artifactId>felix-parent</artifactId>
-        <version>6</version>
+        <version>7</version>
         <relativePath />
     </parent>
 
@@ -41,8 +41,8 @@
         <felix.java.version>8</felix.java.version>
     </properties>
     <scm>
-        <connection>scm:git:ssh://git@github.com/apache/felix-dev.git</connection>
-        <developerConnection>scm:git:ssh://git@github.com/apache/felix-dev.git</developerConnection>
+        <connection>scm:git:https://github.com/apache/felix-dev.git</connection>
+        <developerConnection>scm:git:https://github.com/apache/felix-dev.git</developerConnection>
         <url>https://gitbox.apache.org/repos/asf?p=felix-dev.git</url>
       <tag>HEAD</tag>
   </scm>
@@ -53,7 +53,7 @@
             <plugin>
                 <groupId>biz.aQute.bnd</groupId>
                 <artifactId>bnd-maven-plugin</artifactId>
-                <version>4.0.0</version>
+                <version>6.4.0</version>
                 <executions>
                     <execution>
                         <goals>
@@ -90,11 +90,16 @@
         </dependency>
         <dependency>
             <groupId>org.osgi</groupId>
-            <artifactId>osgi.cmpn</artifactId>
-            <version>6.0.0</version>
+            <artifactId>org.osgi.service.component</artifactId>
+            <version>1.4.0</version>
             <scope>provided</scope>
         </dependency>
-
+        <dependency>
+            <groupId>org.osgi</groupId>
+            <artifactId>org.osgi.service.component.annotations</artifactId>
+            <version>1.4.0</version>
+            <scope>provided</scope>
+        </dependency>
         <dependency>
             <groupId>javax.servlet</groupId>
             <artifactId>servlet-api</artifactId>
@@ -102,9 +107,9 @@
             <scope>provided</scope>
         </dependency>
         <dependency>
-            <groupId>org.slf4j</groupId>
-            <artifactId>slf4j-api</artifactId>
-            <version>1.7.6</version>
+            <groupId>org.owasp.encoder</groupId>
+            <artifactId>encoder</artifactId>
+            <version>1.2.3</version>
             <scope>provided</scope>
         </dependency>
 
@@ -112,13 +117,19 @@
         <dependency>
             <groupId>junit</groupId>
             <artifactId>junit</artifactId>
-            <version>4.13.1</version>
+            <version>4.13.2</version>
             <scope>test</scope>
         </dependency>
         <dependency>
             <groupId>org.mockito</groupId>
             <artifactId>mockito-core</artifactId>
-            <version>1.9.5</version>
+            <version>5.4.0</version>
+            <scope>test</scope>
+        </dependency>
+        <dependency>
+            <groupId>org.slf4j</groupId>
+            <artifactId>slf4j-api</artifactId>
+            <version>1.7.6</version>
             <scope>test</scope>
         </dependency>
         
