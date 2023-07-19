@@ -18,6 +18,7 @@
  */
 package org.apache.felix.http.base.internal.runtime;
 
+import java.util.Arrays;
 import java.util.EventListener;
 import java.util.HashSet;
 import java.util.Set;
@@ -97,5 +98,17 @@ public class ListenerInfo extends WhiteboardServiceInfo<EventListener>
             }
         }
         return false;
+    }
+
+    @Override
+    public boolean isSame(AbstractInfo<EventListener> other) {
+        if (!super.isSame(other)) {
+            return false;
+        }
+        final ListenerInfo o = (ListenerInfo) other;
+        if (!Arrays.deepEquals(this.types, o.types)) {
+            return false;
+        }
+        return this.enabled == o.enabled;
     }
 }

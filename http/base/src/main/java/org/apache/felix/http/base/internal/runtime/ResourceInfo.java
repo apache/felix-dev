@@ -18,6 +18,9 @@
  */
 package org.apache.felix.http.base.internal.runtime;
 
+import java.util.Arrays;
+import java.util.Objects;
+
 import org.apache.felix.http.base.internal.util.PatternUtil;
 import org.osgi.framework.ServiceReference;
 import org.osgi.service.http.whiteboard.HttpWhiteboardConstants;
@@ -85,5 +88,15 @@ public final class ResourceInfo extends WhiteboardServiceInfo<Object>
     public ServletInfo getServletInfo()
     {
         return this.servletInfo;
+    }
+
+    @Override
+    public boolean isSame(AbstractInfo<Object> other) {
+        if (!super.isSame(other)) {
+            return false;
+        }
+        final ResourceInfo o = (ResourceInfo) other;
+        return Arrays.equals(this.patterns, o.patterns)
+            && Objects.equals(this.prefix, o.prefix);
     }
 }

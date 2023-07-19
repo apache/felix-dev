@@ -73,4 +73,26 @@ public class ListenerInfoTest
         when(ref.getProperty(HttpWhiteboardConstants.HTTP_WHITEBOARD_LISTENER)).thenReturn(Boolean.FALSE);
         assertFalse(new ListenerInfo(ref).isValid());
     }
+
+    @Test
+    public void testIsSame() {
+        final ServiceReference<EventListener> refOld = mock(ServiceReference.class);
+        when(refOld.getProperty(Constants.SERVICE_ID)).thenReturn(1L);
+        when(refOld.getProperty(Constants.OBJECTCLASS))
+                .thenReturn(new String[] { ServletContextListener.class.getName() });
+
+        final ServiceReference<EventListener> refNew = mock(ServiceReference.class);
+        when(refNew.getProperty(Constants.SERVICE_ID)).thenReturn(1L);
+        when(refNew.getProperty(Constants.OBJECTCLASS))
+                .thenReturn(new String[] { ServletContextListener.class.getName() });
+        when(refNew.getProperty("foo")).thenReturn("bar");
+
+        assertTrue(new ListenerInfo(refNew).isSame(new ListenerInfo(refOld)));
+        assertTrue(new ListenerInfo(refOld).isSame(new ListenerInfo(refNew)));
+
+        when(refNew.getProperty(Constants.SERVICE_RANKING)).thenReturn(1);
+
+        assertFalse(new ListenerInfo(refNew).isSame(new ListenerInfo(refOld)));
+        assertFalse(new ListenerInfo(refOld).isSame(new ListenerInfo(refNew)));
+    }
 }

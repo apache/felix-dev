@@ -76,8 +76,12 @@ public final class ServletContextHelperTracker extends ServiceTracker<ServletCon
     @Override
     public final void modifiedService(@NotNull final ServiceReference<ServletContextHelper> ref, @NotNull final ServiceReference<ServletContextHelper> service)
     {
-        this.removed(ref);
-        this.added(ref);
+        final ServletContextHelperInfo newInfo = new ServletContextHelperInfo(ref);
+        final ServletContextHelperInfo oldInfo = this.allInfos.get(ref.getProperty(Constants.SERVICE_ID));
+        if (oldInfo == null || !newInfo.isSame(oldInfo)) {
+            this.removed(ref);
+            this.added(ref);
+        }
     }
 
     @Override

@@ -22,6 +22,7 @@ import java.util.Collection;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.Map;
+import java.util.Objects;
 
 import org.osgi.framework.Constants;
 import org.osgi.framework.ServiceReference;
@@ -88,11 +89,24 @@ public abstract class AbstractInfo<T> implements Comparable<AbstractInfo<T>>
             }
             // Service id's can be negative. Negative id's follow the reverse natural ordering of integers.
             int reverseOrder = ( this.serviceId >= 0 && other.serviceId >= 0 ) ? 1 : -1;
-            return reverseOrder * new Long(this.serviceId).compareTo(other.serviceId);
+            return reverseOrder * Long.valueOf(this.serviceId).compareTo(other.serviceId);
         }
 
-        int result = new Integer(other.ranking).compareTo(this.ranking);
+        int result = Integer.valueOf(other.ranking).compareTo(this.ranking);
         return result;
+    }
+
+    /**
+     * Compare two info objects 
+     */
+    public boolean isSame(final AbstractInfo<T> other) {
+        if (this.serviceId != other.serviceId) {
+            return false;
+        }
+        if (this.ranking != other.ranking) {
+            return false;
+        }
+        return Objects.equals(this.target, other.target);
     }
 
     protected boolean isEmpty(final String value)

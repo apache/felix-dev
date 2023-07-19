@@ -18,6 +18,8 @@
  */
 package org.apache.felix.http.base.internal.runtime;
 
+import java.util.Objects;
+
 import org.apache.felix.http.base.internal.util.InternalIdFactory;
 import org.osgi.framework.Bundle;
 import org.osgi.framework.BundleContext;
@@ -98,5 +100,14 @@ public abstract class WhiteboardServiceInfo<T> extends AbstractInfo<T>
     public Filter getContextSelectionFilter()
     {
         return this.filter;
+    }
+
+    @Override
+    public boolean isSame(AbstractInfo<T> other) {
+        if (!super.isSame(other)) {
+            return false;
+        }
+        final WhiteboardServiceInfo<T> o = (WhiteboardServiceInfo<T>) other;
+        return Objects.equals(this.contextSelection, o.contextSelection);
     }
 }

@@ -19,6 +19,8 @@
 package org.apache.felix.http.base.internal.runtime;
 
 import java.util.Map;
+import java.util.Objects;
+
 
 import org.osgi.framework.ServiceReference;
 import org.osgi.service.http.whiteboard.HttpWhiteboardConstants;
@@ -50,5 +52,14 @@ public final class PreprocessorInfo extends WhiteboardServiceInfo<Preprocessor>
     public Map<String, String> getInitParameters()
     {
         return initParams;
+    }
+
+    @Override
+    public boolean isSame(AbstractInfo<Preprocessor> other) {
+        if (!super.isSame(other)) {
+            return false;
+        }
+        final PreprocessorInfo o = (PreprocessorInfo) other;
+        return Objects.equals(this.initParams, o.initParams);
     }
 }
