@@ -18,7 +18,9 @@
  */
 package org.apache.felix.http.base.internal.runtime;
 
+import java.util.Arrays;
 import java.util.Map;
+import java.util.Objects;
 import java.util.regex.Pattern;
 import java.util.regex.PatternSyntaxException;
 
@@ -224,5 +226,20 @@ public class FilterInfo extends WhiteboardServiceInfo<Filter>
             return ((FilterWrapper)filter).getFilter().getClass().getName();
         }
         return filter.getClass().getName();
+    }
+
+    @Override
+    public boolean isSame(AbstractInfo<Filter> other) {
+        if (!super.isSame(other)) {
+            return false;
+        }
+        final FilterInfo o = (FilterInfo) other;
+        return Objects.equals(this.name, o.name)
+            && Arrays.equals(this.patterns, o.patterns)
+            && Arrays.equals(this.servletNames, o.servletNames)
+            && Arrays.equals(this.regexs, o.regexs)
+            && this.asyncSupported == o.asyncSupported
+            && Arrays.equals(this.dispatcher, o.dispatcher)
+            && Objects.equals(this.initParams, o.initParams);
     }
 }

@@ -18,6 +18,9 @@
  */
 package org.apache.felix.http.base.internal.runtime;
 
+import java.util.Arrays;
+import java.util.Objects;
+
 import org.apache.felix.http.base.internal.util.PatternUtil;
 import org.jetbrains.annotations.NotNull;
 import org.osgi.framework.ServiceReference;
@@ -90,5 +93,15 @@ public final class ResourceInfo extends WhiteboardServiceInfo<Object>
     @Override
     public @NotNull String getType() {
         return "Resource";
+    }
+
+    @Override
+    public boolean isSame(AbstractInfo<Object> other) {
+        if (!super.isSame(other)) {
+            return false;
+        }
+        final ResourceInfo o = (ResourceInfo) other;
+        return Arrays.equals(this.patterns, o.patterns)
+            && Objects.equals(this.prefix, o.prefix);
     }
 }

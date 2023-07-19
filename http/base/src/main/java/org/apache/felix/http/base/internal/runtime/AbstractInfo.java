@@ -22,6 +22,7 @@ import java.util.Collection;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.Map;
+import java.util.Objects;
 
 import org.apache.felix.http.base.internal.util.ServiceUtils;
 import org.jetbrains.annotations.NotNull;
@@ -96,6 +97,19 @@ public abstract class AbstractInfo<T> implements Comparable<AbstractInfo<T>>
 
         int result = Integer.valueOf(other.ranking).compareTo(this.ranking);
         return result;
+    }
+
+    /**
+     * Compare two info objects 
+     */
+    public boolean isSame(final AbstractInfo<T> other) {
+        if (this.serviceId != other.serviceId) {
+            return false;
+        }
+        if (this.ranking != other.ranking) {
+            return false;
+        }
+        return Objects.equals(this.target, other.target);
     }
 
     protected boolean isEmpty(final String value)

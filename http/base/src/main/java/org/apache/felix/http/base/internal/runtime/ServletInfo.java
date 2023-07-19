@@ -18,8 +18,10 @@
  */
 package org.apache.felix.http.base.internal.runtime;
 
+import java.util.Arrays;
 import java.util.Collections;
 import java.util.Map;
+import java.util.Objects;
 
 import org.apache.felix.http.base.internal.dispatch.MultipartConfig;
 import org.apache.felix.http.base.internal.jakartawrappers.ServletWrapper;
@@ -271,5 +273,21 @@ public class ServletInfo extends WhiteboardServiceInfo<Servlet>
             return ((ServletWrapper)servlet).getServlet().getClass().getName();
         }
         return servlet.getClass().getName();
+    }
+
+    @Override
+    public boolean isSame(AbstractInfo<Servlet> other) {
+        if (!super.isSame(other)) {
+            return false;
+        }
+        final ServletInfo o = (ServletInfo) other;
+        return Objects.equals(this.name, o.name)
+            && Arrays.equals(this.patterns, o.patterns)
+            && Arrays.equals(this.errorPage, o.errorPage)
+            && this.asyncSupported == o.asyncSupported
+            && this.isResource == o.isResource
+            && Objects.equals(this.multipartConfig, o.multipartConfig)
+            && Objects.equals(this.prefix, o.prefix)
+            && Objects.equals(this.initParams, o.initParams);
     }
 }

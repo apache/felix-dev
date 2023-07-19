@@ -21,6 +21,7 @@ package org.apache.felix.http.base.internal.runtime;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.Map;
+import java.util.Objects;
 
 import org.apache.felix.http.base.internal.service.HttpServiceFactory;
 import org.apache.felix.http.base.internal.util.PatternUtil;
@@ -132,5 +133,16 @@ public class ServletContextHelperInfo extends AbstractInfo<ServletContextHelper>
             props.put(org.osgi.service.http.whiteboard.HttpWhiteboardConstants.HTTP_SERVICE_CONTEXT_PROPERTY, this.getName());
         }
         return info.getContextSelectionFilter().matches(props);
+    }
+
+    @Override
+    public boolean isSame(AbstractInfo<ServletContextHelper> other) {
+        if (!super.isSame(other)) {
+            return false;
+        }
+        final ServletContextHelperInfo o = (ServletContextHelperInfo) other;
+        return Objects.equals(this.name, o.name)
+            && Objects.equals(this.path, o.path)
+            && Objects.equals(this.initParams, o.initParams);
     }
 }
