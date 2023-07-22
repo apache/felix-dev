@@ -30,6 +30,16 @@ import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicLong;
 
+import org.apache.felix.http.itest.BaseIntegrationTest;
+import org.junit.After;
+import org.junit.Before;
+import org.osgi.framework.InvalidSyntaxException;
+import org.osgi.framework.ServiceEvent;
+import org.osgi.framework.ServiceListener;
+import org.osgi.framework.ServiceRegistration;
+import org.osgi.service.servlet.runtime.HttpServiceRuntime;
+import org.osgi.service.servlet.whiteboard.HttpWhiteboardConstants;
+
 import jakarta.servlet.Filter;
 import jakarta.servlet.FilterChain;
 import jakarta.servlet.FilterConfig;
@@ -40,16 +50,6 @@ import jakarta.servlet.ServletResponse;
 import jakarta.servlet.http.HttpServlet;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
-
-import org.apache.felix.http.itest.BaseIntegrationTest;
-import org.junit.After;
-import org.junit.Before;
-import org.osgi.framework.InvalidSyntaxException;
-import org.osgi.framework.ServiceEvent;
-import org.osgi.framework.ServiceListener;
-import org.osgi.framework.ServiceRegistration;
-import org.osgi.service.servlet.runtime.HttpServiceRuntime;
-import org.osgi.service.servlet.whiteboard.HttpWhiteboardConstants;
 
 /**
  * Base class for integration tests.
@@ -85,7 +85,8 @@ public abstract class Servlet5BaseIntegrationTest extends BaseIntegrationTest {
         }
 
         @Override
-        public final void doFilter(ServletRequest req, ServletResponse resp, FilterChain chain) throws IOException, ServletException {
+        public final void doFilter(ServletRequest req, ServletResponse resp, FilterChain chain)
+                throws IOException, ServletException {
             filter((HttpServletRequest) req, (HttpServletResponse) resp, chain);
         }
 
@@ -96,7 +97,8 @@ public abstract class Servlet5BaseIntegrationTest extends BaseIntegrationTest {
             }
         }
 
-        protected void filter(HttpServletRequest req, HttpServletResponse resp, FilterChain chain) throws IOException, ServletException {
+        protected void filter(HttpServletRequest req, HttpServletResponse resp, FilterChain chain)
+                throws IOException, ServletException {
             resp.setStatus(HttpServletResponse.SC_OK);
         }
     }
@@ -127,9 +129,9 @@ public abstract class Servlet5BaseIntegrationTest extends BaseIntegrationTest {
     }
 
     public HttpServiceRuntime getHttpServiceRuntime() {
-         final HttpServiceRuntime runtime = this.getService(HttpServiceRuntime.class);
-         assertNotNull(runtime);
-         return runtime;
+        final HttpServiceRuntime runtime = this.getService(HttpServiceRuntime.class);
+        assertNotNull(runtime);
+        return runtime;
     }
 
     private ServiceListener serviceListener;
@@ -142,11 +144,12 @@ public abstract class Servlet5BaseIntegrationTest extends BaseIntegrationTest {
 
             @Override
             public void serviceChanged(final ServiceEvent event) {
-                runtimeCounter.set((Long)event.getServiceReference().getProperty("service.changecount"));
+                runtimeCounter.set((Long) event.getServiceReference().getProperty("service.changecount"));
             }
-            
+
         };
-        this.m_context.addServiceListener(this.serviceListener, "(objectClass=" + HttpServiceRuntime.class.getName() + ")");
+        this.m_context.addServiceListener(this.serviceListener,
+                "(objectClass=" + HttpServiceRuntime.class.getName() + ")");
     }
 
     public long getRuntimeCounter() {
@@ -154,7 +157,7 @@ public abstract class Servlet5BaseIntegrationTest extends BaseIntegrationTest {
     }
 
     public long waitForRuntime(final long oldCounter) {
-        while ( runtimeCounter.get() == oldCounter ) {
+        while (runtimeCounter.get() == oldCounter) {
             try {
                 Thread.sleep(10);
             } catch (InterruptedException e) {
@@ -166,18 +169,18 @@ public abstract class Servlet5BaseIntegrationTest extends BaseIntegrationTest {
 
     @After
     public void unregisterServices() throws InterruptedException {
-        if ( this.serviceListener != null ) {
+        if (this.serviceListener != null) {
             this.m_context.removeServiceListener(this.serviceListener);
             this.serviceListener = null;
         }
         for (final ServiceRegistration<?> serviceRegistration : registrations) {
             try {
                 serviceRegistration.unregister();
-            } catch ( final IllegalStateException ignore) {
+            } catch (final IllegalStateException ignore) {
                 // ignore
             }
         }
-        if ( destroyLatch != null ) {
+        if (destroyLatch != null) {
             waitForDestroy();
         }
     }
@@ -192,7 +195,8 @@ public abstract class Servlet5BaseIntegrationTest extends BaseIntegrationTest {
         return this.registerServlet(path, servlet, new Hashtable<>());
     }
 
-    protected ServiceRegistration<Servlet> registerServlet(final String path, final Servlet servlet, final Dictionary<String, Object> props) {
+    protected ServiceRegistration<Servlet> registerServlet(final String path, final Servlet servlet,
+            final Dictionary<String, Object> props) {
         props.put(HttpWhiteboardConstants.HTTP_WHITEBOARD_SERVLET_PATTERN, path);
         final ServiceRegistration<Servlet> reg = this.m_context.registerService(Servlet.class, servlet, props);
         this.registrations.add(reg);

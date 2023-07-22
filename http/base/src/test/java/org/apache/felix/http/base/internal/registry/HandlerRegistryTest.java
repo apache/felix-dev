@@ -19,82 +19,133 @@ package org.apache.felix.http.base.internal.registry;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertTrue;
-
-import java.util.Collections;
+import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.when;
 
 import org.apache.felix.http.base.internal.HttpConfig;
-import org.apache.felix.http.base.internal.handler.HttpServiceServletHandler;
+import org.apache.felix.http.base.internal.context.ExtServletContext;
 import org.apache.felix.http.base.internal.handler.ServletHandler;
+import org.apache.felix.http.base.internal.handler.WhiteboardServletHandler;
+import org.apache.felix.http.base.internal.runtime.ServletContextHelperInfo;
 import org.apache.felix.http.base.internal.runtime.ServletInfo;
 import org.apache.felix.http.base.internal.runtime.dto.FailedDTOHolder;
-import org.apache.felix.http.base.internal.service.HttpServiceFactory;
+import org.junit.Before;
 import org.junit.Test;
-import org.mockito.Mockito;
+import org.osgi.framework.Bundle;
+import org.osgi.framework.BundleContext;
+import org.osgi.framework.Constants;
+import org.osgi.framework.InvalidSyntaxException;
+import org.osgi.framework.ServiceObjects;
+import org.osgi.framework.ServiceReference;
 import org.osgi.service.servlet.runtime.dto.ServletContextDTO;
 import org.osgi.service.servlet.runtime.dto.ServletDTO;
+import org.osgi.service.servlet.whiteboard.HttpWhiteboardConstants;
 
 import jakarta.servlet.Servlet;
-import jakarta.servlet.ServletConfig;
 
+public class HandlerRegistryTest {
+    private HandlerRegistry registry;
 
-public class HandlerRegistryTest
-{
-    private final HandlerRegistry registry = new HandlerRegistry(new HttpConfig());
+    @Before
+    public void setUp() {
+        // @formatter:off
+        final ServletContextHelperInfo servletContextHelperInfo = new ServletContextHelperInfo(
+                Integer.MIN_VALUE, 
+                HttpConfig.DEFAULT_CONTEXT_SERVICE_ID, 
+                HttpWhiteboardConstants.HTTP_WHITEBOARD_DEFAULT_CONTEXT_NAME, 
+                "/", 
+                null) {
+            // nothing to override
+        };
+        // @formatter:on
 
-    @Test public void testInitialSetup()
-    {
+        registry = new HandlerRegistry(new HttpConfig());
+
+        registry.add(new PerContextHandlerRegistry(servletContextHelperInfo, registry.getConfig()));
+    }
+
+    @Test
+    public void testInitialSetup() {
         final FailedDTOHolder holder = new FailedDTOHolder();
         final ServletContextDTO dto = new ServletContextDTO();
-        dto.serviceId = HttpServiceFactory.HTTP_SERVICE_CONTEXT_SERVICE_ID;
-
-        assertFalse(registry.getRuntimeInfo(dto, holder));
-
-        registry.init();
+        dto.serviceId = HttpConfig.DEFAULT_CONTEXT_SERVICE_ID;
 
         assertTrue(registry.getRuntimeInfo(dto, holder));
 
         registry.shutdown();
+
         assertFalse(registry.getRuntimeInfo(dto, holder));
     }
 
     @Test
-    public void testAddRemoveServlet() throws Exception
-    {
-        registry.init();
-
+    public void testAddRemoveServlet() throws Exception {
         final FailedDTOHolder holder = new FailedDTOHolder();
         final ServletContextDTO dto = new ServletContextDTO();
-        dto.serviceId = HttpServiceFactory.HTTP_SERVICE_CONTEXT_SERVICE_ID;
+        dto.serviceId = HttpConfig.DEFAULT_CONTEXT_SERVICE_ID;
         dto.servletDTOs = new ServletDTO[0];
 
-        Servlet servlet = Mockito.mock(Servlet.class);
-        final ServletInfo info = new ServletInfo("foo", "/foo", Collections.<String, String> emptyMap());
-        ServletHandler handler = new HttpServiceServletHandler(-1, null, info, servlet);
+        final ServletHandler handler = createServletHandler(1L, "foo", "/foo");
 
         assertTrue(registry.getRuntimeInfo(dto, holder));
         assertEquals("Precondition", 0, dto.servletDTOs.length);
 
-        registry.getRegistry(handler.getContextServiceId()).registerServlet(handler);
-        Mockito.verify(servlet, Mockito.times(1)).init(Mockito.any(ServletConfig.class));
+        registry.getRegistry(HttpConfig.DEFAULT_CONTEXT_SERVICE_ID).registerServlet(handler);
+
         assertTrue(registry.getRuntimeInfo(dto, holder));
         assertEquals(1, dto.servletDTOs.length);
-        assertEquals(info.getServiceId(), dto.servletDTOs[0].serviceId);
 
-        final ServletInfo info2 = new ServletInfo("bar", "/bar", Collections.<String, String> emptyMap());
-        ServletHandler handler2 = new HttpServiceServletHandler(-1, null, info2, Mockito.mock(Servlet.class));
-        registry.getRegistry(handler.getContextServiceId()).registerServlet(handler2);
+        final ServletHandler handler2 = createServletHandler(2L, "bar", "/bar");
+
+        registry.getRegistry(HttpConfig.DEFAULT_CONTEXT_SERVICE_ID).registerServlet(handler2);
         assertTrue(registry.getRuntimeInfo(dto, holder));
         assertEquals(2, dto.servletDTOs.length);
 
-        final ServletInfo info3 = new ServletInfo("zar", "/foo", Collections.<String, String> emptyMap());
-        ServletHandler handler3 = new HttpServiceServletHandler(-1, null,info3, Mockito.mock(Servlet.class));
-        registry.getRegistry(handler.getContextServiceId()).registerServlet(handler3);
+        final ServletHandler handler3 = createServletHandler(3L, "zar", "/foo");
+
+        registry.getRegistry(HttpConfig.DEFAULT_CONTEXT_SERVICE_ID).registerServlet(handler3);
         assertTrue(registry.getRuntimeInfo(dto, holder));
         assertEquals(2, dto.servletDTOs.length);
         assertEquals(1, holder.failedServletDTOs.size());
 
         registry.shutdown();
     }
+
+    private static ServletInfo createServletInfo(final long id, final String name, final String... paths)
+            throws InvalidSyntaxException {
+        final BundleContext bCtx = mock(BundleContext.class);
+        final Bundle bundle = mock(Bundle.class);
+        when(bundle.getBundleContext()).thenReturn(bCtx);
+
+        @SuppressWarnings("unchecked")
+        final ServiceReference<Servlet> ref = mock(ServiceReference.class);
+        when(ref.getBundle()).thenReturn(bundle);
+        when(ref.getProperty(Constants.SERVICE_ID)).thenReturn(id);
+        when(ref.getProperty(Constants.SERVICE_RANKING)).thenReturn(Integer.MAX_VALUE);
+        when(ref.getProperty(HttpWhiteboardConstants.HTTP_WHITEBOARD_SERVLET_NAME)).thenReturn(name);
+        when(ref.getProperty(HttpWhiteboardConstants.HTTP_WHITEBOARD_SERVLET_PATTERN)).thenReturn(paths);
+        when(ref.getPropertyKeys()).thenReturn(new String[0]);
+        final ServletInfo si = new ServletInfo(ref);
+
+        return si;
+    }
+
+    private static ServletHandler createServletHandler(final long id, final String name, final String... paths)
+            throws InvalidSyntaxException {
+        final ServletInfo si = createServletInfo(id, name, paths);
+
+        @SuppressWarnings("unchecked")
+        final ServiceObjects<Servlet> so = mock(ServiceObjects.class);
+        final BundleContext bundleContext = mock(BundleContext.class);
+        when(bundleContext.getServiceObjects(si.getServiceReference())).thenReturn(so);
+
+        final Servlet servlet = mock(Servlet.class);
+        when(so.getService()).thenReturn(servlet);
+
+        final ExtServletContext servletContext = mock(ExtServletContext.class);
+
+        return new WhiteboardServletHandler(id, servletContext, si, bundleContext, servlet);
+    }
+
 /*
     @Test
     public void testAddServletWhileSameServletAddedDuringInit() throws Exception

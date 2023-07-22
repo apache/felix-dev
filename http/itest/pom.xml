@@ -92,18 +92,10 @@
             <artifactId>org.apache.felix.http.servlet-api</artifactId>
             <version>${http.servlet.api.version}</version>
         </dependency>
-        <!-- TODO: remove this - only 'org.osgi.service.servlet' is used --> 
         <dependency>
             <groupId>org.osgi</groupId>
-            <artifactId>org.osgi.service.http</artifactId>
-            <version>1.2.1</version>
-           <scope>provided</scope>
-        </dependency>
-        <!-- TODO: remove this - only 'org.osgi.service.servlet' is used --> 
-        <dependency>
-            <groupId>org.osgi</groupId>
-            <artifactId>org.osgi.service.http.whiteboard</artifactId>
-            <version>1.1.0</version>
+            <artifactId>org.osgi.service.servlet</artifactId>
+            <version>2.0.0</version>
             <scope>provided</scope>
         </dependency>
         <dependency>
@@ -152,14 +144,6 @@
             <artifactId>org.apache.felix.framework</artifactId>
             <version>7.0.5</version>
             <scope>test</scope>
-        </dependency>
-        
-        <!-- required by classes from 'org.apache.felix.http.itest.servletapi5' package -->
-        <dependency>
-            <groupId>org.osgi</groupId>
-            <artifactId>org.osgi.service.servlet</artifactId>
-            <version>2.0.0</version>
-            <scope>provided</scope>
         </dependency>
     </dependencies>
 </project>

@@ -32,6 +32,14 @@ import java.util.List;
 import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.TimeUnit;
 
+import org.junit.Test;
+import org.junit.runner.RunWith;
+import org.ops4j.pax.exam.junit.PaxExam;
+import org.ops4j.pax.exam.spi.reactors.ExamReactorStrategy;
+import org.ops4j.pax.exam.spi.reactors.PerMethod;
+import org.osgi.framework.ServiceRegistration;
+import org.osgi.service.servlet.whiteboard.HttpWhiteboardConstants;
+
 import jakarta.servlet.Servlet;
 import jakarta.servlet.ServletContextEvent;
 import jakarta.servlet.ServletContextListener;
@@ -45,14 +53,6 @@ import jakarta.servlet.http.HttpSessionAttributeListener;
 import jakarta.servlet.http.HttpSessionBindingEvent;
 import jakarta.servlet.http.HttpSessionEvent;
 import jakarta.servlet.http.HttpSessionListener;
-
-import org.junit.Test;
-import org.junit.runner.RunWith;
-import org.ops4j.pax.exam.junit.PaxExam;
-import org.ops4j.pax.exam.spi.reactors.ExamReactorStrategy;
-import org.ops4j.pax.exam.spi.reactors.PerMethod;
-import org.osgi.framework.ServiceRegistration;
-import org.osgi.service.servlet.whiteboard.HttpWhiteboardConstants;
 
 /**
  * Test cases for all supported event listeners.
@@ -97,17 +97,17 @@ public class EventListenerTest extends Servlet5BaseIntegrationTest {
 
         this.registrations.add(m_context.registerService(HttpSessionListener.class, listener, getListenerProps()));
         this.setupLatches(1);
-        this.registrations.add(m_context.registerService(Servlet.class,
-            new TestServlet() {
-                @Override
-                protected void doGet(HttpServletRequest req, HttpServletResponse resp) throws ServletException, IOException {
-                    HttpSession session = req.getSession();
-                    session.setMaxInactiveInterval(2);
+        this.registrations.add(m_context.registerService(Servlet.class, new TestServlet() {
+            @Override
+            protected void doGet(HttpServletRequest req, HttpServletResponse resp)
+                    throws ServletException, IOException {
+                HttpSession session = req.getSession();
+                session.setMaxInactiveInterval(2);
 
-                    resp.setStatus(SC_OK);
-                    resp.flushBuffer();
-                }
-            }, getServletProps("/session")));
+                resp.setStatus(SC_OK);
+                resp.flushBuffer();
+            }
+        }, getServletProps("/session")));
         this.waitForInit();
 
         assertContent(SC_OK, null, createURL("/session"));
@@ -147,39 +147,40 @@ public class EventListenerTest extends Servlet5BaseIntegrationTest {
             }
         };
 
-        this.registrations.add(m_context.registerService(HttpSessionAttributeListener.class, listener, getListenerProps()));
+        this.registrations
+                .add(m_context.registerService(HttpSessionAttributeListener.class, listener, getListenerProps()));
 
         this.setupLatches(1);
-        this.registrations.add(m_context.registerService(Servlet.class,
-            new TestServlet() {
-                @Override
-                protected void doGet(HttpServletRequest req, HttpServletResponse resp) throws ServletException, IOException {
-                    try {
-                        HttpSession session = req.getSession();
+        this.registrations.add(m_context.registerService(Servlet.class, new TestServlet() {
+            @Override
+            protected void doGet(HttpServletRequest req, HttpServletResponse resp)
+                    throws ServletException, IOException {
+                try {
+                    HttpSession session = req.getSession();
 
-                        session.setAttribute("foo", "bar");
+                    session.setAttribute("foo", "bar");
 
-                        assertTrue(addedLatch.await(5, TimeUnit.SECONDS));
+                    assertTrue(addedLatch.await(5, TimeUnit.SECONDS));
 
-                        session.setAttribute("foo", "qux");
+                    session.setAttribute("foo", "qux");
 
-                        assertTrue(replacedLatch.await(5, TimeUnit.SECONDS));
+                    assertTrue(replacedLatch.await(5, TimeUnit.SECONDS));
 
-                        session.removeAttribute("foo");
+                    session.removeAttribute("foo");
 
-                        assertTrue(removedLatch.await(5, TimeUnit.SECONDS));
+                    assertTrue(removedLatch.await(5, TimeUnit.SECONDS));
 
-                        resp.setStatus(SC_OK);
-                    } catch (AssertionError ae) {
-                        resp.sendError(SC_INTERNAL_SERVER_ERROR, ae.getMessage());
-                        throw ae;
-                    } catch (InterruptedException e) {
-                        resp.sendError(SC_SERVICE_UNAVAILABLE, e.getMessage());
-                    } finally {
-                        resp.flushBuffer();
-                    }
+                    resp.setStatus(SC_OK);
+                } catch (AssertionError ae) {
+                    resp.sendError(SC_INTERNAL_SERVER_ERROR, ae.getMessage());
+                    throw ae;
+                } catch (InterruptedException e) {
+                    resp.sendError(SC_SERVICE_UNAVAILABLE, e.getMessage());
+                } finally {
+                    resp.flushBuffer();
                 }
-            }, getServletProps("/session")));
+            }
+        }, getServletProps("/session")));
 
         this.waitForInit();
         assertContent(SC_OK, null, createURL("/session"));
@@ -208,9 +209,10 @@ public class EventListenerTest extends Servlet5BaseIntegrationTest {
         };
 
         // register with default context
-        final ServiceRegistration<ServletContextListener> reg = m_context.registerService(ServletContextListener.class, listener, getListenerProps());
+        final ServiceRegistration<ServletContextListener> reg = m_context.registerService(ServletContextListener.class,
+                listener, getListenerProps());
 
-        try{
+        try {
             assertTrue(initLatch.await(5, TimeUnit.SECONDS));
         } finally {
             reg.unregister();
@@ -245,14 +247,14 @@ public class EventListenerTest extends Servlet5BaseIntegrationTest {
 
         // register test servlet with default context
         this.setupLatches(1);
-        this.registrations.add(m_context.registerService(Servlet.class,
-                new TestServlet() {
-                    @Override
-                    protected void doGet(HttpServletRequest req, HttpServletResponse resp) throws ServletException, IOException {
-                        resp.setStatus(SC_OK);
-                        resp.flushBuffer();
-                    }
-                }, getServletProps("/test")));
+        this.registrations.add(m_context.registerService(Servlet.class, new TestServlet() {
+            @Override
+            protected void doGet(HttpServletRequest req, HttpServletResponse resp)
+                    throws ServletException, IOException {
+                resp.setStatus(SC_OK);
+                resp.flushBuffer();
+            }
+        }, getServletProps("/test")));
         this.waitForInit();
 
         assertEquals(0, list.size());

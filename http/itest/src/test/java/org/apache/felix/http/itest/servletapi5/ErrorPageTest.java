@@ -38,7 +38,7 @@ import org.junit.runner.RunWith;
 import org.ops4j.pax.exam.junit.PaxExam;
 import org.ops4j.pax.exam.spi.reactors.ExamReactorStrategy;
 import org.ops4j.pax.exam.spi.reactors.PerMethod;
-import org.osgi.service.http.context.ServletContextHelper;
+import org.osgi.service.servlet.context.ServletContextHelper;
 
 import jakarta.servlet.Servlet;
 import jakarta.servlet.http.HttpServletRequest;
@@ -48,10 +48,8 @@ import jakarta.servlet.http.HttpServletResponse;
 @ExamReactorStrategy(PerMethod.class)
 public class ErrorPageTest extends Servlet5BaseIntegrationTest {
 
-    public void setupErrorServlet(final Integer errorCode,
-        final Class<? extends RuntimeException> exceptionType,
-        String context) 
-    throws Exception {
+    public void setupErrorServlet(final Integer errorCode, final Class<? extends RuntimeException> exceptionType,
+            String context) throws Exception {
         Dictionary<String, Object> servletProps = new Hashtable<String, Object>();
         servletProps.put(HTTP_WHITEBOARD_SERVLET_NAME, "servlet");
         servletProps.put(HTTP_WHITEBOARD_SERVLET_PATTERN, asList("/test"));
@@ -63,8 +61,7 @@ public class ErrorPageTest extends Servlet5BaseIntegrationTest {
             private static final long serialVersionUID = 1L;
 
             @Override
-            protected void doGet(HttpServletRequest req, HttpServletResponse resp)
-            throws IOException {
+            protected void doGet(HttpServletRequest req, HttpServletResponse resp) throws IOException {
                 if (errorCode != null) {
                     resp.sendError(errorCode);
                 }
@@ -84,16 +81,13 @@ public class ErrorPageTest extends Servlet5BaseIntegrationTest {
         registrations.add(m_context.registerService(Servlet.class.getName(), servletWithErrorCode, servletProps));
     }
 
-    public void setupErrorPage(final Integer errorCode,
-        final Class<? extends Throwable> exceptionType,
-        final String name,
-        String context) throws Exception {
+    public void setupErrorPage(final Integer errorCode, final Class<? extends Throwable> exceptionType,
+            final String name, String context) throws Exception {
         TestServlet errorPage = new TestServlet() {
             private static final long serialVersionUID = 1L;
 
             @Override
-            protected void doGet(HttpServletRequest req, HttpServletResponse resp)
-                throws IOException {
+            protected void doGet(HttpServletRequest req, HttpServletResponse resp) throws IOException {
                 resp.getWriter().print(name);
                 resp.flushBuffer();
             }
@@ -111,21 +105,22 @@ public class ErrorPageTest extends Servlet5BaseIntegrationTest {
         errorPageProps.put(HTTP_WHITEBOARD_SERVLET_NAME, name);
         errorPageProps.put(HTTP_WHITEBOARD_SERVLET_ERROR_PAGE, errors);
         if (context != null) {
-            errorPageProps.put(HTTP_WHITEBOARD_CONTEXT_SELECT, "(" + HTTP_WHITEBOARD_CONTEXT_NAME + "=" + context + ")");
+            errorPageProps.put(HTTP_WHITEBOARD_CONTEXT_SELECT,
+                    "(" + HTTP_WHITEBOARD_CONTEXT_NAME + "=" + context + ")");
         }
 
         registrations.add(m_context.registerService(Servlet.class.getName(), errorPage, errorPageProps));
     }
 
     private void registerContext(String name, String path) throws InterruptedException {
-        Dictionary<String, ?> properties = createDictionary(
-                HTTP_WHITEBOARD_CONTEXT_NAME, name,
+        Dictionary<String, ?> properties = createDictionary(HTTP_WHITEBOARD_CONTEXT_NAME, name,
                 HTTP_WHITEBOARD_CONTEXT_PATH, path);
 
         ServletContextHelper servletContextHelper = new ServletContextHelper(m_context.getBundle()) {
             // test
         };
-        registrations.add(m_context.registerService(ServletContextHelper.class.getName(), servletContextHelper, properties));
+        registrations
+                .add(m_context.registerService(ServletContextHelper.class.getName(), servletContextHelper, properties));
 
         Thread.sleep(500);
     }

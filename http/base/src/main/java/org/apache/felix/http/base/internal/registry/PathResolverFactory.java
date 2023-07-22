@@ -18,8 +18,8 @@ package org.apache.felix.http.base.internal.registry;
 
 import java.util.regex.Pattern;
 
+import org.apache.felix.http.base.internal.HttpConfig;
 import org.apache.felix.http.base.internal.handler.ServletHandler;
-import org.apache.felix.http.base.internal.service.HttpServiceFactory;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
@@ -57,7 +57,10 @@ public abstract class PathResolverFactory {
         {
             return new PathMatcher(handler, pattern);
         }
-        else if ( handler != null && handler.getContextServiceId() == HttpServiceFactory.HTTP_SERVICE_CONTEXT_SERVICE_ID )
+        /**
+         * TODO: clarify regarding pattern matcher created dependent on whether service ID of handler used (previously HttpServiceFactory.HTTP_SERVICE_CONTEXT_SERVICE_ID)
+         **/
+        else if ( handler != null && handler.getContextServiceId() == HttpConfig.DEFAULT_CONTEXT_SERVICE_ID )
         {
             return new ExactAndPathMatcher(handler, pattern);
         }

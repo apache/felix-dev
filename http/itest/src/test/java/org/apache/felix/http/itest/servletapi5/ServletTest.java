@@ -118,7 +118,7 @@ public class ServletTest extends Servlet5BaseIntegrationTest {
     @Test
     public void testUseServletContextOk() throws Exception {
         this.setupLatches(1);
-        TestServlet servlet = new TestServlet()  {
+        TestServlet servlet = new TestServlet() {
             private static final long serialVersionUID = 1L;
 
             @Override
@@ -151,7 +151,8 @@ public class ServletTest extends Servlet5BaseIntegrationTest {
         servletProps.put(HttpWhiteboardConstants.HTTP_WHITEBOARD_SERVLET_PATTERN, path);
         servletProps.put(Constants.SERVICE_RANKING, rank);
         if (context != null) {
-            servletProps.put(HttpWhiteboardConstants.HTTP_WHITEBOARD_CONTEXT_SELECT, "(" + HttpWhiteboardConstants.HTTP_WHITEBOARD_CONTEXT_NAME + "=" + context + ")");
+            servletProps.put(HttpWhiteboardConstants.HTTP_WHITEBOARD_CONTEXT_SELECT,
+                    "(" + HttpWhiteboardConstants.HTTP_WHITEBOARD_CONTEXT_NAME + "=" + context + ")");
         }
 
         long counter = this.getRuntimeCounter();
@@ -159,8 +160,7 @@ public class ServletTest extends Servlet5BaseIntegrationTest {
             private static final long serialVersionUID = 1L;
 
             @Override
-            protected void doGet(HttpServletRequest req, HttpServletResponse resp)
-                throws IOException {
+            protected void doGet(HttpServletRequest req, HttpServletResponse resp) throws IOException {
                 resp.getWriter().print(name);
                 resp.flushBuffer();
             }
@@ -171,15 +171,15 @@ public class ServletTest extends Servlet5BaseIntegrationTest {
     }
 
     private void setupContext(String name, String path) throws InterruptedException {
-        Dictionary<String, ?> properties = createDictionary(
-            HttpWhiteboardConstants.HTTP_WHITEBOARD_CONTEXT_NAME, name,
-            HttpWhiteboardConstants.HTTP_WHITEBOARD_CONTEXT_PATH, path);
+        Dictionary<String, ?> properties = createDictionary(HttpWhiteboardConstants.HTTP_WHITEBOARD_CONTEXT_NAME, name,
+                HttpWhiteboardConstants.HTTP_WHITEBOARD_CONTEXT_PATH, path);
 
-        ServletContextHelper servletContextHelper = new ServletContextHelper(m_context.getBundle()){
+        ServletContextHelper servletContextHelper = new ServletContextHelper(m_context.getBundle()) {
             // test helper
         };
         long counter = this.getRuntimeCounter();
-        registrations.add(m_context.registerService(ServletContextHelper.class.getName(), servletContextHelper, properties));
+        registrations
+                .add(m_context.registerService(ServletContextHelper.class.getName(), servletContextHelper, properties));
         this.waitForRuntime(counter);
     }
 
@@ -195,8 +195,8 @@ public class ServletTest extends Servlet5BaseIntegrationTest {
 
     @Test
     public void testSameRankDoesNotReplace() throws Exception {
-        setupServlet("servlet1", new String[]{ "/foo", "/bar" }, 2, null);
-        setupServlet("servlet2", new String[]{ "/foo", "/baz" }, 2, null);
+        setupServlet("servlet1", new String[] { "/foo", "/bar" }, 2, null);
+        setupServlet("servlet2", new String[] { "/foo", "/baz" }, 2, null);
 
         assertContent("servlet1", createURL("/foo"));
         assertContent("servlet1", createURL("/bar"));
@@ -205,7 +205,7 @@ public class ServletTest extends Servlet5BaseIntegrationTest {
 
     @Test
     public void testHighRankResourceReplaces() throws Exception {
-        setupServlet("lowRankServlet", new String[]{ "/foo" }, 1, null);
+        setupServlet("lowRankServlet", new String[] { "/foo" }, 1, null);
 
         assertContent("lowRankServlet", createURL("/foo"));
 
@@ -216,8 +216,7 @@ public class ServletTest extends Servlet5BaseIntegrationTest {
         resourceProps.put(Constants.SERVICE_RANKING, 2);
 
         long counter = this.getRuntimeCounter();
-        registrations.add(m_context.registerService(Object.class.getName(),
-            new Object(), resourceProps));
+        registrations.add(m_context.registerService(Object.class.getName(), new Object(), resourceProps));
         this.waitForRuntime(counter);
 
         assertContent(getTestHtmlContent(), createURL("/foo"));
@@ -233,11 +232,11 @@ public class ServletTest extends Servlet5BaseIntegrationTest {
         setupContext("contextA", "/a");
         setupContext("contextB", "/a/b");
 
-        setupServlet("servlet1", new String[]{ "/b/test" }, 1, "contextA");
+        setupServlet("servlet1", new String[] { "/b/test" }, 1, "contextA");
 
         assertContent("servlet1", createURL("/a/b/test"));
 
-        setupServlet("servlet2", new String[]{ "/test" }, 1, "contextB");
+        setupServlet("servlet2", new String[] { "/test" }, 1, "contextB");
 
         assertContent("servlet2", createURL("/a/b/test"));
     }
@@ -247,11 +246,11 @@ public class ServletTest extends Servlet5BaseIntegrationTest {
         setupContext("contextA", "/a");
         setupContext("contextB", "/a/b");
 
-        setupServlet("servlet1", new String[]{ "/b/test/servlet" }, 1, "contextA");
+        setupServlet("servlet1", new String[] { "/b/test/servlet" }, 1, "contextA");
 
         assertContent("servlet1", createURL("/a/b/test/servlet"));
 
-        setupServlet("servlet2", new String[]{ "/test/*" }, 1, "contextB");
+        setupServlet("servlet2", new String[] { "/test/*" }, 1, "contextB");
 
         assertContent("servlet2", createURL("/a/b/test/servlet"));
     }
@@ -260,7 +259,7 @@ public class ServletTest extends Servlet5BaseIntegrationTest {
     public void pathMatchingTest() throws Exception {
         setupContext("contextA", "/a");
 
-        setupServlet("servlet1", new String[]{ "/servlet/*" }, 1, "contextA");
+        setupServlet("servlet1", new String[] { "/servlet/*" }, 1, "contextA");
 
         assertContent("servlet1", createURL("/a/servlet/foo"));
         assertContent("servlet1", createURL("/a/servlet"));

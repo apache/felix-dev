@@ -34,7 +34,6 @@ import java.util.Set;
 
 import org.apache.felix.http.base.internal.context.ExtServletContext;
 import org.apache.felix.http.base.internal.handler.FilterHandler;
-import org.apache.felix.http.base.internal.handler.HttpServiceServletHandler;
 import org.apache.felix.http.base.internal.handler.HttpSessionWrapper;
 import org.apache.felix.http.base.internal.handler.ListenerHandler;
 import org.apache.felix.http.base.internal.handler.PreprocessorHandler;
@@ -56,14 +55,8 @@ import org.apache.felix.http.base.internal.runtime.dto.FailedDTOHolder;
 import org.apache.felix.http.base.internal.runtime.dto.PreprocessorDTOBuilder;
 import org.apache.felix.http.base.internal.runtime.dto.RegistryRuntime;
 import org.apache.felix.http.base.internal.runtime.dto.ServletContextDTOBuilder;
-import org.apache.felix.http.base.internal.service.HttpServiceFactory;
 import org.apache.felix.http.base.internal.service.HttpServiceRuntimeImpl;
 import org.apache.felix.http.base.internal.whiteboard.tracker.FilterTracker;
-import org.apache.felix.http.base.internal.whiteboard.tracker.JavaxFilterTracker;
-import org.apache.felix.http.base.internal.whiteboard.tracker.JavaxListenersTracker;
-import org.apache.felix.http.base.internal.whiteboard.tracker.JavaxPreprocessorTracker;
-import org.apache.felix.http.base.internal.whiteboard.tracker.JavaxServletContextHelperTracker;
-import org.apache.felix.http.base.internal.whiteboard.tracker.JavaxServletTracker;
 import org.apache.felix.http.base.internal.whiteboard.tracker.ListenersTracker;
 import org.apache.felix.http.base.internal.whiteboard.tracker.PreprocessorTracker;
 import org.apache.felix.http.base.internal.whiteboard.tracker.ResourceTracker;
@@ -98,9 +91,6 @@ public final class WhiteboardManager
     /** The bundle context of the http bundle. */
     private final BundleContext httpBundleContext;
 
-    /** The http service factory. */
-    private final HttpServiceFactory httpServiceFactory;
-
     private final HttpServiceRuntimeImpl serviceRuntime;
 
     private final List<ServiceTracker<?, ?>> trackers = new ArrayList<>();
@@ -123,15 +113,12 @@ public final class WhiteboardManager
      * Create a new whiteboard http manager
      *
      * @param bundleContext The bundle context of the http bundle
-     * @param httpServiceFactory The http service factory
      * @param registry The handler registry
      */
     public WhiteboardManager(final BundleContext bundleContext,
-            final HttpServiceFactory httpServiceFactory,
             final HandlerRegistry registry)
     {
         this.httpBundleContext = bundleContext;
-        this.httpServiceFactory = httpServiceFactory;
         this.registry = registry;
         this.serviceRuntime = new HttpServiceRuntimeImpl(registry, this, bundleContext);
     }
@@ -145,20 +132,9 @@ public final class WhiteboardManager
         // runtime service gets the same props for now
         this.serviceRuntime.setAllAttributes(httpServiceProps);
 
-        this.serviceRuntime.setAttribute(org.osgi.service.http.runtime.HttpServiceRuntimeConstants.HTTP_SERVICE_ID,
-                Collections.singletonList(this.httpServiceFactory.getHttpServiceServiceId()));
         this.serviceRuntime.register(this.httpBundleContext);
 
         this.webContext = containerContext;
-
-        // add context for http service
-        final List<WhiteboardContextHandler> httpContextList = new ArrayList<>();
-        final ServletContextHelperInfo httpInfo = new ServletContextHelperInfo(Integer.MAX_VALUE,
-                HttpServiceFactory.HTTP_SERVICE_CONTEXT_SERVICE_ID,
-                HttpServiceFactory.HTTP_SERVICE_CONTEXT_NAME, "/", null);
-        httpContextList.add(new HttpServiceContextHandler(httpInfo, registry.getRegistry(HttpServiceFactory.HTTP_SERVICE_CONTEXT_SERVICE_ID),
-                httpServiceFactory, webContext, this.httpBundleContext.getBundle()));
-        this.contextMap.put(HttpServiceFactory.HTTP_SERVICE_CONTEXT_NAME, httpContextList);
 
         // Add default context
         this.addContextHelper(new DefaultServletContextHelperInfo());
@@ -170,11 +146,6 @@ public final class WhiteboardManager
         addTracker(new ServletTracker(this.httpBundleContext, this));
         addTracker(new ResourceTracker(this.httpBundleContext, this));
         addTracker(new ServletContextHelperTracker(this.httpBundleContext, this));
-        addTracker(new JavaxServletContextHelperTracker(httpBundleContext, this));
-        addTracker(new JavaxFilterTracker(httpBundleContext, this));
-        addTracker(new JavaxServletTracker(httpBundleContext, this));
-        addTracker(new JavaxListenersTracker(httpBundleContext, this));
-        addTracker(new JavaxPreprocessorTracker(httpBundleContext, this));
     }
 
     /**
@@ -261,24 +232,20 @@ public final class WhiteboardManager
 
             if ( info.getContextSelectionFilter().match(handler.getContextInfo().getServiceReference()) )
             {
-                final int reason = checkForServletRegistrationInHttpServiceContext(handler, info);
-                if ( reason == -1 )
+                entry.getValue().add(handler);
+                if ( entry.getValue().size() == 1 )
                 {
-                    entry.getValue().add(handler);
-                    if ( entry.getValue().size() == 1 )
-                    {
-                        this.failureStateHandler.remove(info);
-                    }
-                    if ( info instanceof ListenerInfo && ((ListenerInfo)info).isListenerType(ServletContextListener.class.getName()) )
-                    {
-                        // servlet context listeners will be registered directly
-                        this.registerWhiteboardService(handler, info);
-                    }
-                    else
-                    {
-                        // registration of other services will be delayed
-                        services.add(info);
-                    }
+                    this.failureStateHandler.remove(info);
+                }
+                if ( info instanceof ListenerInfo && ((ListenerInfo)info).isListenerType(ServletContextListener.class.getName()) )
+                {
+                    // servlet context listeners will be registered directly
+                    this.registerWhiteboardService(handler, info);
+                }
+                else
+                {
+                    // registration of other services will be delayed
+                    services.add(info);
                 }
             }
         }
@@ -553,20 +520,16 @@ public final class WhiteboardManager
                     {
                         for(final WhiteboardContextHandler h : handlerList)
                         {
-                            final int result = this.checkForServletRegistrationInHttpServiceContext(h, info);
-                            if ( result == -1)
+                            this.registerWhiteboardService(h, info);
+                            if ( info instanceof ListenerInfo && ((ListenerInfo)info).isListenerType(ServletContextListener.class.getName()) )
                             {
-                                this.registerWhiteboardService(h, info);
-                                if ( info instanceof ListenerInfo && ((ListenerInfo)info).isListenerType(ServletContextListener.class.getName()) )
+                                final ListenerHandler handler = h.getRegistry().getEventListenerRegistry().getServletContextListener((ListenerInfo)info);
+                                if ( handler != null )
                                 {
-                                    final ListenerHandler handler = h.getRegistry().getEventListenerRegistry().getServletContextListener((ListenerInfo)info);
-                                    if ( handler != null )
+                                    final ServletContextListener listener = (ServletContextListener)handler.getListener();
+                                    if ( listener != null )
                                     {
-                                        final ServletContextListener listener = (ServletContextListener)handler.getListener();
-                                        if ( listener != null )
-                                        {
-                                            EventListenerRegistry.contextInitialized(handler.getListenerInfo(), listener, new ServletContextEvent(handler.getContext()));
-                                        }
+                                        EventListenerRegistry.contextInitialized(handler.getListenerInfo(), listener, new ServletContextEvent(handler.getContext()));
                                     }
                                 }
                             }
@@ -582,53 +545,6 @@ public final class WhiteboardManager
             return true;
         }
         return false;
-    }
-
-    /**
-     * Check if a registration for a servlet or resource is tried against the http context
-     * of the http service
-     * @param h The handler
-     * @param info The info
-     * @return {@code -1} if everything is ok, error code otherwise
-     */
-    private int checkForServletRegistrationInHttpServiceContext(final WhiteboardContextHandler h,
-            final WhiteboardServiceInfo<?> info)
-    {
-        if ( h.getContextInfo().getServiceId() == HttpServiceFactory.HTTP_SERVICE_CONTEXT_SERVICE_ID )
-        {
-            // In order to be compatible with the implementation of the http service 1.0
-            // we need still support servlet/resource registrations not using the
-            // 1.1 HTTP_SERVICE_CONTEXT_PROPERTY property. (contains is not the best check but
-            // it should do the trick)
-          	if ( info instanceof ResourceInfo && info.getContextSelection().contains(org.osgi.service.http.whiteboard.HttpWhiteboardConstants.HTTP_SERVICE_CONTEXT_PROPERTY))
-        	    {
-                this.failureStateHandler.addFailure(info, HttpServiceFactory.HTTP_SERVICE_CONTEXT_SERVICE_ID, DTOConstants.FAILURE_REASON_VALIDATION_FAILED);
-
-                return DTOConstants.FAILURE_REASON_VALIDATION_FAILED;
-            }
-        	    else if ( info instanceof ServletInfo && info.getContextSelection().contains(org.osgi.service.http.whiteboard.HttpWhiteboardConstants.HTTP_SERVICE_CONTEXT_PROPERTY))
-        	    {
-        		    final ServletInfo servletInfo = (ServletInfo)info;
-        		    final boolean nameIsEmpty = servletInfo.getName() == null || servletInfo.getName().isEmpty();
-        		    final boolean errorPageIsEmpty = servletInfo.getErrorPage() == null || servletInfo.getErrorPage().length == 0;
-        		    final boolean patternIsEmpty = servletInfo.getPatterns() == null || servletInfo.getPatterns().length == 0;
-        		    if ( !nameIsEmpty || !errorPageIsEmpty )
-        		    {
-        			    if ( patternIsEmpty )
-        			    {
-        				    // no pattern, so this is valid
-        				    return -1;
-        			    }
-        		    }
-
-    		        // pattern is invalid, regardless of the other values
-    		        this.failureStateHandler.addFailure(info, HttpServiceFactory.HTTP_SERVICE_CONTEXT_SERVICE_ID, DTOConstants.FAILURE_REASON_VALIDATION_FAILED);
-
-    		        return DTOConstants.FAILURE_REASON_VALIDATION_FAILED;
-        	    }
-        }
-
-        return -1;
     }
 
     /**
@@ -711,6 +627,7 @@ public final class WhiteboardManager
                 }
                 else
                 {
+                    // @formatter:off
                     final ServletHandler servletHandler = new WhiteboardServletHandler(
                         handler.getContextInfo().getServiceId(),
                         servletContext,
@@ -718,6 +635,7 @@ public final class WhiteboardManager
                         handler.getBundleContext(),
                         info.getServiceReference().getBundle(),
                         this.httpBundleContext.getBundle());
+                    // @formatter:on
                     handler.getRegistry().registerServlet(servletHandler);
                 }
             }
@@ -730,11 +648,13 @@ public final class WhiteboardManager
                 }
                 else
                 {
+                    // @formatter:off
                     final FilterHandler filterHandler = new FilterHandler(
                             handler.getContextInfo().getServiceId(),
                             servletContext,
                             (FilterInfo)info,
                             handler.getBundleContext());
+                    // @formatter:on
                     handler.getRegistry().registerFilter(filterHandler);
                 }
             }
@@ -748,12 +668,15 @@ public final class WhiteboardManager
                 }
                 else
                 {
-                    final ServletHandler servleHandler = new HttpServiceServletHandler(
+                    // @formatter:off
+                    final ServletHandler servletHandler = new WhiteboardServletHandler(
                             handler.getContextInfo().getServiceId(),
                             servletContext,
                             servletInfo,
+                            handler.getBundleContext(), 
                             new ResourceServlet(servletInfo.getPrefix()));
-                    handler.getRegistry().registerServlet(servleHandler);
+                    // @formatter:on
+                    handler.getRegistry().registerServlet(servletHandler);
                 }
             }
 
@@ -766,11 +689,13 @@ public final class WhiteboardManager
                 }
                 else
                 {
+                    // @formatter:off
                     final ListenerHandler listenerHandler = new ListenerHandler(
                             handler.getContextInfo().getServiceId(),
                             servletContext,
                             (ListenerInfo)info,
                             handler.getBundleContext());
+                    // @formatter:on
                     handler.getRegistry().registerListeners(listenerHandler);
                 }
             }

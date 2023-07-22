@@ -20,7 +20,6 @@ package org.apache.felix.http.base.internal.runtime;
 
 import java.util.Map;
 
-import org.apache.felix.http.base.internal.jakartawrappers.PreprocessorWrapper;
 import org.jetbrains.annotations.NotNull;
 import org.osgi.framework.ServiceReference;
 import org.osgi.service.servlet.whiteboard.HttpWhiteboardConstants;
@@ -66,9 +65,6 @@ public class PreprocessorInfo extends WhiteboardServiceInfo<Preprocessor>
      * @return The class name
      */
     public @NotNull String getClassName(@NotNull final Preprocessor preprocessor) {
-        if (preprocessor instanceof PreprocessorWrapper ) {
-            return ((PreprocessorWrapper)preprocessor).getPreprocessor().getClass().getName();
-        }
         return preprocessor.getClass().getName();
     }
 }

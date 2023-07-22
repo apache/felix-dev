@@ -89,10 +89,30 @@ public final class WhiteboardServletHandler extends ServletHandler
         }
         multipartErrorCode = errorCode;
     }
+    
+    public WhiteboardServletHandler(final long contextServiceId,
+            final ExtServletContext context,
+            final ServletInfo servletInfo,
+            final BundleContext contextBundleContext,
+            final Servlet servlet)
+    {
+        super(contextServiceId, context, servletInfo);
+        this.bundleContext = contextBundleContext;
+        multipartSecurityContext = null;
+        multipartErrorCode = -1;
+        
+        if (servletInfo.isResource()) {
+            this.setServlet(servlet);
+        }
+    }
 
     @Override
     public int init()
     {
+        if (this.getServletInfo().isResource()) 
+        {
+            return super.init();
+        }
         if ( this.multipartErrorCode != -1 )
         {
             return this.multipartErrorCode;

@@ -77,9 +77,11 @@ public class ResourceTest extends Servlet5BaseIntegrationTest {
         final Dictionary<String, Object> resourcesProps = new Hashtable<>();
         resourcesProps.put(HttpWhiteboardConstants.HTTP_WHITEBOARD_RESOURCE_PATTERN, "/");
         resourcesProps.put(HttpWhiteboardConstants.HTTP_WHITEBOARD_RESOURCE_PREFIX, "/resource");
-        resourcesProps.put(HttpWhiteboardConstants.HTTP_WHITEBOARD_CONTEXT_SELECT, "(" + HttpWhiteboardConstants.HTTP_WHITEBOARD_CONTEXT_NAME + "=test)");
-        final ServiceRegistration<Object> reg = this.m_context.registerService(Object.class, new Object(), resourcesProps);
-        
+        resourcesProps.put(HttpWhiteboardConstants.HTTP_WHITEBOARD_CONTEXT_SELECT,
+                "(" + HttpWhiteboardConstants.HTTP_WHITEBOARD_CONTEXT_NAME + "=test)");
+        final ServiceRegistration<Object> reg = this.m_context.registerService(Object.class, new Object(),
+                resourcesProps);
+
         counter = this.waitForRuntime(counter);
 
         URL testHtmlURL = createURL("/test.html");

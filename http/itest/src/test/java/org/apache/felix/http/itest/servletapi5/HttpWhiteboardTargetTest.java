@@ -47,33 +47,33 @@ public class HttpWhiteboardTargetTest extends Servlet5BaseIntegrationTest {
 
 	private static final String SERVICE_HTTP_PORT = "org.osgi.service.http.port";
 
-	/**]
+	/**
 	 * Test that a servlet with the org.osgi.http.whiteboard.target property not set
 	 * is registered with the whiteboard
 	 */
-	@Test
-	public void testServletNoTargetProperty() throws Exception {
+    @Test
+    public void testServletNoTargetProperty() throws Exception {
         long counter = this.getRuntimeCounter();
-		TestServlet servlet = new TestServlet() {
-			private static final long serialVersionUID = 1L;
+        TestServlet servlet = new TestServlet() {
+            private static final long serialVersionUID = 1L;
 
-			@Override
-			protected void doGet(HttpServletRequest req, HttpServletResponse resp) throws IOException {
-				resp.getWriter().print("It works!");
-				resp.flushBuffer();
-			}
-		};
+            @Override
+            protected void doGet(HttpServletRequest req, HttpServletResponse resp) throws IOException {
+                resp.getWriter().print("It works!");
+                resp.flushBuffer();
+            }
+        };
 
-		Dictionary<String, Object> props = new Hashtable<String, Object>();
-		props.put(HttpWhiteboardConstants.HTTP_WHITEBOARD_SERVLET_PATTERN, "/servletAlias");
-		props.put(HttpWhiteboardConstants.HTTP_WHITEBOARD_FILTER_INIT_PARAM_PREFIX + ".myname", "servletName");
+        Dictionary<String, Object> props = new Hashtable<String, Object>();
+        props.put(HttpWhiteboardConstants.HTTP_WHITEBOARD_SERVLET_PATTERN, "/servletAlias");
+        props.put(HttpWhiteboardConstants.HTTP_WHITEBOARD_FILTER_INIT_PARAM_PREFIX + ".myname", "servletName");
 
-		this.registrations.add(m_context.registerService(Servlet.class.getName(), servlet, props));
+        this.registrations.add(m_context.registerService(Servlet.class.getName(), servlet, props));
         counter = this.waitForRuntime(counter);
 
         URL testURL = createURL("/servletAlias");
         assertContent("It works!", testURL);
-	}
+    }
 
 	/**
 	 * Test that a servlet with the org.osgi.http.whiteboard.target property matching the
@@ -83,222 +83,225 @@ public class HttpWhiteboardTargetTest extends Servlet5BaseIntegrationTest {
 	 * HttpService properties.
 	 *
 	 */
-	@Test
-	public void testServletTargetMatchPort() throws Exception {
+    @Test
+    public void testServletTargetMatchPort() throws Exception {
         long counter = this.getRuntimeCounter();
-		TestServlet servlet = new TestServlet() {
-			private static final long serialVersionUID = 1L;
+        TestServlet servlet = new TestServlet() {
+            private static final long serialVersionUID = 1L;
 
-			@Override
-			protected void doGet(HttpServletRequest req, HttpServletResponse resp) throws IOException {
-				resp.getWriter().print("matchingServlet");
-				resp.flushBuffer();
-			}
-		};
+            @Override
+            protected void doGet(HttpServletRequest req, HttpServletResponse resp) throws IOException {
+                resp.getWriter().print("matchingServlet");
+                resp.flushBuffer();
+            }
+        };
 
-		Dictionary<String, Object> props = new Hashtable<String, Object>();
-		props.put(HttpWhiteboardConstants.HTTP_WHITEBOARD_SERVLET_PATTERN, "/servletAlias");
-		props.put(HttpWhiteboardConstants.HTTP_WHITEBOARD_FILTER_INIT_PARAM_PREFIX + ".myname", "servletName");
-		props.put(HttpWhiteboardConstants.HTTP_WHITEBOARD_TARGET, "(" + SERVICE_HTTP_PORT + "=8080" + ")");
+        Dictionary<String, Object> props = new Hashtable<String, Object>();
+        props.put(HttpWhiteboardConstants.HTTP_WHITEBOARD_SERVLET_PATTERN, "/servletAlias");
+        props.put(HttpWhiteboardConstants.HTTP_WHITEBOARD_FILTER_INIT_PARAM_PREFIX + ".myname", "servletName");
+        props.put(HttpWhiteboardConstants.HTTP_WHITEBOARD_TARGET, "(" + SERVICE_HTTP_PORT + "=8080" + ")");
 
-		this.registrations.add(m_context.registerService(Servlet.class.getName(), servlet, props));
+        this.registrations.add(m_context.registerService(Servlet.class.getName(), servlet, props));
         counter = this.waitForRuntime(counter);
 
         URL testURL = createURL("/servletAlias");
         assertContent("matchingServlet", testURL);
-	}
+    }
 
 	/**
 	 * Test that a servlet with the org.osgi.http.whiteboard.target property not matching
 	 * the properties of the HttpServiceRuntime is not registered with the whiteboard.
 	 *
 	 */
-	@Test
-	public void testServletTargetNotMatchPort() throws Exception {
+    @Test
+    public void testServletTargetNotMatchPort() throws Exception {
         long counter = this.getRuntimeCounter();
-		TestServlet nonMatchingServlet = new TestServlet() {
-			private static final long serialVersionUID = 1L;
+        TestServlet nonMatchingServlet = new TestServlet() {
+            private static final long serialVersionUID = 1L;
 
-			@Override
-			protected void doGet(HttpServletRequest req, HttpServletResponse resp) throws IOException {
-				resp.getWriter().print("nonMatchingServlet");
-				resp.flushBuffer();
-			}
-		};
+            @Override
+            protected void doGet(HttpServletRequest req, HttpServletResponse resp) throws IOException {
+                resp.getWriter().print("nonMatchingServlet");
+                resp.flushBuffer();
+            }
+        };
 
-		Dictionary<String, Object> props = new Hashtable<String, Object>();
-		props.put(HttpWhiteboardConstants.HTTP_WHITEBOARD_SERVLET_PATTERN, "/servletAlias");
-		props.put(HttpWhiteboardConstants.HTTP_WHITEBOARD_FILTER_INIT_PARAM_PREFIX + ".myname", "servletName");
-		props.put(HttpWhiteboardConstants.HTTP_WHITEBOARD_TARGET, "(" + SERVICE_HTTP_PORT + "=8282" + ")");
+        Dictionary<String, Object> props = new Hashtable<String, Object>();
+        props.put(HttpWhiteboardConstants.HTTP_WHITEBOARD_SERVLET_PATTERN, "/servletAlias");
+        props.put(HttpWhiteboardConstants.HTTP_WHITEBOARD_FILTER_INIT_PARAM_PREFIX + ".myname", "servletName");
+        props.put(HttpWhiteboardConstants.HTTP_WHITEBOARD_TARGET, "(" + SERVICE_HTTP_PORT + "=8282" + ")");
 
-		this.registrations.add(m_context.registerService(Servlet.class.getName(), nonMatchingServlet, props));
+        this.registrations.add(m_context.registerService(Servlet.class.getName(), nonMatchingServlet, props));
         counter = this.waitForRuntime(counter);
 
         // the servlet will not be registered
         URL testURL = createURL("/servletAlias");
         assertResponseCode(404, testURL);
-	}
+    }
 
 	/**
 	 * Test that a filter with no target property set is correctly registered with the whiteboard
 	 *
 	 */
-	@Test
-	public void testFilterNoTargetProperty() throws Exception {
+    @Test
+    public void testFilterNoTargetProperty() throws Exception {
         long counter = this.getRuntimeCounter();
-		TestServlet servlet1 = new TestServlet() {
-			private static final long serialVersionUID = 1L;
+        TestServlet servlet1 = new TestServlet() {
+            private static final long serialVersionUID = 1L;
 
-			@Override
-			protected void doGet(HttpServletRequest req, HttpServletResponse resp) throws IOException {
-				resp.getWriter().print("servlet1");
-				resp.flushBuffer();
-			}
-		};
-		Dictionary<String, Object> props1 = new Hashtable<String, Object>();
-		props1.put(HttpWhiteboardConstants.HTTP_WHITEBOARD_SERVLET_PATTERN, "/servlet/1");
-		props1.put(HttpWhiteboardConstants.HTTP_WHITEBOARD_FILTER_INIT_PARAM_PREFIX + ".myname", "servlet1");
-		props1.put(HttpWhiteboardConstants.HTTP_WHITEBOARD_TARGET, "(" + SERVICE_HTTP_PORT + "=8080" + ")");
+            @Override
+            protected void doGet(HttpServletRequest req, HttpServletResponse resp) throws IOException {
+                resp.getWriter().print("servlet1");
+                resp.flushBuffer();
+            }
+        };
+        Dictionary<String, Object> props1 = new Hashtable<String, Object>();
+        props1.put(HttpWhiteboardConstants.HTTP_WHITEBOARD_SERVLET_PATTERN, "/servlet/1");
+        props1.put(HttpWhiteboardConstants.HTTP_WHITEBOARD_FILTER_INIT_PARAM_PREFIX + ".myname", "servlet1");
+        props1.put(HttpWhiteboardConstants.HTTP_WHITEBOARD_TARGET, "(" + SERVICE_HTTP_PORT + "=8080" + ")");
 
-		TestServlet servlet2 = new TestServlet() {
-			private static final long serialVersionUID = 1L;
+        TestServlet servlet2 = new TestServlet() {
+            private static final long serialVersionUID = 1L;
 
-			@Override
-			protected void doGet(HttpServletRequest req, HttpServletResponse resp) throws IOException {
-				resp.getWriter().print("servlet2");
-				resp.flushBuffer();
-			}
-		};
-		Dictionary<String, Object> props2 = new Hashtable<String, Object>();
-		props2.put(HttpWhiteboardConstants.HTTP_WHITEBOARD_SERVLET_PATTERN, "/servlet/2");
-		props2.put(HttpWhiteboardConstants.HTTP_WHITEBOARD_FILTER_INIT_PARAM_PREFIX + ".myname", "servle2");
-		props2.put(HttpWhiteboardConstants.HTTP_WHITEBOARD_TARGET, "(" + SERVICE_HTTP_PORT + "=8080" + ")");
+            @Override
+            protected void doGet(HttpServletRequest req, HttpServletResponse resp) throws IOException {
+                resp.getWriter().print("servlet2");
+                resp.flushBuffer();
+            }
+        };
+        Dictionary<String, Object> props2 = new Hashtable<String, Object>();
+        props2.put(HttpWhiteboardConstants.HTTP_WHITEBOARD_SERVLET_PATTERN, "/servlet/2");
+        props2.put(HttpWhiteboardConstants.HTTP_WHITEBOARD_FILTER_INIT_PARAM_PREFIX + ".myname", "servle2");
+        props2.put(HttpWhiteboardConstants.HTTP_WHITEBOARD_TARGET, "(" + SERVICE_HTTP_PORT + "=8080" + ")");
 
-		TestFilter filter = new TestFilter() {
-			@Override
-			protected void filter(HttpServletRequest req, HttpServletResponse resp, FilterChain chain) throws IOException, ServletException {
-				String param = req.getParameter("param");
-				if ("forbidden".equals(param)) {
-					resp.reset();
-					resp.sendError(SC_FORBIDDEN);
-					resp.flushBuffer();
-				} else {
-					chain.doFilter(req, resp);
-				}
-			}
-		};
+        TestFilter filter = new TestFilter() {
+            @Override
+            protected void filter(HttpServletRequest req, HttpServletResponse resp, FilterChain chain)
+                    throws IOException, ServletException {
+                String param = req.getParameter("param");
+                if ("forbidden".equals(param)) {
+                    resp.reset();
+                    resp.sendError(SC_FORBIDDEN);
+                    resp.flushBuffer();
+                } else {
+                    chain.doFilter(req, resp);
+                }
+            }
+        };
 
-		Dictionary<String, Object> props = new Hashtable<String, Object>();
-		props.put(HttpWhiteboardConstants.HTTP_WHITEBOARD_FILTER_PATTERN, "/servlet/1");
-		props.put(HttpWhiteboardConstants.HTTP_WHITEBOARD_FILTER_INIT_PARAM_PREFIX + ".myname", "servletName");
+        Dictionary<String, Object> props = new Hashtable<String, Object>();
+        props.put(HttpWhiteboardConstants.HTTP_WHITEBOARD_FILTER_PATTERN, "/servlet/1");
+        props.put(HttpWhiteboardConstants.HTTP_WHITEBOARD_FILTER_INIT_PARAM_PREFIX + ".myname", "servletName");
 
-		this.registrations.add(m_context.registerService(Servlet.class.getName(), servlet1, props1));
+        this.registrations.add(m_context.registerService(Servlet.class.getName(), servlet1, props1));
         counter = this.waitForRuntime(counter);
-		this.registrations.add(m_context.registerService(Servlet.class.getName(), servlet2, props2));
+        this.registrations.add(m_context.registerService(Servlet.class.getName(), servlet2, props2));
         counter = this.waitForRuntime(counter);
-		this.registrations.add(m_context.registerService(Filter.class.getName(), filter, props));
+        this.registrations.add(m_context.registerService(Filter.class.getName(), filter, props));
         counter = this.waitForRuntime(counter);
 
-		assertResponseCode(SC_FORBIDDEN, createURL("/servlet/1?param=forbidden"));
-		assertContent("servlet1", createURL("/servlet/1?param=any"));
-		assertContent("servlet1", createURL("/servlet/1"));
+        assertResponseCode(SC_FORBIDDEN, createURL("/servlet/1?param=forbidden"));
+        assertContent("servlet1", createURL("/servlet/1?param=any"));
+        assertContent("servlet1", createURL("/servlet/1"));
 
-		assertResponseCode(SC_OK, createURL("/servlet/2?param=forbidden"));
-		assertContent("servlet2", createURL("/servlet/2?param=forbidden"));
-	}
+        assertResponseCode(SC_OK, createURL("/servlet/2?param=forbidden"));
+        assertContent("servlet2", createURL("/servlet/2?param=forbidden"));
+    }
 
-	@Test
-	public void testFilterTargetMatchPort() throws Exception {
+    @Test
+    public void testFilterTargetMatchPort() throws Exception {
         long counter = this.getRuntimeCounter();
-		TestServlet servlet = new TestServlet() {
-			private static final long serialVersionUID = 1L;
+        TestServlet servlet = new TestServlet() {
+            private static final long serialVersionUID = 1L;
 
-			@Override
-			protected void doGet(HttpServletRequest req, HttpServletResponse resp) throws IOException {
-				resp.getWriter().print("servlet");
-				resp.flushBuffer();
-			}
-		};
-		Dictionary<String, Object> sprops = new Hashtable<String, Object>();
-		sprops.put(HttpWhiteboardConstants.HTTP_WHITEBOARD_SERVLET_PATTERN, "/servlet");
-		sprops.put(HttpWhiteboardConstants.HTTP_WHITEBOARD_FILTER_INIT_PARAM_PREFIX + ".myname", "servlet1");
-		sprops.put(HttpWhiteboardConstants.HTTP_WHITEBOARD_TARGET, "(" + SERVICE_HTTP_PORT + "=8080" + ")");
+            @Override
+            protected void doGet(HttpServletRequest req, HttpServletResponse resp) throws IOException {
+                resp.getWriter().print("servlet");
+                resp.flushBuffer();
+            }
+        };
+        Dictionary<String, Object> sprops = new Hashtable<String, Object>();
+        sprops.put(HttpWhiteboardConstants.HTTP_WHITEBOARD_SERVLET_PATTERN, "/servlet");
+        sprops.put(HttpWhiteboardConstants.HTTP_WHITEBOARD_FILTER_INIT_PARAM_PREFIX + ".myname", "servlet1");
+        sprops.put(HttpWhiteboardConstants.HTTP_WHITEBOARD_TARGET, "(" + SERVICE_HTTP_PORT + "=8080" + ")");
 
-		TestFilter filter = new TestFilter() {
-			@Override
-			protected void filter(HttpServletRequest req, HttpServletResponse resp, FilterChain chain) throws IOException, ServletException {
-				String param = req.getParameter("param");
-				if("forbidden".equals(param)) {
-					resp.reset();
-					resp.sendError(SC_FORBIDDEN);
-					resp.flushBuffer();
-				} else {
-					chain.doFilter(req, resp);
-				}
-			}
-		};
+        TestFilter filter = new TestFilter() {
+            @Override
+            protected void filter(HttpServletRequest req, HttpServletResponse resp, FilterChain chain)
+                    throws IOException, ServletException {
+                String param = req.getParameter("param");
+                if ("forbidden".equals(param)) {
+                    resp.reset();
+                    resp.sendError(SC_FORBIDDEN);
+                    resp.flushBuffer();
+                } else {
+                    chain.doFilter(req, resp);
+                }
+            }
+        };
 
-		Dictionary<String, Object> fprops = new Hashtable<String, Object>();
-		fprops.put(HttpWhiteboardConstants.HTTP_WHITEBOARD_FILTER_PATTERN, "/servlet");
-		fprops.put(HttpWhiteboardConstants.HTTP_WHITEBOARD_FILTER_INIT_PARAM_PREFIX + ".myname", "servletName");
-		fprops.put(HttpWhiteboardConstants.HTTP_WHITEBOARD_TARGET, "(" + SERVICE_HTTP_PORT + "=8080" + ")");
+        Dictionary<String, Object> fprops = new Hashtable<String, Object>();
+        fprops.put(HttpWhiteboardConstants.HTTP_WHITEBOARD_FILTER_PATTERN, "/servlet");
+        fprops.put(HttpWhiteboardConstants.HTTP_WHITEBOARD_FILTER_INIT_PARAM_PREFIX + ".myname", "servletName");
+        fprops.put(HttpWhiteboardConstants.HTTP_WHITEBOARD_TARGET, "(" + SERVICE_HTTP_PORT + "=8080" + ")");
 
-		this.registrations.add(m_context.registerService(Servlet.class.getName(), servlet, sprops));
+        this.registrations.add(m_context.registerService(Servlet.class.getName(), servlet, sprops));
         counter = this.waitForRuntime(counter);
-		this.registrations.add(m_context.registerService(Filter.class.getName(), filter, fprops));
+        this.registrations.add(m_context.registerService(Filter.class.getName(), filter, fprops));
         counter = this.waitForRuntime(counter);
 
-		assertResponseCode(SC_FORBIDDEN, createURL("/servlet?param=forbidden"));
-		assertContent("servlet", createURL("/servlet?param=any"));
-		assertContent("servlet", createURL("/servlet"));
-	}
+        assertResponseCode(SC_FORBIDDEN, createURL("/servlet?param=forbidden"));
+        assertContent("servlet", createURL("/servlet?param=any"));
+        assertContent("servlet", createURL("/servlet"));
+    }
 
-	@Test
-	public void testFilterTargetNotMatchPort() throws Exception {
+    @Test
+    public void testFilterTargetNotMatchPort() throws Exception {
         long counter = this.getRuntimeCounter();
-		TestServlet servlet = new TestServlet() {
-			private static final long serialVersionUID = 1L;
+        TestServlet servlet = new TestServlet() {
+            private static final long serialVersionUID = 1L;
 
-			@Override
-			protected void doGet(HttpServletRequest req, HttpServletResponse resp) throws IOException {
-				resp.getWriter().print("servlet");
-				resp.flushBuffer();
-			}
-		};
-		Dictionary<String, Object> sprops = new Hashtable<String, Object>();
-		sprops.put(HttpWhiteboardConstants.HTTP_WHITEBOARD_SERVLET_PATTERN, "/servlet");
-		sprops.put(HttpWhiteboardConstants.HTTP_WHITEBOARD_FILTER_INIT_PARAM_PREFIX + ".myname", "servlet1");
-		sprops.put(HttpWhiteboardConstants.HTTP_WHITEBOARD_TARGET, "(" + SERVICE_HTTP_PORT + "=8080" + ")");
+            @Override
+            protected void doGet(HttpServletRequest req, HttpServletResponse resp) throws IOException {
+                resp.getWriter().print("servlet");
+                resp.flushBuffer();
+            }
+        };
+        Dictionary<String, Object> sprops = new Hashtable<String, Object>();
+        sprops.put(HttpWhiteboardConstants.HTTP_WHITEBOARD_SERVLET_PATTERN, "/servlet");
+        sprops.put(HttpWhiteboardConstants.HTTP_WHITEBOARD_FILTER_INIT_PARAM_PREFIX + ".myname", "servlet1");
+        sprops.put(HttpWhiteboardConstants.HTTP_WHITEBOARD_TARGET, "(" + SERVICE_HTTP_PORT + "=8080" + ")");
 
-		TestFilter filter = new TestFilter() {
-			@Override
-			protected void filter(HttpServletRequest req, HttpServletResponse resp, FilterChain chain) throws IOException, ServletException {
-				String param = req.getParameter("param");
-				if("forbidden".equals(param)) {
-					resp.reset();
-					resp.sendError(SC_FORBIDDEN);
-					resp.flushBuffer();
-				} else {
-					chain.doFilter(req, resp);
-				}
-			}
-		};
+        TestFilter filter = new TestFilter() {
+            @Override
+            protected void filter(HttpServletRequest req, HttpServletResponse resp, FilterChain chain)
+                    throws IOException, ServletException {
+                String param = req.getParameter("param");
+                if ("forbidden".equals(param)) {
+                    resp.reset();
+                    resp.sendError(SC_FORBIDDEN);
+                    resp.flushBuffer();
+                } else {
+                    chain.doFilter(req, resp);
+                }
+            }
+        };
 
-		Dictionary<String, Object> fprops = new Hashtable<String, Object>();
-		fprops.put(HttpWhiteboardConstants.HTTP_WHITEBOARD_FILTER_PATTERN, "/servlet");
-		fprops.put(HttpWhiteboardConstants.HTTP_WHITEBOARD_FILTER_INIT_PARAM_PREFIX + ".myname", "servletName");
-		fprops.put(HttpWhiteboardConstants.HTTP_WHITEBOARD_TARGET, "(" + SERVICE_HTTP_PORT + "=8181" + ")");
+        Dictionary<String, Object> fprops = new Hashtable<String, Object>();
+        fprops.put(HttpWhiteboardConstants.HTTP_WHITEBOARD_FILTER_PATTERN, "/servlet");
+        fprops.put(HttpWhiteboardConstants.HTTP_WHITEBOARD_FILTER_INIT_PARAM_PREFIX + ".myname", "servletName");
+        fprops.put(HttpWhiteboardConstants.HTTP_WHITEBOARD_TARGET, "(" + SERVICE_HTTP_PORT + "=8181" + ")");
 
-		this.registrations.add(m_context.registerService(Filter.class.getName(), filter, fprops));
-		this.registrations.add(m_context.registerService(Servlet.class.getName(), servlet, sprops));
+        this.registrations.add(m_context.registerService(Filter.class.getName(), filter, fprops));
+        this.registrations.add(m_context.registerService(Servlet.class.getName(), servlet, sprops));
         counter = this.waitForRuntime(counter);
 
-		// servlet is registered
-		// fitler is not registered
+        // servlet is registered
+        // fitler is not registered
 
-		assertResponseCode(SC_OK, createURL("/servlet?param=forbidden"));
-		assertContent("servlet", createURL("/servlet?param=forbidden"));
-		assertContent("servlet", createURL("/servlet?param=any"));
-		assertContent("servlet", createURL("/servlet"));
-	}
+        assertResponseCode(SC_OK, createURL("/servlet?param=forbidden"));
+        assertContent("servlet", createURL("/servlet?param=forbidden"));
+        assertContent("servlet", createURL("/servlet?param=any"));
+        assertContent("servlet", createURL("/servlet"));
+    }
 }

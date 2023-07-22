@@ -27,7 +27,6 @@ import org.apache.felix.http.base.internal.runtime.ListenerInfo;
 import org.apache.felix.http.base.internal.runtime.ServletContextHelperInfo;
 import org.apache.felix.http.base.internal.runtime.ServletInfo;
 import org.apache.felix.http.base.internal.runtime.dto.FailedDTOHolder;
-import org.apache.felix.http.base.internal.service.HttpServiceFactory;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 import org.osgi.service.servlet.runtime.dto.ServletContextDTO;
@@ -61,19 +60,6 @@ public final class PerContextHandlerRegistry implements Comparable<PerContextHan
     private final EventListenerRegistry eventListenerRegistry = new EventListenerRegistry();
 
     private final HttpConfig config;
-
-
-    /**
-     * Default http service registry
-     */
-    public PerContextHandlerRegistry(@NotNull final HttpConfig config)
-    {
-        this.config = config;
-        this.serviceId = HttpServiceFactory.HTTP_SERVICE_CONTEXT_SERVICE_ID;
-        this.ranking = Integer.MAX_VALUE;
-        this.path = "/";
-        this.prefix = null;
-    }
 
     /**
      * Registry for a servlet context helper (whiteboard support)

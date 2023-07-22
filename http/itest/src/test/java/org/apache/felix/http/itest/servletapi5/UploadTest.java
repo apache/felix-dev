@@ -79,11 +79,11 @@ public class UploadTest extends Servlet5BaseIntegrationTest {
                     throws IOException, ServletException {
                 try {
                     final Collection<Part> parts = req.getParts();
-                    for(final Part p : parts) {
+                    for (final Part p : parts) {
                         contents.put(p.getName(), p.getSize());
                     }
                     resp.setStatus(201);
-                } finally{
+                } finally {
                     receivedLatch.countDown();
                 }
 
@@ -101,15 +101,12 @@ public class UploadTest extends Servlet5BaseIntegrationTest {
             final HttpPost httppost = new HttpPost(url.toExternalForm());
 
             final StringBuilder sb = new StringBuilder();
-            for(int i=0;i<length;i++) {
+            for (int i = 0; i < length; i++) {
                 sb.append(c);
             }
             final StringBody text = new StringBody(sb.toString(), ContentType.TEXT_PLAIN);
 
-            final HttpEntity reqEntity = MultipartEntityBuilder.create()
-                    .addPart("text", text)
-                    .build();
-
+            final HttpEntity reqEntity = MultipartEntityBuilder.create().addPart("text", text).build();
 
             httppost.setEntity(reqEntity);
 
@@ -136,7 +133,7 @@ public class UploadTest extends Servlet5BaseIntegrationTest {
         postContent('a', 500, 201);
         assertTrue(receivedLatch.await(5, TimeUnit.SECONDS));
         assertEquals(1, contents.size());
-        assertEquals(500L, (long)contents.get("text"));
+        assertEquals(500L, (long) contents.get("text"));
     }
 
     @Test

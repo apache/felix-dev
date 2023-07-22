@@ -55,14 +55,6 @@
             <version>5.0.0</version>
             <scope>provided</scope>
         </dependency>
-                
-        <!-- TODO: remove this - only 'jakarta.servlet-api' is used --> 
-        <dependency>
-            <groupId>javax.servlet</groupId>
-            <artifactId>javax.servlet-api</artifactId>
-            <version>4.0.1</version>
-            <scope>provided</scope>
-        </dependency>
         <dependency>
             <groupId>org.osgi</groupId>
             <artifactId>osgi.core</artifactId>
@@ -75,31 +67,10 @@
             <version>2.0.0</version>
             <scope>provided</scope>
         </dependency>
-        <!-- TODO: remove this - only 'org.osgi.service.servlet' is used -->
-        <dependency>
-            <groupId>org.osgi</groupId>
-            <artifactId>org.osgi.service.http</artifactId>
-            <version>1.2.1</version>
-           <scope>provided</scope>
-        </dependency>
-        <!-- TODO: remove this - only 'org.osgi.service.servlet' is used -->
-        <dependency>
-            <groupId>org.osgi</groupId>
-            <artifactId>org.osgi.service.http.whiteboard</artifactId>
-            <version>1.1.0</version>
-            <scope>provided</scope>
-        </dependency>
         <dependency>
             <groupId>org.osgi</groupId>
             <artifactId>org.osgi.service.useradmin</artifactId>
             <version>1.1.1</version>
-            <scope>provided</scope>
-        </dependency>
-        <!-- TODO: change to 2.x version of 'commons-fileupload' once released (or use snapshot instead) -->
-        <dependency>
-            <groupId>commons-fileupload</groupId>
-            <artifactId>commons-fileupload</artifactId>
-            <version>1.5</version>
             <scope>provided</scope>
         </dependency>
         <dependency>

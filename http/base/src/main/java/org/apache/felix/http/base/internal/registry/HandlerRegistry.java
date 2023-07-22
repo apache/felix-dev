@@ -21,8 +21,6 @@ import java.util.Collections;
 import java.util.Iterator;
 import java.util.List;
 
-import jakarta.servlet.DispatcherType;
-
 import org.apache.felix.http.base.internal.HttpConfig;
 import org.apache.felix.http.base.internal.handler.FilterHandler;
 import org.apache.felix.http.base.internal.handler.ServletHandler;
@@ -31,6 +29,8 @@ import org.apache.felix.http.base.internal.runtime.dto.FailedDTOHolder;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 import org.osgi.service.servlet.runtime.dto.ServletContextDTO;
+
+import jakarta.servlet.DispatcherType;
 
 /**
  * Registry for all services.
@@ -58,20 +58,11 @@ public final class HandlerRegistry
     }
 
     /**
-     * Register default context registry for Http Service
-     */
-    public void init()
-    {
-        this.add(new PerContextHandlerRegistry(config));
-    }
-
-    /**
      * Reset to initial state
      */
     public void reset()
     {
         this.registrations.clear();
-        this.init();
     }
 
     /**

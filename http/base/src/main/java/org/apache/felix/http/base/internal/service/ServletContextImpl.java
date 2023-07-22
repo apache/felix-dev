@@ -35,8 +35,6 @@ import org.apache.felix.http.base.internal.context.ExtServletContext;
 import org.apache.felix.http.base.internal.dispatch.RequestDispatcherImpl;
 import org.apache.felix.http.base.internal.dispatch.RequestInfo;
 import org.apache.felix.http.base.internal.handler.ServletHandler;
-import org.apache.felix.http.base.internal.javaxwrappers.ServletRequestWrapper;
-import org.apache.felix.http.base.internal.javaxwrappers.ServletResponseWrapper;
 import org.apache.felix.http.base.internal.logger.SystemLogger;
 import org.apache.felix.http.base.internal.registry.PathResolution;
 import org.apache.felix.http.base.internal.registry.PerContextHandlerRegistry;
@@ -44,7 +42,8 @@ import org.apache.felix.http.base.internal.registry.ServletResolution;
 import org.apache.felix.http.base.internal.util.MimeTypes;
 import org.apache.felix.http.base.internal.util.UriUtils;
 import org.osgi.framework.Bundle;
-import org.osgi.service.http.HttpContext;
+import org.osgi.service.servlet.context.ServletContextHelper;
+import org.osgi.service.servlet.whiteboard.HttpWhiteboardConstants;
 
 import jakarta.servlet.Filter;
 import jakarta.servlet.FilterRegistration;
@@ -71,7 +70,7 @@ public class ServletContextImpl implements ExtServletContext
 {
     private final Bundle bundle;
     private final ServletContext context;
-    private final HttpContext httpContext;
+    private final ServletContextHelper servletContextHelper;
     private final Map<String, Object> attributes;
     private final PerContextHandlerRegistry handlerRegistry;
 
@@ -79,19 +78,19 @@ public class ServletContextImpl implements ExtServletContext
      * Create a new servlet context implementation
      * @param bundle The bundle
      * @param context The context
-     * @param httpContext The http context
+     * @param servletContextHelper The servlet context helper
      * @param sharedAttributes shared attribtes
      * @param registry The registry
      */
     public ServletContextImpl(final Bundle bundle,
             final ServletContext context,
-            final HttpContext httpContext,
+            final ServletContextHelper servletContextHelper,
             final boolean sharedAttributes,
             final PerContextHandlerRegistry registry)
     {
         this.bundle = bundle;
         this.context = context;
-        this.httpContext = httpContext;
+        this.servletContextHelper = servletContextHelper;
         this.attributes = sharedAttributes ? null : new ConcurrentHashMap<String, Object>();
         this.handlerRegistry = registry;
     }
@@ -272,7 +271,7 @@ public class ServletContextImpl implements ExtServletContext
     @Override
     public String getMimeType(String file)
     {
-        String type = this.httpContext.getMimeType(file);
+        String type = this.servletContextHelper.getMimeType(file);
         if (type != null)
         {
             return type;
@@ -301,7 +300,7 @@ public class ServletContextImpl implements ExtServletContext
     @Override
     public URL getResource(String path)
     {
-        return this.httpContext.getResource(normalizeResourcePath(path));
+        return this.servletContextHelper.getResource(normalizeResourcePath(path));
     }
 
     @Override
@@ -355,7 +354,7 @@ public class ServletContextImpl implements ExtServletContext
     @Override
     public String getServletContextName()
     {
-        return HttpServiceFactory.HTTP_SERVICE_CONTEXT_NAME;
+        return HttpWhiteboardConstants.HTTP_WHITEBOARD_DEFAULT_CONTEXT_NAME;
     }
 
     @Override
@@ -415,8 +414,7 @@ public class ServletContextImpl implements ExtServletContext
     @Override
     public boolean handleSecurity(HttpServletRequest req, HttpServletResponse res) throws IOException
     {
-        return this.httpContext.handleSecurity((javax.servlet.http.HttpServletRequest)ServletRequestWrapper.getWrapper(req),
-                (javax.servlet.http.HttpServletResponse)ServletResponseWrapper.getWrapper(res));
+        return this.servletContextHelper.handleSecurity(req, res);
     }
 
     @Override

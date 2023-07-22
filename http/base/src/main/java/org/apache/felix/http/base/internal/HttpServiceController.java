@@ -22,7 +22,6 @@ import org.apache.felix.http.base.internal.dispatch.Dispatcher;
 import org.apache.felix.http.base.internal.dispatch.DispatcherServlet;
 import org.apache.felix.http.base.internal.handler.HttpSessionWrapper;
 import org.apache.felix.http.base.internal.registry.HandlerRegistry;
-import org.apache.felix.http.base.internal.service.HttpServiceFactory;
 import org.apache.felix.http.base.internal.whiteboard.WhiteboardManager;
 import org.jetbrains.annotations.NotNull;
 import org.osgi.framework.BundleContext;
@@ -42,7 +41,6 @@ public final class HttpServiceController
     private final HandlerRegistry registry;
     private final Dispatcher dispatcher;
     private final EventDispatcher eventDispatcher;
-    private final HttpServiceFactory httpServiceFactory;
     private final WhiteboardManager whiteboardManager;
 
     private final HttpConfig config = new HttpConfig();
@@ -59,8 +57,7 @@ public final class HttpServiceController
         this.registry = new HandlerRegistry(config);
         this.dispatcher = new Dispatcher(this.registry);
         this.eventDispatcher = new EventDispatcher(this);
-        this.httpServiceFactory = new HttpServiceFactory(this.bundleContext, this.registry);
-        this.whiteboardManager = new WhiteboardManager(bundleContext, this.httpServiceFactory, this.registry);
+        this.whiteboardManager = new WhiteboardManager(bundleContext, this.registry);
     }
 
     /**
@@ -129,10 +126,7 @@ public final class HttpServiceController
     public void register(@NotNull final ServletContext containerContext, @NotNull final Hashtable<String, Object> props)
     {
         this.config.configure(props);
-
-        this.registry.init();
-
-        this.httpServiceFactory.start(containerContext, props);
+        
         this.whiteboardManager.start(containerContext, props);
 
         this.dispatcher.setWhiteboardManager(this.whiteboardManager);
@@ -146,8 +140,7 @@ public final class HttpServiceController
         this.dispatcher.setWhiteboardManager(null);
 
         this.whiteboardManager.stop();
-        this.httpServiceFactory.stop();
-
+        
         this.registry.shutdown();
         this.httpSessionListener = null;
     }

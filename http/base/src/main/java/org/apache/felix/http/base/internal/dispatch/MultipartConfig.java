@@ -16,7 +16,7 @@
  */
 package org.apache.felix.http.base.internal.dispatch;
 
-import org.apache.commons.fileupload.disk.DiskFileItemFactory;
+import org.apache.commons.fileupload2.disk.DiskFileItemFactory;
 
 public final class MultipartConfig
 {

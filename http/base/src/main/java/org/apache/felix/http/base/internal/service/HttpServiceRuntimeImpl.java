@@ -24,7 +24,6 @@ import java.util.Timer;
 import java.util.TimerTask;
 import java.util.concurrent.atomic.AtomicLong;
 
-import org.apache.felix.http.base.internal.javaxwrappers.RuntimeServiceWrapper;
 import org.apache.felix.http.base.internal.registry.HandlerRegistry;
 import org.apache.felix.http.base.internal.runtime.dto.RequestInfoDTOBuilder;
 import org.apache.felix.http.base.internal.runtime.dto.RuntimeDTOBuilder;
@@ -54,8 +53,6 @@ public final class HttpServiceRuntimeImpl implements HttpServiceRuntime
     private final WhiteboardManager contextManager;
 
     private volatile ServiceRegistration<HttpServiceRuntime> serviceReg;
-
-    private volatile ServiceRegistration<org.osgi.service.http.runtime.HttpServiceRuntime> javaxServiceReg;
 
     private final AtomicLong changeCount = new AtomicLong();
 
@@ -133,10 +130,6 @@ public final class HttpServiceRuntimeImpl implements HttpServiceRuntime
         this.serviceReg = bundleContext.registerService(HttpServiceRuntime.class,
                 this,
                 attributes);
-        final RuntimeServiceWrapper wrapper = new RuntimeServiceWrapper(this);
-        this.javaxServiceReg = bundleContext.registerService(org.osgi.service.http.runtime.HttpServiceRuntime.class,
-                wrapper, attributes);
-        wrapper.setServiceReference(this.javaxServiceReg.getReference());
     }
 
     public void unregister()
@@ -161,18 +154,6 @@ public final class HttpServiceRuntimeImpl implements HttpServiceRuntime
             }
             this.serviceReg = null;
     	}
-        if ( this.javaxServiceReg != null )
-        {
-            try
-            {
-                this.javaxServiceReg.unregister();
-            }
-            catch ( final IllegalStateException ise)
-            {
-                // we just ignore it
-            }
-            this.javaxServiceReg = null;
-        }
     }
 
     public ServiceReference<HttpServiceRuntime> getServiceReference()
@@ -188,8 +169,7 @@ public final class HttpServiceRuntimeImpl implements HttpServiceRuntime
     public void updateChangeCount()
     {
         final ServiceRegistration<HttpServiceRuntime> reg = this.serviceReg;
-        final ServiceRegistration<org.osgi.service.http.runtime.HttpServiceRuntime> javaxReg = this.javaxServiceReg;
-        if ( reg != null && javaxReg != null)
+        if ( reg != null)
         {
             final long count = this.changeCount.incrementAndGet();
 
@@ -199,14 +179,6 @@ public final class HttpServiceRuntimeImpl implements HttpServiceRuntime
                 try
                 {
                     reg.setProperties(attributes);
-                }
-                catch ( final IllegalStateException ise)
-                {
-                    // we ignore this as this might happen on shutdown
-                }
-                try
-                {
-                    javaxReg.setProperties(attributes);
                 }
                 catch ( final IllegalStateException ise)
                 {
@@ -235,14 +207,6 @@ public final class HttpServiceRuntimeImpl implements HttpServiceRuntime
                                 try
                                 {
                                     reg.setProperties(attributes);
-                                }
-                                catch ( final IllegalStateException ise)
-                                {
-                                    // we ignore this as this might happen on shutdown
-                                }
-                                try
-                                {
-                                    javaxReg.setProperties(attributes);
                                 }
                                 catch ( final IllegalStateException ise)
                                 {

@@ -46,12 +46,13 @@ import java.util.Iterator;
 import java.util.List;
 import java.util.Set;
 
-import org.apache.commons.fileupload.FileItem;
-import org.apache.commons.fileupload.FileUpload;
-import org.apache.commons.fileupload.FileUploadBase;
-import org.apache.commons.fileupload.FileUploadException;
-import org.apache.commons.fileupload.RequestContext;
-import org.apache.commons.fileupload.disk.DiskFileItemFactory;
+import org.apache.commons.fileupload2.FileItem;
+import org.apache.commons.fileupload2.FileUpload;
+import org.apache.commons.fileupload2.FileUploadBase;
+import org.apache.commons.fileupload2.FileUploadException;
+import org.apache.commons.fileupload2.RequestContext;
+import org.apache.commons.fileupload2.UploadContext;
+import org.apache.commons.fileupload2.disk.DiskFileItemFactory;
 import org.apache.felix.http.base.internal.context.ExtServletContext;
 import org.apache.felix.http.base.internal.handler.HttpSessionWrapper;
 import org.osgi.framework.Bundle;
@@ -413,11 +414,11 @@ final class ServletRequestWrapper extends HttpServletRequestWrapper
     {
         if ( parts == null )
         {
-            final RequestContext multipartContext;
+            final UploadContext multipartContext;
             if (!POST_METHOD.equalsIgnoreCase(this.getMethod())) {
                 multipartContext = null;
             } else {
-                multipartContext = new RequestContext() {
+                multipartContext = new UploadContext() {
 
                     @Override
                     public InputStream getInputStream() throws IOException {
@@ -430,7 +431,7 @@ final class ServletRequestWrapper extends HttpServletRequestWrapper
                     }
 
                     @Override
-                    public int getContentLength() {
+                    public long contentLength() {
                         return ServletRequestWrapper.this.getContentLength();
                     }
 

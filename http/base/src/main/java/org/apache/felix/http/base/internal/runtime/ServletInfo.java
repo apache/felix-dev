@@ -22,7 +22,6 @@ import java.util.Collections;
 import java.util.Map;
 
 import org.apache.felix.http.base.internal.dispatch.MultipartConfig;
-import org.apache.felix.http.base.internal.jakartawrappers.ServletWrapper;
 import org.apache.felix.http.base.internal.util.PatternUtil;
 import org.jetbrains.annotations.NotNull;
 import org.osgi.dto.DTO;
@@ -267,9 +266,6 @@ public class ServletInfo extends WhiteboardServiceInfo<Servlet>
      * @return The class name
      */
     public @NotNull String getClassName(@NotNull final Servlet servlet) {
-        if (servlet instanceof ServletWrapper ) {
-            return ((ServletWrapper)servlet).getServlet().getClass().getName();
-        }
         return servlet.getClass().getName();
     }
 }

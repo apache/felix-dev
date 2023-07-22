@@ -45,35 +45,17 @@
                 <configuration>
                     <instructions>
                         <Export-Package>
-                            javax.servlet;version=2.6;uses:="javax.servlet.annotation,javax.servlet.descriptor",
-                            javax.servlet.annotation;version=2.6;uses:="javax.servlet",
-                            javax.servlet.descriptor;version=2.6,
-                            javax.servlet.http;version=2.6;uses:="javax.servlet",
-                            javax.servlet;version=3.0;uses:="javax.servlet.annotation,javax.servlet.descriptor",
-                            javax.servlet.annotation;version=3.0;uses:="javax.servlet",
-                            javax.servlet.descriptor;version=3.0,
-                            javax.servlet.http;version=3.0;uses:="javax.servlet",
-                            javax.servlet;version=3.1;uses:="javax.servlet.annotation,javax.servlet.descriptor",
-                            javax.servlet.annotation;version=3.1;uses:="javax.servlet",
-                            javax.servlet.descriptor;version=3.1,
-                            javax.servlet.http;version=3.1;uses:="javax.servlet",
-                            javax.servlet;version=4.0;uses:="javax.servlet.annotation,javax.servlet.descriptor",
-                            javax.servlet.annotation;version=4.0;uses:="javax.servlet",
-                            javax.servlet.descriptor;version=4.0,
-                            javax.servlet.http;version=4.0;uses:="javax.servlet",
                             jakarta.servlet;version=5.0;uses:="jakarta.servlet.annotation,jakarta.servlet.descriptor",
                             jakarta.servlet.annotation;version=5.0;uses:="jakarta.servlet",
                             jakarta.servlet.descriptor;version=5.0,
                             jakarta.servlet.http;version=5.0;uses:="jakarta.servlet"
-                        </Export-Package>
+                        </Export-Package>                        
                         <Import-Package>!*</Import-Package>
                         <Provide-Capability>
-                            osgi.contract;osgi.contract="JavaServlet";version:List&lt;Version&gt;="2.6,3.0,3.1,4.0";
-                            uses:="javax.servlet,javax.servlet.http,javax.servlet.descriptor,javax.servlet.annotation",
                             osgi.contract;osgi.contract="JakartaServlet";version:List&lt;Version&gt;="5.0";
                             uses:="jakarta.servlet,jakarta.servlet.http,jakarta.servlet.descriptor,jakarta.servlet.annotation"
-                        </Provide-Capability>
-                        <Embed-Dependency>tomcat-servlet-api;inline=true,jakarta.servlet-api;inline=true</Embed-Dependency>
+                        </Provide-Capability>                        
+                        <Embed-Dependency>jakarta.servlet-api;inline=true</Embed-Dependency>
                     </instructions>
                     <!-- Skip baselining -->
                     <skip>true</skip>
@@ -83,12 +65,6 @@
     </build>
 
     <dependencies>
-        <!-- TODO: provides 'javax.servlet'; remove this - only 'jakarta.servlet-api' is used -->
-        <dependency>
-            <groupId>org.apache.tomcat</groupId>
-            <artifactId>tomcat-servlet-api</artifactId>
-            <version>9.0.56</version>
-        </dependency>
         <dependency>
             <groupId>jakarta.servlet</groupId>
             <artifactId>jakarta.servlet-api</artifactId>

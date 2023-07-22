@@ -31,8 +31,8 @@ import java.util.HashSet;
 import java.util.Set;
 
 import org.apache.felix.http.base.internal.context.ExtServletContext;
-import org.apache.felix.http.base.internal.handler.HttpServiceServletHandler;
 import org.apache.felix.http.base.internal.handler.ServletHandler;
+import org.apache.felix.http.base.internal.handler.WhiteboardServletHandler;
 import org.apache.felix.http.base.internal.runtime.ServletInfo;
 import org.apache.felix.http.base.internal.runtime.dto.FailedDTOHolder;
 import org.junit.Test;
@@ -41,6 +41,7 @@ import org.osgi.framework.Bundle;
 import org.osgi.framework.BundleContext;
 import org.osgi.framework.Constants;
 import org.osgi.framework.InvalidSyntaxException;
+import org.osgi.framework.ServiceObjects;
 import org.osgi.framework.ServiceReference;
 import org.osgi.service.servlet.runtime.dto.DTOConstants;
 import org.osgi.service.servlet.runtime.dto.ServletContextDTO;
@@ -50,26 +51,23 @@ import jakarta.servlet.Servlet;
 import jakarta.servlet.ServletConfig;
 import jakarta.servlet.ServletException;
 
-public class ErrorPageRegistryTest
-{
-    private void assertEmpty(final ServletContextDTO dto, final FailedDTOHolder holder)
-    {
+public class ErrorPageRegistryTest {
+    private void assertEmpty(final ServletContextDTO dto, final FailedDTOHolder holder) {
         assertNull(dto.servletDTOs);
         assertNull(dto.resourceDTOs);
         assertNull(dto.errorPageDTOs);
         assertTrue(holder.failedErrorPageDTOs.isEmpty());
     }
 
-    private void clear(final ServletContextDTO dto, final FailedDTOHolder holder)
-    {
+    private void clear(final ServletContextDTO dto, final FailedDTOHolder holder) {
         dto.servletDTOs = null;
         dto.resourceDTOs = null;
         dto.errorPageDTOs = null;
         holder.failedErrorPageDTOs.clear();
     }
 
-    @Test public void testSingleErrorPage() throws InvalidSyntaxException, ServletException
-    {
+    @Test
+    public void testSingleErrorPage() throws InvalidSyntaxException, ServletException {
         final ErrorPageRegistry reg = new ErrorPageRegistry();
 
         final FailedDTOHolder holder = new FailedDTOHolder();
@@ -117,8 +115,8 @@ public class ErrorPageRegistryTest
         assertEmpty(dto, holder);
     }
 
-    @Test public void testSimpleHiding() throws InvalidSyntaxException, ServletException
-    {
+    @Test
+    public void testSimpleHiding() throws InvalidSyntaxException, ServletException {
         final ErrorPageRegistry reg = new ErrorPageRegistry();
 
         final FailedDTOHolder holder = new FailedDTOHolder();
@@ -157,7 +155,8 @@ public class ErrorPageRegistryTest
         assertEquals(1, holder.failedErrorPageDTOs.get(0).errorCodes.length);
         assertEquals(404, holder.failedErrorPageDTOs.get(0).errorCodes[0]);
         assertEquals(0, holder.failedErrorPageDTOs.get(0).exceptions.length);
-        assertEquals(DTOConstants.FAILURE_REASON_SHADOWED_BY_OTHER_SERVICE, holder.failedErrorPageDTOs.get(0).failureReason);
+        assertEquals(DTOConstants.FAILURE_REASON_SHADOWED_BY_OTHER_SERVICE,
+                holder.failedErrorPageDTOs.get(0).failureReason);
 
         // remove second page
         final Servlet s2 = h2.getServlet();
@@ -195,8 +194,8 @@ public class ErrorPageRegistryTest
         assertEmpty(dto, holder);
     }
 
-    @Test public void testRangeRegistration() throws InvalidSyntaxException
-    {
+    @Test
+    public void testRangeRegistration() throws InvalidSyntaxException {
         final ErrorPageRegistry reg = new ErrorPageRegistry();
         final FailedDTOHolder holder = new FailedDTOHolder();
         final ServletContextDTO dto = new ServletContextDTO();
@@ -214,24 +213,22 @@ public class ErrorPageRegistryTest
         assertEquals(2, dto.errorPageDTOs.length);
         assertEquals(100, dto.errorPageDTOs[0].errorCodes.length);
         final Set<Long> codes4 = new HashSet<Long>();
-        for(final long c : dto.errorPageDTOs[0].errorCodes)
-        {
+        for (final long c : dto.errorPageDTOs[0].errorCodes) {
             assertTrue(c >= 400 && c < 500);
             codes4.add(c);
         }
         assertEquals(100, codes4.size());
         assertEquals(100, dto.errorPageDTOs[1].errorCodes.length);
         final Set<Long> codes5 = new HashSet<Long>();
-        for(final long c : dto.errorPageDTOs[1].errorCodes)
-        {
+        for (final long c : dto.errorPageDTOs[1].errorCodes) {
             assertTrue(c >= 500 && c < 600);
             codes5.add(c);
         }
         assertEquals(100, codes5.size());
     }
 
-    @Test public void testRangeRegistrationOverlay() throws InvalidSyntaxException
-    {
+    @Test
+    public void testRangeRegistrationOverlay() throws InvalidSyntaxException {
         final ErrorPageRegistry reg = new ErrorPageRegistry();
         final FailedDTOHolder holder = new FailedDTOHolder();
         final ServletContextDTO dto = new ServletContextDTO();
@@ -249,8 +246,7 @@ public class ErrorPageRegistryTest
         // -> no failure in this case
         assertEquals(0, holder.failedErrorPageDTOs.size());
         final Set<Long> codes4 = new HashSet<Long>();
-        for(final long c : dto.errorPageDTOs[1].errorCodes)
-        {
+        for (final long c : dto.errorPageDTOs[1].errorCodes) {
             assertTrue(c >= 400 && c < 500);
             codes4.add(c);
         }
@@ -259,18 +255,16 @@ public class ErrorPageRegistryTest
         assertFalse(codes4.contains(403L));
         assertEquals(2, dto.errorPageDTOs[0].errorCodes.length);
         final Set<Long> codes = new HashSet<Long>();
-        for(final long c : dto.errorPageDTOs[0].errorCodes)
-        {
+        for (final long c : dto.errorPageDTOs[0].errorCodes) {
             assertTrue(c >= 403 && c < 405);
             codes.add(c);
         }
         assertEquals(2, codes.size());
     }
 
-    private static ServletInfo createServletInfo(final long id, final int ranking, final String... codes) throws InvalidSyntaxException
-    {
+    private static ServletInfo createServletInfo(final long id, final int ranking, final String... codes)
+            throws InvalidSyntaxException {
         final BundleContext bCtx = mock(BundleContext.class);
-        when(bCtx.createFilter(ArgumentMatchers.anyString())).thenReturn(null);
         final Bundle bundle = mock(Bundle.class);
         when(bundle.getBundleContext()).thenReturn(bCtx);
 
@@ -286,12 +280,20 @@ public class ErrorPageRegistryTest
         return si;
     }
 
-    private static ServletHandler createServletHandler(final long id, final int ranking, final String... codes) throws InvalidSyntaxException
-    {
+    private static ServletHandler createServletHandler(final long id, final int ranking, final String... codes)
+            throws InvalidSyntaxException {
         final ServletInfo si = createServletInfo(id, ranking, codes);
-        final ExtServletContext ctx = mock(ExtServletContext.class);
-        final Servlet servlet = mock(Servlet.class);
 
-        return new HttpServiceServletHandler(-1, ctx, si, servlet);
+        @SuppressWarnings("unchecked")
+        final ServiceObjects<Servlet> so = mock(ServiceObjects.class);
+        final BundleContext bundleContext = mock(BundleContext.class);
+        when(bundleContext.getServiceObjects(si.getServiceReference())).thenReturn(so);
+
+        final Servlet servlet = mock(Servlet.class);
+        when(so.getService()).thenReturn(servlet);
+
+        final ExtServletContext servletContext = mock(ExtServletContext.class);
+
+        return new WhiteboardServletHandler(id, servletContext, si, bundleContext, servlet);
     }
 }

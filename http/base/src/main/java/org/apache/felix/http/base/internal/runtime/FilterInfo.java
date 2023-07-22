@@ -22,7 +22,6 @@ import java.util.Map;
 import java.util.regex.Pattern;
 import java.util.regex.PatternSyntaxException;
 
-import org.apache.felix.http.base.internal.jakartawrappers.FilterWrapper;
 import org.apache.felix.http.base.internal.util.PatternUtil;
 import org.jetbrains.annotations.NotNull;
 import org.osgi.dto.DTO;
@@ -220,9 +219,6 @@ public class FilterInfo extends WhiteboardServiceInfo<Filter>
      * @return The class name
      */
     public @NotNull String getClassName(@NotNull final Filter filter) {
-        if (filter instanceof FilterWrapper ) {
-            return ((FilterWrapper)filter).getFilter().getClass().getName();
-        }
         return filter.getClass().getName();
     }
 }

@@ -35,7 +35,12 @@ public class HttpConfig {
     public static final String PROP_UNIQUE_SESSION_ID = "org.apache.felix.http.session.uniqueid";
 
     public static final boolean DEFAULT_UNIQUE_SESSION_ID = true;
-
+    
+    /**
+     * Type must be compatible with return type of {@link org.apache.felix.http.base.internal.handler.ServletHandler#getContextServiceId()}
+     */
+    public static final long DEFAULT_CONTEXT_SERVICE_ID = Integer.MIN_VALUE;
+    
     private volatile boolean uniqueSessionId;
 
     private volatile boolean invalidateContainerSession;

@@ -77,24 +77,23 @@ public class SessionHandlingTest extends Servlet5BaseIntegrationTest {
             private static final long serialVersionUID = 1L;
 
             @Override
-            protected void doGet(HttpServletRequest req, HttpServletResponse resp)
-                    throws IOException {
+            protected void doGet(HttpServletRequest req, HttpServletResponse resp) throws IOException {
                 final boolean create = req.getParameter("create") != null;
-                if ( create ) {
+                if (create) {
                     req.getSession();
                 }
                 final boolean destroy = req.getParameter("destroy") != null;
-                if ( destroy ) {
+                if (destroy) {
                     req.getSession().invalidate();
                 }
                 final HttpSession s = req.getSession(false);
-                if ( s != null ) {
+                if (s != null) {
                     s.setAttribute("value", context);
                 }
 
                 final PrintWriter pw = resp.getWriter();
                 pw.println("{");
-                if ( s == null ) {
+                if (s == null) {
                     pw.println(" \"session\" : false");
                 } else {
                     pw.println(" \"session\" : true,");
@@ -111,15 +110,15 @@ public class SessionHandlingTest extends Servlet5BaseIntegrationTest {
     }
 
     private void setupContext(String name, String path) throws InterruptedException {
-        Dictionary<String, ?> properties = createDictionary(
-                HTTP_WHITEBOARD_CONTEXT_NAME, name,
+        Dictionary<String, ?> properties = createDictionary(HTTP_WHITEBOARD_CONTEXT_NAME, name,
                 HTTP_WHITEBOARD_CONTEXT_PATH, path);
 
         ServletContextHelper servletContextHelper = new ServletContextHelper(m_context.getBundle()) {
             // test helper
         };
         long counter = this.getRuntimeCounter();
-        registrations.add(m_context.registerService(ServletContextHelper.class.getName(), servletContextHelper, properties));
+        registrations
+                .add(m_context.registerService(ServletContextHelper.class.getName(), servletContextHelper, properties));
 
         this.waitForRuntime(counter);
     }
@@ -138,20 +137,18 @@ public class SessionHandlingTest extends Servlet5BaseIntegrationTest {
         }
 
     }
+
     @Test
     public void testSessionAttributes() throws Exception {
         setupContext("test1", "/");
         setupContext("test2", "/");
 
         setupServlet("foo", new String[] { "/foo" }, 1, "test1");
-        setupServlet("bar", new String[] { "/bar" }, 2, "test2" );
+        setupServlet("bar", new String[] { "/bar" }, 2, "test2");
 
-        RequestConfig globalConfig = RequestConfig.custom()
-                .setCookieSpec(CookieSpecs.DEFAULT)
-                .build();
+        RequestConfig globalConfig = RequestConfig.custom().setCookieSpec(CookieSpecs.DEFAULT).build();
         final CloseableHttpClient httpclient = HttpClients.custom().setDefaultRequestConfig(globalConfig)
-                .setDefaultCookieStore(new BasicCookieStore())
-                .build();
+                .setDefaultCookieStore(new BasicCookieStore()).build();
 
         JsonObject json;
 
@@ -164,7 +161,7 @@ public class SessionHandlingTest extends Servlet5BaseIntegrationTest {
         json = getJSONResponse(httpclient, "/bar");
         assertFalse(json.getBoolean("session"));
 
-        // create session for  context of servlet foo
+        // create session for context of servlet foo
         // check session and session attribute
         json = getJSONResponse(httpclient, "/foo?create=true");
         assertTrue(json.getBoolean("session"));

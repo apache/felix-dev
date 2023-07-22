@@ -32,20 +32,19 @@ import java.util.Set;
 
 import org.apache.felix.http.base.internal.HttpConfig;
 import org.apache.felix.http.base.internal.handler.ListenerHandler;
-import org.apache.felix.http.base.internal.jakartawrappers.ServletRequestWrapper;
-import org.apache.felix.http.base.internal.jakartawrappers.ServletResponseWrapper;
 import org.apache.felix.http.base.internal.registry.EventListenerRegistry;
 import org.apache.felix.http.base.internal.registry.HandlerRegistry;
 import org.apache.felix.http.base.internal.registry.PerContextHandlerRegistry;
 import org.apache.felix.http.base.internal.runtime.ListenerInfo;
-import org.apache.felix.http.base.internal.service.HttpServiceFactory;
+import org.apache.felix.http.base.internal.runtime.ServletContextHelperInfo;
 import org.apache.felix.http.base.internal.service.ServletContextImpl;
 import org.junit.Assert;
 import org.junit.Before;
 import org.junit.Test;
 import org.mockito.Mockito;
 import org.osgi.framework.Bundle;
-import org.osgi.service.http.HttpContext;
+import org.osgi.service.servlet.context.ServletContextHelper;
+import org.osgi.service.servlet.whiteboard.HttpWhiteboardConstants;
 
 import jakarta.servlet.Filter;
 import jakarta.servlet.FilterRegistration;
@@ -494,7 +493,7 @@ public class ServletContextImplTest
     }
 
     private Bundle bundle;
-    private HttpContext httpContext;
+    private ServletContextHelper servletContextHelper;
     private AttributeListener listener;
     private ServletContextImpl context;
     private PerContextHandlerRegistry contextRegistry;
@@ -504,24 +503,35 @@ public class ServletContextImplTest
     {
         this.bundle = Mockito.mock(Bundle.class);
         ServletContext globalContext = new MockServletContext();
-        this.httpContext = Mockito.mock(HttpContext.class);
+        this.servletContextHelper = Mockito.mock(ServletContextHelper.class);
         this.listener = new AttributeListener();
         final HandlerRegistry reg = new HandlerRegistry(new HttpConfig());
-        reg.init();
-        contextRegistry = reg.getRegistry(HttpServiceFactory.HTTP_SERVICE_CONTEXT_SERVICE_ID);
+ 
+        final ServletContextHelperInfo servletContextHelperInfo = new ServletContextHelperInfo(
+                Integer.MIN_VALUE, 
+                HttpConfig.DEFAULT_CONTEXT_SERVICE_ID, 
+                HttpWhiteboardConstants.HTTP_WHITEBOARD_DEFAULT_CONTEXT_NAME, 
+                "/", 
+                null) {
+            // nothing to override
+        };
+
+        reg.add(new PerContextHandlerRegistry(servletContextHelperInfo, reg.getConfig()));
+
+        contextRegistry = reg.getRegistry(HttpConfig.DEFAULT_CONTEXT_SERVICE_ID);
         final EventListenerRegistry eventReg = contextRegistry.getEventListenerRegistry();
         final ListenerInfo info = Mockito.mock(ListenerInfo.class);
         when(info.getDTOListenerTypes()).thenReturn(new String[] {ServletContextAttributeListener.class.getName()});
         when(info.isListenerType(ServletContextAttributeListener.class.getName())).thenReturn(true);
         final ListenerHandler handler = Mockito.mock(ListenerHandler.class);
         when(handler.getListenerInfo()).thenReturn(info);
-        when(handler.getContextServiceId()).thenReturn(HttpServiceFactory.HTTP_SERVICE_CONTEXT_SERVICE_ID);
+        when(handler.getContextServiceId()).thenReturn(HttpConfig.DEFAULT_CONTEXT_SERVICE_ID);
         when(handler.getListener()).thenReturn(listener);
         when(handler.init()).thenReturn(-1);
         eventReg.addListeners(handler);
-        this.context = new ServletContextImpl(this.bundle, globalContext, this.httpContext, false, contextRegistry);
+        this.context = new ServletContextImpl(this.bundle, globalContext, this.servletContextHelper, false, contextRegistry);
     }
-
+    
     @Test
     public void testGetAttribute()
     {
@@ -581,7 +591,7 @@ public class ServletContextImplTest
     @Test
     public void testGetMimeType()
     {
-        Mockito.when(this.httpContext.getMimeType("file.xml")).thenReturn("some-other-format");
+        Mockito.when(this.servletContextHelper.getMimeType("file.xml")).thenReturn("some-other-format");
         Assert.assertEquals("some-other-format", this.context.getMimeType("file.xml"));
         Assert.assertEquals("text/plain", this.context.getMimeType("file.txt"));
     }
@@ -598,7 +608,7 @@ public class ServletContextImplTest
         URL url = getClass().getResource("resource.txt");
         Assert.assertNotNull(url);
 
-        Mockito.when(this.httpContext.getResource("/resource.txt")).thenReturn(url);
+        Mockito.when(this.servletContextHelper.getResource("/resource.txt")).thenReturn(url);
         Assert.assertNull(this.context.getResource("/notfound.txt"));
         Assert.assertEquals(url, this.context.getResource("/resource.txt"));
     }
@@ -609,7 +619,7 @@ public class ServletContextImplTest
         URL url = getClass().getResource("resource.txt");
         Assert.assertNotNull(url);
 
-        Mockito.when(this.httpContext.getResource("/resource.txt")).thenReturn(url);
+        Mockito.when(this.servletContextHelper.getResource("/resource.txt")).thenReturn(url);
         Assert.assertNull(this.context.getResourceAsStream("/notfound.txt"));
         Assert.assertNotNull(this.context.getResourceAsStream("/resource.txt"));
     }
@@ -653,9 +663,9 @@ public class ServletContextImplTest
     public void testGetSharedAttribute()
     {
         ServletContext globalContext = new MockServletContext();
-        ServletContext ctx1 = new ServletContextImpl(bundle, globalContext, httpContext, true,
+        ServletContext ctx1 = new ServletContextImpl(bundle, globalContext, servletContextHelper, true,
                 contextRegistry);
-        ServletContext ctx2 = new ServletContextImpl(bundle, globalContext, httpContext, true,
+        ServletContext ctx2 = new ServletContextImpl(bundle, globalContext, servletContextHelper, true,
                 contextRegistry);
 
         Assert.assertNull(ctx1.getAttribute("key1"));
@@ -764,9 +774,9 @@ public class ServletContextImplTest
     public void testGetSharedAttributeNames()
     {
         ServletContext globalContext = new MockServletContext();
-        ServletContext ctx1 = new ServletContextImpl(bundle, globalContext, httpContext, true,
+        ServletContext ctx1 = new ServletContextImpl(bundle, globalContext, servletContextHelper, true,
                 contextRegistry);
-        ServletContext ctx2 = new ServletContextImpl(bundle, globalContext, httpContext, true,
+        ServletContext ctx2 = new ServletContextImpl(bundle, globalContext, servletContextHelper, true,
                 contextRegistry);
 
         Enumeration<String> e = ctx1.getAttributeNames();
@@ -802,9 +812,9 @@ public class ServletContextImplTest
     public void testGetUnsharedAttribute()
     {
         ServletContext globalContext = new MockServletContext();
-        ServletContext ctx1 = new ServletContextImpl(bundle, globalContext, httpContext, false,
+        ServletContext ctx1 = new ServletContextImpl(bundle, globalContext, servletContextHelper, false,
                 contextRegistry);
-        ServletContext ctx2 = new ServletContextImpl(bundle, globalContext, httpContext, false,
+        ServletContext ctx2 = new ServletContextImpl(bundle, globalContext, servletContextHelper, false,
                 contextRegistry);
 
         Assert.assertNull(ctx1.getAttribute("key1"));
@@ -850,9 +860,9 @@ public class ServletContextImplTest
     public void testGetUnsharedAttributeNames()
     {
         ServletContext globalContext = new MockServletContext();
-        ServletContext ctx1 = new ServletContextImpl(bundle, globalContext, httpContext, false,
+        ServletContext ctx1 = new ServletContextImpl(bundle, globalContext, servletContextHelper, false,
                 contextRegistry);
-        ServletContext ctx2 = new ServletContextImpl(bundle, globalContext, httpContext, false,
+        ServletContext ctx2 = new ServletContextImpl(bundle, globalContext, servletContextHelper, false,
                 contextRegistry);
 
         Enumeration<String> e = ctx1.getAttributeNames();
@@ -883,15 +893,13 @@ public class ServletContextImplTest
     @Test
     public void testHandleSecurity() throws Exception
     {
-        javax.servlet.http.HttpServletRequest req = Mockito.mock(javax.servlet.http.HttpServletRequest.class);
-        javax.servlet.http.HttpServletResponse res = Mockito.mock(javax.servlet.http.HttpServletResponse.class);
+        HttpServletRequest req = Mockito.mock(HttpServletRequest.class);
+        HttpServletResponse res = Mockito.mock(HttpServletResponse.class);
 
-        Mockito.when(this.httpContext.handleSecurity(req, res)).thenReturn(true);
-        Assert.assertTrue(this.context.handleSecurity((HttpServletRequest)ServletRequestWrapper.getWrapper(req),
-                (HttpServletResponse)ServletResponseWrapper.getWrapper(res)));
+        Mockito.when(this.servletContextHelper.handleSecurity(req, res)).thenReturn(true);
+        Assert.assertTrue(this.context.handleSecurity(req, res));
 
-        Mockito.when(this.httpContext.handleSecurity(req, res)).thenReturn(false);
-        Assert.assertFalse(this.context.handleSecurity((HttpServletRequest)ServletRequestWrapper.getWrapper(req),
-                (HttpServletResponse)ServletResponseWrapper.getWrapper(res)));
+        Mockito.when(this.servletContextHelper.handleSecurity(req, res)).thenReturn(false);
+        Assert.assertFalse(this.context.handleSecurity(req, res));
     }
 }

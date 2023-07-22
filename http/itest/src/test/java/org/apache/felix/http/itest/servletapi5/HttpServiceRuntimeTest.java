@@ -89,20 +89,22 @@ import jakarta.servlet.http.HttpSessionListener;
 @ExamReactorStrategy(PerMethod.class)
 public class HttpServiceRuntimeTest extends Servlet5BaseIntegrationTest {
 
-    private static final String HTTP_CONTEXT_NAME = "org.osgi.service.http";
+    private static final String HTTP_CONTEXT_NAME = "default";
 
     private void registerServlet(String name, String path) throws InterruptedException {
         registerServlet(name, path, null);
     }
 
     private void registerServlet(String name, String path, String context) {
+        // @formatter:off
         List<Object> propertyEntries = Arrays.<Object>asList(
                 HTTP_WHITEBOARD_SERVLET_PATTERN, path,
                 HTTP_WHITEBOARD_SERVLET_NAME, name,
                 HTTP_WHITEBOARD_CONTEXT_SELECT, context);
+        // @formatter:on
 
-        Dictionary<String, ?> properties = createDictionary(context == null ?
-                propertyEntries.subList(0, 4).toArray() : propertyEntries.toArray());
+        Dictionary<String, ?> properties = createDictionary(
+                context == null ? propertyEntries.subList(0, 4).toArray() : propertyEntries.toArray());
 
         registrations.add(m_context.registerService(Servlet.class.getName(), new TestServlet(), properties));
     }
@@ -112,13 +114,15 @@ public class HttpServiceRuntimeTest extends Servlet5BaseIntegrationTest {
     }
 
     private void registerFilter(String name, String path, String context) {
+        // @formatter:off
         List<Object> propertyEntries = Arrays.<Object>asList(
                 HTTP_WHITEBOARD_FILTER_PATTERN, path,
                 HTTP_WHITEBOARD_FILTER_NAME, name,
                 HTTP_WHITEBOARD_CONTEXT_SELECT, context);
+        // @formatter:on
 
-        Dictionary<String, ?> properties = createDictionary(context == null ?
-                propertyEntries.subList(0, 4).toArray() : propertyEntries.toArray());
+        Dictionary<String, ?> properties = createDictionary(
+                context == null ? propertyEntries.subList(0, 4).toArray() : propertyEntries.toArray());
 
         registrations.add(m_context.registerService(Filter.class.getName(), new TestFilter(), properties));
     }
@@ -128,15 +132,17 @@ public class HttpServiceRuntimeTest extends Servlet5BaseIntegrationTest {
     }
 
     private void registerResource(String prefix, String path, String context) throws InterruptedException {
+        // @formatter:off        
         List<Object> propertyEntries = Arrays.<Object>asList(
                 HTTP_WHITEBOARD_RESOURCE_PATTERN, path,
                 HTTP_WHITEBOARD_RESOURCE_PREFIX, prefix,
                 HTTP_WHITEBOARD_CONTEXT_SELECT, context);
+        // @formatter:on
 
-        Dictionary<String, ?> properties = createDictionary(context == null ?
-                propertyEntries.subList(0, 4).toArray() : propertyEntries.toArray());
+        Dictionary<String, ?> properties = createDictionary(
+                context == null ? propertyEntries.subList(0, 4).toArray() : propertyEntries.toArray());
 
-        registrations.add(m_context.registerService(TestResource.class.getName(), new TestResource(), properties));
+        registrations.add(m_context.registerService(Object.class.getName(), new Object(), properties));
     }
 
     private void registerErrorPage(String name, List<String> errors) throws InterruptedException {
@@ -144,13 +150,15 @@ public class HttpServiceRuntimeTest extends Servlet5BaseIntegrationTest {
     }
 
     private void registerErrorPage(String name, List<String> errors, String context) {
+        // @formatter:off        
         List<Object> propertyEntries = Arrays.<Object>asList(
                 HTTP_WHITEBOARD_SERVLET_ERROR_PAGE, errors,
                 HTTP_WHITEBOARD_SERVLET_NAME, name,
                 HTTP_WHITEBOARD_CONTEXT_SELECT, context);
+        // @formatter:on
 
-        Dictionary<String, ?> properties = createDictionary(context == null ?
-                propertyEntries.subList(0, 4).toArray() : propertyEntries.toArray());
+        Dictionary<String, ?> properties = createDictionary(
+                context == null ? propertyEntries.subList(0, 4).toArray() : propertyEntries.toArray());
 
         registrations.add(m_context.registerService(Servlet.class.getName(), new TestServlet(), properties));
     }
@@ -159,23 +167,29 @@ public class HttpServiceRuntimeTest extends Servlet5BaseIntegrationTest {
         registerListener(listenerClass, useWithWhiteboard, null);
     }
 
-    private void registerListener(Class<?> listenerClass, boolean useWithWhiteboard, String context) throws InterruptedException {
+    private void registerListener(Class<?> listenerClass, boolean useWithWhiteboard, String context)
+            throws InterruptedException {
+        // @formatter:off
         List<Object> propertyEntries = Arrays.<Object>asList(
                 HTTP_WHITEBOARD_LISTENER, useWithWhiteboard ? "true" : "false",
                 HTTP_WHITEBOARD_CONTEXT_SELECT, context);
+        // @formatter:on
 
-        Dictionary<String, ?> properties = createDictionary(context == null ?
-                propertyEntries.subList(0, 2).toArray() : propertyEntries.toArray());
+        Dictionary<String, ?> properties = createDictionary(
+                context == null ? propertyEntries.subList(0, 2).toArray() : propertyEntries.toArray());
 
         registrations.add(m_context.registerService(listenerClass.getName(), mock(listenerClass), properties));
     }
 
     private ServiceRegistration<?> registerContext(String name, String path) throws InterruptedException {
+        // @formatter:off
         Dictionary<String, ?> properties = createDictionary(
                 HTTP_WHITEBOARD_CONTEXT_NAME, name,
                 HTTP_WHITEBOARD_CONTEXT_PATH, path);
+        // @formatter:on
 
-        ServiceRegistration<?> contextRegistration = m_context.registerService(ServletContextHelper.class.getName(), mock(ServletContextHelper.class), properties);
+        ServiceRegistration<?> contextRegistration = m_context.registerService(ServletContextHelper.class.getName(),
+                mock(ServletContextHelper.class), properties);
         registrations.add(contextRegistration);
         return contextRegistration;
     }
@@ -220,7 +234,7 @@ public class HttpServiceRuntimeTest extends Servlet5BaseIntegrationTest {
 
     @Test
     public void dtosForSuccesfullyRegisteredServlets() throws Exception {
-        //register first servlet
+        // register first servlet
         this.setupLatches(1);
         registerServlet("testServlet 1", "/servlet_1");
         this.waitForInit();
@@ -235,7 +249,7 @@ public class HttpServiceRuntimeTest extends Servlet5BaseIntegrationTest {
         assertEquals(1, contextDTO.servletDTOs.length);
         assertEquals("testServlet 1", contextDTO.servletDTOs[0].name);
 
-        //register second servlet
+        // register second servlet
         this.setupLatches(1);
         registerServlet("testServlet 2", "/servlet_2");
         this.waitForInit();
@@ -254,7 +268,7 @@ public class HttpServiceRuntimeTest extends Servlet5BaseIntegrationTest {
 
     @Test
     public void dtosForSuccesfullyRegisteredFilters() throws Exception {
-        //register first filter
+        // register first filter
         this.setupLatches(1);
         registerFilter("testFilter 1", "/servlet_1");
         this.waitForInit();
@@ -270,7 +284,7 @@ public class HttpServiceRuntimeTest extends Servlet5BaseIntegrationTest {
         assertEquals(1, contextDTO.filterDTOs.length);
         assertEquals("testFilter 1", contextDTO.filterDTOs[0].name);
 
-        //register second filter
+        // register second filter
         this.setupLatches(1);
         registerFilter("testFilter 2", "/servlet_1");
         this.waitForInit();
@@ -339,7 +353,8 @@ public class HttpServiceRuntimeTest extends Servlet5BaseIntegrationTest {
         ServletContextDTO contextDTO = assertDefaultContext(runtimeDTOWithFirstErrorPage);
         assertEquals(1, contextDTO.errorPageDTOs.length);
         assertEquals("error page 1", contextDTO.errorPageDTOs[0].name);
-        assertArrayEquals(new String[] { NoSuchElementException.class.getName() }, contextDTO.errorPageDTOs[0].exceptions);
+        assertArrayEquals(new String[] { NoSuchElementException.class.getName() },
+                contextDTO.errorPageDTOs[0].exceptions);
         assertArrayEquals(new long[] { 404 }, contextDTO.errorPageDTOs[0].errorCodes);
 
         // register second error page
@@ -380,7 +395,8 @@ public class HttpServiceRuntimeTest extends Servlet5BaseIntegrationTest {
         dtosForSuccesfullyRegisteredErrorPageWithWildcardErrorCode("5XX", 500);
     }
 
-    public void dtosForSuccesfullyRegisteredErrorPageWithWildcardErrorCode(String code, long startCode) throws Exception {
+    public void dtosForSuccesfullyRegisteredErrorPageWithWildcardErrorCode(String code, long startCode)
+            throws Exception {
         this.setupLatches(1);
         registerErrorPage("error page 1", asList(code));
         this.waitForInit();
@@ -402,8 +418,7 @@ public class HttpServiceRuntimeTest extends Servlet5BaseIntegrationTest {
     private void assertContainsAllHundredFrom(Long start, long[] errorCodes) {
         assertEquals(100, errorCodes.length);
         SortedSet<Long> distinctErrorCodes = new TreeSet<>();
-        for (Long code : errorCodes)
-        {
+        for (Long code : errorCodes) {
             distinctErrorCodes.add(code);
         }
         assertEquals(100, distinctErrorCodes.size());
@@ -467,15 +482,12 @@ public class HttpServiceRuntimeTest extends Servlet5BaseIntegrationTest {
         RuntimeDTO runtimeDTOWithAdditionalContext = serviceRuntime.getRuntimeDTO();
 
         assertEquals(0, runtimeDTOWithAdditionalContext.failedServletContextDTOs.length);
-        assertEquals(3, runtimeDTOWithAdditionalContext.servletContextDTOs.length);
+        assertEquals(2, runtimeDTOWithAdditionalContext.servletContextDTOs.length);
 
-        // default context is last, as it has the lowest service ranking
-        assertEquals(HTTP_CONTEXT_NAME, runtimeDTOWithAdditionalContext.servletContextDTOs[0].name);
-        assertEquals("", runtimeDTOWithAdditionalContext.servletContextDTOs[0].contextPath);
-        assertEquals("contextA", runtimeDTOWithAdditionalContext.servletContextDTOs[1].name);
-        assertEquals("/contextA", runtimeDTOWithAdditionalContext.servletContextDTOs[1].contextPath);
-        assertEquals("default", runtimeDTOWithAdditionalContext.servletContextDTOs[2].name);
-        assertEquals("", runtimeDTOWithAdditionalContext.servletContextDTOs[2].contextPath);
+        assertEquals(HTTP_CONTEXT_NAME, runtimeDTOWithAdditionalContext.servletContextDTOs[1].name);
+        assertEquals("", runtimeDTOWithAdditionalContext.servletContextDTOs[1].contextPath);
+        assertEquals("contextA", runtimeDTOWithAdditionalContext.servletContextDTOs[0].name);
+        assertEquals("/contextA", runtimeDTOWithAdditionalContext.servletContextDTOs[0].contextPath);
 
         // register second additional context
         registerContext("contextB", "/contextB");
@@ -483,17 +495,15 @@ public class HttpServiceRuntimeTest extends Servlet5BaseIntegrationTest {
         RuntimeDTO runtimeDTOWithAllContexts = serviceRuntime.getRuntimeDTO();
 
         assertEquals(0, runtimeDTOWithAllContexts.failedServletContextDTOs.length);
-        assertEquals(4, runtimeDTOWithAllContexts.servletContextDTOs.length);
+        assertEquals(3, runtimeDTOWithAllContexts.servletContextDTOs.length);
 
         // default context is last, as it has the lowest service ranking
-        assertEquals(HTTP_CONTEXT_NAME, runtimeDTOWithAdditionalContext.servletContextDTOs[0].name);
-        assertEquals("", runtimeDTOWithAdditionalContext.servletContextDTOs[0].contextPath);
-        assertEquals("contextA", runtimeDTOWithAllContexts.servletContextDTOs[1].name);
-        assertEquals("/contextA", runtimeDTOWithAllContexts.servletContextDTOs[1].contextPath);
-        assertEquals("contextB", runtimeDTOWithAllContexts.servletContextDTOs[2].name);
-        assertEquals("/contextB", runtimeDTOWithAllContexts.servletContextDTOs[2].contextPath);
-        assertEquals("default", runtimeDTOWithAllContexts.servletContextDTOs[3].name);
-        assertEquals("", runtimeDTOWithAllContexts.servletContextDTOs[3].contextPath);
+        assertEquals(HTTP_CONTEXT_NAME, runtimeDTOWithAllContexts.servletContextDTOs[2].name);
+        assertEquals("", runtimeDTOWithAllContexts.servletContextDTOs[2].contextPath);
+        assertEquals("contextA", runtimeDTOWithAllContexts.servletContextDTOs[0].name);
+        assertEquals("/contextA", runtimeDTOWithAllContexts.servletContextDTOs[0].contextPath);
+        assertEquals("contextB", runtimeDTOWithAllContexts.servletContextDTOs[1].name);
+        assertEquals("/contextB", runtimeDTOWithAllContexts.servletContextDTOs[1].contextPath);
     }
 
     @Test
@@ -545,12 +555,11 @@ public class HttpServiceRuntimeTest extends Servlet5BaseIntegrationTest {
         assertEquals(0, runtimeDTO.failedServletContextDTOs.length);
         assertEquals(0, runtimeDTO.failedServletDTOs.length);
 
-        assertEquals(3, runtimeDTO.servletContextDTOs.length);
-        assertEquals(HTTP_CONTEXT_NAME, runtimeDTO.servletContextDTOs[0].name);
-        assertEquals("test-context", runtimeDTO.servletContextDTOs[1].name);
-        assertEquals("default", runtimeDTO.servletContextDTOs[2].name);
+        assertEquals(2, runtimeDTO.servletContextDTOs.length);
+        assertEquals("test-context", runtimeDTO.servletContextDTOs[0].name);
+        assertEquals(HTTP_CONTEXT_NAME, runtimeDTO.servletContextDTOs[1].name);
 
-        ServletContextDTO defaultContextDTO = runtimeDTO.servletContextDTOs[2];
+        ServletContextDTO defaultContextDTO = runtimeDTO.servletContextDTOs[1];
         long contextServiceId = defaultContextDTO.serviceId;
 
         assertEquals(Arrays.toString(defaultContextDTO.servletDTOs), 2, defaultContextDTO.servletDTOs.length);
@@ -567,7 +576,7 @@ public class HttpServiceRuntimeTest extends Servlet5BaseIntegrationTest {
         assertEquals(ServletRequestListener.class.getName(), defaultContextDTO.listenerDTOs[0].types[0]);
         assertEquals(contextServiceId, defaultContextDTO.listenerDTOs[0].servletContextId);
 
-        ServletContextDTO testContextDTO = runtimeDTO.servletContextDTOs[1];
+        ServletContextDTO testContextDTO = runtimeDTO.servletContextDTOs[0];
         contextServiceId = testContextDTO.serviceId;
 
         assertEquals(2, testContextDTO.servletDTOs.length);
@@ -585,23 +594,24 @@ public class HttpServiceRuntimeTest extends Servlet5BaseIntegrationTest {
         assertEquals(contextServiceId, testContextDTO.listenerDTOs[0].servletContextId);
     }
 
-    private void assertServlet(final ServletDTO[] servletDTOs,
-    		final String name,
-    		final long contextServiceId) {
-    	assertNotNull(servletDTOs);
-    	for(final ServletDTO dto : servletDTOs) {
-    		if ( name.equals(dto.name) && contextServiceId == dto.servletContextId ) {
-    			return;
-    		}
-    	}
-    	fail("Servlet with name " + name + " and context id " + contextServiceId + " not found in " + Arrays.toString(servletDTOs));
-	}
+    private void assertServlet(final ServletDTO[] servletDTOs, final String name, final long contextServiceId) {
+        assertNotNull(servletDTOs);
+        for (final ServletDTO dto : servletDTOs) {
+            if (name.equals(dto.name) && contextServiceId == dto.servletContextId) {
+                return;
+            }
+        }
+        fail("Servlet with name " + name + " and context id " + contextServiceId + " not found in "
+                + Arrays.toString(servletDTOs));
+    }
 
-	@Test
+    @Test
     public void exceptionInServletInitAppearsAsFailure() throws ServletException, InterruptedException {
-        Dictionary<String, ?> properties = createDictionary(
+        // @formatter:off
+	    Dictionary<String, ?> properties = createDictionary(
                 HTTP_WHITEBOARD_SERVLET_PATTERN, "/servlet",
                 HTTP_WHITEBOARD_SERVLET_NAME, "servlet");
+        // @formatter:on
 
         long counter = this.getRuntimeCounter();
 
@@ -626,19 +636,23 @@ public class HttpServiceRuntimeTest extends Servlet5BaseIntegrationTest {
     }
 
     @Test
-    public void exceptionInServletInitDuringServletRemovalAppearsAsFailure() throws ServletException, InterruptedException {
+    public void exceptionInServletInitDuringServletRemovalAppearsAsFailure()
+            throws ServletException, InterruptedException {
+        // @formatter:off
         Dictionary<String, ?> properties1 = createDictionary(
             HTTP_WHITEBOARD_SERVLET_PATTERN, "/servlet1",
             HTTP_WHITEBOARD_SERVLET_NAME, "servlet1");
+        // @formatter:on
 
         long counter = this.getRuntimeCounter();
 
         @SuppressWarnings("serial")
         Servlet failingServlet1 = new TestServlet() {
             boolean isInit = false;
+
             @Override
             public void init() throws ServletException {
-                //fail when initialized the second time
+                // fail when initialized the second time
                 if (isInit) {
                     throw new ServletException();
                 }
@@ -647,16 +661,19 @@ public class HttpServiceRuntimeTest extends Servlet5BaseIntegrationTest {
             }
         };
 
+        // @formatter:off        
         Dictionary<String, ?> properties2 = createDictionary(
             HTTP_WHITEBOARD_SERVLET_PATTERN, "/servlet2",
             HTTP_WHITEBOARD_SERVLET_NAME, "servlet2");
+        // @formatter:on
 
         @SuppressWarnings("serial")
         Servlet failingServlet2 = new TestServlet() {
             boolean isInit = false;
+
             @Override
             public void init() throws ServletException {
-                //fail when initialized the second time
+                // fail when initialized the second time
                 if (isInit) {
                     throw new ServletException();
                 }
@@ -665,10 +682,12 @@ public class HttpServiceRuntimeTest extends Servlet5BaseIntegrationTest {
             }
         };
 
+        // @formatter:off        
         Dictionary<String, ?> propertiesShadowing = createDictionary(
             HTTP_WHITEBOARD_SERVLET_PATTERN, asList("/servlet1", "/servlet2"),
             HTTP_WHITEBOARD_SERVLET_NAME, "servletShadowing",
             SERVICE_RANKING, Integer.MAX_VALUE);
+        // @formatter:on
 
         Servlet servletShadowing = new TestServlet();
 
@@ -677,7 +696,8 @@ public class HttpServiceRuntimeTest extends Servlet5BaseIntegrationTest {
         registrations.add(m_context.registerService(Servlet.class.getName(), failingServlet2, properties2));
         counter = this.waitForRuntime(counter);
 
-        ServiceRegistration<?> shadowingRegistration = m_context.registerService(Servlet.class.getName(), servletShadowing, propertiesShadowing);
+        ServiceRegistration<?> shadowingRegistration = m_context.registerService(Servlet.class.getName(),
+                servletShadowing, propertiesShadowing);
         registrations.add(shadowingRegistration);
         counter = this.waitForRuntime(counter);
 
@@ -699,9 +719,11 @@ public class HttpServiceRuntimeTest extends Servlet5BaseIntegrationTest {
 
     @Test
     public void exceptionInFilterInitAppearsAsFailure() throws ServletException, InterruptedException {
+        // @formatter:off
         Dictionary<String, ?> properties = createDictionary(
                 HTTP_WHITEBOARD_FILTER_PATTERN, "/filter",
                 HTTP_WHITEBOARD_FILTER_NAME, "filter");
+        // @formatter:on
 
         long counter = this.getRuntimeCounter();
 
@@ -757,12 +779,11 @@ public class HttpServiceRuntimeTest extends Servlet5BaseIntegrationTest {
         assertEquals("/second", runtimeDTO.failedServletContextDTOs[0].contextPath);
         assertEquals(FAILURE_REASON_SHADOWED_BY_OTHER_SERVICE, runtimeDTO.failedServletContextDTOs[0].failureReason);
 
-        assertEquals(3, runtimeDTO.servletContextDTOs.length);
-        assertEquals(HTTP_CONTEXT_NAME, runtimeDTO.servletContextDTOs[0].name);
-        assertEquals("default", runtimeDTO.servletContextDTOs[2].name);
+        assertEquals(2, runtimeDTO.servletContextDTOs.length);
+        assertEquals(HTTP_CONTEXT_NAME, runtimeDTO.servletContextDTOs[1].name);
+        assertEquals("contextA", runtimeDTO.servletContextDTOs[0].name);
 
-        assertEquals("contextA", runtimeDTO.servletContextDTOs[1].name);
-        assertEquals("/first", runtimeDTO.servletContextDTOs[1].contextPath);
+        assertEquals("/first", runtimeDTO.servletContextDTOs[0].contextPath);
 
         firstContextReg.unregister();
         counter = this.waitForRuntime(counter);
@@ -771,12 +792,12 @@ public class HttpServiceRuntimeTest extends Servlet5BaseIntegrationTest {
 
         assertEquals(0, runtimeDTO.failedServletContextDTOs.length);
 
-        assertEquals(3, runtimeDTO.servletContextDTOs.length);
-        assertEquals(HTTP_CONTEXT_NAME, runtimeDTO.servletContextDTOs[0].name);
-        assertEquals("default", runtimeDTO.servletContextDTOs[2].name);
+        assertEquals(2, runtimeDTO.servletContextDTOs.length);
 
-        assertEquals("contextA", runtimeDTO.servletContextDTOs[1].name);
-        assertEquals("/second", runtimeDTO.servletContextDTOs[1].contextPath);
+        assertEquals(HTTP_CONTEXT_NAME, runtimeDTO.servletContextDTOs[1].name);
+
+        assertEquals("contextA", runtimeDTO.servletContextDTOs[0].name);
+        assertEquals("/second", runtimeDTO.servletContextDTOs[0].contextPath);
     }
 
     // As specified in OSGi Compendium Release 6, Chapter 140.1
@@ -785,7 +806,8 @@ public class HttpServiceRuntimeTest extends Servlet5BaseIntegrationTest {
         Dictionary<String, ?> properties = createDictionary(HTTP_WHITEBOARD_CONTEXT_PATH, "");
 
         long counter = this.getRuntimeCounter();
-        registrations.add(m_context.registerService(ServletContextHelper.class.getName(), mock(ServletContextHelper.class), properties));
+        registrations.add(m_context.registerService(ServletContextHelper.class.getName(),
+                mock(ServletContextHelper.class), properties));
         counter = this.waitForRuntime(counter);
 
         final HttpServiceRuntime serviceRuntime = this.getHttpServiceRuntime();
@@ -850,19 +872,21 @@ public class HttpServiceRuntimeTest extends Servlet5BaseIntegrationTest {
         runtimeDTO = serviceRuntime.getRuntimeDTO();
 
         assertEquals(0, runtimeDTO.failedServletDTOs.length);
-        assertEquals(3, runtimeDTO.servletContextDTOs.length);
-        assertEquals("contextA", runtimeDTO.servletContextDTOs[1].name);
-        assertEquals(1, runtimeDTO.servletContextDTOs[1].servletDTOs.length);
-        assertEquals("servlet 1", runtimeDTO.servletContextDTOs[1].servletDTOs[0].name);
+        assertEquals(2, runtimeDTO.servletContextDTOs.length);
+        assertEquals("contextA", runtimeDTO.servletContextDTOs[0].name);
+        assertEquals(1, runtimeDTO.servletContextDTOs[0].servletDTOs.length);
+        assertEquals("servlet 1", runtimeDTO.servletContextDTOs[0].servletDTOs[0].name);
     }
 
     // As specified in OSGi Compendium Release 6, Chapter 140.3
     @Test
     public void differentTargetIsIgnored() throws InterruptedException {
+        // @formatter:off        
         Dictionary<String, ?> properties = createDictionary(
                 HTTP_WHITEBOARD_SERVLET_PATTERN, "/servlet",
                 HTTP_WHITEBOARD_SERVLET_NAME, "servlet",
                 HTTP_WHITEBOARD_TARGET, "(org.osgi.service.http.port=8282)");
+        // @formatter:on
 
         long counter = this.getRuntimeCounter();
         registrations.add(m_context.registerService(Servlet.class.getName(), new TestServlet(), properties));
@@ -901,10 +925,12 @@ public class HttpServiceRuntimeTest extends Servlet5BaseIntegrationTest {
     // As specified in OSGi Compendium Release 6, Chapter 140.4.1
     @Test
     public void patternAndErrorPageSpecified() throws InterruptedException {
+        // @formatter:off        
         Dictionary<String, ?> properties = createDictionary(
                 HTTP_WHITEBOARD_SERVLET_PATTERN, "/servlet",
                 HTTP_WHITEBOARD_SERVLET_NAME, "servlet",
                 HTTP_WHITEBOARD_SERVLET_ERROR_PAGE, asList("400"));
+        // @formatter:on
 
         long counter = this.getRuntimeCounter();
         registrations.add(m_context.registerService(Servlet.class.getName(), new TestServlet(), properties));
@@ -943,13 +969,16 @@ public class HttpServiceRuntimeTest extends Servlet5BaseIntegrationTest {
         ServletContextDTO defaultContext = assertDefaultContext(runtimeDTO);
         assertEquals(1, defaultContext.servletDTOs.length);
 
+        // @formatter:off        
         Dictionary<String, ?> properties = createDictionary(
                 HTTP_WHITEBOARD_SERVLET_PATTERN, "/pathcollision",
                 HTTP_WHITEBOARD_SERVLET_NAME, "servlet 2",
                 SERVICE_RANKING, Integer.MAX_VALUE);
+        // @formatter:on
 
         TestServlet testServlet = new TestServlet();
-        ServiceRegistration<?> higherRankingServlet = m_context.registerService(Servlet.class.getName(), testServlet, properties);
+        ServiceRegistration<?> higherRankingServlet = m_context.registerService(Servlet.class.getName(), testServlet,
+                properties);
         registrations.add(higherRankingServlet);
         counter = this.waitForRuntime(counter);
 
@@ -990,13 +1019,16 @@ public class HttpServiceRuntimeTest extends Servlet5BaseIntegrationTest {
         assertEquals(0, runtimeDTO.failedErrorPageDTOs.length);
         assertEquals(1, defaultContext.errorPageDTOs.length);
 
+        // @formatter:off        
         Dictionary<String, ?> properties = createDictionary(
                 HTTP_WHITEBOARD_SERVLET_ERROR_PAGE, asList("500", IllegalArgumentException.class.getName()),
                 HTTP_WHITEBOARD_SERVLET_NAME, "error page 2",
                 SERVICE_RANKING, Integer.MAX_VALUE);
+        // @formatter:on
 
         TestServlet testServlet = new TestServlet();
-        ServiceRegistration<?> higherRankingServlet = m_context.registerService(Servlet.class.getName(), testServlet, properties);
+        ServiceRegistration<?> higherRankingServlet = m_context.registerService(Servlet.class.getName(), testServlet,
+                properties);
         registrations.add(higherRankingServlet);
         counter = this.waitForRuntime(counter);
 
@@ -1007,10 +1039,12 @@ public class HttpServiceRuntimeTest extends Servlet5BaseIntegrationTest {
         assertEquals(2, defaultContext.errorPageDTOs.length);
         assertEquals("error page 2", defaultContext.errorPageDTOs[0].name);
         assertArrayEquals(new long[] { 500 }, defaultContext.errorPageDTOs[0].errorCodes);
-        assertArrayEquals(new String[] { IllegalArgumentException.class.getName() }, defaultContext.errorPageDTOs[0].exceptions);
+        assertArrayEquals(new String[] { IllegalArgumentException.class.getName() },
+                defaultContext.errorPageDTOs[0].exceptions);
         assertEquals("error page 1", defaultContext.errorPageDTOs[1].name);
         assertEquals(0, defaultContext.errorPageDTOs[1].errorCodes.length);
-        assertArrayEquals(new String[] { NullPointerException.class.getName() }, defaultContext.errorPageDTOs[1].exceptions);
+        assertArrayEquals(new String[] { NullPointerException.class.getName() },
+                defaultContext.errorPageDTOs[1].exceptions);
 
         assertEquals(1, runtimeWithShadowedErrorPage.failedErrorPageDTOs.length);
         FailedErrorPageDTO failedErrorPageDTO = runtimeWithShadowedErrorPage.failedErrorPageDTOs[0];
@@ -1036,7 +1070,8 @@ public class HttpServiceRuntimeTest extends Servlet5BaseIntegrationTest {
     public void invalidListenerPopertyValueAppearsAsFailure() throws Exception {
         Dictionary<String, ?> properties = createDictionary(HTTP_WHITEBOARD_LISTENER, "invalid");
 
-        registrations.add(m_context.registerService(ServletRequestListener.class.getName(), mock(ServletRequestListener.class), properties));
+        registrations.add(m_context.registerService(ServletRequestListener.class.getName(),
+                mock(ServletRequestListener.class), properties));
 
         final HttpServiceRuntime serviceRuntime = this.getHttpServiceRuntime();
 
@@ -1062,22 +1097,25 @@ public class HttpServiceRuntimeTest extends Servlet5BaseIntegrationTest {
         RuntimeDTO runtimeDTO = serviceRuntime.getRuntimeDTO();
 
         assertEquals(0, runtimeDTO.failedServletContextDTOs.length);
-        assertEquals(3, runtimeDTO.servletContextDTOs.length);
-        assertEquals(firstContextId.longValue(), runtimeDTO.servletContextDTOs[1].serviceId);
-        assertEquals("test-context", runtimeDTO.servletContextDTOs[1].name);
-        assertEquals("/first", runtimeDTO.servletContextDTOs[1].contextPath);
-        assertEquals("default", runtimeDTO.servletContextDTOs[2].name);
-        assertEquals(HTTP_CONTEXT_NAME, runtimeDTO.servletContextDTOs[0].name);
+        assertEquals(2, runtimeDTO.servletContextDTOs.length);
 
-        assertEquals(1, runtimeDTO.servletContextDTOs[1].servletDTOs.length);
-        assertEquals("servlet", runtimeDTO.servletContextDTOs[1].servletDTOs[0].name);
+        assertEquals(firstContextId.longValue(), runtimeDTO.servletContextDTOs[0].serviceId);
+        assertEquals("test-context", runtimeDTO.servletContextDTOs[0].name);
+        assertEquals("/first", runtimeDTO.servletContextDTOs[0].contextPath);
+        assertEquals(HTTP_CONTEXT_NAME, runtimeDTO.servletContextDTOs[1].name);
 
+        assertEquals(1, runtimeDTO.servletContextDTOs[0].servletDTOs.length);
+        assertEquals("servlet", runtimeDTO.servletContextDTOs[0].servletDTOs[0].name);
+
+        // @formatter:off        
         Dictionary<String, ?> properties = createDictionary(
                 HTTP_WHITEBOARD_CONTEXT_NAME, "test-context",
                 HTTP_WHITEBOARD_CONTEXT_PATH, "/second",
                 SERVICE_RANKING, Integer.MAX_VALUE);
+        // @formatter:on
 
-        ServiceRegistration<?> secondContext = m_context.registerService(ServletContextHelper.class.getName(), mock(ServletContextHelper.class), properties);
+        ServiceRegistration<?> secondContext = m_context.registerService(ServletContextHelper.class.getName(),
+                mock(ServletContextHelper.class), properties);
         registrations.add(secondContext);
         Long secondContextId = (Long) secondContext.getReference().getProperty(Constants.SERVICE_ID);
         counter = this.waitForRuntime(counter);
@@ -1089,11 +1127,10 @@ public class HttpServiceRuntimeTest extends Servlet5BaseIntegrationTest {
         assertEquals("test-context", runtimeDTO.failedServletContextDTOs[0].name);
         assertEquals("/first", runtimeDTO.failedServletContextDTOs[0].contextPath);
 
-        assertEquals(3, runtimeDTO.servletContextDTOs.length);
+        assertEquals(2, runtimeDTO.servletContextDTOs.length);
 
         final List<String> names = new ArrayList<>();
-        for(final ServletContextDTO dto : runtimeDTO.servletContextDTOs)
-        {
+        for (final ServletContextDTO dto : runtimeDTO.servletContextDTOs) {
             names.add(dto.name);
         }
         final int httpContextIndex = names.indexOf(HTTP_CONTEXT_NAME);
@@ -1114,15 +1151,15 @@ public class HttpServiceRuntimeTest extends Servlet5BaseIntegrationTest {
         runtimeDTO = serviceRuntime.getRuntimeDTO();
 
         assertEquals(0, runtimeDTO.failedServletContextDTOs.length);
-        assertEquals(3, runtimeDTO.servletContextDTOs.length);
-        assertEquals(firstContextId.longValue(), runtimeDTO.servletContextDTOs[1].serviceId);
-        assertEquals("test-context", runtimeDTO.servletContextDTOs[1].name);
-        assertEquals("/first", runtimeDTO.servletContextDTOs[1].contextPath);
-        assertEquals("default", runtimeDTO.servletContextDTOs[2].name);
-        assertEquals(HTTP_CONTEXT_NAME, runtimeDTO.servletContextDTOs[0].name);
+        assertEquals(2, runtimeDTO.servletContextDTOs.length);
 
-        assertEquals(1, runtimeDTO.servletContextDTOs[1].servletDTOs.length);
-        assertEquals("servlet", runtimeDTO.servletContextDTOs[1].servletDTOs[0].name);
+        assertEquals(firstContextId.longValue(), runtimeDTO.servletContextDTOs[0].serviceId);
+        assertEquals("test-context", runtimeDTO.servletContextDTOs[0].name);
+        assertEquals("/first", runtimeDTO.servletContextDTOs[0].contextPath);
+        assertEquals(HTTP_CONTEXT_NAME, runtimeDTO.servletContextDTOs[1].name);
+
+        assertEquals(1, runtimeDTO.servletContextDTOs[0].servletDTOs.length);
+        assertEquals("servlet", runtimeDTO.servletContextDTOs[0].servletDTOs[0].name);
     }
 
     @Test
@@ -1147,11 +1184,13 @@ public class HttpServiceRuntimeTest extends Servlet5BaseIntegrationTest {
 
     @Test
     public void dtosAreIndependentCopies() throws Exception {
-        //register first servlet
+        // register first servlet
+        // @formatter:off
         Dictionary<String, ?> properties = createDictionary(
                 HTTP_WHITEBOARD_SERVLET_PATTERN, "/test",
                 HTTP_WHITEBOARD_SERVLET_NAME, "servlet 1",
                 HTTP_WHITEBOARD_SERVLET_INIT_PARAM_PREFIX + "test", "testValue");
+        // @formatter:on
 
         long counter = this.getRuntimeCounter();
         registrations.add(m_context.registerService(Servlet.class.getName(), new TestServlet(), properties));
@@ -1161,7 +1200,7 @@ public class HttpServiceRuntimeTest extends Servlet5BaseIntegrationTest {
 
         RuntimeDTO runtimeDTOWithFirstSerlvet = serviceRuntime.getRuntimeDTO();
 
-        //register second servlet
+        // register second servlet
         registerServlet("testServlet 2", "/servlet_2");
         counter = this.waitForRuntime(counter);
 
@@ -1213,8 +1252,10 @@ public class HttpServiceRuntimeTest extends Servlet5BaseIntegrationTest {
 
     @Test
     public void serviceEndpointPropertyIsSet() {
-        // if there is more than one network interface, there might be more than one endpoint!
-        final String[] endpoint = (String[]) m_context.getServiceReference(HttpServiceRuntime.class).getProperty(HTTP_SERVICE_ENDPOINT);
+        // if there is more than one network interface, there might be more than one
+        // endpoint!
+        final String[] endpoint = (String[]) m_context.getServiceReference(HttpServiceRuntime.class)
+                .getProperty(HTTP_SERVICE_ENDPOINT);
         assertNotNull(endpoint);
         assertTrue(Arrays.toString(endpoint), endpoint.length > 0);
         assertTrue(endpoint[0].startsWith("http://"));
@@ -1234,11 +1275,13 @@ public class HttpServiceRuntimeTest extends Servlet5BaseIntegrationTest {
         final String rsrcPattern = "/hello/static/*";
         final String rsrcPrefix = "/static";
 
+        // @formatter:off
         List<Object> propertyEntries = Arrays.<Object>asList(
                 HTTP_WHITEBOARD_SERVLET_PATTERN, servletPath,
                 HTTP_WHITEBOARD_SERVLET_NAME, servletName,
                 HTTP_WHITEBOARD_RESOURCE_PATTERN, rsrcPattern,
                 HTTP_WHITEBOARD_RESOURCE_PREFIX, rsrcPrefix);
+        // @formatter:on
 
         Dictionary<String, ?> properties = createDictionary(propertyEntries.toArray());
 
@@ -1267,13 +1310,8 @@ public class HttpServiceRuntimeTest extends Servlet5BaseIntegrationTest {
     }
 
     private ServletContextDTO assertDefaultContext(RuntimeDTO runtimeDTO) {
-        assertTrue(1 < runtimeDTO.servletContextDTOs.length);
+        assertTrue(1 <= runtimeDTO.servletContextDTOs.length);
         assertEquals(HTTP_CONTEXT_NAME, runtimeDTO.servletContextDTOs[0].name);
-        assertEquals("default", runtimeDTO.servletContextDTOs[1].name);
-        return runtimeDTO.servletContextDTOs[1];
-    }
-
-    public static class TestResource {
-        // Tagging class
+        return runtimeDTO.servletContextDTOs[0];
     }
 }

@@ -24,19 +24,19 @@ import static jakarta.servlet.http.HttpServletResponse.SC_OK;
 
 import java.io.IOException;
 
-import jakarta.servlet.AsyncContext;
-import jakarta.servlet.DispatcherType;
-import jakarta.servlet.Servlet;
-import jakarta.servlet.ServletException;
-import jakarta.servlet.http.HttpServletRequest;
-import jakarta.servlet.http.HttpServletResponse;
-
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.ops4j.pax.exam.junit.PaxExam;
 import org.ops4j.pax.exam.spi.reactors.ExamReactorStrategy;
 import org.ops4j.pax.exam.spi.reactors.PerMethod;
 import org.osgi.framework.ServiceRegistration;
+
+import jakarta.servlet.AsyncContext;
+import jakarta.servlet.DispatcherType;
+import jakarta.servlet.Servlet;
+import jakarta.servlet.ServletException;
+import jakarta.servlet.http.HttpServletRequest;
+import jakarta.servlet.http.HttpServletResponse;
 
 @RunWith(PaxExam.class)
 @ExamReactorStrategy(PerMethod.class)
@@ -52,7 +52,8 @@ public class AsyncServletTest extends Servlet5BaseIntegrationTest {
             private static final long serialVersionUID = 1L;
 
             @Override
-            protected void doGet(HttpServletRequest req, HttpServletResponse resp) throws ServletException, IOException {
+            protected void doGet(HttpServletRequest req, HttpServletResponse resp)
+                    throws ServletException, IOException {
                 final AsyncContext asyncContext = req.startAsync(req, resp);
                 asyncContext.setTimeout(2000);
                 asyncContext.start(new Runnable() {
@@ -98,9 +99,10 @@ public class AsyncServletTest extends Servlet5BaseIntegrationTest {
         this.setupLatches(1);
         TestServlet servlet = new TestServlet() {
             private static final long serialVersionUID = 1L;
- 
+
             @Override
-            protected void doGet(final HttpServletRequest req, HttpServletResponse resp) throws ServletException, IOException {
+            protected void doGet(final HttpServletRequest req, HttpServletResponse resp)
+                    throws ServletException, IOException {
                 DispatcherType dispatcherType = req.getDispatcherType();
                 if (DispatcherType.REQUEST == dispatcherType) {
                     final AsyncContext asyncContext = req.startAsync(req, resp);
@@ -118,8 +120,7 @@ public class AsyncServletTest extends Servlet5BaseIntegrationTest {
                             }
                         }
                     });
-                }
-                else if (DispatcherType.ASYNC == dispatcherType) {
+                } else if (DispatcherType.ASYNC == dispatcherType) {
                     String response = (String) req.getAttribute("msg");
                     resp.setStatus(SC_OK);
                     resp.getWriter().printf(response);

@@ -29,6 +29,7 @@ import static org.ops4j.pax.exam.CoreOptions.junitBundles;
 import static org.ops4j.pax.exam.CoreOptions.mavenBundle;
 import static org.ops4j.pax.exam.CoreOptions.options;
 import static org.ops4j.pax.exam.CoreOptions.systemProperty;
+import static org.ops4j.pax.exam.CoreOptions.vmOption;
 import static org.ops4j.pax.exam.CoreOptions.when;
 
 import java.io.IOException;
@@ -154,6 +155,10 @@ public abstract class BaseIntegrationTest {
                         ),
                 //            CoreOptions.vmOption("-Xrunjdwp:transport=dt_socket,server=y,suspend=y,address=8787"),
 
+                when( Boolean.getBoolean( "isDebugEnabled" ) ).useOptions(
+                        vmOption( "-Xrunjdwp:transport=dt_socket,server=y,suspend=y,address=5005" )
+                        ),                
+                
                 // scavenge sessions every 10 seconds (10 minutes is default in 9.4.x)
                 systemProperty("org.eclipse.jetty.servlet.SessionScavengingInterval").value("10"),
                 mavenBundle("org.slf4j", "slf4j-api", "1.7.32"),
@@ -176,12 +181,6 @@ public abstract class BaseIntegrationTest {
                 mavenBundle("org.apache.httpcomponents", "httpclient-osgi", "4.5.3").startLevel(START_LEVEL_SYSTEM_BUNDLES),
                 mavenBundle("org.mockito", "mockito-all", "1.10.19").startLevel(START_LEVEL_SYSTEM_BUNDLES),
                 mavenBundle("org.objenesis", "objenesis", "2.6").startLevel(START_LEVEL_SYSTEM_BUNDLES),
-                
-                // TODO: remove these once migration to Jakarta Servlet API 5.x is complete
-                mavenBundle("commons-fileupload", "commons-fileupload", "1.5"),                        
-                mavenBundle("commons-io", "commons-io", "2.11.0"),                        
-                mavenBundle("org.osgi", "org.osgi.service.http", "1.2.1"),                        
-                mavenBundle("org.osgi", "org.osgi.service.http.whiteboard", "1.1.0"),     
 
                 junitBundles(),
                 frameworkStartLevel(START_LEVEL_TEST_BUNDLE));

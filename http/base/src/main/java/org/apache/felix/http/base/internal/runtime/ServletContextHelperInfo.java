@@ -22,12 +22,11 @@ import java.util.Collections;
 import java.util.HashMap;
 import java.util.Map;
 
-import org.apache.felix.http.base.internal.service.HttpServiceFactory;
 import org.apache.felix.http.base.internal.util.PatternUtil;
 import org.jetbrains.annotations.NotNull;
 import org.osgi.framework.ServiceReference;
-import org.osgi.service.servlet.whiteboard.HttpWhiteboardConstants;
 import org.osgi.service.servlet.context.ServletContextHelper;
+import org.osgi.service.servlet.whiteboard.HttpWhiteboardConstants;
 
 /**
  * Provides registration information for a {@link ServletContextHelper}
@@ -85,7 +84,6 @@ public class ServletContextHelperInfo extends AbstractInfo<ServletContextHelper>
     {
         return super.isValid()
                 && PatternUtil.isValidSymbolicName(this.name)
-                && !HttpServiceFactory.HTTP_SERVICE_CONTEXT_NAME.equals(this.name)
                 && isValidPath();
     }
 
@@ -128,8 +126,8 @@ public class ServletContextHelperInfo extends AbstractInfo<ServletContextHelper>
         final Map<String, String> props = new HashMap<>();
         props.put(HttpWhiteboardConstants.HTTP_WHITEBOARD_CONTEXT_NAME, this.getName());
         props.put(HttpWhiteboardConstants.HTTP_WHITEBOARD_CONTEXT_PATH, this.getPath());
-        if ( HttpServiceFactory.HTTP_SERVICE_CONTEXT_NAME.equals(this.getName()) ) {
-            props.put(org.osgi.service.http.whiteboard.HttpWhiteboardConstants.HTTP_SERVICE_CONTEXT_PROPERTY, this.getName());
+        if ( HttpWhiteboardConstants.HTTP_WHITEBOARD_DEFAULT_CONTEXT_NAME.equals(this.getName()) ) {
+            props.put(HttpWhiteboardConstants.HTTP_WHITEBOARD_CONTEXT_NAME, this.getName());
         }
         return info.getContextSelectionFilter().matches(props);
     }

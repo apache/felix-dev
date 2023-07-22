@@ -21,7 +21,6 @@ import java.io.IOException;
 
 import org.apache.felix.http.base.internal.context.ExtServletContext;
 import org.apache.felix.http.base.internal.dispatch.MultipartConfig;
-import org.apache.felix.http.base.internal.jakartawrappers.ServletWrapper;
 import org.apache.felix.http.base.internal.logger.SystemLogger;
 import org.apache.felix.http.base.internal.runtime.ServletInfo;
 import org.osgi.framework.Bundle;
@@ -146,11 +145,7 @@ public abstract class ServletHandler implements Comparable<ServletHandler>
             final Servlet local = this.servlet;
             if ( local != null )
             {
-                if (local instanceof ServletWrapper ) {
-                    name = ((ServletWrapper)local).getServlet().getClass().getName();
-                } else {
-                    name = local.getClass().getName();
-                }
+                name = local.getClass().getName();
             }
         }
         return name;
