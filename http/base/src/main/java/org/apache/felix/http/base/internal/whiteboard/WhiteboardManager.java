@@ -199,11 +199,11 @@ public final class WhiteboardManager
                         // nothing to do
                     }
                 }, props);
-        addTracker(new FilterTracker(this.httpBundleContext, this));
-        addTracker(new ListenersTracker(this.httpBundleContext, this));
         addTracker(new PreprocessorTracker(this.httpBundleContext, this));
-        addTracker(new ResourceTracker(this.httpBundleContext, this));
+        addTracker(new ListenersTracker(this.httpBundleContext, this));
         addTracker(new ServletContextHelperTracker(this.httpBundleContext, this));
+        addTracker(new FilterTracker(this.httpBundleContext, this));
+        addTracker(new ResourceTracker(this.httpBundleContext, this));
         addTracker(new ServletTracker(this.httpBundleContext, this));
 
         this.plugin.register();
@@ -224,27 +224,27 @@ public final class WhiteboardManager
      */
     public void stop()
     {
-        this.plugin.unregister();
-        for(final ServiceTracker<?, ?> t : this.trackers)
-        {
-            t.close();
-        }
-        this.trackers.clear();
-
+        this.webContext = null;
         this.serviceRuntime.unregister();
-
-        this.preprocessorHandlers = Collections.emptyList();
-        this.contextMap.clear();
-        this.servicesMap.clear();
-        this.failureStateHandler.clear();
-        this.registry.reset();
+        this.plugin.unregister();
 
         if (this.defaultContextRegistration != null)
         {
             this.defaultContextRegistration.unregister();
             this.defaultContextRegistration = null;
         }
-        this.webContext = null;
+
+        for(final ServiceTracker<?, ?> t : this.trackers)
+        {
+            t.close();
+        }
+        this.trackers.clear();
+
+        this.preprocessorHandlers = Collections.emptyList();
+        this.contextMap.clear();
+        this.servicesMap.clear();
+        this.failureStateHandler.clear();
+        this.registry.reset();
     }
 
     public void sessionDestroyed(@NotNull final HttpSession session, final Set<String> contextNames)
@@ -470,7 +470,7 @@ public final class WhiteboardManager
                             if ( first )
                             {
                                 this.deactivate(handler);
-                                activateNext = true;
+                                activateNext = this.webContext != null;
                             }
                             break;
                         }
