@@ -30,8 +30,10 @@ import java.util.ResourceBundle;
 import org.apache.felix.webconsole.i18n.LocalizationHelper;
 import org.osgi.framework.Bundle;
 import org.osgi.framework.BundleContext;
+import org.osgi.framework.ServiceReference;
 import org.osgi.framework.ServiceRegistration;
 import org.osgi.util.tracker.ServiceTracker;
+import org.osgi.util.tracker.ServiceTrackerCustomizer;
 
 
 /**
@@ -268,7 +270,23 @@ public abstract class SimpleWebConsolePlugin extends AbstractWebConsolePlugin
         ServiceTracker serviceTracker = ( ServiceTracker ) services.get( serviceName );
         if ( serviceTracker == null )
         {
-            serviceTracker = new ServiceTracker( getBundleContext(), serviceName, null );
+            serviceTracker = new ServiceTracker( getBundleContext(), serviceName, new ServiceTrackerCustomizer() {
+                    public Object addingService( ServiceReference reference ) {
+                        return getBundleContext().getService( reference );
+                    }
+
+                    public void removedService( ServiceReference reference, Object service ) {
+                        try {
+                            getBundleContext().ungetService( reference );
+                        } catch ( IllegalStateException ise ) {
+                            // ignore, bundle context was shut down
+                        }
+                    }
+
+                    public void modifiedService( ServiceReference reference, Object service ) {
+                        // nothing to do
+                    }
+            } );
             serviceTracker.open();
 
             services.put( serviceName, serviceTracker );

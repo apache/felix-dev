@@ -40,8 +40,10 @@ import org.apache.felix.webconsole.spi.ValidationException;
 import org.osgi.framework.BundleContext;
 import org.osgi.framework.Constants;
 import org.osgi.framework.InvalidSyntaxException;
+import org.osgi.framework.ServiceReference;
 import org.osgi.service.cm.Configuration;
 import org.osgi.util.tracker.ServiceTracker;
+import org.osgi.util.tracker.ServiceTrackerCustomizer;
 
 
 /**
@@ -93,7 +95,26 @@ public class ConfigManager extends SimpleWebConsolePlugin implements OsgiManager
     @Override
     public void activate(final BundleContext bundleContext) {
         super.activate(bundleContext);
-        this.spiTracker = new ServiceTracker<>(bundleContext, ConfigurationHandler.class.getName(), null);
+        this.spiTracker = new ServiceTracker<>(bundleContext, ConfigurationHandler.class, new ServiceTrackerCustomizer<ConfigurationHandler, ConfigurationHandler>() {
+
+
+            @Override
+            public ConfigurationHandler addingService(final ServiceReference<ConfigurationHandler> reference) {
+                return bundleContext.getService(reference);
+            }
+
+            public void modifiedService(final ServiceReference<ConfigurationHandler> reference, final ConfigurationHandler service) {
+                // nothing to do
+            }
+
+            public void removedService(final ServiceReference<ConfigurationHandler> reference, final ConfigurationHandler service) {
+                try {
+                    bundleContext.ungetService(reference);
+                } catch ( final IllegalStateException ise) {
+                    // we ignore this as the service might have already been removed
+                }
+            }
+        });
         this.spiTracker.open(true);
     }
 
