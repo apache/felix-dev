@@ -37,6 +37,7 @@ import java.util.Map;
 import java.util.Map.Entry;
 import java.util.ResourceBundle;
 import java.util.Set;
+import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ConcurrentSkipListSet;
 
 import javax.servlet.GenericServlet;
@@ -929,8 +930,11 @@ public class OsgiManager extends GenericServlet
         public void removedService(ServiceReference<HttpService> reference, HttpService service)
         {
             osgiManager.unbindHttpService(service);
-
-            super.removedService(reference, service);
+            try {
+                super.removedService(reference, service);
+            } catch ( final IllegalStateException ise) {
+                // ignore this as the service is already invalid
+            }
         }
     }
 
@@ -953,7 +957,11 @@ public class OsgiManager extends GenericServlet
         public void removedService(ServiceReference<BrandingPlugin> reference, BrandingPlugin service)
         {
             AbstractWebConsolePlugin.setBrandingPlugin(null);
-            super.removedService(reference, service);
+            try {
+                super.removedService(reference, service);
+            } catch ( final IllegalStateException ise) {
+                // ignore this as the service is already invalid
+            }
         }
 
     }
@@ -1271,15 +1279,24 @@ public class OsgiManager extends GenericServlet
     }
 
     class UpdateDependenciesStateCustomizer implements ServiceTrackerCustomizer<WebConsoleSecurityProvider, WebConsoleSecurityProvider> {
+
+        private final Map<Long, String> registeredProviders = new ConcurrentHashMap<>();
+
         @Override
         public WebConsoleSecurityProvider addingService(ServiceReference<WebConsoleSecurityProvider> reference) {
+            WebConsoleSecurityProvider provider = null;
             Object nameObj = reference.getProperty(SECURITY_PROVIDER_PROPERTY_NAME);
             if (nameObj instanceof String) {
-                String name = (String) nameObj;
-                registeredSecurityProviders.add(name);
-                updateRegistrationState();
+                final String name = (String) nameObj;
+                provider = bundleContext.getService(reference);
+                if (provider != null) {
+                    final Long id = (Long) reference.getProperty(Constants.SERVICE_ID);
+                    registeredProviders.put(id, name);
+                    registeredSecurityProviders.add(name);
+                    updateRegistrationState();
+                }
             }
-            return bundleContext.getService(reference);
+            return provider;
         }
 
         @Override
@@ -1290,11 +1307,15 @@ public class OsgiManager extends GenericServlet
 
         @Override
         public void removedService(ServiceReference<WebConsoleSecurityProvider> reference, WebConsoleSecurityProvider service) {
-            Object nameObj = reference.getProperty(SECURITY_PROVIDER_PROPERTY_NAME);
-            if (nameObj instanceof String) {
-                String name = (String) nameObj;
+            final String name = registeredProviders.remove(reference.getProperty(Constants.SERVICE_ID));
+            if (name != null) {
                 registeredSecurityProviders.remove(name);
                 updateRegistrationState();
+                try {
+                    bundleContext.ungetService(reference);
+                } catch (IllegalStateException ise) {
+                    // ignore on shutdown
+                }
             }
         }
 
