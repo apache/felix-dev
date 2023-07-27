@@ -1284,12 +1284,11 @@ public class OsgiManager extends GenericServlet
 
         @Override
         public WebConsoleSecurityProvider addingService(ServiceReference<WebConsoleSecurityProvider> reference) {
-            WebConsoleSecurityProvider provider = null;
-            Object nameObj = reference.getProperty(SECURITY_PROVIDER_PROPERTY_NAME);
-            if (nameObj instanceof String) {
-                final String name = (String) nameObj;
-                provider = bundleContext.getService(reference);
-                if (provider != null) {
+            final WebConsoleSecurityProvider provider = bundleContext.getService(reference);
+            if (provider != null) {
+                final Object nameObj = reference.getProperty(SECURITY_PROVIDER_PROPERTY_NAME);
+                if (nameObj instanceof String) {
+                    final String name = (String) nameObj;
                     final Long id = (Long) reference.getProperty(Constants.SERVICE_ID);
                     registeredProviders.put(id, name);
                     registeredSecurityProviders.add(name);
@@ -1311,11 +1310,11 @@ public class OsgiManager extends GenericServlet
             if (name != null) {
                 registeredSecurityProviders.remove(name);
                 updateRegistrationState();
-                try {
-                    bundleContext.ungetService(reference);
-                } catch (IllegalStateException ise) {
-                    // ignore on shutdown
-                }
+            }
+            try {
+                bundleContext.ungetService(reference);
+            } catch (IllegalStateException ise) {
+                // ignore on shutdown
             }
         }
 
