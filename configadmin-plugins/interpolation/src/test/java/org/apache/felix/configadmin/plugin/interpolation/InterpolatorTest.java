@@ -65,6 +65,17 @@ public class InterpolatorTest {
     }
 
     @Test
+    public void testRecursionViaPlaceholder() {
+        assertEquals("$[foo:bar]",
+                Interpolator.replace("$[foo:bar]", (type, name, dir) -> {
+                    if ("foo".equals(type) && "bar".equals(name)) {
+                        return "$[foo:bar]";
+                    }
+                    return null;
+                }));
+    }
+
+    @Test
     public void testEscaping() {
         final Provider p = new Provider() {
 

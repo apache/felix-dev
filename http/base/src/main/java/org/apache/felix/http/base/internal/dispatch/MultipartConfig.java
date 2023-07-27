@@ -16,6 +16,8 @@
  */
 package org.apache.felix.http.base.internal.dispatch;
 
+import java.util.Objects;
+
 import org.apache.commons.fileupload2.core.DiskFileItemFactory;
 
 public final class MultipartConfig
@@ -85,5 +87,27 @@ public final class MultipartConfig
         {
             this.multipartMaxFileCount = 50;
         }
+    }
+
+    @Override
+    public int hashCode() {
+        return Objects.hash(multipartThreshold, multipartLocation, multipartMaxFileSize, multipartMaxRequestSize,
+                multipartMaxFileCount);
+    }
+
+    @Override
+    public boolean equals(Object obj) {
+        if (this == obj)
+            return true;
+        if (obj == null)
+            return false;
+        if (getClass() != obj.getClass())
+            return false;
+        MultipartConfig other = (MultipartConfig) obj;
+        return multipartThreshold == other.multipartThreshold
+                && Objects.equals(multipartLocation, other.multipartLocation)
+                && multipartMaxFileSize == other.multipartMaxFileSize
+                && multipartMaxRequestSize == other.multipartMaxRequestSize
+                && multipartMaxFileCount == other.multipartMaxFileCount;
     }
 }

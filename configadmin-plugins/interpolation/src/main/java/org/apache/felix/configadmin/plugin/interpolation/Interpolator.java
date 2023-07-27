@@ -18,7 +18,9 @@ package org.apache.felix.configadmin.plugin.interpolation;
 
 import java.util.Collections;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.Map;
+import java.util.Set;
 import java.util.concurrent.atomic.AtomicReference;
 
 /**
@@ -109,6 +111,10 @@ public class Interpolator {
      * @return Replaced object (or original value)
      */
     public static Object replace(final String value, final Provider provider) {
+        return replaceInternal(value, provider, new HashSet<>());
+    }
+
+    private static Object replaceInternal(final String value, final Provider provider, final Set<String> visited) {
         String result = value;
         int index = -1;
         while (index < result.length()) {
@@ -136,7 +142,7 @@ public class Interpolator {
             final Map<String, String> directives;
             final String name;
             if (dirPos != -1) {
-                directives = parseDirectives(replace(postfix.substring(dirPos + 1), provider).toString());
+                directives = parseDirectives(replaceInternal(postfix.substring(dirPos + 1), provider, visited).toString());
                 name = postfix.substring(0, dirPos);
             } else {
                 directives = Collections.emptyMap();
@@ -144,22 +150,30 @@ public class Interpolator {
             }
 
             // recursive replacement
-            final Object newName = replace(name, provider);
+            final Object newName = replaceInternal(name, provider, visited);
 
-            Object replacement = provider.provide(type, newName.toString(), directives);
-            if (replacement == null) {
-                // no replacement found -> leave as is and continue
-                index = index + START.length();
+            final String id = type.concat(":").concat(name);
+            if (!visited.add(id)) {
+                // endless recursion -> leave as is and continue
+               index = index + START.length();
+
             } else {
-                // if replacement is not a string and placeholder is complete string, return that object
-                if (!(replacement instanceof String) && boundaries[0] == 0 && boundaries[1] == result.length() - 1) {
-                    return replacement;
+                Object replacement = provider.provide(type, newName.toString(), directives);
+                if (replacement == null) {
+                    // no replacement found -> leave as is and continue
+                    index = index + START.length();
+                } else {
+                    // if replacement is not a string and placeholder is complete string, return that object
+                    if (!(replacement instanceof String) && boundaries[0] == 0 && boundaries[1] == result.length() - 1) {
+                        return replacement;
+                    }
+                    // replace and continue with replacement
+                    replacement = replaceInternal(replacement.toString(), provider, visited);
+                    final String val = replacement.toString();
+                    result = result.substring(0, boundaries[0]).concat(val).concat(result.substring(boundaries[1] + 1));
+                    index = boundaries[0] + val.length();
                 }
-                // replace and continue with replacement
-                replacement = replace(replacement.toString(), provider);
-                final String val = replacement.toString();
-                result = result.substring(0, boundaries[0]).concat(val).concat(result.substring(boundaries[1] + 1));
-                index = boundaries[0] + val.length();
+                visited.remove(id);
             }
         }
         return result;

@@ -219,10 +219,11 @@ function printForm( /* Element */ parent, /* Object */ properties, additionalPro
         }
         else if (attr.values.length == 0)
         {
-            tdEl.appendChild( createSpan( prop, "", attr.type ) );
+            tdEl.appendChild( createAddButton( prop) );
         }
         else
         {
+            tdEl.appendChild( createAddButton( prop) );
             for (var i=0;i<attr.values.length;i++)
             {
                 tdEl.appendChild( createSpan( prop, attr.values[i], attr.type ) );
@@ -348,6 +349,25 @@ function printConfigurationInfo( /* Element */ parent, obj )
 
 
 var spanCounter = 0;
+/* Element */ function createAddButton(prop) {
+    spanCounter++;
+    var newId = prop + spanCounter;
+
+    var addButton = createElement("input", null,
+        {   type: "button",
+            style: {width : "5%"},
+            value: "+"
+        }
+    );
+    $(addButton).click(function() {
+        addValue(prop, newId);
+    });
+
+    return createElement( "span", null, { id: newId }, [
+        createElement("span", null, { style: { display: "inline-block", width: '94%'} } ), addButton,
+        createElement("br")
+    ]);
+}
 /* Element */ function createSpan(prop, value, type) {
     spanCounter++;
     var newId = prop + spanCounter;

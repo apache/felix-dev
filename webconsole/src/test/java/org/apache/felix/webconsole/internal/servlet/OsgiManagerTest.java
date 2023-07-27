@@ -42,6 +42,7 @@ import org.mockito.invocation.InvocationOnMock;
 import org.mockito.stubbing.Answer;
 import org.osgi.framework.Bundle;
 import org.osgi.framework.BundleContext;
+import org.osgi.framework.Constants;
 import org.osgi.framework.Filter;
 import org.osgi.framework.FrameworkUtil;
 import org.osgi.framework.InvalidSyntaxException;
@@ -85,6 +86,8 @@ public class OsgiManagerTest {
 
         ServiceReference sref2 = Mockito.mock(ServiceReference.class);
         Mockito.when(sref2.getProperty(OsgiManager.SECURITY_PROVIDER_PROPERTY_NAME)).thenReturn("xyz");
+        Mockito.when(sref2.getProperty(Constants.SERVICE_ID)).thenReturn(1L);
+        Mockito.when(bc.getService(sref2)).thenReturn(Mockito.mock(WebConsoleSecurityProvider.class));
         stc.addingService(sref2);
         assertEquals(Collections.singleton("xyz"), mgr.registeredSecurityProviders);
         assertEquals(2, updateCalled.size());
@@ -102,23 +105,31 @@ public class OsgiManagerTest {
                 updateCalled.add(true);
             }
         };
-        mgr.registeredSecurityProviders.add("abc");
-        mgr.registeredSecurityProviders.add("xyz");
+        ServiceReference sref1 = Mockito.mock(ServiceReference.class);
+        Mockito.when(sref1.getProperty(OsgiManager.SECURITY_PROVIDER_PROPERTY_NAME)).thenReturn("abc");
+        Mockito.when(sref1.getProperty(Constants.SERVICE_ID)).thenReturn(1L);
+        Mockito.when(bc.getService(sref1)).thenReturn(Mockito.mock(WebConsoleSecurityProvider.class));
+
+        ServiceReference sref2 = Mockito.mock(ServiceReference.class);
+        Mockito.when(sref2.getProperty(OsgiManager.SECURITY_PROVIDER_PROPERTY_NAME)).thenReturn("xyz");
+        Mockito.when(sref2.getProperty(Constants.SERVICE_ID)).thenReturn(2L);
+        Mockito.when(bc.getService(sref2)).thenReturn(Mockito.mock(WebConsoleSecurityProvider.class));
 
         ServiceTrackerCustomizer stc = mgr.new UpdateDependenciesStateCustomizer();
+        stc.addingService(sref1);
+        stc.addingService(sref2);
 
         ServiceReference sref = Mockito.mock(ServiceReference.class);
+        Mockito.when(sref.getProperty(Constants.SERVICE_ID)).thenReturn(3L);
         stc.removedService(sref, null);
-        assertEquals(1, updateCalled.size());
+        assertEquals(2, updateCalled.size());
         assertEquals(2, mgr.registeredSecurityProviders.size());
         assertTrue(mgr.registeredSecurityProviders.contains("abc"));
         assertTrue(mgr.registeredSecurityProviders.contains("xyz"));
 
-        ServiceReference sref2 = Mockito.mock(ServiceReference.class);
-        Mockito.when(sref2.getProperty(OsgiManager.SECURITY_PROVIDER_PROPERTY_NAME)).thenReturn("xyz");
         stc.removedService(sref2, null);
         assertEquals(Collections.singleton("abc"), mgr.registeredSecurityProviders);
-        assertEquals(2, updateCalled.size());
+        assertEquals(3, updateCalled.size());
     }
 
     @SuppressWarnings({ "unchecked", "rawtypes" })

@@ -158,7 +158,7 @@ public class ServicesCheck implements HealthCheck {
             if(!entry.getValue().present()) {
                 missingServicesNames.add(entry.getKey());
             } else {
-                log.debug("Found {} services for '{}'", entry.getValue().getTrackingCount(), entry.getKey());
+                log.debug("Found at least one service for '{}'", entry.getKey());
             }
         }
         return missingServicesNames;
@@ -180,18 +180,15 @@ public class ServicesCheck implements HealthCheck {
         }
 
         public boolean present() {
-            return getTrackingCount() > 0;
-        }
-
-        public int getTrackingCount() {
-            return this.stracker.getTrackingCount();
+            // getService() is used as this a) ensures the service is really available (e.g. in case of lazy DS components)
+            // and b) the result of getService() is cached; causing the least performance impact
+            return this.stracker.getService() != null;
         }
 
         @Override
         public void close() {
-            stracker.close();
+            this.stracker.close();
         }
-
     }
 
 }

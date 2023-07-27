@@ -20,6 +20,7 @@ package org.apache.felix.http.base.internal.runtime;
 
 import java.util.EventListener;
 import java.util.HashSet;
+import java.util.Objects;
 import java.util.Set;
 
 import org.jetbrains.annotations.NotNull;
@@ -140,5 +141,17 @@ public class ListenerInfo extends WhiteboardServiceInfo<EventListener>
     @Override
     public @NotNull String getType() {
         return "Listener";
+    }
+
+    @Override
+    public boolean isSame(AbstractInfo<EventListener> other) {
+        if (!super.isSame(other)) {
+            return false;
+        }
+        final ListenerInfo o = (ListenerInfo) other;
+        if (!Objects.equals(this.types, o.types)) {
+            return false;
+        }
+        return this.enabled == o.enabled;
     }
 }

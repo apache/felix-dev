@@ -95,6 +95,9 @@ public class BundlesStartedCheck implements HealthCheck {
         int inactiveCount = 0;
         for (Bundle bundle : bundles) {
             String bundleSymbolicName = bundle.getSymbolicName();
+            if (bundleSymbolicName == null) {
+                bundleSymbolicName = "";
+            }
             int bundleState = bundle.getState();
 
             if (!includesRegex.matcher(bundleSymbolicName).matches()) {

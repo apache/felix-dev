@@ -140,12 +140,12 @@ public final class WhiteboardManager
         this.addContextHelper(new DefaultServletContextHelperInfo());
 
         // Start tracker
-        addTracker(new FilterTracker(this.httpBundleContext, this));
-        addTracker(new ListenersTracker(this.httpBundleContext, this));
         addTracker(new PreprocessorTracker(this.httpBundleContext, this));
+        addTracker(new ListenersTracker(this.httpBundleContext, this));
+        addTracker(new ServletContextHelperTracker(this.httpBundleContext, this));
+        addTracker(new FilterTracker(this.httpBundleContext, this));
         addTracker(new ServletTracker(this.httpBundleContext, this));
         addTracker(new ResourceTracker(this.httpBundleContext, this));
-        addTracker(new ServletContextHelperTracker(this.httpBundleContext, this));
     }
 
     /**
@@ -163,21 +163,18 @@ public final class WhiteboardManager
      */
     public void stop()
     {
+        this.webContext = null;
+        this.serviceRuntime.unregister();
         for(final ServiceTracker<?, ?> t : this.trackers)
         {
             t.close();
         }
         this.trackers.clear();
-
-        this.serviceRuntime.unregister();
-
         this.preprocessorHandlers = Collections.emptyList();
         this.contextMap.clear();
         this.servicesMap.clear();
         this.failureStateHandler.clear();
         this.registry.reset();
-
-        this.webContext = null;
     }
 
     public void sessionDestroyed(@NotNull final HttpSession session, final Set<String> contextNames)
@@ -399,7 +396,7 @@ public final class WhiteboardManager
                             if ( first )
                             {
                                 this.deactivate(handler);
-                                activateNext = true;
+                                activateNext = this.webContext != null;
                             }
                             break;
                         }

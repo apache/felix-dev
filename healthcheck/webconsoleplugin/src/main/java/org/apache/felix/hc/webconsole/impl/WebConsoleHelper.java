@@ -19,10 +19,16 @@ package org.apache.felix.hc.webconsole.impl;
 
 import java.io.PrintWriter;
 
+import org.owasp.encoder.Encode;
+import org.owasp.encoder.Encoder;
+import org.owasp.encoder.Encoders;
+
 /** Webconsole plugin helper for writing html. */
 class WebConsoleHelper {
 
     final PrintWriter pw;
+
+    final Encoder encoder = Encoders.forName(Encoders.HTML);
 
     WebConsoleHelper(final PrintWriter w) {
         pw = w;
@@ -46,7 +52,7 @@ class WebConsoleHelper {
 
     void tdLabel(final String label) {
         pw.print("<td class='content'>");
-        pw.print(escapeHtml(label));
+        pw.print(escapeHtmlContent(label));
         pw.println("</td>");
     }
 
@@ -57,27 +63,30 @@ class WebConsoleHelper {
     void titleHtml(String title, String description) {
         tr();
         pw.print("<th colspan='3' class='content container'>");
-        pw.print(escapeHtml(title));
+        pw.print(escapeHtmlContent(title));
         pw.println("</th>");
         closeTr();
 
         if (description != null) {
             tr();
             pw.print("<td colspan='3' class='content'>");
-            pw.print(escapeHtml(description));
+            pw.print(escapeHtmlContent(description));
             pw.println("</th>");
             closeTr();
         }
     }
     
-    String escapeHtml(String text) {
-        if(text==null) {
-            return null;
+    String escapeHtmlContent(String text) {
+        if (text==null) {
+            return "";
         }
-        return text
-                .replace("&", "&amp;")
-                .replace("\"", "&quot;")
-                .replace("<", "&lt;")
-                .replace(">", "&gt;");
+        return Encode.forHtmlContent(text);
+    }
+
+    String escapeHtmlAttr(String text) {
+        if (text==null) {
+            return "";
+        }
+        return Encode.forHtmlAttribute(text);
     }
 }

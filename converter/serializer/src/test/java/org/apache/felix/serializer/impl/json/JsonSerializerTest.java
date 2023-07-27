@@ -16,13 +16,15 @@
  */
 package org.apache.felix.serializer.impl.json;
 
+import java.io.StringReader;
 import java.util.HashMap;
 import java.util.Map;
 
+import javax.json.Json;
+import javax.json.JsonObject;
+
 import org.apache.felix.serializer.impl.json.MyDTO.Count;
 import org.apache.felix.serializer.impl.json.MyEmbeddedDTO.Alpha;
-import org.apache.sling.commons.json.JSONException;
-import org.apache.sling.commons.json.JSONObject;
 import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
@@ -60,10 +62,10 @@ public class JsonSerializerTest {
         JsonSerializerImpl jsonCodec = new JsonSerializerImpl();
         String json = jsonCodec.serialize(m).toString();
 
-        JSONObject jo = new JSONObject(json);
+        JsonObject jo = Json.createReader(new StringReader(json)).readObject();
         assertEquals(11, jo.getInt("1"));
         assertEquals("cd", jo.getString("ab"));
-        JSONObject jo2 = jo.getJSONObject("true");
+        JsonObject jo2 = jo.getJsonObject("true");
         assertEquals(true, jo2.getBoolean("x"));
         assertTrue(jo2.isNull("y"));
 
@@ -77,7 +79,7 @@ public class JsonSerializerTest {
     }
 
     @Test
-    public void testCodecWithAdapter() throws JSONException {
+    public void testCodecWithAdapter() {
         Map<String, Foo> m1 = new HashMap<>();
         m1.put("f", new Foo("fofofo"));
         Map<String, Map<String,Foo>> m = new HashMap<>();
@@ -90,9 +92,9 @@ public class JsonSerializerTest {
         JsonSerializerImpl jsonCodec = new JsonSerializerImpl();
         String json = jsonCodec.serialize(m).convertWith(ca).toString();
 
-        JSONObject jo = new JSONObject(json);
-        assertEquals(1, jo.length());
-        JSONObject jo1 = jo.getJSONObject("submap");
+        JsonObject jo = Json.createReader(new StringReader(json)).readObject();
+        assertEquals(1, jo.size());
+        JsonObject jo1 = jo.getJsonObject("submap");
         assertEquals("<fofofo>", jo1.getString("f"));
 
         // And convert back

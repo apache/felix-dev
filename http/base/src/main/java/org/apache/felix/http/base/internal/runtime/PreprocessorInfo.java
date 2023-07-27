@@ -19,6 +19,7 @@
 package org.apache.felix.http.base.internal.runtime;
 
 import java.util.Map;
+import java.util.Objects;
 
 import org.jetbrains.annotations.NotNull;
 import org.osgi.framework.ServiceReference;
@@ -66,5 +67,15 @@ public class PreprocessorInfo extends WhiteboardServiceInfo<Preprocessor>
      */
     public @NotNull String getClassName(@NotNull final Preprocessor preprocessor) {
         return preprocessor.getClass().getName();
+    }
+
+
+    @Override
+    public boolean isSame(AbstractInfo<Preprocessor> other) {
+        if (!super.isSame(other)) {
+            return false;
+        }
+        final PreprocessorInfo o = (PreprocessorInfo) other;
+        return Objects.equals(this.initParams, o.initParams);
     }
 }

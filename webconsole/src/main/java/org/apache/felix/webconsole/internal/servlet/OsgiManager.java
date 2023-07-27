@@ -41,6 +41,7 @@ import java.util.Map;
 import java.util.Map.Entry;
 import java.util.ResourceBundle;
 import java.util.Set;
+import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ConcurrentSkipListSet;
 
 import org.apache.felix.webconsole.AbstractWebConsolePlugin;
@@ -275,14 +276,14 @@ public class OsgiManager extends GenericServlet
     public OsgiManager(BundleContext bundleContext)
     {
         this.bundleContext = bundleContext;
-        this.holder = new PluginHolder(bundleContext);
+        this.holder = new PluginHolder(this, bundleContext);
 
         // new plugins setup
         for (int i = 0; i < PLUGIN_MAP.length; i++)
         {
             final String pluginClassName = PLUGIN_MAP[i++];
             final String label = PLUGIN_MAP[i];
-            holder.addInternalPlugin(this, pluginClassName, label);
+            holder.addInternalPlugin(pluginClassName, label);
         }
 
         // setup the included plugins
@@ -886,7 +887,11 @@ public class OsgiManager extends GenericServlet
         public void removedService(ServiceReference<BrandingPlugin> reference, BrandingPlugin service)
         {
             AbstractWebConsolePlugin.setBrandingPlugin(null);
-            super.removedService(reference, service);
+            try {
+                super.removedService(reference, service);
+            } catch ( final IllegalStateException ise) {
+                // ignore this as the service is already invalid
+            }
         }
 
     }
@@ -1057,14 +1062,14 @@ public class OsgiManager extends GenericServlet
             {
                 if (active)
                 {
-                    holder.removeOsgiManagerPlugin(label);
+                    holder.removeInternalPlugin(label);
                 }
             }
             else
             {
                 if (!active)
                 {
-                    holder.addInternalPlugin(this, pluginClassName, label);
+                    holder.addInternalPlugin(pluginClassName, label);
                 }
             }
         }
@@ -1136,15 +1141,23 @@ public class OsgiManager extends GenericServlet
     }
 
     class UpdateDependenciesStateCustomizer implements ServiceTrackerCustomizer<WebConsoleSecurityProvider, WebConsoleSecurityProvider> {
+
+        private final Map<Long, String> registeredProviders = new ConcurrentHashMap<>();
+
         @Override
         public WebConsoleSecurityProvider addingService(ServiceReference<WebConsoleSecurityProvider> reference) {
-            Object nameObj = reference.getProperty(SECURITY_PROVIDER_PROPERTY_NAME);
-            if (nameObj instanceof String) {
-                String name = (String) nameObj;
-                registeredSecurityProviders.add(name);
-                updateRegistrationState();
+            final WebConsoleSecurityProvider provider = bundleContext.getService(reference);
+            if (provider != null) {
+                final Object nameObj = reference.getProperty(SECURITY_PROVIDER_PROPERTY_NAME);
+                if (nameObj instanceof String) {
+                    final String name = (String) nameObj;
+                    final Long id = (Long) reference.getProperty(Constants.SERVICE_ID);
+                    registeredProviders.put(id, name);
+                    registeredSecurityProviders.add(name);
+                    updateRegistrationState();
+                }
             }
-            return getBundleContext().getService(reference);
+            return provider;
         }
 
         @Override
@@ -1155,11 +1168,15 @@ public class OsgiManager extends GenericServlet
 
         @Override
         public void removedService(ServiceReference<WebConsoleSecurityProvider> reference, WebConsoleSecurityProvider service) {
-            Object nameObj = reference.getProperty(SECURITY_PROVIDER_PROPERTY_NAME);
-            if (nameObj instanceof String) {
-                String name = (String) nameObj;
+            final String name = registeredProviders.remove(reference.getProperty(Constants.SERVICE_ID));
+            if (name != null) {
                 registeredSecurityProviders.remove(name);
                 updateRegistrationState();
+            }
+            try {
+                bundleContext.ungetService(reference);
+            } catch (IllegalStateException ise) {
+                // ignore on shutdown
             }
         }
     }

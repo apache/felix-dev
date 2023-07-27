@@ -22,6 +22,8 @@ import java.io.InputStream;
 import java.util.ArrayList;
 
 import org.apache.felix.http.base.internal.HttpConfig;
+import org.apache.felix.http.base.internal.logger.SystemLogger;
+import org.eclipse.jetty.server.CustomRequestLog;
 import org.eclipse.jetty.server.handler.gzip.GzipHandler;
 import org.eclipse.jetty.server.session.HouseKeeper;
 import org.osgi.framework.Bundle;
@@ -455,6 +457,32 @@ class ConfigMetaTypeProvider implements MetaTypeProvider
                 "http/1.1",
                 bundle.getBundleContext().getProperty(JettyConfig.FELIX_JETTY_ALPN_DEFAULT_PROTOCOL)));
 
+        // most important request logging attributes
+        adList.add(new AttributeDefinitionImpl(JettyConfig.FELIX_HTTP_REQUEST_LOG_FILE_PATH,
+                "Request Log File Path",
+                "The path to the log file which is receiving request log entries. If empty no request log file is created",
+                null,
+                bundle.getBundleContext().getProperty(JettyConfig.FELIX_HTTP_REQUEST_LOG_FILE_PATH)));
+        adList.add(new AttributeDefinitionImpl(JettyConfig.FELIX_HTTP_REQUEST_LOG_FILE_FORMAT,
+                "Request Log File Format",
+                "The format of the request log file entries. Only relevant if 'Request Log File Path' is set. Valid placeholders are described in https://www.eclipse.org/jetty/documentation/jetty-11/operations-guide/index.html#og-module-requestlog",
+                CustomRequestLog.NCSA_FORMAT,
+                bundle.getBundleContext().getProperty(JettyConfig.FELIX_HTTP_REQUEST_LOG_FILE_FORMAT)));
+        adList.add(new AttributeDefinitionImpl(JettyConfig.FELIX_HTTP_REQUEST_LOG_OSGI_ENABLE,
+                "Enable SLF4J Request Logging",
+                "Select to log requests through SLF4J logger with given name (on level INFO)",
+                false,
+                bundle.getBundleContext().getProperty(JettyConfig.FELIX_HTTP_REQUEST_LOG_OSGI_ENABLE)));
+        adList.add(new AttributeDefinitionImpl(JettyConfig.FELIX_HTTP_REQUEST_LOG_OSGI_LOGGER_NAME,
+                "SLF4J Request Log Logger Name",
+                "The name of the SLF4J request logger. Only relevant if 'Enable SLF4J Request Logging' is checked.",
+                SystemLogger.LOGGER.getName(),
+                bundle.getBundleContext().getProperty(JettyConfig.FELIX_HTTP_REQUEST_LOG_OSGI_LOGGER_NAME)));
+        adList.add(new AttributeDefinitionImpl(JettyConfig.FELIX_HTTP_REQUEST_LOG_FORMAT,
+                "SLF4J Request Log Format",
+                "The format of the request log entries. Only relevant if 'Enable SLF4J Request Logging' is checked. Valid placeholders are described in https://www.eclipse.org/jetty/documentation/jetty-11/operations-guide/index.html#og-module-requestlog",
+                CustomRequestLog.NCSA_FORMAT,
+                bundle.getBundleContext().getProperty(JettyConfig.FELIX_HTTP_REQUEST_LOG_FORMAT)));
         return new ObjectClassDefinition()
         {
 

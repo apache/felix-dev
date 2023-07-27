@@ -29,6 +29,7 @@ import org.osgi.framework.BundleContext;
 import org.osgi.framework.Constants;
 import org.osgi.service.packageadmin.PackageAdmin;
 import org.osgi.util.tracker.ServiceTracker;
+import org.osgi.util.tracker.ServiceTrackerCustomizer;
 
 
 /**
@@ -38,7 +39,7 @@ public class BundlesConfigurationPrinter
     extends AbstractConfigurationPrinter
 {
 
-    private ServiceTracker packageAdminTracker;
+    private ServiceTracker<PackageAdmin, PackageAdmin> packageAdminTracker;
 
     /**
      * @see org.apache.felix.webconsole.internal.AbstractConfigurationPrinter#activate(org.osgi.framework.BundleContext)
@@ -46,7 +47,23 @@ public class BundlesConfigurationPrinter
     public void activate(final BundleContext bundleContext)
     {
         super.activate(bundleContext);
-        this.packageAdminTracker = new ServiceTracker(bundleContext, PackageAdmin.class.getName(), null);
+        this.packageAdminTracker = new ServiceTracker(bundleContext, PackageAdmin.class, new ServiceTrackerCustomizer<PackageAdmin, PackageAdmin>() {
+            public PackageAdmin addingService(final org.osgi.framework.ServiceReference<PackageAdmin> reference) {
+                return bundleContext.getService(reference);
+            }
+
+            public void modifiedService(final org.osgi.framework.ServiceReference<PackageAdmin> reference, final PackageAdmin service) {
+                // nothing to do
+            }
+
+            public void removedService(final org.osgi.framework.ServiceReference<PackageAdmin> reference, final PackageAdmin service) {
+                try {
+                    bundleContext.ungetService(reference);
+                } catch (IllegalStateException ise) {
+                    // ignore, bundle context was shut down concurrently
+                }
+            }
+        });
         this.packageAdminTracker.open();
     }
 

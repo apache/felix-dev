@@ -74,6 +74,7 @@ import org.osgi.service.packageadmin.ExportedPackage;
 import org.osgi.service.packageadmin.PackageAdmin;
 import org.osgi.service.startlevel.StartLevel;
 import org.osgi.util.tracker.ServiceTracker;
+import org.osgi.util.tracker.ServiceTrackerCustomizer;
 
 import jakarta.servlet.ServletException;
 import jakarta.servlet.http.HttpServletRequest;
@@ -146,7 +147,27 @@ public class BundlesServlet extends SimpleWebConsolePlugin implements OsgiManage
     {
         super.activate( bundleContext );
 
-        bundleInfoTracker = new ServiceTracker<>( bundleContext, BundleInfoProvider.class, null);
+        bundleInfoTracker = new ServiceTracker<>( bundleContext, BundleInfoProvider.class, new ServiceTrackerCustomizer<BundleInfoProvider,BundleInfoProvider>() {
+                
+                @Override
+                public BundleInfoProvider addingService(ServiceReference<BundleInfoProvider> reference) {
+                    return bundleContext.getService(reference);
+                }
+    
+                @Override
+                public void modifiedService(ServiceReference<BundleInfoProvider> reference, BundleInfoProvider service) {
+                    // nothing to do
+                }
+    
+                @Override
+                public void removedService(ServiceReference<BundleInfoProvider> reference, BundleInfoProvider service) {
+                    try {
+                        bundleContext.ungetService(reference);
+                    } catch ( final IllegalStateException ise) {
+                        // might happen on shutdown, ignore
+                    } 
+                }
+        });
         bundleInfoTracker.open();
 
         // bootdelegation property parsing from Apache Felix R4SearchPolicyCore
