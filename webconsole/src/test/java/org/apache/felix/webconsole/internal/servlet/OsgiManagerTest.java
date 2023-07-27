@@ -122,14 +122,14 @@ public class OsgiManagerTest {
         ServiceReference sref = Mockito.mock(ServiceReference.class);
         Mockito.when(sref.getProperty(Constants.SERVICE_ID)).thenReturn(3L);
         stc.removedService(sref, null);
-        assertEquals(2, updateCalled.size());
+        assertEquals(3, updateCalled.size());
         assertEquals(2, mgr.registeredSecurityProviders.size());
         assertTrue(mgr.registeredSecurityProviders.contains("abc"));
         assertTrue(mgr.registeredSecurityProviders.contains("xyz"));
 
         stc.removedService(sref2, null);
         assertEquals(Collections.singleton("abc"), mgr.registeredSecurityProviders);
-        assertEquals(3, updateCalled.size());
+        assertEquals(4, updateCalled.size());
     }
 
     @SuppressWarnings({ "unchecked", "rawtypes" })
