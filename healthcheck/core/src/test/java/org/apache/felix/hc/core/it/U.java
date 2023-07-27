@@ -111,13 +111,7 @@ public class U {
                         mavenBundle().groupId("org.apache.servicemix.bundles").artifactId("org.apache.servicemix.bundles.quartz")
                                 .versionAsInProject(), 
                         mavenBundle("jakarta.xml.bind", "jakarta.xml.bind-api", "2.3.2"),
-                        mavenBundle("com.sun.activation", "jakarta.activation", "1.2.1"),
-                        
-                        // TODO: remove these once migration to Jakarta Servlet API 5.x is complete
-                        mavenBundle("commons-fileupload", "commons-fileupload", "1.5"),                        
-                        mavenBundle("commons-io", "commons-io", "2.11.0"),                        
-                        mavenBundle("org.osgi", "org.osgi.service.http", "1.2.1"),                        
-                        mavenBundle("org.osgi", "org.osgi.service.http.whiteboard", "1.1.0")
+                        mavenBundle("com.sun.activation", "jakarta.activation", "1.2.1")
                         
                         )
                 );

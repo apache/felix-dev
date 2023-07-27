@@ -95,7 +95,7 @@
             <plugin>
                 <groupId>org.apache.felix</groupId>
                 <artifactId>maven-bundle-plugin</artifactId>
-                <version>5.1.1</version>
+                <version>5.1.8</version>
                 <extensions>true</extensions>
                 <configuration>
                     <instructions>
@@ -227,14 +227,8 @@
                                            ${project.version}-all
                                        </Bundle-Version>
                                        <Export-Package>
-                                           org.apache.commons.fileupload2,
-                                           org.apache.commons.fileupload2.disk,
-                                           org.apache.commons.fileupload2.impl,
-                                           org.apache.commons.fileupload2.jaksrvlt,
-                                           org.apache.commons.fileupload2.pub,
-                                           org.apache.commons.fileupload2.servlet,
-                                           org.apache.commons.fileupload2.util,
-                                           org.apache.commons.fileupload2.util.mime,
+                                           org.apache.commons.fileupload2.core,
+                                           org.apache.commons.fileupload2.jakarta,
                                            org.apache.commons.io.*,
                                            org.apache.felix.inventory,
                                            ${webconsole.exports}
@@ -244,7 +238,8 @@
                                            org.apache.felix.utils;inline=org/apache/felix/utils/manifest/**,
                                            org.apache.felix.utils;inline=org/apache/felix/utils/json/**,
                                            org.apache.felix.inventory;inline=true,
-                                           commons-fileupload2;inline=true,
+                                           commons-fileupload2-core;inline=true,
+                                           commons-fileupload2-jakarta;inline=true,
                                            commons-io;inline=true
                                        </Embed-Dependency>
                                        <_removeheaders>
@@ -396,16 +391,19 @@
         </dependency>
         <dependency>
             <groupId>org.apache.commons</groupId>
-            <artifactId>commons-fileupload2</artifactId>
-            <version>2.0-SNAPSHOT</version>
-            <scope>provided</scope>
-        </dependency>
+            <artifactId>commons-fileupload2-core</artifactId>
+            <version>2.0.0-M1</version>
+        </dependency>        
+        <dependency>
+            <groupId>org.apache.commons</groupId>
+            <artifactId>commons-fileupload2-jakarta</artifactId>
+            <version>2.0.0-M1</version>
+        </dependency>        
         <dependency>
             <groupId>commons-io</groupId>
             <artifactId>commons-io</artifactId>
-            <version>2.11.0</version>
-            <scope>provided</scope>
-        </dependency>
+            <version>2.13.0</version>
+        </dependency>        
         <dependency>
             <groupId>org.apache.felix</groupId>
             <artifactId>org.apache.felix.shell</artifactId>

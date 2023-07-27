@@ -157,7 +157,7 @@ public abstract class BaseIntegrationTest {
 
                 when( Boolean.getBoolean( "isDebugEnabled" ) ).useOptions(
                         vmOption( "-Xrunjdwp:transport=dt_socket,server=y,suspend=y,address=5005" )
-                        ),                
+                        ),
                 
                 // scavenge sessions every 10 seconds (10 minutes is default in 9.4.x)
                 systemProperty("org.eclipse.jetty.servlet.SessionScavengingInterval").value("10"),

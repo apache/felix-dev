@@ -43,7 +43,7 @@ import java.util.TreeMap;
 import java.util.jar.JarFile;
 import java.util.jar.Manifest;
 
-import org.apache.commons.fileupload2.FileItem;
+import org.apache.commons.fileupload2.core.FileItem;
 import org.apache.felix.utils.json.JSONWriter;
 import org.apache.felix.utils.manifest.Clause;
 import org.apache.felix.utils.manifest.Parser;
@@ -1583,7 +1583,7 @@ public class BundlesServlet extends SimpleWebConsolePlugin implements OsgiManage
                 // copy the data to a file for better processing
                 tmpFile = File.createTempFile( "install", ".tmp" );
                 tmpFile.delete(); // FIX for FILEUPLOAD-293
-                bundleItem.write( tmpFile );
+                bundleItem.write( tmpFile.toPath() );
             }
             catch ( Exception e )
             {

@@ -47,6 +47,7 @@ import org.osgi.service.servlet.runtime.HttpServiceRuntime;
 import org.osgi.service.servlet.runtime.dto.RuntimeDTO;
 import org.osgi.service.servlet.runtime.dto.ServletContextDTO;
 import org.osgi.service.servlet.runtime.dto.ServletDTO;
+import org.osgi.service.servlet.whiteboard.HttpWhiteboardConstants;
 import org.osgi.util.tracker.ServiceTracker;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -55,7 +56,7 @@ import org.slf4j.LoggerFactory;
 @RunWith(PaxExam.class)
 public class HealthCheckServletIT {
     private static final int EXPECTED_SERVLET_COUNT = 6;
-    private static final String HTTP_CONTEXT_NAME = "org.osgi.service.http";
+    private static final String HTTP_CONTEXT_NAME = HttpWhiteboardConstants.HTTP_WHITEBOARD_DEFAULT_CONTEXT_NAME;
     private static final int DEFAULT_TIMEOUT = 10000;
 
     private final Logger log = LoggerFactory.getLogger(getClass());
@@ -108,7 +109,7 @@ public class HealthCheckServletIT {
             this.serviceListener = null;
         }
     }
-    
+
     @Test
     public void testServletBecomesActive() throws InvalidSyntaxException, IOException, InterruptedException {
         final String servletPathPropertyName = "servletPath";
@@ -168,7 +169,7 @@ public class HealthCheckServletIT {
         assertNotNull(runtime);
         return runtime;
     }
-    
+
     protected <T> T awaitService(Class<T> clazz) throws Exception {
         ServiceTracker<T, T> tracker = null;
         tracker = getTracker(clazz);
@@ -178,31 +179,30 @@ public class HealthCheckServletIT {
     protected <T> T getService(final Class<T> clazz) {
         final ServiceTracker<T, T> tracker = getTracker(clazz);
         return tracker.getService();
-    }    
-    
+    }
+
     private <T> ServiceTracker<T, T> getTracker(Class<T> clazz) {
-        synchronized ( this.trackers ) {
+        synchronized (this.trackers) {
             ServiceTracker<T, T> tracker = (ServiceTracker<T, T>) trackers.get(clazz.getName());
-            if ( tracker == null ) {
+            if (tracker == null) {
                 tracker = new ServiceTracker<>(bundleContext, clazz, null);
                 trackers.put(clazz.getName(), tracker);
                 tracker.open();
             }
             return tracker;
         }
-    }    
-    
+    }
+
     private ServletContextDTO assertDefaultContext(RuntimeDTO runtimeDTO) {
-        assertTrue(1 < runtimeDTO.servletContextDTOs.length);
+        assertTrue(1 <= runtimeDTO.servletContextDTOs.length);
         assertEquals(HTTP_CONTEXT_NAME, runtimeDTO.servletContextDTOs[0].name);
-        assertEquals("default", runtimeDTO.servletContextDTOs[1].name);
-        return runtimeDTO.servletContextDTOs[1];
+        return runtimeDTO.servletContextDTOs[0];
     }
 
     public long getRuntimeCounter() {
         return this.runtimeCounter.get();
     }
-    
+
     public void waitForRuntimeCounterIncrease(final long expectedServletCount) {
         while (runtimeCounter.get() < expectedServletCount) {
             try {

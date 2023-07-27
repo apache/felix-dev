@@ -249,7 +249,7 @@ public class OsgiManager extends GenericServlet
     private ServiceRegistration<Servlet> servletRegistration;
     
     // not-null when the resources are registered
-    private ServiceRegistration<OsgiManager.ResourceService> resourcesRegistration;
+    private ServiceRegistration<Object> resourcesRegistration;
 
     // default configuration from framework properties
     private Map<String, Object> defaultConfiguration;
@@ -413,25 +413,29 @@ public class OsgiManager extends GenericServlet
                 }
             } );
         
-        updateRegistrationState();
+        if (this.requiredSecurityProviders.isEmpty()) {
+            updateRegistrationState();
+        }
     }
 
     void updateRegistrationState() {
-        if (this.registeredSecurityProviders.containsAll(this.requiredSecurityProviders)) {
-            // register servlet context helper, servlet, resources and security provider as services
-            registerServices();
-            return;
-        } else {
-            log(LogService.LOG_INFO,
-                    "Not all requirements met for the Web Console. Required security providers: "
-                            + this.registeredSecurityProviders + " Registered security providers: "
-                            + this.registeredSecurityProviders);
+        if (getBundleContext() != null) {
+            if (this.registeredSecurityProviders.containsAll(this.requiredSecurityProviders)) {
+                // register servlet context helper, servlet, resources and security provider as services
+                registerServices();
+                return;
+            } else {
+                log(LogService.LOG_INFO,
+                        "Not all requirements met for the Web Console. Required security providers: "
+                                + this.registeredSecurityProviders + " Registered security providers: "
+                                + this.registeredSecurityProviders);
+            }  
         }
 
         // Not all requirements met, unregister services
         unregisterServices();
     }
-    
+
     public void dispose()
     {
         // dispose off held plugins
@@ -614,7 +618,7 @@ public class OsgiManager extends GenericServlet
         else
         {
             final String body404 = MessageFormat.format(
-                resourceBundleManager.getResourceBundle(bundleContext.getBundle(), locale).getString(
+                resourceBundleManager.getResourceBundle(getBundleContext().getBundle(), locale).getString(
                     "404"), //$NON-NLS-1$
                 new Object[] { request.getContextPath() + request.getServletPath() + '/'
                     + BundlesServlet.NAME });
@@ -906,7 +910,7 @@ public class OsgiManager extends GenericServlet
 
             if (!isbasicSecurityServiceRegistered()) {
                 // register this component
-                BasicWebConsoleSecurityProvider service = new BasicWebConsoleSecurityProvider(bundleContext, userId,
+                BasicWebConsoleSecurityProvider service = new BasicWebConsoleSecurityProvider(getBundleContext(), userId,
                         password, realm);
                 Dictionary<String, Object> serviceProperties = new Hashtable<>(); // NOSONAR
                 // this is a last resort service, so use a low service ranking to prefer all
@@ -1111,7 +1115,7 @@ public class OsgiManager extends GenericServlet
         if (null != langMap)
             return langMap;
         final Map<String, String> map = new HashMap<>();
-        final Bundle bundle = bundleContext.getBundle();
+        final Bundle bundle = getBundleContext().getBundle();
         final Enumeration<URL> e = bundle.findEntries("res/flags", null, false); //$NON-NLS-1$
         while (e != null && e.hasMoreElements())
         {
@@ -1140,7 +1144,7 @@ public class OsgiManager extends GenericServlet
                 registeredSecurityProviders.add(name);
                 updateRegistrationState();
             }
-            return bundleContext.getService(reference);
+            return getBundleContext().getService(reference);
         }
 
         @Override
@@ -1164,8 +1168,8 @@ public class OsgiManager extends GenericServlet
         final Dictionary<String, Object> servletContextProps = new Hashtable<>();
         servletContextProps.put(HttpWhiteboardConstants.HTTP_WHITEBOARD_CONTEXT_NAME, "default");
         servletContextProps.put(HttpWhiteboardConstants.HTTP_WHITEBOARD_CONTEXT_PATH, "/");
-
-        servletContextHelperRegistration = getBundleContext().registerService(ServletContextHelper.class,
+        
+        this.servletContextHelperRegistration = getBundleContext().registerService(ServletContextHelper.class,
                 servletContextHelper, servletContextProps);
     }
 
@@ -1181,17 +1185,17 @@ public class OsgiManager extends GenericServlet
         }
 
         servletProps.put(HTTP_WHITEBOARD_SERVLET_PATTERN, servletPath);
-
-        servletRegistration = getBundleContext().registerService(Servlet.class, this, servletProps);
+        
+        this.servletRegistration = getBundleContext().registerService(Servlet.class, this, servletProps);
     }
 
     private void registerResources(String pattern, String prefix) throws InterruptedException {
         final Dictionary<String, Object> resourceProps = new Hashtable<>();
         resourceProps.put(HTTP_WHITEBOARD_RESOURCE_PATTERN, pattern);
         resourceProps.put(HTTP_WHITEBOARD_RESOURCE_PREFIX, prefix);
-
-        resourcesRegistration = getBundleContext().registerService(OsgiManager.ResourceService.class,
-                new OsgiManager.ResourceService(), resourceProps);
+        
+        this.resourcesRegistration = getBundleContext().registerService(Object.class,
+                new Object(), resourceProps);        
     }
 
     private boolean isbasicSecurityServiceRegistered() {
@@ -1208,9 +1212,5 @@ public class OsgiManager extends GenericServlet
 
     private boolean isResourcesRegistered() {
         return (this.resourcesRegistration != null);
-    }
-
-    public static class ResourceService {
-        // Tagging class
     }
 }

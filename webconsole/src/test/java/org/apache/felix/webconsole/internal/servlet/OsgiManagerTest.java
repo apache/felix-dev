@@ -55,22 +55,20 @@ public class OsgiManagerTest {
         assertEquals(0, OsgiManager.splitCommaSeparatedString(null).size());
         assertEquals(0, OsgiManager.splitCommaSeparatedString("").size());
         assertEquals(0, OsgiManager.splitCommaSeparatedString(" ").size());
-        assertEquals(Collections.singleton("foo.bar"),
-                OsgiManager.splitCommaSeparatedString("foo.bar "));
+        assertEquals(Collections.singleton("foo.bar"), OsgiManager.splitCommaSeparatedString("foo.bar "));
 
         Set<String> expected = new HashSet<String>();
         expected.add("abc");
         expected.add("x.y.z");
         expected.add("123");
-        assertEquals(expected,
-                OsgiManager.splitCommaSeparatedString(" abc , x.y.z,123"));
+        assertEquals(expected, OsgiManager.splitCommaSeparatedString(" abc , x.y.z,123"));
     }
 
     @SuppressWarnings({ "unchecked", "rawtypes", "serial" })
     @Test
     public void testUpdateDependenciesCustomizerAdd() throws Exception {
         BundleContext bc = mockBundleContext();
-
+        
         final List<Boolean> updateCalled = new ArrayList<Boolean>();
         OsgiManager mgr = new OsgiManager(bc) {
             @Override
@@ -83,15 +81,15 @@ public class OsgiManagerTest {
 
         ServiceReference sref = Mockito.mock(ServiceReference.class);
         stc.addingService(sref);
-        assertEquals(0, updateCalled.size());
+        assertEquals(1, updateCalled.size());
 
         ServiceReference sref2 = Mockito.mock(ServiceReference.class);
         Mockito.when(sref2.getProperty(OsgiManager.SECURITY_PROVIDER_PROPERTY_NAME)).thenReturn("xyz");
         stc.addingService(sref2);
         assertEquals(Collections.singleton("xyz"), mgr.registeredSecurityProviders);
-        assertEquals(1, updateCalled.size());
+        assertEquals(2, updateCalled.size());
     }
-
+    
     @SuppressWarnings({ "unchecked", "rawtypes", "serial" })
     @Test
     public void testUpdateDependenciesCustomzerRemove() throws Exception {
@@ -111,7 +109,7 @@ public class OsgiManagerTest {
 
         ServiceReference sref = Mockito.mock(ServiceReference.class);
         stc.removedService(sref, null);
-        assertEquals(0, updateCalled.size());
+        assertEquals(1, updateCalled.size());
         assertEquals(2, mgr.registeredSecurityProviders.size());
         assertTrue(mgr.registeredSecurityProviders.contains("abc"));
         assertTrue(mgr.registeredSecurityProviders.contains("xyz"));
@@ -120,7 +118,7 @@ public class OsgiManagerTest {
         Mockito.when(sref2.getProperty(OsgiManager.SECURITY_PROVIDER_PROPERTY_NAME)).thenReturn("xyz");
         stc.removedService(sref2, null);
         assertEquals(Collections.singleton("abc"), mgr.registeredSecurityProviders);
-        assertEquals(1, updateCalled.size());
+        assertEquals(2, updateCalled.size());
     }
 
     @SuppressWarnings({ "unchecked", "rawtypes" })
@@ -139,7 +137,8 @@ public class OsgiManagerTest {
             }
 
             @Override
-            public void removedService(ServiceReference<WebConsoleSecurityProvider> reference, WebConsoleSecurityProvider service) {
+            public void removedService(ServiceReference<WebConsoleSecurityProvider> reference,
+                    WebConsoleSecurityProvider service) {
                 invocations.add("removed:" + reference);
             }
         };
@@ -172,25 +171,14 @@ public class OsgiManagerTest {
             }
         };
 
-        // HTTP Service not present -> unregister
-        mgr.updateRegistrationState();
-        assertEquals(Collections.singletonList("unregister"), invocations);
-
-        // BundleContext present, but no required providers, no registered providers -> register
-        invocations.clear();
-        mgr.registeredSecurityProviders.clear();
-        mgr.requiredSecurityProviders.clear();
-        setPrivateField(OsgiManager.class, mgr, "bundleContext", bc);
-        mgr.updateRegistrationState();
         assertEquals(Collections.singletonList("register"), invocations);
     }
-    
+
     @SuppressWarnings("serial")
     @Test
     public void testUpdateRegistrationStateSomeRequiredProviders() throws Exception {
         BundleContext bc = mockBundleContext();
-        Mockito.when(bc.getProperty(OsgiManager.FRAMEWORK_PROP_SECURITY_PROVIDERS)).
-            thenReturn("foo,blah");
+        Mockito.when(bc.getProperty(OsgiManager.FRAMEWORK_PROP_SECURITY_PROVIDERS)).thenReturn("foo,blah");
 
         final List<String> invocations = new ArrayList<String>();
         OsgiManager mgr = new OsgiManager(bc) {
@@ -205,60 +193,41 @@ public class OsgiManagerTest {
             }
         };
 
-        // BundleContext present, some required providers, no registered providers -> unregister
+        // BundleContext present, some required providers, no registered providers ->
+        // unregister
         invocations.clear();
         mgr.registeredSecurityProviders.clear();
-        setPrivateField(OsgiManager.class, mgr, "bundleContext", bc);
         mgr.updateRegistrationState();
         assertEquals(Collections.singletonList("unregister"), invocations);
 
-        // BundleContext present, some required providers, more registered ones -> register
+        // BundleContext present, some required providers, more registered ones ->
+        // register
         invocations.clear();
         mgr.registeredSecurityProviders.addAll(Arrays.asList("foo", "bar", "blah"));
-        setPrivateField(OsgiManager.class, mgr, "bundleContext", bc);
         mgr.updateRegistrationState();
         assertEquals(Collections.singletonList("register"), invocations);
 
-        // BundleContext present, some required providers, different registered ones -> unregister
+        // BundleContext present, some required providers, different registered ones ->
+        // unregister
         invocations.clear();
         mgr.registeredSecurityProviders.clear();
         mgr.registeredSecurityProviders.addAll(Arrays.asList("foo", "bar"));
-        setPrivateField(OsgiManager.class, mgr, "bundleContext", bc);
         mgr.updateRegistrationState();
         assertEquals(Collections.singletonList("unregister"), invocations);
 
-        // BundleContext not present, some required providers, more registered ones -> unregister
+        // BundleContext not present, some required providers, more registered ones ->
+        // unregister
         invocations.clear();
         mgr.registeredSecurityProviders.addAll(Arrays.asList("foo", "bar", "blah"));
         setPrivateField(OsgiManager.class, mgr, "bundleContext", null);
         mgr.updateRegistrationState();
         assertEquals(Collections.singletonList("unregister"), invocations);
     }
-    
-    @Test
-    public void testRegisterServices() throws Exception {
-        BundleContext bc = mockBundleContext();
-        OsgiManager mgr = new OsgiManager(bc);
-
-        setPrivateField(OsgiManager.class, mgr, "bundleContext", bc);
-
-        assertNull(getPrivateField(OsgiManager.class, mgr, "servletContextHelperRegistration"));
-        assertNull(getPrivateField(OsgiManager.class, mgr, "servletRegistration"));
-        assertNull(getPrivateField(OsgiManager.class, mgr, "resourcesRegistration"));
-
-        mgr.registerServices();
-
-        assertNotNull(getPrivateField(OsgiManager.class, mgr, "servletContextHelperRegistration"));
-        assertNotNull(getPrivateField(OsgiManager.class, mgr, "servletRegistration"));
-        assertNotNull(getPrivateField(OsgiManager.class, mgr, "resourcesRegistration"));
-    }
 
     @Test
     public void testUnregisterServices() throws Exception {
         BundleContext bc = mockBundleContext();
         OsgiManager mgr = new OsgiManager(bc);
-
-        setPrivateField(OsgiManager.class, mgr, "bundleContext", bc);
 
         setPrivateField(OsgiManager.class, mgr, "servletContextHelperRegistration",
                 Mockito.mock(ServiceRegistration.class));
@@ -300,17 +269,20 @@ public class OsgiManagerTest {
                 return FrameworkUtil.createFilter(fs);
             }
         });
-        // FELIX-6341 - mock the getHeaders to avoid a NPE during ResourceBundleCache#getResourceBundleEntries
+        // FELIX-6341 - mock the getHeaders to avoid a NPE during
+        // ResourceBundleCache#getResourceBundleEntries
         final Dictionary<String, String> headers = new Hashtable<>();
         Mockito.when(bundle.getHeaders()).thenReturn(headers);
-        // FELIX-6341 - mock bundle#findEntries so ResourceBundleCache#getResourceBundleEntries will function
+        // FELIX-6341 - mock bundle#findEntries so
+        // ResourceBundleCache#getResourceBundleEntries will function
         URL rbUrl = getClass().getResource("/OSGI-INF/l10n/bundle.properties");
-        Mockito.when(bundle.findEntries("OSGI-INF/l10n", "bundle*.properties", false)).thenAnswer(new Answer<Enumeration<URL>>() {
-			@Override
-			public Enumeration<URL> answer(InvocationOnMock invocation) throws Throwable {
-				return Collections.enumeration(Collections.singleton(rbUrl));
-			}
-        });
+        Mockito.when(bundle.findEntries("OSGI-INF/l10n", "bundle*.properties", false))
+                .thenAnswer(new Answer<Enumeration<URL>>() {
+                    @Override
+                    public Enumeration<URL> answer(InvocationOnMock invocation) throws Throwable {
+                        return Collections.enumeration(Collections.singleton(rbUrl));
+                    }
+                });
         return bc;
     }
 }

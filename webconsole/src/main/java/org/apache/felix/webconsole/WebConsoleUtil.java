@@ -28,12 +28,11 @@ import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 
-import org.apache.commons.fileupload2.FileItem;
-import org.apache.commons.fileupload2.FileUploadBase;
-import org.apache.commons.fileupload2.FileUploadException;
-import org.apache.commons.fileupload2.disk.DiskFileItemFactory;
-import org.apache.commons.fileupload2.jaksrvlt.JakSrvltFileUpload;
-import org.apache.commons.fileupload2.jaksrvlt.JakSrvltRequestContext;
+import org.apache.commons.fileupload2.core.DiskFileItemFactory;
+import org.apache.commons.fileupload2.core.FileItem;
+import org.apache.commons.fileupload2.core.FileUploadException;
+import org.apache.commons.fileupload2.jakarta.JakartaServletFileUpload;
+import org.apache.commons.fileupload2.jakarta.JakartaServletRequestContext;
 
 import jakarta.servlet.ServletRequest;
 import jakarta.servlet.http.HttpServletRequest;
@@ -121,10 +120,11 @@ public final class WebConsoleUtil
      *  and the specified parameter is field - then the value of the parameter
      *  is returned.
      */
+    @SuppressWarnings({ "unchecked", "rawtypes" })
     public static final String getParameter( HttpServletRequest request, String name )
     {
         // just get the parameter if not a multipart/form-data POST
-        if ( !FileUploadBase.isMultipartContent( new JakSrvltRequestContext( request ) ) )
+        if ( !JakartaServletFileUpload.isMultipartContent( new JakartaServletRequestContext( request ) ) )
         {
             return request.getParameter( name );
         }
@@ -135,17 +135,17 @@ public final class WebConsoleUtil
         {
             // parameters not read yet, read now
             // Create a factory for disk-based file items
-            DiskFileItemFactory factory = new DiskFileItemFactory();
-            factory.setSizeThreshold( 256000 );
+            DiskFileItemFactory.Builder factoryBuilder = DiskFileItemFactory.builder();
+            factoryBuilder.setBufferSize( 256000 );
             // See https://issues.apache.org/jira/browse/FELIX-4660
             final Object repo = request.getAttribute( AbstractWebConsolePlugin.ATTR_FILEUPLOAD_REPO );
             if ( repo instanceof File )
             {
-                factory.setRepository( (File) repo );
+                factoryBuilder.setPath( ((File) repo).toPath() );
             }
 
             // Create a new file upload handler
-            JakSrvltFileUpload upload = new JakSrvltFileUpload( factory );
+            JakartaServletFileUpload upload = new JakartaServletFileUpload( factoryBuilder.get() );
             upload.setSizeMax( -1 );
             upload.setFileCountMax(50);
 

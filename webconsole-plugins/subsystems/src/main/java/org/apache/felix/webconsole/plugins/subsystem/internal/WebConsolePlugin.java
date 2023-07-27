@@ -27,7 +27,7 @@ import java.util.Collection;
 import java.util.List;
 import java.util.Map;
 
-import org.apache.commons.fileupload2.FileItem;
+import org.apache.commons.fileupload2.core.FileItem;
 import org.apache.felix.utils.json.JSONWriter;
 import org.apache.felix.webconsole.AbstractWebConsolePlugin;
 import org.apache.felix.webconsole.DefaultVariableResolver;
@@ -155,7 +155,7 @@ public class WebConsolePlugin extends SimpleWebConsolePlugin
             {
                 // copy the data to a file for better processing
                 tmpFile = File.createTempFile("installSubsystem", ".tmp");
-                subsystemItem.write(tmpFile);
+                subsystemItem.write(tmpFile.toPath());
             }
             catch (Exception e)
             {

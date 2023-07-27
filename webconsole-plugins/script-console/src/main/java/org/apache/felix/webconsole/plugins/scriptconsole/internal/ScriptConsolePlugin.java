@@ -39,7 +39,7 @@ import javax.script.ScriptException;
 import javax.script.SimpleBindings;
 import javax.script.SimpleScriptContext;
 
-import org.apache.commons.fileupload2.FileItem;
+import org.apache.commons.fileupload2.core.FileItem;
 import org.apache.commons.io.IOUtils;
 import org.apache.felix.utils.json.JSONWriter;
 import org.apache.felix.webconsole.AbstractWebConsolePlugin;

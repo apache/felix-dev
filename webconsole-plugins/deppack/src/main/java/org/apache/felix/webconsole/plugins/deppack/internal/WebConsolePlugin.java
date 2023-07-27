@@ -25,7 +25,7 @@ import jakarta.servlet.ServletException;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 
-import org.apache.commons.fileupload2.FileItem;
+import org.apache.commons.fileupload2.core.FileItem;
 import org.apache.felix.webconsole.AbstractWebConsolePlugin;
 import org.apache.felix.webconsole.DefaultVariableResolver;
 import org.apache.felix.webconsole.SimpleWebConsolePlugin;

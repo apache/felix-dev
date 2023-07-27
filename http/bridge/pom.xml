@@ -48,7 +48,6 @@
             <plugin>
                 <groupId>org.apache.felix</groupId>
                 <artifactId>maven-bundle-plugin</artifactId>
-                <version>5.1.4</version>
                 <extensions>true</extensions>
                 <configuration>
                     <instructions>
@@ -131,13 +130,18 @@
         </dependency>
         <dependency>
             <groupId>org.apache.commons</groupId>
-            <artifactId>commons-fileupload2</artifactId>
-            <version>2.0-SNAPSHOT</version>
-        </dependency>
+            <artifactId>commons-fileupload2-core</artifactId>
+            <version>2.0.0-M1</version>
+        </dependency>        
+        <dependency>
+            <groupId>org.apache.commons</groupId>
+            <artifactId>commons-fileupload2-jakarta</artifactId>
+            <version>2.0.0-M1</version>
+        </dependency>    
         <dependency>
             <groupId>commons-io</groupId>
             <artifactId>commons-io</artifactId>
-            <version>2.11.0</version>
+            <version>2.13.0</version>
         </dependency>
         <dependency>
             <groupId>org.apache.felix</groupId>

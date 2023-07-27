@@ -46,13 +46,11 @@ import java.util.Iterator;
 import java.util.List;
 import java.util.Set;
 
-import org.apache.commons.fileupload2.FileItem;
-import org.apache.commons.fileupload2.FileUpload;
-import org.apache.commons.fileupload2.FileUploadBase;
-import org.apache.commons.fileupload2.FileUploadException;
-import org.apache.commons.fileupload2.RequestContext;
-import org.apache.commons.fileupload2.UploadContext;
-import org.apache.commons.fileupload2.disk.DiskFileItemFactory;
+import org.apache.commons.fileupload2.core.DiskFileItemFactory;
+import org.apache.commons.fileupload2.core.FileItem;
+import org.apache.commons.fileupload2.core.FileUploadException;
+import org.apache.commons.fileupload2.jakarta.JakartaServletFileUpload;
+import org.apache.commons.fileupload2.jakarta.JakartaServletRequestContext;
 import org.apache.felix.http.base.internal.context.ExtServletContext;
 import org.apache.felix.http.base.internal.handler.HttpSessionWrapper;
 import org.osgi.framework.Bundle;
@@ -414,11 +412,11 @@ final class ServletRequestWrapper extends HttpServletRequestWrapper
     {
         if ( parts == null )
         {
-            final UploadContext multipartContext;
+            final JakartaServletRequestContext multipartContext;
             if (!POST_METHOD.equalsIgnoreCase(this.getMethod())) {
                 multipartContext = null;
             } else {
-                multipartContext = new UploadContext() {
+                multipartContext = new JakartaServletRequestContext( (HttpServletRequest) getRequest()) {
 
                     @Override
                     public InputStream getInputStream() throws IOException {
@@ -431,7 +429,7 @@ final class ServletRequestWrapper extends HttpServletRequestWrapper
                     }
 
                     @Override
-                    public long contentLength() {
+                    public long getContentLength() {
                         return ServletRequestWrapper.this.getContentLength();
                     }
 
@@ -441,7 +439,7 @@ final class ServletRequestWrapper extends HttpServletRequestWrapper
                     }
                 };
             }
-            if ( multipartContext != null && FileUploadBase.isMultipartContent(multipartContext) )
+            if ( multipartContext != null && JakartaServletFileUpload.isMultipartContent(multipartContext) )
             {
                 if ( this.multipartConfig == null)
                 {
@@ -487,14 +485,15 @@ final class ServletRequestWrapper extends HttpServletRequestWrapper
         return parts;
     }
 
-    private void handleMultipart(final RequestContext multipartContext) throws IOException
+    @SuppressWarnings({ "rawtypes", "unchecked" })
+    private void handleMultipart(final JakartaServletRequestContext multipartContext) throws IOException
     {
         // Create a new file upload handler
-        final FileUpload upload = new FileUpload();
+        final JakartaServletFileUpload upload = new JakartaServletFileUpload();
         upload.setSizeMax(this.multipartConfig.multipartMaxRequestSize);
         upload.setFileSizeMax(this.multipartConfig.multipartMaxFileSize);
-        upload.setFileItemFactory(new DiskFileItemFactory(this.multipartConfig.multipartThreshold,
-                new File(this.multipartConfig.multipartLocation)));
+        upload.setFileItemFactory(DiskFileItemFactory.builder().setBufferSize(this.multipartConfig.multipartThreshold)
+                .setFile(new File(this.multipartConfig.multipartLocation)).get());
         upload.setFileCountMax(this.multipartConfig.multipartMaxFileCount);
         // Parse the request
         List<FileItem> items = null;
@@ -546,7 +545,7 @@ final class ServletRequestWrapper extends HttpServletRequestWrapper
                 {
                     try
                     {
-                        item.write(new File(fileName));
+                        item.write(new File(fileName).toPath());
                     }
                     catch (IOException e)
                     {

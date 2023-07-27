@@ -60,7 +60,7 @@
             <plugin>
                 <groupId>org.apache.felix</groupId>
                 <artifactId>maven-bundle-plugin</artifactId>
-                <version>3.5.0</version>
+                <version>5.1.8</version>
                 <extensions>true</extensions>
                 <configuration>
                     <instructions>
@@ -98,7 +98,6 @@
             <version>5.0.0</version>
             <scope>provided</scope>
         </dependency>
-
         <dependency>
             <groupId>org.osgi</groupId>
             <artifactId>osgi.core</artifactId>
