@@ -51,6 +51,7 @@ import org.junit.Test;
 import org.mockito.ArgumentMatcher;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
+import org.osgi.framework.BundleContext;
 import org.osgi.framework.Constants;
 import org.osgi.framework.ServiceReference;
 
@@ -82,6 +83,9 @@ public class HealthCheckExecutorServletTest {
 
     @Mock
     private ServiceReference hcServiceRef;
+    
+    @Mock
+    private BundleContext bundleContext;
 
     @Mock
     private PrintWriter writer;
@@ -106,7 +110,7 @@ public class HealthCheckExecutorServletTest {
             HealthCheckExecutorServlet.FORMAT_TXT,
             HealthCheckExecutorServlet.FORMAT_VERBOSE_TXT}).when(healthCheckExecutorServletConfig).allowed_formats();
         doReturn("/hc").when(healthCheckExecutorServletConfig).servletPath();
-        healthCheckExecutorServlet.activate(healthCheckExecutorServletConfig);
+        healthCheckExecutorServlet.activate(healthCheckExecutorServletConfig, bundleContext);
     }
 
     @Test
