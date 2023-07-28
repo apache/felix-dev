@@ -24,11 +24,13 @@ import org.osgi.service.metatype.annotations.Option;
 @ObjectClassDefinition(name = "Apache Felix Health Check Executor Servlet", description = "Serializes health check results into html, json or txt format")
 @interface HealthCheckExecutorServletConfiguration {
 
-	@AttributeDefinition(name = "Servlet Context Name", description = "Servlet Context Name")
-    String servletContextName() default "*";
+    String SERVLET_PATH_DEFAULT = "/system/health";
 
-    @AttributeDefinition(name = "Servlet Path", description = "Servlet Path)")
-    String servletPath() default "/system/health";
+	@AttributeDefinition(name = "Servlet Context Name", description = "Servlet Context Name to register the servlet with. If not specified, the default context is used.")
+    String servletContextName();
+
+    @AttributeDefinition(name = "Servlet Path", description = "Servlet path (defaults to " + SERVLET_PATH_DEFAULT + ")")
+    String servletPath() default SERVLET_PATH_DEFAULT;
 
     @AttributeDefinition(name = "Http Status Mapping", description = "Maps HC result status values to http response codes. Can be overwritten via request parameter 'httpStatus'")
     String httpStatusMapping() default "OK:200,WARN:200,CRITICAL:503,TEMPORARILY_UNAVAILABLE:503,HEALTH_CHECK_ERROR:500";

@@ -18,6 +18,7 @@
 package org.apache.felix.hc.core.impl.servlet;
 
 import static org.osgi.service.http.whiteboard.HttpWhiteboardConstants.HTTP_WHITEBOARD_CONTEXT_SELECT;
+import static org.osgi.service.http.whiteboard.HttpWhiteboardConstants.HTTP_WHITEBOARD_CONTEXT_NAME;
 import static org.osgi.service.http.whiteboard.HttpWhiteboardConstants.HTTP_WHITEBOARD_SERVLET_PATTERN;
 
 import java.io.IOException;
@@ -252,7 +253,9 @@ public class HealthCheckExecutorServlet extends HttpServlet {
     private void registerServlet(final ServletInfoDTO servletInfo) {
     	final Dictionary<String, Object> properties = new Hashtable<>();
 
-    	properties.put(HTTP_WHITEBOARD_CONTEXT_SELECT, servletInfo.contextName);
+        if (servletInfo.contextName != null && !servletInfo.contextName.isEmpty()) {
+    	    properties.put(HTTP_WHITEBOARD_CONTEXT_SELECT, "(".concat(HTTP_WHITEBOARD_CONTEXT_NAME).concat("=").concat(servletInfo.contextName).concat(")"));
+        }
     	properties.put(HTTP_WHITEBOARD_SERVLET_PATTERN, servletInfo.servletPath);
     	
     	final ServiceRegistration<Servlet> registration = bundleContext.registerService(Servlet.class, servletInfo.servlet, properties);

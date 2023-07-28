@@ -18,14 +18,19 @@
 package org.apache.felix.hc.core.it;
 
 import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertTrue;
 
 import java.io.IOException;
+import java.security.Provider.Service;
+import java.util.ArrayList;
+import java.util.Collection;
 import java.util.Dictionary;
 import java.util.Hashtable;
 import java.util.List;
 import java.util.UUID;
 
 import javax.inject.Inject;
+import javax.servlet.Servlet;
 
 import org.junit.After;
 import org.junit.Before;
@@ -37,9 +42,10 @@ import org.ops4j.pax.exam.junit.PaxExam;
 import org.osgi.framework.BundleContext;
 import org.osgi.framework.Constants;
 import org.osgi.framework.InvalidSyntaxException;
+import org.osgi.framework.ServiceReference;
 import org.osgi.framework.ServiceRegistration;
 import org.osgi.service.cm.ConfigurationAdmin;
-import org.osgi.service.http.HttpService;
+import org.osgi.service.http.whiteboard.HttpWhiteboardConstants;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -54,47 +60,30 @@ public class HealthCheckServletIT {
     @Inject
     private BundleContext bundleContext;
 
-    private MockHttpService httpService;
-    private ServiceRegistration reg;
-
     @Configuration
     public Option[] config() {
         return U.config();
     }
 
-    private int countServletServices(String packageNamePrefix) throws InvalidSyntaxException {
-        final List<String> classNames = httpService.getServletClassNames();
-        int count = 0;
-        for (final String className : classNames) {
-            if (className.startsWith(packageNamePrefix)) {
-                count++;
+    private List<String> getRegisteredServletPaths() throws InvalidSyntaxException {
+        final Collection<ServiceReference<Servlet>> refs = bundleContext.getServiceReferences(Servlet.class, null);
+        final List<String> result = new ArrayList<>();
+        for(final ServiceReference<Servlet> ref : refs) {
+            final String path = (String) ref.getProperty(HttpWhiteboardConstants.HTTP_WHITEBOARD_SERVLET_PATTERN);
+            if (path != null) {
+                result.add(path);
             }
         }
-        return count;
-    }
-
-    @Before
-    public void setup() {
-        httpService = new MockHttpService();
-        Dictionary<String,Object> httpServiceProps = new Hashtable<String,Object> ();
-        httpServiceProps.put(Constants.SERVICE_RANKING, Integer.MAX_VALUE);
-        reg = bundleContext.registerService(HttpService.class.getName(), httpService, httpServiceProps);
-    }
-
-    @After
-    public void cleanup() {
-        reg.unregister();
-        reg = null;
-        httpService = null;
+        return result;
     }
 
     @Test
     public void testServletBecomesActive() throws InvalidSyntaxException, IOException, InterruptedException {
         final String servletPathPropertyName = "servletPath";
         final String servletPathPropertyVal = "/test/" + UUID.randomUUID();
-        final String packagePrefix = "org.apache.felix.hc";
-        assertEquals("Initially expecting no servlet from " + packagePrefix, 0, countServletServices(packagePrefix));
-        final int pathsBefore = httpService.getPaths().size();
+
+        final List<String> initialPaths = this.getRegisteredServletPaths();
+        assertEquals("Initially expecting no servlets", 0, initialPaths.size());
 
         // Activate servlet and wait for it to show up
         final String factoryPid = "org.apache.felix.hc.core.impl.servlet.HealthCheckExecutorServlet";
@@ -107,25 +96,21 @@ public class HealthCheckServletIT {
 
         final long timeoutMsec = 5000L;
         final long endTime = System.currentTimeMillis() + timeoutMsec;
+        int expectedServletCount = 6;
         while (System.currentTimeMillis() < endTime) {
-            if (countServletServices(packagePrefix) > 0) {
+            if (getRegisteredServletPaths().size() >= expectedServletCount) {
                 break;
             }
             Thread.sleep(50L);
         }
 
-        int expectedServletCount = 6;
-        assertEquals("After adding configuration, expecting six servlets from " + packagePrefix, expectedServletCount,
-                countServletServices(packagePrefix));
-        final List<String> paths = httpService.getPaths();
-        assertEquals("Expecting six new servlet registration", pathsBefore + expectedServletCount, paths.size());
-        assertEquals("Expecting the HC servlet to be registered at " + servletPathPropertyVal, servletPathPropertyVal, paths.get(paths.size() - 6)); // paths list is longer,
-                                                                                                                 // use last entries in list
-        assertEquals("Expecting the HTML HC servlet to be registered at " + servletPathPropertyVal + ".html", servletPathPropertyVal + ".html", paths.get(paths.size() - 5));
-        assertEquals("Expecting the JSON HC servlet to be registered at " + servletPathPropertyVal + ".json", servletPathPropertyVal + ".json", paths.get(paths.size() - 4));
-        assertEquals("Expecting the JSONP HC servlet to be registered at " + servletPathPropertyVal + ".jsonp", servletPathPropertyVal + ".jsonp", paths.get(paths.size() - 3));
-        assertEquals("Expecting the TXT HC servlet to be registered at " + servletPathPropertyVal + ".txt", servletPathPropertyVal + ".txt", paths.get(paths.size() - 2));
-        assertEquals("Expecting the verbose TXT HC servlet to be registered at " + servletPathPropertyVal + ".verbose.txt", servletPathPropertyVal + ".verbose.txt",
-                paths.get(paths.size() - 1));
+        final List<String> paths = this.getRegisteredServletPaths();
+        assertEquals("After adding configuration, expecting six servlets", expectedServletCount, paths.size());
+        assertTrue("Expecting the HC servlet to be registered at " + servletPathPropertyVal, paths.contains(servletPathPropertyVal));
+        assertTrue("Expecting the HTML HC servlet to be registered at " + servletPathPropertyVal + ".html", paths.contains(servletPathPropertyVal + ".html"));
+        assertTrue("Expecting the JSON HC servlet to be registered at " + servletPathPropertyVal + ".json", paths.contains(servletPathPropertyVal + ".json"));
+        assertTrue("Expecting the JSONP HC servlet to be registered at " + servletPathPropertyVal + ".jsonp", paths.contains(servletPathPropertyVal + ".jsonp"));
+        assertTrue("Expecting the TXT HC servlet to be registered at " + servletPathPropertyVal + ".txt", paths.contains(servletPathPropertyVal + ".txt"));
+        assertTrue("Expecting the verbose TXT HC servlet to be registered at " + servletPathPropertyVal + ".verbose.txt", paths.contains(servletPathPropertyVal + ".verbose.txt"));
     }
 }
