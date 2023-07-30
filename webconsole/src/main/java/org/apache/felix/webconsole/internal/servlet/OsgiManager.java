@@ -333,12 +333,6 @@ public class OsgiManager extends GenericServlet
         // the resource bundle manager
         resourceBundleManager = new ResourceBundleManager(getBundleContext());
 
-        // start the configuration render, providing the resource bundle manager
-        //ConfigurationRender cr = new ConfigurationRender(resourceBundleManager);
-        //cr.activate(bundleContext);
-        //osgiManagerPlugins.add(cr);
-        //holder.addOsgiManagerPlugin(cr);
-
         // start tracking external plugins after setting up our own plugins
         holder.open();
 
@@ -1200,7 +1194,7 @@ public class OsgiManager extends GenericServlet
             {
                 if (active)
                 {
-                    holder.removeInternalPlugin(label);
+                    holder.removeInternalPlugin(pluginClassName, label);
                 }
             }
             else

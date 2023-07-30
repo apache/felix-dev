@@ -18,62 +18,68 @@
  */
 package org.apache.felix.webconsole.internal.servlet;
 
-
+import java.util.ArrayList;
+import java.util.Collections;
 import java.util.Enumeration;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Locale;
 import java.util.Map;
 import java.util.NoSuchElementException;
 import java.util.ResourceBundle;
 
 import javax.servlet.Servlet;
-import javax.servlet.ServletConfig;
 import javax.servlet.ServletContext;
-import javax.servlet.ServletException;
 
 import org.apache.felix.webconsole.AbstractWebConsolePlugin;
 import org.apache.felix.webconsole.WebConsoleConstants;
 import org.apache.felix.webconsole.internal.OsgiManagerPlugin;
 import org.apache.felix.webconsole.internal.WebConsolePluginAdapter;
 import org.apache.felix.webconsole.internal.i18n.ResourceBundleManager;
-import org.osgi.framework.Bundle;
 import org.osgi.framework.BundleContext;
 import org.osgi.framework.Constants;
+import org.osgi.framework.Filter;
 import org.osgi.framework.InvalidSyntaxException;
-import org.osgi.framework.ServiceEvent;
-import org.osgi.framework.ServiceListener;
 import org.osgi.framework.ServiceReference;
 import org.osgi.service.log.LogService;
+import org.osgi.util.tracker.ServiceTracker;
+import org.osgi.util.tracker.ServiceTrackerCustomizer;
 
 
 /**
  * The <code>PluginHolder</code> class implements the maintenance and lazy
  * access to web console plugin services.
  */
-class PluginHolder implements ServiceListener
-{
+class PluginHolder implements ServiceTrackerCustomizer<Servlet, Plugin> {
 
     private final OsgiManager osgiManager;
 
     // The Web Console's bundle context to access the plugin services
     private final BundleContext bundleContext;
 
-    // registered plugins
-    private final Map<String, Plugin> plugins;
+    // Registered plugins
+    private final Map<String, List<Plugin>> plugins = new HashMap<>();
 
     // The servlet context used to initialize plugin services
-    private ServletContext servletContext;
+    private volatile ServletContext servletContext;
 
     // the label of the default plugin
-    private String defaultPluginLabel;
+    private volatile String defaultPluginLabel;
 
+    private final ServiceTracker<Servlet, Plugin> servletTracker;
 
-
-    PluginHolder( final OsgiManager osgiManager, final BundleContext context )
-    {
+    PluginHolder( final OsgiManager osgiManager, final BundleContext context ) {
         this.osgiManager = osgiManager;
         this.bundleContext = context;
-        this.plugins = new HashMap<>();
+        Filter filter = null;
+        try {
+            filter = context.createFilter("(&(" + Constants.OBJECTCLASS + "=" + WebConsoleConstants.SERVICE_NAME + 
+                ")(" + WebConsoleConstants.PLUGIN_LABEL + "=*))");
+        } catch (final InvalidSyntaxException e) {
+            // not expected, thus fail hard
+            throw new InternalError( "Failed creating filter: " + e.getMessage() );
+        }
+        this.servletTracker = new ServiceTracker<>(context, filter, this);
     }
 
 
@@ -84,90 +90,69 @@ class PluginHolder implements ServiceListener
      * and getting references to all plugins already registered in the
      * framework.
      */
-    void open()
-    {
-        try
-        {
-            bundleContext.addServiceListener( this, "(" + Constants.OBJECTCLASS + "="
-                + WebConsoleConstants.SERVICE_NAME + ")" );
-        }
-        catch ( InvalidSyntaxException ise )
-        {
-            // not expected, thus fail hard
-            throw new InternalError( "Failed registering for Servlet service events: " + ise.getMessage() );
-        }
-
-        try
-        {
-            ServiceReference<?>[] refs = bundleContext.getServiceReferences( WebConsoleConstants.SERVICE_NAME, null );
-            if ( refs != null )
-            {
-                for ( int i = 0; i < refs.length; i++ )
-                {
-                    serviceAdded( refs[i] );
-                }
-            }
-        }
-        catch ( InvalidSyntaxException ise )
-        {
-            // not expected, thus fail hard
-            throw new InternalError( "Failed getting existing Servlet services: " + ise.getMessage() );
-        }
+    void open() {
+        this.servletTracker.open();
     }
-
 
     /**
      * Stop using the plugin manager by removing as a service listener and
      * releasing all held plugins, which includes ungetting and destroying any
      * held plugin services.
      */
-    void close()
-    {
-        bundleContext.removeServiceListener( this );
+    void close() {
+        this.servletTracker.close();
 
-        Plugin[] plugin = getPlugins();
-        for ( int i = 0; i < plugin.length; i++ )
-        {
-            plugin[i].dispose();
-        }
-
-        plugins.clear();
-        defaultPluginLabel = null;
+        this.plugins.clear();
+        this.servletContext = null;
+        this.defaultPluginLabel = null;
     }
-
 
     /**
      * Returns label of the default plugin
      * @return label of the default plugin
      */
-    String getDefaultPluginLabel()
-    {
+    String getDefaultPluginLabel() {
         return defaultPluginLabel;
     }
-
 
     /**
      * Sets the label of the default plugin
      * @param defaultPluginLabel
      */
-    void setDefaultPluginLabel( String defaultPluginLabel )
-    {
+    void setDefaultPluginLabel( final String defaultPluginLabel ) {
         this.defaultPluginLabel = defaultPluginLabel;
     }
 
-    void addInternalPlugin( final String pluginClassName, final String label)
-    {
+    /**
+     * Add the internal Web Console plugin registered under the given label
+     * @param pluginClassName The class name of the Web Console internal plugin to add
+     * @param label The label of the Web Console internal plugin to add
+     */
+    void addInternalPlugin( final String pluginClassName, final String label) {
         final Plugin plugin = new InternalPlugin(this, osgiManager, pluginClassName, label);
-        addPlugin( label, plugin );
+        this.addPlugin( plugin );
     }
 
     /**
      * Remove the internal Web Console plugin registered under the given label
+     * @param pluginClassName The class name of the Web Console internal plugin to remove
      * @param label The label of the Web Console internal plugin to remove
      */
-    void removeInternalPlugin( final String label )
-    {
-        removePlugin( label );
+    void removeInternalPlugin( final String pluginClassName, final String label ) {
+        synchronized ( plugins ) {
+            final List<Plugin> list = plugins.get( label );
+            if ( list != null ) {
+                for(final Plugin plugin : list) {
+                    if ( plugin instanceof InternalPlugin ) {
+                        final InternalPlugin internalPlugin = (InternalPlugin)plugin;
+                        if ( internalPlugin.getId().equals(pluginClassName) ) {
+                            this.removePlugin( plugin );
+                            break;
+                        }
+                    }
+                }
+            }
+        }
     }
 
     /**
@@ -180,28 +165,26 @@ class PluginHolder implements ServiceListener
      * @return The plugin or <code>null</code> if no plugin is registered with
      *      the given label.
      */
-    AbstractWebConsolePlugin getPlugin( final String label )
-    {
+    AbstractWebConsolePlugin getPlugin( final String label ) {
         AbstractWebConsolePlugin consolePlugin = null;
-        if ( label != null && label.length() > 0 )
-        {
+
+        if ( label != null && label.length() > 0 ) {
             final Plugin plugin;
-            synchronized ( plugins )
-            {
-                plugin = plugins.get( label );
+            synchronized ( plugins ) {
+                final List<Plugin> list = plugins.get( label );
+                plugin = list != null && !list.isEmpty() ? list.get(0) : null;
             }
 
-            if ( plugin != null )
-            {
+            if ( plugin != null ) {
                 consolePlugin = plugin.getConsolePlugin();
             }
-        }
-        else
-        {
-            Plugin[] plugins = getPlugins();
-            for ( int i = 0; i < plugins.length && consolePlugin == null; i++ )
-            {
-                consolePlugin = plugins[i].getConsolePlugin();
+        } else{
+            final List<Plugin> plugins = getPlugins();
+            for(final Plugin p : plugins) {
+                consolePlugin = p.getConsolePlugin();
+                if ( consolePlugin != null ) {
+                    break;
+                }
             }
         }
 
@@ -231,13 +214,9 @@ class PluginHolder implements ServiceListener
     {
         final Map map = new HashMap();
         final Map flatMap = new HashMap();
-        Plugin[] plugins = getPlugins();
-        for ( int i = 0; i < plugins.length; i++ )
-        {
-            final Plugin plugin = plugins[i];
-
-            if ( !plugin.isEnabled() )
-            {
+        final List<Plugin> plugins = getPlugins();
+        for(final Plugin plugin : plugins) {
+            if ( !plugin.isEnabled() ) {
                 continue;
             }
 
@@ -311,46 +290,16 @@ class PluginHolder implements ServiceListener
      * Returns the bundle context of the Web Console itself.
      * @return the bundle context of the Web Console itself.
      */
-    BundleContext getBundleContext()
-    {
+    BundleContext getBundleContext() {
         return bundleContext;
     }
-
 
     /**
      * Sets the servlet context to be used to initialize plugin services
      * @param servletContext
      */
-    void setServletContext( ServletContext servletContext )
-    {
-        final Plugin[] plugin = getPlugins();
-        if ( servletContext != null )
-        {
-            this.servletContext = servletContext;
-            for ( int i = 0; i < plugin.length; i++ )
-            {
-                try
-                {
-                    plugin[i].init();
-                }
-                catch ( ServletException se )
-                {
-                    // TODO: log !!
-                }
-            }
-        }
-        else
-        {
-            for ( int i = 0; i < plugin.length; i++ )
-            {
-                try {
-                    plugin[i].destroy();
-                } catch (Throwable t) {
-                    // TODO: log !!
-                }
-            }
-            this.servletContext = null;
-        }
+    void setServletContext( final ServletContext context ) {
+        this.servletContext = context;
     }
 
 
@@ -358,339 +307,104 @@ class PluginHolder implements ServiceListener
      * Returns the servlet context to be used to initialize plugin services
      * @return the servlet context to be used to initialize plugin services
      */
-    ServletContext getServletContext()
-    {
+    ServletContext getServletContext() {
         return servletContext;
     }
 
-
-    //---------- ServletListener
-
-    /**
-     * Called when plugin services are registered or unregistered (or modified,
-     * which is currently ignored)
-     *
-     * @see org.osgi.framework.ServiceListener#serviceChanged(org.osgi.framework.ServiceEvent)
-     */
-    public void serviceChanged( ServiceEvent event )
-    {
-        switch ( event.getType() )
-        {
-            case ServiceEvent.REGISTERED:
-                // add service
-                serviceAdded( event.getServiceReference() );
-                break;
-
-            case ServiceEvent.UNREGISTERING:
-                // remove service
-                serviceRemoved( event.getServiceReference() );
-                break;
-
-            default:
-                // update service
-                break;
-        }
-    }
-
-
-    private void serviceAdded( final ServiceReference<?> serviceReference )
-    {
-        final String label = getProperty( serviceReference, WebConsoleConstants.PLUGIN_LABEL );
-        if ( label != null )
-        {
-            addPlugin( label, new ServletPlugin( this, serviceReference, label ) );
-        }
-    }
-
-
-    private void serviceRemoved( final ServiceReference<?> serviceReference )
-    {
-        final String label = getProperty( serviceReference, WebConsoleConstants.PLUGIN_LABEL );
-        if ( label != null )
-        {
-            removePlugin( label );
-        }
-    }
-
-
-    private void addPlugin( final String label, final Plugin plugin )
-    {
-        synchronized ( plugins )
-        {
-            plugins.compute( label, (key, oldPlugin) -> {
-                if (oldPlugin != null) {
-                    if (plugin.compareTo(oldPlugin) > 0) {
-                        osgiManager.log(LogService.LOG_WARNING, "Overwriting existing plugin " + oldPlugin.doGetConsolePlugin().getClass().getName() 
-                                + " having label " + key + " with new plugin " + plugin.doGetConsolePlugin().getClass().getName()
-                                + " due to higher ranking " );
-                    } else {
-                        osgiManager.log(LogService.LOG_WARNING, "Ignoring new plugin " + plugin.doGetConsolePlugin().getClass().getName()
-                                + " having existing label " + key + " due to lower ranking than old plugin " +  oldPlugin.doGetConsolePlugin().getClass().getName() );
-                        return oldPlugin;
-                    }
+    private List<Plugin> getPlugins() {
+        final List<Plugin> plugins = new ArrayList<>();
+        synchronized ( plugins ) {
+            for(final List<Plugin> c : this.plugins.values()) {
+                if ( !c.isEmpty() ) {
+                    plugins.add(c.get(0));
                 }
-                return plugin;
-            });
-            plugins.put( label, plugin );
+            }
         }
+        return plugins;
+    }
+
+    //---------- ServiceTrackerCustomizer
+
+    @Override
+    public Plugin addingService(final ServiceReference<Servlet> reference) {
+        Plugin plugin = null;
+        final String label = getProperty( reference, WebConsoleConstants.PLUGIN_LABEL );
+        if ( label != null ) {
+            plugin = new ServletPlugin( this, reference, label );
+            addPlugin( plugin );
+        }
+        return plugin;
     }
 
 
-    private void removePlugin( final String label )
-    {
-        final Plugin oldPlugin;
-        synchronized ( plugins )
-        {
-            oldPlugin = plugins.remove( label );
-        }
-
-        if ( oldPlugin != null )
-        {
-            oldPlugin.dispose();
-        }
+    @Override
+    public void modifiedService(final ServiceReference<Servlet> reference, final Plugin plugin) {
+        removedService( reference, plugin );
+        addingService(reference);
     }
 
 
-    private Plugin[] getPlugins()
-    {
-        synchronized ( plugins )
-        {
-            return plugins.values().toArray( new Plugin[plugins.size()] );
+    @Override
+    public void removedService(final ServiceReference<Servlet> reference, final Plugin plugin) {
+        removePlugin( plugin );
+    }
+
+    private void addPlugin( final Plugin plugin ) {
+        synchronized ( plugins ) {
+            final List<Plugin> list = plugins.computeIfAbsent(plugin.getLabel(), k -> new ArrayList<>());
+            final Plugin oldPlugin = list.isEmpty() ? null : list.get(0);
+            list.add(plugin);
+            Collections.sort(list);
+            Collections.reverse(list);
+            final Plugin first = list.get(0);
+            if (first == plugin && oldPlugin != null) {
+                osgiManager.log(LogService.LOG_WARNING, "Overwriting existing plugin " + oldPlugin.getId() 
+                        + " having label " + plugin.getLabel() + " with new plugin " + plugin.getId()
+                        + " due to higher ranking " );
+                oldPlugin.dispose();
+            }
+            if (first == oldPlugin) {
+                osgiManager.log(LogService.LOG_WARNING, "Ignoring new plugin " + plugin.getId()
+                        + " having existing label " + plugin.getLabel() + " due to lower ranking than old plugin " + oldPlugin.getId() );
+            }
         }
     }
 
+    private void removePlugin( final Plugin plugin ) {
+        synchronized ( plugins ) {
+            final List<Plugin> list = plugins.get( plugin.getLabel() );
+            if ( list != null ) {
+                list.remove( plugin );
+                if ( list.isEmpty() ) {
+                    plugins.remove( plugin.getLabel() );
+                }
+            }
+            plugin.dispose();
+        }
+    }
 
-    static String getProperty( final ServiceReference<?> service, final String propertyName )
-    {
+    static String getProperty( final ServiceReference<?> service, final String propertyName ) {
         final Object property = service.getProperty( propertyName );
-        if ( property instanceof String )
-        {
+        if ( property instanceof String ) {
             return ( String ) property;
         }
-
         return null;
     }
 
-    private abstract static class Plugin implements ServletConfig, Comparable<Plugin>
-    {
-        private final PluginHolder holder;
-        protected final ServiceReference<?> serviceReference; // used for comparing conflicting services
-        private final String label;
-        private String title;
+    private static class ServletPlugin extends Plugin {
 
-        protected Plugin( final PluginHolder holder, final ServiceReference<?> serviceReference, final String label )
-        {
-            this.holder = holder;
-            this.serviceReference = serviceReference;
-            this.label = label;
-        }
-
-
-        void init() throws ServletException {
-        }
-
-        void destroy()
-        {
-        }
-
-        /**
-         * Cleans up this plugin when it is not used any longer. This means
-         * destroying the plugin servlet and, if it was registered as an OSGi
-         * service, ungetting the service.
-         */
-        final void dispose()
-        {
-        }
-
-        @Override
-        public int compareTo(Plugin other)
-        {
-            // serviceReference = null means internal (i.e. service.ranking=0 and service.id=0)
-            // mostly a copy from org.apache.felix.framework.ServiceRegistrationImpl.ServiceReferenceImpl
-
-            Long id = serviceReference != null ? (Long) serviceReference.getProperty(Constants.SERVICE_ID) : 0;
-            Long otherId = other.serviceReference != null ? (Long) other.serviceReference.getProperty(Constants.SERVICE_ID) : 0;
-
-            if (id.equals(otherId))
-            {
-                return 0; // same service
-            }
-
-            Object rankObj = serviceReference != null ? serviceReference.getProperty(Constants.SERVICE_RANKING) : null;
-            Object otherObj = other.serviceReference != null ? other.serviceReference.getProperty(Constants.SERVICE_RANKING) : null;
-
-            // If no rank, then spec says it defaults to zero.
-            rankObj = (rankObj == null) ? new Integer(0) : rankObj;
-            otherObj = (otherObj == null) ? new Integer(0) : otherObj;
-
-            // If rank is not Integer, then spec says it defaults to zero.
-            Integer rank = (rankObj instanceof Integer)
-                ? (Integer) rankObj : new Integer(0);
-            Integer otherRank = (otherObj instanceof Integer)
-                ? (Integer) otherObj : new Integer(0);
-
-            // Sort by rank in ascending order.
-            if (rank.compareTo(otherRank) < 0)
-            {
-                return -1; // lower rank
-            }
-            else if (rank.compareTo(otherRank) > 0)
-            {
-                return 1; // higher rank
-            }
-
-            // If ranks are equal, then sort by service id in descending order.
-            return (id.compareTo(otherId) < 0) ? 1 : -1;
-        }
-
-
-        protected PluginHolder getHolder()
-        {
-            return holder;
-        }
-
-
-        Bundle getBundle()
-        {
-            return getHolder().getBundleContext().getBundle();
-        }
-
-
-        final String getLabel()
-        {
-            return label;
-        }
-
-
-        protected void setTitle( String title )
-        {
-            this.title = title;
-        }
-
-
-        final String getTitle()
-        {
-            if ( title == null )
-            {
-                final String title = doGetTitle();
-                this.title = ( title == null ) ? getLabel() : title;
-            }
-            return title;
-        }
-
-        protected String doGetTitle()
-        {
-            // get the service now
-            final AbstractWebConsolePlugin consolePlugin = getConsolePlugin();
-
-            // reset the title:
-            // - null if the servlet cannot be loaded
-            // - to the servlet's actual title if the servlet is loaded
-            return ( consolePlugin != null ) ? consolePlugin.getTitle() : null;
-        }
-
-        // methods added to support categories
-
-        final String getCategory() {
-        	return doGetCategory();
-        }
-
-        protected String doGetCategory() {
-        	// get the service now
-            final AbstractWebConsolePlugin consolePlugin = getConsolePlugin();
-            return ( consolePlugin != null ) ? consolePlugin.getCategory() : null;
-        }
-
-        final AbstractWebConsolePlugin getConsolePlugin()
-        {
-            final AbstractWebConsolePlugin consolePlugin = doGetConsolePlugin();
-            if ( consolePlugin != null )
-            {
-                try
-                {
-                    init();
-                }
-                catch ( ServletException se )
-                {
-                    // TODO: log
-                }
-            } else {
-                // TODO: log !!
-            }
-            return consolePlugin;
-        }
-
-        protected boolean isEnabled() {
-            return true;
-        }
-
-        protected abstract AbstractWebConsolePlugin doGetConsolePlugin();
-
-
-        protected void doUngetConsolePlugin( AbstractWebConsolePlugin consolePlugin )
-        {
-        }
-
-
-        //---------- ServletConfig interface
-
-        public String getInitParameter( String name )
-        {
-            return null;
-        }
-
-
-        public Enumeration<?> getInitParameterNames()
-        {
-            return new Enumeration<Object>()
-            {
-                public boolean hasMoreElements()
-                {
-                    return false;
-                }
-
-
-                public Object nextElement()
-                {
-                    throw new NoSuchElementException();
-                }
-            };
-        }
-
-
-        public ServletContext getServletContext()
-        {
-            return getHolder().getServletContext();
-        }
-
-
-        public String getServletName()
-        {
-            return getTitle();
-        }
-
-
-    }
-
-    private static class ServletPlugin extends Plugin
-    {
-
-        ServletPlugin( final PluginHolder holder, final ServiceReference<?> serviceReference, final String label )
-        {
+        ServletPlugin( final PluginHolder holder, final ServiceReference<Servlet> serviceReference, final String label ) {
             super(holder, serviceReference, label);
         }
 
-        Bundle getBundle()
-        {
-            return serviceReference.getBundle();
+        public String getId() {
+            return this.getServiceReference().toString();
         }
-
 
         protected String doGetTitle() {
             // check service Reference
-            final String title = getProperty( serviceReference, WebConsoleConstants.PLUGIN_TITLE );
-            if ( title != null )
-            {
+            final String title = getProperty( this.getServiceReference(), WebConsoleConstants.PLUGIN_TITLE );
+            if ( title != null ) {
                 return title;
             }
 
@@ -705,28 +419,22 @@ class PluginHolder implements ServiceListener
         // added to support categories
         protected String doGetCategory() {
             // check service Reference
-            final String category = getProperty( serviceReference, WebConsoleConstants.PLUGIN_CATEGORY );
-            if ( category != null )
-            {
+            final String category = getProperty( this.getServiceReference(), WebConsoleConstants.PLUGIN_CATEGORY );
+            if ( category != null ) {
                 return category;
             }
 
             return super.doGetCategory();
         }
 
-        protected AbstractWebConsolePlugin doGetConsolePlugin()
-        {
-            Object service = getHolder().getBundleContext().getService( serviceReference );
-            if ( service instanceof Servlet )
-            {
+        protected AbstractWebConsolePlugin doGetConsolePlugin() {
+            final Servlet service = getHolder().getBundleContext().getService( this.getServiceReference() );
+            if ( service != null ) {
                 final AbstractWebConsolePlugin servlet;
-                if ( service instanceof AbstractWebConsolePlugin )
-                {
+                if ( service instanceof AbstractWebConsolePlugin ) {
                     servlet = ( AbstractWebConsolePlugin ) service;
-                }
-                else
-                {
-                    servlet = new WebConsolePluginAdapter( getLabel(), ( Servlet ) service, serviceReference );
+                } else {
+                    servlet = new WebConsolePluginAdapter( getLabel(), service, this.getServiceReference() );
                 }
 
                 return servlet;
@@ -734,65 +442,60 @@ class PluginHolder implements ServiceListener
             return null;
         }
 
-        protected void doUngetConsolePlugin( AbstractWebConsolePlugin consolePlugin )
-        {
-            getHolder().getBundleContext().ungetService( serviceReference );
+        protected void doUngetConsolePlugin( AbstractWebConsolePlugin consolePlugin ) {
+            try {
+                getHolder().getBundleContext().ungetService( this.getServiceReference() );
+            } catch ( final IllegalStateException ise ) {
+                // ignore - bundle context is no longer valid
+            }
         }
 
         //---------- ServletConfig overwrite (based on ServletReference)
 
-        public String getInitParameter( String name )
-        {
-            Object property = serviceReference.getProperty( name );
-            if ( property != null && !property.getClass().isArray() )
-            {
+        @Override
+        public String getInitParameter( final String name ) {
+            Object property = this.getServiceReference().getProperty( name );
+            if ( property != null && !property.getClass().isArray() ) {
                 return property.toString();
             }
 
             return super.getInitParameter( name );
         }
 
-
-        public Enumeration<?> getInitParameterNames()
-        {
-            final String[] keys = serviceReference.getPropertyKeys();
-            return new Enumeration<Object>()
-            {
+        @Override
+        public Enumeration<?> getInitParameterNames() {
+            final String[] keys = this.getServiceReference().getPropertyKeys();
+            return new Enumeration<Object>() {
                 int idx = 0;
 
-
-                public boolean hasMoreElements()
-                {
+                public boolean hasMoreElements() {
                     return idx < keys.length;
                 }
 
-
-                public Object nextElement()
-                {
-                    if ( hasMoreElements() )
-                    {
+                public Object nextElement() {
+                    if ( hasMoreElements() ) {
                         return keys[idx++];
                     }
                     throw new NoSuchElementException();
                 }
-
             };
         }
-
     }
 
-    static class InternalPlugin extends Plugin
-    {
-        final String pluginClassName;
-        final OsgiManager osgiManager;
-        AbstractWebConsolePlugin plugin;
-        boolean doLog = true;
+    static class InternalPlugin extends Plugin {
 
-        protected InternalPlugin(PluginHolder holder, OsgiManager osgiManager, String pluginClassName, String label)
-        {
+        private final String pluginClassName;
+        private final OsgiManager osgiManager;
+        private volatile boolean doLog = true;
+
+        protected InternalPlugin(PluginHolder holder, OsgiManager osgiManager, String pluginClassName, String label) {
             super(holder, null, label);
             this.osgiManager = osgiManager;
             this.pluginClassName = pluginClassName;
+        }
+
+        public String getId() {
+            return this.pluginClassName;
         }
 
         protected final boolean isEnabled() {
@@ -800,53 +503,39 @@ class PluginHolder implements ServiceListener
             return !osgiManager.isPluginDisabled(pluginClassName);
         }
 
-        protected AbstractWebConsolePlugin doGetConsolePlugin()
-        {
-            if (null == plugin) {
-                if (!isEnabled())
-                {
-                    if (doLog)
-                    {
-                        osgiManager.log( LogService.LOG_INFO, "Ignoring plugin " + pluginClassName + ": Disabled by configuration" );
-                        doLog = false;
-                    }
-                    return null;
+        protected AbstractWebConsolePlugin doGetConsolePlugin() {
+            if (!isEnabled()) {
+                if (doLog) {
+                    osgiManager.log( LogService.LOG_INFO, "Ignoring plugin " + pluginClassName + ": Disabled by configuration" );
+                    doLog = false;
                 }
+                return null;
+            }
 
-                try
-                {
-                    Class<?> pluginClass = getClass().getClassLoader().loadClass(pluginClassName);
-                    plugin = (AbstractWebConsolePlugin) pluginClass.newInstance();
+            AbstractWebConsolePlugin plugin = null;
+            try {
+                Class<?> pluginClass = getClass().getClassLoader().loadClass(pluginClassName);
+                plugin = (AbstractWebConsolePlugin) pluginClass.getDeclaredConstructor().newInstance();
 
-                    if (plugin instanceof OsgiManagerPlugin)
-                    {
-                        ((OsgiManagerPlugin) plugin).activate(getBundle().getBundleContext());
-                    }
-                    doLog = true; // reset logging if it succeeded
+                if (plugin instanceof OsgiManagerPlugin) {
+                    ((OsgiManagerPlugin) plugin).activate(osgiManager.getBundleContext());
                 }
-                catch (Throwable t)
-                {
-                    plugin = null; // in case only activate has faled!
-                    if (doLog)
-                    {
-                        osgiManager.log( LogService.LOG_WARNING, "Failed to instantiate plugin " + pluginClassName, t );
-                        doLog = false;
-                    }
+                doLog = true; // reset logging if it succeeded
+            } catch (final Throwable t) {
+                plugin = null; // in case only activate has faled!
+                if (doLog) {
+                    osgiManager.log( LogService.LOG_WARNING, "Failed to instantiate plugin " + pluginClassName, t );
+                    doLog = false;
                 }
             }
 
             return plugin;
         }
 
-        protected void doUngetConsolePlugin(AbstractWebConsolePlugin consolePlugin)
-        {
-            if (consolePlugin == plugin) plugin = null;
-            if (consolePlugin instanceof OsgiManagerPlugin)
-            {
-                ((OsgiManagerPlugin) consolePlugin).deactivate();
+        protected void doUngetConsolePlugin(final AbstractWebConsolePlugin plugin) {
+            if (plugin instanceof OsgiManagerPlugin) {
+                ((OsgiManagerPlugin) plugin).deactivate();
             }
-            super.doUngetConsolePlugin(consolePlugin);
         }
-
     }
 }
