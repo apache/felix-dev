@@ -415,16 +415,15 @@ class PluginHolder implements ServiceTrackerCustomizer<Servlet, Plugin> {
         protected AbstractWebConsolePlugin doGetConsolePlugin() {
             final Servlet service = getHolder().getBundleContext().getService( this.getServiceReference() );
             if ( service != null ) {
-                String title = null;
+                String title = getProperty( this.getServiceReference(), WebConsoleConstants.PLUGIN_TITLE );
                 final AbstractWebConsolePlugin servlet;
                 if ( service instanceof AbstractWebConsolePlugin ) {
                     servlet = ( AbstractWebConsolePlugin ) service;
-                    title = servlet.getTitle();
+                    if (title == null) {
+                        title = servlet.getTitle();
+                    }
                 } else {
                     servlet = new WebConsolePluginAdapter( getLabel(), service, this.getServiceReference() );
-                }
-                if (title == null) {
-                    title = getProperty( this.getServiceReference(), WebConsoleConstants.PLUGIN_TITLE );
                 }
                 this.setTitle(title);
 
