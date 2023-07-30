@@ -401,21 +401,6 @@ class PluginHolder implements ServiceTrackerCustomizer<Servlet, Plugin> {
             return this.getServiceReference().toString();
         }
 
-        protected String doGetTitle() {
-            // check service Reference
-            final String title = getProperty( this.getServiceReference(), WebConsoleConstants.PLUGIN_TITLE );
-            if ( title != null ) {
-                return title;
-            }
-
-            // temporarily set the title to a non-null value to prevent
-            // recursion issues if this method or the getServletName
-            // method is called while the servlet is being acquired
-            setTitle(getLabel());
-
-            return super.doGetTitle();
-        }
-
         // added to support categories
         protected String doGetCategory() {
             // check service Reference
@@ -430,12 +415,18 @@ class PluginHolder implements ServiceTrackerCustomizer<Servlet, Plugin> {
         protected AbstractWebConsolePlugin doGetConsolePlugin() {
             final Servlet service = getHolder().getBundleContext().getService( this.getServiceReference() );
             if ( service != null ) {
+                String title = null;
                 final AbstractWebConsolePlugin servlet;
                 if ( service instanceof AbstractWebConsolePlugin ) {
                     servlet = ( AbstractWebConsolePlugin ) service;
+                    title = servlet.getTitle();
                 } else {
                     servlet = new WebConsolePluginAdapter( getLabel(), service, this.getServiceReference() );
                 }
+                if (title == null) {
+                    title = getProperty( this.getServiceReference(), WebConsoleConstants.PLUGIN_TITLE );
+                }
+                this.setTitle(title);
 
                 return servlet;
             }
@@ -520,6 +511,7 @@ class PluginHolder implements ServiceTrackerCustomizer<Servlet, Plugin> {
                 if (plugin instanceof OsgiManagerPlugin) {
                     ((OsgiManagerPlugin) plugin).activate(osgiManager.getBundleContext());
                 }
+                this.setTitle(plugin.getTitle());
                 doLog = true; // reset logging if it succeeded
             } catch (final Throwable t) {
                 plugin = null; // in case only activate has faled!

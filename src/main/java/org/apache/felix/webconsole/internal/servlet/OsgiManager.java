@@ -230,7 +230,7 @@ public class OsgiManager extends GenericServlet
 
     private PluginHolder holder;
 
-    private ServiceTracker brandingTracker;
+    private ServiceTracker<BrandingPlugin, BrandingPlugin> brandingTracker;
 
     private ServiceTracker<WebConsoleSecurityProvider, WebConsoleSecurityProvider> securityProviderTracker;
 

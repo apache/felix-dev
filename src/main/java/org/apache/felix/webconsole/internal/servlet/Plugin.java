@@ -119,26 +119,12 @@ public abstract class Plugin implements ServletConfig, Comparable<Plugin> {
         return label;
     }
 
-    protected void setTitle( String title ) {
+    protected void setTitle(final String title ) {
         this.title = title;
     }
 
     public String getTitle() {
-        if ( this.title == null ) {
-            final String v = this.doGetTitle();
-            this.title = ( v == null ) ? this.label : v;
-        }
-        return this.title;
-    }
-
-    protected String doGetTitle() {
-        // get the service now
-        final AbstractWebConsolePlugin plugin = this.getConsolePlugin();
-
-        // reset the title:
-        // - null if the servlet cannot be loaded
-        // - to the servlet's actual title if the servlet is loaded
-        return ( plugin != null ) ? plugin.getTitle() : null;
+        return this.title != null ? this.title : this.getLabel();
     }
 
     // methods added to support categories
