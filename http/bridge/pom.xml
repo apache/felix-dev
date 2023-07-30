@@ -22,14 +22,14 @@
     <parent>
         <groupId>org.apache.felix</groupId>
         <artifactId>org.apache.felix.http.parent</artifactId>
-        <version>15-SNAPSHOT</version>
+        <version>16-SNAPSHOT</version>
         <relativePath>../parent/pom.xml</relativePath>
     </parent>
 
     <name>Apache Felix Http Bridge</name>
     <description>This is an implementation of the OSGi Servlet Service, the OSGi Http Service and the OSGi Http Whiteboard Specification used when run as a web application</description>
     <artifactId>org.apache.felix.http.bridge</artifactId>
-    <version>5.0.5-SNAPSHOT</version>
+    <version>6.0.0-SNAPSHOT</version>
     <packaging>bundle</packaging>
 
     <scm>
@@ -40,7 +40,7 @@
     </scm>
 
     <properties>
-        <felix.java.version>11</felix.java.version>
+        <felix.java.version>17</felix.java.version>
     </properties>
 
     <build>
@@ -72,7 +72,7 @@
                             *
                         </Import-Package>
                         <Provide-Capability>
-                            osgi.implementation;osgi.implementation="osgi.http";version:Version="2.0";
+                            osgi.implementation;osgi.implementation="osgi.http";version:Version="3.0";
                             uses:="jakarta.servlet,jakarta.servlet.http,org.osgi.service.servlet.context,org.osgi.service.servlet.whiteboard",
                             osgi.service;objectClass:List&lt;String&gt;="org.osgi.service.servlet.runtime.HttpServiceRuntime";
                             uses:="org.osgi.service.servlet.runtime,org.osgi.service.servlet.runtime.dto",
@@ -115,17 +115,15 @@
         <dependency>
             <groupId>jakarta.servlet</groupId>
             <artifactId>jakarta.servlet-api</artifactId>
-            <version>5.0.0</version>
         </dependency>
         <dependency>
             <groupId>org.osgi</groupId>
             <artifactId>osgi.core</artifactId>
-            <version>8.0.0</version>
         </dependency>
         <dependency>
             <groupId>org.osgi</groupId>
             <artifactId>org.osgi.service.servlet</artifactId>
-            <version>2.0.0</version>
+            <version>3.0.0-SNAPSHOT</version>
             <scope>provided</scope>
         </dependency>
         <dependency>
@@ -136,7 +134,7 @@
         <dependency>
             <groupId>org.apache.commons</groupId>
             <artifactId>commons-fileupload2-jakarta</artifactId>
-            <version>2.0.0-M1</version>
+            <version>3.0.0-SNAPSHOT</version>
         </dependency>    
         <dependency>
             <groupId>commons-io</groupId>
@@ -146,7 +144,7 @@
         <dependency>
             <groupId>org.apache.felix</groupId>
             <artifactId>org.apache.felix.http.base</artifactId>
-            <version>5.0.3-SNAPSHOT</version>
+            <version>6.0.0-SNAPSHOT</version>
         </dependency>
     </dependencies>
 </project>

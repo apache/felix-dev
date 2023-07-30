@@ -23,12 +23,12 @@
     <parent>
         <groupId>org.apache.felix</groupId>
         <artifactId>felix-parent</artifactId>
-        <version>7</version>
+        <version>8-SNAPSHOT</version>
         <relativePath />
     </parent>
 
     <artifactId>org.apache.felix.healthcheck.webconsoleplugin</artifactId>
-    <version>3.0.0-SNAPSHOT</version>
+    <version>4.0.0-SNAPSHOT</version>
 
     <name>Apache Felix Health Check Webconsole Plugin</name>
     <inceptionYear>2013</inceptionYear>
@@ -38,7 +38,7 @@
     </description>
     
     <properties>
-        <felix.java.version>11</felix.java.version>
+        <felix.java.version>17</felix.java.version>
     </properties>
     <scm>
         <connection>scm:git:https://github.com/apache/felix-dev.git</connection>
@@ -102,7 +102,7 @@
         <dependency>
             <groupId>jakarta.servlet</groupId>
             <artifactId>jakarta.servlet-api</artifactId>
-            <version>5.0.0</version>
+            <version>6.0.0</version>
             <scope>provided</scope>
         </dependency>
         <dependency>
@@ -136,7 +136,7 @@
         <dependency>
             <groupId>org.apache.felix</groupId>
             <artifactId>org.apache.felix.healthcheck.core</artifactId>
-            <version>3.0.0-SNAPSHOT</version>
+            <version>4.0.0-SNAPSHOT</version>
             <scope>test</scope>
         </dependency>
         <!-- END test scope dependencies -->

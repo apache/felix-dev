@@ -20,11 +20,11 @@ import static org.mockito.Mockito.times;
 
 import java.io.IOException;
 
-import jakarta.servlet.http.Cookie;
-import jakarta.servlet.http.HttpServletResponse;
-
 import org.junit.Test;
 import org.mockito.Mockito;
+
+import jakarta.servlet.http.Cookie;
+import jakarta.servlet.http.HttpServletResponse;
 
 public class IncludeResponseWrapperTest {
 
@@ -76,13 +76,11 @@ public class IncludeResponseWrapperTest {
         Mockito.verifyNoInteractions(orig);
     }
 
-    @Deprecated
     @Test public void testSetStatus() {
         final HttpServletResponse orig = Mockito.mock(HttpServletResponse.class);
         final HttpServletResponse include = new IncludeResponseWrapper(orig);
 
         include.setStatus(500);
-        include.setStatus(500, "Error");
 
         Mockito.verifyNoInteractions(orig);
     }

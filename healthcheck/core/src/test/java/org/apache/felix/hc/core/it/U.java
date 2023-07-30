@@ -39,6 +39,7 @@ import org.apache.felix.hc.api.execution.HealthCheckExecutor;
 import org.apache.felix.hc.api.execution.HealthCheckSelector;
 import org.ops4j.pax.exam.CoreOptions;
 import org.ops4j.pax.exam.Option;
+import org.ops4j.pax.exam.options.DefaultCompositeOption;
 import org.osgi.framework.ServiceReference;
 
 /** Test utilities */
@@ -81,9 +82,9 @@ public class U {
                 provision(
                         bundle(bundleFile.toURI().toString()),
                         
-                        mavenBundle("org.osgi", "org.osgi.service.servlet", "2.0.0"),
+                        mavenBundle("org.osgi", "org.osgi.service.servlet").versionAsInProject(),
                         
-                        mavenBundle("org.osgi", "org.osgi.service.component", "1.5.1"),
+                        mavenBundle("org.osgi", "org.osgi.service.component").versionAsInProject(),
                         
                         mavenBundle("org.osgi", "org.osgi.util.promise").versionAsInProject(),
                         
@@ -103,7 +104,7 @@ public class U {
                         
                         mavenBundle("org.apache.felix", "org.apache.felix.http.jetty").versionAsInProject(),
                         
-                        mavenBundle("org.apache.felix", "org.apache.felix.http.sslfilter", "3.0.0-SNAPSHOT"),                        
+                        mavenBundle("org.apache.felix", "org.apache.felix.http.sslfilter").versionAsInProject(),
 
                         // javax annotation
                         mavenBundle("org.apache.geronimo.specs", "geronimo-annotation_1.3_spec", "1.3"),
@@ -113,10 +114,29 @@ public class U {
                         mavenBundle("jakarta.xml.bind", "jakarta.xml.bind-api", "2.3.2"),
                         mavenBundle("com.sun.activation", "jakarta.activation", "1.2.1")
                         
-                        )
+                        ),
+                
+                jpmsOptions()
                 );
     }
-    
+
+    // adopted from org.apache.jackrabbit.oak.osgi.OSGiIT
+    private static Option jpmsOptions(){
+        DefaultCompositeOption composite = new DefaultCompositeOption();
+        composite.add(vmOption("--add-opens=java.base/jdk.internal.loader=ALL-UNNAMED"));
+        composite.add(vmOption("--add-opens=java.base/java.lang=ALL-UNNAMED"));
+        composite.add(vmOption("--add-opens=java.base/java.lang.invoke=ALL-UNNAMED"));
+        composite.add(vmOption("--add-opens=java.base/java.io=ALL-UNNAMED"));
+        composite.add(vmOption("--add-opens=java.base/java.net=ALL-UNNAMED"));
+        composite.add(vmOption("--add-opens=java.base/java.nio=ALL-UNNAMED"));
+        composite.add(vmOption("--add-opens=java.base/java.util=ALL-UNNAMED"));
+        composite.add(vmOption("--add-opens=java.base/java.util.jar=ALL-UNNAMED"));
+        composite.add(vmOption("--add-opens=java.base/java.util.regex=ALL-UNNAMED"));
+        composite.add(vmOption("--add-opens=java.base/java.util.zip=ALL-UNNAMED"));
+        composite.add(vmOption("--add-opens=java.base/sun.nio.ch=ALL-UNNAMED"));
+        return composite;
+    }
+
     // -- util methods
     
     /** Wait until the specified number of health checks are seen by supplied executor */

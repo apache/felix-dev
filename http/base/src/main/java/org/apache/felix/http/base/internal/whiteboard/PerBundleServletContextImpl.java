@@ -220,38 +220,10 @@ public class PerBundleServletContextImpl implements ExtServletContext {
         return delegatee.getNamedDispatcher(name);
     }
 
-    @SuppressWarnings("deprecation")
-    @Override
-    public Servlet getServlet(String name) throws ServletException
-    {
-        return delegatee.getServlet(name);
-    }
-
-    @SuppressWarnings("deprecation")
-    @Override
-    public Enumeration<Servlet> getServlets()
-    {
-        return delegatee.getServlets();
-    }
-
-    @SuppressWarnings("deprecation")
-    @Override
-    public Enumeration<String> getServletNames()
-    {
-        return delegatee.getServletNames();
-    }
-
     @Override
     public void log(String msg)
     {
         delegatee.log(msg);
-    }
-
-    @SuppressWarnings("deprecation")
-    @Override
-    public void log(Exception exception, String msg)
-    {
-        delegatee.log(exception, msg);
     }
 
     @Override

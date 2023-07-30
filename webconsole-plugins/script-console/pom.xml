@@ -22,13 +22,13 @@
   <parent>
     <groupId>org.apache.felix</groupId>
     <artifactId>felix-parent</artifactId>
-    <version>7</version>
+    <version>8-SNAPSHOT</version>
     <relativePath>../../pom/pom.xml</relativePath>
   </parent>
 
   <artifactId>org.apache.felix.webconsole.plugins.scriptconsole</artifactId>
   <packaging>bundle</packaging>
-  <version>2.0.0-SNAPSHOT</version>
+  <version>3.0.0-SNAPSHOT</version>
 
   <name>Apache Felix Script Console Plugin</name>
   <description>
@@ -44,7 +44,7 @@
     <bundle.file.name>
       ${bundle.build.name}/${project.build.finalName}.jar
     </bundle.file.name>
-    <felix.java.version>11</felix.java.version>
+    <felix.java.version>17</felix.java.version>
   </properties>
 
   <scm>
@@ -69,7 +69,7 @@
                             ${project.artifactId}
                         </Bundle-SymbolicName>
                         <Import-Package>
-                           jakarta.servlet.*;version="[5.0,6)",
+                           jakarta.servlet.*;version="[6.0,7)",
                            org.apache.commons.io; version="[1.4,3)",
                            *
                         </Import-Package>
@@ -177,7 +177,7 @@
     <dependency>
       <groupId>jakarta.servlet</groupId>
       <artifactId>jakarta.servlet-api</artifactId>
-      <version>5.0.0</version>
+      <version>6.0.0</version>
       <scope>provided</scope>
     </dependency>
     <dependency>
@@ -189,7 +189,7 @@
     <dependency>
       <groupId>org.apache.felix</groupId>
       <artifactId>org.apache.felix.webconsole</artifactId>
-      <version>5.0.0-SNAPSHOT</version>
+      <version>6.0.0-SNAPSHOT</version>
       <scope>provided</scope>
     </dependency>
     <dependency>
@@ -207,7 +207,7 @@
     <dependency>
       <groupId>org.apache.commons</groupId>
       <artifactId>commons-fileupload2-jakarta</artifactId>
-      <version>2.0.0-M1</version>
+      <version>3.0.0-SNAPSHOT</version>
       <scope>provided</scope>
     </dependency>
 
@@ -264,7 +264,7 @@
     <dependency>
       <groupId>org.apache.felix</groupId>
       <artifactId>org.apache.felix.http.jetty</artifactId>
-      <version>5.0.5-SNAPSHOT</version>
+      <version>6.0.0-SNAPSHOT</version>
       <scope>test</scope>
     </dependency>
     <dependency>

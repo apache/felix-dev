@@ -22,7 +22,7 @@
     <parent>
         <groupId>org.apache.felix</groupId>
         <artifactId>org.apache.felix.http.parent</artifactId>
-        <version>15-SNAPSHOT</version>
+        <version>16-SNAPSHOT</version>
         <relativePath>../parent/pom.xml</relativePath>
     </parent>
 
@@ -30,7 +30,7 @@
     <description>This is an implementation of the R8.1 OSGi Servlet Service, the R7 OSGi Http Service and the R7 OSGi Http Whiteboard Specification</description>
 
     <artifactId>org.apache.felix.http.jetty</artifactId>
-    <version>5.0.5-SNAPSHOT</version>
+    <version>6.0.0-SNAPSHOT</version>
     <packaging>bundle</packaging>
 
     <scm>
@@ -41,8 +41,8 @@
     </scm>
 
     <properties>
-        <felix.java.version>11</felix.java.version>
-        <jetty.version>11.0.15</jetty.version>
+        <felix.java.version>17</felix.java.version>
+        <jetty.version>12.0.0.beta4</jetty.version>
     </properties>
 
     <build>
@@ -191,14 +191,14 @@
                             org.osgi.service.metatype;version="[1.4,2)"
                         </DynamicImport-Package>
                         <Provide-Capability>
-                            osgi.implementation;osgi.implementation="osgi.http";version:Version="2.0";
+                            osgi.implementation;osgi.implementation="osgi.http";version:Version="3.0";
                             uses:="jakarta.servlet,jakarta.servlet.http,org.osgi.service.servlet.context,org.osgi.service.servlet.whiteboard",
                             osgi.service;objectClass:List&lt;String&gt;="org.osgi.service.servlet.runtime.HttpServiceRuntime";
                             uses:="org.osgi.service.servlet.runtime,org.osgi.service.servlet.runtime.dto",
                             osgi.serviceloader;osgi.serviceloader="org.eclipse.jetty.http.HttpFieldPreEncoder"
                         </Provide-Capability>
                         <Require-Capability>
-                            osgi.contract;filter:="(&amp;(osgi.contract=JakartaServlet)(version=5.0))",
+                            osgi.contract;filter:="(&amp;(osgi.contract=JakartaServlet)(version=6.0))",
                             osgi.extender;filter:="(osgi.extender=osgi.serviceloader.registrar)";resolution:=optional,
                             osgi.extender;filter:="(osgi.extender=osgi.serviceloader.processor)";resolution:=optional,
                             osgi.serviceloader;filter:="(osgi.serviceloader=org.eclipse.jetty.http.HttpFieldPreEncoder)";resolution:=optional;cardinality:=multiple,
@@ -248,14 +248,14 @@
                                 </Import-Package>
                                 <!-- We need to override this from the base configuration to exclude the ServiceLoader capabilities -->
                                 <Provide-Capability>
-                                    osgi.implementation;osgi.implementation="osgi.http";version:Version="2.0";
+                                    osgi.implementation;osgi.implementation="osgi.http";version:Version="3.0";
                                     uses:="jakarta.servlet,jakarta.servlet.http,org.osgi.service.servlet.context,org.osgi.service.servlet.whiteboard",
                                     osgi.service;objectClass:List&lt;String&gt;="org.osgi.service.servlet.runtime.HttpServiceRuntime";
                                     uses:="org.osgi.service.servlet.runtime,org.osgi.service.servlet.runtime.dto",
                                 </Provide-Capability>
                                 <!-- We need to override this from the base configuration to exclude the ServiceLoader capabilities -->
                                 <Require-Capability>
-                                  osgi.contract;filter:="(&amp;(osgi.contract=JakartaServlet)(version=5.0))"
+                                  osgi.contract;filter:="(&amp;(osgi.contract=JakartaServlet)(version=6.0))"
                                 </Require-Capability>
                                 <!-- We need to override this from the base configuration to exclude the ServiceLoader resources -->
                                 <Include-Resource>
@@ -302,8 +302,8 @@
             <scope>provided</scope>
         </dependency>
         <dependency>
-            <groupId>org.eclipse.jetty</groupId>
-            <artifactId>jetty-servlet</artifactId>
+            <groupId>org.eclipse.jetty.ee10</groupId>
+            <artifactId>jetty-ee10-servlet</artifactId>
             <version>${jetty.version}</version>
         </dependency>
         <dependency>
@@ -333,17 +333,17 @@
         </dependency>
         <dependency>
             <groupId>org.eclipse.jetty.http2</groupId>
-            <artifactId>http2-server</artifactId>
+            <artifactId>jetty-http2-server</artifactId>
             <version>${jetty.version}</version>
         </dependency>
         <dependency>
             <groupId>org.eclipse.jetty.http2</groupId>
-            <artifactId>http2-common</artifactId>
+            <artifactId>jetty-http2-common</artifactId>
             <version>${jetty.version}</version>
         </dependency>
         <dependency>
             <groupId>org.eclipse.jetty.http2</groupId>
-            <artifactId>http2-hpack</artifactId>
+            <artifactId>jetty-http2-hpack</artifactId>
             <version>${jetty.version}</version>
         </dependency>
         <dependency>
@@ -351,16 +351,21 @@
             <artifactId>jetty-alpn-server</artifactId>
             <version>${jetty.version}</version>
         </dependency>
-       <dependency>
+        <dependency>
+            <groupId>org.eclipse.jetty</groupId>
+            <artifactId>jetty-session</artifactId>
+            <version>${jetty.version}</version>
+        </dependency>
+        <dependency>
             <groupId>org.osgi</groupId>
             <artifactId>org.osgi.service.servlet</artifactId>
-            <version>2.0.0</version>
+            <version>3.0.0-SNAPSHOT</version>
             <scope>provided</scope>
         </dependency>
         <dependency>
             <groupId>org.apache.felix</groupId>
             <artifactId>org.apache.felix.http.base</artifactId>
-            <version>5.0.3-SNAPSHOT</version>
+            <version>6.0.0-SNAPSHOT</version>
         </dependency>
         <dependency>
             <groupId>org.apache.commons</groupId>
@@ -370,7 +375,7 @@
         <dependency>
             <groupId>org.apache.commons</groupId>
             <artifactId>commons-fileupload2-jakarta</artifactId>
-            <version>2.0.0-M1</version>
+            <version>3.0.0-SNAPSHOT</version>
         </dependency>        
         <dependency>
             <groupId>commons-io</groupId>

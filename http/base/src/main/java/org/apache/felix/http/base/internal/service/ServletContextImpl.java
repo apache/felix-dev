@@ -346,21 +346,9 @@ public class ServletContextImpl implements ExtServletContext
     }
 
     @Override
-    public Servlet getServlet(String name) throws ServletException
-    {
-        return this.context.getServlet(name);
-    }
-
-    @Override
     public String getServletContextName()
     {
         return HttpWhiteboardConstants.HTTP_WHITEBOARD_DEFAULT_CONTEXT_NAME;
-    }
-
-    @Override
-    public Enumeration<String> getServletNames()
-    {
-        return this.context.getServletNames();
     }
 
     @Override
@@ -373,12 +361,6 @@ public class ServletContextImpl implements ExtServletContext
     public Map<String, ? extends ServletRegistration> getServletRegistrations()
     {
         return this.context.getServletRegistrations();
-    }
-
-    @Override
-    public Enumeration<Servlet> getServlets()
-    {
-        return this.context.getServlets();
     }
 
     @Override
@@ -420,12 +402,6 @@ public class ServletContextImpl implements ExtServletContext
     @Override
     public void finishSecurity(HttpServletRequest req, HttpServletResponse res) {
         // nothing to do
-    }
-
-    @Override
-    public void log(Exception cause, String message)
-    {
-        SystemLogger.LOGGER.error(message, cause);
     }
 
     @Override

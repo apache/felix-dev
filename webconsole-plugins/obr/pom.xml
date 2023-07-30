@@ -14,13 +14,13 @@
 	<parent>
 		<groupId>org.apache.felix</groupId>
 		<artifactId>felix-parent</artifactId>
-		<version>7</version>
+		<version>8-SNAPSHOT</version>
 		<relativePath>../../../pom/pom.xml</relativePath>
 	</parent>
 
 	<artifactId>org.apache.felix.webconsole.plugins.obr</artifactId>
 	<packaging>bundle</packaging>
-	<version>2.0.0-SNAPSHOT</version>
+	<version>3.0.0-SNAPSHOT</version>
 
 	<name>Apache Felix Web Console OBR Plugin</name>
 	<description>
@@ -34,7 +34,7 @@
 	</scm>
 
     <properties>
-        <felix.java.version>11</felix.java.version>
+        <felix.java.version>17</felix.java.version>
     </properties>
 
 	<build>
@@ -102,7 +102,7 @@
         <dependency>
             <groupId>jakarta.servlet</groupId>
             <artifactId>jakarta.servlet-api</artifactId>
-            <version>5.0.0</version>
+            <version>6.0.0</version>
             <scope>provided</scope>
         </dependency>
 		<dependency>
@@ -120,7 +120,7 @@
 		<dependency>
 			<groupId>org.apache.felix</groupId>
 			<artifactId>org.apache.felix.webconsole</artifactId>
-			<version>5.0.0-SNAPSHOT</version>
+			<version>6.0.0-SNAPSHOT</version>
 			<scope>provided</scope>
 		</dependency>
 

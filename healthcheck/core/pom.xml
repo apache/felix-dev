@@ -23,12 +23,12 @@
     <parent>
         <groupId>org.apache.felix</groupId>
         <artifactId>felix-parent</artifactId>
-        <version>7</version>
+        <version>8-SNAPSHOT</version>
         <relativePath />
     </parent>
 
     <artifactId>org.apache.felix.healthcheck.core</artifactId>
-    <version>3.0.0-SNAPSHOT</version>
+    <version>4.0.0-SNAPSHOT</version>
 
     <name>Apache Felix Health Check Core</name>
     <inceptionYear>2013</inceptionYear>
@@ -38,7 +38,7 @@
     </description>
 
     <properties>
-        <felix.java.version>11</felix.java.version>
+        <felix.java.version>17</felix.java.version>
         <pax-exam.version>4.13.4</pax-exam.version>
         <pax-link.version>2.6.7</pax-link.version>        
         <org.ops4j.pax.logging.DefaultServiceLog.level>INFO</org.ops4j.pax.logging.DefaultServiceLog.level>
@@ -80,7 +80,7 @@
             <plugin>
                 <groupId>org.jacoco</groupId>
                 <artifactId>jacoco-maven-plugin</artifactId>
-                <version>0.8.2</version>
+                <version>0.8.10</version>
                 <executions>
                     <execution>
                         <id>prepare-agent-integration</id>
@@ -124,6 +124,7 @@
                         <coverage.command>${coverage.command}</coverage.command>
                         <project.bundle.file>${project.bundle.file}</project.bundle.file>
                     </systemProperties>
+                    <useModulePath>false</useModulePath>
                 </configuration>
             </plugin>
         </plugins>
@@ -181,7 +182,7 @@
         <dependency>
             <groupId>org.osgi</groupId>
             <artifactId>org.osgi.service.servlet</artifactId>
-            <version>2.0.0</version>
+            <version>3.0.0-SNAPSHOT</version>
             <scope>provided</scope>
         </dependency>
         <dependency>
@@ -199,7 +200,7 @@
         <dependency>
             <groupId>jakarta.servlet</groupId>
             <artifactId>jakarta.servlet-api</artifactId>
-            <version>5.0.0</version>
+            <version>6.0.0</version>
             <scope>provided</scope>
             <!-- servlet api optional: only add configs for servlets/filters your setup includes the servlet runtime! -->
             <optional>true</optional>
@@ -285,16 +286,22 @@
         <dependency>
             <groupId>org.apache.felix</groupId>
             <artifactId>org.apache.felix.http.servlet-api</artifactId>
-            <version>3.0.0-SNAPSHOT</version>
+            <version>4.0.0-SNAPSHOT</version>
             <scope>test</scope>
         </dependency>
         <dependency>
             <groupId>org.apache.felix</groupId>
             <artifactId>org.apache.felix.http.jetty</artifactId>
-            <version>5.0.5-SNAPSHOT</version>
+            <version>6.0.0-SNAPSHOT</version>
             <scope>test</scope>
         </dependency>
-                
+        <dependency>
+            <groupId>org.apache.felix</groupId>
+            <artifactId>org.apache.felix.http.sslfilter</artifactId>
+            <version>4.0.0-SNAPSHOT</version>
+            <scope>test</scope>
+        </dependency>
+
         <!-- END test scope dependencies -->
 
     </dependencies>

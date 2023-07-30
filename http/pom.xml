@@ -22,14 +22,13 @@
     <parent>
         <groupId>org.apache.felix</groupId>
         <artifactId>felix-parent</artifactId>
-        <version>7</version>
+        <version>8-SNAPSHOT</version>
         <relativePath>../pom/pom.xml</relativePath>
     </parent>
 
     <name>Apache Felix Http Reactor</name>
-    <groupId>org.apache.felix</groupId>
     <artifactId>org.apache.felix.http</artifactId>
-    <version>7-SNAPSHOT</version>
+    <version>8-SNAPSHOT</version>
     <packaging>pom</packaging>
 
     <scm>

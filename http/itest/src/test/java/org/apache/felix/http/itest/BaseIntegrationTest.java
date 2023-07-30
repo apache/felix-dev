@@ -50,6 +50,7 @@ import org.junit.After;
 import org.junit.Before;
 import org.ops4j.pax.exam.Configuration;
 import org.ops4j.pax.exam.Option;
+import org.ops4j.pax.exam.options.DefaultCompositeOption;
 import org.osgi.framework.Bundle;
 import org.osgi.framework.BundleContext;
 import org.osgi.framework.Constants;
@@ -183,8 +184,26 @@ public abstract class BaseIntegrationTest {
                 mavenBundle("org.objenesis", "objenesis", "2.6").startLevel(START_LEVEL_SYSTEM_BUNDLES),
 
                 junitBundles(),
+                jpmsOptions(),
                 frameworkStartLevel(START_LEVEL_TEST_BUNDLE));
     }
+    
+    // adopted from org.apache.jackrabbit.oak.osgi.OSGiIT
+    private Option jpmsOptions(){
+        DefaultCompositeOption composite = new DefaultCompositeOption();
+        composite.add(vmOption("--add-opens=java.base/jdk.internal.loader=ALL-UNNAMED"));
+        composite.add(vmOption("--add-opens=java.base/java.lang=ALL-UNNAMED"));
+        composite.add(vmOption("--add-opens=java.base/java.lang.invoke=ALL-UNNAMED"));
+        composite.add(vmOption("--add-opens=java.base/java.io=ALL-UNNAMED"));
+        composite.add(vmOption("--add-opens=java.base/java.net=ALL-UNNAMED"));
+        composite.add(vmOption("--add-opens=java.base/java.nio=ALL-UNNAMED"));
+        composite.add(vmOption("--add-opens=java.base/java.util=ALL-UNNAMED"));
+        composite.add(vmOption("--add-opens=java.base/java.util.jar=ALL-UNNAMED"));
+        composite.add(vmOption("--add-opens=java.base/java.util.regex=ALL-UNNAMED"));
+        composite.add(vmOption("--add-opens=java.base/java.util.zip=ALL-UNNAMED"));
+        composite.add(vmOption("--add-opens=java.base/sun.nio.ch=ALL-UNNAMED"));
+        return composite;
+    }    
 
     private final Map<String, ServiceTracker<?, ?>> trackers = new HashMap<>();
 

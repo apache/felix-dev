@@ -381,24 +381,10 @@ public class SharedServletContextImpl implements ServletContext
         return this.context.getServerInfo();
     }
 
-    @SuppressWarnings("deprecation")
-    @Override
-    public Servlet getServlet(final String name) throws ServletException
-    {
-        return this.context.getServlet(name);
-    }
-
     @Override
     public String getServletContextName()
     {
         return this.name;
-    }
-
-    @SuppressWarnings("deprecation")
-    @Override
-    public Enumeration<String> getServletNames()
-    {
-        return this.context.getServletNames();
     }
 
     @Override
@@ -413,23 +399,10 @@ public class SharedServletContextImpl implements ServletContext
         return this.context.getServletRegistrations();
     }
 
-    @SuppressWarnings("deprecation")
-    @Override
-    public Enumeration<Servlet> getServlets()
-    {
-        return this.context.getServlets();
-    }
-
     @Override
     public SessionCookieConfig getSessionCookieConfig()
     {
         return this.context.getSessionCookieConfig();
-    }
-
-    @Override
-    public void log(final Exception cause, final String message)
-    {
-        SystemLogger.LOGGER.error(message, cause);
     }
 
     @Override

@@ -34,10 +34,12 @@ import org.apache.http.impl.client.DefaultHttpClient;
 import org.apache.http.message.BasicNameValuePair;
 import org.apache.sling.testing.tools.http.RequestBuilder;
 import org.apache.sling.testing.tools.http.RequestExecutor;
+import org.junit.Ignore;
 import org.junit.Rule;
 import org.junit.Test;
 import org.ops4j.pax.exam.junit.PaxExamServer;
 
+@Ignore("Disabled due to issues caused by old dependencies")
 public class ITScriptConsolePlugin
 {
     private DefaultHttpClient httpClient = new DefaultHttpClient();

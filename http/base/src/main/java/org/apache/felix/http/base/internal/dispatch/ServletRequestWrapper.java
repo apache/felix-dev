@@ -233,11 +233,10 @@ final class ServletRequestWrapper extends HttpServletRequestWrapper
     }
 
     @Override
-    @SuppressWarnings("deprecation")
     public String getPathTranslated()
     {
         final String info = getPathInfo();
-        return (null == info) ? null : getRealPath(info);
+        return (null == info) ? null : this.servletContext.getRealPath(info);
     }
 
     @Override

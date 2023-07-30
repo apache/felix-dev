@@ -160,37 +160,9 @@ public abstract class ExtServletContextWrapper implements ExtServletContext
 	}
 
 	@Override
-    @SuppressWarnings("deprecation")
-    public Servlet getServlet(final String name) throws ServletException
-	{
-		return delegate.getServlet(name);
-	}
-
-	@Override
-    @SuppressWarnings("deprecation")
-    public Enumeration<Servlet> getServlets()
-    {
-		return delegate.getServlets();
-	}
-
-	@Override
-    @SuppressWarnings("deprecation")
-    public Enumeration<String> getServletNames()
-    {
-		return delegate.getServletNames();
-	}
-
-	@Override
     public void log(final String msg)
 	{
 		delegate.log(msg);
-	}
-
-	@Override
-    @SuppressWarnings("deprecation")
-    public void log(final Exception exception, final String msg)
-	{
-		delegate.log(exception, msg);
 	}
 
 	@Override

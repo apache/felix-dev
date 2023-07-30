@@ -16,8 +16,7 @@
  */
 package org.apache.felix.http.jetty.internal;
 
-import org.eclipse.jetty.server.Connector;
-import org.eclipse.jetty.server.HttpConfiguration;
+import org.eclipse.jetty.http.HttpFields.Mutable;
 import org.eclipse.jetty.server.HttpConfiguration.Customizer;
 import org.eclipse.jetty.server.Request;
 
@@ -31,15 +30,17 @@ public class CustomizerWrapper implements Customizer
         this.customizer = customizer;
     }
 
+    /* 
+     * (non-Javadoc)
+     * @see org.eclipse.jetty.server.HttpConfiguration.Customizer#customize(org.eclipse.jetty.server.Request, org.eclipse.jetty.http.HttpFields.Mutable)
+     */
     @Override
-    public void customize(final Connector connector,
-            final HttpConfiguration channelConfig,
-            final Request request)
-    {
+    public Request customize(Request request, Mutable responseHeaders) {
         final Customizer local = this.customizer;
-        if (local!= null )
-        {
-            local.customize(connector, channelConfig, request);
+        if (local != null) {
+            return local.customize(request, responseHeaders);
         }
+
+        return null;
     }
 }

@@ -363,25 +363,10 @@ public class ServletContextImplTest
             return null;
         }
 
-        @Deprecated
-        @Override
-        public Servlet getServlet(String name)
-        {
-            return null;
-        }
-
         @Override
         public String getServletContextName()
         {
             return null;
-        }
-
-        @SuppressWarnings({ "rawtypes", "unchecked" })
-        @Deprecated
-        @Override
-        public Enumeration getServletNames()
-        {
-            return Collections.enumeration(Collections.emptyList());
         }
 
         @Override
@@ -396,24 +381,10 @@ public class ServletContextImplTest
             return null;
         }
 
-        @SuppressWarnings({ "rawtypes", "unchecked" })
-        @Deprecated
-        @Override
-        public Enumeration getServlets()
-        {
-            return Collections.enumeration(Collections.emptyList());
-        }
-
         @Override
         public SessionCookieConfig getSessionCookieConfig()
         {
             return null;
-        }
-
-        @Deprecated
-        @Override
-        public void log(Exception exception, String msg)
-        {
         }
 
         @Override
@@ -635,28 +606,6 @@ public class ServletContextImplTest
         Assert.assertEquals(2, set.size());
         Assert.assertTrue(set.contains("/some/path/1"));
         Assert.assertTrue(set.contains("/some/path/2"));
-    }
-
-    @Test
-    public void testGetServlet() throws Exception
-    {
-        Assert.assertNull(this.context.getServlet("test"));
-    }
-
-    @Test
-    public void testGetServletNames()
-    {
-        Enumeration<String> e = this.context.getServletNames();
-        Assert.assertNotNull(e);
-        Assert.assertFalse(e.hasMoreElements());
-    }
-
-    @Test
-    public void testGetServlets()
-    {
-        Enumeration<Servlet> e = this.context.getServlets();
-        Assert.assertNotNull(e);
-        Assert.assertFalse(e.hasMoreElements());
     }
 
     @Test

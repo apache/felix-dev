@@ -123,10 +123,16 @@ public class ResourceServlet extends HttpServlet {
             os = res.getOutputStream();
             // FELIX-3987 content length should be set *before* any streaming is done
             // as headers should be written before the content is actually written...
-            int len = getContentLength(conn);
-            if (len >= 0) {
-                res.setContentLength(len);
-            }
+            
+            // ... however, when testing via org.apache.felix.http.itest.servletapi5.ResourceTest, 
+            //  on Jetty 11.0.15, this causes a warning, i.e. 
+            //  "transfer closed with [X] bytes remaining to read" warning (e.g. "transfer closed with 4086 bytes remaining to read")
+            //  on Jetty 12.x, this causes error 500, i.e. 
+            //  "org.eclipse.jetty.server.Response writeError: status=500, message=java.io.IOException: written 10 < 4096 content-length, response=ErrorResponse"
+//            int len = getContentLength(conn);
+//            if (len >= 0) {
+//                res.setContentLength(len);
+//            }
 
             byte[] buf = new byte[1024];
             int n;

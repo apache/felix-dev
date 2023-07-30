@@ -23,17 +23,17 @@
     <parent>
         <groupId>org.apache.felix</groupId>
         <artifactId>felix-parent</artifactId>
-        <version>7</version>
+        <version>8-SNAPSHOT</version>
         <relativePath>../../pom/pom.xml</relativePath>
     </parent>
 
     <name>Apache Felix Http Parent POM</name>
     <artifactId>org.apache.felix.http.parent</artifactId>
-    <version>15-SNAPSHOT</version>
+    <version>16-SNAPSHOT</version>
     <packaging>pom</packaging>
 
     <properties>
-    	<servlet.version>5.0.0</servlet.version>
+    	<servlet.version>6.0.0</servlet.version>
     </properties>
 
     <scm>

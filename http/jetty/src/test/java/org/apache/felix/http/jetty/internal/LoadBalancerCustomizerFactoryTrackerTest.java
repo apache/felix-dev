@@ -26,8 +26,7 @@ import java.util.Dictionary;
 import java.util.List;
 
 import org.apache.felix.http.jetty.LoadBalancerCustomizerFactory;
-import org.eclipse.jetty.server.Connector;
-import org.eclipse.jetty.server.HttpConfiguration;
+import org.eclipse.jetty.http.HttpFields.Mutable;
 import org.eclipse.jetty.server.HttpConfiguration.Customizer;
 import org.eclipse.jetty.server.Request;
 import org.junit.Test;
@@ -47,7 +46,7 @@ public class LoadBalancerCustomizerFactoryTrackerTest
 
         final LoadBalancerCustomizerFactoryTracker tracker = new LoadBalancerCustomizerFactoryTracker(bc, wrapper);
 
-        wrapper.customize(null, null, null);
+        wrapper.customize(null, null);
         assertTrue(result.isEmpty());
 
         final ServiceReference<LoadBalancerCustomizerFactory> refA = create(bc, result, 5, "A");
@@ -57,7 +56,7 @@ public class LoadBalancerCustomizerFactoryTrackerTest
         // just A
         tracker.addingService(refA);
 
-        wrapper.customize(null, null, null);
+        wrapper.customize(null, null);
         assertEquals(1, result.size());
         assertEquals("A", result.get(0));
         result.clear();
@@ -65,7 +64,7 @@ public class LoadBalancerCustomizerFactoryTrackerTest
         // add B, B is highest
         tracker.addingService(refB);
 
-        wrapper.customize(null, null, null);
+        wrapper.customize(null, null);
         assertEquals(1, result.size());
         assertEquals("B", result.get(0));
         result.clear();
@@ -73,7 +72,7 @@ public class LoadBalancerCustomizerFactoryTrackerTest
         // add C, C is highest
         tracker.addingService(refC);
 
-        wrapper.customize(null, null, null);
+        wrapper.customize(null, null);
         assertEquals(1, result.size());
         assertEquals("C", result.get(0));
         result.clear();
@@ -81,7 +80,7 @@ public class LoadBalancerCustomizerFactoryTrackerTest
         // remove B, C is still highest
         tracker.removedService(refB, refB);
 
-        wrapper.customize(null, null, null);
+        wrapper.customize(null, null);
         assertEquals(1, result.size());
         assertEquals("C", result.get(0));
         result.clear();
@@ -89,7 +88,7 @@ public class LoadBalancerCustomizerFactoryTrackerTest
         // remove C, A is highest
         tracker.removedService(refC, refC);
 
-        wrapper.customize(null, null, null);
+        wrapper.customize(null, null);
         assertEquals(1, result.size());
         assertEquals("A", result.get(0));
         result.clear();
@@ -97,7 +96,7 @@ public class LoadBalancerCustomizerFactoryTrackerTest
         // remove A, no customizer
         tracker.removedService(refA, refA);
 
-        wrapper.customize(null, null, null);
+        wrapper.customize(null, null);
         assertTrue(result.isEmpty());
     }
 
@@ -110,7 +109,7 @@ public class LoadBalancerCustomizerFactoryTrackerTest
 
         final LoadBalancerCustomizerFactoryTracker tracker = new LoadBalancerCustomizerFactoryTracker(bc, wrapper);
 
-        wrapper.customize(null, null, null);
+        wrapper.customize(null, null);
         assertTrue(result.isEmpty());
 
         final ServiceReference<LoadBalancerCustomizerFactory> refA = create(bc, result, 5, "A");
@@ -122,7 +121,7 @@ public class LoadBalancerCustomizerFactoryTrackerTest
         tracker.addingService(refC);
         tracker.addingService(refB);
 
-        wrapper.customize(null, null, null);
+        wrapper.customize(null, null);
         assertEquals(1, result.size());
         assertEquals("C", result.get(0));
         result.clear();
@@ -130,19 +129,19 @@ public class LoadBalancerCustomizerFactoryTrackerTest
         // remove C, B returns null, therefore A is used
         tracker.removedService(refC, refC);
 
-        wrapper.customize(null, null, null);
+        wrapper.customize(null, null);
         assertEquals(1, result.size());
         assertEquals("A", result.get(0));
         result.clear();
 
         // remove A, no wrapper
         tracker.removedService(refA, refA);
-        wrapper.customize(null, null, null);
+        wrapper.customize(null, null);
         assertTrue(result.isEmpty());
 
         // remove B, no wrapper
         tracker.removedService(refB, refB);
-        wrapper.customize(null, null, null);
+        wrapper.customize(null, null);
         assertTrue(result.isEmpty());
     }
 
@@ -167,9 +166,10 @@ public class LoadBalancerCustomizerFactoryTrackerTest
                 {
 
                     @Override
-                    public void customize(Connector connector, HttpConfiguration channelConfig, Request request)
-                    {
+                    public Request customize(Request request, Mutable responseHeaders) {
                         result.add(identifier);
+                        
+                        return request;
                     }
                 };
             }

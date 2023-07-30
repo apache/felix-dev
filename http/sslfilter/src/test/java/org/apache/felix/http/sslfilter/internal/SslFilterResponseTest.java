@@ -18,11 +18,11 @@
  */
 package org.apache.felix.http.sslfilter.internal;
 
-import static org.junit.Assert.assertEquals;
 import static org.apache.felix.http.sslfilter.internal.SslFilterConstants.HDR_X_FORWARDED_PROTO;
 import static org.apache.felix.http.sslfilter.internal.SslFilterConstants.HDR_X_FORWARDED_SSL_CERTIFICATE;
 import static org.apache.felix.http.sslfilter.internal.SslFilterConstants.HTTP;
 import static org.apache.felix.http.sslfilter.internal.SslFilterConstants.HTTPS;
+import static org.junit.Assert.assertEquals;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
 
@@ -34,12 +34,12 @@ import java.util.HashMap;
 import java.util.Locale;
 import java.util.Map;
 
+import org.junit.Test;
+
 import jakarta.servlet.ServletOutputStream;
 import jakarta.servlet.http.Cookie;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
-
-import org.junit.Test;
 
 public class SslFilterResponseTest
 {
@@ -516,12 +516,6 @@ public class SslFilterResponseTest
         }
 
         @Override
-        public void setStatus(int sc, String sm) {
-            status = sc;
-            committed = true;
-        }
-
-        @Override
         public void setStatus(int sc) {
             status = sc;
             committed = true;
@@ -578,17 +572,7 @@ public class SslFilterResponseTest
         }
 
         @Override
-        public String encodeUrl(String url) {
-            throw new UnsupportedOperationException();
-        }
-
-        @Override
         public String encodeURL(String url) {
-            throw new UnsupportedOperationException();
-        }
-
-        @Override
-        public String encodeRedirectUrl(String url) {
             throw new UnsupportedOperationException();
         }
 

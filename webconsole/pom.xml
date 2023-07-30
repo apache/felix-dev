@@ -22,13 +22,13 @@
     <parent>
         <groupId>org.apache.felix</groupId>
         <artifactId>felix-parent</artifactId>
-        <version>7</version>
+        <version>8-SNAPSHOT</version>
         <relativePath>../pom/pom.xml</relativePath>
     </parent>
 
     <artifactId>org.apache.felix.webconsole</artifactId>
     <packaging>bundle</packaging>
-    <version>5.0.0-SNAPSHOT</version>
+    <version>6.0.0-SNAPSHOT</version>
 
     <name>Apache Felix Web Management Console</name>
     <description>
@@ -44,7 +44,7 @@
             org.apache.felix.webconsole.i18n;provide:=true,
             org.apache.felix.webconsole.spi
 	   </webconsole.exports>
-	   <felix.java.version>11</felix.java.version>
+	   <felix.java.version>17</felix.java.version>
     </properties>
 
     <scm>
@@ -116,7 +116,7 @@
                         </Export-Package>
                         <!-- Import-Package header is also used for the all bundle -->
                         <Import-Package>
-                            jakarta.servlet.*;version="[5.0,6)",
+                            jakarta.servlet.*;version="[6.0,7)",
                             !javax.portlet,
                             !org.apache.felix.bundlerepository,
                             !org.osgi.service.obr,
@@ -274,7 +274,7 @@
                 <dependency>
                     <groupId>org.apache.felix</groupId>
                     <artifactId>org.apache.felix.inventory</artifactId>
-                    <version>2.0.0-SNAPSHOT</version>
+                    <version>3.0.0-SNAPSHOT</version>
                     <scope>provided</scope>
                 </dependency>
             </dependencies>
@@ -374,7 +374,7 @@
         <dependency>
             <groupId>org.osgi</groupId>
             <artifactId>org.osgi.service.servlet</artifactId>
-            <version>2.0.0</version>
+            <version>3.0.0-SNAPSHOT</version>
             <scope>provided</scope>
         </dependency>
         <dependency>
@@ -386,7 +386,7 @@
         <dependency>
             <groupId>jakarta.servlet</groupId>
             <artifactId>jakarta.servlet-api</artifactId>
-            <version>5.0.0</version>
+            <version>6.0.0</version>
             <scope>provided</scope>
         </dependency>
         <dependency>
@@ -397,7 +397,7 @@
         <dependency>
             <groupId>org.apache.commons</groupId>
             <artifactId>commons-fileupload2-jakarta</artifactId>
-            <version>2.0.0-M1</version>
+            <version>3.0.0-SNAPSHOT</version>
         </dependency>        
         <dependency>
             <groupId>commons-io</groupId>

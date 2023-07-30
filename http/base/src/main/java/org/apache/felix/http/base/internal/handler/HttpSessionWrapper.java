@@ -20,28 +20,24 @@
 package org.apache.felix.http.base.internal.handler;
 
 import java.io.Serializable;
-import java.util.ArrayList;
 import java.util.Enumeration;
 import java.util.HashSet;
-import java.util.List;
 import java.util.NoSuchElementException;
 import java.util.Set;
+
+import org.apache.felix.http.base.internal.HttpConfig;
+import org.apache.felix.http.base.internal.context.ExtServletContext;
 
 import jakarta.servlet.ServletContext;
 import jakarta.servlet.http.HttpSession;
 import jakarta.servlet.http.HttpSessionBindingEvent;
 import jakarta.servlet.http.HttpSessionBindingListener;
-import jakarta.servlet.http.HttpSessionContext;
 import jakarta.servlet.http.HttpSessionEvent;
-
-import org.apache.felix.http.base.internal.HttpConfig;
-import org.apache.felix.http.base.internal.context.ExtServletContext;
 
 /**
  * The session wrapper keeps track of the internal session, manages their attributes
  * separately and also handles session timeout.
  */
-@SuppressWarnings("deprecation")
 public class HttpSessionWrapper implements HttpSession
 {
     /** All special attributes are prefixed with this prefix. */
@@ -302,26 +298,6 @@ public class HttpSessionWrapper implements HttpSession
     }
 
     @Override
-    public Object getValue(String name)
-    {
-        this.checkInvalid();
-        return this.getAttribute(name);
-    }
-
-    @Override
-    public String[] getValueNames()
-    {
-        this.checkInvalid();
-        final List<String> names = new ArrayList<>();
-        final Enumeration<String> e = this.getAttributeNames();
-        while ( e.hasMoreElements() )
-        {
-            names.add(e.nextElement());
-        }
-        return names.toArray(new String[names.size()]);
-    }
-
-    @Override
     public void invalidate()
     {
         this.checkInvalid();
@@ -381,13 +357,6 @@ public class HttpSessionWrapper implements HttpSession
     }
 
     @Override
-    public void putValue(final String name, final Object value)
-    {
-        this.checkInvalid();
-        this.setAttribute(name, value);
-    }
-
-    @Override
     public void removeAttribute(final String name)
     {
         this.checkInvalid();
@@ -404,13 +373,6 @@ public class HttpSessionWrapper implements HttpSession
                 this.context.getHttpSessionAttributeListener().attributeRemoved(new HttpSessionBindingEvent(this, name, oldValue));
             }
         }
-    }
-
-    @Override
-    public void removeValue(final String name)
-    {
-        this.checkInvalid();
-        this.removeAttribute(name);
     }
 
     @Override
@@ -466,13 +428,6 @@ public class HttpSessionWrapper implements HttpSession
         } catch ( final IllegalStateException iae) {
             // this might throw if delegate is invalid
         }
-    }
-
-    @Override
-    public HttpSessionContext getSessionContext()
-    {
-        // no need to check validity conforming to the javadoc
-        return this.delegate.getSessionContext();
     }
 
     private static final class SessionBindingValueListenerWrapper implements Serializable

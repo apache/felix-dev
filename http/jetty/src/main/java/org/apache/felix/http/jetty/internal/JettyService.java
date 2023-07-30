@@ -31,6 +31,9 @@ import java.util.List;
 import org.apache.felix.http.base.internal.HttpServiceController;
 import org.apache.felix.http.base.internal.logger.SystemLogger;
 import org.eclipse.jetty.alpn.server.ALPNServerConnectionFactory;
+import org.eclipse.jetty.ee10.servlet.ServletContextHandler;
+import org.eclipse.jetty.ee10.servlet.ServletHolder;
+import org.eclipse.jetty.ee10.servlet.SessionHandler;
 import org.eclipse.jetty.http.HttpVersion;
 import org.eclipse.jetty.http2.server.HTTP2ServerConnectionFactory;
 import org.eclipse.jetty.io.ConnectionStatistics;
@@ -46,10 +49,7 @@ import org.eclipse.jetty.server.SslConnectionFactory;
 import org.eclipse.jetty.server.handler.ContextHandlerCollection;
 import org.eclipse.jetty.server.handler.StatisticsHandler;
 import org.eclipse.jetty.server.handler.gzip.GzipHandler;
-import org.eclipse.jetty.server.session.HouseKeeper;
-import org.eclipse.jetty.server.session.SessionHandler;
-import org.eclipse.jetty.servlet.ServletContextHandler;
-import org.eclipse.jetty.servlet.ServletHolder;
+import org.eclipse.jetty.session.HouseKeeper;
 import org.eclipse.jetty.util.ssl.SslContextFactory;
 import org.eclipse.jetty.util.thread.QueuedThreadPool;
 import org.eclipse.jetty.util.thread.ThreadPool;
@@ -251,11 +251,10 @@ public final class JettyService
             loginService.setUserStore(new UserStore());
             this.server.addBean(loginService);
 
-            this.parent = new ContextHandlerCollection();
-
-            ServletContextHandler context = new ServletContextHandler(this.parent,
-                    this.config.getContextPath(),
+            ServletContextHandler context = new ServletContextHandler(this.config.getContextPath(),                    
                     ServletContextHandler.SESSIONS);
+            
+            this.parent = new ContextHandlerCollection(context);
 
             configureSessionManager(context);
             this.controller.getEventDispatcher().setActive(true);

@@ -11,8 +11,8 @@ This is an implementation of the [HTTP Whiteboard Service as described in chapte
 
 The Apache Felix HTTP Service project includes several bundles.
 
-  * `org.apache.felix.http.servlet-api` - Provides the Servlet API (version 5.0 of the Servlet specification, with additional OSGi metadata)
-  * `org.apache.felix.http.jetty` - Implementation that is embedding Jetty server (currently Jetty 11, requiring Java 11). This bundle includes the http.api bundle.
+  * `org.apache.felix.http.servlet-api` - Provides the Servlet API (version 6.0 of the Servlet specification, with additional OSGi metadata)
+  * `org.apache.felix.http.jetty` - Implementation that is embedding Jetty server (currently Jetty 12, requiring Java 17). This bundle includes the http.base bundle.
   * `org.apache.felix.http.sslfilter` - Servlet filter for handling SSL termination.
   * `org.apache.felix.http.bridge` - Implementation that uses the host application server (bridged mode). Must be used with the proxy (see below)
   * `org.apache.felix.http.proxy` - Proxy that is needed inside WAR when deployed inside an application server.
@@ -53,7 +53,7 @@ Next, depending on your server environment you must choose only one of the follo
 
 ## Using the OSGi Http Whiteboard
 
-The OSGi whiteboard implementation simplifies the task of registering servlets, filters, resources, listeners, and servlet contexts. For a complete introduction, please refer to the OSGi R7 Compendium or Enterprise specification.
+The OSGi whiteboard implementation simplifies the task of registering servlets, filters, resources, listeners, and servlet contexts. For a complete introduction, please refer to [chapter 140 of the OSGi Compendium (R8.1) specification](https://docs.osgi.org/specification/osgi.cmpn/8.1.0/service.servlet.html).
 
 For a short introduction: Such a whiteboard service can be registered by exporting it as a service, making it no longer necessary to track and use the `HttpService` directly. The whiteboard implementation detects all `jakarta.servlet.Servlet` and `jakarta.servlet.Filter` services with the right service properties. Let us illustrate the usage by registering a servlet:
 
@@ -107,7 +107,7 @@ The servlet bridge is used if you want to use the HTTP service inside a WAR depl
   2. in a startup listener (like `ServletContextListener`) set the BundleContext as a servlet context attribute (see [example](https://github.com/apache/felix-dev/blob/master/http/samples/bridge/src/main/java/org/apache/felix/http/samples/bridge/StartupListener.java);
   3. define `org.apache.felix.http.proxy.ProxyServlet` inside your `web.xml` and register it to serve on all requests `/*` (see [example](https://github.com/apache/felix-dev/blob/master/http/samples/bridge/src/main/webapp/WEB-INF/web.xml);
   4. define `org.apache.felix.http.proxy.ProxyListener` as a `<listener>` in your `web.xml` to allow HTTP session related events to be forwarded (see the section of Servlet API Event forwarding below and [example](https://github.com/apache/felix-dev/blob/master/http/samples/bridge/src/main/webapp/WEB-INF/web.xml);
-  5. be sure to add `jakarta.servlet;jakarta.servlet.http;version=5.0` to OSGi system packages (`org.osgi.framework.system.packages`);
+  5. be sure to add `jakarta.servlet;jakarta.servlet.http;version=6.0` to OSGi system packages (`org.osgi.framework.system.packages`);
   6. deploy `org.apache.felix.http.bridge` (or `org.apache.felix.http.bundle`) inside the OSGi framework.
 
 

@@ -14,14 +14,14 @@
     <parent>
         <groupId>org.apache.felix</groupId>
         <artifactId>org.apache.felix.http.parent</artifactId>
-        <version>15-SNAPSHOT</version>
+        <version>16-SNAPSHOT</version>
         <relativePath>../parent/pom.xml</relativePath>
     </parent>
 
     <name>Apache Felix Servlet API</name>
     <description>Provides the Servlet API for use by applications</description>
     <artifactId>org.apache.felix.http.servlet-api</artifactId>
-    <version>3.0.0-SNAPSHOT</version>
+    <version>4.0.0-SNAPSHOT</version>
     <packaging>bundle</packaging>
 
     <scm>
@@ -32,7 +32,7 @@
     </scm>
 
     <properties>
-        <felix.java.version>11</felix.java.version>
+        <felix.java.version>17</felix.java.version>
     </properties>
 
     <build>
@@ -44,14 +44,14 @@
                 <configuration>
                     <instructions>
                         <Export-Package>
-                            jakarta.servlet;version=5.0;uses:="jakarta.servlet.annotation,jakarta.servlet.descriptor",
-                            jakarta.servlet.annotation;version=5.0;uses:="jakarta.servlet",
-                            jakarta.servlet.descriptor;version=5.0,
-                            jakarta.servlet.http;version=5.0;uses:="jakarta.servlet"
+                            jakarta.servlet;version=6.0;uses:="jakarta.servlet.annotation,jakarta.servlet.descriptor",
+                            jakarta.servlet.annotation;version=6.0;uses:="jakarta.servlet",
+                            jakarta.servlet.descriptor;version=6.0,
+                            jakarta.servlet.http;version=6.0;uses:="jakarta.servlet"
                         </Export-Package>                        
                         <Import-Package>!*</Import-Package>
                         <Provide-Capability>
-                            osgi.contract;osgi.contract="JakartaServlet";version:List&lt;Version&gt;="5.0";
+                            osgi.contract;osgi.contract="JakartaServlet";version:List&lt;Version&gt;="6.0";
                             uses:="jakarta.servlet,jakarta.servlet.http,jakarta.servlet.descriptor,jakarta.servlet.annotation"
                         </Provide-Capability>                        
                         <Embed-Dependency>jakarta.servlet-api;inline=true</Embed-Dependency>
@@ -67,7 +67,6 @@
         <dependency>
             <groupId>jakarta.servlet</groupId>
             <artifactId>jakarta.servlet-api</artifactId>
-            <version>5.0.0</version>
         </dependency>
     </dependencies>
 
