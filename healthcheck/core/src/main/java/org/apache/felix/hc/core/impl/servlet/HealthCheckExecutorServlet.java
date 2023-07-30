@@ -244,7 +244,7 @@ public class HealthCheckExecutorServlet extends HttpServlet {
                 LOG.info("Unregistering HC Servlet {} from path {}", getClass().getSimpleName(), entry.getKey());
                 entry.getValue().unregister();
             } catch (Exception e) {
-                LOG.error("Could not unregister health check servlet", e);
+                // ignore the exception - this might happen on shutdown
             }
         }
         servletRegistrations.clear();
@@ -257,7 +257,7 @@ public class HealthCheckExecutorServlet extends HttpServlet {
     	    properties.put(HTTP_WHITEBOARD_CONTEXT_SELECT, "(".concat(HTTP_WHITEBOARD_CONTEXT_NAME).concat("=").concat(servletInfo.contextName).concat(")"));
         }
     	properties.put(HTTP_WHITEBOARD_SERVLET_PATTERN, servletInfo.servletPath);
-    	
+
     	final ServiceRegistration<Servlet> registration = bundleContext.registerService(Servlet.class, servletInfo.servlet, properties);
     	servletRegistrations.put(servletPath, registration);
     }
