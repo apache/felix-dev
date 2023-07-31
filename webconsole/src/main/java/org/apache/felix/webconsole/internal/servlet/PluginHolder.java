@@ -20,12 +20,10 @@ package org.apache.felix.webconsole.internal.servlet;
 
 import java.util.ArrayList;
 import java.util.Collections;
-import java.util.Enumeration;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Locale;
 import java.util.Map;
-import java.util.NoSuchElementException;
 import java.util.ResourceBundle;
 
 import javax.servlet.Servlet;
@@ -33,9 +31,10 @@ import javax.servlet.ServletContext;
 
 import org.apache.felix.webconsole.AbstractWebConsolePlugin;
 import org.apache.felix.webconsole.WebConsoleConstants;
-import org.apache.felix.webconsole.internal.OsgiManagerPlugin;
-import org.apache.felix.webconsole.internal.WebConsolePluginAdapter;
+import org.apache.felix.webconsole.internal.Util;
 import org.apache.felix.webconsole.internal.i18n.ResourceBundleManager;
+import org.apache.felix.webconsole.internal.servlet.Plugin.InternalPlugin;
+import org.apache.felix.webconsole.internal.servlet.Plugin.ServletPlugin;
 import org.osgi.framework.BundleContext;
 import org.osgi.framework.Constants;
 import org.osgi.framework.Filter;
@@ -328,7 +327,7 @@ class PluginHolder implements ServiceTrackerCustomizer<Servlet, Plugin> {
     @Override
     public Plugin addingService(final ServiceReference<Servlet> reference) {
         Plugin plugin = null;
-        final String label = getProperty( reference, WebConsoleConstants.PLUGIN_LABEL );
+        final String label = Util.getStringProperty( reference, WebConsoleConstants.PLUGIN_LABEL );
         if ( label != null ) {
             plugin = new ServletPlugin( this, reference, label );
             addPlugin( plugin );
@@ -357,11 +356,15 @@ class PluginHolder implements ServiceTrackerCustomizer<Servlet, Plugin> {
             Collections.sort(list);
             Collections.reverse(list);
             final Plugin first = list.get(0);
-            if (first == plugin && oldPlugin != null) {
-                osgiManager.log(LogService.LOG_WARNING, "Overwriting existing plugin " + oldPlugin.getId() 
-                        + " having label " + plugin.getLabel() + " with new plugin " + plugin.getId()
-                        + " due to higher ranking " );
-                oldPlugin.dispose();
+            if (first == plugin) {
+                if (!first.init()) {
+                    list.remove(plugin);
+                } else if (oldPlugin != null) {
+                    osgiManager.log(LogService.LOG_WARNING, "Overwriting existing plugin " + oldPlugin.getId() 
+                            + " having label " + plugin.getLabel() + " with new plugin " + plugin.getId()
+                            + " due to higher ranking " );
+                    oldPlugin.dispose();
+                }
             }
             if (first == oldPlugin) {
                 osgiManager.log(LogService.LOG_WARNING, "Ignoring new plugin " + plugin.getId()
@@ -374,159 +377,17 @@ class PluginHolder implements ServiceTrackerCustomizer<Servlet, Plugin> {
         synchronized ( plugins ) {
             final List<Plugin> list = plugins.get( plugin.getLabel() );
             if ( list != null ) {
+                final boolean isFirst = !list.isEmpty() && list.get(0) == plugin;
                 list.remove( plugin );
                 if ( list.isEmpty() ) {
                     plugins.remove( plugin.getLabel() );
+                } else if ( isFirst ) {
+                    while ( !list.isEmpty() && !list.get(0).init() ) {
+                        list.remove(0);
+                    }
                 }
             }
             plugin.dispose();
-        }
-    }
-
-    static String getProperty( final ServiceReference<?> service, final String propertyName ) {
-        final Object property = service.getProperty( propertyName );
-        if ( property instanceof String ) {
-            return ( String ) property;
-        }
-        return null;
-    }
-
-    private static class ServletPlugin extends Plugin {
-
-        ServletPlugin( final PluginHolder holder, final ServiceReference<Servlet> serviceReference, final String label ) {
-            super(holder, serviceReference, label);
-        }
-
-        public String getId() {
-            return this.getServiceReference().toString();
-        }
-
-        // added to support categories
-        protected String doGetCategory() {
-            // check service Reference
-            final String category = getProperty( this.getServiceReference(), WebConsoleConstants.PLUGIN_CATEGORY );
-            if ( category != null ) {
-                return category;
-            }
-
-            return super.doGetCategory();
-        }
-
-        protected AbstractWebConsolePlugin doGetConsolePlugin() {
-            final Servlet service = getHolder().getBundleContext().getService( this.getServiceReference() );
-            if ( service != null ) {
-                String title = getProperty( this.getServiceReference(), WebConsoleConstants.PLUGIN_TITLE );
-                final AbstractWebConsolePlugin servlet;
-                if ( service instanceof AbstractWebConsolePlugin ) {
-                    servlet = ( AbstractWebConsolePlugin ) service;
-                    if (title == null) {
-                        title = servlet.getTitle();
-                    }
-                } else {
-                    servlet = new WebConsolePluginAdapter( getLabel(), service, this.getServiceReference() );
-                }
-                this.setTitle(title);
-
-                return servlet;
-            }
-            return null;
-        }
-
-        protected void doUngetConsolePlugin( AbstractWebConsolePlugin consolePlugin ) {
-            try {
-                getHolder().getBundleContext().ungetService( this.getServiceReference() );
-            } catch ( final IllegalStateException ise ) {
-                // ignore - bundle context is no longer valid
-            }
-        }
-
-        //---------- ServletConfig overwrite (based on ServletReference)
-
-        @Override
-        public String getInitParameter( final String name ) {
-            Object property = this.getServiceReference().getProperty( name );
-            if ( property != null && !property.getClass().isArray() ) {
-                return property.toString();
-            }
-
-            return super.getInitParameter( name );
-        }
-
-        @Override
-        public Enumeration<?> getInitParameterNames() {
-            final String[] keys = this.getServiceReference().getPropertyKeys();
-            return new Enumeration<Object>() {
-                int idx = 0;
-
-                public boolean hasMoreElements() {
-                    return idx < keys.length;
-                }
-
-                public Object nextElement() {
-                    if ( hasMoreElements() ) {
-                        return keys[idx++];
-                    }
-                    throw new NoSuchElementException();
-                }
-            };
-        }
-    }
-
-    static class InternalPlugin extends Plugin {
-
-        private final String pluginClassName;
-        private final OsgiManager osgiManager;
-        private volatile boolean doLog = true;
-
-        protected InternalPlugin(PluginHolder holder, OsgiManager osgiManager, String pluginClassName, String label) {
-            super(holder, null, label);
-            this.osgiManager = osgiManager;
-            this.pluginClassName = pluginClassName;
-        }
-
-        public String getId() {
-            return this.pluginClassName;
-        }
-
-        protected final boolean isEnabled() {
-            // check if the plugin is enabled
-            return !osgiManager.isPluginDisabled(pluginClassName);
-        }
-
-        protected AbstractWebConsolePlugin doGetConsolePlugin() {
-            if (!isEnabled()) {
-                if (doLog) {
-                    osgiManager.log( LogService.LOG_INFO, "Ignoring plugin " + pluginClassName + ": Disabled by configuration" );
-                    doLog = false;
-                }
-                return null;
-            }
-
-            AbstractWebConsolePlugin plugin = null;
-            try {
-                Class<?> pluginClass = getClass().getClassLoader().loadClass(pluginClassName);
-                plugin = (AbstractWebConsolePlugin) pluginClass.getDeclaredConstructor().newInstance();
-
-                if (plugin instanceof OsgiManagerPlugin) {
-                    ((OsgiManagerPlugin) plugin).activate(osgiManager.getBundleContext());
-                }
-                this.setTitle(plugin.getTitle());
-                doLog = true; // reset logging if it succeeded
-            } catch (final Throwable t) {
-                plugin = null; // in case only activate has faled!
-                if (doLog) {
-                    osgiManager.log( LogService.LOG_WARNING, "Failed to instantiate plugin " + pluginClassName, t );
-                    doLog = false;
-                }
-            }
-
-            return plugin;
-        }
-
-        protected void doUngetConsolePlugin(final AbstractWebConsolePlugin plugin) {
-            if (plugin instanceof OsgiManagerPlugin) {
-                ((OsgiManagerPlugin) plugin).deactivate();
-            }
         }
     }
 }
