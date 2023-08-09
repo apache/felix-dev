@@ -20,15 +20,23 @@ package org.apache.felix.webconsole.internal;
 
 
 import java.io.IOException;
-import java.util.*;
-
-import jakarta.servlet.*;
-import jakarta.servlet.http.HttpServletRequest;
-import jakarta.servlet.http.HttpServletResponse;
+import java.util.Arrays;
+import java.util.Collection;
+import java.util.Iterator;
 
 import org.apache.felix.webconsole.AbstractWebConsolePlugin;
 import org.apache.felix.webconsole.WebConsoleConstants;
 import org.osgi.framework.ServiceReference;
+import org.osgi.framework.ServiceRegistration;
+import org.osgi.service.log.LogService;
+
+import jakarta.servlet.Servlet;
+import jakarta.servlet.ServletConfig;
+import jakarta.servlet.ServletException;
+import jakarta.servlet.ServletRequest;
+import jakarta.servlet.ServletResponse;
+import jakarta.servlet.http.HttpServletRequest;
+import jakarta.servlet.http.HttpServletResponse;
 
 
 /**
@@ -51,6 +59,8 @@ public class WebConsolePluginAdapter extends AbstractWebConsolePlugin
 
     // the CSS references (null if none)
     private final String[] cssReferences;
+    
+    private ServiceRegistration<Servlet> registration;
 
     /**
      * Creates a new wrapper for a Web Console Plugin
@@ -67,8 +77,13 @@ public class WebConsolePluginAdapter extends AbstractWebConsolePlugin
 
         // activate this abstract plugin (mainly to set the bundle context)
         activate( serviceReference.getBundle().getBundleContext() );
+        
+        try {
+            init(plugin.getServletConfig());
+        } catch (ServletException e) {
+            log(LogService.LOG_ERROR, "Problem initializing", e);
+        }
     }
-
 
     //---------- AbstractWebConsolePlugin API
 
@@ -137,13 +152,14 @@ public class WebConsolePluginAdapter extends AbstractWebConsolePlugin
     }
 
 
-    //---------- Servlet API overwrite
+    //---------- Servlet API override
 
     /**
      * Initializes this servlet as well as the plugin servlet.
      *
      * @see jakarta.servlet.GenericServlet#init(jakarta.servlet.ServletConfig)
      */
+    @Override
     public void init( ServletConfig config ) throws ServletException
     {
         // no need to activate the plugin, this has already been done
@@ -166,7 +182,6 @@ public class WebConsolePluginAdapter extends AbstractWebConsolePlugin
             throw se;
         }
     }
-
 
     /**
      * Detects whether this request is intended to have the headers and
@@ -233,9 +248,15 @@ public class WebConsolePluginAdapter extends AbstractWebConsolePlugin
         finally
         {
             deactivate();
+            
+            if (registration != null)
+            {
+                registration.unregister();
+                
+                registration = null;
+            }            
         }
     }
-
 
     //---------- internal
 

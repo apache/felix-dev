@@ -19,18 +19,23 @@ package org.apache.felix.webconsole.plugins.event.internal;
 import java.util.Dictionary;
 import java.util.Hashtable;
 
-import jakarta.servlet.Servlet;
-
+import org.apache.felix.webconsole.WebConsoleConstants;
+import org.apache.felix.webconsole.internal.servlet.OsgiManager;
 import org.osgi.framework.BundleActivator;
 import org.osgi.framework.BundleContext;
 import org.osgi.framework.Constants;
 import org.osgi.framework.ServiceRegistration;
+import org.osgi.service.servlet.whiteboard.HttpWhiteboardConstants;
+
+import jakarta.servlet.Servlet;
 
 /**
  * Setup the event plugin
  */
 public class Activator implements BundleActivator
 {
+    private static final String NAME = "events";
+    
     /** Registration for the plugin. */
     private ServiceRegistration<Servlet> pluginRegistration;
 
@@ -62,10 +67,14 @@ public class Activator implements BundleActivator
         final Dictionary<String, Object> props = new Hashtable<>();
         props.put( Constants.SERVICE_DESCRIPTION, "Event Plugin for the Apache Felix Web Console" );
         props.put( Constants.SERVICE_VENDOR, "The Apache Software Foundation" );
-        props.put( "felix.webconsole.label", "events");
-        props.put( "felix.webconsole.title", "%plugin.events.title");
-        props.put( "felix.webconsole.css", "/events/res/ui/events.css");
-        props.put( "felix.webconsole.category", "OSGi");
+        props.put(HttpWhiteboardConstants.HTTP_WHITEBOARD_SERVLET_NAME, NAME);
+        props.put(HttpWhiteboardConstants.HTTP_WHITEBOARD_CONTEXT_SELECT,
+                "(" + HttpWhiteboardConstants.HTTP_WHITEBOARD_CONTEXT_NAME + "=" + OsgiManager.DEFAULT_CONTEXT_NAME
+                        + ")");        
+        props.put( WebConsoleConstants.PLUGIN_LABEL, NAME);
+        props.put( WebConsoleConstants.PLUGIN_TITLE, "%plugin.events.title");
+        props.put( WebConsoleConstants.PLUGIN_CSS_REFERENCES, "/events/res/ui/events.css");
+        props.put( WebConsoleConstants.PLUGIN_CATEGORY, "OSGi");
         this.pluginRegistration = context.registerService(Servlet.class,
                                 plugin,
                                 props);

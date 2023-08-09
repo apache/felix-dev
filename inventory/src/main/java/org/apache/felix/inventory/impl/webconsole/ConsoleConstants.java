@@ -19,6 +19,8 @@ package org.apache.felix.inventory.impl.webconsole;
 public class ConsoleConstants
 {
 
+    public static final String DEFAULT_CONTEXT_NAME = "OsgiManagerDefaultHttpContext"; //$NON-NLS-1$
+
     public static final String INTERFACE_SERVLET = "jakarta.servlet.Servlet"; //$NON-NLS-1$
 
     public static final String INTERFACE_CONFIGURATION_PRINTER = "org.apache.felix.webconsole.ConfigurationPrinter"; //$NON-NLS-1$

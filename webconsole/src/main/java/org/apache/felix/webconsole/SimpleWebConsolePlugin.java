@@ -20,6 +20,7 @@ package org.apache.felix.webconsole;
 
 
 import java.net.URL;
+import java.util.Dictionary;
 import java.util.HashMap;
 import java.util.Hashtable;
 import java.util.Iterator;
@@ -28,13 +29,16 @@ import java.util.Map;
 import java.util.ResourceBundle;
 
 import org.apache.felix.webconsole.i18n.LocalizationHelper;
+import org.apache.felix.webconsole.internal.servlet.OsgiManager;
 import org.osgi.framework.Bundle;
 import org.osgi.framework.BundleContext;
 import org.osgi.framework.ServiceReference;
 import org.osgi.framework.ServiceRegistration;
+import org.osgi.service.servlet.whiteboard.HttpWhiteboardConstants;
 import org.osgi.util.tracker.ServiceTracker;
 import org.osgi.util.tracker.ServiceTrackerCustomizer;
 
+import jakarta.servlet.Servlet;
 
 /**
  * SimpleWebConsolePlugin is an utility class that provides default
@@ -224,18 +228,21 @@ public abstract class SimpleWebConsolePlugin extends AbstractWebConsolePlugin
         {
             activate( bc ); // don't know why this is needed!
 
-            Hashtable props = new Hashtable();
+            Dictionary<String, Object> props = new Hashtable<>();
+            props.put(HttpWhiteboardConstants.HTTP_WHITEBOARD_SERVLET_NAME, getLabel());
+            props.put(HttpWhiteboardConstants.HTTP_WHITEBOARD_CONTEXT_SELECT,
+                    "(" + HttpWhiteboardConstants.HTTP_WHITEBOARD_CONTEXT_NAME + "=" + OsgiManager.DEFAULT_CONTEXT_NAME
+                            + ")");
             props.put( WebConsoleConstants.PLUGIN_LABEL, getLabel() );
             props.put( WebConsoleConstants.PLUGIN_TITLE, getTitle() );
             if ( getCategory() != null )
             {
                 props.put( WebConsoleConstants.PLUGIN_CATEGORY, getCategory() );
             }
-            reg = bc.registerService( "jakarta.servlet.Servlet", this, props ); //$NON-NLS-1$
+            reg = bc.registerService( Servlet.class, this, props );
         }
         return this;
     }
-
 
     /**
      * An utility method that removes the service, registered by the

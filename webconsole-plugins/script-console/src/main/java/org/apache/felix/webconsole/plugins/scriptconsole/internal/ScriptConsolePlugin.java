@@ -45,11 +45,14 @@ import org.apache.felix.utils.json.JSONWriter;
 import org.apache.felix.webconsole.AbstractWebConsolePlugin;
 import org.apache.felix.webconsole.DefaultVariableResolver;
 import org.apache.felix.webconsole.SimpleWebConsolePlugin;
+import org.apache.felix.webconsole.WebConsoleConstants;
 import org.apache.felix.webconsole.WebConsoleUtil;
+import org.apache.felix.webconsole.internal.servlet.OsgiManager;
 import org.osgi.framework.BundleContext;
 import org.osgi.framework.Constants;
 import org.osgi.framework.ServiceRegistration;
 import org.osgi.service.log.LogService;
+import org.osgi.service.servlet.whiteboard.HttpWhiteboardConstants;
 
 import jakarta.servlet.Servlet;
 import jakarta.servlet.ServletException;
@@ -80,12 +83,16 @@ class ScriptConsolePlugin extends SimpleWebConsolePlugin
         final Dictionary<String, Object> servletProps = new Hashtable<>();
         servletProps.put(Constants.SERVICE_VENDOR, "Apache Software Foundation");
         servletProps.put(Constants.SERVICE_DESCRIPTION, "Script Console Web Console Plugin");
-        servletProps.put("felix.webconsole.label", ScriptConsolePlugin.NAME);
-        servletProps.put("felix.webconsole.title", "Script Console");        
+        servletProps.put(HttpWhiteboardConstants.HTTP_WHITEBOARD_SERVLET_NAME, ScriptConsolePlugin.NAME);
+        servletProps.put(HttpWhiteboardConstants.HTTP_WHITEBOARD_CONTEXT_SELECT,
+                "(" + HttpWhiteboardConstants.HTTP_WHITEBOARD_CONTEXT_NAME + "=" + OsgiManager.DEFAULT_CONTEXT_NAME
+                        + ")");
+        servletProps.put(WebConsoleConstants.PLUGIN_LABEL, ScriptConsolePlugin.NAME);
+        servletProps.put(WebConsoleConstants.PLUGIN_TITLE, "Script Console");
         
         registration = getBundleContext().registerService(Servlet.class, this, servletProps);
     }
-
+    
     public String getCategory()
     {
         return CATEGORY;

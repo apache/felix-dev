@@ -16,6 +16,8 @@
  */
 package org.apache.felix.webconsole.internal.servlet;
 
+import static org.osgi.service.servlet.whiteboard.HttpWhiteboardConstants.HTTP_WHITEBOARD_CONTEXT_NAME;
+import static org.osgi.service.servlet.whiteboard.HttpWhiteboardConstants.HTTP_WHITEBOARD_CONTEXT_SELECT;
 import static org.osgi.service.servlet.whiteboard.HttpWhiteboardConstants.HTTP_WHITEBOARD_RESOURCE_PATTERN;
 import static org.osgi.service.servlet.whiteboard.HttpWhiteboardConstants.HTTP_WHITEBOARD_RESOURCE_PREFIX;
 import static org.osgi.service.servlet.whiteboard.HttpWhiteboardConstants.HTTP_WHITEBOARD_SERVLET_PATTERN;
@@ -184,6 +186,8 @@ public class OsgiManager extends GenericServlet
 
     static final String DEFAULT_HTTP_SERVICE_SELECTOR = ""; //$NON-NLS-1$
 
+    public static final String DEFAULT_CONTEXT_NAME = "OsgiManagerDefaultHttpContext"; //$NON-NLS-1$
+
     /** Default value for secret heuristics */
     public static final boolean DEFAULT_ENABLE_SECRET_HEURISTIC = false;
 
@@ -195,7 +199,8 @@ public class OsgiManager extends GenericServlet
      * The default value for the {@link #PROP_MANAGER_ROOT} configuration
      * property (value is "/system/console").
      */
-    static final String DEFAULT_MANAGER_ROOT = "/system/console"; //$NON-NLS-1$
+    public static final String DEFAULT_MANAGER_ROOT = "/system/console"; //$NON-NLS-1$
+//    static final String DEFAULT_MANAGER_ROOT = "/system/console"; //$NON-NLS-1$
 
     private static final String OLD_CONFIG_MANAGER_CLASS = "org.apache.felix.webconsole.internal.compendium.ConfigManager"; //$NON-NLS-1$
     private static final String NEW_CONFIG_MANAGER_CLASS = "org.apache.felix.webconsole.internal.configuration.ConfigManager"; //$NON-NLS-1$
@@ -928,11 +933,11 @@ public class OsgiManager extends GenericServlet
             if (!isServletRegistered()) {
                 Dictionary<String, String> servletConfig = toStringConfig(config);
 
-                registerServlet(this.webManagerRoot, servletConfig);
+                registerServlet(this.webManagerRoot + "/*", servletConfig);
             }
 
             if (!isResourcesRegistered()) {
-                registerResources(this.webManagerRoot + "/res", "/res");
+                registerResources(this.webManagerRoot + "/res/*", "/res");
             }
 
         } catch (Exception e) {
@@ -1026,6 +1031,11 @@ public class OsgiManager extends GenericServlet
             newWebManagerRoot = "/" + newWebManagerRoot; //$NON-NLS-1$
         }
 
+        if (newWebManagerRoot.endsWith("/"))
+        {
+            newWebManagerRoot = newWebManagerRoot.substring(0, newWebManagerRoot.lastIndexOf("/"));            
+        }
+
         // default category
         this.defaultCategory = ConfigurationUtil.getProperty( config, PROP_CATEGORY, DEFAULT_CATEGORY );
         
@@ -1046,8 +1056,22 @@ public class OsgiManager extends GenericServlet
         }
         initInternalPlugins();
 
-        // just set the configured location (FELIX-2034)
-        this.webManagerRoot = newWebManagerRoot;
+        if (osgiConfig != null) {
+
+            // unbind old location first
+            unregisterServices();
+
+            // switch location
+            this.webManagerRoot = newWebManagerRoot;
+
+            // bind new location now
+            registerServices();
+
+        } else {
+
+            // just set the configured location (FELIX-2034)
+            this.webManagerRoot = newWebManagerRoot;
+        }
     }
 
     private void initInternalPlugins()
@@ -1183,7 +1207,7 @@ public class OsgiManager extends GenericServlet
     
     private void registerServletContextHelper(ServletContextHelper servletContextHelper) {
         final Dictionary<String, Object> servletContextProps = new Hashtable<>();
-        servletContextProps.put(HttpWhiteboardConstants.HTTP_WHITEBOARD_CONTEXT_NAME, "default");
+        servletContextProps.put(HttpWhiteboardConstants.HTTP_WHITEBOARD_CONTEXT_NAME, DEFAULT_CONTEXT_NAME);
         servletContextProps.put(HttpWhiteboardConstants.HTTP_WHITEBOARD_CONTEXT_PATH, "/");
         
         this.servletContextHelperRegistration = getBundleContext().registerService(ServletContextHelper.class,
@@ -1202,7 +1226,8 @@ public class OsgiManager extends GenericServlet
         }
 
         servletProps.put(HTTP_WHITEBOARD_SERVLET_PATTERN, servletPath);
-        
+        servletProps.put(HTTP_WHITEBOARD_CONTEXT_SELECT, "(" + HTTP_WHITEBOARD_CONTEXT_NAME + "=" + DEFAULT_CONTEXT_NAME + ")");
+
         this.servletRegistration = getBundleContext().registerService(Servlet.class, this, servletProps);
     }
 
@@ -1210,7 +1235,8 @@ public class OsgiManager extends GenericServlet
         final Dictionary<String, Object> resourceProps = new Hashtable<>();
         resourceProps.put(HTTP_WHITEBOARD_RESOURCE_PATTERN, pattern);
         resourceProps.put(HTTP_WHITEBOARD_RESOURCE_PREFIX, prefix);
-        
+        resourceProps.put(HTTP_WHITEBOARD_CONTEXT_SELECT, "(" + HTTP_WHITEBOARD_CONTEXT_NAME + "=" + DEFAULT_CONTEXT_NAME + ")");
+
         this.resourcesRegistration = getBundleContext().registerService(Object.class,
                 new Object(), resourceProps);        
     }

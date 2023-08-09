@@ -27,10 +27,9 @@ import org.apache.felix.inventory.Format;
 import org.apache.felix.inventory.InventoryPrinter;
 import org.apache.felix.inventory.ZipAttachmentProvider;
 import org.apache.felix.inventory.impl.webconsole.ConsoleConstants;
-import org.osgi.framework.Bundle;
 import org.osgi.framework.BundleContext;
-import org.osgi.framework.ServiceFactory;
 import org.osgi.framework.ServiceRegistration;
+import org.osgi.service.servlet.whiteboard.HttpWhiteboardConstants;
 
 /**
  * Helper class for a inventory printer.
@@ -79,25 +78,14 @@ public class InventoryPrinterAdapter implements InventoryPrinterHandler, Compara
             if (value == null || !"false".equalsIgnoreCase(value.toString()))
             {
                 final Dictionary<String, Object> props = new Hashtable<>();
-                props.put(ConsoleConstants.PLUGIN_LABEL, "status-" + this.description.getName());
+                props.put(HttpWhiteboardConstants.HTTP_WHITEBOARD_SERVLET_NAME, getLabel());
+                props.put(HttpWhiteboardConstants.HTTP_WHITEBOARD_CONTEXT_SELECT,
+                        "(" + HttpWhiteboardConstants.HTTP_WHITEBOARD_CONTEXT_NAME + "="
+                                + ConsoleConstants.DEFAULT_CONTEXT_NAME + ")");
+                props.put(ConsoleConstants.PLUGIN_LABEL, getLabel());
                 props.put(ConsoleConstants.PLUGIN_TITLE, this.description.getTitle());
                 props.put(ConsoleConstants.PLUGIN_CATEGORY, ConsoleConstants.WEB_CONSOLE_CATEGORY);
-                this.registration = context.registerService(ConsoleConstants.INTERFACE_SERVLET, new ServiceFactory()
-                {
-
-                    @Override
-                    public void ungetService(final Bundle bundle, final ServiceRegistration registration, final Object service)
-                    {
-                        // nothing to do
-                    }
-
-                    @Override
-                    public Object getService(final Bundle bundle, final ServiceRegistration registration)
-                    {
-                        return new WebConsolePlugin(manager, description.getName());
-                    }
-
-                }, props);
+                this.registration = context.registerService(ConsoleConstants.INTERFACE_SERVLET, new WebConsolePlugin(manager, description.getName()), props);
             }
         }
     }
@@ -184,6 +172,11 @@ public class InventoryPrinterAdapter implements InventoryPrinterHandler, Compara
     {
         return this.description;
     }
+
+    private final String getLabel()
+    {
+        return ("status-" + this.description.getName());
+    }    
 
     @Override
     public int compareTo(final InventoryPrinterAdapter spa)

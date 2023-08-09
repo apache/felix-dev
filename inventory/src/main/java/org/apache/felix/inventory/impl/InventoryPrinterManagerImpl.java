@@ -31,12 +31,11 @@ import java.util.TreeSet;
 import org.apache.felix.inventory.Format;
 import org.apache.felix.inventory.InventoryPrinter;
 import org.apache.felix.inventory.impl.webconsole.ConsoleConstants;
-import org.osgi.framework.Bundle;
 import org.osgi.framework.BundleContext;
 import org.osgi.framework.InvalidSyntaxException;
-import org.osgi.framework.ServiceFactory;
 import org.osgi.framework.ServiceReference;
 import org.osgi.framework.ServiceRegistration;
+import org.osgi.service.servlet.whiteboard.HttpWhiteboardConstants;
 import org.osgi.util.tracker.ServiceTracker;
 import org.osgi.util.tracker.ServiceTrackerCustomizer;
 
@@ -79,23 +78,14 @@ public class InventoryPrinterManagerImpl implements ServiceTrackerCustomizer<Inv
         this.cfgPrinterTracker.open();
 
         final Dictionary<String, Object> props = new Hashtable<>();
+        props.put(HttpWhiteboardConstants.HTTP_WHITEBOARD_SERVLET_NAME, ConsoleConstants.NAME);
+        props.put(HttpWhiteboardConstants.HTTP_WHITEBOARD_CONTEXT_SELECT,
+                "(" + HttpWhiteboardConstants.HTTP_WHITEBOARD_CONTEXT_NAME + "=" + ConsoleConstants.DEFAULT_CONTEXT_NAME
+                        + ")");
         props.put(ConsoleConstants.PLUGIN_LABEL, ConsoleConstants.NAME);
         props.put(ConsoleConstants.PLUGIN_TITLE, ConsoleConstants.TITLE);
         props.put(ConsoleConstants.PLUGIN_CATEGORY, ConsoleConstants.WEB_CONSOLE_CATEGORY);
-        this.pluginRegistration = btx.registerService(ConsoleConstants.INTERFACE_SERVLET, new ServiceFactory()
-        {
-            @Override
-            public void ungetService(final Bundle bundle, final ServiceRegistration registration, final Object service)
-            {
-                // nothing to do
-            }
-
-            @Override
-            public Object getService(final Bundle bundle, final ServiceRegistration registration)
-            {
-                return new DefaultWebConsolePlugin(InventoryPrinterManagerImpl.this);
-            }
-        }, props);
+        this.pluginRegistration = btx.registerService(ConsoleConstants.INTERFACE_SERVLET, new DefaultWebConsolePlugin(InventoryPrinterManagerImpl.this), props);
     }
 
     /**

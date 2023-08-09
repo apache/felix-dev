@@ -21,16 +21,16 @@ import java.text.DateFormat;
 import java.util.Date;
 import java.util.Locale;
 
-import jakarta.servlet.http.HttpServlet;
-import jakarta.servlet.http.HttpServletRequest;
-import jakarta.servlet.http.HttpServletResponse;
-
 import org.apache.felix.inventory.Format;
 import org.apache.felix.inventory.impl.helper.ConfigurationWriter;
 import org.apache.felix.inventory.impl.helper.HtmlConfigurationWriter;
 import org.apache.felix.inventory.impl.helper.JSONConfigurationWriter;
 import org.apache.felix.inventory.impl.helper.PlainTextConfigurationWriter;
 import org.apache.felix.inventory.impl.helper.ZipConfigurationWriter;
+
+import jakarta.servlet.http.HttpServlet;
+import jakarta.servlet.http.HttpServletRequest;
+import jakarta.servlet.http.HttpServletResponse;
 
 /**
  * The web console plugin for a inventory printer.
