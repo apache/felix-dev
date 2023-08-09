@@ -24,12 +24,13 @@ import java.util.Comparator;
 import java.util.Enumeration;
 import java.util.Locale;
 
-import jakarta.servlet.http.HttpServletRequest;
-import jakarta.servlet.http.HttpServletResponse;
-
 import org.osgi.framework.Bundle;
 import org.osgi.framework.Constants;
+import org.osgi.framework.ServiceReference;
 import org.osgi.framework.Version;
+
+import jakarta.servlet.http.HttpServletRequest;
+import jakarta.servlet.http.HttpServletResponse;
 
 
 /**
@@ -262,5 +263,14 @@ public class Util
             // fallback to using the default locale
             return Locale.getDefault();
         }
+    }
+
+
+    public static String getStringProperty( final ServiceReference<?> service, final String propertyName ) {
+        final Object property = service.getProperty( propertyName );
+        if ( property instanceof String ) {
+            return ( String ) property;
+        }
+        return null;
     }
 }

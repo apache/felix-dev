@@ -77,12 +77,6 @@ public class WebConsolePluginAdapter extends AbstractWebConsolePlugin
 
         // activate this abstract plugin (mainly to set the bundle context)
         activate( serviceReference.getBundle().getBundleContext() );
-        
-        try {
-            init(plugin.getServletConfig());
-        } catch (ServletException e) {
-            log(LogService.LOG_ERROR, "Problem initializing", e);
-        }
     }
 
     //---------- AbstractWebConsolePlugin API

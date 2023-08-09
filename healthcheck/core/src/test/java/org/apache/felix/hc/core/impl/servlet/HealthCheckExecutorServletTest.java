@@ -82,7 +82,7 @@ public class HealthCheckExecutorServletTest {
     private ResultTxtVerboseSerializer verboseTxtSerializer;
 
     @Mock
-    private ServiceReference hcServiceRef;
+    private ServiceReference<?> hcServiceRef;
 
     @Mock
     private PrintWriter writer;

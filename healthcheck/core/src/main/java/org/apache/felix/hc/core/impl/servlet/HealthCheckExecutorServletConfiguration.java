@@ -20,20 +20,18 @@ package org.apache.felix.hc.core.impl.servlet;
 import org.osgi.service.metatype.annotations.AttributeDefinition;
 import org.osgi.service.metatype.annotations.ObjectClassDefinition;
 import org.osgi.service.metatype.annotations.Option;
-import org.osgi.service.servlet.whiteboard.HttpWhiteboardConstants;
 
 @ObjectClassDefinition(name = "Apache Felix Health Check Executor Servlet", description = "Serializes health check results into html, json or txt format")
 @interface HealthCheckExecutorServletConfiguration {
 
     String SERVLET_PATH_DEFAULT = "/system/health";
 
-    @AttributeDefinition(name = "Path", description = "Servlet path (defaults to " + SERVLET_PATH_DEFAULT
-            + " in order to not be accessible via Apache/Internet)")
+	@AttributeDefinition(name = "Servlet Context Name", description = "Servlet Context Name to register the servlet with. If not specified, the default context is used.")
+    String servletContextName();
+
+    @AttributeDefinition(name = "Servlet Path", description = "Servlet path (defaults to " + SERVLET_PATH_DEFAULT + ")")
     String servletPath() default SERVLET_PATH_DEFAULT;
     
-    @AttributeDefinition(name = "Servlet Context Filter", description = "Needs to be set to correct whiteboard servlet context helper service filter expression (e.g. '(osgi.http.whiteboard.context.name=default)'")
-    String osgi_http_whiteboard_context_select() default "(" + HttpWhiteboardConstants.HTTP_WHITEBOARD_CONTEXT_NAME + "=*)";
-
     @AttributeDefinition(name = "Servlet Whiteboard Filter", description = "Needs to be set to correct servlet whiteboard filter expression")
     String osgi_http_whiteboard_target();    
     

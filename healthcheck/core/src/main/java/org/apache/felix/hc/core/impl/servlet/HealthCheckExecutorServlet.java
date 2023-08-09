@@ -17,6 +17,7 @@
  */
 package org.apache.felix.hc.core.impl.servlet;
 
+import static org.osgi.service.servlet.whiteboard.HttpWhiteboardConstants.HTTP_WHITEBOARD_CONTEXT_NAME;
 import static org.osgi.service.servlet.whiteboard.HttpWhiteboardConstants.HTTP_WHITEBOARD_CONTEXT_SELECT;
 import static org.osgi.service.servlet.whiteboard.HttpWhiteboardConstants.HTTP_WHITEBOARD_SERVLET_PATTERN;
 import static org.osgi.service.servlet.whiteboard.HttpWhiteboardConstants.HTTP_WHITEBOARD_TARGET;
@@ -26,10 +27,12 @@ import java.io.PrintWriter;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Dictionary;
+import java.util.HashMap;
 import java.util.Hashtable;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Map.Entry;
 import java.util.TreeMap;
 
 import org.apache.felix.hc.api.Result;
@@ -39,6 +42,7 @@ import org.apache.felix.hc.api.execution.HealthCheckExecutor;
 import org.apache.felix.hc.api.execution.HealthCheckSelector;
 import org.apache.felix.hc.core.impl.executor.CombinedExecutionResult;
 import org.apache.felix.hc.core.impl.util.lang.StringUtils;
+import org.osgi.dto.DTO;
 import org.osgi.framework.BundleContext;
 import org.osgi.framework.ServiceRegistration;
 import org.osgi.service.component.annotations.Activate;
@@ -138,18 +142,16 @@ public class HealthCheckExecutorServlet extends HttpServlet {
     private static final String CACHE_CONTROL_VALUE = "no-cache";
     private static final String CORS_ORIGIN_HEADER_NAME = "Access-Control-Allow-Origin";
 
-    private final List<ServiceRegistration<Servlet>> servletRegistrations = new ArrayList<>();
-
     private String servletPath;
     
-    private String whiteboardContextSelect;
-    
-    private String whiteboardTarget;    
-
     private String corsAccessControlAllowOrigin;
 
     private Map<Result.Status, Integer> defaultStatusMapping;
     
+    // Key: Servlet Path | Value: Servlet Registration
+    private Map<String, ServiceRegistration<Servlet>> servletRegistrations;
+    
+    private BundleContext bundleContext;
     private long servletDefaultTimeout;
     private String[] servletDefaultTags;
     private String defaultFormat;
@@ -157,8 +159,6 @@ public class HealthCheckExecutorServlet extends HttpServlet {
     private boolean defaultCombineTagsWithOr;
     private boolean disableRequestConfiguration;
     
-    private BundleContext bundleContext;
-
     @Reference
     HealthCheckExecutor healthCheckExecutor;
 
@@ -176,10 +176,9 @@ public class HealthCheckExecutorServlet extends HttpServlet {
     
     @Activate
     protected final void activate(final HealthCheckExecutorServletConfiguration configuration, final BundleContext bundleContext) {
-        this.bundleContext = bundleContext;
+    	this.bundleContext = bundleContext;
+    	this.servletRegistrations = new HashMap<>();
         this.servletPath = configuration.servletPath();
-        this.whiteboardContextSelect = configuration.osgi_http_whiteboard_context_select();
-        this.whiteboardTarget = configuration.osgi_http_whiteboard_target();
         this.defaultStatusMapping = getStatusMapping(configuration.httpStatusMapping());
         this.servletDefaultTimeout = configuration.timeout();
         this.servletDefaultTags = configuration.tags();
@@ -208,7 +207,7 @@ public class HealthCheckExecutorServlet extends HttpServlet {
             servletPath, defaultStatusMapping, servletDefaultTimeout, 
             servletDefaultTags!=null ? Arrays.asList(servletDefaultTags): "<none>", defaultCombineTagsWithOr, defaultFormat, 
             Arrays.toString(this.allowedFormats), corsAccessControlAllowOrigin);
-        
+
         Map<String, HttpServlet> servletsToRegister = new LinkedHashMap<String, HttpServlet>();
         servletsToRegister.put(this.servletPath, this);
         if ( isFormatAllowed(FORMAT_HTML) ) {
@@ -229,19 +228,11 @@ public class HealthCheckExecutorServlet extends HttpServlet {
 
         for (final Map.Entry<String, HttpServlet> servlet : servletsToRegister.entrySet()) {
             try {
-                LOG.info("Registering HC servlet {} to path {}", getClass().getSimpleName(), servlet.getKey());
-
-                final Dictionary<String, Object> servletProps = new Hashtable<>();
-                servletProps.put(HTTP_WHITEBOARD_SERVLET_PATTERN, servlet.getKey());
-                if (this.whiteboardContextSelect != null) {
-                    servletProps.put(HTTP_WHITEBOARD_CONTEXT_SELECT, this.whiteboardContextSelect);
-                }
-                if (this.whiteboardTarget != null) {
-                    servletProps.put(HTTP_WHITEBOARD_TARGET, this.whiteboardTarget);
-                }
-
-                servletRegistrations
-                        .add(this.bundleContext.registerService(Servlet.class, servlet.getValue(), servletProps));
+                LOG.info("Registering HC Servlet > Name: '{}', Path: '{}'", getClass().getSimpleName(),
+                	    servlet.getKey());
+                ServletInfoDTO servletInfo = new ServletInfoDTO(configuration.servletContextName(), configuration.osgi_http_whiteboard_target(),
+                        servlet.getKey(), servlet.getValue());
+                registerServlet(servletInfo);
             } catch (Exception e) {
                 LOG.error("Could not register health check servlet: " + e, e);
             }
@@ -250,20 +241,31 @@ public class HealthCheckExecutorServlet extends HttpServlet {
     
     @Deactivate
     public void deactivate() {
-        if (this.servletRegistrations.isEmpty()) {
-            return;
-        }
-        
-        for (ServiceRegistration<Servlet> servletRegistration : servletRegistrations) {
+        for (final Entry<String, ServiceRegistration<Servlet>> entry : servletRegistrations.entrySet()) {
             try {
-                LOG.info("Unregistering HC Servlet {} from path {}", getClass().getSimpleName(), servletRegistration.getReference().getProperty(HTTP_WHITEBOARD_SERVLET_PATTERN));
-                servletRegistration.unregister();
+                LOG.info("Unregistering HC Servlet {} from path {}", getClass().getSimpleName(), entry.getKey());
+                entry.getValue().unregister();
             } catch (Exception e) {
-                // already unregistered
+                // ignore the exception - this might happen on shutdown
             }
         }
         servletRegistrations.clear();
-    }    
+    }
+
+    private void registerServlet(final ServletInfoDTO servletInfo) {
+    	final Dictionary<String, Object> properties = new Hashtable<>();
+
+    	if (servletInfo.whiteboardTarget != null && !servletInfo.whiteboardTarget.isEmpty()) {
+    	    properties.put(HTTP_WHITEBOARD_TARGET, servletInfo.whiteboardTarget);
+        }
+        if (servletInfo.contextName != null && !servletInfo.contextName.isEmpty()) {
+    	    properties.put(HTTP_WHITEBOARD_CONTEXT_SELECT, "(".concat(HTTP_WHITEBOARD_CONTEXT_NAME).concat("=").concat(servletInfo.contextName).concat(")"));
+        }
+    	properties.put(HTTP_WHITEBOARD_SERVLET_PATTERN, servletInfo.servletPath);
+
+    	final ServiceRegistration<Servlet> registration = bundleContext.registerService(Servlet.class, servletInfo.servlet, properties);
+    	servletRegistrations.put(servletPath, registration);
+    }
 
     /**
      * Check if the format is allowed
@@ -482,5 +484,18 @@ public class HealthCheckExecutorServlet extends HttpServlet {
             HealthCheckExecutorServlet.this.doGet(req, resp, null, format);
         }
     }
-
+    
+    private static class ServletInfoDTO extends DTO {
+    	String contextName;
+    	String whiteboardTarget;
+    	String servletPath;
+    	Servlet servlet;
+    	
+        public ServletInfoDTO(String contextName, String whiteboardTarget, String servletPath, Servlet servlet) {
+            this.contextName = contextName;
+            this.whiteboardTarget = whiteboardTarget;
+            this.servletPath = servletPath;
+            this.servlet = servlet;
+        }
+    }
 }

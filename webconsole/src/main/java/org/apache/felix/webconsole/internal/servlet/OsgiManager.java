@@ -58,7 +58,7 @@ import org.apache.felix.webconsole.internal.Util;
 import org.apache.felix.webconsole.internal.core.BundlesServlet;
 import org.apache.felix.webconsole.internal.filter.FilteringResponseWrapper;
 import org.apache.felix.webconsole.internal.i18n.ResourceBundleManager;
-import org.apache.felix.webconsole.internal.servlet.PluginHolder.InternalPlugin;
+import org.apache.felix.webconsole.internal.servlet.Plugin.InternalPlugin;
 import org.osgi.framework.Bundle;
 import org.osgi.framework.BundleContext;
 import org.osgi.framework.Constants;
@@ -200,7 +200,6 @@ public class OsgiManager extends GenericServlet
      * property (value is "/system/console").
      */
     public static final String DEFAULT_MANAGER_ROOT = "/system/console"; //$NON-NLS-1$
-//    static final String DEFAULT_MANAGER_ROOT = "/system/console"; //$NON-NLS-1$
 
     private static final String OLD_CONFIG_MANAGER_CLASS = "org.apache.felix.webconsole.internal.compendium.ConfigManager"; //$NON-NLS-1$
     private static final String NEW_CONFIG_MANAGER_CLASS = "org.apache.felix.webconsole.internal.configuration.ConfigManager"; //$NON-NLS-1$
@@ -233,7 +232,7 @@ public class OsgiManager extends GenericServlet
     
     private PluginHolder holder;
 
-    private ServiceTracker brandingTracker;
+    private ServiceTracker<BrandingPlugin, BrandingPlugin> brandingTracker;
 
     private ServiceTracker<WebConsoleSecurityProvider, WebConsoleSecurityProvider> securityProviderTracker;
 
@@ -338,12 +337,6 @@ public class OsgiManager extends GenericServlet
 
         // the resource bundle manager
         resourceBundleManager = new ResourceBundleManager(getBundleContext());
-
-        // start the configuration render, providing the resource bundle manager
-        //ConfigurationRender cr = new ConfigurationRender(resourceBundleManager);
-        //cr.activate(bundleContext);
-        //osgiManagerPlugins.add(cr);
-        //holder.addOsgiManagerPlugin(cr);
 
         // start tracking external plugins after setting up our own plugins
         holder.open();
@@ -1086,7 +1079,7 @@ public class OsgiManager extends GenericServlet
             {
                 if (active)
                 {
-                    holder.removeInternalPlugin(label);
+                    holder.removeInternalPlugin(pluginClassName, label);
                 }
             }
             else
