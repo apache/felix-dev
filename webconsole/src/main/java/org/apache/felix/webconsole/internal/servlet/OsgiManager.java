@@ -64,6 +64,7 @@ import org.apache.felix.webconsole.internal.core.BundlesServlet;
 import org.apache.felix.webconsole.internal.filter.FilteringResponseWrapper;
 import org.apache.felix.webconsole.internal.i18n.ResourceBundleManager;
 import org.apache.felix.webconsole.internal.servlet.Plugin.InternalPlugin;
+import org.apache.felix.webconsole.internal.system.VMStatPlugin;
 import org.osgi.framework.Bundle;
 import org.osgi.framework.BundleContext;
 import org.osgi.framework.Constants;
@@ -142,6 +143,10 @@ public class OsgiManager extends GenericServlet
 
     private static final String FRAMEWORK_PROP_LOCALE = "felix.webconsole.locale"; //$NON-NLS-1$
 
+    private static final String FRAMEWORK_SHUTDOWN_TIMEOUT = "felix.webconsole.shutdown.timeout"; //$NON-NLS-1$
+
+    private static final String FRAMEWORK_RELOAD_TIMEOUT = "felix.webconsole.reload.timeout"; //$NON-NLS-1$
+
     static final String FRAMEWORK_PROP_SECURITY_PROVIDERS = "felix.webconsole.security.providers"; //$NON-NLS-1$
 
     static final String SECURITY_PROVIDER_PROPERTY_NAME = "webconsole.security.provider.id"; //$NON-NLS-1$
@@ -167,6 +172,12 @@ public class OsgiManager extends GenericServlet
     static final String PROP_ENABLE_SECRET_HEURISTIC = "secret.heuristic.enabled"; //$NON-NLS-1$
 
     static final String PROP_HTTP_SERVICE_SELECTOR = "http.service.filter"; //$NON-NLS-1$
+    
+    /** The framework shutdown timeout */
+    public static final String PROP_SHUTDOWN_TIMEOUT = "shutdown.timeout";
+
+    /** The timeout for VMStat plugin page reload */
+    public static final String PROP_RELOAD_TIMEOUT = "reload.timeout";
 
     public static final int DEFAULT_LOG_LEVEL = LogService.LOG_WARNING;
 
@@ -181,6 +192,10 @@ public class OsgiManager extends GenericServlet
     static final String DEFAULT_CATEGORY = "Main"; //$NON-NLS-1$
 
     static final String DEFAULT_HTTP_SERVICE_SELECTOR = ""; //$NON-NLS-1$
+
+    static final int DEFAULT_SHUTDOWN_TIMEOUT = 5; //$NON-NLS-1$
+
+    static final int DEFAULT_RELOAD_TIMEOUT = 40; //$NON-NLS-1$
 
     /** Default value for secret heuristics */
     public static final boolean DEFAULT_ENABLE_SECRET_HEURISTIC = false;
@@ -361,7 +376,11 @@ public class OsgiManager extends GenericServlet
             ConfigurationUtil.getProperty( bundleContext, FRAMEWORK_PROP_LOG_LEVEL, DEFAULT_LOG_LEVEL ) );
         this.defaultConfiguration.put( PROP_LOCALE,
             ConfigurationUtil.getProperty( bundleContext, FRAMEWORK_PROP_LOCALE, null ) );
-
+        this.defaultConfiguration.put( PROP_SHUTDOWN_TIMEOUT,
+            ConfigurationUtil.getProperty( bundleContext, FRAMEWORK_SHUTDOWN_TIMEOUT, DEFAULT_SHUTDOWN_TIMEOUT ) );
+        this.defaultConfiguration.put( PROP_RELOAD_TIMEOUT,
+            ConfigurationUtil.getProperty( bundleContext, FRAMEWORK_RELOAD_TIMEOUT, DEFAULT_RELOAD_TIMEOUT ) );
+        
         // configure and start listening for configuration
         updateConfiguration(null);
 
@@ -578,35 +597,8 @@ public class OsgiManager extends GenericServlet
         final Locale locale = getConfiguredLocale(request);
         final String label = pathInfo.substring(1, slash);
         AbstractWebConsolePlugin plugin = getConsolePlugin(label);
-        if (plugin != null)
-        {
-            final Map labelMap = holder.getLocalizedLabelMap( resourceBundleManager, locale, this.defaultCategory );
-            final Object flatLabelMap = labelMap.remove( WebConsoleConstants.ATTR_LABEL_MAP );
 
-            // the official request attributes
-            request.setAttribute(WebConsoleConstants.ATTR_LANG_MAP, getLangMap());
-            request.setAttribute(WebConsoleConstants.ATTR_LABEL_MAP, flatLabelMap);
-            request.setAttribute( ATTR_LABEL_MAP_CATEGORIZED, labelMap );
-            request.setAttribute(WebConsoleConstants.ATTR_APP_ROOT,
-                request.getContextPath() + request.getServletPath());
-            request.setAttribute(WebConsoleConstants.ATTR_PLUGIN_ROOT,
-                request.getContextPath() + request.getServletPath() + '/' + label);
-
-            // deprecated request attributes
-            request.setAttribute(ATTR_LABEL_MAP_OLD, flatLabelMap);
-            request.setAttribute(ATTR_APP_ROOT_OLD,
-                request.getContextPath() + request.getServletPath());
-
-            // fix for https://issues.apache.org/jira/browse/FELIX-3408
-            ensureLocaleCookieSet(request, response, locale);
-
-            // wrap the response for localization and template variable replacement
-            request = wrapRequest(request, locale);
-            response = wrapResponse(request, response, plugin);
-
-            plugin.service(request, response);
-        }
-        else
+        if (plugin == null)
         {
             final String body404 = MessageFormat.format(
                 resourceBundleManager.getResourceBundle(bundleContext.getBundle(), locale).getString(
@@ -617,7 +609,36 @@ public class OsgiManager extends GenericServlet
             response.setContentType("text/html"); //$NON-NLS-1$
             response.setStatus(HttpServletResponse.SC_NOT_FOUND);
             response.getWriter().println(body404);
+
+            return;
         }
+
+        final Map labelMap = holder.getLocalizedLabelMap( resourceBundleManager, locale, this.defaultCategory );
+        final Object flatLabelMap = labelMap.remove( WebConsoleConstants.ATTR_LABEL_MAP );
+
+        // the official request attributes
+        request.setAttribute(WebConsoleConstants.ATTR_LANG_MAP, getLangMap());
+        request.setAttribute(WebConsoleConstants.ATTR_LABEL_MAP, flatLabelMap);
+        request.setAttribute( ATTR_LABEL_MAP_CATEGORIZED, labelMap );
+        request.setAttribute(WebConsoleConstants.ATTR_APP_ROOT,
+            request.getContextPath() + request.getServletPath());
+        request.setAttribute(WebConsoleConstants.ATTR_PLUGIN_ROOT,
+            request.getContextPath() + request.getServletPath() + '/' + label);
+        request.setAttribute(WebConsoleConstants.ATTR_CONFIGURATION, configuration);
+
+        // deprecated request attributes
+        request.setAttribute(ATTR_LABEL_MAP_OLD, flatLabelMap);
+        request.setAttribute(ATTR_APP_ROOT_OLD,
+            request.getContextPath() + request.getServletPath());
+
+        // fix for https://issues.apache.org/jira/browse/FELIX-3408
+        ensureLocaleCookieSet(request, response, locale);
+
+        // wrap the response for localization and template variable replacement
+        request = wrapRequest(request, locale);
+        response = wrapResponse(request, response, plugin);
+
+        plugin.service(request, response);
     }
 
     private final void logout(HttpServletRequest request, HttpServletResponse response)

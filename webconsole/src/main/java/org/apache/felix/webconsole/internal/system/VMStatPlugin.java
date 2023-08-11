@@ -24,6 +24,7 @@ import java.io.StringWriter;
 import java.text.DateFormat;
 import java.text.MessageFormat;
 import java.util.Date;
+import java.util.Map;
 
 import javax.servlet.ServletException;
 import javax.servlet.http.HttpServletRequest;
@@ -32,8 +33,10 @@ import javax.servlet.http.HttpServletResponse;
 import org.apache.felix.utils.json.JSONWriter;
 import org.apache.felix.webconsole.DefaultVariableResolver;
 import org.apache.felix.webconsole.SimpleWebConsolePlugin;
+import org.apache.felix.webconsole.WebConsoleConstants;
 import org.apache.felix.webconsole.WebConsoleUtil;
 import org.apache.felix.webconsole.internal.OsgiManagerPlugin;
+import org.apache.felix.webconsole.internal.servlet.OsgiManager;
 import org.osgi.framework.Bundle;
 import org.osgi.framework.BundleException;
 import org.osgi.service.startlevel.StartLevel;
@@ -170,6 +173,7 @@ public class VMStatPlugin extends SimpleWebConsolePlugin implements OsgiManagerP
      */
     protected void renderContent( HttpServletRequest request, HttpServletResponse response ) throws IOException
     {
+        Map<String, Object> configuration = (Map<String, Object>) request.getAttribute( WebConsoleConstants.ATTR_CONFIGURATION );
         String body;
 
         if ( request.getAttribute( ATTR_TERMINATED ) != null )
@@ -177,6 +181,18 @@ public class VMStatPlugin extends SimpleWebConsolePlugin implements OsgiManagerP
             Object restart = request.getAttribute( PARAM_SHUTDOWN_TYPE );
             if ( ( restart instanceof Boolean ) && ( ( Boolean ) restart ).booleanValue() )
             {
+                StringWriter json = new StringWriter();
+
+                int reloadTimeout = (int) configuration.get( OsgiManager.PROP_RELOAD_TIMEOUT );
+                JSONWriter jw = new JSONWriter(json);
+                jw.object();
+                jw.key( "reloadTimeout").value( reloadTimeout );
+                jw.endObject();
+                jw.flush();
+
+                DefaultVariableResolver vars = ( ( DefaultVariableResolver ) WebConsoleUtil.getVariableResolver( request ) );
+                vars.put( "data", json.toString() );
+
                 body = TPL_VM_RESTART;
             }
             else
@@ -219,6 +235,9 @@ public class VMStatPlugin extends SimpleWebConsolePlugin implements OsgiManagerP
         jw.key( "mem_free").value(freeMem );
         jw.key( "mem_used").value(usedMem );
         jw.key( "shutdownType").value(shutdownType );
+
+        int shutdownTimeout = (int) configuration.get( OsgiManager.PROP_SHUTDOWN_TIMEOUT );
+        jw.key( "shutdownTimeout").value(shutdownTimeout );
 
         // only add the processors if the number is available
         final int processors = getAvailableProcessors();
