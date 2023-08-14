@@ -40,7 +40,7 @@ import org.osgi.framework.Constants;
 import org.osgi.framework.Filter;
 import org.osgi.framework.InvalidSyntaxException;
 import org.osgi.framework.ServiceReference;
-import org.osgi.service.log.LogService;
+import org.osgi.service.log.LogLevel;
 import org.osgi.util.tracker.ServiceTracker;
 import org.osgi.util.tracker.ServiceTrackerCustomizer;
 
@@ -209,6 +209,7 @@ class PluginHolder implements ServiceTrackerCustomizer<Servlet, Plugin> {
      *
      * @return The localized map of labels to titles
      */
+    @SuppressWarnings({ "unchecked", "rawtypes" })
     Map getLocalizedLabelMap( final ResourceBundleManager resourceBundleManager, final Locale locale, final String defaultCategory )
     {
         final Map map = new HashMap();
@@ -259,6 +260,7 @@ class PluginHolder implements ServiceTrackerCustomizer<Servlet, Plugin> {
     }
 
 
+    @SuppressWarnings({ "unchecked", "rawtypes" })
     private Map findCategoryMap( Map map, String categoryPath )
     {
         Map categoryMap = null;
@@ -360,14 +362,14 @@ class PluginHolder implements ServiceTrackerCustomizer<Servlet, Plugin> {
                 if (!first.init()) {
                     list.remove(plugin);
                 } else if (oldPlugin != null) {
-                    osgiManager.log(LogService.LOG_WARNING, "Overwriting existing plugin " + oldPlugin.getId() 
+                    osgiManager.log(LogLevel.WARN.ordinal(), "Overwriting existing plugin " + oldPlugin.getId() 
                             + " having label " + plugin.getLabel() + " with new plugin " + plugin.getId()
                             + " due to higher ranking " );
                     oldPlugin.dispose();
                 }
             }
             if (first == oldPlugin) {
-                osgiManager.log(LogService.LOG_WARNING, "Ignoring new plugin " + plugin.getId()
+                osgiManager.log(LogLevel.WARN.ordinal(), "Ignoring new plugin " + plugin.getId()
                         + " having existing label " + plugin.getLabel() + " due to lower ranking than old plugin " + oldPlugin.getId() );
             }
         }

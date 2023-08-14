@@ -22,71 +22,55 @@ import static org.apache.felix.webconsole.internal.servlet.BasicWebConsoleSecuri
 import static org.apache.felix.webconsole.internal.servlet.BasicWebConsoleSecurityProvider.HEADER_WWW_AUTHENTICATE;
 
 import java.io.IOException;
-import java.net.URL;
 
 import javax.servlet.http.HttpServletRequest;
+import javax.servlet.http.HttpServletRequestWrapper;
 import javax.servlet.http.HttpServletResponse;
 
 import org.apache.felix.webconsole.User;
 import org.apache.felix.webconsole.WebConsoleSecurityProvider;
 import org.apache.felix.webconsole.WebConsoleSecurityProvider2;
-import org.osgi.service.http.HttpContext;
-import org.osgi.service.http.HttpService;
+import org.osgi.framework.Bundle;
+import org.osgi.service.http.context.ServletContextHelper;
 import org.osgi.util.tracker.ServiceTracker;
 
 
-final class OsgiManagerHttpContext implements HttpContext
-{
-
-    private final HttpContext base;
+final class OsgiManagerHttpContext extends ServletContextHelper {
 
     private final ServiceTracker<WebConsoleSecurityProvider, WebConsoleSecurityProvider> tracker;
 
     private final String realm;
 
-    OsgiManagerHttpContext(final HttpService httpService,
+    OsgiManagerHttpContext(final Bundle webConsoleBundle,
             final ServiceTracker<WebConsoleSecurityProvider, WebConsoleSecurityProvider> tracker,
-            final String realm)
-    {
+            final String realm) {
+        super(webConsoleBundle);
         this.tracker = tracker;
         this.realm = realm;
-        this.base = httpService.createDefaultHttpContext();
     }
 
-
-    public String getMimeType( String name )
-    {
-        return this.base.getMimeType( name );
-    }
-
-
-    public URL getResource( String name )
-    {
-        URL url = this.base.getResource( name );
-        if ( url == null && name.endsWith( "/" ) )
-        {
-            return this.base.getResource( name.substring( 0, name.length() - 1 ) );
-        }
-        return url;
-    }
-
-
-    /**
-     * Checks the <code>Authorization</code> header of the request for Basic
-     * authentication user name and password. If contained, the credentials are
-     * compared to the user name and password set for the OSGi Console.
-     * <p>
-     * If no user name is set, the <code>Authorization</code> header is
-     * ignored and the client is assumed to be authenticated.
-     *
-     * @param request The HTTP request used to get the
-     *            <code>Authorization</code> header.
-     * @param response The HTTP response used to send the authentication request
-     *            if authentication is required but not satisfied.
-     * @return {@code} true if authentication is required and not satisfied by the request.
-     */
-    public boolean handleSecurity( final HttpServletRequest request, final HttpServletResponse response ) {
+    @Override
+    public boolean handleSecurity( final HttpServletRequest r, final HttpServletResponse response ) {
         final WebConsoleSecurityProvider provider = tracker.getService();
+
+        // for compatibility we have to adjust a few methods on the request
+        final HttpServletRequest request = new HttpServletRequestWrapper(r) {
+
+            @Override
+            public String getContextPath() {
+                return "";
+            }
+
+            @Override
+            public String getServletPath() {
+                return r.getContextPath();
+            }
+
+            @Override
+            public String getPathInfo() {
+                return r.getServletPath();
+            }
+        };
 
         // check whether the security provider can fully handle the request
         final boolean result;
@@ -156,8 +140,8 @@ final class OsgiManagerHttpContext implements HttpContext
                         if ( authenticate( provider, username, userPass[1] ) )
                         {
                             // as per the spec, set attributes
-                            request.setAttribute( HttpContext.AUTHENTICATION_TYPE, HttpServletRequest.BASIC_AUTH );
-                            request.setAttribute( HttpContext.REMOTE_USER, username );
+                            request.setAttribute( AUTHENTICATION_TYPE, HttpServletRequest.BASIC_AUTH );
+                            request.setAttribute( REMOTE_USER, username );
 
                             // set web console user attribute
                             request.setAttribute( WebConsoleSecurityProvider2.USER_ATTRIBUTE, username );
@@ -175,15 +159,12 @@ final class OsgiManagerHttpContext implements HttpContext
         }
 
         // request authentication
-        try
-        {
+        try {
             response.setHeader( HEADER_WWW_AUTHENTICATE, AUTHENTICATION_SCHEME_BASIC + " realm=\"" + this.realm + "\"" );
             response.setStatus( HttpServletResponse.SC_UNAUTHORIZED );
             response.setContentLength( 0 );
             response.flushBuffer();
-        }
-        catch ( IOException ioe )
-        {
+        } catch ( IOException ioe ) {
             // failed sending the response ... cannot do anything about it
         }
 
@@ -191,8 +172,7 @@ final class OsgiManagerHttpContext implements HttpContext
         return false;
     }
 
-    private boolean authenticate( WebConsoleSecurityProvider provider, String username, byte[] password )
-    {
+    private boolean authenticate( WebConsoleSecurityProvider provider, String username, byte[] password ) {
         if ( provider != null )
         {
             return provider.authenticate( username, BasicWebConsoleSecurityProvider.toString( password ) ) != null;

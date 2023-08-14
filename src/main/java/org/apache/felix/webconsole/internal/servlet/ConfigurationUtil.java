@@ -91,7 +91,7 @@ public class ConfigurationUtil
      * @return The value of the named property as a string or <code>def</code>
      *         if the property does not exist
      */
-    public static final String getProperty(Map config, String name, String def)
+    public static final String getProperty(Map<String, Object> config, String name, String def)
     {
         Object value = config.get(name);
         if ( value instanceof String )
@@ -118,7 +118,7 @@ public class ConfigurationUtil
      * @return The value of the named property as a string or <code>def</code>
      *         if the property does not exist
      */
-    public static final int getProperty(Map config, String name, int def)
+    public static final int getProperty(Map<String, Object> config, String name, int def)
     {
         Object value = config.get(name);
         if (value instanceof Number)
@@ -150,7 +150,7 @@ public class ConfigurationUtil
      * @param name The name of the property to return
      * @return the property value as string array - no matter if originally it was other kind of array, collection or comma-separated string. Returns <code>null</code> if the property is not set.
      */
-    public static final String[] getStringArrayProperty(Map config, String name)
+    public static final String[] getStringArrayProperty(Map<String, Object> config, String name)
     {
         Object value = config.get(name);
         if (value == null)

@@ -35,13 +35,12 @@ import org.osgi.service.metatype.ObjectClassDefinition;
 class ConfigurationMetatypeSupport extends ConfigurationSupport implements MetaTypeProvider
 {
     private static final String[] CONF_PROPS = new String[]
-        { OsgiManager.PROP_MANAGER_ROOT, OsgiManager.DEFAULT_MANAGER_ROOT, //
-            OsgiManager.PROP_HTTP_SERVICE_SELECTOR, OsgiManager.DEFAULT_HTTP_SERVICE_SELECTOR, //
-            OsgiManager.PROP_DEFAULT_RENDER, OsgiManager.DEFAULT_PAGE, //
-            OsgiManager.PROP_REALM, OsgiManager.DEFAULT_REALM, //
-            OsgiManager.PROP_USER_NAME, OsgiManager.DEFAULT_USER_NAME, //
-            OsgiManager.PROP_CATEGORY, OsgiManager.DEFAULT_CATEGORY, //
-            OsgiManager.PROP_LOCALE, "", //$NON-NLS-1$
+        { OsgiManager.PROP_MANAGER_ROOT, OsgiManager.DEFAULT_MANAGER_ROOT,
+            OsgiManager.PROP_DEFAULT_RENDER, OsgiManager.DEFAULT_PAGE,
+            OsgiManager.PROP_REALM, OsgiManager.DEFAULT_REALM,
+            OsgiManager.PROP_USER_NAME, OsgiManager.DEFAULT_USER_NAME,
+            OsgiManager.PROP_CATEGORY, OsgiManager.DEFAULT_CATEGORY,
+            OsgiManager.PROP_LOCALE, "",
         };
 
     private final Object ocdLock = new Object();

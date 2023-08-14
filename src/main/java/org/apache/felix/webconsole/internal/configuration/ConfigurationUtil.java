@@ -20,13 +20,16 @@ package org.apache.felix.webconsole.internal.configuration;
 
 
 import java.io.IOException;
+import java.util.Collections;
 import java.util.Dictionary;
 import java.util.List;
+import java.util.Set;
 
 import org.apache.felix.webconsole.spi.ConfigurationHandler;
 import org.apache.felix.webconsole.spi.ValidationException;
 import org.osgi.framework.Constants;
 import org.osgi.framework.InvalidSyntaxException;
+import org.osgi.framework.ServiceReference;
 import org.osgi.service.cm.Configuration;
 import org.osgi.service.cm.ConfigurationAdmin;
 
@@ -109,12 +112,10 @@ public class ConfigurationUtil {
             this.factoryPid = factoryPid;
         }
 
-
         @Override
         public String getPid() {
             return PLACEHOLDER_PID;
         }
-
 
         @Override
         public String getFactoryPid() {
@@ -156,6 +157,34 @@ public class ConfigurationUtil {
         public long getChangeCount() {
             // dummy configuration always returns 0
             return 0;
+        }
+
+        @Override
+        public void addAttributes(ConfigurationAttribute... attrs) throws IOException {            
+            // no attributes
+        }
+
+        @Override
+        public Set<ConfigurationAttribute> getAttributes() {
+            // no attributes
+            return Collections.emptySet();
+        }
+
+        @Override
+        public Dictionary<String, Object> getProcessedProperties(ServiceReference<?> reference) {
+            // dummy configuration has no properties
+            return null;
+        }
+
+        @Override
+        public void removeAttributes(ConfigurationAttribute... attrs) throws IOException {            
+            // no attributes
+        }
+
+        @Override
+        public boolean updateIfDifferent(Dictionary<String, ?> properties) throws IOException {
+            // dummy configuration has no properties
+            return false;
         }
     }
 }
