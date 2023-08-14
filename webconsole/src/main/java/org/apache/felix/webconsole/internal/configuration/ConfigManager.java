@@ -287,7 +287,7 @@ public class ConfigManager extends SimpleWebConsolePlugin implements OsgiManager
             if ( ca != null )
             {
                 // create filter
-                final StringBuffer sb = new StringBuffer();
+                final StringBuilder sb = new StringBuilder();
                 if ( pid != null && pidFilter != null)
                 {
                     sb.append("(&"); //$NON-NLS-1$

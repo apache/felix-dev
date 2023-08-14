@@ -189,7 +189,7 @@ class ConfigJsonSupport {
             }
             json.endObject();
             if ( props != null ) {
-                final StringBuffer sb = new StringBuffer();
+                final StringBuilder sb = new StringBuilder();
                 for(final String key : Collections.list(props.keys())) {
                     if ( !metatypeAttributes.contains(key) ) {
                         if ( sb.length() > 0 ) {
@@ -432,7 +432,7 @@ class ConfigJsonSupport {
 
         // search for all variable patterns in name hint and replace them with configured/default values
         Matcher matcher = ConfigAdminSupport.NAMEHINT_PLACEHOLER_REGEXP.matcher(nameHint);
-        StringBuffer sb = new StringBuffer();
+        StringBuffer sb = new StringBuffer(); // use StringBuilder with Java >= 9
         while (matcher.find()) {
             String propertyName = matcher.group(1);
             String value = getConfigurationPropertyValueOrDefault(propertyName, props, adMap);
@@ -482,7 +482,7 @@ class ConfigJsonSupport {
         }
         // convert array to string
         if (value.getClass().isArray()) {
-            StringBuffer valueString = new StringBuffer();
+            StringBuilder valueString = new StringBuilder();
             for (int i = 0; i < Array.getLength(value); i++) {
                 if (i > 0) {
                     valueString.append(", ");

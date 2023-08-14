@@ -984,7 +984,7 @@ public abstract class AbstractWebConsolePlugin extends HttpServlet
         }
 
         // build the CSS links from the references
-        final StringBuffer buf = new StringBuffer();
+        final StringBuilder buf = new StringBuilder();
         for ( int i = 0; i < cssRefs.length; i++ )
         {
             buf.append( "<link href='" ); //$NON-NLS-1$
