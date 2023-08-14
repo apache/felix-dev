@@ -234,6 +234,7 @@ public class BundlesServlet extends SimpleWebConsolePlugin implements OsgiManage
      * @see org.apache.felix.webconsole.ConfigurationPrinter#printConfiguration(java.io.PrintWriter)
      */
     @Override
+    @SuppressWarnings({"rawtypes"})
     public void printConfiguration( PrintWriter pw )
     {
         try

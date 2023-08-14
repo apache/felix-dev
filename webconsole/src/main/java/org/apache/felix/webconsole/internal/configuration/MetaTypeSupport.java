@@ -163,6 +163,7 @@ class MetaTypeSupport
     }
 
 
+    @SuppressWarnings("rawtypes")
     private static List toList( Object value )
     {
         if ( value instanceof Vector )
@@ -190,11 +191,12 @@ class MetaTypeSupport
     }
 
 
+    @SuppressWarnings("rawtypes")
     static PropertyDescriptor createAttributeDefinition( final String id, final Object value )
     {
         int attrType;
         int attrCardinality;
-        Class type;
+        Class<?> type;
 
         if ( value == null )
         {
@@ -299,7 +301,7 @@ class MetaTypeSupport
             return Byte.valueOf( value );
         case AttributeDefinition.CHARACTER:
             char c = ( value.length() > 0 ) ? value.charAt( 0 ) : 0;
-            return new Character( c );
+            return Character.valueOf( c );
         case AttributeDefinition.DOUBLE:
             return Double.valueOf( value );
         case AttributeDefinition.FLOAT:
@@ -318,6 +320,7 @@ class MetaTypeSupport
     }
 
 
+    @SuppressWarnings({"rawtypes", "unchecked"})
     static void setPasswordProps( final Vector vec, final String[] properties, Object props )
     {
         List propList = ( props == null ) ? new ArrayList() : toList( props );

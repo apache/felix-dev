@@ -45,6 +45,7 @@ public class PreferencesConfigurationPrinter extends AbstractConfigurationPrinte
     /**
      * @see org.apache.felix.webconsole.ConfigurationPrinter#printConfiguration(java.io.PrintWriter)
      */
+    @SuppressWarnings({"rawtypes", "unchecked"})
     public void printConfiguration(PrintWriter printWriter)
     {
         ServiceReference sr = getBundleContext().getServiceReference(
