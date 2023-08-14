@@ -22,6 +22,7 @@ import static org.apache.felix.webconsole.internal.servlet.BasicWebConsoleSecuri
 import static org.apache.felix.webconsole.internal.servlet.BasicWebConsoleSecurityProvider.HEADER_WWW_AUTHENTICATE;
 
 import java.io.IOException;
+import java.net.URL;
 
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletRequestWrapper;
@@ -41,12 +42,23 @@ final class OsgiManagerHttpContext extends ServletContextHelper {
 
     private final String realm;
 
+    private final Bundle bundle;
+
     OsgiManagerHttpContext(final Bundle webConsoleBundle,
             final ServiceTracker<WebConsoleSecurityProvider, WebConsoleSecurityProvider> tracker,
             final String realm) {
         super(webConsoleBundle);
         this.tracker = tracker;
         this.realm = realm;
+        this.bundle = webConsoleBundle;
+    }
+
+    public URL getResource(final String name) {
+        URL url = this.bundle.getResource( name );
+        if ( url == null && name.endsWith( "/" ) ) {
+            url = this.bundle.getResource( name.substring( 0, name.length() - 1 ) );
+        }
+        return url;
     }
 
     @Override

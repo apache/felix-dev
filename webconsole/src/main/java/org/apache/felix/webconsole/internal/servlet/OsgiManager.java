@@ -17,10 +17,7 @@
 package org.apache.felix.webconsole.internal.servlet;
 
 import java.io.IOException;
-import java.io.InputStream;
-import java.io.OutputStream;
 import java.net.URL;
-import java.net.URLConnection;
 import java.security.AccessController;
 import java.security.PrivilegedActionException;
 import java.security.PrivilegedExceptionAction;
@@ -584,16 +581,6 @@ public class OsgiManager extends GenericServlet {
             return;
         }
 
-        if (pathInfo.startsWith("/res/")) {
-            URL url = this.getBundleContext().getBundle().getResource( pathInfo );
-            if ( url == null && pathInfo.endsWith( "/" ) ) {
-                url = this.getBundleContext().getBundle().getResource( pathInfo.substring( 0, pathInfo.length() - 1 ) );
-            }
-            if ( url != null && this.spool(request, response, url)) {
-                return;
-            }
-        }
-
         int slash = pathInfo.indexOf("/", 1); //$NON-NLS-1$
         if (slash < 2)
         {
@@ -646,46 +633,6 @@ public class OsgiManager extends GenericServlet {
         response = wrapResponse(request, response, plugin);
 
         plugin.service(request, response);
-    }
-
-    private boolean spool(final HttpServletRequest request, final HttpServletResponse response, final URL url) 
-    throws IOException {
-        final URLConnection connection = url.openConnection();
-        try ( InputStream ins = connection.getInputStream()) {
-            if (ins == null) {
-                return false;
-            }
-
-            // check whether we may return 304/UNMODIFIED
-            final long lastModified = connection.getLastModified();
-            if ( lastModified > 0 ) {
-                final long ifModifiedSince = request.getDateHeader( "If-Modified-Since" );
-                if ( ifModifiedSince >= ( lastModified / 1000 * 1000 ) ) {
-                    // Round down to the nearest second for a proper compare
-                    // A ifModifiedSince of -1 will always be less
-                    response.setStatus( HttpServletResponse.SC_NOT_MODIFIED );
-
-                    return true;
-                }
-
-                // have to send, so set the last modified header now
-                response.setDateHeader( "Last-Modified", lastModified );
-            }
-
-            response.setContentType( getServletContext().getMimeType( request.getPathInfo() ) );
-            response.setIntHeader( "Content-Length", connection.getContentLength() );
-
-            // spool the actual contents
-            try (final OutputStream out = response.getOutputStream()) {
-                byte[] buf = new byte[2048];
-                int rd;
-                while ( ( rd = ins.read( buf ) ) >= 0 ) {
-                    out.write( buf, 0, rd );
-                }
-            }
-
-            return true;
-        }
     }
 
     private final void logout(HttpServletRequest request, HttpServletResponse response)
@@ -989,6 +936,9 @@ public class OsgiManager extends GenericServlet {
 
                 props.put(HttpWhiteboardConstants.HTTP_WHITEBOARD_SERVLET_PATTERN, "/");
                 props.put(HttpWhiteboardConstants.HTTP_WHITEBOARD_CONTEXT_SELECT, "(" + HttpWhiteboardConstants.HTTP_WHITEBOARD_CONTEXT_NAME + "=" + SERVLEXT_CONTEXT_NAME + ")");
+
+                props.put(HttpWhiteboardConstants.HTTP_WHITEBOARD_RESOURCE_PATTERN, "/res/*");
+                props.put(HttpWhiteboardConstants.HTTP_WHITEBOARD_RESOURCE_PREFIX, "/res");
 
                 this.servletRegistration = getBundleContext().registerService(Servlet.class, this, props);                
             }
