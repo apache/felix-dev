@@ -21,8 +21,10 @@ package org.apache.felix.webconsole;
 
 import java.io.File;
 import java.io.IOException;
+import java.io.UnsupportedEncodingException;
 import java.lang.reflect.Array;
 import java.net.URLDecoder;
+import java.nio.charset.StandardCharsets;
 import java.util.HashMap;
 import java.util.Iterator;
 import java.util.List;
@@ -73,6 +75,7 @@ public final class WebConsoleUtil
      *
      * @return The {@link VariableResolver} for the given request.
      */
+    @SuppressWarnings("unchecked")
     public static VariableResolver getVariableResolver( final ServletRequest request )
     {
         final Object resolverObj = request.getAttribute( WebConsoleConstants.ATTR_CONSOLE_VARIABLE_RESOLVER );
@@ -82,9 +85,8 @@ public final class WebConsoleUtil
         }
 
         final DefaultVariableResolver resolver = new DefaultVariableResolver();
-        // FIXME: don't we need a constant for the values below?
-        resolver.put( "appRoot", request.getAttribute( WebConsoleConstants.ATTR_APP_ROOT ) ); //$NON-NLS-1$
-        resolver.put( "pluginRoot", request.getAttribute( WebConsoleConstants.ATTR_PLUGIN_ROOT ) ); //$NON-NLS-1$
+        resolver.put( "appRoot", request.getAttribute( WebConsoleConstants.ATTR_APP_ROOT ) );
+        resolver.put( "pluginRoot", request.getAttribute( WebConsoleConstants.ATTR_PLUGIN_ROOT ) );
         setVariableResolver( request, resolver );
         return resolver;
     }
@@ -130,6 +132,7 @@ public final class WebConsoleUtil
         }
 
         // check, whether we already have the parameters
+        @SuppressWarnings("unchecked")
         Map<String, FileItem[]> params = ( Map<String, FileItem[]> ) request.getAttribute( AbstractWebConsolePlugin.ATTR_FILEUPLOAD );
         if ( params == null )
         {
@@ -338,6 +341,7 @@ public final class WebConsoleUtil
      * @param value the value to decode
      * @return the decoded string
      */
+    @SuppressWarnings("deprecation")
     public static String urlDecode( final String value )
     {
         // shortcut for empty or missing values
@@ -346,14 +350,9 @@ public final class WebConsoleUtil
             return value;
         }
 
-        try
-        {
-            return URLDecoder.decode( value, "UTF-8" ); //$NON-NLS-1$
-        }
-        catch ( Throwable t )
-        {
-            // expected NoSuchMethodError: if platform does not support it
-            // expected UnsupportedEncoding (not really: UTF-8 is required)
+        try {
+            return URLDecoder.decode( value, "UTF-8" );
+        } catch (UnsupportedEncodingException e) {
             return URLDecoder.decode( value );
         }
     }

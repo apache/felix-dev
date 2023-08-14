@@ -18,10 +18,6 @@
  */
 package org.apache.felix.webconsole;
 
-import java.util.Dictionary;
-
-import org.apache.felix.webconsole.internal.servlet.OsgiManager;
-
 /**
  * WebConsoleConstants provides some common constants that are used by plugin
  * developers.
@@ -207,16 +203,10 @@ public interface WebConsoleConstants
      * <p>
      * The type of this request attribute is <code>Map&lt;String, Object&gt;</code>.
      * <p>
-     * This map contains the web console configuration params managed by {@link OsgiManager}.
+     * This map contains the web console configuration params managed by the web console.
      * It can be used to access to the configuration values while processing requests.
-     * e.g.: The VMStat plugin uses it in order to retrive the "felix.webconsole.reload.timeout" ({@link OsgiManager#FRAMEWORK_RELOAD_TIMEOUT})
-     * and "felix.webconsole.shutdown.timeout" ({@link OsgiManager#FRAMEWORK_SHUTDOWN_TIMEOUT}).
      * 
-     * @see OsgiManager
-     * @see OsgiManager#configuration
-     * @see OsgiManager#updateConfiguration( java.util.Dictionary )
-     * 
-     * @since 4.8.13
+     * @since 3.5.0
      */
-    public static final String ATTR_CONFIGURATION = "felix.webconsole.configuration"; //$NON-NLS-1$
+    public static final String ATTR_CONFIGURATION = "felix.webconsole.configuration";
 }
