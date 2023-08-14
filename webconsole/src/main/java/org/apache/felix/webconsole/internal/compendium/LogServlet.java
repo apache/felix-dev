@@ -68,7 +68,7 @@ public class LogServlet extends SimpleWebConsolePlugin implements OsgiManagerPlu
      */
     protected void doPost( HttpServletRequest req, HttpServletResponse resp ) throws IOException
     {
-        final int minLevel = WebConsoleUtil.getParameterInt( req, "minLevel", LogService.LOG_DEBUG ); //$NON-NLS-1$
+        final int minLevel = WebConsoleUtil.getParameterInt( req, "minLevel", LogService.LOG_DEBUG); //$NON-NLS-1$
 
         resp.setContentType( "application/json" ); //$NON-NLS-1$
         resp.setCharacterEncoding( "utf-8" ); //$NON-NLS-1$

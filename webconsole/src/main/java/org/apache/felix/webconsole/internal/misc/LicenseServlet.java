@@ -109,6 +109,7 @@ public final class LicenseServlet extends SimpleWebConsolePlugin implements Osgi
     /**
      * @see org.apache.felix.webconsole.AbstractWebConsolePlugin#renderContent(javax.servlet.http.HttpServletRequest, javax.servlet.http.HttpServletResponse)
      */
+    @SuppressWarnings("unchecked")
     protected void renderContent( HttpServletRequest request, HttpServletResponse res ) throws IOException
     {
         Bundle[] bundles = getBundleContext().getBundles();

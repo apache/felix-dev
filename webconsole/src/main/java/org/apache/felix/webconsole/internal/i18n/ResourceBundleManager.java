@@ -19,10 +19,10 @@
 package org.apache.felix.webconsole.internal.i18n;
 
 
-import java.util.HashMap;
 import java.util.Locale;
 import java.util.Map;
 import java.util.ResourceBundle;
+import java.util.concurrent.ConcurrentHashMap;
 
 import org.osgi.framework.Bundle;
 import org.osgi.framework.BundleContext;
@@ -35,26 +35,22 @@ import org.osgi.framework.BundleListener;
  * It contains a local cache, for bundles, but when a bundle is being unistalled,
  * its resources stored in the cache are cleaned up.
  */
-public class ResourceBundleManager implements BundleListener
-{
+public class ResourceBundleManager implements BundleListener {
 
     private final BundleContext bundleContext;
 
     private final ResourceBundleCache consoleResourceBundleCache;
 
-    private final Map resourceBundleCaches;
-
+    private final Map<Long, ResourceBundleCache> resourceBundleCaches = new ConcurrentHashMap<>();
 
     /**
      * Creates a new object and adds self as a bundle listener
      *
      * @param bundleContext the bundle context of the Web Console.
      */
-    public ResourceBundleManager( final BundleContext bundleContext )
-    {
+    public ResourceBundleManager( final BundleContext bundleContext ) {
         this.bundleContext = bundleContext;
         this.consoleResourceBundleCache = new ResourceBundleCache( bundleContext.getBundle() );
-        this.resourceBundleCaches = new HashMap();
 
         bundleContext.addBundleListener( this );
     }
@@ -78,8 +74,7 @@ public class ResourceBundleManager implements BundleListener
      * @return the resource bundle - if not bundle with the requested locale exists, 
      *   the default locale is used.
      */
-    public ResourceBundle getResourceBundle( final Bundle provider, final Locale locale )
-    {
+    public ResourceBundle getResourceBundle( final Bundle provider, final Locale locale ) {
         // check whether we have to return the resource bundle for the
         // Web Console itself in which case we directly return it
         final ResourceBundle defaultResourceBundle = consoleResourceBundleCache.getResourceBundle( locale );
@@ -88,17 +83,7 @@ public class ResourceBundleManager implements BundleListener
             return defaultResourceBundle;
         }
 
-        ResourceBundleCache cache;
-        synchronized ( resourceBundleCaches )
-        {
-            Long key = new Long( provider.getBundleId() );
-            cache = ( ResourceBundleCache ) resourceBundleCaches.get( key );
-            if ( cache == null )
-            {
-                cache = new ResourceBundleCache( provider );
-                resourceBundleCaches.put( key, cache );
-            }
-        }
+        final ResourceBundleCache cache = this.resourceBundleCaches.computeIfAbsent(provider.getBundleId(), key -> new ResourceBundleCache(provider));
 
         final ResourceBundle bundleResourceBundle = cache.getResourceBundle( locale );
         return new CombinedResourceBundle( bundleResourceBundle, defaultResourceBundle, locale );
@@ -110,15 +95,9 @@ public class ResourceBundleManager implements BundleListener
     /**
      * @see org.osgi.framework.BundleListener#bundleChanged(org.osgi.framework.BundleEvent)
      */
-    public final void bundleChanged( BundleEvent event )
-    {
-        if ( event.getType() == BundleEvent.STOPPED )
-        {
-            Long key = new Long( event.getBundle().getBundleId() );
-            synchronized ( resourceBundleCaches )
-            {
-                resourceBundleCaches.remove( key );
-            }
+    public final void bundleChanged( BundleEvent event ) {
+        if ( event.getType() == BundleEvent.STOPPED ) {
+            resourceBundleCaches.remove( event.getBundle().getBundleId()  );
         }
     }
 }

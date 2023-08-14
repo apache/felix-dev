@@ -75,7 +75,7 @@ import org.osgi.framework.ServiceReference;
 import org.osgi.framework.ServiceRegistration;
 import org.osgi.service.http.context.ServletContextHelper;
 import org.osgi.service.http.whiteboard.HttpWhiteboardConstants;
-import org.osgi.service.log.LogLevel;
+import org.osgi.service.log.LogService;
 import org.osgi.util.tracker.ServiceTracker;
 import org.osgi.util.tracker.ServiceTrackerCustomizer;
 
@@ -178,7 +178,7 @@ public class OsgiManager extends GenericServlet {
     /** The timeout for VMStat plugin page reload */
     public static final String PROP_RELOAD_TIMEOUT = "reload.timeout";
 
-    public static final int DEFAULT_LOG_LEVEL = LogLevel.WARN.ordinal();
+    public static final int DEFAULT_LOG_LEVEL = LogService.LOG_WARNING;
 
     static final String DEFAULT_PAGE = BundlesServlet.NAME;
 
@@ -330,12 +330,12 @@ public class OsgiManager extends GenericServlet {
                     // message is just a class name, try to be more descriptive
                     message = "Class " + message + " missing";
                 }
-                log(LogLevel.INFO.ordinal(), pluginClassName + " not enabled. Reason: "
+                log(LogService.LOG_INFO, pluginClassName + " not enabled. Reason: "
                     + message);
             }
             catch (Throwable t)
             {
-                log(LogLevel.INFO.ordinal(), "Failed to instantiate plugin "
+                log(LogService.LOG_INFO, "Failed to instantiate plugin "
                     + pluginClassName + ". Reason: " + t);
             }
         }
@@ -427,7 +427,7 @@ public class OsgiManager extends GenericServlet {
             // register servlet context helper, servlet, resources
             this.registerHttpWhiteboardServices();
         } else {
-            log(LogLevel.INFO.ordinal(), "Not all requirements met for the Web Console. Required security providers: "
+            log(LogService.LOG_INFO, "Not all requirements met for the Web Console. Required security providers: "
                     + this.registeredSecurityProviders + " Registered security providers: " + this.registeredSecurityProviders);
             // Not all requirements met, unregister services
             this.unregisterHttpWhiteboardServices();
@@ -776,8 +776,6 @@ public class OsgiManager extends GenericServlet {
             }
         }
 
-        // TODO: check UserAdmin ?
-
         if (locale == null)
             locale = configuredLocale;
         if (locale == null)
@@ -995,7 +993,7 @@ public class OsgiManager extends GenericServlet {
                 this.servletRegistration = getBundleContext().registerService(Servlet.class, this, props);                
             }
         } catch (final Exception e) {
-            log(LogLevel.ERROR.ordinal(), "registerHttpWhiteboardServices: Problem setting up", e);
+            log(LogService.LOG_ERROR, "registerHttpWhiteboardServices: Problem setting up", e);
             this.unregisterHttpWhiteboardServices();
         }
     }

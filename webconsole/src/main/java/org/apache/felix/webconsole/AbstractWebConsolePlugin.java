@@ -47,7 +47,7 @@ import javax.servlet.http.HttpServletResponse;
 import org.apache.felix.webconsole.internal.servlet.OsgiManager;
 import org.osgi.framework.Bundle;
 import org.osgi.framework.BundleContext;
-import org.osgi.service.log.LogLevel;
+import org.osgi.service.log.LogService;
 
 
 /**
@@ -969,7 +969,7 @@ public abstract class AbstractWebConsolePlugin extends HttpServlet
         }
 
         // template file does not exist, return an empty string
-        log( LogLevel.ERROR.ordinal(), "readTemplateFile: File '" + templateFile + "' not found through class " + clazz ); //$NON-NLS-1$ //$NON-NLS-2$
+        log( LogService.LOG_ERROR, "readTemplateFile: File '" + templateFile + "' not found through class " + clazz ); //$NON-NLS-1$ //$NON-NLS-2$
         return ""; //$NON-NLS-1$
     }
 
