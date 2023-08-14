@@ -53,6 +53,7 @@ public final class WireAdminConfigurationPrinter extends AbstractConfigurationPr
     /**
      * @see org.apache.felix.webconsole.ConfigurationPrinter#printConfiguration(java.io.PrintWriter)
      */
+    @SuppressWarnings({"rawtypes", "unchecked"})
     public final void printConfiguration(PrintWriter pw)
     {
         final BundleContext bc = getBundleContext();
@@ -170,7 +171,7 @@ public final class WireAdminConfigurationPrinter extends AbstractConfigurationPr
             }
         }
 
-        Class[] flavors = wire.getFlavors();
+        Class<?>[] flavors = wire.getFlavors();
         if (flavors == null)
         {
             pw.println("  Flavors: none");
@@ -187,7 +188,7 @@ public final class WireAdminConfigurationPrinter extends AbstractConfigurationPr
             pw.println();
         }
 
-        Dictionary props = wire.getProperties();
+        Dictionary<String, Object> props = wire.getProperties();
         if (props == null)
         {
             pw.println("  Properties: none");
@@ -195,11 +196,11 @@ public final class WireAdminConfigurationPrinter extends AbstractConfigurationPr
         else
         {
             pw.println("  Properties: ");
-            for (Enumeration e = props.keys(); e.hasMoreElements();)
+            for (Enumeration<String> e = props.keys(); e.hasMoreElements();)
             {
-                final Object key = e.nextElement();
+                final String key = e.nextElement();
                 pw.print("    "); //$NON-NLS-1$
-                pw.print(key.toString());
+                pw.print(key);
                 pw.print('=');
                 pw.println(props.get(key));
             }

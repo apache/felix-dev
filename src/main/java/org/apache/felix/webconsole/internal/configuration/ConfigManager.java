@@ -439,6 +439,7 @@ public class ConfigManager extends SimpleWebConsolePlugin implements OsgiManager
         // prepare variables
         final String referer = request.getParameter( REFERER );
         final boolean factoryCreate = "true".equals( request.getParameter(FACTORY_CREATE) ); //$NON-NLS-1$
+        @SuppressWarnings("unchecked")
         final Map<String, Object> vars = ( ( Map<String, Object> ) WebConsoleUtil.getVariableResolver( request ) );
         vars.put( "__data__", json.toString() ); //$NON-NLS-1$
         vars.put( "selectedPid", pid != null ? pid : "" ); //$NON-NLS-1$ //$NON-NLS-2$

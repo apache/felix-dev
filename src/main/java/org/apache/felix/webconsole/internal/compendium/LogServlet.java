@@ -82,6 +82,7 @@ public class LogServlet extends SimpleWebConsolePlugin implements OsgiManagerPlu
         return null == traces ? false : Boolean.valueOf( traces ).booleanValue();
     }
 
+    @SuppressWarnings("rawtypes")
     private final void renderJSON( final PrintWriter pw, int minLogLevel, boolean traces ) throws IOException
     {
         // create status line
@@ -185,7 +186,7 @@ public class LogServlet extends SimpleWebConsolePlugin implements OsgiManagerPlu
         jw.endObject();
     }
 
-
+    @SuppressWarnings("rawtypes")
     private static final String serviceDescription( ServiceReference serviceReference )
     {
         if ( serviceReference == null )
