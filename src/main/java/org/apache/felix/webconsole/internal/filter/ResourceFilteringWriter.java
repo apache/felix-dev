@@ -80,7 +80,7 @@ class ResourceFilteringWriter extends FilterWriter
     /**
      * The buffer to gather the text to be translated
      */
-    private final StringBuffer lineBuffer = new StringBuffer();
+    private final StringBuilder lineBuffer = new StringBuilder();
 
     /**
      * The current state, starts with {@link #STATE_NULL}

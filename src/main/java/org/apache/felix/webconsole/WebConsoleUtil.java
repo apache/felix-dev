@@ -261,45 +261,42 @@ public final class WebConsoleUtil
      */
     public static final String escapeHtml(String text)
     {
-        StringBuffer sb = new StringBuffer(text.length() * 4 / 3);
-        synchronized (sb) // faster buffer operations
+        StringBuilder sb = new StringBuilder(text.length() * 4 / 3);
+        char ch, oldch = '_';
+        for (int i = 0; i < text.length(); i++)
         {
-            char ch, oldch = '_';
-            for (int i = 0; i < text.length(); i++)
+            switch (ch = text.charAt(i))
             {
-                switch (ch = text.charAt(i))
-                {
-                case '<':
-                    sb.append("&lt;"); //$NON-NLS-1$
-                    break;
-                case '>':
-                    sb.append("&gt;"); //$NON-NLS-1$
-                    break;
-                case '&':
-                    sb.append("&amp;"); //$NON-NLS-1$
-                    break;
-                case ' ':
-                    sb.append("&nbsp;"); //$NON-NLS-1$
-                    break;
-                case '\'':
-                    sb.append("&apos;"); //$NON-NLS-1$
-                    break;
-                case '"':
-                    sb.append("&quot;"); //$NON-NLS-1$
-                    break;
-                case '\r':
-                case '\n':
-                    if (oldch != '\r' && oldch != '\n') // don't add twice <br>
-                        sb.append("<br/>\n"); //$NON-NLS-1$
-                    break;
-                default:
-                    sb.append(ch);
-                }
-                oldch = ch;
+            case '<':
+                sb.append("&lt;"); //$NON-NLS-1$
+                break;
+            case '>':
+                sb.append("&gt;"); //$NON-NLS-1$
+                break;
+            case '&':
+                sb.append("&amp;"); //$NON-NLS-1$
+                break;
+            case ' ':
+                sb.append("&nbsp;"); //$NON-NLS-1$
+                break;
+            case '\'':
+                sb.append("&apos;"); //$NON-NLS-1$
+                break;
+            case '"':
+                sb.append("&quot;"); //$NON-NLS-1$
+                break;
+            case '\r':
+            case '\n':
+                if (oldch != '\r' && oldch != '\n') // don't add twice <br>
+                    sb.append("<br/>\n"); //$NON-NLS-1$
+                break;
+            default:
+                sb.append(ch);
             }
-
-            return sb.toString();
+            oldch = ch;
         }
+
+        return sb.toString();
     }
 
     /**
@@ -375,42 +372,38 @@ public final class WebConsoleUtil
         }
         else if (value.getClass().isArray())
         {
-            final StringBuffer sb = new StringBuffer();
+            final StringBuilder sb = new StringBuilder();
             final int len = Array.getLength(value);
-            synchronized (sb)
-            { // it's faster to synchronize ALL loop calls
-                sb.append('[');
-                for (int i = 0; i < len; i++)
+            sb.append('[');
+            for (int i = 0; i < len; i++)
+            {
+                final Object element = Array.get(value, i);
+                if (element instanceof Byte)
                 {
-                    final Object element = Array.get(value, i);
-                    if (element instanceof Byte)
+                    // convert byte[] to hex string
+                    sb.append("0x"); //$NON-NLS-1$
+                    final String x = Integer.toHexString(((Byte) element).intValue() & 0xff);
+                    if (1 == x.length())
                     {
-                        // convert byte[] to hex string
-                        sb.append("0x"); //$NON-NLS-1$
-                        final String x = Integer.toHexString(((Byte) element).intValue() & 0xff);
-                        if (1 == x.length())
-                        {
-                            sb.append('0');
-                        }
-                        sb.append(x);
+                        sb.append('0');
                     }
-                    else
-                    {
-                        sb.append(toString(element));
-                    }
-
-                    if (i < len - 1)
-                    {
-                        sb.append(", "); //$NON-NLS-1$
-                    }
+                    sb.append(x);
                 }
-                return sb.append(']').toString();
+                else
+                {
+                    sb.append(toString(element));
+                }
+
+                if (i < len - 1)
+                {
+                    sb.append(", "); //$NON-NLS-1$
+                }
             }
+            return sb.append(']').toString();
         }
         else
         {
             return value.toString();
         }
-
     }
 }

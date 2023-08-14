@@ -537,7 +537,7 @@ public class BundlesServlet extends SimpleWebConsolePlugin implements OsgiManage
     }
 
 
-    private void appendBundleInfoCount( final StringBuffer buf, String msg, int count )
+    private void appendBundleInfoCount( final StringBuilder buf, String msg, int count )
     {
         buf.append(count);
         buf.append(" bundle");
@@ -686,7 +686,7 @@ public class BundlesServlet extends SimpleWebConsolePlugin implements OsgiManage
                 break;
             }
         }
-        final StringBuffer buffer = new StringBuffer();
+        final StringBuilder buffer = new StringBuilder();
         buffer.append("Bundle information: ");
         appendBundleInfoCount(buffer, "in total", bundles.length);
         if ( active == bundles.length || active + fragments == bundles.length )
@@ -1155,10 +1155,10 @@ public class BundlesServlet extends SimpleWebConsolePlugin implements OsgiManage
     private String getServiceID(ServiceReference ref, final String servicesRoot)
     {
         String id = ref.getProperty( Constants.SERVICE_ID ).toString();
-        StringBuffer val = new StringBuffer();
 
         if ( servicesRoot != null )
         {
+            StringBuilder val = new StringBuilder();
             val.append( "<a href='" ).append( servicesRoot ).append( id ).append( "'>" );
             val.append( id );
             val.append( "</a>" );
@@ -1221,20 +1221,17 @@ public class BundlesServlet extends SimpleWebConsolePlugin implements OsgiManage
 
     private static final String enableLineWrapping(final String value)
     {
-        StringBuffer sb = new StringBuffer(value.length() * 2 / 3);
-        synchronized (sb)
-        { // faster
-            for (int i = 0; i < value.length(); i++)
+        StringBuilder sb = new StringBuilder(value.length() * 2 / 3);
+        for (int i = 0; i < value.length(); i++)
+        {
+            final char ch = value.charAt( i );
+            sb.append( ch );
+            if ( ch == ';' || ch == ',' )
             {
-                final char ch = value.charAt( i );
-                sb.append( ch );
-                if ( ch == ';' || ch == ',' )
-                {
-                    sb.append( ' ' );
-                }
+                sb.append( ' ' );
             }
-            return sb.toString();
         }
+        return sb.toString();
     }
 
     private void listFragmentInfo( final List props, final Bundle bundle, final String pluginRoot )
@@ -1272,7 +1269,7 @@ public class BundlesServlet extends SimpleWebConsolePlugin implements OsgiManage
 
     private void appendProperty( final List props, ServiceReference ref, String name, String label )
     {
-        StringBuffer dest = new StringBuffer();
+        StringBuilder dest = new StringBuilder();
         Object value = ref.getProperty( name );
         if ( value instanceof Object[] )
         {
@@ -1302,7 +1299,7 @@ public class BundlesServlet extends SimpleWebConsolePlugin implements OsgiManage
 
     private Object collectExport( String name, String version )
     {
-        StringBuffer val = new StringBuffer();
+        StringBuilder val = new StringBuilder();
         boolean bootDel = isBootDelegated( name );
         if ( bootDel )
         {
@@ -1335,7 +1332,7 @@ public class BundlesServlet extends SimpleWebConsolePlugin implements OsgiManage
     private Object collectImport( String name, String version, boolean optional, ExportedPackage export,
             final String pluginRoot )
     {
-        StringBuffer val = new StringBuffer();
+        StringBuilder val = new StringBuilder();
         boolean bootDel = isBootDelegated( name );
 
         String marker = null;
@@ -1441,7 +1438,7 @@ public class BundlesServlet extends SimpleWebConsolePlugin implements OsgiManage
 
     private String getBundleDescriptor( Bundle bundle, final String pluginRoot )
     {
-        StringBuffer val = new StringBuffer();
+        StringBuilder val = new StringBuilder();
 
         if ( pluginRoot != null )
         {

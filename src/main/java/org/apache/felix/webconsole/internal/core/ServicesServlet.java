@@ -145,7 +145,7 @@ public class ServicesServlet extends SimpleWebConsolePlugin implements OsgiManag
         // only use last part of the pathInfo
         pathInfo = pathInfo.substring( pathInfo.lastIndexOf( '/' ) + 1 );
 
-        StringBuffer filter = new StringBuffer();
+        StringBuilder filter = new StringBuilder();
         filter.append( "(" ).append( Constants.SERVICE_ID ).append( "=" );
         filter.append( pathInfo ).append( ")" );
         String filterStr = filter.toString();
@@ -194,7 +194,7 @@ public class ServicesServlet extends SimpleWebConsolePlugin implements OsgiManag
     static final String getStatusLine( final ServiceReference[] services )
     {
         final int count = services.length;
-        final StringBuffer buffer = new StringBuffer();
+        final StringBuilder buffer = new StringBuilder();
         buffer.append( count );
         buffer.append( " service" );
         if ( count != 1 )
