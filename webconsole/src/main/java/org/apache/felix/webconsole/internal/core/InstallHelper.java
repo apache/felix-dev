@@ -27,11 +27,10 @@ import org.osgi.framework.Bundle;
 import org.osgi.framework.BundleContext;
 import org.osgi.framework.BundleException;
 import org.osgi.framework.Constants;
-import org.osgi.service.startlevel.StartLevel;
+import org.osgi.framework.startlevel.BundleStartLevel;
 
 
-class InstallHelper extends BaseUpdateInstallHelper
-{
+class InstallHelper extends BaseUpdateInstallHelper {
     private final BundleContext bundleContext;
     private final String location;
     private final int startlevel;
@@ -51,22 +50,18 @@ class InstallHelper extends BaseUpdateInstallHelper
 
 
     @Override
-    protected Bundle doRun( InputStream bundleStream ) throws BundleException
-    {
+    protected Bundle doRun( final InputStream bundleStream ) throws BundleException {
         Bundle bundle = bundleContext.installBundle( location, bundleStream );
 
-        if ( startlevel > 0 )
-        {
-            StartLevel sl = ( StartLevel ) getService( StartLevel.class.getName() );
-            if ( sl != null )
-            {
-                sl.setBundleStartLevel( bundle, startlevel );
+        if ( startlevel > 0 ) {
+            final BundleStartLevel bsl = bundle.adapt(BundleStartLevel.class);
+            if (bsl != null) {
+                bsl.setStartLevel(startlevel);
             }
         }
 
         // don't start fragments
-        if ( doStart && bundle.getHeaders().get( Constants.FRAGMENT_HOST ) == null )
-        {
+        if ( doStart && bundle.getHeaders().get( Constants.FRAGMENT_HOST ) == null ) {
             bundle.start();
         }
 
