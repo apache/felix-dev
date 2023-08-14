@@ -40,7 +40,7 @@ import org.osgi.framework.Constants;
 import org.osgi.framework.Filter;
 import org.osgi.framework.InvalidSyntaxException;
 import org.osgi.framework.ServiceReference;
-import org.osgi.service.log.LogLevel;
+import org.osgi.service.log.LogService;
 import org.osgi.util.tracker.ServiceTracker;
 import org.osgi.util.tracker.ServiceTrackerCustomizer;
 
@@ -362,14 +362,14 @@ class PluginHolder implements ServiceTrackerCustomizer<Servlet, Plugin> {
                 if (!first.init()) {
                     list.remove(plugin);
                 } else if (oldPlugin != null) {
-                    osgiManager.log(LogLevel.WARN.ordinal(), "Overwriting existing plugin " + oldPlugin.getId() 
+                    osgiManager.log(LogService.LOG_WARNING, "Overwriting existing plugin " + oldPlugin.getId() 
                             + " having label " + plugin.getLabel() + " with new plugin " + plugin.getId()
                             + " due to higher ranking " );
                     oldPlugin.dispose();
                 }
             }
             if (first == oldPlugin) {
-                osgiManager.log(LogLevel.WARN.ordinal(), "Ignoring new plugin " + plugin.getId()
+                osgiManager.log(LogService.LOG_WARNING, "Ignoring new plugin " + plugin.getId()
                         + " having existing label " + plugin.getLabel() + " due to lower ranking than old plugin " + oldPlugin.getId() );
             }
         }

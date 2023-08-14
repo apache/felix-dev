@@ -18,7 +18,6 @@ package org.apache.felix.webconsole.internal;
 
 
 import org.apache.felix.webconsole.ConfigurationPrinter;
-import org.apache.felix.webconsole.internal.OsgiManagerPlugin;
 import org.osgi.framework.BundleContext;
 import org.osgi.framework.ServiceRegistration;
 
@@ -26,12 +25,13 @@ import org.osgi.framework.ServiceRegistration;
  * AbstractConfigurationPrinter is an utility class, that provides a basic implementation
  * of {@link ConfigurationPrinter} and {@link OsgiManagerPlugin} interfaces.
  */
+@SuppressWarnings("deprecation")
 public abstract class AbstractConfigurationPrinter implements ConfigurationPrinter, OsgiManagerPlugin
 {
 
     private BundleContext bundleContext;
 
-    private ServiceRegistration registration;
+    private ServiceRegistration<ConfigurationPrinter> registration;
 
 
     /**
@@ -40,7 +40,7 @@ public abstract class AbstractConfigurationPrinter implements ConfigurationPrint
     public void activate( BundleContext bundleContext )
     {
         this.bundleContext = bundleContext;
-        this.registration = bundleContext.registerService( SERVICE, this, null );
+        this.registration = bundleContext.registerService( ConfigurationPrinter.class, this, null );
     }
 
 

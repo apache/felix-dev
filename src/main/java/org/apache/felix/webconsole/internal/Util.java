@@ -18,10 +18,8 @@ package org.apache.felix.webconsole.internal;
 
 
 import java.io.IOException;
-import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Comparator;
-import java.util.Enumeration;
 import java.util.Locale;
 
 import javax.servlet.http.HttpServletRequest;
@@ -37,31 +35,7 @@ import org.osgi.framework.Version;
  * The <code>Util</code> class contains various utility methods used internally
  * by the web console implementation and the build-in plugins.
  */
-public class Util
-{
-
-    // FIXME: from the constants below only PARAM_ACTION is used, consider removal of others?
-
-    /** web apps subpage */
-    public static final String PAGE_WEBAPPS = "/webapps";
-
-    /** vm statistics subpage */
-    public static final String PAGE_VM_STAT = "/vmstat";
-
-    /** Logs subpage */
-    public static final String PAGE_LOGS = "/logs";
-
-    /** Parameter name */
-    public static final String PARAM_ACTION = "action";
-
-    /** Parameter name */
-    public static final String PARAM_CONTENT = "content";
-
-    /** Parameter name */
-    public static final String PARAM_SHUTDOWN = "shutdown";
-
-    /** Parameter value */
-    public static final String VALUE_SHUTDOWN = "shutdown";
+public class Util {
 
     /**
      * Return a display name for the given <code>bundle</code>:
@@ -129,25 +103,6 @@ public class Util
         Arrays.sort( bundles, new BundleNameComparator( locale ) );
     }
 
-
-    /**
-     * This method is the same as Collections#list(Enumeration). The reason to
-     * duplicate it here, is that it is missing in OSGi/Minimum execution
-     * environment.
-     *
-     * @param e the enumeration which to convert
-     * @return the list containing all enumeration entries.
-     */
-    public static final ArrayList list( Enumeration e )
-    {
-        ArrayList l = new ArrayList();
-        while ( e.hasMoreElements() )
-        {
-            l.add( e.nextElement() );
-        }
-        return l;
-    }
-
     /**
      * This method expects a locale string in format language_COUNTRY, or
      * language. The method will determine which is the correct form of locale
@@ -185,22 +140,14 @@ public class Util
         return new Locale(language, country);
     }
 
-    private static final class BundleNameComparator implements Comparator
+    private static final class BundleNameComparator implements Comparator<Bundle>
     {
         private final Locale locale;
 
 
-        BundleNameComparator( final Locale locale )
-        {
+        BundleNameComparator( final Locale locale ) {
             this.locale = locale;
         }
-
-
-        public int compare( Object o1, Object o2 )
-        {
-            return compare( ( Bundle ) o1, ( Bundle ) o2 );
-        }
-
 
         public int compare( Bundle b1, Bundle b2 )
         {

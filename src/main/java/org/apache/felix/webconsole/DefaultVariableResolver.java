@@ -78,6 +78,7 @@ public class DefaultVariableResolver extends HashMap implements VariableResolver
      * @param source  the map whose variables are to be placed in this resolver.
      * @see HashMap#HashMap(Map)
      */
+    @SuppressWarnings({"unchecked"})
     public DefaultVariableResolver( final Map source )
     {
         super( source );
