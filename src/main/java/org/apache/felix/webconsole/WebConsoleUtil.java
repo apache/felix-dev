@@ -24,7 +24,6 @@ import java.io.IOException;
 import java.io.UnsupportedEncodingException;
 import java.lang.reflect.Array;
 import java.net.URLDecoder;
-import java.nio.charset.StandardCharsets;
 import java.util.HashMap;
 import java.util.Iterator;
 import java.util.List;
@@ -178,7 +177,8 @@ public final class WebConsoleUtil
             }
             catch ( FileUploadException fue )
             {
-                // TODO: log
+                // fail
+                return null;
             }
             request.setAttribute( AbstractWebConsolePlugin.ATTR_FILEUPLOAD, params );
         }
