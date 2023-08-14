@@ -59,7 +59,7 @@ public class WebConsolePluginAdapter extends AbstractWebConsolePlugin
      * @param plugin the plugin itself
      * @param serviceReference reference to the plugin
      */
-    public WebConsolePluginAdapter( String label, Servlet plugin, ServiceReference serviceReference )
+    public WebConsolePluginAdapter( String label, Servlet plugin, ServiceReference<Servlet> serviceReference )
     {
         this.label = label;
         this.plugin = plugin;
@@ -239,6 +239,7 @@ public class WebConsolePluginAdapter extends AbstractWebConsolePlugin
 
     //---------- internal
 
+    @SuppressWarnings("rawtypes")
     private String[] toStringArray( final Object value )
     {
         if ( value instanceof String )

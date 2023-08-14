@@ -268,6 +268,7 @@ public abstract class SimpleWebConsolePlugin extends AbstractWebConsolePlugin
      * @param serviceName the service name to obtain
      * @return the service or <code>null</code> if missing.
      */
+    @SuppressWarnings({"rawtypes", "unchecked"})
     public final Object getService( String serviceName ) {
         ServiceTracker<?,?> serviceTracker = services.get( serviceName );
         if ( serviceTracker == null ) {
