@@ -17,7 +17,10 @@
 package org.apache.felix.webconsole.internal.servlet;
 
 import java.io.IOException;
+import java.io.InputStream;
+import java.io.OutputStream;
 import java.net.URL;
+import java.net.URLConnection;
 import java.security.AccessController;
 import java.security.PrivilegedActionException;
 import java.security.PrivilegedExceptionAction;
@@ -34,13 +37,13 @@ import java.util.Iterator;
 import java.util.List;
 import java.util.Locale;
 import java.util.Map;
-import java.util.Map.Entry;
 import java.util.ResourceBundle;
 import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ConcurrentSkipListSet;
 
 import javax.servlet.GenericServlet;
+import javax.servlet.Servlet;
 import javax.servlet.ServletConfig;
 import javax.servlet.ServletContext;
 import javax.servlet.ServletException;
@@ -64,28 +67,24 @@ import org.apache.felix.webconsole.internal.core.BundlesServlet;
 import org.apache.felix.webconsole.internal.filter.FilteringResponseWrapper;
 import org.apache.felix.webconsole.internal.i18n.ResourceBundleManager;
 import org.apache.felix.webconsole.internal.servlet.Plugin.InternalPlugin;
-import org.apache.felix.webconsole.internal.system.VMStatPlugin;
 import org.osgi.framework.Bundle;
 import org.osgi.framework.BundleContext;
 import org.osgi.framework.Constants;
-import org.osgi.framework.Filter;
-import org.osgi.framework.InvalidSyntaxException;
 import org.osgi.framework.ServiceFactory;
 import org.osgi.framework.ServiceReference;
 import org.osgi.framework.ServiceRegistration;
-import org.osgi.service.http.HttpContext;
-import org.osgi.service.http.HttpService;
-import org.osgi.service.log.LogService;
+import org.osgi.service.http.context.ServletContextHelper;
+import org.osgi.service.http.whiteboard.HttpWhiteboardConstants;
+import org.osgi.service.log.LogLevel;
 import org.osgi.util.tracker.ServiceTracker;
 import org.osgi.util.tracker.ServiceTrackerCustomizer;
 
 /**
- * The <code>OSGi Manager</code> is the actual Web Console Servlet which
- * is registered with the OSGi Http Service and which maintains registered
+ * The <code>OSGi Manager</code> is the actual Web Console Servlet. It is
+ * registered with the OSGi Http Whiteboard Service and it manages registered
  * console plugins.
  */
-public class OsgiManager extends GenericServlet
-{
+public class OsgiManager extends GenericServlet {
 
     /** Pseudo class version ID to keep the IDE quite. */
     private static final long serialVersionUID = 1L;
@@ -179,7 +178,7 @@ public class OsgiManager extends GenericServlet
     /** The timeout for VMStat plugin page reload */
     public static final String PROP_RELOAD_TIMEOUT = "reload.timeout";
 
-    public static final int DEFAULT_LOG_LEVEL = LogService.LOG_WARNING;
+    public static final int DEFAULT_LOG_LEVEL = LogLevel.WARN.ordinal();
 
     static final String DEFAULT_PAGE = BundlesServlet.NAME;
 
@@ -190,8 +189,6 @@ public class OsgiManager extends GenericServlet
     static final String DEFAULT_PASSWORD = "{sha-256}jGl25bVBBBW96Qi9Te4V37Fnqchz/Eu4qB9vKrRIqRg="; //$NON-NLS-1$
 
     static final String DEFAULT_CATEGORY = "Main"; //$NON-NLS-1$
-
-    static final String DEFAULT_HTTP_SERVICE_SELECTOR = ""; //$NON-NLS-1$
 
     static final int DEFAULT_SHUTDOWN_TIMEOUT = 5; //$NON-NLS-1$
 
@@ -234,14 +231,12 @@ public class OsgiManager extends GenericServlet
             "org.apache.felix.webconsole.internal.system.VMStatPlugin", "vmstat", //$NON-NLS-1$ //$NON-NLS-2$
     };
 
+    private static final String SERVLEXT_CONTEXT_NAME = "org.apache.felix.webconsole";
+
     /** Flag to control whether secret heuristics is enabled */
     public static volatile boolean ENABLE_SECRET_HEURISTICS = OsgiManager.DEFAULT_ENABLE_SECRET_HEURISTIC;
 
     private BundleContext bundleContext;
-
-    private HttpServiceTracker httpServiceTracker;
-
-    private volatile HttpService httpService;
 
     private PluginHolder holder;
 
@@ -253,19 +248,19 @@ public class OsgiManager extends GenericServlet
 
     // list of OsgiManagerPlugin instances activated during init. All these
     // instances will have to be deactivated during destroy
-    private List<OsgiManagerPlugin> osgiManagerPlugins = new ArrayList<>();
+    private volatile List<OsgiManagerPlugin> osgiManagerPlugins = new ArrayList<>();
 
-    private String webManagerRoot;
+    private volatile String webManagerRoot;
 
     // not-null when the BasicWebConsoleSecurityProvider service is registered
     private ServiceRegistration<WebConsoleSecurityProvider> basicSecurityServiceRegistration;
 
-    // true if the OsgiManager is registered as a Servlet with the HttpService
-    private boolean httpServletRegistered;
-
-    // true if the resources have been registered with the HttpService
-    private boolean httpResourcesRegistered;
-
+    // not-null when the ServletContextHelper service is registered
+    private volatile ServiceRegistration<ServletContextHelper> servletContextRegistration;
+    
+    // not-null when the main servlet and the resources are registered
+    private volatile ServiceRegistration<Servlet> servletRegistration;
+    
     // default configuration from framework properties
     private Map<String, Object> defaultConfiguration;
 
@@ -335,12 +330,12 @@ public class OsgiManager extends GenericServlet
                     // message is just a class name, try to be more descriptive
                     message = "Class " + message + " missing";
                 }
-                log(LogService.LOG_INFO, pluginClassName + " not enabled. Reason: "
+                log(LogLevel.INFO.ordinal(), pluginClassName + " not enabled. Reason: "
                     + message);
             }
             catch (Throwable t)
             {
-                log(LogService.LOG_INFO, "Failed to instantiate plugin "
+                log(LogLevel.INFO.ordinal(), "Failed to instantiate plugin "
                     + pluginClassName + ". Reason: " + t);
             }
         }
@@ -428,18 +423,15 @@ public class OsgiManager extends GenericServlet
     }
 
     void updateRegistrationState() {
-        if (this.httpService != null) {
-            if (this.registeredSecurityProviders.containsAll(this.requiredSecurityProviders)) {
-                // register HTTP service
-                registerHttpService();
-                return;
-            } else {
-                log(LogService.LOG_INFO, "Not all requirements met for the Web Console. Required security providers: "
-                        + this.registeredSecurityProviders + " Registered security providers: " + this.registeredSecurityProviders);
-            }
+        if (this.registeredSecurityProviders.containsAll(this.requiredSecurityProviders)) {
+            // register servlet context helper, servlet, resources
+            this.registerHttpWhiteboardServices();
+        } else {
+            log(LogLevel.INFO.ordinal(), "Not all requirements met for the Web Console. Required security providers: "
+                    + this.registeredSecurityProviders + " Registered security providers: " + this.registeredSecurityProviders);
+            // Not all requirements met, unregister services
+            this.unregisterHttpWhiteboardServices();
         }
-        // Not all requirements met, unregister service.
-        unregisterHttpService();
     }
 
     public void dispose()
@@ -472,11 +464,7 @@ public class OsgiManager extends GenericServlet
         this.osgiManagerPlugins.clear();
 
         // now drop the HttpService and continue with further destroyals
-        if (httpServiceTracker != null)
-        {
-            httpServiceTracker.close();
-            httpServiceTracker = null;
-        }
+        this.unregisterHttpWhiteboardServices();
 
         // stop listening for configuration
         if (configurationListener != null)
@@ -525,7 +513,18 @@ public class OsgiManager extends GenericServlet
                 @Override
                 public Object run() throws Exception
                 {
-                    service((HttpServletRequest) req, (HttpServletResponse) res);
+                    final HttpServletRequest wrapper = new HttpServletRequestWrapper((HttpServletRequest) req) {
+                        @Override
+                        public String getServletPath() {
+                            return "";
+                        }
+
+                        @Override
+                        public String getPathInfo() {
+                            return super.getServletPath();
+                        }
+                    };
+                    service(wrapper, (HttpServletResponse) res);
                     return null;
                 }
             });
@@ -566,16 +565,13 @@ public class OsgiManager extends GenericServlet
     }
 
     void service(HttpServletRequest request, HttpServletResponse response)
-        throws ServletException, IOException
-    {
+        throws ServletException, IOException {
         // check whether we are not at .../{webManagerRoot}
         final String pathInfo = request.getPathInfo();
-        if (pathInfo == null || pathInfo.equals("/")) //$NON-NLS-1$
-        {
+        if (pathInfo == null || pathInfo.isEmpty() || pathInfo.equals("/"))  {
             String path = request.getRequestURI();
-            if (!path.endsWith("/")) //$NON-NLS-1$
-            {
-                path = path.concat("/"); //$NON-NLS-1$
+            if (!path.endsWith("/")) {
+                path = path.concat("/");
             }
             path = path.concat(holder.getDefaultPluginLabel());
             response.setContentLength(0);
@@ -583,9 +579,19 @@ public class OsgiManager extends GenericServlet
             return;
         }
 
-        if (pathInfo.equals("/logout")) { //$NON-NLS-1$
+        if (pathInfo.equals("/logout")) {
             logout(request, response);
             return;
+        }
+
+        if (pathInfo.startsWith("/res/")) {
+            URL url = this.getBundleContext().getBundle().getResource( pathInfo );
+            if ( url == null && pathInfo.endsWith( "/" ) ) {
+                url = this.getBundleContext().getBundle().getResource( pathInfo.substring( 0, pathInfo.length() - 1 ) );
+            }
+            if ( url != null && this.spool(request, response, url)) {
+                return;
+            }
         }
 
         int slash = pathInfo.indexOf("/", 1); //$NON-NLS-1$
@@ -613,6 +619,7 @@ public class OsgiManager extends GenericServlet
             return;
         }
 
+        @SuppressWarnings("rawtypes")
         final Map labelMap = holder.getLocalizedLabelMap( resourceBundleManager, locale, this.defaultCategory );
         final Object flatLabelMap = labelMap.remove( WebConsoleConstants.ATTR_LABEL_MAP );
 
@@ -641,60 +648,92 @@ public class OsgiManager extends GenericServlet
         plugin.service(request, response);
     }
 
-    private final void logout(HttpServletRequest request, HttpServletResponse response)
-        throws IOException
-    {
-        // check if special logout cookie is set, this is used to prevent
-        // from an endless loop with basic auth
-        Cookie[] cookies = request.getCookies();
-        boolean found = false;
-        if ( cookies != null )
-        {
-            for(int i=0;i<cookies.length;i++)
-            {
-                if ( cookies[i].getName().equals("logout") ) //$NON-NLS-1$
-                {
-                    found = true;
-                    break;
+    private boolean spool(final HttpServletRequest request, final HttpServletResponse response, final URL url) 
+    throws IOException {
+        final URLConnection connection = url.openConnection();
+        try ( InputStream ins = connection.getInputStream()) {
+            if (ins == null) {
+                return false;
+            }
+
+            // check whether we may return 304/UNMODIFIED
+            final long lastModified = connection.getLastModified();
+            if ( lastModified > 0 ) {
+                final long ifModifiedSince = request.getDateHeader( "If-Modified-Since" );
+                if ( ifModifiedSince >= ( lastModified / 1000 * 1000 ) ) {
+                    // Round down to the nearest second for a proper compare
+                    // A ifModifiedSince of -1 will always be less
+                    response.setStatus( HttpServletResponse.SC_NOT_MODIFIED );
+
+                    return true;
+                }
+
+                // have to send, so set the last modified header now
+                response.setDateHeader( "Last-Modified", lastModified );
+            }
+
+            response.setContentType( getServletContext().getMimeType( request.getPathInfo() ) );
+            response.setIntHeader( "Content-Length", connection.getContentLength() );
+
+            // spool the actual contents
+            try (final OutputStream out = response.getOutputStream()) {
+                byte[] buf = new byte[2048];
+                int rd;
+                while ( ( rd = ins.read( buf ) ) >= 0 ) {
+                    out.write( buf, 0, rd );
                 }
             }
-        }
-        if ( found )
-        {
-            // redirect to main page
-            String url = request.getRequestURI();
-            final int lastSlash = url.lastIndexOf('/');
-            final Cookie c = new Cookie("logout", "true"); //$NON-NLS-1$ //$NON-NLS-2$
-            c.setMaxAge(0);
-            response.addCookie(c);
-            response.sendRedirect(url.substring(0, lastSlash));
-            return;
-        }
-        Object securityProvider = securityProviderTracker.getService();
-        if (securityProvider instanceof WebConsoleSecurityProvider3)
-        {
-            ((WebConsoleSecurityProvider3) securityProvider).logout(request, response);
-        }
-        else
-        {
-            // if the security provider doesn't support logout, we try to
-            // logout the default basic authentication mechanism
-            // See https://issues.apache.org/jira/browse/FELIX-3006
 
-            // check for basic authentication
-            String auth = request.getHeader(HEADER_AUTHORIZATION); //$NON-NLS-1$
-            if (null != auth && auth.toLowerCase().startsWith("basic ")) { //$NON-NLS-1$
-                Map<String, Object> config = getConfiguration();
-                String realm = ConfigurationUtil.getProperty(config, PROP_REALM, DEFAULT_REALM);
-                response.setHeader(HEADER_WWW_AUTHENTICATE, "Basic realm=\"" +  realm + "\""); //$NON-NLS-1$ //$NON-NLS-2$
-                response.addCookie(new Cookie("logout", "true")); //$NON-NLS-1$ //$NON-NLS-2$
-                response.setStatus(HttpServletResponse.SC_UNAUTHORIZED);
+            return true;
+        }
+    }
+
+    private final void logout(HttpServletRequest request, HttpServletResponse response)
+        throws IOException {
+        final Object securityProvider = securityProviderTracker.getService();
+        if (securityProvider instanceof WebConsoleSecurityProvider3) {
+            ((WebConsoleSecurityProvider3) securityProvider).logout(request, response);
+        } else {
+            // check if special logout cookie is set, this is used to prevent
+            // from an endless loop with basic auth
+            final Cookie[] cookies = request.getCookies();
+            boolean found = false;
+            if ( cookies != null ) {
+                for(final Cookie c : cookies) {
+                    if (c.getName().equals("logout") ) {
+                        found = true;
+                        break;
+                    }
+                }
+            }
+            if ( found ) {
+                // redirect to main page
+                final String url = request.getRequestURI();
+                final int lastSlash = url.lastIndexOf('/');
+                final Cookie c = new Cookie("logout", "true");
+                c.setMaxAge(0);
+                response.addCookie(c);
+                response.sendRedirect(url.substring(0, lastSlash));
+            } else {
+                // if the security provider doesn't support logout, we try to
+                // logout the default basic authentication mechanism
+                // See https://issues.apache.org/jira/browse/FELIX-3006
+
+                // check for basic authentication
+                final String auth = request.getHeader(HEADER_AUTHORIZATION);
+                if (null != auth && auth.toLowerCase().startsWith("basic ")) {
+                    Map<String, Object> config = getConfiguration();
+                    String realm = ConfigurationUtil.getProperty(config, PROP_REALM, DEFAULT_REALM);
+                    response.setHeader(HEADER_WWW_AUTHENTICATE, "Basic realm=\"" +  realm + "\"");
+                    response.addCookie(new Cookie("logout", "true"));
+                    response.setStatus(HttpServletResponse.SC_UNAUTHORIZED);
+                }
             }
         }
 
         // clean-up
-        request.removeAttribute(HttpContext.REMOTE_USER);
-        request.removeAttribute(HttpContext.AUTHORIZATION);
+        request.removeAttribute(ServletContextHelper.REMOTE_USER);
+        request.removeAttribute(ServletContextHelper.AUTHORIZATION);
         request.removeAttribute(WebConsoleSecurityProvider2.USER_ATTRIBUTE);
         request.removeAttribute(User.USER_ATTRIBUTE);
     }
@@ -879,80 +918,6 @@ public class OsgiManager extends GenericServlet
         return new FilteringResponseWrapper(response, resourceBundle, request);
     }
 
-    private static class HttpServiceTracker extends ServiceTracker<HttpService, HttpService>
-    {
-        private final OsgiManager osgiManager;
-
-        private final String httpServiceSelector;
-
-        static HttpServiceTracker create(OsgiManager osgiManager,
-            String httpServiceSelector)
-        {
-            // got a service selector filter
-            if (httpServiceSelector != null && httpServiceSelector.length() > 0)
-            {
-                try
-                {
-                    final String filterString = "(&(" + Constants.OBJECTCLASS + "=" //$NON-NLS-1$ //$NON-NLS-2$
-                        + HttpService.class.getName() + ")(" + httpServiceSelector + "))"; //$NON-NLS-1$ //$NON-NLS-2$
-                    Filter filter = osgiManager.getBundleContext().createFilter(
-                        filterString);
-                    return new HttpServiceTracker(osgiManager, httpServiceSelector,
-                        filter);
-                }
-                catch (InvalidSyntaxException ise)
-                {
-                    // TODO: log or throw or ignore ....
-                }
-            }
-
-            // no filter or illegal filter string
-            return new HttpServiceTracker(osgiManager);
-        }
-
-        private HttpServiceTracker(final OsgiManager osgiManager)
-        {
-            super(osgiManager.getBundleContext(), HttpService.class, null);
-            this.osgiManager = osgiManager;
-            this.httpServiceSelector = null;
-        }
-
-        private HttpServiceTracker(final OsgiManager osgiManager, final String httpServiceSelector, final Filter httpServiceFilter)
-        {
-            super(osgiManager.getBundleContext(), httpServiceFilter, null);
-            this.osgiManager = osgiManager;
-            this.httpServiceSelector = httpServiceSelector;
-        }
-
-        boolean isSameSelector(final String newHttpServiceSelector)
-        {
-            if (newHttpServiceSelector != null)
-            {
-                return newHttpServiceSelector.equals(httpServiceSelector);
-            }
-            return httpServiceSelector == null;
-        }
-
-        @Override
-        public HttpService addingService(ServiceReference<HttpService> reference)
-        {
-            HttpService service = super.addingService(reference);
-            osgiManager.bindHttpService(service);
-            return service;
-        }
-
-        @Override
-        public void removedService(ServiceReference<HttpService> reference, HttpService service)
-        {
-            osgiManager.unbindHttpService(service);
-            try {
-                super.removedService(reference, service);
-            } catch ( final IllegalStateException ise) {
-                // ignore this as the service is already invalid
-            }
-        }
-    }
-
     private static class BrandingServiceTracker extends ServiceTracker<BrandingPlugin, BrandingPlugin>
     {
         BrandingServiceTracker(OsgiManager osgiManager)
@@ -981,158 +946,113 @@ public class OsgiManager extends GenericServlet
 
     }
 
-    protected void bindHttpService(HttpService httpService)
-    {
-        // do not bind service, when we are already bound
-        if (this.httpService != null)
-        {
-            log(LogService.LOG_DEBUG,
-                "bindHttpService: Already bound to an HTTP Service, ignoring further services");
-            return;
-        }
+    synchronized void registerHttpWhiteboardServices() {
+        final String realm = ConfigurationUtil.getProperty(this.getConfiguration(), PROP_REALM, DEFAULT_REALM);
 
-        this.httpService = httpService;
-        updateRegistrationState();
-    }
+        try{
+            final String httpServiceSelector = ConfigurationUtil.getProperty(this.getConfiguration(), PROP_HTTP_SERVICE_SELECTOR, null);
 
-    synchronized void registerHttpService() {
-        Map<String, Object> config = getConfiguration();
-
-        // get authentication details
-        String realm = ConfigurationUtil.getProperty(config, PROP_REALM, DEFAULT_REALM);
-        String userId = ConfigurationUtil.getProperty(config, PROP_USER_NAME, DEFAULT_USER_NAME);
-        String password = ConfigurationUtil.getProperty(config, PROP_PASSWORD, DEFAULT_PASSWORD);
-
-        // register the servlet and resources
-        try
-        {
-            HttpContext httpContext = new OsgiManagerHttpContext(httpService,
-                securityProviderTracker, realm);
-
-            Dictionary<String, String> servletConfig = toStringConfig(config);
-
-            if (basicSecurityServiceRegistration == null) {
+            if (this.basicSecurityServiceRegistration == null) {
                 //register this component
-                BasicWebConsoleSecurityProvider service = new BasicWebConsoleSecurityProvider(bundleContext,
+                final String userId = ConfigurationUtil.getProperty(this.getConfiguration(), PROP_USER_NAME, DEFAULT_USER_NAME);
+                final String password = ConfigurationUtil.getProperty(this.getConfiguration(), PROP_PASSWORD, DEFAULT_PASSWORD);
+                final BasicWebConsoleSecurityProvider service = new BasicWebConsoleSecurityProvider(bundleContext,
                         userId, password, realm);
-                Dictionary<String, Object> serviceProperties = new Hashtable<>(); // NOSONAR
+                final Dictionary<String, Object> serviceProperties = new Hashtable<>(); // NOSONAR
                 // this is a last resort service, so use a low service ranking to prefer all other services over this one
                 serviceProperties.put(Constants.SERVICE_RANKING, Integer.MIN_VALUE);
-                basicSecurityServiceRegistration = bundleContext.registerService(WebConsoleSecurityProvider.class,
+                this.basicSecurityServiceRegistration = bundleContext.registerService(WebConsoleSecurityProvider.class,
                         service, serviceProperties);
             }
 
-            if (!httpServletRegistered) {
+            if (this.servletContextRegistration == null) {
+                final ServletContextHelper httpContext = new OsgiManagerHttpContext(this.bundleContext.getBundle(),
+                    securityProviderTracker, realm);
+                final Dictionary<String, Object> props = new Hashtable<>();
+                if (httpServiceSelector != null) {
+                    props.put(HttpWhiteboardConstants.HTTP_WHITEBOARD_TARGET, httpServiceSelector);
+                }
+                props.put(HttpWhiteboardConstants.HTTP_WHITEBOARD_CONTEXT_NAME, SERVLEXT_CONTEXT_NAME);
+                props.put(HttpWhiteboardConstants.HTTP_WHITEBOARD_CONTEXT_PATH, this.webManagerRoot);
+
+                this.servletContextRegistration = getBundleContext().registerService(ServletContextHelper.class,
+                    httpContext, props);
+            }
+
+            if (this.servletRegistration == null) {
                 // register this servlet and take note of this
-                httpService.registerServlet(this.webManagerRoot, this, servletConfig,
-                    httpContext);
-                httpServletRegistered = true;
-            }
+                final Dictionary<String, Object> props = new Hashtable<>();
+                for(final Map.Entry<String, Object> entry : this.getConfiguration().entrySet()) {
+                    props.put(entry.getKey(), String.valueOf(entry.getValue()));
+                }
+                if (httpServiceSelector != null) {
+                    props.put(HttpWhiteboardConstants.HTTP_WHITEBOARD_TARGET, httpServiceSelector);
+                }
 
-            if (!httpResourcesRegistered) {
-                // register resources and take of this
-                httpService.registerResources(this.webManagerRoot + "/res", "/res",
-                    httpContext);
-                httpResourcesRegistered = true;
+                props.put(HttpWhiteboardConstants.HTTP_WHITEBOARD_SERVLET_PATTERN, "/");
+                props.put(HttpWhiteboardConstants.HTTP_WHITEBOARD_CONTEXT_SELECT, "(" + HttpWhiteboardConstants.HTTP_WHITEBOARD_CONTEXT_NAME + "=" + SERVLEXT_CONTEXT_NAME + ")");
+
+                this.servletRegistration = getBundleContext().registerService(Servlet.class, this, props);                
             }
-        }
-        catch (Exception e)
-        {
-            log(LogService.LOG_ERROR, "bindHttpService: Problem setting up", e);
+        } catch (final Exception e) {
+            log(LogLevel.ERROR.ordinal(), "registerHttpWhiteboardServices: Problem setting up", e);
+            this.unregisterHttpWhiteboardServices();
         }
     }
 
-    protected void unbindHttpService(HttpService httpService)
-    {
-        if (this.httpService != httpService)
-        {
-            log(LogService.LOG_DEBUG,
-                "unbindHttpService: Ignoring unbind of an HttpService to which we are not registered");
-            return;
-        }
-
-        unregisterHttpService();
-
-        // drop the service reference
-        this.httpService = null;
-    }
-
-    synchronized void unregisterHttpService() {
-        if (httpService == null)
-            return;
-
-        if (basicSecurityServiceRegistration != null) {
+    synchronized void unregisterHttpWhiteboardServices() {
+        if (this.basicSecurityServiceRegistration != null) {
             try {
-                basicSecurityServiceRegistration.unregister();
-            } catch (Throwable t) {
-                log(LogService.LOG_WARNING,
-                        "unbindHttpService: Failed unregistering basic WebConsoleSecurityProvider", t);
+                this.basicSecurityServiceRegistration.unregister();
+            } catch (final IllegalStateException ignore) {
+                // ignore
             }
-            basicSecurityServiceRegistration = null;
+            this.basicSecurityServiceRegistration = null;
         }
 
-        if (httpResourcesRegistered)
-        {
-            try
-            {
-                httpService.unregister(this.webManagerRoot + "/res");
+        if (this.servletRegistration != null) {
+            try {
+                this.servletRegistration.unregister();
+            } catch (final IllegalStateException ignore) {
+                // ignore
             }
-            catch (Throwable t)
-            {
-                log(LogService.LOG_WARNING,
-                    "unbindHttpService: Failed unregistering Resources", t);
-            }
-            httpResourcesRegistered = false;
+            this.servletRegistration = null;
         }
 
-        if (httpServletRegistered)
-        {
-            try
-            {
-                httpService.unregister(this.webManagerRoot);
+        if (this.servletContextRegistration != null) {
+            try {
+                this.servletContextRegistration.unregister();
+            } catch (final IllegalStateException ignore) {
+                // ignore
             }
-            catch (Throwable t)
-            {
-                log(LogService.LOG_WARNING,
-                    "unbindHttpService: Failed unregistering Servlet", t);
-            }
-            httpServletRegistered = false;
+            this.servletContextRegistration = null;
         }
     }
 
-
-    private Map<String, Object> getConfiguration()
-    {
+    private Map<String, Object> getConfiguration() {
         return configuration;
     }
 
-
-    Map<String, Object> getDefaultConfiguration()
-    {
+    Map<String, Object> getDefaultConfiguration() {
         return defaultConfiguration;
     }
 
+    synchronized void updateConfiguration( final Dictionary<String, Object> osgiConfig) {
+        final Map<String, Object> config = new HashMap<String, Object>( this.defaultConfiguration );
 
-    synchronized void updateConfiguration( Dictionary<String, Object> osgiConfig )
-    {
-        Map<String, Object> config = new HashMap<String, Object>( this.defaultConfiguration );
-
-        if ( osgiConfig != null )
-        {
-            for ( Enumeration<String> keys = osgiConfig.keys(); keys.hasMoreElements(); )
-            {
+        if ( osgiConfig != null ) {
+            for ( Enumeration<String> keys = osgiConfig.keys(); keys.hasMoreElements(); ) {
                 final String key = keys.nextElement();
                 config.put( key, osgiConfig.get( key ) );
             }
         }
 
-        configuration = config;
+        this.configuration = config;
 
         final Object locale = config.get(PROP_LOCALE);
-        configuredLocale = locale == null || locale.toString().trim().length() == 0 //
-        ? null : Util.parseLocaleString(locale.toString().trim());
+        this.configuredLocale = locale == null || locale.toString().trim().length() == 0 ? null : Util.parseLocaleString(locale.toString().trim());
 
-        logLevel = ConfigurationUtil.getProperty(config, PROP_LOG_LEVEL, DEFAULT_LOG_LEVEL);
+        this.logLevel = ConfigurationUtil.getProperty(config, PROP_LOG_LEVEL, DEFAULT_LOG_LEVEL);
         AbstractWebConsolePlugin.setLogLevel(logLevel);
 
         // default plugin page configuration
@@ -1140,67 +1060,33 @@ public class OsgiManager extends GenericServlet
 
         // get the web manager root path
         String newWebManagerRoot = ConfigurationUtil.getProperty(config, PROP_MANAGER_ROOT, DEFAULT_MANAGER_ROOT);
-        if (!newWebManagerRoot.startsWith("/")) //$NON-NLS-1$
-        {
-            newWebManagerRoot = "/" + newWebManagerRoot; //$NON-NLS-1$
+        if (!newWebManagerRoot.startsWith("/")) { //$NON-NLS-1$
+            newWebManagerRoot = "/".concat(newWebManagerRoot); //$NON-NLS-1$
         }
 
         // default category
         this.defaultCategory = ConfigurationUtil.getProperty( config, PROP_CATEGORY, DEFAULT_CATEGORY );
-
-        // get the HTTP Service selector (and dispose tracker for later
-        // recreation)
-        final String newHttpServiceSelector = ConfigurationUtil.getProperty(config,
-            PROP_HTTP_SERVICE_SELECTOR, DEFAULT_HTTP_SERVICE_SELECTOR);
-        if (httpServiceTracker != null
-            && !httpServiceTracker.isSameSelector(newHttpServiceSelector))
-        {
-            httpServiceTracker.close();
-            httpServiceTracker = null;
-        }
 
         // secret heuristics
         final boolean enableHeuristics = ConfigurationUtil.getProperty(config, PROP_ENABLE_SECRET_HEURISTIC, DEFAULT_ENABLE_SECRET_HEURISTIC);
         OsgiManager.ENABLE_SECRET_HEURISTICS = enableHeuristics;
 
         // get enabled plugins
-        String[] plugins = ConfigurationUtil.getStringArrayProperty(config, PROP_ENABLED_PLUGINS);
-        enabledPlugins = null == plugins ? null : new HashSet<String>(Arrays.asList(plugins));
+        final String[] plugins = ConfigurationUtil.getStringArrayProperty(config, PROP_ENABLED_PLUGINS);
+        this.enabledPlugins = null == plugins ? null : new HashSet<String>(Arrays.asList(plugins));
         // check for moved config manager class (see FELIX-4074)
-        if ( enabledPlugins != null )
-        {
-            if ( enabledPlugins.remove(OLD_CONFIG_MANAGER_CLASS) )
-            {
+        if ( enabledPlugins != null ) {
+            if ( enabledPlugins.remove(OLD_CONFIG_MANAGER_CLASS) ) {
                 enabledPlugins.add(NEW_CONFIG_MANAGER_CLASS);
             }
         }
         initInternalPlugins();
 
-        // might update HTTP service registration
-        HttpService httpService = this.httpService;
-        if (httpService != null)
-        {
-            // unbind old location first
-            unbindHttpService(httpService);
-
-            // switch location
-            this.webManagerRoot = newWebManagerRoot;
-
-            // bind new location now
-            bindHttpService(httpService);
-        }
-        else
-        {
-            // just set the configured location (FELIX-2034)
-            this.webManagerRoot = newWebManagerRoot;
-        }
-
-        // create or recreate the HTTP service tracker with the new selector
-        if (httpServiceTracker == null)
-        {
-            httpServiceTracker = HttpServiceTracker.create(this, newHttpServiceSelector);
-            httpServiceTracker.open();
-        }
+        // update http service registrations.
+        this.unregisterHttpWhiteboardServices();
+        // switch location
+        this.webManagerRoot = newWebManagerRoot;
+        this.registerHttpWhiteboardServices();
     }
 
     private void initInternalPlugins()
@@ -1237,18 +1123,6 @@ public class OsgiManager extends GenericServlet
     boolean isPluginDisabled(String pluginClass)
     {
         return enabledPlugins != null && !enabledPlugins.contains( pluginClass );
-    }
-
-
-    private Dictionary<String, String> toStringConfig( Map<String, Object> config )
-    {
-        Dictionary<String, String> stringConfig = new Hashtable<>();
-        for ( Iterator<Map.Entry<String, Object>> ei = config.entrySet().iterator(); ei.hasNext(); )
-        {
-            Entry<String, Object> entry = ei.next();
-            stringConfig.put( entry.getKey(), String.valueOf( entry.getValue() ) );
-        }
-        return stringConfig;
     }
 
     static Set<String> splitCommaSeparatedString(final String str) {

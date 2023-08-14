@@ -19,14 +19,12 @@
 package org.apache.felix.webconsole.internal.configuration;
 
 import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertTrue;
 
 import java.io.IOException;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.Dictionary;
 import java.util.Hashtable;
-import java.util.List;
 
 import org.apache.felix.webconsole.spi.ConfigurationHandler;
 import org.apache.felix.webconsole.spi.ValidationException;

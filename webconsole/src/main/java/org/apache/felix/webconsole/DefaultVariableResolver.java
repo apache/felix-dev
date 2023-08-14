@@ -31,6 +31,7 @@ import java.util.Map;
  * {@link WebConsoleUtil#getVariableResolver(javax.servlet.ServletRequest)}
  * as the variable resolver if none has yet been assigned to the request.
  */
+@SuppressWarnings({ "rawtypes" })
 public class DefaultVariableResolver extends HashMap implements VariableResolver
 {
 

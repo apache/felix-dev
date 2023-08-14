@@ -35,7 +35,7 @@ import org.apache.felix.webconsole.internal.WebConsolePluginAdapter;
 import org.osgi.framework.Bundle;
 import org.osgi.framework.Constants;
 import org.osgi.framework.ServiceReference;
-import org.osgi.service.log.LogService;
+import org.osgi.service.log.LogLevel;
 
 public abstract class Plugin implements ServletConfig, Comparable<Plugin> {
 
@@ -279,7 +279,7 @@ public abstract class Plugin implements ServletConfig, Comparable<Plugin> {
         protected AbstractWebConsolePlugin doGetConsolePlugin() {
             if (!isEnabled()) {
                 if (doLog) {
-                    osgiManager.log( LogService.LOG_INFO, "Ignoring plugin " + pluginClassName + ": Disabled by configuration" );
+                    osgiManager.log( LogLevel.INFO.ordinal(), "Ignoring plugin " + pluginClassName + ": Disabled by configuration" );
                     doLog = false;
                 }
                 return null;
@@ -299,7 +299,7 @@ public abstract class Plugin implements ServletConfig, Comparable<Plugin> {
             } catch (final Throwable t) {
                 plugin = null; // in case only activate has faled!
                 if (doLog) {
-                    osgiManager.log( LogService.LOG_WARNING, "Failed to instantiate plugin " + pluginClassName, t );
+                    osgiManager.log( LogLevel.WARN.ordinal(), "Failed to instantiate plugin " + pluginClassName, t );
                     doLog = false;
                 }
             }

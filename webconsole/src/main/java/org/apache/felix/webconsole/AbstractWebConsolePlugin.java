@@ -47,7 +47,7 @@ import javax.servlet.http.HttpServletResponse;
 import org.apache.felix.webconsole.internal.servlet.OsgiManager;
 import org.osgi.framework.Bundle;
 import org.osgi.framework.BundleContext;
-import org.osgi.service.log.LogService;
+import org.osgi.service.log.LogLevel;
 
 
 /**
@@ -389,7 +389,7 @@ public abstract class AbstractWebConsolePlugin extends HttpServlet
         {
             try
             {
-                Class cl = resourceProvider.getClass();
+                Class<?> cl = resourceProvider.getClass();
                 while ( tmpGetResourceMethod == null && cl != Object.class )
                 {
                     Method[] methods = cl.getDeclaredMethods();
@@ -633,6 +633,7 @@ public abstract class AbstractWebConsolePlugin extends HttpServlet
      * @throws IOException on I/O error
      * @see #endResponse(PrintWriter)
      */
+    @SuppressWarnings({ "unchecked" })
     protected PrintWriter startResponse( HttpServletRequest request, HttpServletResponse response ) throws IOException
     {
         response.setCharacterEncoding( "utf-8" ); //$NON-NLS-1$
@@ -674,6 +675,7 @@ public abstract class AbstractWebConsolePlugin extends HttpServlet
      * @param request the HTTP request coming from the user
      * @param pw the writer, where the HTML data is rendered
      */
+    @SuppressWarnings({ "rawtypes" })
     protected void renderTopNavigation( HttpServletRequest request, PrintWriter pw )
     {
         // assume pathInfo to not be null, else this would not be called
@@ -730,6 +732,7 @@ public abstract class AbstractWebConsolePlugin extends HttpServlet
     }
 
 
+    @SuppressWarnings({ "rawtypes" })
     protected void renderMenu( Map menuMap, String appRoot, PrintWriter pw )
     {
         if ( menuMap != null )
@@ -745,6 +748,7 @@ public abstract class AbstractWebConsolePlugin extends HttpServlet
     }
 
 
+    @SuppressWarnings({ "rawtypes" })
     private void renderMenu( Map menuMap, String appRoot, PrintWriter pw, int level )
     {
         pw.println( "<ul class=\"navMenuLevel-" + level + "\">" );
@@ -753,6 +757,7 @@ public abstract class AbstractWebConsolePlugin extends HttpServlet
     }
 
 
+    @SuppressWarnings({ "rawtypes" })
     private void renderSubmenu( Map menuMap, String appRoot, PrintWriter pw, int level )
     {
         String liStyleClass = " class=\"navMenuItem-" + level + "\"";
@@ -935,7 +940,7 @@ public abstract class AbstractWebConsolePlugin extends HttpServlet
         return readTemplateFile( getClass(), templateFile );
     }
 
-    private final String readTemplateFile( final Class clazz, final String templateFile) {
+    private final String readTemplateFile( final Class<?> clazz, final String templateFile) {
         
         try(InputStream templateStream = clazz.getResourceAsStream( templateFile )) {
             if ( templateStream != null ) {
@@ -964,7 +969,7 @@ public abstract class AbstractWebConsolePlugin extends HttpServlet
         }
 
         // template file does not exist, return an empty string
-        log( LogService.LOG_ERROR, "readTemplateFile: File '" + templateFile + "' not found through class " + clazz ); //$NON-NLS-1$ //$NON-NLS-2$
+        log( LogLevel.ERROR.ordinal(), "readTemplateFile: File '" + templateFile + "' not found through class " + clazz ); //$NON-NLS-1$ //$NON-NLS-2$
         return ""; //$NON-NLS-1$
     }
 
@@ -1013,6 +1018,7 @@ public abstract class AbstractWebConsolePlugin extends HttpServlet
     }
 
 
+    @SuppressWarnings({ "unchecked", "rawtypes" })
     private SortedMap sortMenuCategoryMap( Map map, String appRoot )
     {
         SortedMap sortedMap = new TreeMap<>( String.CASE_INSENSITIVE_ORDER );
@@ -1054,17 +1060,16 @@ public abstract class AbstractWebConsolePlugin extends HttpServlet
         return sortedMap;
     }
 
+    @SuppressWarnings({ "rawtypes" })
     private static class MenuItem
     {
     private String link;
         private Map subMenu;
 
-
         public MenuItem( String link )
         {
             this.link = link;
         }
-
 
         public MenuItem( String link, Map subMenu )
         {

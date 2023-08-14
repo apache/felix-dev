@@ -21,7 +21,7 @@ package org.apache.felix.webconsole;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 
-import org.osgi.service.http.HttpContext;
+import org.osgi.service.http.context.ServletContextHelper;
 
 /**
  * The <code>WebConsoleSecurityProvider3</code> extends the
@@ -34,7 +34,7 @@ import org.osgi.service.http.HttpContext;
  * If this service is missing and basic authentication is used, then new authentication is requested.
  * 
  * In any case, the logout procedure will invalidate the current session and will remove the 
- * {@link HttpContext#REMOTE_USER}, {@link HttpContext#AUTHORIZATION} attributes from the request and the session.
+ * {@link ServletContextHelper#REMOTE_USER}, {@link ServletContextHelper#AUTHORIZATION} attributes from the request and the session.
  * 
  * @since 4.2.8; Web Console Bundle 4.2.8
  */

@@ -21,8 +21,8 @@ package org.apache.felix.webconsole.internal.servlet;
 import org.apache.felix.webconsole.WebConsoleSecurityProvider;
 import org.junit.Test;
 import org.mockito.Mockito;
+import org.osgi.framework.Bundle;
 import org.osgi.framework.BundleContext;
-import org.osgi.service.http.HttpService;
 
 import java.lang.reflect.Method;
 
@@ -32,8 +32,8 @@ public class OsgiManagerHttpContextTest {
     @Test
     public void testAuthenticate() throws Exception {
         BundleContext bc = Mockito.mock(BundleContext.class);
-        HttpService svc = Mockito.mock(HttpService.class);
-        OsgiManagerHttpContext ctx = new OsgiManagerHttpContext(svc, null, "blah");
+        Bundle bundle = Mockito.mock(Bundle.class);
+        OsgiManagerHttpContext ctx = new OsgiManagerHttpContext(bundle, null, "blah");
 
         Method authenticateMethod = OsgiManagerHttpContext.class.getDeclaredMethod(
                 "authenticate", new Class [] {WebConsoleSecurityProvider.class, String.class, byte[].class});
@@ -54,8 +54,8 @@ public class OsgiManagerHttpContextTest {
         BundleContext bc = Mockito.mock(BundleContext.class);
         Mockito.when(bc.getProperty(OsgiManager.FRAMEWORK_PROP_SECURITY_PROVIDERS)).thenReturn("a");
 
-        HttpService svc = Mockito.mock(HttpService.class);
-        OsgiManagerHttpContext ctx = new OsgiManagerHttpContext(svc, null, "blah");
+        Bundle bundle = Mockito.mock(Bundle.class);
+        OsgiManagerHttpContext ctx = new OsgiManagerHttpContext(bundle, null, "blah");
 
         Method authenticateMethod = OsgiManagerHttpContext.class.getDeclaredMethod(
                 "authenticate", new Class [] {WebConsoleSecurityProvider.class, String.class, byte[].class});
