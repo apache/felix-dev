@@ -136,7 +136,7 @@ public class ZipConfigurationWriter extends ConfigurationWriter
 
         this.entryCounter++;
         return MessageFormat.format("{0,number,000}_{1}", new Object[]
-            { new Integer(this.entryCounter), name });
+            { this.entryCounter, name });
     }
 
     private static class ConfigZipOutputStream extends ZipOutputStream
