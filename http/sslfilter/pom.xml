@@ -36,14 +36,18 @@
         <developerConnection>scm:git:https://github.com/apache/felix-dev.git</developerConnection>
         <url>https://gitbox.apache.org/repos/asf?p=felix-dev.git</url>
       <tag>HEAD</tag>
-  </scm>
+   </scm>
+
+    <properties>
+        <servlet.api>5.0.0</servlet.api>
+    </properties>
 
     <build>
         <plugins>
             <plugin>
                 <groupId>org.apache.felix</groupId>
                 <artifactId>maven-bundle-plugin</artifactId>
-                <version>5.1.4</version>
+                <version>5.1.9</version>
                 <extensions>true</extensions>
             </plugin>
         </plugins>
@@ -81,7 +85,7 @@
         <dependency>
             <groupId>jakarta.servlet</groupId>
             <artifactId>jakarta.servlet-api</artifactId>
-            <version>5.0.0</version>
+            <version>${servlet.api}</version>
             <scope>provided</scope>
         </dependency>
         <!-- Test Dependencies -->

@@ -515,10 +515,8 @@ public class SslFilterResponseTest
             committed = true;
         }
 
-        @Override
         public void setStatus(int sc, String sm) {
-            status = sc;
-            committed = true;
+            throw new UnsupportedOperationException();
         }
 
         @Override
@@ -577,7 +575,6 @@ public class SslFilterResponseTest
             return headers.get(name);
         }
 
-        @Override
         public String encodeUrl(String url) {
             throw new UnsupportedOperationException();
         }
@@ -587,7 +584,6 @@ public class SslFilterResponseTest
             throw new UnsupportedOperationException();
         }
 
-        @Override
         public String encodeRedirectUrl(String url) {
             throw new UnsupportedOperationException();
         }
