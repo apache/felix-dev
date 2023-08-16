@@ -367,7 +367,7 @@ public class BundlesServlet extends SimpleWebConsolePlugin implements OsgiManage
         boolean success = false;
         BundleException bundleException = null;
         final String action = req.getParameter( "action" );
-System.out.println("action: " + action);
+
         if ( "refreshPackages".equals( action ) ) {
             // refresh packages and give it most 15 seconds to finish
             final FrameworkWiring fw = getBundleContext().getBundle(Constants.SYSTEM_BUNDLE_LOCATION).adapt(FrameworkWiring.class);
