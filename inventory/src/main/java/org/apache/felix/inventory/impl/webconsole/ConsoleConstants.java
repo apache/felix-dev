@@ -19,7 +19,7 @@ package org.apache.felix.inventory.impl.webconsole;
 public class ConsoleConstants
 {
 
-    public static final String INTERFACE_SERVLET = "javax.servlet.Servlet"; //$NON-NLS-1$
+    public static final String INTERFACE_SERVLET = "jakarta.servlet.Servlet"; //$NON-NLS-1$
 
     public static final String INTERFACE_CONFIGURATION_PRINTER = "org.apache.felix.webconsole.ConfigurationPrinter"; //$NON-NLS-1$
 
