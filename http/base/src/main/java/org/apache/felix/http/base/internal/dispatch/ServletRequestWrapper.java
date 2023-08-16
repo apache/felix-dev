@@ -519,7 +519,7 @@ final class ServletRequestWrapper extends HttpServletRequestWrapper
 
     @Override
     public Map<String, String[]> getParameterMap() {
-        if ( ServletFileUpload.isMultipartContent(this) ) {
+        if ( ServletFileUpload.isMultipartContent(this) && this.multipartConfig != null ) {
             return this.getPartsParameterMap();
         }
         return super.getParameterMap();
