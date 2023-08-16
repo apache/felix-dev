@@ -69,6 +69,7 @@ public abstract class Plugin implements ServletConfig, Comparable<Plugin> {
 
     /**
      * Initialize everything including title and category
+     * @return {@code true} if the plugin is initialized, {@code false} otherwise
      */
     public boolean init() {
         final AbstractWebConsolePlugin plugin = this.doGetConsolePlugin();
@@ -169,7 +170,7 @@ public abstract class Plugin implements ServletConfig, Comparable<Plugin> {
     }
 
     @Override
-    public Enumeration<?> getInitParameterNames() {
+    public Enumeration<String> getInitParameterNames() {
         return Collections.emptyEnumeration();
     }
 
@@ -236,16 +237,16 @@ public abstract class Plugin implements ServletConfig, Comparable<Plugin> {
         }
 
         @Override
-        public Enumeration<?> getInitParameterNames() {
+        public Enumeration<String> getInitParameterNames() {
             final String[] keys = this.getServiceReference().getPropertyKeys();
-            return new Enumeration<Object>() {
+            return new Enumeration<String>() {
                 int idx = 0;
 
                 public boolean hasMoreElements() {
                     return idx < keys.length;
                 }
 
-                public Object nextElement() {
+                public String nextElement() {
                     if ( hasMoreElements() ) {
                         return keys[idx++];
                     }

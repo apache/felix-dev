@@ -265,19 +265,19 @@ public class OsgiManager extends GenericServlet {
     private volatile Map<String, Object> configuration;
 
     // See https://issues.apache.org/jira/browse/FELIX-2267
-    private Locale configuredLocale;
+    private volatile Locale configuredLocale;
 
-    private Set<String> enabledPlugins;
+    private volatile Set<String> enabledPlugins;
 
     final ConcurrentSkipListSet<String> registeredSecurityProviders = new ConcurrentSkipListSet<String>();
 
     final Set<String> requiredSecurityProviders;
 
-    ResourceBundleManager resourceBundleManager;
+    final ResourceBundleManager resourceBundleManager;
 
-    private int logLevel = DEFAULT_LOG_LEVEL;
+    private volatile int logLevel = DEFAULT_LOG_LEVEL;
 
-    private String defaultCategory = DEFAULT_CATEGORY;
+    private volatile String defaultCategory = DEFAULT_CATEGORY;
 
     public OsgiManager(BundleContext bundleContext)
     {
@@ -437,11 +437,7 @@ public class OsgiManager extends GenericServlet {
         holder.close();
 
         // dispose off the resource bundle manager
-        if (resourceBundleManager != null)
-        {
-            resourceBundleManager.dispose();
-            resourceBundleManager = null;
-        }
+        resourceBundleManager.dispose();
 
         // stop listening for brandings
         if (brandingTracker != null)
@@ -934,6 +930,8 @@ public class OsgiManager extends GenericServlet {
                     props.put(HttpWhiteboardConstants.HTTP_WHITEBOARD_TARGET, httpServiceSelector);
                 }
 
+                props.put(HttpWhiteboardConstants.HTTP_WHITEBOARD_SERVLET_MULTIPART_ENABLED, Boolean.TRUE);
+                props.put("osgi.http.whiteboard.servlet.multipart.maxFileCount", 50);
                 props.put(HttpWhiteboardConstants.HTTP_WHITEBOARD_SERVLET_PATTERN, "/");
                 props.put(HttpWhiteboardConstants.HTTP_WHITEBOARD_CONTEXT_SELECT, "(" + HttpWhiteboardConstants.HTTP_WHITEBOARD_CONTEXT_NAME + "=" + SERVLEXT_CONTEXT_NAME + ")");
 

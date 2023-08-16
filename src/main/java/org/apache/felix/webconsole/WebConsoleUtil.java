@@ -25,7 +25,6 @@ import java.io.UnsupportedEncodingException;
 import java.lang.reflect.Array;
 import java.net.URLDecoder;
 import java.util.HashMap;
-import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 
@@ -121,28 +120,26 @@ public final class WebConsoleUtil
      *  parameter value or <code>null</code> if not set. If multipart is used,
      *  and the specified parameter is field - then the value of the parameter
      *  is returned.
+     * @deprecated Use the Servlet API for uploads
      */
-    public static final String getParameter( HttpServletRequest request, String name )
-    {
+    @Deprecated
+    public static final String getParameter( final HttpServletRequest request, final String name ) {
         // just get the parameter if not a multipart/form-data POST
-        if ( !FileUploadBase.isMultipartContent( new ServletRequestContext( request ) ) )
-        {
+        if ( !FileUploadBase.isMultipartContent( new ServletRequestContext( request ) ) ) {
             return request.getParameter( name );
         }
 
         // check, whether we already have the parameters
         @SuppressWarnings("unchecked")
         Map<String, FileItem[]> params = ( Map<String, FileItem[]> ) request.getAttribute( AbstractWebConsolePlugin.ATTR_FILEUPLOAD );
-        if ( params == null )
-        {
+        if ( params == null ) {
             // parameters not read yet, read now
             // Create a factory for disk-based file items
             DiskFileItemFactory factory = new DiskFileItemFactory();
             factory.setSizeThreshold( 256000 );
             // See https://issues.apache.org/jira/browse/FELIX-4660
             final Object repo = request.getAttribute( AbstractWebConsolePlugin.ATTR_FILEUPLOAD_REPO );
-            if ( repo instanceof File )
-            {
+            if ( repo instanceof File ) {
                 factory.setRepository( (File) repo );
             }
 
@@ -153,20 +150,13 @@ public final class WebConsoleUtil
 
             // Parse the request
             params = new HashMap<>();
-            try
-            {
+            try {
                 final List<FileItem> items = upload.parseRequest( request );
-                for ( final Iterator<FileItem> fiter = items.iterator(); fiter.hasNext(); )
-                {
-                    final FileItem fi = fiter.next();
+                for(final FileItem fi : items) {
                     FileItem[] current = ( FileItem[] ) params.get( fi.getFieldName() );
-                    if ( current == null )
-                    {
-                        current = new FileItem[]
-                                { fi };
-                    }
-                    else
-                    {
+                    if ( current == null ) {
+                        current = new FileItem[] { fi };
+                    } else {
                         FileItem[] newCurrent = new FileItem[current.length + 1];
                         System.arraycopy( current, 0, newCurrent, 0, current.length );
                         newCurrent[current.length] = fi;
@@ -174,22 +164,17 @@ public final class WebConsoleUtil
                     }
                     params.put( fi.getFieldName(), current );
                 }
-            }
-            catch ( FileUploadException fue )
-            {
+            } catch ( FileUploadException fue ) {
                 // fail
                 return null;
             }
             request.setAttribute( AbstractWebConsolePlugin.ATTR_FILEUPLOAD, params );
         }
 
-        FileItem[] param = ( FileItem[] ) params.get( name );
-        if ( param != null )
-        {
-            for ( int i = 0; i < param.length; i++ )
-            {
-                if ( param[i].isFormField() )
-                {
+        final FileItem[] param = ( FileItem[] ) params.get( name );
+        if ( param != null ) {
+            for ( int i = 0; i < param.length; i++ ) {
+                if ( param[i].isFormField() ) {
                     return param[i].getString();
                 }
             }
