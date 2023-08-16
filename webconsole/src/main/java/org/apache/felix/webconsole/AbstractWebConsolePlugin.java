@@ -61,13 +61,16 @@ import org.osgi.service.log.LogService;
  * options. One of the options is to extend the AbstractWebConsolePlugin overwriting
  * the {@link #renderContent(HttpServletRequest, HttpServletResponse)} method.
  */
-public abstract class AbstractWebConsolePlugin extends HttpServlet
-{
+public abstract class AbstractWebConsolePlugin extends HttpServlet {
 
     /** Pseudo class version ID to keep the IDE quite. */
     private static final long serialVersionUID = 1L;
 
-    /** The name of the request attribute containing the map of FileItems from the POST request */
+    /**
+     * The name of the request attribute containing the map of FileItems from the POST request.
+     * @deprecated Use the Servlet API for uploads
+     */
+    @Deprecated
     public static final String ATTR_FILEUPLOAD = "org.apache.felix.webconsole.fileupload"; //$NON-NLS-1$
     
     /** 
@@ -84,7 +87,9 @@ public abstract class AbstractWebConsolePlugin extends HttpServlet
      * Without setting this attribute, your plugin will not work if there is a security manager enabled.
      * It is guaranteed, that your plugin has permissions to read/write/delete files to the location, 
      * provided by the bundle context.
+     * @deprecated Use the Servlet API for uploads
      */
+    @Deprecated
     public static final String ATTR_FILEUPLOAD_REPO = "org.apache.felix.webconsole.fileupload.repo"; //$NON-NLS-1$
 
     /**
@@ -817,8 +822,9 @@ public abstract class AbstractWebConsolePlugin extends HttpServlet
      *  parameter value or <code>null</code> if not set. If multipart is used,
      *  and the specified parameter is field - then the value of the parameter
      *  is returned.
-     * @deprecated use {@link WebConsoleUtil#getParameter(HttpServletRequest, String)}
+     * @deprecated Use the Servlet API for uploads
      */
+    @Deprecated
     public static final String getParameter( HttpServletRequest request, String name )
     {
         return WebConsoleUtil.getParameter(request, name);

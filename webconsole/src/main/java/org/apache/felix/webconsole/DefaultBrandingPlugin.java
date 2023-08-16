@@ -32,7 +32,8 @@ import java.util.Properties;
  * <p>
  * This default implementation provides Apache Felix based default branding
  * as follows:
- * <table summary="Web Console Branding Properties">
+ * <table>
+ * <caption>Web Console Branding Properties</caption>
  * <tr><th>Name</th><th>Property Name</th><th>Default Value</th></tr>
  * <tr>
  *  <td>Brand Name</td>
@@ -47,7 +48,7 @@ import java.util.Properties;
  * <tr>
  *  <td>Product URL</td>
  *  <td>webconsole.product.url</td>
- *  <td>http://felix.apache.org</td>
+ *  <td>https://felix.apache.org</td>
  * </tr>
  * <tr>
  *  <td>Product Image</td>

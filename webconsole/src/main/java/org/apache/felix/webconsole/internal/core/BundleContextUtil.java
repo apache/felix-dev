@@ -24,8 +24,8 @@ import org.osgi.framework.Constants;
 /**
  * The <code>BundleContextUtil</code> class.
  */
-public class BundleContextUtil
-{
+public class BundleContextUtil {
+
     /**
      * This property defines which bundle context the web console plugins use to
      * get the list of bundles and services. It defaults to {@link #WORK_CTX_OWN}.
@@ -44,6 +44,8 @@ public class BundleContextUtil
     /**
      * Get the working bundle context: the bundle context to lookup bundles and
      * services.
+     * @param bc the bundle context of the web console plugin
+     * @return the bundle context to use
      */
     public static BundleContext getWorkingBundleContext( final BundleContext bc)
     {
