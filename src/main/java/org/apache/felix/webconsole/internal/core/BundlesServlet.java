@@ -107,6 +107,8 @@ public class BundlesServlet extends SimpleWebConsolePlugin implements OsgiManage
 
     private static final String FIELD_BUNDLEFILE = "bundlefile";
 
+    private static final String FIELD_UPLOADID = "uploadid";
+
     // set to ask for PackageAdmin.refreshPackages() after install/update
     private static final String FIELD_REFRESH_PACKAGES = "refreshPackages";
 
@@ -364,13 +366,8 @@ public class BundlesServlet extends SimpleWebConsolePlugin implements OsgiManage
     throws ServletException, IOException {
         boolean success = false;
         BundleException bundleException = null;
-        final String action;
-        if (req.getParts().isEmpty()) {
-            action = req.getParameter( "action" );
-        } else {
-            action = getValue(req, "action");
-        }
-
+        final String action = req.getParameter( "action" );
+System.out.println("action: " + action);
         if ( "refreshPackages".equals( action ) ) {
             // refresh packages and give it most 15 seconds to finish
             final FrameworkWiring fw = getBundleContext().getBundle(Constants.SYSTEM_BUNDLE_LOCATION).adapt(FrameworkWiring.class);
@@ -1478,14 +1475,6 @@ public class BundlesServlet extends SimpleWebConsolePlugin implements OsgiManage
 
     //---------- Bundle Installation handler (former InstallAction)
 
-    private String getValue(final HttpServletRequest request, final String fieldName) throws ServletException, IOException {
-        final Part part = request.getPart(fieldName);
-        if ( part != null ) {
-            return IOUtils.toString(part.getInputStream(), "UTF-8");
-        }
-        return null;
-    }
-    
     private void installBundles( final HttpServletRequest request )
     throws IOException, ServletException {
         final Collection<Part> bundleItems = request.getParts();
@@ -1494,17 +1483,17 @@ public class BundlesServlet extends SimpleWebConsolePlugin implements OsgiManage
         }
 
         final long uploadId;
-        final String uidVal = this.getValue(request, "uploadid");
+        final String uidVal = request.getParameter(FIELD_UPLOADID);
         if ( uidVal != null ) {
             uploadId = Long.valueOf(uidVal);
         } else {
             uploadId = -1;
         }
 
-        final String startItem = this.getValue(request, FIELD_START);
-        final String startLevelItem = this.getValue(request, FIELD_STARTLEVEL);
-        final String refreshPackagesItem = this.getValue(request, FIELD_REFRESH_PACKAGES);
-        final String parallelVersionItem = this.getValue(request, FIELD_PARALLEL_VERSION);
+        final String startItem = request.getParameter(FIELD_START);
+        final String startLevelItem = request.getParameter(FIELD_STARTLEVEL);
+        final String refreshPackagesItem = request.getParameter(FIELD_REFRESH_PACKAGES);
+        final String parallelVersionItem = request.getParameter(FIELD_PARALLEL_VERSION);
 
         // default values
         // it exists
