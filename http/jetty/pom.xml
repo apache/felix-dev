@@ -30,14 +30,14 @@
     <description>This is an implementation of the R7 OSGi Http Service and the R7 OSGi Http Whiteboard Specification</description>
 
     <artifactId>org.apache.felix.http.jetty</artifactId>
-    <version>4.2.16</version>
+    <version>4.2.17-SNAPSHOT</version>
     <packaging>bundle</packaging>
     
     <scm>
         <connection>scm:git:https://github.com/apache/felix-dev.git</connection>
         <developerConnection>scm:git:https://github.com/apache/felix-dev.git</developerConnection>
         <url>https://gitbox.apache.org/repos/asf?p=felix-dev.git</url>
-      <tag>org.apache.felix.http.jetty-4.2.16</tag>
+      <tag>HEAD</tag>
   </scm>
     
     <properties>
