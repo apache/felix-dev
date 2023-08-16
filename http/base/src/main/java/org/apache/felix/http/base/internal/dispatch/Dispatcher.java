@@ -22,12 +22,12 @@ import java.util.Set;
 import org.apache.felix.http.base.internal.context.ExtServletContext;
 import org.apache.felix.http.base.internal.handler.FilterHandler;
 import org.apache.felix.http.base.internal.handler.HttpSessionWrapper;
-import org.apache.felix.http.base.internal.jakartawrappers.ServletExceptionWrapper;
 import org.apache.felix.http.base.internal.logger.SystemLogger;
 import org.apache.felix.http.base.internal.registry.HandlerRegistry;
 import org.apache.felix.http.base.internal.registry.PathResolution;
 import org.apache.felix.http.base.internal.registry.PerContextHandlerRegistry;
 import org.apache.felix.http.base.internal.whiteboard.WhiteboardManager;
+import org.apache.felix.http.jakartawrappers.ServletExceptionWrapper;
 import org.jetbrains.annotations.Nullable;
 import org.osgi.service.servlet.whiteboard.Preprocessor;
 

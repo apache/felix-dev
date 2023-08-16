@@ -27,6 +27,7 @@ import org.apache.felix.http.base.internal.context.ExtServletContext;
 import org.apache.felix.http.base.internal.logger.SystemLogger;
 import org.apache.felix.http.base.internal.runtime.ServletInfo;
 import org.apache.felix.http.base.internal.util.PatternUtil;
+import org.apache.felix.http.javaxwrappers.ServletWrapper;
 import org.jetbrains.annotations.NotNull;
 import org.osgi.framework.Bundle;
 import org.osgi.service.http.HttpContext;
@@ -101,7 +102,7 @@ public final class PerBundleHttpServiceImpl implements HttpService
         try
         {
             final HttpResourceServlet servlet = new HttpResourceServlet(name);
-            final javax.servlet.Servlet wrapper = new org.apache.felix.http.base.internal.javaxwrappers.ServletWrapper(servlet);
+            final javax.servlet.Servlet wrapper = new ServletWrapper(servlet);
             servlet.setWrapper(wrapper);
             registerServlet(alias, wrapper, null, context);
         }

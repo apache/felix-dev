@@ -165,7 +165,9 @@
                             !org.eclipse.jetty,
                             !org.eclipse.jetty.version,
                             org.eclipse.jetty.*,
-                            org.apache.felix.http.jetty
+			    org.apache.felix.http.jetty,
+                            org.apache.felix.http.jakartawrappers,
+			    org.apache.felix.http.javaxwrappers
                         </Export-Package>
                         <Private-Package>
                             org.apache.felix.http.base.*,
@@ -253,7 +255,9 @@
                                     org.osgi.service.http.runtime.dto,
                                     org.osgi.service.http.whiteboard,
                                     !org.osgi.service.servlet.*,
-                                    org.apache.felix.http.jetty
+				    org.apache.felix.http.jetty,
+				    org.apache.felix.http.javaxwrappers,
+				    org.apache.felix.http.jakartawrappers
                                 </Export-Package>
                                 <Private-Package>
                                     org.apache.felix.http.base.*,
@@ -409,8 +413,13 @@
         <dependency>
             <groupId>org.apache.felix</groupId>
             <artifactId>org.apache.felix.http.base</artifactId>
-            <version>5.0.4</version>
+            <version>5.0.5-SNAPSHOT</version>
         </dependency>
+	<dependency>
+            <groupId>org.apache.felix</groupId>
+	    <artifactId>org.apache.felix.http.wrappers</artifactId>
+	    <version>1.0.0-SNAPSHOT</version>
+	</dependency>
         <dependency>
             <groupId>commons-fileupload</groupId>
             <artifactId>commons-fileupload</artifactId>

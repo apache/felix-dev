@@ -17,9 +17,9 @@
 package org.apache.felix.http.base.internal.handler;
 
 import org.apache.felix.http.base.internal.context.ExtServletContext;
-import org.apache.felix.http.base.internal.jakartawrappers.ServletWrapper;
 import org.apache.felix.http.base.internal.runtime.ServletInfo;
 import org.apache.felix.http.base.internal.service.HttpServiceFactory;
+import org.apache.felix.http.jakartawrappers.ServletWrapper;
 
 import jakarta.servlet.Servlet;
 

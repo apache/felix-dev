@@ -24,8 +24,8 @@ import java.util.Map;
 import java.util.Objects;
 
 import org.apache.felix.http.base.internal.dispatch.MultipartConfig;
-import org.apache.felix.http.base.internal.jakartawrappers.ServletWrapper;
 import org.apache.felix.http.base.internal.util.PatternUtil;
+import org.apache.felix.http.jakartawrappers.ServletWrapper;
 import org.jetbrains.annotations.NotNull;
 import org.osgi.dto.DTO;
 import org.osgi.framework.ServiceReference;

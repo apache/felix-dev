@@ -16,6 +16,7 @@
  */
 package org.apache.felix.http.base.internal.jakartawrappers;
 
+import org.apache.felix.http.jakartawrappers.FilterWrapper;
 import org.jetbrains.annotations.NotNull;
 import org.osgi.service.servlet.whiteboard.Preprocessor;
 

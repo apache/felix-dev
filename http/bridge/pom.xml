@@ -64,7 +64,9 @@
                             org.osgi.service.http.context,
                             org.osgi.service.http.runtime,
                             org.osgi.service.http.runtime.dto,
-                            org.osgi.service.http.whiteboard
+			    org.osgi.service.http.whiteboard,
+			    org.apache.felix.http.jakartawrappers,
+			    org.apache.felix.http.javaxwrappers
                         </Export-Package>
                         <Private-Package>
                             org.apache.felix.http.base.*,
@@ -163,7 +165,12 @@
         <dependency>
             <groupId>org.apache.felix</groupId>
             <artifactId>org.apache.felix.http.base</artifactId>
-            <version>5.0.4</version>
+            <version>5.0.5-SNAPSHOT</version>
         </dependency>
+	<dependency>
+            <groupId>org.apache.felix</groupId>
+	    <artifactId>org.apache.felix.http.wrappers</artifactId>
+	    <version>1.0.0-SNAPSHOT</version>
+	</dependency>
     </dependencies>
 </project>

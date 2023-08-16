@@ -35,14 +35,14 @@ import org.apache.felix.http.base.internal.context.ExtServletContext;
 import org.apache.felix.http.base.internal.dispatch.RequestDispatcherImpl;
 import org.apache.felix.http.base.internal.dispatch.RequestInfo;
 import org.apache.felix.http.base.internal.handler.ServletHandler;
-import org.apache.felix.http.base.internal.javaxwrappers.ServletRequestWrapper;
-import org.apache.felix.http.base.internal.javaxwrappers.ServletResponseWrapper;
 import org.apache.felix.http.base.internal.logger.SystemLogger;
 import org.apache.felix.http.base.internal.registry.PathResolution;
 import org.apache.felix.http.base.internal.registry.PerContextHandlerRegistry;
 import org.apache.felix.http.base.internal.registry.ServletResolution;
 import org.apache.felix.http.base.internal.util.MimeTypes;
 import org.apache.felix.http.base.internal.util.UriUtils;
+import org.apache.felix.http.javaxwrappers.ServletRequestWrapper;
+import org.apache.felix.http.javaxwrappers.ServletResponseWrapper;
 import org.osgi.framework.Bundle;
 import org.osgi.service.http.HttpContext;
 

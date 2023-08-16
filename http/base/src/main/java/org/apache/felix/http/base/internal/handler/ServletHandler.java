@@ -21,9 +21,9 @@ import java.io.IOException;
 
 import org.apache.felix.http.base.internal.context.ExtServletContext;
 import org.apache.felix.http.base.internal.dispatch.MultipartConfig;
-import org.apache.felix.http.base.internal.jakartawrappers.ServletWrapper;
 import org.apache.felix.http.base.internal.logger.SystemLogger;
 import org.apache.felix.http.base.internal.runtime.ServletInfo;
+import org.apache.felix.http.jakartawrappers.ServletWrapper;
 import org.osgi.framework.Bundle;
 import org.osgi.service.servlet.runtime.dto.DTOConstants;
 

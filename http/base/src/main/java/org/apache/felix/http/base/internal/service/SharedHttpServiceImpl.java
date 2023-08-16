@@ -23,9 +23,9 @@ import java.util.Map;
 import org.apache.felix.http.base.internal.context.ExtServletContext;
 import org.apache.felix.http.base.internal.handler.HttpServiceServletHandler;
 import org.apache.felix.http.base.internal.handler.ServletHandler;
-import org.apache.felix.http.base.internal.jakartawrappers.ServletWrapper;
 import org.apache.felix.http.base.internal.registry.HandlerRegistry;
 import org.apache.felix.http.base.internal.runtime.ServletInfo;
+import org.apache.felix.http.jakartawrappers.ServletWrapper;
 import org.jetbrains.annotations.NotNull;
 import org.osgi.service.http.NamespaceException;
 

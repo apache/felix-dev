@@ -20,11 +20,11 @@ import java.util.EventListener;
 import java.util.HashSet;
 import java.util.Set;
 
-import org.apache.felix.http.base.internal.jakartawrappers.EventListenerWrapper;
 import org.apache.felix.http.base.internal.runtime.ListenerInfo;
 import org.apache.felix.http.base.internal.runtime.WhiteboardServiceInfo;
 import org.apache.felix.http.base.internal.util.ServiceUtils;
 import org.apache.felix.http.base.internal.whiteboard.WhiteboardManager;
+import org.apache.felix.http.jakartawrappers.EventListenerWrapper;
 import org.osgi.framework.BundleContext;
 import org.osgi.framework.Constants;
 import org.osgi.framework.ServiceReference;

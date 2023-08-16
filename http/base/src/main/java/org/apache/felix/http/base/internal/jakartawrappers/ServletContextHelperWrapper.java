@@ -20,8 +20,8 @@ import java.io.IOException;
 import java.net.URL;
 import java.util.Set;
 
-import org.apache.felix.http.base.internal.javaxwrappers.ServletRequestWrapper;
-import org.apache.felix.http.base.internal.javaxwrappers.ServletResponseWrapper;
+import org.apache.felix.http.javaxwrappers.ServletRequestWrapper;
+import org.apache.felix.http.javaxwrappers.ServletResponseWrapper;
 import org.jetbrains.annotations.NotNull;
 import org.osgi.service.servlet.context.ServletContextHelper;
 
