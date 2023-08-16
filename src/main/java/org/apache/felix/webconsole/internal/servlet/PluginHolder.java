@@ -18,6 +18,8 @@
  */
 package org.apache.felix.webconsole.internal.servlet;
 
+import java.io.Closeable;
+import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.HashMap;
@@ -67,6 +69,8 @@ class PluginHolder implements ServiceTrackerCustomizer<Servlet, Plugin> {
 
     private final ServiceTracker<Servlet, Plugin> servletTracker;
 
+    private volatile Closeable jakartaTracker;
+
     PluginHolder( final OsgiManager osgiManager, final BundleContext context ) {
         this.osgiManager = osgiManager;
         this.bundleContext = context;
@@ -91,6 +95,13 @@ class PluginHolder implements ServiceTrackerCustomizer<Servlet, Plugin> {
      */
     void open() {
         this.servletTracker.open();
+        try {
+            this.jakartaTracker = new JakartaServletTracker(this, this.getBundleContext());
+            this.osgiManager.log(LogService.LOG_INFO, "Jakarta Servlet bridge enabled");
+        } catch ( final Throwable t) {
+            // ignore
+            this.osgiManager.log(LogService.LOG_INFO, "Jakarta Servlet bridge not enabled");
+        }
     }
 
     /**
@@ -99,6 +110,14 @@ class PluginHolder implements ServiceTrackerCustomizer<Servlet, Plugin> {
      * held plugin services.
      */
     void close() {
+        if (this.jakartaTracker != null) {
+            try {
+                this.jakartaTracker.close();
+            } catch (final IOException e) {
+                // ignore
+            }
+            this.jakartaTracker = null;
+        }
         this.servletTracker.close();
 
         this.plugins.clear();
@@ -350,7 +369,7 @@ class PluginHolder implements ServiceTrackerCustomizer<Servlet, Plugin> {
         removePlugin( plugin );
     }
 
-    private void addPlugin( final Plugin plugin ) {
+    void addPlugin( final Plugin plugin ) {
         synchronized ( plugins ) {
             final List<Plugin> list = plugins.computeIfAbsent(plugin.getLabel(), k -> new ArrayList<>());
             final Plugin oldPlugin = list.isEmpty() ? null : list.get(0);
@@ -375,7 +394,7 @@ class PluginHolder implements ServiceTrackerCustomizer<Servlet, Plugin> {
         }
     }
 
-    private void removePlugin( final Plugin plugin ) {
+    void removePlugin( final Plugin plugin ) {
         synchronized ( plugins ) {
             final List<Plugin> list = plugins.get( plugin.getLabel() );
             if ( list != null ) {
