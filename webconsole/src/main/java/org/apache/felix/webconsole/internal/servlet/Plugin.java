@@ -194,8 +194,12 @@ public abstract class Plugin implements ServletConfig, Comparable<Plugin> {
             return this.getServiceReference().toString();
         }
 
+        protected Servlet getService() {
+            return getHolder().getBundleContext().getService( this.getServiceReference() );
+        }
+
         protected AbstractWebConsolePlugin doGetConsolePlugin() {
-            final Servlet service = getHolder().getBundleContext().getService( this.getServiceReference() );
+            final Servlet service = getService();
             if ( service != null ) {
                 this.title = Util.getStringProperty( this.getServiceReference(), WebConsoleConstants.PLUGIN_TITLE );
                 this.category = Util.getStringProperty( this.getServiceReference(), WebConsoleConstants.PLUGIN_CATEGORY );
