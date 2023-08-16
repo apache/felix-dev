@@ -41,9 +41,11 @@ import java.util.Arrays;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.Enumeration;
+import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Iterator;
 import java.util.List;
+import java.util.Map;
 import java.util.Set;
 
 import javax.servlet.AsyncContext;
@@ -86,7 +88,9 @@ final class ServletRequestWrapper extends HttpServletRequestWrapper
     private final MultipartConfig multipartConfig;
     private final Bundle bundleForSecurityCheck;
 
-    private Collection<Part> parts;
+    private Collection<PartImpl> parts;
+
+    private Map<String, String[]> partsParameterMap;
 
     public ServletRequestWrapper(final HttpServletRequest req,
             final ExtServletContext servletContext,
@@ -399,58 +403,42 @@ final class ServletRequestWrapper extends HttpServletRequestWrapper
         return this.asyncSupported;
     }
 
-    private Collection<Part> checkMultipart() throws IOException, ServletException
-    {
-        if ( parts == null )
-        {
-            if ( ServletFileUpload.isMultipartContent(this) )
-            {
-                if ( this.multipartConfig == null)
-                {
+    private Collection<PartImpl> checkMultipart() throws IOException, ServletException {
+        if ( parts == null ) {
+            if ( ServletFileUpload.isMultipartContent(this) ) {
+                if ( this.multipartConfig == null) {
                     throw new IllegalStateException("Multipart not enabled for servlet.");
                 }
 
-                if ( System.getSecurityManager() == null )
-                {
+                if ( System.getSecurityManager() == null ) {
                     handleMultipart();
-                }
-                else
-                {
+                } else {
                     final AccessControlContext ctx = bundleForSecurityCheck.adapt(AccessControlContext.class);
-                    final IOException ioe = AccessController.doPrivileged(new PrivilegedAction<IOException>()
-                    {
+                    final IOException ioe = AccessController.doPrivileged(new PrivilegedAction<IOException>() {
 
                         @Override
-                        public IOException run()
-                        {
-                            try
-                            {
+                        public IOException run() {
+                            try {
                                 handleMultipart();
-                            }
-                            catch ( final IOException ioe)
-                            {
+                            } catch ( final IOException ioe) {
                                 return ioe;
                             }
                             return null;
                         }
                     }, ctx);
-                    if ( ioe != null )
-                    {
+                    if ( ioe != null ) {
                         throw ioe;
                     }
                 }
 
-            }
-            else
-            {
+            } else {
                 throw new ServletException("Not a multipart request");
             }
         }
         return parts;
     }
 
-    private void handleMultipart() throws IOException
-    {
+    private void handleMultipart() throws IOException {
         // Create a new file upload handler
         final ServletFileUpload upload = new ServletFileUpload();
         upload.setSizeMax(this.multipartConfig.multipartMaxRequestSize);
@@ -461,127 +449,175 @@ final class ServletRequestWrapper extends HttpServletRequestWrapper
 
         // Parse the request
         List<FileItem> items = null;
-        try
-        {
+        try {
             items = upload.parseRequest(new ServletRequestContext(this));
-        }
-        catch (final FileUploadException fue)
-        {
+        } catch (final FileUploadException fue) {
             throw new IOException("Error parsing multipart request", fue);
         }
-        parts = new ArrayList<>();
-        for(final FileItem item : items)
-        {
-            parts.add(new Part() {
-
-                @Override
-                public InputStream getInputStream() throws IOException
-                {
-                    return item.getInputStream();
-                }
-
-                @Override
-                public String getContentType()
-                {
-                    return item.getContentType();
-                }
-
-                @Override
-                public String getName()
-                {
-                    return item.getFieldName();
-                }
-
-                @Override
-                public String getSubmittedFileName()
-                {
-                    return item.getName();
-                }
-
-                @Override
-                public long getSize()
-                {
-                    return item.getSize();
-                }
-
-                @Override
-                public void write(String fileName) throws IOException
-                {
-                    try
-                    {
-                        item.write(new File(fileName));
-                    }
-                    catch (IOException e)
-                    {
-                        throw e;
-                    }
-                    catch (Exception e)
-                    {
-                        throw new IOException(e);
-                    }
-                }
-
-                @Override
-                public void delete() throws IOException
-                {
-                    item.delete();
-                }
-
-                @Override
-                public String getHeader(String name)
-                {
-                    return item.getHeaders().getHeader(name);
-                }
-
-                @Override
-                public Collection<String> getHeaders(String name)
-                {
-                    final List<String> values = new ArrayList<>();
-                    final Iterator<String> iter = item.getHeaders().getHeaders(name);
-                    while ( iter.hasNext() )
-                    {
-                        values.add(iter.next());
-                    }
-                    return values;
-                }
-
-                @Override
-                public Collection<String> getHeaderNames()
-                {
-                    final List<String> names = new ArrayList<>();
-                    final Iterator<String> iter = item.getHeaders().getHeaderNames();
-                    while ( iter.hasNext() )
-                    {
-                        names.add(iter.next());
-                    }
-                    return names;
-                }
-            });
+        this.parts = new ArrayList<>();
+        for(final FileItem item : items) {
+            this.parts.add(new PartImpl(item));
         }
     }
-    @Override
-    public Collection<Part> getParts() throws IOException, ServletException
-    {
-        return checkMultipart();
 
+    @Override
+    @SuppressWarnings({"rawtypes", "unchecked"})
+    public Collection<Part> getParts() throws IOException, ServletException {
+        return (Collection)checkMultipart();
     }
 
     @Override
-    public Part getPart(String name) throws IOException, ServletException
-    {
-        Collection<Part> parts = this.checkMultipart();
-        for(final Part p : parts)
-        {
-            if ( p.getName().equals(name) )
-            {
+    public Part getPart(final String name) throws IOException, ServletException {
+        final Collection<PartImpl> parts = this.checkMultipart();
+        for(final Part p : parts) {
+            if ( p.getName().equals(name) ) {
                 return p;
             }
         }
         return null;
     }
 
+    private Map<String, String[]> getPartsParameterMap() {
+        if ( this.partsParameterMap == null ) {
+            try {
+                final Collection<PartImpl> parts = this.checkMultipart();
+                final Map<String, String[]> params = new HashMap<>();
+                for(final PartImpl p : parts) {
+                    if (p.getFileItem().isFormField()) {
+                        String[] current = params.get(p.getName());
+                        if (current == null) {
+                            current = new String[] {p.getFileItem().getString()};
+                        } else {
+                            String[] newCurrent = new String[current.length + 1];
+                            System.arraycopy( current, 0, newCurrent, 0, current.length );
+                            newCurrent[current.length] = p.getFileItem().getString();
+                            current = newCurrent;
+                        }
+                        params.put(p.getName(), current);
+                    }
+                }
+                this.partsParameterMap = params;
+            } catch (final IOException | ServletException ignore) {
+                // ignore all exceptions and use default
+            }
+            if ( this.partsParameterMap == null ) {
+                // use map from container implementation as default
+                this.partsParameterMap = super.getParameterMap();
+            }
+        }
+        return this.partsParameterMap;
+    }
+    
+    @Override
+    public String getParameter(final String name) {
+        final String[] values = this.getParameterValues(name);
+        if (values != null && values.length > 0) {
+            return values[0];
+        }
+        return null;
+    }
+
+    @Override
+    public Map<String, String[]> getParameterMap() {
+        if ( ServletFileUpload.isMultipartContent(this) ) {
+            return this.getPartsParameterMap();
+        }
+        return super.getParameterMap();
+    }
+
+    @Override
+    public Enumeration<String> getParameterNames() {
+        final Map<String, String[]> params = this.getParameterMap();
+        return Collections.enumeration(params.keySet());
+    }
+
+    @Override
+    public String[] getParameterValues(final String name) {
+        final Map<String, String[]> params = this.getParameterMap();
+        return params.get(name);
+    }
+
     @Override
     public HttpServletMapping getHttpServletMapping() {
         return new HttpServletMappingImpl(this.requestInfo);
+    }
+
+    private static final class PartImpl implements Part {
+
+        private final FileItem item;
+
+        public PartImpl(final FileItem item) {
+            this.item = item;
+        }
+
+        @Override
+        public InputStream getInputStream() throws IOException {
+            return item.getInputStream();
+        }
+
+        @Override
+        public String getContentType() {
+            return item.getContentType();
+        }
+
+        @Override
+        public String getName() {
+            return item.getFieldName();
+        }
+
+        @Override
+        public String getSubmittedFileName() {
+            return item.getName();
+        }
+
+        @Override
+        public long getSize() {
+            return item.getSize();
+        }
+
+        @Override
+        public void write(final String fileName) throws IOException {
+            try {
+                item.write(new File(fileName));
+            } catch (final IOException e) {
+                throw e;
+            } catch (final Exception e) {
+                throw new IOException(e);
+            }
+        }
+
+        @Override
+        public void delete() throws IOException {
+            item.delete();
+        }
+
+        @Override
+        public String getHeader(final String name) {
+            return item.getHeaders().getHeader(name);
+        }
+
+        @Override
+        public Collection<String> getHeaders(final String name) {
+            final List<String> values = new ArrayList<>();
+            final Iterator<String> iter = item.getHeaders().getHeaders(name);
+            while ( iter.hasNext() ) {
+                values.add(iter.next());
+            }
+            return values;
+        }
+
+        @Override
+        public Collection<String> getHeaderNames() {
+            final List<String> names = new ArrayList<>();
+            final Iterator<String> iter = item.getHeaders().getHeaderNames();
+            while ( iter.hasNext() ) {
+                names.add(iter.next());
+            }
+            return names;
+        }
+
+        public FileItem getFileItem() {
+            return this.item;
+        }
     }
 }
