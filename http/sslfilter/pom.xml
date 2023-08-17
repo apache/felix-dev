@@ -48,7 +48,16 @@
                 <groupId>org.apache.felix</groupId>
                 <artifactId>maven-bundle-plugin</artifactId>
                 <version>5.1.9</version>
-                <extensions>true</extensions>
+		<extensions>true</extensions>
+		<configuration>
+                    <instructions>
+                        <Import-Package>
+                            jakarta.servlet;version="[5.0,7)",
+                            jakarta.servlet.http;version="[5.0,7)",
+                            *
+                        </Import-Package>
+                    </instructions>
+		</configuration>
             </plugin>
         </plugins>
     </build>
