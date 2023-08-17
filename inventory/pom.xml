@@ -65,12 +65,13 @@
                             org.apache.felix.inventory.impl.Activator
                         </Bundle-Activator>
                         <Import-Package>
-                            jakarta.servlet;resolution:=optional,
-                            jakarta.servlet.http;resolution:=optional,
+                            jakarta.servlet;version="[5.0,7)";resolution:=optional,
+                            jakarta.servlet.http;version="[5.0,7)";resolution:=optional,
                             *
                         </Import-Package>
                         <DynamicImport-Package>
-                            jakarta.servlet, jakarta.servlet.http
+                            jakarta.servlet;version="[5.0,7)",
+                            jakarta.servlet.http;version="[5.0,7)"
                         </DynamicImport-Package>
                     </instructions>
                 </configuration>
