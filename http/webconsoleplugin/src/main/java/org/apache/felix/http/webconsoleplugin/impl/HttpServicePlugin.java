@@ -28,10 +28,10 @@ import java.util.Collections;
 import java.util.List;
 import java.util.Map;
 
-import javax.servlet.ServletException;
-import javax.servlet.http.HttpServlet;
-import javax.servlet.http.HttpServletRequest;
-import javax.servlet.http.HttpServletResponse;
+import jakarta.servlet.ServletException;
+import jakarta.servlet.http.HttpServlet;
+import jakarta.servlet.http.HttpServletRequest;
+import jakarta.servlet.http.HttpServletResponse;
 
 import org.osgi.framework.BundleContext;
 import org.osgi.framework.Constants;
@@ -54,6 +54,7 @@ import org.osgi.service.servlet.runtime.dto.ResourceDTO;
 import org.osgi.service.servlet.runtime.dto.RuntimeDTO;
 import org.osgi.service.servlet.runtime.dto.ServletContextDTO;
 import org.osgi.service.servlet.runtime.dto.ServletDTO;
+import org.owasp.encoder.Encode;
 
 /**
  * This is a web console plugin.
@@ -70,32 +71,6 @@ public class HttpServicePlugin extends HttpServlet {
     public HttpServicePlugin(final BundleContext context, final HttpServiceRuntime runtime) {
         this.context = context;
         this.runtime = runtime;
-    }
-
-    /** Escape xml text */
-    private static String escapeXml(final String input) {
-        if (input == null) {
-            return null;
-        }
-
-        final StringBuilder b = new StringBuilder(input.length());
-        for(int i = 0;i  < input.length(); i++) {
-            final char c = input.charAt(i);
-            if(c == '&') {
-                b.append("&amp;");
-            } else if(c == '<') {
-                b.append("&lt;");
-            } else if(c == '>') {
-                b.append("&gt;");
-            } else if(c == '"') {
-                b.append("&quot;");
-            } else if(c == '\'') {
-                b.append("&apos;");
-            } else {
-                b.append(c);
-            }
-        }
-        return b.toString();
     }
 
     @Override
@@ -219,7 +194,7 @@ public class HttpServicePlugin extends HttpServlet {
         pw.print("'>");
         pw.print("<input type='text' name='" + ATTR_TEST + "' value='");
         if (value != null) {
-            pw.print(escapeXml(value));
+            pw.print(Encode.forHtmlAttribute(value));
         }
         pw.println("' class='input' size='50'>");
         pw.println("&nbsp;&nbsp;<input type='submit' name='" + ATTR_SUBMIT
@@ -232,7 +207,7 @@ public class HttpServicePlugin extends HttpServlet {
             pw.println("<tr class='content'>");
             pw.println("<td class='content'>&nbsp;</td>");
             pw.print("<td class='content' colspan='2'>");
-            pw.print(escapeXml(msg));
+            pw.print(Encode.forHtmlContent(msg));
             pw.println("</td>");
             pw.println("</tr>");
         }
@@ -307,7 +282,7 @@ public class HttpServicePlugin extends HttpServlet {
         for(final String val : columns) {
             pw.print("<td>");
             if ( val != null ) {
-                String text = escapeXml(val).replace("\n", "<br/>");
+                String text = Encode.forHtmlContent(val).replace("\n", "<br/>");
                 int pos;
                 while ( (pos = text.indexOf("${#link:")) != -1) {
                     final int endPos = text.indexOf("}", pos);
@@ -348,7 +323,7 @@ public class HttpServicePlugin extends HttpServlet {
 
     private void printContextDetails(final PrintWriter pw, final ServletContextDTO dto) {
         pw.print("<p class=\"statline ui-state-highlight\">${Servlet Context} '");
-        pw.print(escapeXml(dto.name));
+        pw.print(Encode.forHtmlContent(dto.name));
         pw.println("'</p>");
 
         pw.println("<table class=\"nicetable\">");
@@ -374,7 +349,7 @@ public class HttpServicePlugin extends HttpServlet {
 
     private void printFailedContextDetails(final PrintWriter pw, final FailedServletContextDTO dto) {
         pw.print("<p class=\"statline ui-state-highlight\">${Servlet Context} '");
-        pw.print(escapeXml(dto.name));
+        pw.print(Encode.forHtmlContent(dto.name));
         pw.println("'</p>");
 
         pw.println("<table class=\"nicetable\">");
@@ -386,7 +361,7 @@ public class HttpServicePlugin extends HttpServlet {
         pw.println("</tr></thead>");
         odd = printRow(pw, odd, "${Path}",
                 dto.contextPath == null ? dto.contextPath : getContextPath(dto.contextPath));
-        odd = printRow(pw, odd, "${reason}", escapeXml(getErrorText(dto.failureReason)));
+        odd = printRow(pw, odd, "${reason}", getErrorText(dto.failureReason));
         odd = printRow(pw, odd, "${service.id}", String.valueOf(dto.serviceId));
         pw.println("</table>");
     }
@@ -407,7 +382,7 @@ public class HttpServicePlugin extends HttpServlet {
             return;
         }
         pw.print("<p class=\"statline ui-state-highlight\">${Servlet Context} '");
-        pw.print(escapeXml(dto.name));
+        pw.print(Encode.forHtmlContent(dto.name));
         pw.println("' ${Registered Filter Services}</p>");
 
         pw.println("<table class=\"nicetable\">");
@@ -528,7 +503,7 @@ public class HttpServicePlugin extends HttpServlet {
             return;
         }
         pw.print("<p class=\"statline ui-state-highlight\">${Servlet Context} '");
-        pw.print(escapeXml(dto.name));
+        pw.print(Encode.forHtmlContent(dto.name));
         pw.println("' ${Registered Servlet Services}</p>");
 
         pw.println("<table class=\"nicetable\">");
@@ -607,7 +582,7 @@ public class HttpServicePlugin extends HttpServlet {
             return;
         }
         pw.print("<p class=\"statline ui-state-highlight\">${Servlet Context} '");
-        pw.print(escapeXml(dto.name));
+        pw.print(Encode.forHtmlContent(dto.name));
         pw.println("' ${Registered Resource Services}</p>");
 
         pw.println("<table class=\"nicetable\">");
@@ -684,7 +659,7 @@ public class HttpServicePlugin extends HttpServlet {
             return;
         }
         pw.print("<p class=\"statline ui-state-highlight\">${Servlet Context} '");
-        pw.print(escapeXml(dto.name));
+        pw.print(Encode.forHtmlContent(dto.name));
         pw.println("' ${Registered Error Pages}</p>");
 
         pw.println("<table class=\"nicetable\">");
@@ -769,7 +744,7 @@ public class HttpServicePlugin extends HttpServlet {
             return;
         }
         pw.print("<p class=\"statline ui-state-highlight\">${Servlet Context} '");
-        pw.print(escapeXml(dto.name));
+        pw.print(Encode.forHtmlContent(dto.name));
         pw.println("' ${Registered Listeners}</p>");
 
         pw.println("<table class=\"nicetable\">");

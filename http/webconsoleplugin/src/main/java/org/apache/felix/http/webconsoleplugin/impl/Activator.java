@@ -21,7 +21,7 @@ package org.apache.felix.http.webconsoleplugin.impl;
 import java.util.Dictionary;
 import java.util.Hashtable;
 
-import javax.servlet.Servlet;
+import jakarta.servlet.Servlet;
 
 import org.osgi.annotation.bundle.Header;
 import org.osgi.framework.BundleActivator;
