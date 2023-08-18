@@ -32,20 +32,16 @@ import java.util.Map;
  * as the variable resolver if none has yet been assigned to the request.
  */
 @SuppressWarnings({ "rawtypes" })
-public class DefaultVariableResolver extends HashMap implements VariableResolver
-{
+public class DefaultVariableResolver extends HashMap implements VariableResolver {
 
     private static final long serialVersionUID = 4148807223433047780L;
-
 
     /**
      * Creates a new variable resolver with default capacity.
      */
-    public DefaultVariableResolver()
-    {
+    public DefaultVariableResolver() {
         super();
     }
-
 
     /**
      * Creates a new variable resolver and initializes both - capacity &amp; load factor
@@ -54,11 +50,9 @@ public class DefaultVariableResolver extends HashMap implements VariableResolver
      * @param loadFactor the load factor of the variable container
      * @see HashMap#HashMap(int, float)
      */
-    public DefaultVariableResolver( final int initialCapacity, final float loadFactor )
-    {
+    public DefaultVariableResolver( final int initialCapacity, final float loadFactor ) {
         super( initialCapacity, loadFactor );
     }
-
 
     /**
      * Creates a new variable resolver with specified initial capacity
@@ -66,11 +60,9 @@ public class DefaultVariableResolver extends HashMap implements VariableResolver
      * @param initialCapacity  the initial capacity of the variable container
      * @see HashMap#HashMap(int)
      */
-    public DefaultVariableResolver( final int initialCapacity )
-    {
+    public DefaultVariableResolver( final int initialCapacity ) {
         super( initialCapacity );
     }
-
 
     /**
      * Creates a new variable resolver copying the variables from the given map.
@@ -79,11 +71,9 @@ public class DefaultVariableResolver extends HashMap implements VariableResolver
      * @see HashMap#HashMap(Map)
      */
     @SuppressWarnings({"unchecked"})
-    public DefaultVariableResolver( final Map source )
-    {
+    public DefaultVariableResolver( final Map source ) {
         super( source );
     }
-
 
     /**
      * Returns the string representation of the value stored under the variable
@@ -94,14 +84,11 @@ public class DefaultVariableResolver extends HashMap implements VariableResolver
      * @return The variable value or <code>null</code> if there is no entry
      *      with the given name in this map.
      */
-    public String resolve( final String variable )
-    {
+    public String resolve( final String variable ) {
         Object value = get( variable );
-        if ( value != null )
-        {
+        if ( value != null ) {
             return value.toString();
         }
         return null;
     }
-
 }

@@ -18,6 +18,8 @@
  */
 package org.apache.felix.webconsole;
 
+import org.osgi.annotation.versioning.ConsumerType;
+import org.osgi.annotation.versioning.ProviderType;
 
 /**
  * The <code>VariableResolver</code> interface defines the API for an object
@@ -40,8 +42,8 @@ package org.apache.felix.webconsole;
  * @see WebConsoleUtil#getVariableResolver(javax.servlet.ServletRequest)
  * @see WebConsoleUtil#setVariableResolver(javax.servlet.ServletRequest, VariableResolver)
  */
-public interface VariableResolver
-{
+@ConsumerType
+public interface VariableResolver {
 
     /**
      * Returns a replacement value for the named variable or <code>null</code>
@@ -53,5 +55,4 @@ public interface VariableResolver
      *      available.
      */
     String resolve( String variable );
-
 }

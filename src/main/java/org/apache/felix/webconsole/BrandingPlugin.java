@@ -18,6 +18,7 @@
  */
 package org.apache.felix.webconsole;
 
+import org.osgi.annotation.versioning.ConsumerType;
 
 /**
  * The <code>BrandingPlugin</code> is the service interface for the most
@@ -25,8 +26,8 @@ package org.apache.felix.webconsole;
  *
  * @see DefaultBrandingPlugin
  */
-public interface BrandingPlugin
-{
+@ConsumerType
+public interface BrandingPlugin {
     /**
      * Returns an indicative name of the branding plugin. This value is used
      * as the Window/Page title together with the title of the respective

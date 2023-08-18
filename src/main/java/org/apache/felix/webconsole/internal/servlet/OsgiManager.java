@@ -58,6 +58,7 @@ import org.apache.felix.webconsole.WebConsoleConstants;
 import org.apache.felix.webconsole.WebConsoleSecurityProvider;
 import org.apache.felix.webconsole.WebConsoleSecurityProvider2;
 import org.apache.felix.webconsole.WebConsoleSecurityProvider3;
+import org.apache.felix.webconsole.WebConsoleUtil;
 import org.apache.felix.webconsole.internal.OsgiManagerPlugin;
 import org.apache.felix.webconsole.internal.Util;
 import org.apache.felix.webconsole.internal.core.BundlesServlet;
@@ -627,6 +628,9 @@ public class OsgiManager extends GenericServlet {
         // wrap the response for localization and template variable replacement
         request = wrapRequest(request, locale);
         response = wrapResponse(request, response, plugin);
+
+        // make sure to set the variable resolver
+        WebConsoleUtil.getVariableResolver(request);
 
         plugin.service(request, response);
     }

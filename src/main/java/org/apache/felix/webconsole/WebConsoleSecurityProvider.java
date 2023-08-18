@@ -18,6 +18,7 @@
  */
 package org.apache.felix.webconsole;
 
+import org.osgi.annotation.versioning.ConsumerType;
 
 /**
  * The <code>WebConsoleSecurityProvider</code> is a service interface allowing
@@ -26,8 +27,8 @@ package org.apache.felix.webconsole;
  *
  * @since 3.1.0; Web Console Bundle 3.1.0
  */
-public interface WebConsoleSecurityProvider
-{
+@ConsumerType
+public interface WebConsoleSecurityProvider {
 
     /**
      * Authenticates the user with the given user name and password.
