@@ -21,6 +21,8 @@ package org.apache.felix.webconsole;
 
 import java.io.PrintWriter;
 
+import org.osgi.annotation.versioning.ConsumerType;
+
 
 /**
  * This is an optional extension of the {@link ConfigurationPrinter}.
@@ -37,9 +39,9 @@ import java.io.PrintWriter;
  * @deprecated This has been deprecated. Use the org.apache.felix.status
  *             API instead.
  */
-public interface ModeAwareConfigurationPrinter
-    extends ConfigurationPrinter
-{
+@Deprecated
+@ConsumerType
+public interface ModeAwareConfigurationPrinter extends ConfigurationPrinter {
 
     /**
      * Prints the configuration report to the given <code>printWriter</code>.

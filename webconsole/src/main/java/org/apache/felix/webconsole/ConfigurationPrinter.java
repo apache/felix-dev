@@ -18,9 +18,9 @@
  */
 package org.apache.felix.webconsole;
 
-
 import java.io.PrintWriter;
 
+import org.osgi.annotation.versioning.ConsumerType;
 
 /**
  * The <code>ConfigurationPrinter</code> is a service interface to be used by
@@ -32,11 +32,12 @@ import java.io.PrintWriter;
  * With the {@link WebConsoleConstants#CONFIG_PRINTER_MODES} property this
  * service can specify when it should be included.
  * The default mode is {@link #MODE_ALWAYS}.
- * @deprecated This has been deprecated. Use the org.apache.felix.status
- *             API instead.
+ *
+ * @deprecated This has been deprecated. Use the org.apache.felix.inventory API instead.
  */
-public interface ConfigurationPrinter
-{
+@Deprecated
+@ConsumerType
+public interface ConfigurationPrinter {
 
     /**
      * The service name under which services of this class must be registered

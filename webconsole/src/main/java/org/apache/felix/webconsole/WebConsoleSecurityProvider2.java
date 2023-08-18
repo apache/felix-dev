@@ -22,6 +22,8 @@ package org.apache.felix.webconsole;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 
+import org.osgi.annotation.versioning.ConsumerType;
+
 
 /**
  * The <code>WebConsoleSecurityProvider2</code> extends the
@@ -35,8 +37,8 @@ import javax.servlet.http.HttpServletResponse;
  *
  * @since 3.1.2; Web Console Bundle 3.1.4
  */
-public interface WebConsoleSecurityProvider2 extends WebConsoleSecurityProvider
-{
+@ConsumerType
+public interface WebConsoleSecurityProvider2 extends WebConsoleSecurityProvider {
 
     /**
      * The name of the request attribute providing the object representing the

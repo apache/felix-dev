@@ -21,6 +21,7 @@ package org.apache.felix.webconsole;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 
+import org.osgi.annotation.versioning.ConsumerType;
 import org.osgi.service.http.context.ServletContextHelper;
 
 /**
@@ -38,8 +39,8 @@ import org.osgi.service.http.context.ServletContextHelper;
  * 
  * @since 4.2.8; Web Console Bundle 4.2.8
  */
-public interface WebConsoleSecurityProvider3 extends WebConsoleSecurityProvider2
-{
+@ConsumerType
+public interface WebConsoleSecurityProvider3 extends WebConsoleSecurityProvider2 {
 
     /**
      * This method will be called by the web console when the user clicks the logout button. The security provider
