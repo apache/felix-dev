@@ -16,7 +16,6 @@
  */
 package org.apache.felix.webconsole.plugins.deppack.internal;
 
-import org.apache.felix.webconsole.SimpleWebConsolePlugin;
 import org.osgi.framework.BundleActivator;
 import org.osgi.framework.BundleContext;
 import org.osgi.framework.ServiceReference;
@@ -27,13 +26,11 @@ import org.osgi.util.tracker.ServiceTrackerCustomizer;
 /**
  * Activator is the main starting class.
  */
-public class Activator implements BundleActivator, ServiceTrackerCustomizer
+public class Activator implements BundleActivator, ServiceTrackerCustomizer<DeploymentAdmin, WebConsolePlugin>
 {
 
-    private ServiceTracker tracker;
+    private ServiceTracker<DeploymentAdmin, WebConsolePlugin> tracker;
     private BundleContext context;
-
-    private SimpleWebConsolePlugin plugin;
 
     /**
      * @see org.osgi.framework.BundleActivator#start(org.osgi.framework.BundleContext)
@@ -41,7 +38,7 @@ public class Activator implements BundleActivator, ServiceTrackerCustomizer
     public final void start(BundleContext context) throws Exception
     {
         this.context = context;
-        this.tracker = new ServiceTracker(context, DeploymentAdmin.class.getName(), this);
+        this.tracker = new ServiceTracker(context, DeploymentAdmin.class, this);
         this.tracker.open();
     }
 
@@ -62,37 +59,32 @@ public class Activator implements BundleActivator, ServiceTrackerCustomizer
      * @see org.osgi.util.tracker.ServiceTrackerCustomizer#modifiedService(org.osgi.framework.ServiceReference,
      *      java.lang.Object)
      */
-    public final void modifiedService(ServiceReference reference, Object service)
+    public final void modifiedService(ServiceReference<DeploymentAdmin> reference, WebConsolePlugin service)
     {/* unused */
     }
 
     /**
      * @see org.osgi.util.tracker.ServiceTrackerCustomizer#addingService(org.osgi.framework.ServiceReference)
      */
-    public final Object addingService(ServiceReference reference)
+    public final WebConsolePlugin addingService(ServiceReference<DeploymentAdmin> reference)
     {
-        SimpleWebConsolePlugin plugin = this.plugin;
-        if (plugin == null)
-        {
-            this.plugin = plugin = new WebConsolePlugin(tracker).register(context);
+        final DeploymentAdmin admin = context.getService(reference);
+        if (admin != null) {
+            final WebConsolePlugin plugin = new WebConsolePlugin(admin);
+            plugin.register(context);
+            return plugin;
         }
 
-        return context.getService(reference);
+        return null;
     }
 
     /**
      * @see org.osgi.util.tracker.ServiceTrackerCustomizer#removedService(org.osgi.framework.ServiceReference,
      *      java.lang.Object)
      */
-    public final void removedService(ServiceReference reference, Object service)
+    public final void removedService(ServiceReference<DeploymentAdmin> reference, WebConsolePlugin plugin)
     {
-        SimpleWebConsolePlugin plugin = this.plugin;
-
-        if (tracker.getTrackingCount() == 0 && plugin != null)
-        {
-            plugin.unregister();
-            this.plugin = null;
-        }
-
+        plugin.unregister();
+        this.context.ungetService(reference);
     }
 }

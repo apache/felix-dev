@@ -16,7 +16,7 @@
 		<groupId>org.apache.felix</groupId>
 		<artifactId>felix-parent</artifactId>
 		<version>7</version>
-		<relativePath>../../../pom/pom.xml</relativePath>
+		<relativePath/>
 	</parent>
 
 	<artifactId>org.apache.felix.webconsole.plugins.deppack</artifactId>
@@ -82,12 +82,12 @@
 			<plugin>
 				<groupId>org.apache.felix</groupId>
 				<artifactId>maven-bundle-plugin</artifactId>
-				<version>3.2.0</version>
+				<version>5.1.9</version>
 				<extensions>true</extensions>
 				<configuration>
 					<instructions>
 						<Bundle-SymbolicName>
-							${artifactId}
+							${project.artifactId}
                         </Bundle-SymbolicName>
 						<Bundle-Activator>
 							org.apache.felix.webconsole.plugins.deppack.internal.Activator
@@ -103,40 +103,33 @@
 
 	<dependencies>
 		<dependency>
-			<groupId>javax.servlet</groupId>
-			<artifactId>servlet-api</artifactId>
-			<version>2.4</version>
-			<scope>provided</scope>
-		</dependency>
-		<dependency>
-			<groupId>commons-fileupload</groupId>
-			<artifactId>commons-fileupload</artifactId>
-			<version>1.5</version>
-			<scope>provided</scope>
-			<optional>true</optional>
-		</dependency>
-		<dependency>
-			<groupId>org.osgi</groupId>
-			<artifactId>org.osgi.core</artifactId>
-			<version>4.0.0</version>
+			<groupId>jakarta.servlet</groupId>
+			<artifactId>jakarta.servlet-api</artifactId>
+			<version>5.0.0</version>
 			<scope>provided</scope>
 		</dependency>
 		<dependency>
 			<groupId>org.osgi</groupId>
-			<artifactId>org.osgi.compendium</artifactId>
-			<version>4.1.0</version>
+			<artifactId>osgi.core</artifactId>
+			<version>6.0.0</version>
+			<scope>provided</scope>
+		</dependency>
+		<dependency>
+			<groupId>org.osgi</groupId>
+			<artifactId>org.osgi.service.deploymentadmin</artifactId>
+			<version>1.1.0</version>
 			<scope>provided</scope>
 		</dependency>
 		<dependency>
 			<groupId>org.apache.felix</groupId>
 			<artifactId>org.apache.felix.webconsole</artifactId>
-			<version>3.0.0</version>
+			<version>4.8.13-SNAPSHOT</version>
 			<scope>provided</scope>
 		</dependency>
 		<dependency>
 			<groupId>org.apache.felix</groupId>
 			<artifactId>org.apache.felix.utils</artifactId>
-			<version>1.9.0</version>
+			<version>1.11.8</version>
 			<scope>provided</scope>
 		</dependency>
 	</dependencies>
