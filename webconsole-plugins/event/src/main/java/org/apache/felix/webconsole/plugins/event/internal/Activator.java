@@ -19,7 +19,7 @@ package org.apache.felix.webconsole.plugins.event.internal;
 import java.util.Dictionary;
 import java.util.Hashtable;
 
-import javax.servlet.Servlet;
+import jakarta.servlet.Servlet;
 
 import org.osgi.framework.BundleActivator;
 import org.osgi.framework.BundleContext;
