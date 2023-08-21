@@ -68,7 +68,9 @@
                         </Bundle-Activator>
                         <Import-Package>
                             org.osgi.service.cm;version="[1.6,2)";resolution:=optional,
-                            org.osgi.service.metatype;version="[1.2,2)";resolution:=optional,
+			    org.osgi.service.metatype;version="[1.2,2)";resolution:=optional,
+                            jakarta.servlet;version="[5,7)",
+			    jakarta.servlet.http;version="[5,7)",
                             *
                         </Import-Package>
                         <DynamicImport-Package>
