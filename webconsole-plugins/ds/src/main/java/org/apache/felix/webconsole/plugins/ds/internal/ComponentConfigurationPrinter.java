@@ -24,16 +24,15 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
 import java.util.Collections;
-import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
+import java.util.Objects;
 import java.util.TreeMap;
 import java.util.TreeSet;
 
 import org.apache.felix.inventory.Format;
 import org.apache.felix.inventory.InventoryPrinter;
 import org.apache.felix.utils.json.JSONWriter;
-import org.apache.felix.webconsole.WebConsoleUtil;
 import org.osgi.framework.Constants;
 import org.osgi.framework.dto.ServiceReferenceDTO;
 import org.osgi.service.component.ComponentConstants;
@@ -176,7 +175,7 @@ class ComponentConfigurationPrinter implements InventoryPrinter
             TreeMap<Long, ComponentConfigurationDTO> componentMap = new TreeMap<>();
             for(final ComponentConfigurationDTO cfg : configurations)
             {
-                componentMap.put(new Long(cfg.id), cfg);
+                componentMap.put(cfg.id, cfg);
             }
 
             // render components
@@ -343,14 +342,12 @@ class ComponentConfigurationPrinter implements InventoryPrinter
 
             pw.println("  Properties=");
             TreeSet<String> keys = new TreeSet<>(props.keySet());
-            for (Iterator<String> ki = keys.iterator(); ki.hasNext();)
-            {
-                String key = ki.next();
+            for(final String key : keys) {
                 Object value = props.get(key);
-                value = WebConsoleUtil.toString(value);
-                if (value.getClass().isArray())
-                {
-                    value = Arrays.asList((Object[]) value);
+                if (value != null && value.getClass().isArray()) {
+                    value = Arrays.toString((Object[]) value);
+                } else {
+                    value = Objects.toString(value, "n/a");
                 }
                 pw.println("    " + key + "=" + value);
             }
@@ -358,14 +355,12 @@ class ComponentConfigurationPrinter implements InventoryPrinter
         if ( cfg == null && description.factoryProperties != null ) {
             pw.println("  FactoryProperties=");
             TreeSet<String> keys = new TreeSet<>(description.factoryProperties.keySet());
-            for (Iterator<String> ki = keys.iterator(); ki.hasNext();)
-            {
-                String key = ki.next();
+            for(final String key : keys) {
                 Object value = props.get(key);
-                value = WebConsoleUtil.toString(value);
-                if (value.getClass().isArray())
-                {
-                    value = Arrays.asList((Object[]) value);
+                if (value != null && value.getClass().isArray()) {
+                    value = Arrays.toString((Object[]) value);
+                } else {
+                    value = Objects.toString(value, "n/a");
                 }
                 pw.println("    " + key + "=" + value);
             }

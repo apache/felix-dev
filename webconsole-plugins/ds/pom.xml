@@ -56,7 +56,7 @@
             <plugin>
                 <groupId>org.apache.felix</groupId>
                 <artifactId>maven-bundle-plugin</artifactId>
-                <version>3.5.0</version>
+                <version>5.1.9</version>
                 <extensions>true</extensions>
                 <configuration>
                     <instructions>
@@ -66,9 +66,6 @@
                         <Bundle-Activator>
                             org.apache.felix.webconsole.plugins.ds.internal.Activator
                         </Bundle-Activator>
-                        <Include-Resource>
-                            {maven-resources},OSGI-INF=target/classes/OSGI-INF
-                        </Include-Resource>
                         <Import-Package>
                             org.osgi.service.cm;version="[1.6,2)";resolution:=optional,
                             org.osgi.service.metatype;version="[1.2,2)";resolution:=optional,
@@ -79,7 +76,7 @@
                             org.osgi.service.metatype;version="[1.2,2)"
                         </DynamicImport-Package>
                         <Embed-Dependency>
-                             org.apache.felix.utils;inline=org/apache/felix/utils/json/JSONWriter**
+                            org.apache.felix.utils;inline=org/apache/felix/utils/json/JSONWriter**
                         </Embed-Dependency>
                     </instructions>
                 </configuration>
@@ -89,9 +86,9 @@
 
     <dependencies>
         <dependency>
-            <groupId>javax.servlet</groupId>
-            <artifactId>servlet-api</artifactId>
-            <version>2.4</version>
+            <groupId>jakarta.servlet</groupId>
+            <artifactId>jakarta.servlet-api</artifactId>
+            <version>5.0.0</version>
             <scope>provided</scope>
         </dependency>
         <dependency>
@@ -127,7 +124,7 @@
         <dependency>
             <groupId>org.apache.felix</groupId>
             <artifactId>org.apache.felix.webconsole</artifactId>
-            <version>4.2.0</version>
+            <version>4.8.13-SNAPSHOT</version>
             <scope>provided</scope>
         </dependency>
         <dependency>
@@ -139,7 +136,7 @@
         <dependency>
             <groupId>org.apache.felix</groupId>
             <artifactId>org.apache.felix.utils</artifactId>
-            <version>1.9.0</version>
+            <version>1.11.8</version>
             <scope>provided</scope>
         </dependency>
     </dependencies>

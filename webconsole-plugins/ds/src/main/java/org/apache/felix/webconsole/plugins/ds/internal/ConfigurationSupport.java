@@ -31,8 +31,7 @@ public class ConfigurationSupport {
 
     private final ServiceTracker<Object, Object> metatypeTracker;
 
-    public ConfigurationSupport(final BundleContext bundleContext)
-    {
+    public ConfigurationSupport(final BundleContext bundleContext) {
         this.configAdminTracker = new ServiceTracker<Object, Object>(bundleContext, "org.osgi.service.cm.ConfigurationAdmin", null);
         this.metatypeTracker = new ServiceTracker<Object, Object>(bundleContext, "org.osgi.service.metatype.MetaTypeService", null);
 
@@ -40,8 +39,7 @@ public class ConfigurationSupport {
         this.metatypeTracker.open();
     }
 
-    public void close()
-    {
+    public void close() {
         this.configAdminTracker.close();
         this.metatypeTracker.close();
     }
@@ -54,23 +52,18 @@ public class ConfigurationSupport {
      * @param pid A non null pid
      * @return <code>true</code> if the component is configurable.
      */
-    public boolean isConfigurable(final Bundle providingBundle, final String pid)
-    {
+    public boolean isConfigurable(final Bundle providingBundle, final String pid) {
         // we first check if the config admin has something for this pid
         final Object ca = this.configAdminTracker.getService();
-        if (ca != null)
-        {
-            if ( new ConfigurationAdminSupport().check(ca, pid) )
-            {
+        if (ca != null) {
+            if ( new ConfigurationAdminSupport().check(ca, pid) ) {
                 return true;
             }
         }
         // second check is using the meta type service
-        if (providingBundle != null)
-        {
+        if (providingBundle != null) {
             final Object mts = this.metatypeTracker.getService();
-            if (mts != null)
-            {
+            if (mts != null) {
                 return new MetatypeSupport().check(mts, providingBundle, pid);
             }
         }
@@ -90,5 +83,4 @@ public class ConfigurationSupport {
         }
         return new MetatypeSupport().getPasswordAttributeDefinitionIds(metaTypeService, bundle, configurationPids);
     }
-
 }
