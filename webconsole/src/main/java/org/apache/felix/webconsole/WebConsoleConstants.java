@@ -18,6 +18,8 @@
  */
 package org.apache.felix.webconsole;
 
+import org.apache.felix.webconsole.servlet.RequestVariableResolver;
+
 /**
  * WebConsoleConstants provides some common constants that are used by plugin
  * developers.
@@ -173,9 +175,11 @@ public interface WebConsoleConstants
      * @see VariableResolver
      * @see WebConsoleUtil#getVariableResolver(javax.servlet.ServletRequest)
      * @see WebConsoleUtil#setVariableResolver(javax.servlet.ServletRequest, VariableResolver)
+     * @deprecated Use {@link RequestVariableResolver#REQUEST_ATTRIBUTE} instead
      * @since 3.0
      */
-    static final String ATTR_CONSOLE_VARIABLE_RESOLVER = "felix.webconsole.variable.resolver"; //$NON-NLS-1$
+    @Deprecated
+    static final String ATTR_CONSOLE_VARIABLE_RESOLVER = RequestVariableResolver.REQUEST_ATTRIBUTE;
 
     /**
      * The name of the request attribute holding the language {@link java.util.Map}

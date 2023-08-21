@@ -47,7 +47,7 @@ public class ServicesConfigurationPrinter extends AbstractConfigurationPrinter
         "  Using Bundle {0} - {1} ({2}), version {3}");
 
     // don't create empty reference array all the time, create it only once - it is immutable
-    private static final ServiceReference[] NO_REFS = new ServiceReference[0];
+    private static final ServiceReference<?>[] NO_REFS = new ServiceReference[0];
 
     /**
      * @see org.apache.felix.webconsole.ConfigurationPrinter#getTitle()
@@ -65,7 +65,7 @@ public class ServicesConfigurationPrinter extends AbstractConfigurationPrinter
     public final void printConfiguration(PrintWriter pw)
     {
         final Object[] data = new Object[4]; // used as message formatter parameters
-        final ServiceReference refs[] = getServices();
+        final ServiceReference<?> refs[] = getServices();
         pw.print("Status: ");
         pw.println(ServicesServlet.getStatusLine(refs));
 
@@ -118,7 +118,7 @@ public class ServicesConfigurationPrinter extends AbstractConfigurationPrinter
         return data;
     }
 
-    private static final Object[] params(ServiceReference ref, Object[] data)
+    private static final Object[] params(ServiceReference<?> ref, Object[] data)
     {
         data[0] = ServicesServlet.propertyAsString(ref, Constants.SERVICE_ID);
         data[1] = ServicesServlet.propertyAsString(ref, Constants.OBJECTCLASS);
@@ -127,64 +127,20 @@ public class ServicesConfigurationPrinter extends AbstractConfigurationPrinter
         return data;
     }
 
-    private final ServiceReference[] getServices()
-    {
-        ServiceReference[] refs = null;
-        try
-        {
+    private final ServiceReference<?>[] getServices() {
+        ServiceReference<?>[] refs = null;
+        try {
             refs = BundleContextUtil.getWorkingBundleContext(getBundleContext()).getAllServiceReferences(null, null);
-        }
-        catch (InvalidSyntaxException e)
-        {
+        } catch (InvalidSyntaxException e) {
             // ignore
         }
 
         // no services or invalid filter syntax (unlikely)
-        if (refs != null)
-        {
-            Arrays.sort(refs, new ServiceReferenceComparator());
-        }
-        else
-        {
+        if (refs != null) {
+            Arrays.sort(refs);
+        } else {
             refs = NO_REFS;
         }
         return refs;
-    }
-
-}
-
-class ServiceReferenceComparator implements Comparator
-{
-    private static final Long ZERO = new Long(0);
-
-    public int compare(ServiceReference p1, ServiceReference p2)
-    {
-        Long id1 = null;
-        if (p1 != null)
-        {
-            id1 = (Long) p1.getProperty(Constants.SERVICE_ID);
-        }
-        if (id1 == null)
-        {
-            id1 = ZERO;
-        }
-
-        Long id2 = null;
-        if (p2 != null)
-        {
-            id2 = (Long) p2.getProperty(Constants.SERVICE_ID);
-        }
-        if (id2 == null)
-        {
-            id2 = ZERO;
-        }
-
-        return id1.compareTo(id2);
-    }
-
-    @Override
-    public int compare(Object o1, Object o2)
-    {
-        return compare((ServiceReference) o1, (ServiceReference) o2);
     }
 }

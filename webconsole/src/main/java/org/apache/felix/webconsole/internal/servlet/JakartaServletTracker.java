@@ -25,6 +25,7 @@ import org.apache.felix.http.javaxwrappers.ServletWrapper;
 import org.apache.felix.webconsole.WebConsoleConstants;
 import org.apache.felix.webconsole.internal.Util;
 import org.apache.felix.webconsole.internal.servlet.Plugin.ServletPlugin;
+import org.apache.felix.webconsole.servlet.AbstractServlet;
 import org.osgi.framework.BundleContext;
 import org.osgi.framework.Constants;
 import org.osgi.framework.Filter;
@@ -84,14 +85,19 @@ public class JakartaServletTracker implements Closeable, ServiceTrackerCustomize
 
     public static class JakartaServletPlugin extends ServletPlugin {
             
+        @SuppressWarnings({"unchecked", "rawtypes"})
         public JakartaServletPlugin(PluginHolder holder, ServiceReference<jakarta.servlet.Servlet> serviceReference,
                 String label) {
             super(holder, (ServiceReference)serviceReference, label);
         }
 
+        @SuppressWarnings({"unchecked", "rawtypes"})
         protected javax.servlet.Servlet getService() {
             final Servlet servlet = (Servlet) getHolder().getBundleContext().getService( (ServiceReference)this.getServiceReference() );
             if (servlet != null) {
+                if ( servlet instanceof AbstractServlet ) {
+                    return new JakartaServletAdapter((AbstractServlet)servlet, this.getServiceReference());
+                }
                 return new ServletWrapper(servlet);
             }
             return null;

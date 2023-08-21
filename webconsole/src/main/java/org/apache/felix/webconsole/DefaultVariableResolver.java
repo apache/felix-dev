@@ -18,10 +18,10 @@
  */
 package org.apache.felix.webconsole;
 
-
 import java.util.HashMap;
 import java.util.Map;
 
+import org.apache.felix.webconsole.servlet.RequestVariableResolver;
 
 /**
  * The <code>DefaultVariableResolver</code> is a <code>HashMap</code> based
@@ -30,9 +30,11 @@ import java.util.Map;
  * used by the
  * {@link WebConsoleUtil#getVariableResolver(javax.servlet.ServletRequest)}
  * as the variable resolver if none has yet been assigned to the request.
+ * @deprecated Use {@link RequestVariableResolver} instead.
  */
 @SuppressWarnings({ "rawtypes" })
-public class DefaultVariableResolver extends HashMap implements VariableResolver {
+@Deprecated
+public class DefaultVariableResolver extends RequestVariableResolver implements VariableResolver {
 
     private static final long serialVersionUID = 4148807223433047780L;
 
@@ -51,7 +53,7 @@ public class DefaultVariableResolver extends HashMap implements VariableResolver
      * @see HashMap#HashMap(int, float)
      */
     public DefaultVariableResolver( final int initialCapacity, final float loadFactor ) {
-        super( initialCapacity, loadFactor );
+        this();
     }
 
     /**
@@ -61,7 +63,7 @@ public class DefaultVariableResolver extends HashMap implements VariableResolver
      * @see HashMap#HashMap(int)
      */
     public DefaultVariableResolver( final int initialCapacity ) {
-        super( initialCapacity );
+        this();
     }
 
     /**
@@ -72,23 +74,6 @@ public class DefaultVariableResolver extends HashMap implements VariableResolver
      */
     @SuppressWarnings({"unchecked"})
     public DefaultVariableResolver( final Map source ) {
-        super( source );
-    }
-
-    /**
-     * Returns the string representation of the value stored under the variable
-     * name in this map. If no value is stored under the variable name,
-     * <code>null</code> is returned.
-     *
-     * @param variable The name of the variable whose value is to be returned.
-     * @return The variable value or <code>null</code> if there is no entry
-     *      with the given name in this map.
-     */
-    public String resolve( final String variable ) {
-        Object value = get( variable );
-        if ( value != null ) {
-            return value.toString();
-        }
-        return null;
+        this.putAll(source);
     }
 }

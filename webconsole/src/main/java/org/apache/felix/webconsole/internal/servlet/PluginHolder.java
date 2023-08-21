@@ -242,29 +242,21 @@ class PluginHolder implements ServiceTrackerCustomizer<Servlet, Plugin> {
             // support only one level for now
             Map categoryMap = null;
             String category = plugin.getCategory();
-            if ( category == null || category.trim().length() == 0 )
-            {
+            if ( category == null || category.trim().length() == 0 ) {
                 // FELIX-3798 configured default category
                 category = defaultCategory;
             }
-
-            // TODO: FELIX-3769; translate the Category
 
             categoryMap = findCategoryMap( map, category );
 
             final String label = plugin.getLabel();
             String title = plugin.getTitle();
-            if ( title.startsWith( "%" ) )
-            {
-                try
-                {
-                    final ResourceBundle resourceBundle = resourceBundleManager.getResourceBundle( plugin.getBundle(),
-                        locale );
+            if ( title.startsWith( "%" ) ) {
+                try {
+                    final ResourceBundle resourceBundle = resourceBundleManager.getResourceBundle( plugin.getBundle(), locale );
                     title = resourceBundle.getString( title.substring( 1 ) );
-                }
-                catch ( Throwable e )
-                {
-                    /* ignore missing resource - use default title */
+                } catch ( Throwable e ) {
+                    // ignore missing resource - use default title
                 }
             }
 

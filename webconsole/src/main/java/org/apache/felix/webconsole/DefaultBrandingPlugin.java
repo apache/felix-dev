@@ -63,7 +63,7 @@ import java.util.Properties;
  * <tr>
  *  <td>Vendor URL</td>
  *  <td>webconsole.vendor.url</td>
- *  <td>http://www.apache.org</td>
+ *  <td>https://www.apache.org</td>
  * </tr>
  * <tr>
  *  <td>Vendor Image</td>
@@ -133,10 +133,10 @@ public class DefaultBrandingPlugin implements BrandingPlugin
         // set the fields from the properties now
         brandName = props.getProperty( "webconsole.brand.name", "Apache Felix Web Console" ); //$NON-NLS-1$
         productName = props.getProperty( "webconsole.product.name", "Apache Felix" ); //$NON-NLS-1$
-        productURL = props.getProperty( "webconsole.product.url", "http://felix.apache.org" ); //$NON-NLS-1$
+        productURL = props.getProperty( "webconsole.product.url", "https://felix.apache.org" ); //$NON-NLS-1$
         productImage = props.getProperty( "webconsole.product.image", "/res/imgs/logo.png" ); //$NON-NLS-1$
         vendorName = props.getProperty( "webconsole.vendor.name", "The Apache Software Foundation" ); //$NON-NLS-1$
-        vendorURL = props.getProperty( "webconsole.vendor.url", "http://www.apache.org" ); //$NON-NLS-1$
+        vendorURL = props.getProperty( "webconsole.vendor.url", "https://www.apache.org" ); //$NON-NLS-1$
         vendorImage = props.getProperty( "webconsole.vendor.image", "/res/imgs/logo.png" ); //$NON-NLS-1$
         favIcon = props.getProperty( "webconsole.favicon", "/res/imgs/favicon.ico" ); //$NON-NLS-1$
         mainStyleSheet = props.getProperty( "webconsole.stylesheet", "/res/ui/webconsole.css" ); //$NON-NLS-1$

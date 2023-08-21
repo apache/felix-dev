@@ -57,7 +57,6 @@ import org.apache.felix.utils.json.JSONWriter;
 import org.apache.felix.utils.manifest.Clause;
 import org.apache.felix.utils.manifest.Parser;
 import org.apache.felix.webconsole.ConfigurationPrinter;
-import org.apache.felix.webconsole.DefaultVariableResolver;
 import org.apache.felix.webconsole.SimpleWebConsolePlugin;
 import org.apache.felix.webconsole.WebConsoleConstants;
 import org.apache.felix.webconsole.WebConsoleUtil;
@@ -65,6 +64,7 @@ import org.apache.felix.webconsole.bundleinfo.BundleInfo;
 import org.apache.felix.webconsole.bundleinfo.BundleInfoProvider;
 import org.apache.felix.webconsole.internal.OsgiManagerPlugin;
 import org.apache.felix.webconsole.internal.Util;
+import org.apache.felix.webconsole.servlet.RequestVariableResolver;
 import org.osgi.framework.Bundle;
 import org.osgi.framework.BundleContext;
 import org.osgi.framework.BundleException;
@@ -75,12 +75,14 @@ import org.osgi.framework.ServiceReference;
 import org.osgi.framework.ServiceRegistration;
 import org.osgi.framework.Version;
 import org.osgi.framework.VersionRange;
+import org.osgi.framework.startlevel.BundleStartLevel;
+import org.osgi.framework.startlevel.FrameworkStartLevel;
+import org.osgi.framework.wiring.BundleRevision;
 import org.osgi.framework.wiring.FrameworkWiring;
 import org.osgi.service.cm.ConfigurationAdmin;
 import org.osgi.service.log.LogService;
 import org.osgi.service.packageadmin.ExportedPackage;
 import org.osgi.service.packageadmin.PackageAdmin;
-import org.osgi.service.startlevel.StartLevel;
 import org.osgi.util.tracker.ServiceTracker;
 import org.osgi.util.tracker.ServiceTrackerCustomizer;
 
@@ -518,16 +520,17 @@ public class BundlesServlet extends SimpleWebConsolePlugin implements OsgiManage
      * @see org.apache.felix.webconsole.AbstractWebConsolePlugin#renderContent(javax.servlet.http.HttpServletRequest, javax.servlet.http.HttpServletResponse)
      */
     @Override
-    @SuppressWarnings("unchecked")
     protected void renderContent( HttpServletRequest request, HttpServletResponse response ) throws IOException
     {
         // get request info from request attribute
         final RequestInfo reqInfo = getRequestInfo(request);
 
-        final int startLevel = getStartLevel().getInitialBundleStartLevel();
+        final Bundle systemBundle = this.getBundleContext().getBundle(Constants.SYSTEM_BUNDLE_LOCATION);
+        final FrameworkStartLevel fsl = systemBundle.adapt(FrameworkStartLevel.class);
+        final int startLevel = fsl.getInitialBundleStartLevel();
 
         // prepare variables
-        DefaultVariableResolver vars = ( ( DefaultVariableResolver ) WebConsoleUtil.getVariableResolver( request ) );
+        final RequestVariableResolver vars = WebConsoleUtil.getRequestVariableResolver(request);
         vars.put( "startLevel", String.valueOf(startLevel));
         vars.put( "drawDetails", reqInfo.bundleRequested ? Boolean.TRUE : Boolean.FALSE );
         vars.put( "currentBundle", (reqInfo.bundleRequested && reqInfo.bundle != null ? String.valueOf(reqInfo.bundle.getBundleId()) : "null"));
@@ -755,15 +758,13 @@ public class BundlesServlet extends SimpleWebConsolePlugin implements OsgiManage
     }
 
 
-    private final boolean isFragmentBundle( Bundle bundle )
-    {
+    private final boolean isFragmentBundle(final Bundle bundle ) {
         // Workaround for FELIX-3670
-        if ( bundle.getState() == Bundle.UNINSTALLED )
-        {
+        if ( bundle.getState() == Bundle.UNINSTALLED ) {
             return bundle.getHeaders().get( Constants.FRAGMENT_HOST ) != null;
         }
-
-        return getPackageAdmin().getBundleType( bundle ) == PackageAdmin.BUNDLE_TYPE_FRAGMENT;
+        final BundleRevision rev = bundle.adapt(BundleRevision.class);
+        return rev != null && (rev.getTypes() & BundleRevision.TYPE_FRAGMENT) == BundleRevision.TYPE_FRAGMENT;
     }
 
     private void keyVal(final List<Map<String, Object>> props, final String key, final Object val)
@@ -865,14 +866,11 @@ public class BundlesServlet extends SimpleWebConsolePlugin implements OsgiManage
     }
 
 
-    private final Integer getStartLevel( Bundle bundle )
-    {
-        if ( bundle.getState() != Bundle.UNINSTALLED )
-        {
-            StartLevel sl = getStartLevel();
-            if ( sl != null )
-            {
-                return sl.getBundleStartLevel( bundle );
+    private final Integer getStartLevel( Bundle bundle ) {
+        if ( bundle.getState() != Bundle.UNINSTALLED ){
+            final BundleStartLevel bsl = bundle.adapt( BundleStartLevel.class );
+            if (bsl != null ) {
+                return bsl.getStartLevel();
             }
         }
 
@@ -881,8 +879,7 @@ public class BundlesServlet extends SimpleWebConsolePlugin implements OsgiManage
     }
 
 
-    private void listImportExport( List<Map<String, Object>> props, Bundle bundle, final String pluginRoot )
-    {
+    private void listImportExport( List<Map<String, Object>> props, Bundle bundle, final String pluginRoot ) {
         PackageAdmin packageAdmin = getPackageAdmin();
         if ( packageAdmin == null )
         {
@@ -1466,12 +1463,6 @@ public class BundlesServlet extends SimpleWebConsolePlugin implements OsgiManage
     {
         return ( PackageAdmin ) getService( PackageAdmin.class.getName() );
     }
-
-    private final StartLevel getStartLevel()
-    {
-        return ( StartLevel ) getService( StartLevel.class.getName() );
-    }
-
 
     //---------- Bundle Installation handler (former InstallAction)
 

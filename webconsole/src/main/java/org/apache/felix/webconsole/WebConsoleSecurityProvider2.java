@@ -53,7 +53,7 @@ public interface WebConsoleSecurityProvider2 extends WebConsoleSecurityProvider 
      * Authenticates the given request or asks the client for credentials.
      * <p>
      * Implementations of this method are expected to respect and implement
-     * the semantics of the <code>HttpContext.handleSecurity</code> method
+     * the semantics of the <code>ServletContextHelper.handleSecurity</code> method
      * as specified in the OSGi HTTP Service specification.
      * <p>
      * If this method returns <code>true</code> it is assumed the request

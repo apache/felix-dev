@@ -38,6 +38,7 @@ import org.apache.commons.fileupload.FileUploadException;
 import org.apache.commons.fileupload.disk.DiskFileItemFactory;
 import org.apache.commons.fileupload.servlet.ServletFileUpload;
 import org.apache.commons.fileupload.servlet.ServletRequestContext;
+import org.apache.felix.webconsole.servlet.RequestVariableResolver;
 
 
 /**
@@ -72,23 +73,42 @@ public final class WebConsoleUtil
      * @param request The request whose attribute is returned (or set)
      *
      * @return The {@link VariableResolver} for the given request.
+     * @deprecated Use the {@link getRequestVariableResolver} instead.
      */
-    @SuppressWarnings("unchecked")
-    public static VariableResolver getVariableResolver( final ServletRequest request )
-    {
+    @Deprecated
+    public static VariableResolver getVariableResolver( final ServletRequest request ) {
         final Object resolverObj = request.getAttribute( WebConsoleConstants.ATTR_CONSOLE_VARIABLE_RESOLVER );
-        if ( resolverObj instanceof VariableResolver )
-        {
+        if ( resolverObj instanceof VariableResolver ) {
             return ( VariableResolver ) resolverObj;
         }
 
         final DefaultVariableResolver resolver = new DefaultVariableResolver();
-        resolver.put( "appRoot", request.getAttribute( WebConsoleConstants.ATTR_APP_ROOT ) );
-        resolver.put( "pluginRoot", request.getAttribute( WebConsoleConstants.ATTR_PLUGIN_ROOT ) );
+        resolver.put( "appRoot", (String) request.getAttribute( WebConsoleConstants.ATTR_APP_ROOT ) );
+        resolver.put( "pluginRoot", (String) request.getAttribute( WebConsoleConstants.ATTR_PLUGIN_ROOT ) );
         setVariableResolver( request, resolver );
         return resolver;
     }
 
+    /**
+     * Returns the {@link RequestVariableResolver} for the given request.
+     * <p>
+     * The resolver is added to the request attributes via the web console main
+     * servlet before it invokes any plugins.
+     * The preset properties are
+     * <code>appRoot</code> set to the value of the
+     * {@link WebConsoleConstants#ATTR_APP_ROOT} request attribute and
+     * <code>pluginRoot</code> set to the value of the
+     * {@link WebConsoleConstants#ATTR_PLUGIN_ROOT} request attribute.
+     * <p>
+     *
+     * @param request The request whose attribute is returned 
+     *
+     * @return The {@link RequestVariableResolver} for the given request.
+     * @since 3.5.0
+     */
+    public static RequestVariableResolver getRequestVariableResolver( final ServletRequest request) {
+        return (RequestVariableResolver) request.getAttribute( RequestVariableResolver.REQUEST_ATTRIBUTE );
+    }
 
     /**
      * Sets the {@link VariableResolver} as the
@@ -98,9 +118,10 @@ public final class WebConsoleUtil
      *
      * @param request The request whose attribute is set
      * @param resolver The {@link VariableResolver} to place into the request
+     * @deprecated Use the {@link RequestVaraibleResolver} instead.
      */
-    public static void setVariableResolver( final ServletRequest request, final VariableResolver resolver )
-    {
+    @Deprecated
+    public static void setVariableResolver( final ServletRequest request, final VariableResolver resolver )  {
         request.setAttribute( WebConsoleConstants.ATTR_CONSOLE_VARIABLE_RESOLVER, resolver );
     }
 
@@ -243,13 +264,13 @@ public final class WebConsoleUtil
      *
      * @param text the text to escape
      * @return the escaped text
+     * @deprecated It is better to use specialized encoders instead
      */
-    public static final String escapeHtml(String text)
-    {
+    @Deprecated
+    public static final String escapeHtml(String text) {
         StringBuilder sb = new StringBuilder(text.length() * 4 / 3);
         char ch, oldch = '_';
-        for (int i = 0; i < text.length(); i++)
-        {
+        for (int i = 0; i < text.length(); i++) {
             switch (ch = text.charAt(i))
             {
             case '<':
@@ -349,46 +370,36 @@ public final class WebConsoleUtil
      * @param value the value to convert
      * @return the string representation of the value
      */
-    public static final String toString(Object value)
-    {
-        if (value == null)
-        {
-            return "n/a"; //$NON-NLS-1$
-        }
-        else if (value.getClass().isArray())
-        {
+    public static final String toString(Object value) {
+        if (value == null) {
+            return "n/a";
+        } else if (value.getClass().isArray()) {
             final StringBuilder sb = new StringBuilder();
-            final int len = Array.getLength(value);
+            int len = Array.getLength(value);
             sb.append('[');
-            for (int i = 0; i < len; i++)
-            {
+
+            for(int i = 0; i < len; ++i) {
                 final Object element = Array.get(value, i);
-                if (element instanceof Byte)
-                {
-                    // convert byte[] to hex string
-                    sb.append("0x"); //$NON-NLS-1$
-                    final String x = Integer.toHexString(((Byte) element).intValue() & 0xff);
-                    if (1 == x.length())
-                    {
+                if (element instanceof Byte) {
+                    sb.append("0x");
+                    final String x = Integer.toHexString(((Byte)element).intValue() & 255);
+                    if (1 == x.length()) {
                         sb.append('0');
                     }
+
                     sb.append(x);
-                }
-                else
-                {
+                } else {
                     sb.append(toString(element));
                 }
 
-                if (i < len - 1)
-                {
-                    sb.append(", "); //$NON-NLS-1$
+                if (i < len - 1) {
+                    sb.append(", ");
                 }
             }
+
             return sb.append(']').toString();
-        }
-        else
-        {
+        } else {
             return value.toString();
         }
-    }
+     }
 }

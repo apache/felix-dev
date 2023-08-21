@@ -70,7 +70,7 @@ public class OsgiManagerTest {
                 OsgiManager.splitCommaSeparatedString(" abc , x.y.z,123"));
     }
 
-    @SuppressWarnings({ "unchecked", "rawtypes", "serial" })
+    @SuppressWarnings({ "unchecked", "rawtypes"})
     @Test
     public void testUpdateDependenciesCustomizerAdd() throws Exception {
         BundleContext bc = mockBundleContext();
@@ -98,7 +98,7 @@ public class OsgiManagerTest {
         assertEquals(1, updateCalled.size());
     }
 
-    @SuppressWarnings({ "unchecked", "rawtypes", "serial" })
+    @SuppressWarnings({ "unchecked", "rawtypes" })
     @Test
     public void testUpdateDependenciesCustomzerRemove() throws Exception {
         BundleContext bc = mockBundleContext();

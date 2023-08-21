@@ -45,6 +45,7 @@ import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 
 import org.apache.felix.webconsole.internal.servlet.OsgiManager;
+import org.apache.felix.webconsole.servlet.RequestVariableResolver;
 import org.osgi.framework.Bundle;
 import org.osgi.framework.BundleContext;
 import org.osgi.service.log.LogService;
@@ -638,11 +639,9 @@ public abstract class AbstractWebConsolePlugin extends HttpServlet {
      * @throws IOException on I/O error
      * @see #endResponse(PrintWriter)
      */
-    @SuppressWarnings({ "unchecked" })
-    protected PrintWriter startResponse( HttpServletRequest request, HttpServletResponse response ) throws IOException
-    {
-        response.setCharacterEncoding( "utf-8" ); //$NON-NLS-1$
-        response.setContentType( "text/html" ); //$NON-NLS-1$
+    protected PrintWriter startResponse( HttpServletRequest request, HttpServletResponse response ) throws IOException {
+        response.setCharacterEncoding( "utf-8" );
+        response.setContentType( "text/html" );
 
         final PrintWriter pw = response.getWriter();
 
@@ -650,24 +649,21 @@ public abstract class AbstractWebConsolePlugin extends HttpServlet {
 
         // support localization of the plugin title
         String title = getTitle();
-        if ( title.startsWith( "%" ) ) //$NON-NLS-1$
+        if ( title.startsWith( "%" ) )
         {
-            title = "${" + title.substring( 1 ) + "}"; //$NON-NLS-1$ //$NON-NLS-2$
+            title = "${" + title.substring( 1 ) + "}";
         }
 
-        VariableResolver resolver = WebConsoleUtil.getVariableResolver(request);
-        if (resolver instanceof DefaultVariableResolver) {
-            DefaultVariableResolver r = (DefaultVariableResolver) resolver;
-            r.put("head.title", title); //$NON-NLS-1$
-            r.put("head.label", getLabel()); //$NON-NLS-1$
-            r.put("head.cssLinks", getCssLinks(appRoot)); //$NON-NLS-1$
-            r.put("brand.name", brandingPlugin.getBrandName()); //$NON-NLS-1$
-            r.put("brand.product.url", brandingPlugin.getProductURL()); //$NON-NLS-1$
-            r.put("brand.product.name", brandingPlugin.getProductName()); //$NON-NLS-1$
-            r.put("brand.product.img", toUrl( brandingPlugin.getProductImage(), appRoot )); //$NON-NLS-1$
-            r.put("brand.favicon", toUrl( brandingPlugin.getFavIcon(), appRoot )); //$NON-NLS-1$
-            r.put("brand.css", toUrl( brandingPlugin.getMainStyleSheet(), appRoot )); //$NON-NLS-1$
-        }
+        final RequestVariableResolver r = WebConsoleUtil.getRequestVariableResolver(request);
+        r.put("head.title", title);
+        r.put("head.label", getLabel());
+        r.put("head.cssLinks", getCssLinks(appRoot));
+        r.put("brand.name", brandingPlugin.getBrandName());
+        r.put("brand.product.url", brandingPlugin.getProductURL());
+        r.put("brand.product.name", brandingPlugin.getProductName());
+        r.put("brand.product.img", toUrl( brandingPlugin.getProductImage(), appRoot ));
+        r.put("brand.favicon", toUrl( brandingPlugin.getFavIcon(), appRoot ));
+        r.put("brand.css", toUrl( brandingPlugin.getMainStyleSheet(), appRoot ));
         pw.println( getHeader() );
 
         return pw;

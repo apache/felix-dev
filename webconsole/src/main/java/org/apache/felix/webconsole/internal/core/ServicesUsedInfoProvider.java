@@ -61,7 +61,7 @@ final class ServicesUsedInfoProvider implements BundleInfoProvider
 
     public BundleInfo[] getBundleInfo( Bundle bundle, String webConsoleRoot, Locale locale )
     {
-        final ServiceReference[] refs = bundle.getServicesInUse();
+        final ServiceReference<?>[] refs = bundle.getServicesInUse();
         if ( null == refs || refs.length == 0 )
             return NO_INFO;
 
@@ -74,7 +74,7 @@ final class ServicesUsedInfoProvider implements BundleInfoProvider
     }
 
 
-    private BundleInfo toInfo( ServiceReference ref, String webConsoleRoot, Locale locale )
+    private BundleInfo toInfo( ServiceReference<?> ref, String webConsoleRoot, Locale locale )
     {
         final String[] classes = ( String[] ) ref.getProperty( Constants.OBJECTCLASS );
         final Object id = ref.getProperty( Constants.SERVICE_ID );
@@ -91,9 +91,8 @@ final class ServicesUsedInfoProvider implements BundleInfoProvider
     }
 
 
-    ServiceRegistration register( BundleContext context )
-    {
-        return context.registerService( BundleInfoProvider.class.getName(), this, null );
+    ServiceRegistration<BundleInfoProvider> register( BundleContext context ) {
+        return context.registerService( BundleInfoProvider.class, this, null );
     }
 
 }
