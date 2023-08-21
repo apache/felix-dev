@@ -25,8 +25,7 @@ import java.io.Writer;
 import java.util.MissingResourceException;
 import java.util.ResourceBundle;
 
-import org.apache.felix.webconsole.DefaultVariableResolver;
-import org.apache.felix.webconsole.VariableResolver;
+import org.apache.felix.webconsole.servlet.RequestVariableResolver;
 
 
 /**
@@ -75,7 +74,7 @@ class ResourceFilteringWriter extends FilterWriter
      */
     private final ResourceBundle locale;
 
-    private final VariableResolver variables;
+    private final RequestVariableResolver variables;
 
     /**
      * The buffer to gather the text to be translated
@@ -88,11 +87,11 @@ class ResourceFilteringWriter extends FilterWriter
     private int state = STATE_NULL;
 
 
-    ResourceFilteringWriter( final Writer out, final ResourceBundle locale, final VariableResolver variables )
+    ResourceFilteringWriter( final Writer out, final ResourceBundle locale, final RequestVariableResolver variables )
     {
         super( out );
         this.locale = locale;
-        this.variables = ( variables != null ) ? variables : new DefaultVariableResolver();
+        this.variables = variables;
     }
 
 

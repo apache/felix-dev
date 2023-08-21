@@ -35,6 +35,7 @@ import org.apache.felix.webconsole.WebConsoleUtil;
 import org.apache.felix.webconsole.internal.OsgiManagerPlugin;
 import org.apache.felix.webconsole.internal.Util;
 import org.apache.felix.webconsole.internal.misc.ServletSupport;
+import org.apache.felix.webconsole.servlet.RequestVariableResolver;
 import org.apache.felix.webconsole.spi.ConfigurationHandler;
 import org.apache.felix.webconsole.spi.ValidationException;
 import org.osgi.framework.BundleContext;
@@ -423,9 +424,9 @@ public class ConfigManager extends SimpleWebConsolePlugin implements OsgiManager
             cas.getJsonSupport().listFactoryConfigurations( jw, pidFilter, locale );
         }
         if ( !hasConfigs && !hasMetatype && cas != null ) {
-            jw.key("noconfigs").value(true); //$NON-NLS-1$
+            jw.key("noconfigs").value(true);
         } else {
-            jw.key("noconfigs").value(false); //$NON-NLS-1$
+            jw.key("noconfigs").value(false);
         }
 
         jw.endObject();
@@ -438,19 +439,19 @@ public class ConfigManager extends SimpleWebConsolePlugin implements OsgiManager
 
         // prepare variables
         final String referer = request.getParameter( REFERER );
-        final boolean factoryCreate = "true".equals( request.getParameter(FACTORY_CREATE) ); //$NON-NLS-1$
-        @SuppressWarnings("unchecked")
-        final Map<String, Object> vars = ( ( Map<String, Object> ) WebConsoleUtil.getVariableResolver( request ) );
-        vars.put( "__data__", json.toString() ); //$NON-NLS-1$
-        vars.put( "selectedPid", pid != null ? pid : "" ); //$NON-NLS-1$ //$NON-NLS-2$
-        vars.put( "configurationReferer", referer != null ? referer : "" ); //$NON-NLS-1$ //$NON-NLS-2$
-        vars.put( "factoryCreate", Boolean.valueOf(factoryCreate) ); //$NON-NLS-1$
-        vars.put( "param.apply", ACTION_APPLY ); //$NON-NLS-1$
-        vars.put( "param.create", ACTION_CREATE ); //$NON-NLS-1$
-        vars.put( "param.unbind", ACTION_UNBIND ); //$NON-NLS-1$
-        vars.put( "param.delete", ACTION_DELETE ); //$NON-NLS-1$
-        vars.put( "param.propertylist", PROPERTY_LIST ); //$NON-NLS-1$
-        vars.put( "param.pidFilter", PID_FILTER ); //$NON-NLS-1$
+        final boolean factoryCreate = "true".equals( request.getParameter(FACTORY_CREATE) );
+
+        final RequestVariableResolver vars = WebConsoleUtil.getRequestVariableResolver(request);
+        vars.put( "__data__", json.toString() ); 
+        vars.put( "selectedPid", pid != null ? pid : "" );
+        vars.put( "configurationReferer", referer != null ? referer : "" );
+        vars.put( "factoryCreate", Boolean.valueOf(factoryCreate) );
+        vars.put( "param.apply", ACTION_APPLY );
+        vars.put( "param.create", ACTION_CREATE );
+        vars.put( "param.unbind", ACTION_UNBIND );
+        vars.put( "param.delete", ACTION_DELETE );
+        vars.put( "param.propertylist", PROPERTY_LIST );
+        vars.put( "param.pidFilter", PID_FILTER );
 
         response.getWriter().print(TEMPLATE);
     }

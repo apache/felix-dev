@@ -28,8 +28,7 @@ import java.util.TreeSet;
 import org.apache.felix.webconsole.internal.AbstractConfigurationPrinter;
 
 
-public class SystemPropertiesPrinter extends AbstractConfigurationPrinter
-{
+public class SystemPropertiesPrinter extends AbstractConfigurationPrinter {
 
     private static final String TITLE = "System Properties";
 

@@ -30,18 +30,19 @@ import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 
 import org.apache.felix.utils.json.JSONWriter;
-import org.apache.felix.webconsole.DefaultVariableResolver;
 import org.apache.felix.webconsole.SimpleWebConsolePlugin;
 import org.apache.felix.webconsole.WebConsoleConstants;
 import org.apache.felix.webconsole.WebConsoleUtil;
 import org.apache.felix.webconsole.internal.OsgiManagerPlugin;
 import org.apache.felix.webconsole.internal.Util;
+import org.apache.felix.webconsole.servlet.RequestVariableResolver;
 import org.osgi.framework.Bundle;
 import org.osgi.framework.BundleContext;
 import org.osgi.framework.Constants;
 import org.osgi.framework.InvalidSyntaxException;
 import org.osgi.framework.ServiceReference;
 import org.osgi.framework.ServiceRegistration;
+import org.owasp.encoder.Encode;
 
 
 /**
@@ -50,12 +51,12 @@ import org.osgi.framework.ServiceRegistration;
 public class ServicesServlet extends SimpleWebConsolePlugin implements OsgiManagerPlugin
 {
     // don't create empty reference array all the time, create it only once - it is immutable
-    private static final ServiceReference[] NO_REFS = new ServiceReference[0];
+    private static final ServiceReference<?>[] NO_REFS = new ServiceReference[0];
 
     private final class RequestInfo
     {
         public final String extension;
-        public final ServiceReference service;
+        public final ServiceReference<?> service;
         public final boolean serviceRequested;
 
 
@@ -404,8 +405,7 @@ public class ServicesServlet extends SimpleWebConsolePlugin implements OsgiManag
     /**
      * @see org.apache.felix.webconsole.AbstractWebConsolePlugin#renderContent(javax.servlet.http.HttpServletRequest, javax.servlet.http.HttpServletResponse)
      */
-    protected void renderContent( HttpServletRequest request, HttpServletResponse response ) throws IOException
-    {
+    protected void renderContent( HttpServletRequest request, HttpServletResponse response ) throws IOException {
         // get request info from request attribute
         final RequestInfo reqInfo = getRequestInfo( request );
 
@@ -415,11 +415,11 @@ public class ServicesServlet extends SimpleWebConsolePlugin implements OsgiManag
         writeJSON(w, reqInfo.service, request.getLocale(), filter);
 
         // prepare variables
-        DefaultVariableResolver vars = ( ( DefaultVariableResolver ) WebConsoleUtil.getVariableResolver( request ) );
+        final RequestVariableResolver vars = WebConsoleUtil.getRequestVariableResolver(request);
         vars.put( "bundlePath", appRoot +  "/" + BundlesServlet.NAME + "/" );
         vars.put( "drawDetails", String.valueOf(reqInfo.serviceRequested));
         vars.put( "__data__", w.toString() );
-        vars.put( "filter", filter == null ? "" : WebConsoleUtil.escapeHtml(filter));
+        vars.put( "filter", filter == null ? "" : Encode.forHtmlContent(filter) );
 
         response.getWriter().print( TEMPLATE );
     }

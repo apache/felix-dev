@@ -31,12 +31,12 @@ import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 
 import org.apache.felix.utils.json.JSONWriter;
-import org.apache.felix.webconsole.DefaultVariableResolver;
 import org.apache.felix.webconsole.SimpleWebConsolePlugin;
 import org.apache.felix.webconsole.WebConsoleConstants;
 import org.apache.felix.webconsole.WebConsoleUtil;
 import org.apache.felix.webconsole.internal.OsgiManagerPlugin;
 import org.apache.felix.webconsole.internal.servlet.OsgiManager;
+import org.apache.felix.webconsole.servlet.RequestVariableResolver;
 import org.osgi.framework.Bundle;
 import org.osgi.framework.BundleException;
 import org.osgi.service.startlevel.StartLevel;
@@ -190,7 +190,7 @@ public class VMStatPlugin extends SimpleWebConsolePlugin implements OsgiManagerP
                 jw.endObject();
                 jw.flush();
 
-                DefaultVariableResolver vars = ( ( DefaultVariableResolver ) WebConsoleUtil.getVariableResolver( request ) );
+                final RequestVariableResolver vars = WebConsoleUtil.getRequestVariableResolver(request);
                 vars.put( "data", json.toString() );
 
                 body = TPL_VM_RESTART;
@@ -250,7 +250,7 @@ public class VMStatPlugin extends SimpleWebConsolePlugin implements OsgiManagerP
 
         jw.flush();
 
-        DefaultVariableResolver vars = ( ( DefaultVariableResolver ) WebConsoleUtil.getVariableResolver( request ) );
+        final RequestVariableResolver vars = WebConsoleUtil.getRequestVariableResolver(request);
         vars.put( "startData", json.toString() );
 
         response.getWriter().print( body );

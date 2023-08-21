@@ -133,7 +133,7 @@ public abstract class SimpleWebConsolePlugin extends AbstractWebConsolePlugin
             LocalizationHelper localization = new LocalizationHelper( bundle );
             ResourceBundle rb = localization.getResourceBundle(Locale.getDefault());
             if (rb != null) {
-                if ( this.title != null && this.title.startsWith( "%" ) ) { //$NON-NLS-1$
+                if ( this.title != null && this.title.startsWith( "%" ) ) {
                     String key = this.title.substring(1);
                     if (rb.containsKey(key)) {
                         this.servletName = rb.getString(key);

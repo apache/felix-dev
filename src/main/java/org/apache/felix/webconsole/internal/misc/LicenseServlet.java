@@ -42,11 +42,11 @@ import javax.servlet.http.HttpServletResponse;
 import org.apache.felix.utils.json.JSONWriter;
 import org.apache.felix.utils.manifest.Clause;
 import org.apache.felix.utils.manifest.Parser;
-import org.apache.felix.webconsole.DefaultVariableResolver;
 import org.apache.felix.webconsole.SimpleWebConsolePlugin;
 import org.apache.felix.webconsole.WebConsoleUtil;
 import org.apache.felix.webconsole.internal.OsgiManagerPlugin;
 import org.apache.felix.webconsole.internal.Util;
+import org.apache.felix.webconsole.servlet.RequestVariableResolver;
 import org.osgi.framework.Bundle;
 
 
@@ -109,14 +109,13 @@ public final class LicenseServlet extends SimpleWebConsolePlugin implements Osgi
     /**
      * @see org.apache.felix.webconsole.AbstractWebConsolePlugin#renderContent(javax.servlet.http.HttpServletRequest, javax.servlet.http.HttpServletResponse)
      */
-    @SuppressWarnings("unchecked")
     protected void renderContent( HttpServletRequest request, HttpServletResponse res ) throws IOException
     {
         Bundle[] bundles = getBundleContext().getBundles();
         Util.sort( bundles, request.getLocale() );
 
         // prepare variables
-        DefaultVariableResolver vars = ( ( DefaultVariableResolver ) WebConsoleUtil.getVariableResolver( request ) );
+        final RequestVariableResolver vars = WebConsoleUtil.getRequestVariableResolver(request);
         vars.put( "__data__", getBundleData( bundles, request.getLocale() ));
 
         res.getWriter().print(TEMPLATE);

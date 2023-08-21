@@ -59,8 +59,8 @@ public final class PermissionsConfigurationPrinter extends AbstractConfiguration
     public final void printConfiguration(PrintWriter pw)
     {
         final BundleContext bc = getBundleContext();
-        final ServiceReference paRef = bc.getServiceReference( PERMISSION_ADMIN_NAME );
-        final ServiceReference cpaRef = bc.getServiceReference( CONDITIONAL_PERMISSION_ADMIN_NAME );
+        final ServiceReference<?> paRef = bc.getServiceReference( PERMISSION_ADMIN_NAME );
+        final ServiceReference<?> cpaRef = bc.getServiceReference( CONDITIONAL_PERMISSION_ADMIN_NAME );
         final Object paSvc = paRef != null ? bc.getService(paRef) : null;
         final Object cpaSvc = cpaRef != null ? bc.getService(cpaRef) : null;
 
@@ -112,7 +112,7 @@ public final class PermissionsConfigurationPrinter extends AbstractConfiguration
                 boolean hasPermissions = false;
                 //final java.util.List list = cpa.newConditionalPermissionUpdate().getConditionalPermissionInfos();
                 //for (int i = 0; list != null && i < list.size(); i++)
-                for (Enumeration e = cpa.getConditionalPermissionInfos(); e.hasMoreElements();)
+                for (Enumeration<ConditionalPermissionInfo> e = cpa.getConditionalPermissionInfos(); e.hasMoreElements();)
                 {
                     hasPermissions = true;
                     //final ConditionalPermissionInfo info = (ConditionalPermissionInfo) list.get(i);
