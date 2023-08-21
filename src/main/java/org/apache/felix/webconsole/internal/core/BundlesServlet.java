@@ -59,7 +59,6 @@ import org.apache.felix.utils.manifest.Parser;
 import org.apache.felix.webconsole.ConfigurationPrinter;
 import org.apache.felix.webconsole.SimpleWebConsolePlugin;
 import org.apache.felix.webconsole.WebConsoleConstants;
-import org.apache.felix.webconsole.WebConsoleUtil;
 import org.apache.felix.webconsole.bundleinfo.BundleInfo;
 import org.apache.felix.webconsole.bundleinfo.BundleInfoProvider;
 import org.apache.felix.webconsole.internal.OsgiManagerPlugin;
@@ -530,7 +529,7 @@ public class BundlesServlet extends SimpleWebConsolePlugin implements OsgiManage
         final int startLevel = fsl.getInitialBundleStartLevel();
 
         // prepare variables
-        final RequestVariableResolver vars = WebConsoleUtil.getRequestVariableResolver(request);
+        final RequestVariableResolver vars = this.getVariableResolver(request);
         vars.put( "startLevel", String.valueOf(startLevel));
         vars.put( "drawDetails", reqInfo.bundleRequested ? Boolean.TRUE : Boolean.FALSE );
         vars.put( "currentBundle", (reqInfo.bundleRequested && reqInfo.bundle != null ? String.valueOf(reqInfo.bundle.getBundleId()) : "null"));

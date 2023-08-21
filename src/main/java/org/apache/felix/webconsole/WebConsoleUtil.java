@@ -38,7 +38,6 @@ import org.apache.commons.fileupload.FileUploadException;
 import org.apache.commons.fileupload.disk.DiskFileItemFactory;
 import org.apache.commons.fileupload.servlet.ServletFileUpload;
 import org.apache.commons.fileupload.servlet.ServletRequestContext;
-import org.apache.felix.webconsole.servlet.RequestVariableResolver;
 
 
 /**
@@ -87,27 +86,6 @@ public final class WebConsoleUtil
         resolver.put( "pluginRoot", (String) request.getAttribute( WebConsoleConstants.ATTR_PLUGIN_ROOT ) );
         setVariableResolver( request, resolver );
         return resolver;
-    }
-
-    /**
-     * Returns the {@link RequestVariableResolver} for the given request.
-     * <p>
-     * The resolver is added to the request attributes via the web console main
-     * servlet before it invokes any plugins.
-     * The preset properties are
-     * <code>appRoot</code> set to the value of the
-     * {@link WebConsoleConstants#ATTR_APP_ROOT} request attribute and
-     * <code>pluginRoot</code> set to the value of the
-     * {@link WebConsoleConstants#ATTR_PLUGIN_ROOT} request attribute.
-     * <p>
-     *
-     * @param request The request whose attribute is returned 
-     *
-     * @return The {@link RequestVariableResolver} for the given request.
-     * @since 3.5.0
-     */
-    public static RequestVariableResolver getRequestVariableResolver( final ServletRequest request) {
-        return (RequestVariableResolver) request.getAttribute( RequestVariableResolver.REQUEST_ATTRIBUTE );
     }
 
     /**

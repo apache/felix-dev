@@ -18,11 +18,9 @@
  */
 package org.apache.felix.webconsole;
 
-
 import java.io.IOException;
 import java.io.InputStream;
 import java.util.Properties;
-
 
 /**
  * The <code>DefaultBrandingPlugin</code> class is the default implementation
@@ -86,15 +84,17 @@ import java.util.Properties;
  * through the class loader of this class, the properties overwrite the default
  * settings according to the property names listed above. The easiest way to
  * add such a properties file is to provide a fragment bundle with the file.
+ *
+ * @deprecated Plugins should never use the branding plugin directly
  */
-public class DefaultBrandingPlugin implements BrandingPlugin
-{
+@Deprecated
+public class DefaultBrandingPlugin implements BrandingPlugin {
 
     /**
      * The name of the bundle entry providing branding properties for this
      * default branding plugin (value is "/META-INF/webconsole.properties").
      */
-    private static final String BRANDING_PROPERTIES = "/META-INF/webconsole.properties"; //$NON-NLS-1$
+    private static final String BRANDING_PROPERTIES = "/META-INF/webconsole.properties";
 
     private static DefaultBrandingPlugin instance;
 
@@ -116,9 +116,7 @@ public class DefaultBrandingPlugin implements BrandingPlugin
 
     private final String mainStyleSheet;
 
-
-    private DefaultBrandingPlugin()
-    {
+    private DefaultBrandingPlugin() {
         Properties props = new Properties();
 
         // try to load the branding properties
@@ -131,110 +129,71 @@ public class DefaultBrandingPlugin implements BrandingPlugin
         }
 
         // set the fields from the properties now
-        brandName = props.getProperty( "webconsole.brand.name", "Apache Felix Web Console" ); //$NON-NLS-1$
-        productName = props.getProperty( "webconsole.product.name", "Apache Felix" ); //$NON-NLS-1$
-        productURL = props.getProperty( "webconsole.product.url", "https://felix.apache.org" ); //$NON-NLS-1$
-        productImage = props.getProperty( "webconsole.product.image", "/res/imgs/logo.png" ); //$NON-NLS-1$
-        vendorName = props.getProperty( "webconsole.vendor.name", "The Apache Software Foundation" ); //$NON-NLS-1$
-        vendorURL = props.getProperty( "webconsole.vendor.url", "https://www.apache.org" ); //$NON-NLS-1$
-        vendorImage = props.getProperty( "webconsole.vendor.image", "/res/imgs/logo.png" ); //$NON-NLS-1$
-        favIcon = props.getProperty( "webconsole.favicon", "/res/imgs/favicon.ico" ); //$NON-NLS-1$
-        mainStyleSheet = props.getProperty( "webconsole.stylesheet", "/res/ui/webconsole.css" ); //$NON-NLS-1$
+        brandName = props.getProperty( "webconsole.brand.name", "Apache Felix Web Console" );
+        productName = props.getProperty( "webconsole.product.name", "Apache Felix" );
+        productURL = props.getProperty( "webconsole.product.url", "https://felix.apache.org" );
+        productImage = props.getProperty( "webconsole.product.image", "/res/imgs/logo.png" );
+        vendorName = props.getProperty( "webconsole.vendor.name", "The Apache Software Foundation" );
+        vendorURL = props.getProperty( "webconsole.vendor.url", "https://www.apache.org" );
+        vendorImage = props.getProperty( "webconsole.vendor.image", "/res/imgs/logo.png" );
+        favIcon = props.getProperty( "webconsole.favicon", "/res/imgs/favicon.ico" );
+        mainStyleSheet = props.getProperty( "webconsole.stylesheet", "/res/ui/webconsole.css" );
     }
-
 
     /**
      * Retrieves the shared instance
      * 
      * @return the singleton instance of the object
      */
-    public static DefaultBrandingPlugin getInstance()
-    {
-        if ( instance == null )
-        {
+    public static DefaultBrandingPlugin getInstance() {
+        if ( instance == null ) {
             instance = new DefaultBrandingPlugin();
         }
         return instance;
     }
 
-
-    /**
-     * @see org.apache.felix.webconsole.BrandingPlugin#getBrandName()
-     */
-    public String getBrandName()
-    {
+    @Override
+    public String getBrandName() {
         return brandName;
     }
 
-
-    /**
-     * @see org.apache.felix.webconsole.BrandingPlugin#getProductName()
-     */
-    public String getProductName()
-    {
+    @Override
+    public String getProductName() {
         return productName;
     }
 
-
-    /**
-     * @see org.apache.felix.webconsole.BrandingPlugin#getProductURL()
-     */
-    public String getProductURL()
-    {
+    @Override
+    public String getProductURL() {
         return productURL;
     }
 
-
-    /**
-     * @see org.apache.felix.webconsole.BrandingPlugin#getProductImage()
-     */
-    public String getProductImage()
-    {
+    @Override
+    public String getProductImage() {
         return productImage;
     }
 
-
-    /**
-     * @see org.apache.felix.webconsole.BrandingPlugin#getVendorName()
-     */
-    public String getVendorName()
-    {
+    @Override
+    public String getVendorName() {
         return vendorName;
     }
 
-
-    /**
-     * @see org.apache.felix.webconsole.BrandingPlugin#getVendorURL()
-     */
-    public String getVendorURL()
-    {
+    @Override
+    public String getVendorURL() {
         return vendorURL;
     }
 
-
-    /**
-     * @see org.apache.felix.webconsole.BrandingPlugin#getVendorImage()
-     */
-    public String getVendorImage()
-    {
+    @Override
+    public String getVendorImage() {
         return vendorImage;
     }
 
-
-    /**
-     * @see org.apache.felix.webconsole.BrandingPlugin#getFavIcon()
-     */
-    public String getFavIcon()
-    {
+    @Override
+    public String getFavIcon() {
         return favIcon;
     }
 
-
-    /**
-     * @see org.apache.felix.webconsole.BrandingPlugin#getMainStyleSheet()
-     */
-    public String getMainStyleSheet()
-    {
+    @Override
+    public String getMainStyleSheet() {
         return mainStyleSheet;
     }
 }

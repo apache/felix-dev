@@ -441,7 +441,7 @@ public class ConfigManager extends SimpleWebConsolePlugin implements OsgiManager
         final String referer = request.getParameter( REFERER );
         final boolean factoryCreate = "true".equals( request.getParameter(FACTORY_CREATE) );
 
-        final RequestVariableResolver vars = WebConsoleUtil.getRequestVariableResolver(request);
+        final RequestVariableResolver vars = this.getVariableResolver(request);
         vars.put( "__data__", json.toString() ); 
         vars.put( "selectedPid", pid != null ? pid : "" );
         vars.put( "configurationReferer", referer != null ? referer : "" );

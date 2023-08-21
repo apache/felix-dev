@@ -20,6 +20,8 @@ package org.apache.felix.webconsole.servlet;
 
 import java.util.HashMap;
 
+import jakarta.servlet.ServletRequest;
+
 /**
  * The <code>RequestVariableResolver</code> is a <code>HashMap</code> that
  * is used by the webconsole to process variables in the template.
@@ -31,10 +33,23 @@ public class RequestVariableResolver extends HashMap<String, Object> {
     /**
      * The name of the request attribute holding the {@link RequestVariableResolver}
      * for the request (value is "felix.webconsole.variable.resolver").
-     *
-     * @since 3.0
+     * This attribute is guaaranteed to be set for plugins.
      */
     public static final String REQUEST_ATTRIBUTE = "felix.webconsole.variable.resolver";
+
+    /**
+     * The name of the key providing the absolute path of the Web Console root.
+     * This key is guaaranteed to be set for plugins.
+     * @see ServletConstants.ATTR_APP_ROOT
+     */
+    public static final String KEY_APP_ROOT = "appRoot";
+
+    /**
+     * The name of the key providing the absolute path of the current plugin.
+     * This key is guaaranteed to be set for plugins.
+     * @see ServletConstants.ATTR_PLUGIN_ROOT
+     */
+    public static final String KEY_PLUGIN_ROOT = "pluginRoot";
 
     /**
      * Creates a new variable resolver with default capacity.
@@ -58,5 +73,19 @@ public class RequestVariableResolver extends HashMap<String, Object> {
             return value.toString();
         }
         return null;
+    }
+
+    /**
+     * Returns the {@link RequestVariableResolver} for the given request.
+     * <p>
+     * The resolver is added to the request attributes via the web console main
+     * servlet before it invokes any plugins.
+     * @param request The request
+     * @return The {@link RequestVariableResolver} for the given request.
+     * @see #KEY_APP_ROOT
+     * @see #KEY_PLUGIN_ROOT
+     */
+    public static RequestVariableResolver getRequestVariableResolver( final ServletRequest request) {
+        return (RequestVariableResolver) request.getAttribute( RequestVariableResolver.REQUEST_ATTRIBUTE );
     }
 }

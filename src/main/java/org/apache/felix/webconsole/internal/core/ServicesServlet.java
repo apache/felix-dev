@@ -416,7 +416,7 @@ public class ServicesServlet extends SimpleWebConsolePlugin implements OsgiManag
         writeJSON(w, reqInfo.service, request.getLocale(), filter);
 
         // prepare variables
-        final RequestVariableResolver vars = WebConsoleUtil.getRequestVariableResolver(request);
+        final RequestVariableResolver vars = this.getVariableResolver(request);
         vars.put( "bundlePath", appRoot +  "/" + BundlesServlet.NAME + "/" );
         vars.put( "drawDetails", String.valueOf(reqInfo.serviceRequested));
         vars.put( "__data__", w.toString() );
