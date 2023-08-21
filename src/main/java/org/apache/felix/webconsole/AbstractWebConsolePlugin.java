@@ -193,14 +193,11 @@ public abstract class AbstractWebConsolePlugin extends HttpServlet {
      * @see javax.servlet.http.HttpServlet#doGet(javax.servlet.http.HttpServletRequest,
      *      javax.servlet.http.HttpServletResponse)
      */
-    protected void doGet( HttpServletRequest request, HttpServletResponse response ) throws ServletException,
-        IOException
-    {
-        if ( !spoolResource( request, response ) )
-        {
+    protected void doGet( HttpServletRequest request, HttpServletResponse response )
+    throws ServletException, IOException {
+        if ( !spoolResource( request, response ) ) {
             // detect if this is an html request
-            if ( isHtmlRequest(request) )
-            {
+            if ( isHtmlRequest(request) ) {
                 // start the html response, write the header, open body and main div
                 PrintWriter pw = startResponse( request, response );
 
@@ -214,9 +211,7 @@ public abstract class AbstractWebConsolePlugin extends HttpServlet {
 
                 // close the main div, body, and html
                 endResponse( pw );
-            }
-            else
-            {
+            } else {
                 renderContent( request, response );
             }
         }
@@ -232,8 +227,7 @@ public abstract class AbstractWebConsolePlugin extends HttpServlet {
      * @param request the original request passed from the HTTP server
      * @return <code>true</code> if the page should have headers and footers rendered
      */
-    protected boolean isHtmlRequest( final HttpServletRequest request )
-    {
+    protected boolean isHtmlRequest( final HttpServletRequest request ) {
         return true;
     }
 
@@ -649,8 +643,7 @@ public abstract class AbstractWebConsolePlugin extends HttpServlet {
 
         // support localization of the plugin title
         String title = getTitle();
-        if ( title.startsWith( "%" ) )
-        {
+        if ( title.startsWith( "%" ) ) {
             title = "${" + title.substring( 1 ) + "}";
         }
 

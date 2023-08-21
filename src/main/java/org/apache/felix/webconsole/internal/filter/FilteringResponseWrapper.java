@@ -40,8 +40,7 @@ import org.apache.felix.webconsole.servlet.RequestVariableResolver;
  * exists in the resource bundle, the text is written unmodifed (except the
  * wrapping <code>${}</code> characters are removed.
  */
-public class FilteringResponseWrapper extends HttpServletResponseWrapper
-{
+public class FilteringResponseWrapper extends HttpServletResponseWrapper {
 
     // the resource bundle providing translations for the output
     private final ResourceBundle locale;
@@ -62,14 +61,13 @@ public class FilteringResponseWrapper extends HttpServletResponseWrapper
      * @param locale a resource bundle, that will be used for translation of the strings
      * @param request the original request - used to obtain the variable resolver
      */
-    public FilteringResponseWrapper( final HttpServletResponse response, final ResourceBundle locale,
-        final ServletRequest request )
-    {
+    public FilteringResponseWrapper( final HttpServletResponse response, 
+        final ResourceBundle locale,
+        final ServletRequest request ) {
         super( response );
         this.locale = locale;
         this.request = request;
     }
-
 
     /**
      * Returns a <code>PrintWriter</code> for the response. If <code>text/html</code>
@@ -79,19 +77,14 @@ public class FilteringResponseWrapper extends HttpServletResponseWrapper
      *
      * @see javax.servlet.ServletResponseWrapper#getWriter()
      */
-    public PrintWriter getWriter() throws IOException
-    {
-        if ( writer == null )
-        {
+    public PrintWriter getWriter() throws IOException {
+        if ( writer == null ) {
             final PrintWriter base = super.getWriter();
-            if ( doWrap() )
-            {
+            if ( doWrap() ) {
                 final RequestVariableResolver vars = WebConsoleUtil.getRequestVariableResolver(request);
                 final ResourceFilteringWriter filter = new ResourceFilteringWriter( base, locale, vars );
                 writer = new PrintWriter( filter );
-            }
-            else
-            {
+            } else {
                 writer = base;
             }
         }
@@ -99,11 +92,7 @@ public class FilteringResponseWrapper extends HttpServletResponseWrapper
         return writer;
     }
 
-
-    private final boolean doWrap()
-    {
-        boolean doWrap = getContentType() != null && getContentType().indexOf( "text/html" ) >= 0;
-        return doWrap;
+    private final boolean doWrap() {
+        return getContentType() != null && getContentType().indexOf( "text/html" ) >= 0;
     }
-
 }

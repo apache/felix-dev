@@ -65,6 +65,7 @@ import org.apache.felix.webconsole.internal.core.BundlesServlet;
 import org.apache.felix.webconsole.internal.filter.FilteringResponseWrapper;
 import org.apache.felix.webconsole.internal.i18n.ResourceBundleManager;
 import org.apache.felix.webconsole.internal.servlet.Plugin.InternalPlugin;
+import org.apache.felix.webconsole.servlet.RequestVariableResolver;
 import org.osgi.framework.Bundle;
 import org.osgi.framework.BundleContext;
 import org.osgi.framework.Constants;
@@ -630,9 +631,16 @@ public class OsgiManager extends GenericServlet {
         response = wrapResponse(request, response, plugin);
 
         // make sure to set the variable resolver
-        WebConsoleUtil.getVariableResolver(request);
+        initRequestVariableResolver(request);
 
         plugin.service(request, response);
+    }
+
+    private void initRequestVariableResolver(final HttpServletRequest request) {
+        final RequestVariableResolver resolver = new RequestVariableResolver();
+        request.setAttribute(RequestVariableResolver.REQUEST_ATTRIBUTE, resolver);
+        resolver.put( "appRoot", (String) request.getAttribute( WebConsoleConstants.ATTR_APP_ROOT ) );
+        resolver.put( "pluginRoot", (String) request.getAttribute( WebConsoleConstants.ATTR_PLUGIN_ROOT ) );
     }
 
     private final void logout(HttpServletRequest request, HttpServletResponse response)

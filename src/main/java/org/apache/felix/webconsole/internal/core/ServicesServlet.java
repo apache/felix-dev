@@ -33,6 +33,7 @@ import org.apache.felix.utils.json.JSONWriter;
 import org.apache.felix.webconsole.SimpleWebConsolePlugin;
 import org.apache.felix.webconsole.WebConsoleConstants;
 import org.apache.felix.webconsole.WebConsoleUtil;
+import org.apache.felix.webconsole.bundleinfo.BundleInfoProvider;
 import org.apache.felix.webconsole.internal.OsgiManagerPlugin;
 import org.apache.felix.webconsole.internal.Util;
 import org.apache.felix.webconsole.servlet.RequestVariableResolver;
@@ -123,7 +124,7 @@ public class ServicesServlet extends SimpleWebConsolePlugin implements OsgiManag
         TEMPLATE = readTemplateFile( "/templates/services.html" ); //$NON-NLS-1$
     }
 
-    private ServiceRegistration bipReg;
+    private ServiceRegistration<BundleInfoProvider> bipReg;
 
     public void activate(BundleContext bundleContext)
     {
@@ -141,7 +142,7 @@ public class ServicesServlet extends SimpleWebConsolePlugin implements OsgiManag
     }
 
 
-    final ServiceReference getServiceById( String pathInfo )
+    final ServiceReference<?> getServiceById( String pathInfo )
     {
         // only use last part of the pathInfo
         pathInfo = pathInfo.substring( pathInfo.lastIndexOf( '/' ) + 1 );
@@ -152,7 +153,7 @@ public class ServicesServlet extends SimpleWebConsolePlugin implements OsgiManag
         String filterStr = filter.toString();
         try
         {
-            ServiceReference[] refs = BundleContextUtil.getWorkingBundleContext(this.getBundleContext()).getAllServiceReferences( null, filterStr );
+            ServiceReference<?>[] refs = BundleContextUtil.getWorkingBundleContext(this.getBundleContext()).getAllServiceReferences( null, filterStr );
             if ( refs == null || refs.length != 1 )
             {
                 return null;
@@ -168,7 +169,7 @@ public class ServicesServlet extends SimpleWebConsolePlugin implements OsgiManag
     }
 
 
-    private final ServiceReference[] getServices(String filter)
+    private final ServiceReference<?>[] getServices(String filter)
     {
         // empty filter string will return nothing, must set it to null to return all services
         if (filter != null && filter.trim().length() == 0) {
@@ -176,7 +177,7 @@ public class ServicesServlet extends SimpleWebConsolePlugin implements OsgiManag
         }
         try
         {
-            final ServiceReference[] refs = BundleContextUtil.getWorkingBundleContext(this.getBundleContext()).getAllServiceReferences( null, filter );
+            final ServiceReference<?>[] refs = BundleContextUtil.getWorkingBundleContext(this.getBundleContext()).getAllServiceReferences( null, filter );
             if ( refs != null )
             {
                 return refs;
@@ -192,7 +193,7 @@ public class ServicesServlet extends SimpleWebConsolePlugin implements OsgiManag
     }
 
 
-    static final String getStatusLine( final ServiceReference[] services )
+    static final String getStatusLine( final ServiceReference<?>[] services )
     {
         final int count = services.length;
         final StringBuilder buffer = new StringBuilder();
@@ -205,14 +206,14 @@ public class ServicesServlet extends SimpleWebConsolePlugin implements OsgiManag
     }
 
 
-    static final String propertyAsString( ServiceReference ref, String name )
+    static final String propertyAsString( ServiceReference<?> ref, String name )
     {
         final Object value = ref.getProperty( name );
         return WebConsoleUtil.toString( value );
     }
 
 
-    private void renderJSON( final HttpServletResponse response, final ServiceReference service, final Locale locale )
+    private void renderJSON( final HttpServletResponse response, final ServiceReference<?> service, final Locale locale )
             throws IOException
     {
         response.setContentType( "application/json" );
@@ -233,7 +234,7 @@ public class ServicesServlet extends SimpleWebConsolePlugin implements OsgiManag
         }
     }
 
-    private void serviceDetails( JSONWriter jw, ServiceReference service ) throws IOException
+    private void serviceDetails( JSONWriter jw, ServiceReference<?> service ) throws IOException
     {
         String[] keys = service.getPropertyKeys();
 
@@ -267,7 +268,7 @@ public class ServicesServlet extends SimpleWebConsolePlugin implements OsgiManag
     }
 
 
-    private void usingBundles( JSONWriter jw, ServiceReference service, Locale locale ) throws IOException
+    private void usingBundles( JSONWriter jw, ServiceReference<?> service, Locale locale ) throws IOException
     {
         jw.key( "usingBundles" );
         jw.array();
@@ -288,7 +289,7 @@ public class ServicesServlet extends SimpleWebConsolePlugin implements OsgiManag
     }
 
 
-    private void serviceInfo( JSONWriter jw, ServiceReference service, boolean details, final Locale locale )
+    private void serviceInfo( JSONWriter jw, ServiceReference<?> service, boolean details, final Locale locale )
             throws IOException
     {
         jw.object();
@@ -334,19 +335,19 @@ public class ServicesServlet extends SimpleWebConsolePlugin implements OsgiManag
     }
 
 
-    private void writeJSON(final Writer pw, final ServiceReference service, final Locale locale, final String filter) throws IOException
+    private void writeJSON(final Writer pw, final ServiceReference<?> service, final Locale locale, final String filter) throws IOException
     {
         writeJSON( pw, service, false, locale, filter );
     }
 
 
-    private void writeJSON( final Writer pw, final ServiceReference service, final boolean fullDetails, final Locale locale, final String filter )
+    private void writeJSON( final Writer pw, final ServiceReference<?> service, final boolean fullDetails, final Locale locale, final String filter )
             throws IOException
     {
-        final ServiceReference[] allServices = this.getServices(filter);
+        final ServiceReference<?>[] allServices = this.getServices(filter);
         final String statusLine = getStatusLine( allServices );
 
-        final ServiceReference[] services = ( service != null ) ? new ServiceReference[]
+        final ServiceReference<?>[] services = ( service != null ) ? new ServiceReference[]
                 { service } : allServices;
 
                 final JSONWriter jw = new JSONWriter( pw );

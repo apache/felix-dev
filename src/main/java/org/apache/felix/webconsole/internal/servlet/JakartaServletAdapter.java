@@ -148,30 +148,6 @@ public class JakartaServletAdapter extends AbstractWebConsolePlugin {
         }
     }
 
-    /**
-     * Detects whether this request is intended to have the headers and
-     * footers of this plugin be rendered or not. The decision is taken based
-     * on whether and what extension the request URI has: If the request URI
-     * has no extension or the the extension is <code>.html</code>, the request
-     * is assumed to be rendered with header and footer. Otherwise the
-     * headers and footers are omitted and the
-     * {@link #renderContent(HttpServletRequest, HttpServletResponse)}
-     * method is called without any decorations and without setting any
-     * response headers.
-     *
-     * @see org.apache.felix.webconsole.AbstractWebConsolePlugin#isHtmlRequest(javax.servlet.http.HttpServletRequest)
-     */
-    protected boolean isHtmlRequest( final HttpServletRequest request ) {
-        final String requestUri = request.getRequestURI();
-        if ( requestUri.endsWith( ".html" ) ) {
-            return true;
-        }
-        // check if there is an extension
-        final int lastSlash = requestUri.lastIndexOf('/');
-        final int lastDot = requestUri.indexOf('.', lastSlash + 1);
-        return lastDot < 0;
-    }
-
     private static final class CheckHttpServletResponse extends HttpServletResponseWrapper {
 
         private boolean done = false;
