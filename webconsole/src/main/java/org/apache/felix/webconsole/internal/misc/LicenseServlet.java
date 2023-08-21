@@ -115,7 +115,7 @@ public final class LicenseServlet extends SimpleWebConsolePlugin implements Osgi
         Util.sort( bundles, request.getLocale() );
 
         // prepare variables
-        final RequestVariableResolver vars = WebConsoleUtil.getRequestVariableResolver(request);
+        final RequestVariableResolver vars = this.getVariableResolver(request);
         vars.put( "__data__", getBundleData( bundles, request.getLocale() ));
 
         res.getWriter().print(TEMPLATE);

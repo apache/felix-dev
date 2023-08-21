@@ -30,8 +30,7 @@ import org.osgi.service.http.whiteboard.annotations.RequireHttpWhiteboard;
  * the Apache Web Console upon bundle lifecycle requests.
  */
 @RequireHttpWhiteboard
-public class OsgiManagerActivator implements BundleActivator
-{
+public class OsgiManagerActivator implements BundleActivator {
 
     private OsgiManager osgiManager;
 
@@ -42,42 +41,31 @@ public class OsgiManagerActivator implements BundleActivator
     /**
      * @see org.osgi.framework.BundleActivator#start(org.osgi.framework.BundleContext)
      */
-    public void start( final BundleContext bundleContext ) throws Exception
-    {
+    public void start( final BundleContext bundleContext ) throws Exception {
         osgiManager = new OsgiManager( bundleContext );
-        try
-        {
+        try {
             final Class<?> activatorClass = bundleContext.getBundle().loadClass(STATUS_ACTIVATOR);
             this.statusActivator = (BundleActivator) activatorClass.getDeclaredConstructor().newInstance();
-
-        }
-        catch (Throwable t)
-        {
+        } catch (Throwable t) {
             // we ignore this as the status activator is only available if the web console
             // bundle contains the status bundle.
         }
-        if ( this.statusActivator != null)
-        {
+        if ( this.statusActivator != null) {
             this.statusActivator.start(bundleContext);
         }
     }
 
-
     /**
      * @see org.osgi.framework.BundleActivator#stop(org.osgi.framework.BundleContext)
      */
-    public void stop( final BundleContext bundleContext ) throws Exception
-    {
-        if ( this.statusActivator != null)
-        {
+    public void stop( final BundleContext bundleContext ) throws Exception {
+        if ( this.statusActivator != null) {
             this.statusActivator.stop(bundleContext);
             this.statusActivator = null;
         }
 
-        if ( osgiManager != null )
-        {
+        if ( osgiManager != null ) {
             osgiManager.dispose();
         }
     }
-
 }

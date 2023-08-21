@@ -27,7 +27,6 @@ import javax.servlet.ServletRequest;
 import javax.servlet.http.HttpServletResponse;
 import javax.servlet.http.HttpServletResponseWrapper;
 
-import org.apache.felix.webconsole.WebConsoleUtil;
 import org.apache.felix.webconsole.servlet.RequestVariableResolver;
 
 
@@ -81,7 +80,7 @@ public class FilteringResponseWrapper extends HttpServletResponseWrapper {
         if ( writer == null ) {
             final PrintWriter base = super.getWriter();
             if ( doWrap() ) {
-                final RequestVariableResolver vars = WebConsoleUtil.getRequestVariableResolver(request);
+                final RequestVariableResolver vars = (RequestVariableResolver) request.getAttribute(RequestVariableResolver.REQUEST_ATTRIBUTE);
                 final ResourceFilteringWriter filter = new ResourceFilteringWriter( base, locale, vars );
                 writer = new PrintWriter( filter );
             } else {

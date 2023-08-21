@@ -52,13 +52,11 @@ import javax.servlet.http.HttpServletRequestWrapper;
 import javax.servlet.http.HttpServletResponse;
 
 import org.apache.felix.webconsole.AbstractWebConsolePlugin;
-import org.apache.felix.webconsole.BrandingPlugin;
 import org.apache.felix.webconsole.User;
 import org.apache.felix.webconsole.WebConsoleConstants;
 import org.apache.felix.webconsole.WebConsoleSecurityProvider;
 import org.apache.felix.webconsole.WebConsoleSecurityProvider2;
 import org.apache.felix.webconsole.WebConsoleSecurityProvider3;
-import org.apache.felix.webconsole.WebConsoleUtil;
 import org.apache.felix.webconsole.internal.OsgiManagerPlugin;
 import org.apache.felix.webconsole.internal.Util;
 import org.apache.felix.webconsole.internal.core.BundlesServlet;
@@ -66,9 +64,13 @@ import org.apache.felix.webconsole.internal.filter.FilteringResponseWrapper;
 import org.apache.felix.webconsole.internal.i18n.ResourceBundleManager;
 import org.apache.felix.webconsole.internal.servlet.Plugin.InternalPlugin;
 import org.apache.felix.webconsole.servlet.RequestVariableResolver;
+import org.apache.felix.webconsole.servlet.ServletConstants;
+import org.apache.felix.webconsole.spi.BrandingPlugin;
 import org.osgi.framework.Bundle;
 import org.osgi.framework.BundleContext;
 import org.osgi.framework.Constants;
+import org.osgi.framework.Filter;
+import org.osgi.framework.InvalidSyntaxException;
 import org.osgi.framework.ServiceFactory;
 import org.osgi.framework.ServiceReference;
 import org.osgi.framework.ServiceRegistration;
@@ -96,8 +98,7 @@ public class OsgiManager extends GenericServlet {
      * @deprecated use {@link WebConsoleConstants#ATTR_APP_ROOT} instead
      */
     @Deprecated
-    private static final String ATTR_APP_ROOT_OLD = OsgiManager.class.getName()
-        + ".appRoot";
+    private static final String ATTR_APP_ROOT_OLD = OsgiManager.class.getName() + ".appRoot";
 
     /**
      * Old name of the request attribute providing the mappings from label to
@@ -107,8 +108,7 @@ public class OsgiManager extends GenericServlet {
      * @deprecated use {@link WebConsoleConstants#ATTR_LABEL_MAP} instead
      */
     @Deprecated
-    private static final String ATTR_LABEL_MAP_OLD = OsgiManager.class.getName()
-        + ".labelMap";
+    private static final String ATTR_LABEL_MAP_OLD = OsgiManager.class.getName() + ".labelMap";
 
     /**
      * The name of the (internal) request attribute providing the categorized
@@ -127,49 +127,49 @@ public class OsgiManager extends GenericServlet {
      * The name of the cookie storing user-configured locale
      * See https://issues.apache.org/jira/browse/FELIX-2267
      */
-    private static final String COOKIE_LOCALE = "felix-webconsole-locale"; //$NON-NLS-1$
+    private static final String COOKIE_LOCALE = "felix-webconsole-locale";
 
-    private static final String FRAMEWORK_PROP_MANAGER_ROOT = "felix.webconsole.manager.root"; //$NON-NLS-1$
+    private static final String FRAMEWORK_PROP_MANAGER_ROOT = "felix.webconsole.manager.root";
 
-    private static final String FRAMEWORK_PROP_REALM = "felix.webconsole.realm"; //$NON-NLS-1$
+    private static final String FRAMEWORK_PROP_REALM = "felix.webconsole.realm";
 
-    private static final String FRAMEWORK_PROP_USER_NAME = "felix.webconsole.username"; //$NON-NLS-1$
+    private static final String FRAMEWORK_PROP_USER_NAME = "felix.webconsole.username";
 
-    private static final String FRAMEWORK_PROP_PASSWORD = "felix.webconsole.password"; //$NON-NLS-1$
+    private static final String FRAMEWORK_PROP_PASSWORD = "felix.webconsole.password";
 
-    private static final String FRAMEWORK_PROP_LOG_LEVEL = "felix.webconsole.loglevel"; //$NON-NLS-1$
+    private static final String FRAMEWORK_PROP_LOG_LEVEL = "felix.webconsole.loglevel";
 
-    private static final String FRAMEWORK_PROP_LOCALE = "felix.webconsole.locale"; //$NON-NLS-1$
+    private static final String FRAMEWORK_PROP_LOCALE = "felix.webconsole.locale";
 
-    private static final String FRAMEWORK_SHUTDOWN_TIMEOUT = "felix.webconsole.shutdown.timeout"; //$NON-NLS-1$
+    private static final String FRAMEWORK_SHUTDOWN_TIMEOUT = "felix.webconsole.shutdown.timeout";
 
-    private static final String FRAMEWORK_RELOAD_TIMEOUT = "felix.webconsole.reload.timeout"; //$NON-NLS-1$
+    private static final String FRAMEWORK_RELOAD_TIMEOUT = "felix.webconsole.reload.timeout";
 
-    static final String FRAMEWORK_PROP_SECURITY_PROVIDERS = "felix.webconsole.security.providers"; //$NON-NLS-1$
+    static final String FRAMEWORK_PROP_SECURITY_PROVIDERS = "felix.webconsole.security.providers";
 
-    static final String SECURITY_PROVIDER_PROPERTY_NAME = "webconsole.security.provider.id"; //$NON-NLS-1$
+    static final String SECURITY_PROVIDER_PROPERTY_NAME = "webconsole.security.provider.id";
 
-    static final String PROP_MANAGER_ROOT = "manager.root"; //$NON-NLS-1$
+    static final String PROP_MANAGER_ROOT = "manager.root";
 
-    static final String PROP_DEFAULT_RENDER = "default.render"; //$NON-NLS-1$
+    static final String PROP_DEFAULT_RENDER = "default.render";
 
-    static final String PROP_REALM = "realm"; //$NON-NLS-1$
+    static final String PROP_REALM = "realm";
 
-    static final String PROP_USER_NAME = "username"; //$NON-NLS-1$
+    static final String PROP_USER_NAME = "username";
 
-    static final String PROP_PASSWORD = "password"; //$NON-NLS-1$
+    static final String PROP_PASSWORD = "password";
 
-    static final String PROP_CATEGORY = "category"; //$NON-NLS-1$
+    static final String PROP_CATEGORY = "category";
 
-    static final String PROP_ENABLED_PLUGINS = "plugins"; //$NON-NLS-1$
+    static final String PROP_ENABLED_PLUGINS = "plugins";
 
-    static final String PROP_LOG_LEVEL = "loglevel"; //$NON-NLS-1$
+    static final String PROP_LOG_LEVEL = "loglevel";
 
-    static final String PROP_LOCALE = "locale"; //$NON-NLS-1$
+    static final String PROP_LOCALE = "locale";
 
-    static final String PROP_ENABLE_SECRET_HEURISTIC = "secret.heuristic.enabled"; //$NON-NLS-1$
+    static final String PROP_ENABLE_SECRET_HEURISTIC = "secret.heuristic.enabled";
 
-    static final String PROP_HTTP_SERVICE_SELECTOR = "http.service.filter"; //$NON-NLS-1$
+    static final String PROP_HTTP_SERVICE_SELECTOR = "http.service.filter";
     
     /** The framework shutdown timeout */
     public static final String PROP_SHUTDOWN_TIMEOUT = "shutdown.timeout";
@@ -181,53 +181,53 @@ public class OsgiManager extends GenericServlet {
 
     static final String DEFAULT_PAGE = BundlesServlet.NAME;
 
-    static final String DEFAULT_REALM = "OSGi Management Console"; //$NON-NLS-1$
+    static final String DEFAULT_REALM = "OSGi Management Console";
 
-    static final String DEFAULT_USER_NAME = "admin"; //$NON-NLS-1$
+    static final String DEFAULT_USER_NAME = "admin";
 
-    static final String DEFAULT_PASSWORD = "{sha-256}jGl25bVBBBW96Qi9Te4V37Fnqchz/Eu4qB9vKrRIqRg="; //$NON-NLS-1$
+    static final String DEFAULT_PASSWORD = "{sha-256}jGl25bVBBBW96Qi9Te4V37Fnqchz/Eu4qB9vKrRIqRg=";
 
-    static final String DEFAULT_CATEGORY = "Main"; //$NON-NLS-1$
+    static final String DEFAULT_CATEGORY = "Main";
 
-    static final int DEFAULT_SHUTDOWN_TIMEOUT = 5; //$NON-NLS-1$
+    static final int DEFAULT_SHUTDOWN_TIMEOUT = 5;
 
-    static final int DEFAULT_RELOAD_TIMEOUT = 40; //$NON-NLS-1$
+    static final int DEFAULT_RELOAD_TIMEOUT = 40;
 
     /** Default value for secret heuristics */
     public static final boolean DEFAULT_ENABLE_SECRET_HEURISTIC = false;
 
-    private static final String HEADER_AUTHORIZATION = "Authorization"; //$NON-NLS-1$
+    private static final String HEADER_AUTHORIZATION = "Authorization";
 
-    private static final String HEADER_WWW_AUTHENTICATE = "WWW-Authenticate"; //$NON-NLS-1$
+    private static final String HEADER_WWW_AUTHENTICATE = "WWW-Authenticate";
 
     /**
      * The default value for the {@link #PROP_MANAGER_ROOT} configuration
      * property (value is "/system/console").
      */
-    static final String DEFAULT_MANAGER_ROOT = "/system/console"; //$NON-NLS-1$
+    static final String DEFAULT_MANAGER_ROOT = "/system/console";
 
-    private static final String OLD_CONFIG_MANAGER_CLASS = "org.apache.felix.webconsole.internal.compendium.ConfigManager"; //$NON-NLS-1$
-    private static final String NEW_CONFIG_MANAGER_CLASS = "org.apache.felix.webconsole.internal.configuration.ConfigManager"; //$NON-NLS-1$
+    private static final String OLD_CONFIG_MANAGER_CLASS = "org.apache.felix.webconsole.internal.compendium.ConfigManager";
+    private static final String NEW_CONFIG_MANAGER_CLASS = "org.apache.felix.webconsole.internal.configuration.ConfigManager";
 
     static final String[] PLUGIN_CLASSES = {
-            "org.apache.felix.webconsole.internal.configuration.ConfigurationAdminConfigurationPrinter", //$NON-NLS-1$
-            "org.apache.felix.webconsole.internal.compendium.PreferencesConfigurationPrinter", //$NON-NLS-1$
-            "org.apache.felix.webconsole.internal.compendium.WireAdminConfigurationPrinter", //$NON-NLS-1$
-            "org.apache.felix.webconsole.internal.core.BundlesConfigurationPrinter", //$NON-NLS-1$
-            "org.apache.felix.webconsole.internal.core.CapabilitiesPrinter", //$NON-NLS-1$
-            "org.apache.felix.webconsole.internal.core.FrameworkPropertiesPrinter", //$NON-NLS-1$
-            "org.apache.felix.webconsole.internal.core.PermissionsConfigurationPrinter", //$NON-NLS-1$
-            "org.apache.felix.webconsole.internal.core.ServicesConfigurationPrinter", //$NON-NLS-1$
-            "org.apache.felix.webconsole.internal.misc.SystemPropertiesPrinter", //$NON-NLS-1$
-            "org.apache.felix.webconsole.internal.misc.ThreadPrinter", }; //$NON-NLS-1$
+            "org.apache.felix.webconsole.internal.configuration.ConfigurationAdminConfigurationPrinter",
+            "org.apache.felix.webconsole.internal.compendium.PreferencesConfigurationPrinter",
+            "org.apache.felix.webconsole.internal.compendium.WireAdminConfigurationPrinter",
+            "org.apache.felix.webconsole.internal.core.BundlesConfigurationPrinter",
+            "org.apache.felix.webconsole.internal.core.CapabilitiesPrinter",
+            "org.apache.felix.webconsole.internal.core.FrameworkPropertiesPrinter",
+            "org.apache.felix.webconsole.internal.core.PermissionsConfigurationPrinter",
+            "org.apache.felix.webconsole.internal.core.ServicesConfigurationPrinter",
+            "org.apache.felix.webconsole.internal.misc.SystemPropertiesPrinter",
+            "org.apache.felix.webconsole.internal.misc.ThreadPrinter", };
 
     static final String[] PLUGIN_MAP = {
-            NEW_CONFIG_MANAGER_CLASS, "configMgr", //$NON-NLS-1$ //$NON-NLS-2$
-            "org.apache.felix.webconsole.internal.compendium.LogServlet", "logs", //$NON-NLS-1$ //$NON-NLS-2$
-            "org.apache.felix.webconsole.internal.core.BundlesServlet", "bundles", //$NON-NLS-1$ //$NON-NLS-2$
-            "org.apache.felix.webconsole.internal.core.ServicesServlet", "services", //$NON-NLS-1$ //$NON-NLS-2$
-            "org.apache.felix.webconsole.internal.misc.LicenseServlet", "licenses", //$NON-NLS-1$ //$NON-NLS-2$
-            "org.apache.felix.webconsole.internal.system.VMStatPlugin", "vmstat", //$NON-NLS-1$ //$NON-NLS-2$
+            NEW_CONFIG_MANAGER_CLASS, "configMgr",
+            "org.apache.felix.webconsole.internal.compendium.LogServlet", "logs",
+            "org.apache.felix.webconsole.internal.core.BundlesServlet", "bundles",
+            "org.apache.felix.webconsole.internal.core.ServicesServlet", "services",
+            "org.apache.felix.webconsole.internal.misc.LicenseServlet", "licenses",
+            "org.apache.felix.webconsole.internal.system.VMStatPlugin", "vmstat",
     };
 
     private static final String SERVLEXT_CONTEXT_NAME = "org.apache.felix.webconsole";
@@ -296,28 +296,19 @@ public class OsgiManager extends GenericServlet {
 
         // setup the included plugins
         ClassLoader classLoader = getClass().getClassLoader();
-        for (int i = 0; i < PLUGIN_CLASSES.length; i++)
-        {
-            String pluginClassName = PLUGIN_CLASSES[i];
+        for (int i = 0; i < PLUGIN_CLASSES.length; i++) {
+            final String pluginClassName = PLUGIN_CLASSES[i];
 
-            try
-            {
+            try {
                 final Class<?> pluginClass = classLoader.loadClass(pluginClassName);
                 final Object plugin = pluginClass.getDeclaredConstructor().newInstance();
 
-                if (plugin instanceof OsgiManagerPlugin)
-                {
+                if (plugin instanceof OsgiManagerPlugin) {
                     final OsgiManagerPlugin p = (OsgiManagerPlugin)plugin;
                     p.activate(bundleContext);
                     osgiManagerPlugins.add(p);
                 }
-                if (plugin instanceof BrandingPlugin)
-                {
-                    AbstractWebConsolePlugin.setBrandingPlugin((BrandingPlugin) plugin);
-                }
-            }
-            catch (NoClassDefFoundError ncdfe)
-            {
+            } catch (NoClassDefFoundError ncdfe) {
                 String message = ncdfe.getMessage();
                 if (message == null)
                 {
@@ -379,7 +370,7 @@ public class OsgiManager extends GenericServlet {
         updateConfiguration(null);
 
         // register managed service as a service factory
-        this.configurationListener = bundleContext.registerService( "org.osgi.service.cm.ManagedService", //$NON-NLS-1$
+        this.configurationListener = bundleContext.registerService( "org.osgi.service.cm.ManagedService",
             new ServiceFactory()
             {
                 @Override
@@ -414,8 +405,8 @@ public class OsgiManager extends GenericServlet {
             }, new Hashtable<String, Object>()
             {
                 {
-                    put( Constants.SERVICE_VENDOR, "The Apache Software Foundation" ); //$NON-NLS-1$
-                    put( Constants.SERVICE_DESCRIPTION, "OSGi Management Console Configuration Receiver" ); //$NON-NLS-1$
+                    put( Constants.SERVICE_VENDOR, "The Apache Software Foundation" );
+                    put( Constants.SERVICE_DESCRIPTION, "OSGi Management Console Configuration Receiver" );
                     put( Constants.SERVICE_PID, getConfigurationPid() );
                 }
             } );
@@ -579,7 +570,7 @@ public class OsgiManager extends GenericServlet {
             return;
         }
 
-        int slash = pathInfo.indexOf("/", 1); //$NON-NLS-1$
+        int slash = pathInfo.indexOf("/", 1);
         if (slash < 2)
         {
             slash = pathInfo.length();
@@ -593,11 +584,11 @@ public class OsgiManager extends GenericServlet {
         {
             final String body404 = MessageFormat.format(
                 resourceBundleManager.getResourceBundle(bundleContext.getBundle(), locale).getString(
-                    "404"), //$NON-NLS-1$
+                    "404"),
                 new Object[] { request.getContextPath() + request.getServletPath() + '/'
                     + BundlesServlet.NAME });
-            response.setCharacterEncoding("utf-8"); //$NON-NLS-1$
-            response.setContentType("text/html"); //$NON-NLS-1$
+            response.setCharacterEncoding("utf-8");
+            response.setContentType("text/html");
             response.setStatus(HttpServletResponse.SC_NOT_FOUND);
             response.getWriter().println(body404);
 
@@ -612,16 +603,14 @@ public class OsgiManager extends GenericServlet {
         request.setAttribute(WebConsoleConstants.ATTR_LANG_MAP, getLangMap());
         request.setAttribute(WebConsoleConstants.ATTR_LABEL_MAP, flatLabelMap);
         request.setAttribute( ATTR_LABEL_MAP_CATEGORIZED, labelMap );
-        request.setAttribute(WebConsoleConstants.ATTR_APP_ROOT,
-            request.getContextPath() + request.getServletPath());
-        request.setAttribute(WebConsoleConstants.ATTR_PLUGIN_ROOT,
-            request.getContextPath() + request.getServletPath() + '/' + label);
-        request.setAttribute(WebConsoleConstants.ATTR_CONFIGURATION, configuration);
+        final String appRoot = request.getContextPath().concat(request.getServletPath());
+        request.setAttribute(ServletConstants.ATTR_APP_ROOT, appRoot);
+        request.setAttribute(ServletConstants.ATTR_PLUGIN_ROOT, appRoot.concat("/").concat(label));
+        request.setAttribute(ServletConstants.ATTR_CONFIGURATION, configuration);
 
         // deprecated request attributes
         request.setAttribute(ATTR_LABEL_MAP_OLD, flatLabelMap);
-        request.setAttribute(ATTR_APP_ROOT_OLD,
-            request.getContextPath() + request.getServletPath());
+        request.setAttribute(ATTR_APP_ROOT_OLD, appRoot);
 
         // fix for https://issues.apache.org/jira/browse/FELIX-3408
         ensureLocaleCookieSet(request, response, locale);
@@ -639,8 +628,8 @@ public class OsgiManager extends GenericServlet {
     private void initRequestVariableResolver(final HttpServletRequest request) {
         final RequestVariableResolver resolver = new RequestVariableResolver();
         request.setAttribute(RequestVariableResolver.REQUEST_ATTRIBUTE, resolver);
-        resolver.put( "appRoot", (String) request.getAttribute( WebConsoleConstants.ATTR_APP_ROOT ) );
-        resolver.put( "pluginRoot", (String) request.getAttribute( WebConsoleConstants.ATTR_PLUGIN_ROOT ) );
+        resolver.put( RequestVariableResolver.KEY_APP_ROOT, (String) request.getAttribute( ServletConstants.ATTR_APP_ROOT ) );
+        resolver.put( RequestVariableResolver.KEY_PLUGIN_ROOT, (String) request.getAttribute( ServletConstants.ATTR_PLUGIN_ROOT ) );
     }
 
     private final void logout(HttpServletRequest request, HttpServletResponse response)
@@ -697,7 +686,7 @@ public class OsgiManager extends GenericServlet {
     {
         // backwards compatibility for the former "install" action which is
         // used by the Maven Sling Plugin
-        if ("install".equals(label)) //$NON-NLS-1$
+        if ("install".equals(label))
         {
             return holder.getPlugin(BundlesServlet.NAME);
         }
@@ -871,24 +860,37 @@ public class OsgiManager extends GenericServlet {
         return new FilteringResponseWrapper(response, resourceBundle, request);
     }
 
-    private static class BrandingServiceTracker extends ServiceTracker<BrandingPlugin, BrandingPlugin>
-    {
-        BrandingServiceTracker(OsgiManager osgiManager)
-        {
-            super(osgiManager.getBundleContext(), BrandingPlugin.class, null);
+    @SuppressWarnings("deprecation")
+    private static class BrandingServiceTracker extends ServiceTracker<BrandingPlugin, BrandingPlugin> {
+
+        private static Filter createFilter(final BundleContext context) {
+            try {
+                final Filter filter = context.createFilter("(|(" + Constants.OBJECTCLASS + "="
+                        + BrandingPlugin.class.getName() + ")" + "(" + Constants.OBJECTCLASS + "=" + org.apache.felix.webconsole.BrandingPlugin.class.getName() + "))");
+                return filter;
+            } catch (final InvalidSyntaxException e) {
+                // fail loud and clear
+                throw new InternalError(e);
+            }
+        }
+
+        public BrandingServiceTracker(final OsgiManager osgiManager) {
+            super(osgiManager.getBundleContext(), createFilter(osgiManager.getBundleContext()), null);
         }
 
         @Override
-        public BrandingPlugin addingService(ServiceReference<BrandingPlugin> reference)
-        {
-            BrandingPlugin plugin = super.addingService(reference);
-            AbstractWebConsolePlugin.setBrandingPlugin( plugin);
+        public BrandingPlugin addingService(ServiceReference<BrandingPlugin> reference) {
+            final BrandingPlugin plugin = super.addingService(reference);
+            if (plugin instanceof org.apache.felix.webconsole.BrandingPlugin) {
+                AbstractWebConsolePlugin.setBrandingPlugin((org.apache.felix.webconsole.BrandingPlugin)plugin);
+            } else {
+                AbstractWebConsolePlugin.setBrandingPlugin(new BrandingPluginAdapter(plugin));
+            }
             return plugin;
         }
 
         @Override
-        public void removedService(ServiceReference<BrandingPlugin> reference, BrandingPlugin service)
-        {
+        public void removedService(ServiceReference<BrandingPlugin> reference, BrandingPlugin service) {
             AbstractWebConsolePlugin.setBrandingPlugin(null);
             try {
                 super.removedService(reference, service);
@@ -896,7 +898,61 @@ public class OsgiManager extends GenericServlet {
                 // ignore this as the service is already invalid
             }
         }
+    }
 
+    @SuppressWarnings("deprecation")
+    private static class BrandingPluginAdapter implements org.apache.felix.webconsole.BrandingPlugin {
+
+        private final BrandingPlugin p;
+
+        public BrandingPluginAdapter(final BrandingPlugin p) {
+            this.p = p;
+        }
+
+        @Override
+        public String getBrandName() {
+            return p.getBrandName();
+        }
+
+        @Override
+        public String getFavIcon() {
+            return p.getFavIcon();
+        }
+
+        @Override
+        public String getMainStyleSheet() {
+            return p.getMainStyleSheet();
+        }
+
+        @Override
+        public String getProductImage() {
+            return p.getProductImage();
+        }
+
+        @Override
+        public String getProductName() {
+            return p.getProductName();
+        }
+
+        @Override
+        public String getProductURL() {
+            return p.getProductURL();
+        }
+
+        @Override
+        public String getVendorImage() {
+            return p.getVendorImage();
+        }
+
+        @Override
+        public String getVendorName() {
+            return p.getVendorName();
+        }
+
+        @Override
+        public String getVendorURL() {
+            return p.getVendorURL();
+        }
     }
 
     synchronized void registerHttpWhiteboardServices() {
@@ -1018,8 +1074,8 @@ public class OsgiManager extends GenericServlet {
 
         // get the web manager root path
         String newWebManagerRoot = ConfigurationUtil.getProperty(config, PROP_MANAGER_ROOT, DEFAULT_MANAGER_ROOT);
-        if (!newWebManagerRoot.startsWith("/")) { //$NON-NLS-1$
-            newWebManagerRoot = "/".concat(newWebManagerRoot); //$NON-NLS-1$
+        if (!newWebManagerRoot.startsWith("/")) {
+            newWebManagerRoot = "/".concat(newWebManagerRoot);
         }
 
         // default category
@@ -1106,7 +1162,7 @@ public class OsgiManager extends GenericServlet {
             return langMap;
         final Map<String, String> map = new HashMap<>();
         final Bundle bundle = bundleContext.getBundle();
-        final Enumeration<URL> e = bundle.findEntries("res/flags", null, false); //$NON-NLS-1$
+        final Enumeration<URL> e = bundle.findEntries("res/flags", null, false);
         while (e != null && e.hasMoreElements())
         {
             final URL img = e.nextElement();
@@ -1115,7 +1171,7 @@ public class OsgiManager extends GenericServlet {
                 final int lastSlash = path.lastIndexOf('/');
                 final int dot = path.indexOf('.', lastSlash);
                 final String name = (dot == -1 ? path.substring(lastSlash+1) : path.substring(lastSlash + 1, dot));
-                final String locale = new Locale(name, "").getDisplayLanguage(); //$NON-NLS-1$
+                final String locale = new Locale(name, "").getDisplayLanguage();
                 map.put(name, null != locale ? locale : name);
             }
             catch (Throwable t) {

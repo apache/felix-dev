@@ -72,4 +72,26 @@ public abstract class ServletConstants {
      * The type of this request attribute is <code>String</code>.
      */
     public static final String ATTR_APP_ROOT = "felix.webconsole.appRoot";
+
+    /**
+     * The name of the request attribute providing the absolute path of the
+     * current plugin (value is "felix.webconsole.pluginRoot"). This consists of
+     * the servlet context path (from <code>ServletRequest.getContextPath()</code>),
+     * the configured path of the web console root (<code>/system/console</code>
+     * by default) and the plugin label {@link #PLUGIN_LABEL}.
+     * <p>
+     * The type of this request attribute is <code>String</code>.
+     */
+    public static final String ATTR_PLUGIN_ROOT = "felix.webconsole.pluginRoot";
+
+    /**
+     * The name of the request attribute holding the configuration params {@link java.util.Map}
+     * for the request (value is "felix.webconsole.configuration").
+     * <p>
+     * The type of this request attribute is <code>Map&lt;String, Object&gt;</code>.
+     * <p>
+     * This map contains the web console configuration params managed by the web console.
+     * It can be used to access to the configuration values while processing requests.
+     */
+    public static final String ATTR_CONFIGURATION = "felix.webconsole.configuration";
 }

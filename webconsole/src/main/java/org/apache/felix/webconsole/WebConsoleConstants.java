@@ -24,14 +24,13 @@ import org.apache.felix.webconsole.servlet.RequestVariableResolver;
  * WebConsoleConstants provides some common constants that are used by plugin
  * developers.
  */
-public interface WebConsoleConstants
-{
+public interface WebConsoleConstants {
 
     /**
      * The name of the service to register as to be used as a "plugin" for
      * the OSGi Manager (value is "javax.servlet.Servlet").
      */
-    public static final String SERVICE_NAME = "javax.servlet.Servlet"; //$NON-NLS-1$
+    public static final String SERVICE_NAME = "javax.servlet.Servlet";
 
     /**
      * The URI address label under which the OSGi Manager plugin is called by
@@ -41,7 +40,7 @@ public interface WebConsoleConstants
      * String value. Otherwise the {@link #SERVICE_NAME Servlet} services will
      * be ignored by the Felix Web Console and not be used as a plugin.
      */
-    public static final String PLUGIN_LABEL = "felix.webconsole.label"; //$NON-NLS-1$
+    public static final String PLUGIN_LABEL = "felix.webconsole.label";
 
     /**
      * The title under which the OSGi Manager plugin is called by
@@ -60,7 +59,7 @@ public interface WebConsoleConstants
      *
      * @since 2.0.0
      */
-    public static final String PLUGIN_TITLE = "felix.webconsole.title"; //$NON-NLS-1$
+    public static final String PLUGIN_TITLE = "felix.webconsole.title";
 
     /**
      * The category under which the OSGi Manager plugin is listed in the top
@@ -81,7 +80,7 @@ public interface WebConsoleConstants
      *
      * @since 3.1.3; Web Console Bundle 4.0.2
      */
-    public static final String PLUGIN_CATEGORY = "felix.webconsole.category"; //$NON-NLS-1$
+    public static final String PLUGIN_CATEGORY = "felix.webconsole.category";
 
     /**
      * The property marking a service as a configuration printer.
@@ -94,8 +93,10 @@ public interface WebConsoleConstants
      * this property, it is treated as a configuration printer service.
      *
      * @since 3.1.2; Web Console Bundle 3.1.4
+     * @deprecated Use the Apache Felix Inventory API
      */
-    public static final String CONFIG_PRINTER_MODES = "felix.webconsole.configprinter.modes"; //$NON-NLS-1$
+    @Deprecated
+    public static final String CONFIG_PRINTER_MODES = "felix.webconsole.configprinter.modes";
 
     /**
      * Name of the optional service registration property indicating that a
@@ -106,8 +107,10 @@ public interface WebConsoleConstants
      * mode is escaped for plain text use.
      *
      * @since 3.1.2; Web Console Bundle 3.1.4
+     * @deprecated Use the Apache Felix Inventory API
      */
-    public static final String CONFIG_PRINTER_WEB_UNESCAPED = "felix.webconsole.configprinter.web.unescaped"; //$NON-NLS-1$
+    @Deprecated
+    public static final String CONFIG_PRINTER_WEB_UNESCAPED = "felix.webconsole.configprinter.web.unescaped";
 
     /**
      * The name of the service registration properties providing references
@@ -126,7 +129,7 @@ public interface WebConsoleConstants
      *
      * @since 2.0.0
      */
-    public static final String PLUGIN_CSS_REFERENCES = "felix.webconsole.css"; //$NON-NLS-1$
+    public static final String PLUGIN_CSS_REFERENCES = "felix.webconsole.css";
 
     /**
      * The name of the request attribute providing the absolute path of the
@@ -140,7 +143,7 @@ public interface WebConsoleConstants
      *
      * @since 2.0.0
      */
-    public static final String ATTR_APP_ROOT = "felix.webconsole.appRoot"; //$NON-NLS-1$
+    public static final String ATTR_APP_ROOT = "felix.webconsole.appRoot";
 
     /**
      * The name of the request attribute providing the absolute path of the
@@ -153,7 +156,7 @@ public interface WebConsoleConstants
      *
      * @since 1.2.12
      */
-    public static final String ATTR_PLUGIN_ROOT = "felix.webconsole.pluginRoot"; //$NON-NLS-1$
+    public static final String ATTR_PLUGIN_ROOT = "felix.webconsole.pluginRoot";
 
     /**
      * The name of the request attribute providing a mapping of labels to page
@@ -165,8 +168,10 @@ public interface WebConsoleConstants
      * The type of this request attribute is <code>Map&lt;String, String&gt;</code>.
      *
      * @since 2.0.0
+     * @deprecated Plugins should never create a navigation themselves
      */
-    public static final String ATTR_LABEL_MAP = "felix.webconsole.labelMap"; //$NON-NLS-1$
+    @Deprecated
+    public static final String ATTR_LABEL_MAP = "felix.webconsole.labelMap";
 
     /**
      * The name of the request attribute holding the {@link VariableResolver}
@@ -198,8 +203,10 @@ public interface WebConsoleConstants
      * renamed to the correct locale.
      *
      * @since 3.1.2
+     * @deprecated Plugins should never create a navigation themselves
      */
-    public static final String ATTR_LANG_MAP = "felix.webconsole.langMap"; //$NON-NLS-1$
+    @Deprecated
+    public static final String ATTR_LANG_MAP = "felix.webconsole.langMap";
     
     /**
      * The name of the request attribute holding the configuration params {@link java.util.Map}

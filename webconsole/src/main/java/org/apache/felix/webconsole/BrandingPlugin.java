@@ -25,86 +25,11 @@ import org.osgi.annotation.versioning.ConsumerType;
  * elaborate way of branding the web console.
  *
  * @see DefaultBrandingPlugin
+ * @deprecated Use {@link org.apache.felix.webconsole.spi.BrandingPlugin} instead.
  */
 @ConsumerType
-public interface BrandingPlugin {
-    /**
-     * Returns an indicative name of the branding plugin. This value is used
-     * as the Window/Page title together with the title of the respective
-     * plugin.
-     * 
-     * @return the name of the branding plugin
-     */
-    String getBrandName();
+@Deprecated
+public interface BrandingPlugin extends org.apache.felix.webconsole.spi.BrandingPlugin {
 
-
-    /**
-     * Returns the name of the product in which the web console is contained
-     * and to which the web console is branded.
-     *
-     * @return the product name
-     */
-    String getProductName();
-
-
-    /**
-     * Returns an (absolute) URL to a web site representing the product to
-     * which the web console is branded.
-     *
-     * @return the product URL
-     */
-    String getProductURL();
-
-
-    /**
-     * Returns an absolute path to an image to be rendered as the logo of the
-     * branding product.
-     *
-     * @return a path to an image - usually the product logo
-     */
-    String getProductImage();
-
-
-    /**
-     * Returns the name of the branding product vendor.
-     *
-     * @return the product vendor
-     */
-    String getVendorName();
-
-
-    /**
-     * Returns an (absolute) URL to the web site of the branding product
-     * vendor.
-     *
-     * @return the URL of the product vendor
-     */
-    String getVendorURL();
-
-
-    /**
-     * Returns an absolute path to an image to be rendered as the logo of the
-     * branding product vendor.
-     *
-     * @return the company logo
-     */
-    String getVendorImage();
-
-
-    /**
-     * Returns the absolute path to an icon to be used as the web console
-     * "favicon".
-     *
-     * @return path to an image, that is shown as favorite icon in the web browser
-     */
-    String getFavIcon();
-
-
-    /**
-     * Returns the absolute path to a CSS file to be used as the main CSS for
-     * the basic admin site.
-     *
-     * @return a path to a custom CSS. Used to override the default web console styling
-     */
-    String getMainStyleSheet();
+    // for compatibility
 }

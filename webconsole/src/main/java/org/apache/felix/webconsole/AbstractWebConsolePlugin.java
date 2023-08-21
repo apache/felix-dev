@@ -40,6 +40,7 @@ import java.util.TreeMap;
 import javax.servlet.ServletConfig;
 import javax.servlet.ServletContext;
 import javax.servlet.ServletException;
+import javax.servlet.ServletRequest;
 import javax.servlet.http.HttpServlet;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
@@ -134,9 +135,9 @@ public abstract class AbstractWebConsolePlugin extends HttpServlet {
 
     private BundleContext bundleContext;
 
-    private static BrandingPlugin brandingPlugin = DefaultBrandingPlugin.getInstance();
+    private static volatile BrandingPlugin brandingPlugin = DefaultBrandingPlugin.getInstance();
 
-    private static int logLevel;
+    private static volatile int logLevel;
 
 
     //---------- HttpServlet Overwrites ----------------------------------------
@@ -647,7 +648,7 @@ public abstract class AbstractWebConsolePlugin extends HttpServlet {
             title = "${" + title.substring( 1 ) + "}";
         }
 
-        final RequestVariableResolver r = WebConsoleUtil.getRequestVariableResolver(request);
+        final RequestVariableResolver r = this.getVariableResolver(request);
         r.put("head.title", title);
         r.put("head.label", getLabel());
         r.put("head.cssLinks", getCssLinks(appRoot));
@@ -843,7 +844,9 @@ public abstract class AbstractWebConsolePlugin extends HttpServlet {
      * branding.
      *
      * @return the brandingPlugin
+     * @deprecated
      */
+    @Deprecated
     public static BrandingPlugin getBrandingPlugin() {
         return AbstractWebConsolePlugin.brandingPlugin;
     }
@@ -856,7 +859,9 @@ public abstract class AbstractWebConsolePlugin extends HttpServlet {
      * to update the branding plugin to use.
      *
      * @param brandingPlugin the brandingPlugin to set
+     * @deprecated
      */
+    @Deprecated
     public static final void setBrandingPlugin(BrandingPlugin brandingPlugin) {
         if(brandingPlugin == null){
             AbstractWebConsolePlugin.brandingPlugin = DefaultBrandingPlugin.getInstance();
@@ -864,7 +869,6 @@ public abstract class AbstractWebConsolePlugin extends HttpServlet {
             AbstractWebConsolePlugin.brandingPlugin = brandingPlugin;
         }
     }
-
 
     /**
      * Sets the log level to be applied for calls to the {@link #log(int, String)}
@@ -876,14 +880,11 @@ public abstract class AbstractWebConsolePlugin extends HttpServlet {
      * @param logLevel the maximum allowed log level. If message is logged with
      *        lower level it will not be forwarded to the logger.
      */
-    public static final void setLogLevel( int logLevel )
-    {
+    public static final void setLogLevel( int logLevel ) {
         AbstractWebConsolePlugin.logLevel = logLevel;
     }
 
-
-    private final String getHeader()
-    {
+    private final String getHeader() {
         // MessageFormat pattern place holder
         //  0 main title (brand name)
         //  1 console plugin title
@@ -1053,6 +1054,27 @@ public abstract class AbstractWebConsolePlugin extends HttpServlet {
 
         }
         return sortedMap;
+    }
+
+        /**
+     * Returns the {@link RequestVariableResolver} for the given request.
+     * <p>
+     * The resolver is added to the request attributes via the web console main
+     * servlet before it invokes any plugins.
+     * The preset properties are
+     * <code>appRoot</code> set to the value of the
+     * {@link WebConsoleConstants#ATTR_APP_ROOT} request attribute and
+     * <code>pluginRoot</code> set to the value of the
+     * {@link WebConsoleConstants#ATTR_PLUGIN_ROOT} request attribute.
+     * <p>
+     *
+     * @param request The request whose attribute is returned 
+     *
+     * @return The {@link RequestVariableResolver} for the given request.
+     * @since 3.5.0
+     */
+    public RequestVariableResolver getVariableResolver( final ServletRequest request) {
+        return (RequestVariableResolver) request.getAttribute( RequestVariableResolver.REQUEST_ATTRIBUTE );
     }
 
     @SuppressWarnings({ "rawtypes" })
