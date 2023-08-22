@@ -16,23 +16,37 @@
  * specific language governing permissions and limitations
  * under the License.
  */
-package org.apache.felix.webconsole;
+package org.apache.felix.webconsole.servlet;
 
 import org.osgi.annotation.versioning.ProviderType;
 
 /**
  * Representation of a user.
  * The user object can be used by plugins to {@link #authorize(String)} the user.
- * @since 3.4.0
- * @deprecated Use {@link org.apache.felix.webconsole.servlet.User} instead
  */
 @ProviderType
-@Deprecated
-public interface User extends org.apache.felix.webconsole.servlet.User {
+public interface User {
     
     /**
      * The name of the request attribute providing an object of this class
      */
     String USER_ATTRIBUTE = User.class.getName();
 
+    /**
+     * Return the user object.
+     * This method might return {@code null} if no web console security provider is configured and
+     * access to the console is allowed without authentication.
+     * This is the same value as the request attribute from {@link WebConsoleSecurityProvider2#USER_ATTRIBUTE}.
+     * @return The user object or {@code null}
+     */
+    Object getUserObject();
+
+
+    /**
+     * Checks whether the user has the given role permission.
+     *
+     * @param role The requested role
+     * @return {@code true} if the user is given permission for the given role.
+     */
+    boolean authorize( String role );
 }

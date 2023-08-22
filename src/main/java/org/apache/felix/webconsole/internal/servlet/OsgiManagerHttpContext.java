@@ -28,7 +28,7 @@ import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletRequestWrapper;
 import javax.servlet.http.HttpServletResponse;
 
-import org.apache.felix.webconsole.User;
+import org.apache.felix.webconsole.servlet.User;
 import org.apache.felix.webconsole.WebConsoleSecurityProvider;
 import org.apache.felix.webconsole.WebConsoleSecurityProvider2;
 import org.osgi.framework.Bundle;
@@ -93,7 +93,7 @@ final class OsgiManagerHttpContext extends ServletContextHelper {
         }
 
         if ( result ) {
-            request.setAttribute(User.USER_ATTRIBUTE, new User(){
+            request.setAttribute(User.USER_ATTRIBUTE, new org.apache.felix.webconsole.User(){
 
 				@Override
 				public boolean authorize(String role) {
@@ -106,7 +106,7 @@ final class OsgiManagerHttpContext extends ServletContextHelper {
                         // no provider, allow (compatibility)
                         return true;
                     }
-					return provider.authorize(this.getUserObject(), role);
+					return provider.authorize(user, role);
 				}
 
 				@Override
@@ -115,6 +115,7 @@ final class OsgiManagerHttpContext extends ServletContextHelper {
 				}
                 
             });
+            request.setAttribute(org.apache.felix.webconsole.User.USER_ATTRIBUTE, request.getAttribute(User.USER_ATTRIBUTE));
         }
         return result;
     }
