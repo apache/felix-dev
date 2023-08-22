@@ -52,7 +52,7 @@ import javax.servlet.http.HttpServletRequestWrapper;
 import javax.servlet.http.HttpServletResponse;
 
 import org.apache.felix.webconsole.AbstractWebConsolePlugin;
-import org.apache.felix.webconsole.User;
+import org.apache.felix.webconsole.servlet.User;
 import org.apache.felix.webconsole.WebConsoleConstants;
 import org.apache.felix.webconsole.WebConsoleSecurityProvider;
 import org.apache.felix.webconsole.WebConsoleSecurityProvider2;
@@ -113,7 +113,9 @@ public class OsgiManager extends GenericServlet {
     /**
      * The name of the (internal) request attribute providing the categorized
      * label map structure.
+     * @deprecated use {@link WebConsoleConstants#ATTR_LABEL_MAP_CATEGORIZED} instead
      */
+    @Deprecated
     public static final String ATTR_LABEL_MAP_CATEGORIZED = WebConsoleConstants.ATTR_LABEL_MAP + ".categorized";
 
     /**
@@ -484,13 +486,9 @@ public class OsgiManager extends GenericServlet {
 
     }
 
-    /**
-     * @see javax.servlet.GenericServlet#service(javax.servlet.ServletRequest, javax.servlet.ServletResponse)
-     */
     @Override
     public void service(final ServletRequest req, final ServletResponse res)
-        throws ServletException, IOException
-    {
+    throws ServletException, IOException {
         // don't really expect to be called within a non-HTTP environment
         try
         {
@@ -597,7 +595,7 @@ public class OsgiManager extends GenericServlet {
 
         @SuppressWarnings("rawtypes")
         final Map labelMap = holder.getLocalizedLabelMap( resourceBundleManager, locale, this.defaultCategory );
-        final Object flatLabelMap = labelMap.remove( WebConsoleConstants.ATTR_LABEL_MAP );
+        final Object flatLabelMap = labelMap.remove( PluginHolder.ATTR_FLAT_LABEL_MAP );
 
         // the official request attributes
         request.setAttribute(WebConsoleConstants.ATTR_LANG_MAP, getLangMap());
@@ -680,6 +678,7 @@ public class OsgiManager extends GenericServlet {
         request.removeAttribute(ServletContextHelper.AUTHORIZATION);
         request.removeAttribute(WebConsoleSecurityProvider2.USER_ATTRIBUTE);
         request.removeAttribute(User.USER_ATTRIBUTE);
+        request.removeAttribute(org.apache.felix.webconsole.User.USER_ATTRIBUTE);
     }
 
     private final AbstractWebConsolePlugin getConsolePlugin(final String label)

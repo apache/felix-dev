@@ -20,8 +20,6 @@ package org.apache.felix.webconsole.servlet;
 
 import java.util.HashMap;
 
-import jakarta.servlet.ServletRequest;
-
 /**
  * The <code>RequestVariableResolver</code> is a <code>HashMap</code> that
  * is used by the webconsole to process variables in the template.
@@ -73,19 +71,5 @@ public class RequestVariableResolver extends HashMap<String, Object> {
             return value.toString();
         }
         return null;
-    }
-
-    /**
-     * Returns the {@link RequestVariableResolver} for the given request.
-     * <p>
-     * The resolver is added to the request attributes via the web console main
-     * servlet before it invokes any plugins.
-     * @param request The request
-     * @return The {@link RequestVariableResolver} for the given request.
-     * @see #KEY_APP_ROOT
-     * @see #KEY_PLUGIN_ROOT
-     */
-    public static RequestVariableResolver getRequestVariableResolver( final ServletRequest request) {
-        return (RequestVariableResolver) request.getAttribute( RequestVariableResolver.REQUEST_ATTRIBUTE );
     }
 }

@@ -53,6 +53,8 @@ import org.osgi.util.tracker.ServiceTrackerCustomizer;
  */
 class PluginHolder implements ServiceTrackerCustomizer<Servlet, Plugin> {
 
+    public static final String ATTR_FLAT_LABEL_MAP = PluginHolder.class.getName() + ".flatLabelMap";
+
     private final OsgiManager osgiManager;
 
     // The Web Console's bundle context to access the plugin services
@@ -265,7 +267,7 @@ class PluginHolder implements ServiceTrackerCustomizer<Servlet, Plugin> {
         }
 
         // flat map of labels to titles (FELIX-3833)
-        map.put( WebConsoleConstants.ATTR_LABEL_MAP, flatMap );
+        map.put( ATTR_FLAT_LABEL_MAP, flatMap );
 
         return map;
     }
