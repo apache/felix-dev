@@ -24,17 +24,22 @@ package org.apache.felix.webconsole.plugins.gogo.impl;
 
 import java.io.IOException;
 import java.io.PrintWriter;
+import java.util.Dictionary;
+import java.util.Hashtable;
 import java.util.zip.GZIPOutputStream;
 
-import javax.servlet.http.HttpServletRequest;
-import javax.servlet.http.HttpServletResponse;
-import org.apache.felix.webconsole.SimpleWebConsolePlugin;
+import jakarta.servlet.Servlet;
+import jakarta.servlet.http.HttpServletRequest;
+import jakarta.servlet.http.HttpServletResponse;
+import org.apache.felix.webconsole.servlet.AbstractServlet;
+import org.apache.felix.webconsole.servlet.ServletConstants;
 import org.osgi.framework.BundleContext;
+import org.osgi.framework.ServiceRegistration;
 
 /**
  * The <code>GogoPlugin</code>
  */
-public class GogoPlugin extends SimpleWebConsolePlugin {
+public class GogoPlugin extends AbstractServlet {
 
     /** Pseudo class version ID to keep the IDE quite. */
     private static final long serialVersionUID = 1L;
@@ -52,26 +57,18 @@ public class GogoPlugin extends SimpleWebConsolePlugin {
     private final SessionTerminalManager terminalManager;
 
     public GogoPlugin(final SessionTerminalManager terminalManager) {
-        super(LABEL, TITLE, null);
         this.terminalManager = terminalManager;
     }
 
-    @Override
-    public void activate(BundleContext bundleContext) {
-        super.activate(bundleContext);
+    public ServiceRegistration<Servlet> register(final BundleContext bundleContext) {
+        final Dictionary<String, Object> props = new Hashtable<>();
+        props.put(ServletConstants.PLUGIN_LABEL, LABEL); 
+        props.put(ServletConstants.PLUGIN_TITLE, TITLE);
+        props.put(ServletConstants.PLUGIN_CATEGORY, CATEGORY);
+        return bundleContext.registerService(Servlet.class, this, props);
     }
 
-    @Override
-    public void deactivate() {
-        super.deactivate();
-    }
-
-    public String getCategory()
-    {
-        return CATEGORY;
-    }
-
-    protected void renderContent(HttpServletRequest request, HttpServletResponse response) throws IOException {
+    public void renderContent(HttpServletRequest request, HttpServletResponse response) throws IOException {
         PrintWriter pw = response.getWriter();
 
         String appRoot = request.getContextPath() + request.getServletPath();

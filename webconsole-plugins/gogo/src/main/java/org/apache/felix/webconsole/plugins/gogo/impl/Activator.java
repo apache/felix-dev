@@ -20,22 +20,28 @@ package org.apache.felix.webconsole.plugins.gogo.impl;
 
 import org.osgi.framework.BundleActivator;
 import org.osgi.framework.BundleContext;
+import org.osgi.framework.ServiceRegistration;
+
+import jakarta.servlet.Servlet;
 
 public class Activator implements BundleActivator {
 
     private SessionTerminalManager terminalManager;
 
-    private GogoPlugin plugin;
+    private ServiceRegistration<Servlet> plugin;
 
     public void start(BundleContext context) throws Exception {
         this.terminalManager = new SessionTerminalManager(context);
-        this.plugin = new GogoPlugin(this.terminalManager);
-        this.plugin.register(context);
+        this.plugin = new GogoPlugin(this.terminalManager).register(context);
     }
 
     public void stop(BundleContext context) throws Exception {
         if (this.plugin != null) {
-            this.plugin.unregister();
+            try {
+                this.plugin.unregister();
+            } catch (IllegalStateException ignore) {
+                // ignore
+            }
             this.plugin = null;
         }
         if (this.terminalManager != null) {
