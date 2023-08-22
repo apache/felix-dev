@@ -24,53 +24,35 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
 import java.io.PrintWriter;
-import java.net.MalformedURLException;
-import java.net.URL;
 import java.util.NoSuchElementException;
 import java.util.zip.Deflater;
 import java.util.zip.ZipEntry;
 import java.util.zip.ZipOutputStream;
 
-import javax.servlet.ServletException;
-import javax.servlet.http.HttpServletRequest;
-import javax.servlet.http.HttpServletResponse;
+import jakarta.servlet.ServletException;
+import jakarta.servlet.http.HttpServletRequest;
+import jakarta.servlet.http.HttpServletResponse;
 
-import org.apache.felix.webconsole.AbstractWebConsolePlugin;
-import org.apache.felix.webconsole.AttachmentProvider;
-import org.apache.felix.webconsole.ConfigurationPrinter;
-import org.apache.felix.webconsole.DefaultVariableResolver;
-import org.apache.felix.webconsole.WebConsoleUtil;
+import org.apache.felix.inventory.Format;
+import org.apache.felix.inventory.ZipAttachmentProvider;
+import org.apache.felix.webconsole.servlet.AbstractServlet;
+import org.apache.felix.webconsole.servlet.RequestVariableResolver;
 import org.osgi.service.log.LogService;
 
 @SuppressWarnings("serial")
-class MemoryUsagePanel extends AbstractWebConsolePlugin implements ConfigurationPrinter, AttachmentProvider
-{
+class MemoryUsagePanel extends AbstractServlet implements ZipAttachmentProvider {
 
     private final MemoryUsageSupport support;
 
     MemoryUsagePanel(final MemoryUsageSupport support)
     {
         this.support = support;
-        activate(support.getBundleContext());
     }
 
     // ---------- AbstractWebConsolePlugin
 
     @Override
-    public String getLabel()
-    {
-        return MemoryUsageConstants.LABEL;
-    }
-
-    @Override
-    public String getTitle()
-    {
-        return "%dump.title";
-    }
-
-    @SuppressWarnings("unchecked")
-    @Override
-    protected void renderContent(HttpServletRequest req, HttpServletResponse res) throws IOException
+    public void renderContent(HttpServletRequest req, HttpServletResponse res) throws IOException
     {
         final PrintWriter pw = res.getWriter();
 
@@ -109,7 +91,7 @@ class MemoryUsagePanel extends AbstractWebConsolePlugin implements Configuration
         JsonPrintHelper jph = new JsonPrintHelper();
         support.printOverallMemory(jph);
 
-        DefaultVariableResolver resolver = (DefaultVariableResolver) WebConsoleUtil.getVariableResolver(req);
+        RequestVariableResolver resolver = this.getVariableResolver(req);
         resolver.put("__files__", filesBuf.toString());
         resolver.put("__status__", statusBuf.toString());
         resolver.put("__threshold__", String.valueOf(support.getThreshold()));
@@ -123,38 +105,30 @@ class MemoryUsagePanel extends AbstractWebConsolePlugin implements Configuration
 
     // ---------- Configuration Printer
 
-    public void printConfiguration(PrintWriter pw)
-    {
+    public void print(final PrintWriter pw, final Format format, final boolean isZip) {
         support.printMemory(new PrintWriterPrintHelper(pw));
     }
 
     // ---------- AttachmentProvider
 
-    public URL[] getAttachments(String mode)
-    {
-        if (ConfigurationPrinter.MODE_ZIP.equals(mode))
-        {
-            File[] dumpFiles = support.getDumpFiles();
-            if (dumpFiles != null && dumpFiles.length > 0)
-            {
-                URL[] attachs = new URL[dumpFiles.length];
-                for (int i = 0; i < dumpFiles.length; i++)
-                {
-                    try
-                    {
-                        attachs[i] = dumpFiles[i].toURI().toURL();
-                    }
-                    catch (MalformedURLException mue)
-                    {
-                        // not expected ...
+    public void addAttachments(final ZipOutputStream stream, final String prefix) throws IOException {
+        File[] dumpFiles = support.getDumpFiles();
+        if (dumpFiles != null) {
+            for(final File f : dumpFiles) {
+                final ZipEntry entry = new ZipEntry(prefix + f.getName());
+                entry.setTime(f.lastModified());
+                stream.putNextEntry(entry);
+
+                try(final FileInputStream fis = new FileInputStream(f)) {
+                    final byte[] buf = new byte[32768];
+                    int rd = 0;
+                    while ((rd = fis.read(buf)) >= 0) {
+                        stream.write(buf, 0, rd);
                     }
                 }
-                return attachs;
+                stream.closeEntry();
             }
         }
-
-        // not ZIP mode, return nothing
-        return null;
     }
 
     // ---------- GenericServlet
@@ -182,7 +156,7 @@ class MemoryUsagePanel extends AbstractWebConsolePlugin implements Configuration
         }
         else
         {
-            String command = WebConsoleUtil.getParameter(req, "command");
+            String command = req.getParameter("command");
             if ("dump".equals(command))
             {
                 resp.setContentType("text/plain; charset=UTF-8");
@@ -255,7 +229,7 @@ class MemoryUsagePanel extends AbstractWebConsolePlugin implements Configuration
     private DumpFile getDumpFile(final HttpServletRequest request)
     {
         final String pathInfo = request.getPathInfo();
-        if (pathInfo != null && !pathInfo.endsWith(getLabel()))
+        if (pathInfo != null && !pathInfo.endsWith(MemoryUsageConstants.LABEL))
         {
             final int lastSlash = pathInfo.lastIndexOf('/');
             if (lastSlash > 0)
@@ -286,10 +260,11 @@ class MemoryUsagePanel extends AbstractWebConsolePlugin implements Configuration
             ins = new FileInputStream(dumpFile);
 
             response.setDateHeader("Last-Modified", dumpFile.lastModified());
-            WebConsoleUtil.setNoCache(response);
+            AbstractServlet.setNoCache(response);
 
             OutputStream out = response.getOutputStream();
 
+            response.setStatus(HttpServletResponse.SC_OK);
             if (compress)
             {
                 ZipOutputStream zip = new ZipOutputStream(out);
