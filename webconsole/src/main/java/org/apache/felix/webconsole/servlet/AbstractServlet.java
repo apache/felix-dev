@@ -198,4 +198,23 @@ public abstract class AbstractServlet extends HttpServlet {
     protected RequestVariableResolver getVariableResolver(final HttpServletRequest request) {
         return (RequestVariableResolver) request.getAttribute(RequestVariableResolver.REQUEST_ATTRIBUTE);
     }
+
+    /**
+     * Sets response headers to force the client to not cache the response
+     * sent back. This method must be called before the response is committed
+     * otherwise it will have no effect.
+     * <p>
+     * This method sets the <code>Cache-Control</code>, <code>Expires</code>,
+     * and <code>Pragma</code> headers.
+     *
+     * @param response The response for which to set the cache prevention
+     */
+    public static final void setNoCache(final HttpServletResponse response) {
+        response.setHeader("Cache-Control", "no-cache");
+        response.addHeader("Cache-Control", "no-store");
+        response.addHeader("Cache-Control", "must-revalidate");
+        response.addHeader("Cache-Control", "max-age=0");
+        response.setHeader("Expires", "Thu, 01 Jan 1970 01:00:00 GMT");
+        response.setHeader("Pragma", "no-cache");
+    }
 }
