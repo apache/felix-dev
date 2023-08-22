@@ -34,13 +34,13 @@ import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 
 import org.apache.felix.inventory.Format;
+import org.apache.felix.inventory.InventoryPrinter;
 import org.apache.felix.inventory.ZipAttachmentProvider;
 import org.apache.felix.webconsole.servlet.AbstractServlet;
 import org.apache.felix.webconsole.servlet.RequestVariableResolver;
 import org.osgi.service.log.LogService;
 
-@SuppressWarnings("serial")
-class MemoryUsagePanel extends AbstractServlet implements ZipAttachmentProvider {
+class MemoryUsagePanel extends AbstractServlet implements ZipAttachmentProvider, InventoryPrinter {
 
     private final MemoryUsageSupport support;
 
