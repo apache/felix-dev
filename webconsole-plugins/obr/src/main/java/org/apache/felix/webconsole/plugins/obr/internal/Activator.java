@@ -41,9 +41,9 @@ public class Activator implements BundleActivator, ServiceTrackerCustomizer
     public final void start(BundleContext context) throws Exception
     {
         this.context = context;
-        Filter filter = context.createFilter("(|" //$NON-NLS-1$
-            + '(' + Constants.OBJECTCLASS + "=org.osgi.service.obr.RepositoryAdmin)" //$NON-NLS-1$
-            + '(' + Constants.OBJECTCLASS + "=org.apache.felix.bundlerepository.RepositoryAdmin)" //$NON-NLS-1$
+        Filter filter = context.createFilter("(|"
+            + '(' + Constants.OBJECTCLASS + "=org.osgi.service.obr.RepositoryAdmin)"
+            + '(' + Constants.OBJECTCLASS + "=org.apache.felix.bundlerepository.RepositoryAdmin)"
             + ')');
         this.tracker = new ServiceTracker(context, filter, this);
         this.tracker.open();

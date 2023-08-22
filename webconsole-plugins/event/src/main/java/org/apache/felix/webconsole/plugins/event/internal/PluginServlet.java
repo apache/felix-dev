@@ -21,7 +21,6 @@ import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.PrintWriter;
-import java.net.URL;
 import java.util.Date;
 import java.util.Dictionary;
 import java.util.Iterator;
@@ -45,11 +44,11 @@ public class PluginServlet extends HttpServlet
 
     private static final long serialVersionUID = -8601361741848077124L;
 
-    private static final String ACTION_POST = "post"; //$NON-NLS-1$
-    private static final String ACTION_SEND = "send"; //$NON-NLS-1$
-    private static final String ACTION_CLEAR = "clear"; //$NON-NLS-1$
+    private static final String ACTION_POST = "post";
+    private static final String ACTION_SEND = "send";
+    private static final String ACTION_CLEAR = "clear";
 
-    private static final String PARAMETER_ACTION = "action"; //$NON-NLS-1$
+    private static final String PARAMETER_ACTION = "action";
 
     /** The event collector. */
     private final EventCollector collector;
@@ -64,7 +63,7 @@ public class PluginServlet extends HttpServlet
     public PluginServlet()
     {
         this.collector = new EventCollector();
-        TEMPLATE = readTemplateFile(getClass(), "/res/events.html"); //$NON-NLS-1$
+        TEMPLATE = readTemplateFile(getClass(), "/res/events.html");
     }
 
     private final String readTemplateFile(final Class<?> clazz, final String templateFile)
@@ -81,7 +80,7 @@ public class PluginServlet extends HttpServlet
                 {
                     baos.write(data, 0, len);
                 }
-                return baos.toString("UTF-8"); //$NON-NLS-1$
+                return baos.toString("UTF-8");
             }
             catch (IOException e)
             {
@@ -106,12 +105,12 @@ public class PluginServlet extends HttpServlet
         // template file does not exist, return an empty string
         log("readTemplateFile: File '" + templateFile + "' not found through class "
             + clazz);
-        return ""; //$NON-NLS-1$
+        return "";
     }
 
     private static final Event newEvent(HttpServletRequest request)
     {
-        String topic = request.getParameter("topic"); //$NON-NLS-1$
+        String topic = request.getParameter("topic");
 
         return new Event(topic, PropertiesEditorSupport.convertProperties(request));
     }
@@ -135,8 +134,8 @@ public class PluginServlet extends HttpServlet
             this.collector.clear();
         }
         // we always send back the json data
-        resp.setContentType( "application/json" ); //$NON-NLS-1$
-        resp.setCharacterEncoding( "utf-8" ); //$NON-NLS-1$
+        resp.setContentType( "application/json" );
+        resp.setCharacterEncoding( "utf-8" );
 
         renderJSON( resp.getWriter() );
     }
@@ -196,17 +195,13 @@ public class PluginServlet extends HttpServlet
         writer.endObject();
     }
 
-
     @Override
-    protected void doGet( HttpServletRequest request, HttpServletResponse response )
-    throws ServletException, IOException
-    {
-
+    public void doGet( HttpServletRequest request, HttpServletResponse response )
+    throws ServletException, IOException {
         final String info = request.getPathInfo();
-        if ( info.endsWith( ".json" ) ) //$NON-NLS-1$
-        {
-            response.setContentType( "application/json" ); //$NON-NLS-1$
-            response.setCharacterEncoding( "UTF-8" ); //$NON-NLS-1$
+        if ( info.endsWith( ".json" ) )  {
+            response.setContentType( "application/json" ); 
+            response.setCharacterEncoding( "UTF-8" );
 
             PrintWriter pw = response.getWriter();
             this.renderJSON( pw );
@@ -215,28 +210,11 @@ public class PluginServlet extends HttpServlet
             return;
         }
 
-        this.renderContent( request, response );
-    }
-
-
-    protected void renderContent( HttpServletRequest request, HttpServletResponse response )
-    throws ServletException, IOException
-    {
         final PrintWriter pw = response.getWriter();
         //final String appRoot = ( String ) request.getAttribute( "felix.webconsole.appRoot" );
         //pw.println( "<script src='" + appRoot + "/events/res/ui/" + "events.js" + "' type='text/javascript'></script>" );
         pw.print(TEMPLATE);
     }
-
-    public URL getResource(String path)
-    {
-        if ( path.startsWith("/events/res/ui/") ) //$NON-NLS-1$
-        {
-            return this.getClass().getResource(path.substring(7));
-        }
-        return null;
-    }
-
 
     private void eventJson( JSONWriter jw, EventInfo info, int index, final long start, final float scale )
     throws IOException

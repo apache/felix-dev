@@ -18,30 +18,41 @@
  */
 package org.apache.felix.webconsole.plugins.scriptconsole.internal;
 
-import org.apache.commons.fileupload.FileItem;
 import org.apache.commons.io.IOUtils;
 import org.apache.felix.utils.json.JSONWriter;
-import org.apache.felix.webconsole.AbstractWebConsolePlugin;
-import org.apache.felix.webconsole.DefaultVariableResolver;
-import org.apache.felix.webconsole.SimpleWebConsolePlugin;
-import org.apache.felix.webconsole.WebConsoleUtil;
+import org.apache.felix.webconsole.servlet.AbstractServlet;
+import org.apache.felix.webconsole.servlet.RequestVariableResolver;
+import org.apache.felix.webconsole.servlet.ServletConstants;
 import org.osgi.framework.BundleContext;
 import org.osgi.framework.Constants;
 import org.osgi.framework.ServiceRegistration;
 import org.osgi.service.log.LogService;
 
-import javax.script.*;
-import javax.servlet.Servlet;
-import javax.servlet.ServletException;
-import javax.servlet.http.HttpServletRequest;
-import javax.servlet.http.HttpServletResponse;
-import java.io.*;
-import java.util.ArrayList;
-import java.util.List;
-import java.util.Map;
-import java.util.Properties;
+import jakarta.servlet.Servlet;
+import jakarta.servlet.ServletException;
+import jakarta.servlet.http.HttpServletRequest;
+import jakarta.servlet.http.HttpServletResponse;
+import jakarta.servlet.http.Part;
 
-class ScriptConsolePlugin extends SimpleWebConsolePlugin
+import java.io.IOException;
+import java.io.InputStream;
+import java.io.PrintWriter;
+import java.io.Reader;
+import java.io.StringReader;
+import java.io.StringWriter;
+import java.io.Writer;
+import java.util.Dictionary;
+import java.util.Hashtable;
+import java.util.List;
+import javax.script.Bindings;
+import javax.script.ScriptContext;
+import javax.script.ScriptEngine;
+import javax.script.ScriptEngineFactory;
+import javax.script.ScriptException;
+import javax.script.SimpleBindings;
+import javax.script.SimpleScriptContext;
+
+class ScriptConsolePlugin extends AbstractServlet
 {
 
     public static final String NAME = "sc";
@@ -52,47 +63,44 @@ class ScriptConsolePlugin extends SimpleWebConsolePlugin
     private final String TEMPLATE;
     private final Logger log;
     private final ScriptEngineManager scriptEngineManager;
-    private final ServiceRegistration registration;
+    private final ServiceRegistration<Servlet> registration;
+    private final BundleContext bundleContext;
 
     public ScriptConsolePlugin(BundleContext bundleContext, Logger logger, ScriptEngineManager scriptEngineManager)
     {
-        super(NAME, TITLE, processFileNames(CSS));
+        this.bundleContext = bundleContext;
         this.log = logger;
         this.scriptEngineManager = scriptEngineManager;
-        TEMPLATE = readTemplateFile("/templates/script-console.html");
-        super.activate(bundleContext);
+        try {
+            TEMPLATE = readTemplateFile("/templates/script-console.html");
+        } catch (IOException e) {
+            throw new RuntimeException("Unable to read template file", e);
+        }
 
-        Properties props = new Properties();
+        Dictionary<String, Object> props = new Hashtable<>();
         props.put(Constants.SERVICE_VENDOR, "Apache Software Foundation");
         props.put(Constants.SERVICE_DESCRIPTION, "Script Console Web Console Plugin");
-        props.put("felix.webconsole.label", ScriptConsolePlugin.NAME);
-        props.put("felix.webconsole.title", "Script Console");
+        props.put(ServletConstants.PLUGIN_LABEL, NAME);
+        props.put(ServletConstants.PLUGIN_TITLE, TITLE);
+        props.put(ServletConstants.PLUGIN_CATEGORY,  CATEGORY);
+        props.put(ServletConstants.PLUGIN_CSS_REFERENCES, processFileNames(CSS));
 
-        registration = getBundleContext().registerService(Servlet.class.getName(), this,
-            props);
+        registration = bundleContext.registerService(Servlet.class, this, props);
     }
 
-
-    public String getCategory()
-    {
-        return CATEGORY;
-    }
-
-    @SuppressWarnings("unchecked")
     @Override
-    protected void renderContent(HttpServletRequest request, HttpServletResponse response)
+    public void renderContent(HttpServletRequest request, HttpServletResponse response)
         throws ServletException, IOException
     {
         final PrintWriter pw = response.getWriter();
-        DefaultVariableResolver varResolver = (DefaultVariableResolver) WebConsoleUtil.getVariableResolver(request);
+        RequestVariableResolver varResolver = this.getVariableResolver(request);
         varResolver.put("__scriptConfig__", getScriptConfig());
         pw.println(TEMPLATE);
     }
 
     @Override
     protected void doPost(HttpServletRequest req, HttpServletResponse resp)
-        throws ServletException, IOException
-    {
+        throws ServletException, IOException {
         final String contentType = getContentType(req);
         resp.setContentType(contentType);
         if (contentType.startsWith("text/"))
@@ -102,10 +110,10 @@ class ScriptConsolePlugin extends SimpleWebConsolePlugin
         final String script = getCodeValue(req);
         final Bindings bindings = new SimpleBindings();
         final PrintWriter pw = resp.getWriter();
-        final ScriptHelper osgi = new ScriptHelper(getBundleContext());
+        final ScriptHelper osgi = new ScriptHelper(this.bundleContext);
         final Writer errorWriter = new LogWriter(log);
-        final Reader reader = new StringReader(script)
-                ;
+        final Reader reader = new StringReader(script);
+
         //Populate bindings
         bindings.put("request", req);
         bindings.put("reader", reader);
@@ -115,12 +123,10 @@ class ScriptConsolePlugin extends SimpleWebConsolePlugin
 
         //Also expose the bundleContext to simplify scripts interaction with the
         //enclosing OSGi container
-        bindings.put("bundleContext", getBundleContext());
+        bindings.put("bundleContext", this.bundleContext);
 
-        final String lang = WebConsoleUtil.getParameter(req, "lang");
-        final boolean webClient = "webconsole".equals(WebConsoleUtil.getParameter(req,
-            "client"));
-
+        final String lang = req.getParameter("lang");
+        final boolean webClient = "webconsole".equals(req.getParameter("client"));
 
         SimpleScriptContext sc = new SimpleScriptContext();
         sc.setBindings(bindings, ScriptContext.ENGINE_SCOPE);
@@ -131,7 +137,7 @@ class ScriptConsolePlugin extends SimpleWebConsolePlugin
         try
         {
             log.log(LogService.LOG_DEBUG, "Executing script" + script);
-           eval(script, lang, sc);
+            eval(script, lang, sc);
         }
         catch (Throwable t)
         {
@@ -165,9 +171,9 @@ class ScriptConsolePlugin extends SimpleWebConsolePlugin
 
     }
 
-    private String getCodeValue(HttpServletRequest req) throws IOException
+    private String getCodeValue(HttpServletRequest req) throws IOException, ServletException
     {
-        String script = WebConsoleUtil.getParameter(req, "code");
+        String script = req.getParameter("code");
         if (script == null)
         {
             script = getContentFromFilePart(req, "code");
@@ -181,7 +187,7 @@ class ScriptConsolePlugin extends SimpleWebConsolePlugin
 
     private String getContentType(HttpServletRequest req)
     {
-        String passedContentType = WebConsoleUtil.getParameter(req, "responseContentType");
+        String passedContentType = req.getParameter("responseContentType");
         if (passedContentType != null)
         {
             return passedContentType;
@@ -262,27 +268,22 @@ class ScriptConsolePlugin extends SimpleWebConsolePlugin
     }
 
     private String getContentFromFilePart(HttpServletRequest req, String paramName)
-        throws IOException
+        throws IOException, ServletException
     {
-        String value = WebConsoleUtil.getParameter(req, paramName);
+        String value = req.getParameter(paramName);
         if (value != null)
         {
             return value;
         }
-        final Map params = (Map) req.getAttribute(AbstractWebConsolePlugin.ATTR_FILEUPLOAD);
-        if (params == null)
-        {
-            return null;
-        }
-        FileItem[] codeFile = getFileItems(params, paramName);
-        if (codeFile.length == 0)
+        final Part part = req.getPart(paramName);
+        if (part == null)
         {
             return null;
         }
         InputStream is = null;
         try
         {
-            is = codeFile[0].getInputStream();
+            is = part.getInputStream();
             StringWriter sw = new StringWriter();
             IOUtils.copy(is, sw, "utf-8");
             return sw.toString();
@@ -293,26 +294,8 @@ class ScriptConsolePlugin extends SimpleWebConsolePlugin
         }
     }
 
-    private FileItem[] getFileItems(Map params, String name)
-    {
-        final List<FileItem> files = new ArrayList<FileItem>();
-        FileItem[] items = (FileItem[]) params.get(name);
-        if (items != null)
-        {
-            for (int i = 0; i < items.length; i++)
-            {
-                if (!items[i].isFormField() && items[i].getSize() > 0)
-                {
-                    files.add(items[i]);
-                }
-            }
-        }
-        return files.toArray(new FileItem[files.size()]);
-    }
-
     public void dispose()
     {
-        super.deactivate();
         if (registration != null)
         {
             registration.unregister();

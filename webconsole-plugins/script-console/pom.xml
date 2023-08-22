@@ -37,14 +37,13 @@
   </description>
 
   <properties>
-    <pax-exam.version>4.6.0</pax-exam.version>
+    <pax-exam.version>4.13.5</pax-exam.version>
     <bundle.build.name>
       ${basedir}/target
     </bundle.build.name>
     <bundle.file.name>
       ${bundle.build.name}/${project.build.finalName}.jar
     </bundle.file.name>
-    <felix.java.version>6</felix.java.version>
   </properties>
 
   <scm>
@@ -60,7 +59,7 @@
             <plugin>
                 <groupId>org.apache.felix</groupId>
                 <artifactId>maven-bundle-plugin</artifactId>
-                <version>3.2.0</version>
+                <version>5.1.9</version>
                 <extensions>true</extensions>
                 <configuration>
                     <instructions>
@@ -69,8 +68,7 @@
                             ${project.artifactId}
                         </Bundle-SymbolicName>
                         <Import-Package>
-                           javax.servlet.*;version=2.3,
-                           org.apache.commons.io; version="[1.4,3)",
+                           jakarta.servlet.*;version="[5,7)",
                            *
                         </Import-Package>
                         <Bundle-Activator>
@@ -160,31 +158,30 @@
   </build>
 
   <dependencies>
-    <!-- Need to keep first to override conflicts in core and
-    compendium jars-->
+  <!-- Keep first to avoid problems with framework api differences during testing -->
     <dependency>
       <groupId>org.apache.felix</groupId>
       <artifactId>org.apache.felix.framework</artifactId>
-      <version>5.4.0</version>
+      <version>7.0.5</version>
       <scope>test</scope>
     </dependency>
 
     <dependency>
       <groupId>org.osgi</groupId>
-      <artifactId>org.osgi.core</artifactId>
-      <version>4.2.0</version>
+      <artifactId>osgi.core</artifactId>
+      <version>6.0.0</version>
       <scope>provided</scope>
     </dependency>
     <dependency>
       <groupId>org.osgi</groupId>
-      <artifactId>org.osgi.compendium</artifactId>
-      <version>4.2.0</version>
+      <artifactId>org.osgi.service.log</artifactId>
+      <version>1.3.0</version>
       <scope>provided</scope>
     </dependency>
     <dependency>
-      <groupId>javax.servlet</groupId>
-      <artifactId>servlet-api</artifactId>
-      <version>2.4</version>
+      <groupId>jakarta.servlet</groupId>
+      <artifactId>jakarta.servlet-api</artifactId>
+      <version>5.0.0</version>
       <scope>provided</scope>
     </dependency>
     <dependency>
@@ -196,7 +193,7 @@
     <dependency>
       <groupId>org.apache.felix</groupId>
       <artifactId>org.apache.felix.webconsole</artifactId>
-      <version>4.3.12</version>
+      <version>4.8.13-SNAPSHOT</version>
       <scope>provided</scope>
     </dependency>
     <dependency>
@@ -205,20 +202,13 @@
       <version>1.11.8</version>
       <scope>provided</scope>
     </dependency>
-    <dependency>
-      <groupId>commons-fileupload</groupId>
-      <artifactId>commons-fileupload</artifactId>
-      <version>1.5</version>
-      <scope>provided</scope>
-    </dependency>
-
 
     <!-- testing -->
     <dependency>
       <groupId>junit</groupId>
       <artifactId>junit</artifactId>
+      <version>4.13.2</version>
       <scope>test</scope>
-      <version>4.10</version>
     </dependency>
     <!-- Pax Exam Dependencies -->
     <dependency>
@@ -260,13 +250,13 @@
     <dependency>
       <groupId>org.apache.felix</groupId>
       <artifactId>org.apache.felix.configadmin</artifactId>
-      <version>1.6.0</version>
+      <version>1.9.26</version>
       <scope>test</scope>
     </dependency>
     <dependency>
       <groupId>org.apache.felix</groupId>
       <artifactId>org.apache.felix.http.jetty</artifactId>
-      <version>2.2.0</version>
+      <version>5.0.7-SNAPSHOT</version>
       <scope>test</scope>
     </dependency>
     <dependency>

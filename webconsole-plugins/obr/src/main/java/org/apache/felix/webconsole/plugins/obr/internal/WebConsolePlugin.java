@@ -20,8 +20,6 @@ package org.apache.felix.webconsole.plugins.obr.internal;
 
 
 import java.io.IOException;
-import java.net.URLDecoder;
-import java.nio.charset.StandardCharsets;
 import java.util.Dictionary;
 import java.util.Enumeration;
 import java.util.Hashtable;
@@ -45,10 +43,10 @@ import jakarta.servlet.Servlet;
  */
 class WebConsolePlugin extends AbstractServlet
 {
-    private static final String LABEL = "obr"; //$NON-NLS-1$
-    private static final String TITLE = "%obr.pluginTitle"; //$NON-NLS-1$
-    private static final String CATEGORY = "OSGi"; //$NON-NLS-1$
-    private static final String CSS[] = { "/" + LABEL + "/res/plugin.css" }; //$NON-NLS-1$ //$NON-NLS-2$
+    private static final String LABEL = "obr";
+    private static final String TITLE = "%obr.pluginTitle";
+    private static final String CATEGORY = "OSGi";
+    private static final String CSS[] = { "/" + LABEL + "/res/plugin.css" };
 
     // templates
     private final String TEMPLATE;
@@ -122,21 +120,21 @@ class WebConsolePlugin extends AbstractServlet
             return;
         }
 
-        final String action = request.getParameter( "action" ); //$NON-NLS-1$
-        final String deploy = request.getParameter( "deploy" ); //$NON-NLS-1$
-        final String deploystart = request.getParameter( "deploystart" ); //$NON-NLS-1$
-        final String optional = request.getParameter( "optional" ); //$NON-NLS-1$
+        final String action = request.getParameter( "action" );
+        final String deploy = request.getParameter( "deploy" );
+        final String deploystart = request.getParameter( "deploystart" );
+        final String optional = request.getParameter( "optional" );
 
         if ( action != null )
         {
-            doAction( action, request.getParameter( "url" ) ); //$NON-NLS-1$
+            doAction( action, request.getParameter( "url" ) );
             response.getWriter().print( getData( request ) );
             return;
         }
 
         if ( deploy != null || deploystart != null )
         {
-            doDeploy( request.getParameterValues( "bundle" ), deploystart != null, optional != null ); //$NON-NLS-1$
+            doDeploy( request.getParameterValues( "bundle" ), deploystart != null, optional != null );
             doGet( request, response );
             return;
         }
@@ -184,7 +182,7 @@ class WebConsolePlugin extends AbstractServlet
         AbstractBundleRepositoryRenderHelper helper = getHelper();
         if ( helper == null || !helper.hasRepositoryAdmin() )
         {
-            return "{}"; //$NON-NLS-1$
+            return "{}";
         }
 
         RequestInfo info = new RequestInfo( request );
@@ -193,22 +191,22 @@ class WebConsolePlugin extends AbstractServlet
         String list = info.getList();
         if ( list != null )
         {
-            if ( "-".equals( list ) ) //$NON-NLS-1$
+            if ( "-".equals( list ) )
             {
-                StringBuffer sb = new StringBuffer( "(!(|" ); //$NON-NLS-1$
+                StringBuffer sb = new StringBuffer( "(!(|" );
                 for ( int c = 0; c < 26; c++ )
                 {
-                    sb.append( "(presentationname=" ).append( ( char ) ( 'a' + c ) ) //$NON-NLS-1$
-                      .append( "*)(presentationname=" ).append( ( char ) ( 'A' + c ) ) //$NON-NLS-1$
-                      .append( "*)" ); //$NON-NLS-1$
+                    sb.append( "(presentationname=" ).append( ( char ) ( 'a' + c ) )
+                      .append( "*)(presentationname=" ).append( ( char ) ( 'A' + c ) )
+                      .append( "*)" );
                 }
-                sb.append( "))" ); //$NON-NLS-1$
+                sb.append( "))" );
                 filter = sb.toString();
             }
             else
             {
-                filter = "(|(presentationname=" + list.toLowerCase() //$NON-NLS-1$
-                    + "*)(presentationname=" + list.toUpperCase() + "*))"; //$NON-NLS-1$ //$NON-NLS-2$
+                filter = "(|(presentationname=" + list.toLowerCase()
+                    + "*)(presentationname=" + list.toUpperCase() + "*))";
             }
         }
         else
@@ -218,33 +216,33 @@ class WebConsolePlugin extends AbstractServlet
             {
                 if ( query.indexOf( '=' ) > 0 )
                 {
-                    if ( query.startsWith( "(" ) ) //$NON-NLS-1$
+                    if ( query.startsWith( "(" ) )
                     {
                         filter = query;
                     }
                     else
                     {
-                        filter = "(" + query + ")"; //$NON-NLS-1$ //$NON-NLS-2$
+                        filter = "(" + query + ")";
                     }
                 }
                 else
                 {
-                    filter = "(|(presentationame=*" + query + "*)(symbolicname=*" + query + "*))"; //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$
+                    filter = "(|(presentationame=*" + query + "*)(symbolicname=*" + query + "*))";
                 }
             }
             else
             {
-                StringBuffer sb = new StringBuffer( "(&" ); //$NON-NLS-1$
+                StringBuffer sb = new StringBuffer( "(&" );
                 for ( Enumeration e = request.getParameterNames(); e.hasMoreElements(); )
                 {
                     String k = ( String ) e.nextElement();
                     String v = request.getParameter( k );
                     if ( v != null && v.length() > 0
-                        && !"details".equals( k )  //$NON-NLS-1$
-                        && !"deploy".equals( k ) //$NON-NLS-1$
-                        && !"deploystart".equals( k )  //$NON-NLS-1$
-                        && !"bundle".equals( k )  //$NON-NLS-1$
-                        && !"optional".equals( k ) ) //$NON-NLS-1$
+                        && !"details".equals( k ) 
+                        && !"deploy".equals( k )
+                        && !"deploystart".equals( k ) 
+                        && !"bundle".equals( k ) 
+                        && !"optional".equals( k ) )
                     {
                         sb.append( '(' ).append( k ).append( '=' ).append( v ).append( ')' );
                     }
@@ -303,7 +301,7 @@ class WebConsolePlugin extends AbstractServlet
         {
             if ( query == null )
             {
-                String query = URLDecoder.decode( request.getParameter( "query" ), StandardCharsets.UTF_8 ); //$NON-NLS-1$
+                String query = request.getParameter( "query" );
                 boolean details = false;
                 if ( query == null && request.getPathInfo().length() > 5 )
                 {
@@ -313,12 +311,12 @@ class WebConsolePlugin extends AbstractServlet
                     if ( slash < 0 )
                     {
                         // symbolic name only, version ??
-                        query = "(symbolicname=" + path + ")"; //$NON-NLS-1$ //$NON-NLS-2$
+                        query = "(symbolicname=" + path + ")";
                     }
                     else
                     {
-                        query = "(&(symbolicname=" + path.substring( 0, slash )  //$NON-NLS-1$
-                            + ")(version=" + path.substring( slash + 1 ) + "))"; //$NON-NLS-1$ //$NON-NLS-2$
+                        query = "(&(symbolicname=" + path.substring( 0, slash ) 
+                            + ")(version=" + path.substring( slash + 1 ) + "))";
                         details = true;
                     }
                 }
@@ -334,10 +332,10 @@ class WebConsolePlugin extends AbstractServlet
         {
             if ( list == null )
             {
-                list = URLDecoder.decode( request.getParameter( "list" ), StandardCharsets.UTF_8 ); //$NON-NLS-1$
+                list = request.getParameter( "list" );
                 if ( list == null && !request.getParameterNames().hasMoreElements() && getQuery() == null )
                 {
-                    list = "a"; //$NON-NLS-1$
+                    list = "a";
                 }
             }
             return list;
