@@ -193,7 +193,13 @@ public class JakartaServletAdapter extends AbstractWebConsolePlugin {
         public void setStatus(final int sc, final String sm) {
             this.done = true;
             super.setStatus(sc, sm);
-        }        
+        }
+
+        @Override
+        public void setContentType(final String type) {
+            this.done = true;
+            super.setContentType(type);
+        }
     }
 
     /**
