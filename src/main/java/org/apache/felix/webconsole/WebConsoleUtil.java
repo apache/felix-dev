@@ -199,16 +199,16 @@ public final class WebConsoleUtil
             final HttpServletResponse response,
             String redirectUrl) throws IOException {
         // check for relative URL
-        if ( !redirectUrl.startsWith("/") ) { //$NON-NLS-1$
+        if ( !redirectUrl.startsWith("/") ) {
             String base = request.getContextPath() + request.getServletPath() + request.getPathInfo();
             int i = base.lastIndexOf('/');
             if (i > -1) {
                 base = base.substring(0, i);
             } else {
                 i = base.indexOf(':');
-                base = (i > -1) ? base.substring(i + 1, base.length()) : ""; //$NON-NLS-1$
+                base = (i > -1) ? base.substring(i + 1, base.length()) : "";
             }
-            if (!base.startsWith("/")) { //$NON-NLS-1$
+            if (!base.startsWith("/")) {
                 base = '/' + base;
             }
             redirectUrl = base + '/' + redirectUrl;
@@ -228,12 +228,12 @@ public final class WebConsoleUtil
      * @param response The response for which to set the cache prevention
      */
     public static final void setNoCache(final HttpServletResponse response) {
-        response.setHeader("Cache-Control", "no-cache"); //$NON-NLS-1$ //$NON-NLS-2$
-        response.addHeader("Cache-Control", "no-store"); //$NON-NLS-1$ //$NON-NLS-2$
-        response.addHeader("Cache-Control", "must-revalidate"); //$NON-NLS-1$ //$NON-NLS-2$
-        response.addHeader("Cache-Control", "max-age=0"); //$NON-NLS-1$ //$NON-NLS-2$
-        response.setHeader("Expires", "Thu, 01 Jan 1970 01:00:00 GMT"); //$NON-NLS-1$ //$NON-NLS-2$
-        response.setHeader("Pragma", "no-cache"); //$NON-NLS-1$ //$NON-NLS-2$
+        response.setHeader("Cache-Control", "no-cache");
+        response.addHeader("Cache-Control", "no-store");
+        response.addHeader("Cache-Control", "must-revalidate");
+        response.addHeader("Cache-Control", "max-age=0");
+        response.setHeader("Expires", "Thu, 01 Jan 1970 01:00:00 GMT");
+        response.setHeader("Pragma", "no-cache");
     }
 
     /**
@@ -252,27 +252,27 @@ public final class WebConsoleUtil
             switch (ch = text.charAt(i))
             {
             case '<':
-                sb.append("&lt;"); //$NON-NLS-1$
+                sb.append("&lt;");
                 break;
             case '>':
-                sb.append("&gt;"); //$NON-NLS-1$
+                sb.append("&gt;");
                 break;
             case '&':
-                sb.append("&amp;"); //$NON-NLS-1$
+                sb.append("&amp;");
                 break;
             case ' ':
-                sb.append("&nbsp;"); //$NON-NLS-1$
+                sb.append("&nbsp;");
                 break;
             case '\'':
-                sb.append("&apos;"); //$NON-NLS-1$
+                sb.append("&apos;");
                 break;
             case '"':
-                sb.append("&quot;"); //$NON-NLS-1$
+                sb.append("&quot;");
                 break;
             case '\r':
             case '\n':
                 if (oldch != '\r' && oldch != '\n') // don't add twice <br>
-                    sb.append("<br/>\n"); //$NON-NLS-1$
+                    sb.append("<br/>\n");
                 break;
             default:
                 sb.append(ch);
