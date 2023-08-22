@@ -16,7 +16,6 @@
  */
 package org.apache.felix.webconsole.plugins.obr.internal;
 
-import org.apache.felix.webconsole.SimpleWebConsolePlugin;
 import org.osgi.framework.BundleActivator;
 import org.osgi.framework.BundleContext;
 import org.osgi.framework.Constants;
@@ -34,7 +33,7 @@ public class Activator implements BundleActivator, ServiceTrackerCustomizer, Con
     private ServiceTracker tracker;
     private BundleContext context;
 
-    private SimpleWebConsolePlugin plugin;
+    private WebConsolePlugin plugin;
 
     /**
      * @see org.osgi.framework.BundleActivator#start(org.osgi.framework.BundleContext)
@@ -76,10 +75,10 @@ public class Activator implements BundleActivator, ServiceTrackerCustomizer, Con
      */
     public final Object addingService(ServiceReference reference)
     {
-        SimpleWebConsolePlugin plugin = this.plugin;
+        WebConsolePlugin plugin = this.plugin;
         if (plugin == null)
         {
-            this.plugin = plugin = new WebConsolePlugin().register(context);
+            this.plugin = new WebConsolePlugin().register(context);
         }
 
         return context.getService(reference);
@@ -91,11 +90,11 @@ public class Activator implements BundleActivator, ServiceTrackerCustomizer, Con
      */
     public final void removedService(ServiceReference reference, Object service)
     {
-        SimpleWebConsolePlugin plugin = this.plugin;
+        WebConsolePlugin plugin = this.plugin;
 
         if (tracker.getTrackingCount() == 0 && plugin != null)
         {
-            plugin.unregister();
+            plugin.deactivate();
             this.plugin = null;
         }
 

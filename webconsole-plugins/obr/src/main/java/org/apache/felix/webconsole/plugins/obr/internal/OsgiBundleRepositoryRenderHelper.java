@@ -26,7 +26,7 @@ import java.util.Iterator;
 import java.util.Map;
 import java.util.Map.Entry;
 
-import javax.servlet.ServletException;
+import jakarta.servlet.ServletException;
 
 import org.apache.felix.utils.json.JSONWriter;
 import org.apache.felix.webconsole.AbstractWebConsolePlugin;
@@ -48,9 +48,9 @@ import org.osgi.service.obr.Resource;
 class OsgiBundleRepositoryRenderHelper extends AbstractBundleRepositoryRenderHelper
 {
 
-    OsgiBundleRepositoryRenderHelper( final AbstractWebConsolePlugin logger, final BundleContext bundleContext )
+    OsgiBundleRepositoryRenderHelper( final BundleContext bundleContext )
     {
-        super( logger, bundleContext, RepositoryAdmin.class.getName() );
+        super( bundleContext, RepositoryAdmin.class.getName() );
     }
 
 
@@ -104,11 +104,11 @@ class OsgiBundleRepositoryRenderHelper extends AbstractBundleRepositoryRenderHel
             }
             catch ( IOException e )
             {
-                logger.log( "Failed to serialize repository to JSON object.", e );
+                logger.error( "Failed to serialize repository to JSON object.", e );
             }
             catch ( Exception e )
             {
-                logger.log( "Failed to parse filter '" + filter + "'", e );
+                logger.error( "Failed to parse filter '" + filter + "'", e );
                 try
                 {
                     String reason = "filter=" + filter;
@@ -175,7 +175,7 @@ class OsgiBundleRepositoryRenderHelper extends AbstractBundleRepositoryRenderHel
         // check whether we have to do something
         if ( bundles == null || bundles.length == 0 )
         {
-            logger.log( "No resources to deploy" );
+            logger.info( "No resources to deploy" );
             return;
         }
 
@@ -199,7 +199,7 @@ class OsgiBundleRepositoryRenderHelper extends AbstractBundleRepositoryRenderHel
             }
         }
 
-        OsgiDeployer.deploy( resolver, logger, start );
+        OsgiDeployer.deploy( resolver, start );
     }
 
 

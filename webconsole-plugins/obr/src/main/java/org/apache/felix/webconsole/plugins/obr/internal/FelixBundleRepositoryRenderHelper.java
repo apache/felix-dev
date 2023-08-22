@@ -22,7 +22,7 @@ package org.apache.felix.webconsole.plugins.obr.internal;
 import java.io.IOException;
 import java.io.StringWriter;
 
-import javax.servlet.ServletException;
+import jakarta.servlet.ServletException;
 
 import org.apache.felix.bundlerepository.Capability;
 import org.apache.felix.bundlerepository.Property;
@@ -33,7 +33,7 @@ import org.apache.felix.bundlerepository.Requirement;
 import org.apache.felix.bundlerepository.Resolver;
 import org.apache.felix.bundlerepository.Resource;
 import org.apache.felix.utils.json.JSONWriter;
-import org.apache.felix.webconsole.AbstractWebConsolePlugin;
+import org.apache.felix.webconsole.servlet.AbstractServlet;
 import org.osgi.framework.Bundle;
 import org.osgi.framework.BundleContext;
 import org.osgi.framework.InvalidSyntaxException;
@@ -47,9 +47,9 @@ import org.osgi.framework.Version;
 class FelixBundleRepositoryRenderHelper extends AbstractBundleRepositoryRenderHelper
 {
 
-    FelixBundleRepositoryRenderHelper( AbstractWebConsolePlugin logger, BundleContext bundleContext )
+    FelixBundleRepositoryRenderHelper( BundleContext bundleContext )
     {
-        super( logger, bundleContext, RepositoryAdmin.class.getName() );
+        super( bundleContext, RepositoryAdmin.class.getName() );
     }
 
 
@@ -105,11 +105,11 @@ class FelixBundleRepositoryRenderHelper extends AbstractBundleRepositoryRenderHe
             }
             catch ( IOException e )
             {
-                logger.log( "Failed to serialize repository to JSON object.", e );
+                logger.info( "Failed to serialize repository to JSON object.", e );
             }
             catch ( Exception e )
             {
-                logger.log( "Failed to parse filter '" + filter + "'", e );
+                logger.info( "Failed to parse filter '" + filter + "'", e );
                 try
                 {
                     String reason = "filter=" + filter;
@@ -178,7 +178,7 @@ class FelixBundleRepositoryRenderHelper extends AbstractBundleRepositoryRenderHe
             // check whether we have to do something
             if ( bundles == null || bundles.length == 0 )
             {
-                logger.log( "No resources to deploy" );
+                logger.info( "No resources to deploy" );
                 return;
             }
 
@@ -202,7 +202,7 @@ class FelixBundleRepositoryRenderHelper extends AbstractBundleRepositoryRenderHe
                 }
             }
 
-            FelixDeployer.deploy( resolver, logger, start, optional );
+            FelixDeployer.deploy( resolver, start, optional );
         }
         catch ( InvalidSyntaxException e )
         {

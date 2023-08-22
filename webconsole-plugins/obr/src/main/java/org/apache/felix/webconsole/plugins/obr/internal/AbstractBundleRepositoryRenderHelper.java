@@ -21,25 +21,25 @@ package org.apache.felix.webconsole.plugins.obr.internal;
 
 import java.io.IOException;
 
-import javax.servlet.ServletException;
-import org.apache.felix.webconsole.AbstractWebConsolePlugin;
+import jakarta.servlet.ServletException;
+
 import org.osgi.framework.Bundle;
 import org.osgi.framework.BundleContext;
 import org.osgi.util.tracker.ServiceTracker;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 
 abstract class AbstractBundleRepositoryRenderHelper
 {
 
-    protected final AbstractWebConsolePlugin logger;
+    protected final Logger logger = LoggerFactory.getLogger(this.getClass());
 
     private final ServiceTracker repositoryAdmin;
 
 
-    protected AbstractBundleRepositoryRenderHelper( final AbstractWebConsolePlugin logger,
-        final BundleContext bundleContext, final String serviceName )
+    protected AbstractBundleRepositoryRenderHelper( final BundleContext bundleContext, final String serviceName )
     {
-        this.logger = logger;
         this.repositoryAdmin = new ServiceTracker( bundleContext, serviceName, null );
         this.repositoryAdmin.open();
     }

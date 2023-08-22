@@ -20,22 +20,30 @@ package org.apache.felix.webconsole.plugins.obr.internal;
 
 
 import java.io.IOException;
+import java.net.URLDecoder;
+import java.nio.charset.StandardCharsets;
+import java.util.Dictionary;
 import java.util.Enumeration;
+import java.util.Hashtable;
 
-import javax.servlet.ServletException;
-import javax.servlet.http.HttpServletRequest;
-import javax.servlet.http.HttpServletResponse;
+import jakarta.servlet.ServletException;
+import jakarta.servlet.http.HttpServletRequest;
+import jakarta.servlet.http.HttpServletResponse;
 
-import org.apache.felix.webconsole.DefaultVariableResolver;
-import org.apache.felix.webconsole.SimpleWebConsolePlugin;
-import org.apache.felix.webconsole.WebConsoleUtil;
+import org.apache.felix.webconsole.servlet.AbstractServlet;
+import org.apache.felix.webconsole.servlet.RequestVariableResolver;
+import org.apache.felix.webconsole.servlet.ServletConstants;
+import org.osgi.framework.BundleContext;
+import org.osgi.framework.ServiceRegistration;
+
+import jakarta.servlet.Servlet;
 
 
 /**
  * This class provides a plugin for rendering the available OSGi Bundle Repositories
  * and the resources they provide.
  */
-class WebConsolePlugin extends SimpleWebConsolePlugin
+class WebConsolePlugin extends AbstractServlet
 {
     private static final String LABEL = "obr"; //$NON-NLS-1$
     private static final String TITLE = "%obr.pluginTitle"; //$NON-NLS-1$
@@ -47,56 +55,64 @@ class WebConsolePlugin extends SimpleWebConsolePlugin
 
     private AbstractBundleRepositoryRenderHelper helper;
 
+    private ServiceRegistration<Servlet> registration;
+
+    private BundleContext bundleContext;
 
     /**
      *
      */
     public WebConsolePlugin()
     {
-        super( LABEL, TITLE, CSS );
-
         // load templates
-        TEMPLATE = readTemplateFile("/res/plugin.html"); //$NON-NLS-1$
+        try {
+            TEMPLATE = readTemplateFile("/res/plugin.html");
+        } catch (IOException e) {
+            throw new RuntimeException("Unable to read template");
+        }
     }
 
+    public WebConsolePlugin register(final BundleContext context) {
+        this.bundleContext = context;
+        final Dictionary<String, Object> props = new Hashtable<>();
+        props.put(ServletConstants.PLUGIN_LABEL, LABEL);
+        props.put(ServletConstants.PLUGIN_TITLE, TITLE);
+        props.put(ServletConstants.PLUGIN_CATEGORY, CATEGORY);
+        props.put(ServletConstants.PLUGIN_CSS_REFERENCES, CSS);
 
-    public String getCategory()
-    {
-        return CATEGORY;
+        this.registration = context.registerService(Servlet.class, this, props);
+        return this;
     }
 
-
-    /**
-     * @see org.apache.felix.webconsole.SimpleWebConsolePlugin#deactivate()
-     */
     public void deactivate()
     {
+        if (this.registration != null) {
+            try {
+                this.registration.unregister();
+            } catch ( final IllegalStateException ignore) {
+                // ignore
+            }
+            this.registration = null;
+        }
         if ( helper != null )
         {
             helper.dispose();
             helper = null;
         }
-
-        super.deactivate();
     }
 
-
-    /**
-     * @see org.apache.felix.webconsole.AbstractWebConsolePlugin#renderContent(javax.servlet.http.HttpServletRequest, javax.servlet.http.HttpServletResponse)
-     */
-    protected void renderContent( HttpServletRequest request, HttpServletResponse response ) throws IOException
+    @Override
+    public void renderContent( HttpServletRequest request, HttpServletResponse response ) throws IOException
     {
         // prepare variables
-        DefaultVariableResolver vars = ( ( DefaultVariableResolver ) WebConsoleUtil.getVariableResolver( request ) );
-        vars.put( "__data__", getData( request ) ); //$NON-NLS-1$
+        RequestVariableResolver vars = this.getVariableResolver(request);
+        vars.put( "__data__", getData( request ) );
 
         response.getWriter().print( TEMPLATE );
     }
 
 
-    /**
-     * @see javax.servlet.http.HttpServlet#doPost(javax.servlet.http.HttpServletRequest, javax.servlet.http.HttpServletResponse)
-     */
+    @Override
     protected void doPost( HttpServletRequest request, HttpServletResponse response ) throws ServletException,
         IOException
     {
@@ -135,7 +151,7 @@ class WebConsolePlugin extends SimpleWebConsolePlugin
         {
             try
             {
-                helper = new FelixBundleRepositoryRenderHelper( this, getBundleContext() );
+                helper = new FelixBundleRepositoryRenderHelper( this.bundleContext );
             }
             catch ( Throwable felixt )
             {
@@ -143,7 +159,7 @@ class WebConsolePlugin extends SimpleWebConsolePlugin
 
                 try
                 {
-                    helper = new OsgiBundleRepositoryRenderHelper( this, getBundleContext() );
+                    helper = new OsgiBundleRepositoryRenderHelper( this.bundleContext );
                 }
                 catch ( Throwable osgit )
                 {
@@ -238,7 +254,7 @@ class WebConsolePlugin extends SimpleWebConsolePlugin
             }
         }
 
-        return helper.getData( filter, info.showDetails(), getBundleContext().getBundles() );
+        return helper.getData( filter, info.showDetails(), this.bundleContext.getBundles() );
     }
 
 
@@ -287,7 +303,7 @@ class WebConsolePlugin extends SimpleWebConsolePlugin
         {
             if ( query == null )
             {
-                String query = WebConsoleUtil.urlDecode( request.getParameter( "query" ) ); //$NON-NLS-1$
+                String query = URLDecoder.decode( request.getParameter( "query" ), StandardCharsets.UTF_8 ); //$NON-NLS-1$
                 boolean details = false;
                 if ( query == null && request.getPathInfo().length() > 5 )
                 {
@@ -318,7 +334,7 @@ class WebConsolePlugin extends SimpleWebConsolePlugin
         {
             if ( list == null )
             {
-                list = WebConsoleUtil.urlDecode( request.getParameter( "list" ) ); //$NON-NLS-1$
+                list = URLDecoder.decode( request.getParameter( "list" ), StandardCharsets.UTF_8 ); //$NON-NLS-1$
                 if ( list == null && !request.getParameterNames().hasMoreElements() && getQuery() == null )
                 {
                     list = "a"; //$NON-NLS-1$

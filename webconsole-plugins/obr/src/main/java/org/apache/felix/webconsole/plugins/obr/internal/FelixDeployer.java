@@ -22,8 +22,8 @@ package org.apache.felix.webconsole.plugins.obr.internal;
 import org.apache.felix.bundlerepository.Reason;
 import org.apache.felix.bundlerepository.Resolver;
 import org.apache.felix.bundlerepository.Resource;
-import org.apache.felix.webconsole.AbstractWebConsolePlugin;
-import org.osgi.service.log.LogService;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 
 class FelixDeployer implements Runnable
@@ -31,25 +31,24 @@ class FelixDeployer implements Runnable
 
     private final Resolver obrResolver;
 
-    private final AbstractWebConsolePlugin logger;
+    private final Logger logger = LoggerFactory.getLogger( getClass() );
 
     private final boolean startBundles;
 
     private final boolean optionalDependencies;
 
-    static void deploy(Resolver obrResolver, AbstractWebConsolePlugin logger, boolean startBundles,
+    static void deploy(Resolver obrResolver, boolean startBundles,
         boolean optionalDependencies)
     {
-        final FelixDeployer d = new FelixDeployer(obrResolver, logger, startBundles, optionalDependencies);
+        final FelixDeployer d = new FelixDeployer(obrResolver, startBundles, optionalDependencies);
         final Thread t = new Thread(d, "OBR Bundle Deployer (Apache Felix API)");
         t.start();
     }
 
-    private FelixDeployer(Resolver obrResolver, AbstractWebConsolePlugin logger, boolean startBundles,
+    private FelixDeployer(Resolver obrResolver, boolean startBundles,
         boolean optionalDependencies)
     {
         this.obrResolver = obrResolver;
-        this.logger = logger;
         this.startBundles = startBundles;
         this.optionalDependencies = optionalDependencies;
     }
@@ -78,7 +77,7 @@ class FelixDeployer implements Runnable
         }
         catch ( Exception ie )
         {
-            logger.log( LogService.LOG_ERROR, "Cannot install bundles", ie );
+            logger.error( "Cannot install bundles", ie );
         }
     }
 
@@ -87,10 +86,10 @@ class FelixDeployer implements Runnable
     {
         if ( res != null && res.length > 0 )
         {
-            logger.log( LogService.LOG_INFO, message );
+            logger.info( message );
             for ( int i = 0; i < res.length; i++ )
             {
-                logger.log( LogService.LOG_INFO, "  " + i + ": " + res[i].getSymbolicName() + ", "
+                logger.info( "  " + i + ": " + res[i].getSymbolicName() + ", "
                     + res[i].getVersion() );
             }
         }
@@ -99,7 +98,7 @@ class FelixDeployer implements Runnable
 
     private void logRequirements( String message, Reason[] reasons )
     {
-        logger.log( LogService.LOG_ERROR, message );
+        logger.error( message );
         for ( int i = 0; reasons != null && i < reasons.length; i++ )
         {
             String moreInfo = reasons[i].getRequirement().getComment();
@@ -107,7 +106,7 @@ class FelixDeployer implements Runnable
             {
                 moreInfo = reasons[i].getRequirement().getFilter().toString();
             }
-            logger.log( LogService.LOG_ERROR, "  " + i + ": " + reasons[i].getRequirement().getName() + " (" + moreInfo + ")" );
+            logger.error( "  " + i + ": " + reasons[i].getRequirement().getName() + " (" + moreInfo + ")" );
         }
     }
 
