@@ -20,6 +20,7 @@ package org.apache.felix.webconsole.internal.servlet;
 
 
 import java.io.Closeable;
+import java.net.URL;
 
 import org.apache.felix.http.javaxwrappers.ServletWrapper;
 import org.apache.felix.webconsole.WebConsoleConstants;
@@ -98,7 +99,18 @@ public class JakartaServletTracker implements Closeable, ServiceTrackerCustomize
                 if ( servlet instanceof AbstractServlet ) {
                     return new JakartaServletAdapter((AbstractServlet)servlet, this.getServiceReference());
                 }
-                return new ServletWrapper(servlet);
+                final String prefix = "/".concat(this.getLabel());
+                final String resStart = prefix.concat("/res/");
+                return new ServletWrapper(servlet) {
+
+                    @SuppressWarnings("unused")
+                    public URL getResource(String path) {
+                        if (path != null && path.startsWith(resStart)) {
+                            return servlet.getClass().getResource(path.substring(prefix.length()));
+                        }
+                        return null;
+                    }
+                };
             }
             return null;
         }
