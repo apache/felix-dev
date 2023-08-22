@@ -27,7 +27,7 @@ import org.osgi.util.tracker.ServiceTrackerCustomizer;
 /**
  * Activator is the main starting class.
  */
-public class Activator implements BundleActivator, ServiceTrackerCustomizer, Constants
+public class Activator implements BundleActivator, ServiceTrackerCustomizer
 {
 
     private ServiceTracker tracker;
@@ -42,8 +42,8 @@ public class Activator implements BundleActivator, ServiceTrackerCustomizer, Con
     {
         this.context = context;
         Filter filter = context.createFilter("(|" //$NON-NLS-1$
-            + '(' + OBJECTCLASS + "=org.osgi.service.obr.RepositoryAdmin)" //$NON-NLS-1$
-            + '(' + OBJECTCLASS + "=org.apache.felix.bundlerepository.RepositoryAdmin)" //$NON-NLS-1$
+            + '(' + Constants.OBJECTCLASS + "=org.osgi.service.obr.RepositoryAdmin)" //$NON-NLS-1$
+            + '(' + Constants.OBJECTCLASS + "=org.apache.felix.bundlerepository.RepositoryAdmin)" //$NON-NLS-1$
             + ')');
         this.tracker = new ServiceTracker(context, filter, this);
         this.tracker.open();

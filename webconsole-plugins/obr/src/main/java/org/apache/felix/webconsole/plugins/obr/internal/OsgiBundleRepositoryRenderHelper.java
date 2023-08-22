@@ -29,7 +29,6 @@ import java.util.Map.Entry;
 import jakarta.servlet.ServletException;
 
 import org.apache.felix.utils.json.JSONWriter;
-import org.apache.felix.webconsole.AbstractWebConsolePlugin;
 import org.osgi.framework.Bundle;
 import org.osgi.framework.BundleContext;
 import org.osgi.framework.Version;
