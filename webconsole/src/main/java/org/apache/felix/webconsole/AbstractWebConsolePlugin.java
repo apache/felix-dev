@@ -135,6 +135,7 @@ public abstract class AbstractWebConsolePlugin extends HttpServlet {
 
     private BundleContext bundleContext;
 
+    @SuppressWarnings("deprecation")
     private static volatile BrandingPlugin brandingPlugin = DefaultBrandingPlugin.getInstance();
 
     private static volatile int logLevel;
@@ -670,7 +671,7 @@ public abstract class AbstractWebConsolePlugin extends HttpServlet {
      * @param request the HTTP request coming from the user
      * @param pw the writer, where the HTML data is rendered
      */
-    @SuppressWarnings({ "rawtypes" })
+    @SuppressWarnings({ "rawtypes", "deprecation" })
     protected void renderTopNavigation( HttpServletRequest request, PrintWriter pw )
     {
         // assume pathInfo to not be null, else this would not be called

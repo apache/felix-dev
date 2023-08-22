@@ -46,6 +46,9 @@ import jakarta.servlet.http.HttpServletResponse;
  * <p>
  * For html (content) requests, the web console automatically draws the header,
  * footer and navigation.
+ * <p>
+ * Support for Jakarta servlets requires that the Jakarta Servlet API and the
+ * Apache Felix Http Wrappers are available in the runtime.
  *
  * @see ServletConstants#PLUGIN_LABEL
  * @see ServletConstants#PLUGIN_TITLE

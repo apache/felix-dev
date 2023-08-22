@@ -411,7 +411,7 @@ public class ConfigManager extends SimpleWebConsolePlugin implements OsgiManager
         jw.object();
         final ConfigAdminSupport cas = getConfigurationAdminSupport();
         // check for osgi installer plugin
-        @SuppressWarnings("unchecked")
+        @SuppressWarnings({"unchecked", "deprecation" })
         final Map<String, Object> labelMap = (Map<String, Object>) request.getAttribute(WebConsoleConstants.ATTR_LABEL_MAP);
         jw.key("jsonsupport").value( labelMap.containsKey("osgi-installer-config-printer") ); //$NON-NLS-1$
         final boolean hasMetatype = cas.getMetaTypeSupport() != null;

@@ -21,29 +21,41 @@ package org.apache.felix.webconsole.internal.servlet;
 
 import java.io.Closeable;
 import java.net.URL;
+import java.util.Dictionary;
+import java.util.Hashtable;
 
+import javax.servlet.http.HttpServletRequest;
+import javax.servlet.http.HttpServletResponse;
+
+import org.apache.felix.http.jakartawrappers.HttpServletRequestWrapper;
+import org.apache.felix.http.jakartawrappers.HttpServletResponseWrapper;
 import org.apache.felix.http.javaxwrappers.ServletWrapper;
 import org.apache.felix.webconsole.WebConsoleConstants;
+import org.apache.felix.webconsole.WebConsoleSecurityProvider3;
 import org.apache.felix.webconsole.internal.Util;
 import org.apache.felix.webconsole.internal.servlet.Plugin.ServletPlugin;
 import org.apache.felix.webconsole.servlet.AbstractServlet;
+import org.apache.felix.webconsole.spi.SecurityProvider;
 import org.osgi.framework.BundleContext;
 import org.osgi.framework.Constants;
 import org.osgi.framework.Filter;
 import org.osgi.framework.InvalidSyntaxException;
 import org.osgi.framework.ServiceReference;
+import org.osgi.framework.ServiceRegistration;
 import org.osgi.util.tracker.ServiceTracker;
 import org.osgi.util.tracker.ServiceTrackerCustomizer;
 
 import jakarta.servlet.Servlet;
 
-public class JakartaServletTracker implements Closeable, ServiceTrackerCustomizer<Servlet, JakartaServletTracker.JakartaServletPlugin> {
+public class JakartaServiceTracker implements Closeable, ServiceTrackerCustomizer<Servlet, JakartaServiceTracker.JakartaServletPlugin> {
 
     private final ServiceTracker<Servlet, JakartaServletPlugin> servletTracker;
 
     private final PluginHolder pluginHolder;
 
-    public JakartaServletTracker( final PluginHolder pluginHolder, final BundleContext context ) {
+    private final JakartaSecurityProviderTracker securityProviderTracker;
+
+    public JakartaServiceTracker( final PluginHolder pluginHolder, final BundleContext context ) {
         this.pluginHolder = pluginHolder;
         Filter filter = null;
         try {
@@ -55,11 +67,13 @@ public class JakartaServletTracker implements Closeable, ServiceTrackerCustomize
         }
         this.servletTracker = new ServiceTracker<>(context, filter, this);
         servletTracker.open();
+        this.securityProviderTracker = new JakartaSecurityProviderTracker(context);
     }
 
     @Override
     public void close() {
-        servletTracker.close();
+        this.servletTracker.close();
+        this.securityProviderTracker.close();
     }
 
     @Override
@@ -113,6 +127,89 @@ public class JakartaServletTracker implements Closeable, ServiceTrackerCustomize
                 };
             }
             return null;
+        }
+    }
+
+    public static class JakartaSecurityProviderTracker implements ServiceTrackerCustomizer<SecurityProvider, ServiceRegistration<WebConsoleSecurityProvider3>> {
+
+        private final ServiceTracker<SecurityProvider, ServiceRegistration<WebConsoleSecurityProvider3>> tracker;
+
+        private final BundleContext bundleContext;
+
+        public JakartaSecurityProviderTracker( final BundleContext context ) {
+            this.bundleContext = context;
+            this.tracker = new ServiceTracker<>(context, SecurityProvider.class, this);
+            tracker.open();
+        }
+
+        public void close() {
+            tracker.close();
+        }
+
+        @Override
+        public ServiceRegistration<WebConsoleSecurityProvider3> addingService( final ServiceReference<SecurityProvider> reference ) {
+            final SecurityProvider provider = this.bundleContext.getService(reference);
+            if ( provider != null ) {
+                final JakartaSecurityProvider jakartaSecurityProvider = new JakartaSecurityProvider(provider);
+                final Dictionary<String, Object> props = new Hashtable<>();
+                if (reference.getProperty(Constants.SERVICE_RANKING) != null) {
+                    props.put(Constants.SERVICE_RANKING, reference.getProperty(Constants.SERVICE_RANKING));
+                }
+                final ServiceRegistration<WebConsoleSecurityProvider3> reg = this.bundleContext.registerService(WebConsoleSecurityProvider3.class, jakartaSecurityProvider, props);
+                return reg;
+            }
+            return null;
+        }
+
+        @Override
+        public void modifiedService( final ServiceReference<SecurityProvider> reference, final ServiceRegistration<WebConsoleSecurityProvider3> service ) {
+            // nothing to do
+        }
+
+        @Override
+        public void removedService( final ServiceReference<SecurityProvider> reference, final ServiceRegistration<WebConsoleSecurityProvider3> service ) {
+            this.bundleContext.ungetService(reference);
+            try {
+                service.unregister();
+            } catch ( final IllegalStateException ise ) {
+                // ignore
+            }
+        }
+    }
+
+    public static class JakartaSecurityProvider implements WebConsoleSecurityProvider3 {
+            
+        private final SecurityProvider provider;
+
+        public JakartaSecurityProvider(final SecurityProvider provider) {
+            this.provider = provider;
+        }
+
+        @Override
+        public void logout(final HttpServletRequest request, final HttpServletResponse response) {
+            this.provider.logout((jakarta.servlet.http.HttpServletRequest)HttpServletRequestWrapper.getWrapper(request), 
+                (jakarta.servlet.http.HttpServletResponse)HttpServletResponseWrapper.getWrapper(response));
+        }
+
+        @Override
+        public boolean authenticate(final HttpServletRequest request, final HttpServletResponse response) {
+            final Object user = this.provider.authenticate((jakarta.servlet.http.HttpServletRequest)HttpServletRequestWrapper.getWrapper(request), 
+                (jakarta.servlet.http.HttpServletResponse)HttpServletResponseWrapper.getWrapper(response));
+            if (user != null) {
+                request.setAttribute(WebConsoleSecurityProvider3.USER_ATTRIBUTE, user);
+            }
+            return user != null;
+        }
+
+        @Override
+        public Object authenticate(final String username, final String password) {
+            // no need to implement
+            return null;
+        }
+
+        @Override
+        public boolean authorize(final Object user, final String role) {
+            return this.provider.authorize(user, role);
         }
     }
 }
