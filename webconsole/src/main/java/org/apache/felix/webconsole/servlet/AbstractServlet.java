@@ -38,10 +38,19 @@ import jakarta.servlet.http.HttpServletResponse;
  * This class can be used as a base class for a web console plugin.
  * The plugin (servlet) needs to be registered as a servlet service
  * with at least the label property.
+ * <p>
+ * Extending this servlet is one way of providing a plugin. The other
+ * is to simply direclty implement the servlet interface. In both cases
+ * requests to resources with a path of "LABEL/res/*" are automatically
+ * handled.
+ * <p>
+ * For html (content) requests, the web console automatically draws the header,
+ * footer and navigation.
  *
  * @see ServletConstants#PLUGIN_LABEL
  * @see ServletConstants#PLUGIN_TITLE
  * @see ServletConstants#PLUGIN_CATEGORY
+ * @see ServletConstants#PLUGIN_CSS_REFERENCES
  */
 public abstract class AbstractServlet extends HttpServlet {
 
