@@ -98,7 +98,7 @@ class PluginHolder implements ServiceTrackerCustomizer<Servlet, Plugin> {
     void open() {
         this.servletTracker.open();
         try {
-            this.jakartaTracker = new JakartaServletTracker(this, this.getBundleContext());
+            this.jakartaTracker = new JakartaServiceTracker(this, this.getBundleContext());
             this.osgiManager.log(LogService.LOG_INFO, "Jakarta Servlet bridge enabled");
         } catch ( final Throwable t) {
             // ignore
