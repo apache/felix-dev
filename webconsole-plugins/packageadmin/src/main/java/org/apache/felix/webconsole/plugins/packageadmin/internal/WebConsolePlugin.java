@@ -24,8 +24,10 @@ import java.net.URL;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Comparator;
+import java.util.Dictionary;
 import java.util.Enumeration;
 import java.util.HashMap;
+import java.util.Hashtable;
 import java.util.Iterator;
 import java.util.LinkedHashSet;
 import java.util.List;
@@ -37,20 +39,22 @@ import java.util.StringTokenizer;
 import java.util.TreeMap;
 import java.util.TreeSet;
 
-import javax.servlet.ServletException;
-import javax.servlet.http.HttpServlet;
-import javax.servlet.http.HttpServletRequest;
-import javax.servlet.http.HttpServletResponse;
+import jakarta.servlet.Servlet;
+import jakarta.servlet.ServletException;
+import jakarta.servlet.http.HttpServlet;
+import jakarta.servlet.http.HttpServletRequest;
+import jakarta.servlet.http.HttpServletResponse;
 
 import org.apache.commons.io.IOUtils;
 import org.apache.felix.utils.json.JSONWriter;
 import org.apache.felix.utils.manifest.Clause;
 import org.apache.felix.utils.manifest.Parser;
-import org.apache.felix.webconsole.SimpleWebConsolePlugin;
-import org.apache.felix.webconsole.WebConsoleUtil;
+import org.apache.felix.webconsole.servlet.AbstractServlet;
+import org.apache.felix.webconsole.servlet.ServletConstants;
 import org.osgi.framework.Bundle;
 import org.osgi.framework.BundleContext;
 import org.osgi.framework.Constants;
+import org.osgi.framework.ServiceRegistration;
 import org.osgi.service.packageadmin.ExportedPackage;
 import org.osgi.service.packageadmin.PackageAdmin;
 
@@ -58,51 +62,47 @@ import org.osgi.service.packageadmin.PackageAdmin;
  * Provides a Web bases interface to the Packages Admin service, allowing
  * the user to find package / maven information and identify duplicate exports.
  */
-class WebConsolePlugin extends SimpleWebConsolePlugin
-{
-    private static final long serialVersionUID = 1L;
-    private static final String LABEL = "depfinder"; //$NON-NLS-1$
-    private static final String TITLE = "%pluginTitle"; //$NON-NLS-1$
-    private static final String CATEGORY = "OSGi"; //$NON-NLS-1$
-    private static final String CSS[] = { "/" + LABEL + "/res/plugin.css" }; //$NON-NLS-1$ //$NON-NLS-2$
+@SuppressWarnings("deprecation")
+class WebConsolePlugin extends AbstractServlet {
 
-    @SuppressWarnings("deprecation")
+    private static final long serialVersionUID = 1L;
+    private static final String LABEL = "depfinder"; 
+    private static final String TITLE = "%pluginTitle";
+    private static final String CATEGORY = "OSGi";
+    private static final String CSS[] = { "/" + LABEL + "/res/plugin.css" };
+
     private static final Comparator<ExportedPackage> EXPORT_PACKAGE_COMPARATOR = new ExportedPackageComparator();
 
-    @SuppressWarnings("deprecation")
     private final PackageAdmin pa;
     private final BundleContext bc;
 
     // templates
     private final String TEMPLATE;
 
-    @SuppressWarnings("deprecation")
-    WebConsolePlugin(BundleContext bc, Object pa)
-    {
-        super(LABEL, TITLE, CATEGORY, CSS);
-
+    WebConsolePlugin(BundleContext bc, PackageAdmin pa) {
         this.pa = (PackageAdmin) pa;
         this.bc = bc;
 
         // load templates
-        TEMPLATE = readTemplateFile("/res/plugin.html"); //$NON-NLS-1$
+        try {
+            TEMPLATE = readTemplateFile("/res/plugin.html");
+        } catch (IOException e) {
+            throw new RuntimeException("Cannot load template files", e);
+        }
     }
 
-
-    @Override
-    public String getCategory()
-    {
-        return CATEGORY;
+    public ServiceRegistration<Servlet> register() {
+        final Dictionary<String, Object> props = new Hashtable<String, Object>();
+        props.put(ServletConstants.PLUGIN_LABEL, LABEL);
+        props.put(ServletConstants.PLUGIN_TITLE, TITLE);
+        props.put(ServletConstants.PLUGIN_CATEGORY, CATEGORY);
+        props.put(ServletConstants.PLUGIN_CSS_REFERENCES, CSS);
+        return this.bc.registerService(Servlet.class, this, props);
     }
 
-
-    /**
-     * @see org.apache.felix.webconsole.AbstractWebConsolePlugin#renderContent(HttpServletRequest, HttpServletResponse)
-     */
     @Override
-    protected final void renderContent(HttpServletRequest req,
-        HttpServletResponse response) throws ServletException, IOException
-    {
+    public final void renderContent(HttpServletRequest req,
+        HttpServletResponse response) throws ServletException, IOException {
         response.getWriter().print(TEMPLATE);
     }
 
@@ -115,12 +115,11 @@ class WebConsolePlugin extends SimpleWebConsolePlugin
     {
         final Object json;
 
-        String action = req.getParameter("action"); //$NON-NLS-1$
-        if ("deps".equals(action)) { //$NON-NLS-1$
+        String action = req.getParameter("action");
+        if ("deps".equals(action)) {
             json = doFindDependencies(req, pa);
         }
-        else if ("dups".equals(action)) { //$NON-NLS-1$
-            @SuppressWarnings("deprecation")
+        else if ("dups".equals(action)) {
             Map<String, Set<ExportedPackage>> packages = collectExportedPackages(
                 pa, bc);
             json = doFindDuplicates(packages);
@@ -130,14 +129,13 @@ class WebConsolePlugin extends SimpleWebConsolePlugin
             throw new ServletException("Invalid action: " + action);
         }
 
-        WebConsoleUtil.setNoCache(resp);
-        resp.setContentType("application/json; utf-8"); //$NON-NLS-1$
+        AbstractServlet.setNoCache(resp);
+        resp.setContentType("application/json; utf-8");
         JSONWriter writer = new JSONWriter(resp.getWriter());
         writer.value(json);
         writer.flush();
     }
 
-    @SuppressWarnings("deprecation")
     static final Map<String, Set<ExportedPackage>> collectExportedPackages(
         final PackageAdmin pa, final BundleContext bundleContext)
     {
@@ -165,13 +163,12 @@ class WebConsolePlugin extends SimpleWebConsolePlugin
         return exports;
     }
 
-    @SuppressWarnings("deprecation")
     private static final Map<String, Object> doFindDependencies(HttpServletRequest req,
         PackageAdmin pa)
     {
         final Map<String, Object> json = new HashMap<String, Object>();
 
-        final String findField = req.getParameter("plugin.find"); //$NON-NLS-1$
+        final String findField = req.getParameter("plugin.find");
         if (findField != null)
         {
             Set<String> packageNames = getPackageNames(findField);
@@ -181,7 +178,7 @@ class WebConsolePlugin extends SimpleWebConsolePlugin
             {
                 String name = i.next();
                 @SuppressWarnings("unchecked")
-                List<Object> pl = (List<Object>)json.get("packages"); //$NON-NLS-1$
+                List<Object> pl = (List<Object>)json.get("packages");
                 if ( pl == null )
                 {
                     pl = new ArrayList<Object>();
@@ -191,7 +188,7 @@ class WebConsolePlugin extends SimpleWebConsolePlugin
             }
 
             final Map<String, Object> mavenJson = new HashMap<String, Object>();
-            json.put("maven", mavenJson); //$NON-NLS-1$
+            json.put("maven", mavenJson);
             for (Iterator<Bundle> i = exportingBundles.iterator(); i.hasNext();)
             {
                 Bundle bundle = i.next();
@@ -207,7 +204,6 @@ class WebConsolePlugin extends SimpleWebConsolePlugin
 
     }
 
-    @SuppressWarnings("deprecation")
     private static final Collection<Object> doFindDuplicates(
         final Map<String, Set<ExportedPackage>> exports)
     {
@@ -224,13 +220,13 @@ class WebConsolePlugin extends SimpleWebConsolePlugin
                 {
                     ExportedPackage exportedPackage = packageIter.next();
                     final Map<String, Object> json = toJSON(exportedPackage);
-                    container.put("name", exportedPackage.getName()); //$NON-NLS-1$
+                    container.put("name", exportedPackage.getName());
                     @SuppressWarnings("unchecked")
-                    List<Object> imps = (List<Object>) container.get("entries"); //$NON-NLS-1$
+                    List<Object> imps = (List<Object>) container.get("entries");
                     if ( imps == null )
                     {
                         imps = new ArrayList<Object>();
-                        container.put("entries", imps); //$NON-NLS-1$
+                        container.put("entries", imps);
                     }
                     imps.add(json);
                 }
@@ -241,10 +237,10 @@ class WebConsolePlugin extends SimpleWebConsolePlugin
 
     private static final void toJSON(Bundle bundle, Map<String, Object> json)
     {
-        json.put("bid", bundle.getBundleId()); //$NON-NLS-1$
+        json.put("bid", bundle.getBundleId());
         if ( bundle.getSymbolicName() != null )
         {
-            json.put("bsn", bundle.getSymbolicName()); //$NON-NLS-1$
+            json.put("bsn", bundle.getSymbolicName());
         }
     }
 
@@ -267,27 +263,25 @@ class WebConsolePlugin extends SimpleWebConsolePlugin
                 }
             }
             @SuppressWarnings("unchecked")
-            List<Object> imps = (List<Object>) json.get("importers"); //$NON-NLS-1$
+            List<Object> imps = (List<Object>) json.get("importers");
             if ( imps == null )
             {
                 imps = new ArrayList<Object>();
-                json.put("importers", imps); //$NON-NLS-1$
+                json.put("importers", imps);
             }
             imps.add(usingJson);
         }
     }
 
-    @SuppressWarnings("deprecation")
     private static final Map<String, Object> toJSON(final ExportedPackage pkg)
     {
         final Map<String, Object> ret = new HashMap<String, Object>();
-        ret.put("version", pkg.getVersion()); //$NON-NLS-1$
+        ret.put("version", pkg.getVersion());
         toJSON(pkg.getExportingBundle(), ret);
         toJSON(pkg.getName(), pkg.getImportingBundles(), ret);
         return ret;
     }
 
-    @SuppressWarnings("deprecation")
     private static final Map<String, Object> getPackageInfo(String packageName, PackageAdmin pa,
         Set<Bundle> exportingBundles)
     {
@@ -297,16 +291,16 @@ class WebConsolePlugin extends SimpleWebConsolePlugin
         {
             final ExportedPackage x = exports[i];
             @SuppressWarnings("unchecked")
-            List<Object> el = (List<Object>)ret.get("exporters"); //$NON-NLS-1$
+            List<Object> el = (List<Object>)ret.get("exporters");
             if ( el == null )
             {
                 el = new ArrayList<Object>();
-                ret.put("exporters", el); //$NON-NLS-1$
+                ret.put("exporters", el);
             }
             el.add(toJSON(x));
             exportingBundles.add(x.getExportingBundle());
         }
-        ret.put("name", packageName); //$NON-NLS-1$
+        ret.put("name", packageName);
         return ret;
     }
 
@@ -314,7 +308,7 @@ class WebConsolePlugin extends SimpleWebConsolePlugin
     {
         Map<Object, Object> ret = null;
 
-        Enumeration<URL> entries = bundle.findEntries("META-INF/maven", "pom.properties", true); //$NON-NLS-1$ //$NON-NLS-2$
+        Enumeration<URL> entries = bundle.findEntries("META-INF/maven", "pom.properties", true); //$NON-NLS-2$
         if (entries != null)
         {
             URL u = entries.nextElement();
@@ -341,7 +335,7 @@ class WebConsolePlugin extends SimpleWebConsolePlugin
 
     static final Set<String> getPackageNames(String findField)
     {
-        StringTokenizer tok = new StringTokenizer(findField, " \t\n\f\r"); //$NON-NLS-1$
+        StringTokenizer tok = new StringTokenizer(findField, " \t\n\f\r");
         SortedSet<String> result = new TreeSet<String>();
         while (tok.hasMoreTokens())
         {

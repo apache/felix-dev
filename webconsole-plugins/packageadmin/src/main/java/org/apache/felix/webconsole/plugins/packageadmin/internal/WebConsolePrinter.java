@@ -32,34 +32,26 @@ import org.osgi.framework.Bundle;
 import org.osgi.framework.BundleContext;
 import org.osgi.service.packageadmin.ExportedPackage;
 import org.osgi.service.packageadmin.PackageAdmin;
-import org.osgi.util.tracker.ServiceTracker;
 
+@SuppressWarnings("deprecation")
 class WebConsolePrinter implements InventoryPrinter
 {
 
-    private final ServiceTracker tracker;
+    private final PackageAdmin pa;
     private final BundleContext bc;
 
-    WebConsolePrinter(BundleContext bc, ServiceTracker tracker)
+    WebConsolePrinter(BundleContext bc, PackageAdmin pa)
     {
         this.bc = bc;
-        this.tracker = tracker;
+        this.pa = pa;
     }
 
     /**
      * @see org.apache.felix.inventory.InventoryPrinter#print(
      *  java.io.PrintWriter, org.apache.felix.inventory.Format, boolean)
      */
-    @SuppressWarnings("deprecation")
     public void print(PrintWriter pw, Format format, boolean isZip)
     {
-        final PackageAdmin pa = (PackageAdmin) tracker.getService();
-        if (pa == null)
-        {
-            pw.println("Status: PackageAdmin Service not registered");
-            return;
-        }
-
         try
         {
             Map<String, Set<ExportedPackage>> exports = WebConsolePlugin.collectExportedPackages(
@@ -78,7 +70,6 @@ class WebConsolePrinter implements InventoryPrinter
         }
     }
 
-    @SuppressWarnings("deprecation")
     private void dumpDuplicatesAsTxt(final PrintWriter pw,
         final Map<String, Set<ExportedPackage>> exports)
     {
@@ -170,5 +161,4 @@ class WebConsolePrinter implements InventoryPrinter
     {
         return "Duplicate Exports";
     }
-
 }

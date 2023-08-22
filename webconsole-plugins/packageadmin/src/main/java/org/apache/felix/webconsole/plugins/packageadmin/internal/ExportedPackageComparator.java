@@ -22,6 +22,7 @@ import java.util.Comparator;
 
 import org.osgi.service.packageadmin.ExportedPackage;
 
+@SuppressWarnings("deprecation")
 final class ExportedPackageComparator implements Comparator<ExportedPackage>
 {
 
