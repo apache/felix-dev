@@ -44,9 +44,9 @@ import org.osgi.service.log.LogService;
  */
 public class LogServlet extends SimpleWebConsolePlugin implements OsgiManagerPlugin
 {
-    private static final String LABEL = "logs"; //$NON-NLS-1$
-    private static final String TITLE = "%logs.pluginTitle"; //$NON-NLS-1$
-    private static final String CSS[] = { "/res/ui/logs.css" }; //$NON-NLS-1$
+    private static final String LABEL = "logs";
+    private static final String TITLE = "%logs.pluginTitle";
+    private static final String CSS[] = { "/res/ui/logs.css" };
 
     private final static int MAX_LOGS = 200; //maximum number of log entries
 
@@ -59,7 +59,7 @@ public class LogServlet extends SimpleWebConsolePlugin implements OsgiManagerPlu
         super(LABEL, TITLE, CATEGORY_OSGI, CSS);
 
         // load templates
-        TEMPLATE = readTemplateFile( "/templates/logs.html" ); //$NON-NLS-1$
+        TEMPLATE = readTemplateFile( "/templates/logs.html" );
     }
 
 
@@ -68,17 +68,17 @@ public class LogServlet extends SimpleWebConsolePlugin implements OsgiManagerPlu
      */
     protected void doPost( HttpServletRequest req, HttpServletResponse resp ) throws IOException
     {
-        final int minLevel = WebConsoleUtil.getParameterInt( req, "minLevel", LogService.LOG_DEBUG); //$NON-NLS-1$
+        final int minLevel = WebConsoleUtil.getParameterInt( req, "minLevel", LogService.LOG_DEBUG);
 
-        resp.setContentType( "application/json" ); //$NON-NLS-1$
-        resp.setCharacterEncoding( "utf-8" ); //$NON-NLS-1$
+        resp.setContentType( "application/json" );
+        resp.setCharacterEncoding( "utf-8" );
 
         renderJSON( resp.getWriter(), minLevel, trasesEnabled(req) );
     }
 
     private static boolean trasesEnabled( final HttpServletRequest req )
     {
-        String traces = req.getParameter("traces"); //$NON-NLS-1$
+        String traces = req.getParameter("traces");
         return null == traces ? false : Boolean.valueOf( traces ).booleanValue();
     }
 
@@ -92,10 +92,10 @@ public class LogServlet extends SimpleWebConsolePlugin implements OsgiManagerPlu
         JSONWriter jw = new JSONWriter( pw );
         jw.object();
 
-        jw.key( "status" ); //$NON-NLS-1$
+        jw.key( "status" );
         jw.value( logReaderService == null ? Boolean.FALSE : Boolean.TRUE );
 
-        jw.key( "data" ); //$NON-NLS-1$
+        jw.key( "data" );
         jw.array();
 
         if ( logReaderService != null )
@@ -125,12 +125,12 @@ public class LogServlet extends SimpleWebConsolePlugin implements OsgiManagerPlu
     protected void doGet( HttpServletRequest request, HttpServletResponse response ) throws ServletException,
     IOException
     {
-        final int minLevel = WebConsoleUtil.getParameterInt( request, "minLevel", LogService.LOG_DEBUG ); //$NON-NLS-1$
+        final int minLevel = WebConsoleUtil.getParameterInt( request, "minLevel", LogService.LOG_DEBUG );
         final String info = request.getPathInfo();
-        if ( info.endsWith( ".json" ) ) //$NON-NLS-1$
+        if ( info.endsWith( ".json" ) )
         {
-            response.setContentType( "application/json" ); //$NON-NLS-1$
-            response.setCharacterEncoding( "UTF-8" ); //$NON-NLS-1$
+            response.setContentType( "application/json" );
+            response.setCharacterEncoding( "UTF-8" );
 
             PrintWriter pw = response.getWriter();
             this.renderJSON( pw, minLevel, trasesEnabled(request) );
@@ -152,24 +152,24 @@ public class LogServlet extends SimpleWebConsolePlugin implements OsgiManagerPlu
     private static final void logJson( JSONWriter jw, LogEntry info, int index, boolean traces ) throws IOException
     {
         jw.object();
-        jw.key( "id" ); //$NON-NLS-1$
+        jw.key( "id" );
         jw.value( String.valueOf( index ) );
-        jw.key( "received" ); //$NON-NLS-1$
+        jw.key( "received" );
         jw.value( info.getTime() );
-        jw.key( "level" ); //$NON-NLS-1$
+        jw.key( "level" );
         jw.value( logLevel( info.getLevel() ) );
-        jw.key( "raw_level" ); //$NON-NLS-1$
+        jw.key( "raw_level" );
         jw.value( info.getLevel() );
-        jw.key( "message" ); //$NON-NLS-1$
+        jw.key( "message" );
         jw.value( info.getMessage() );
-        jw.key( "service" ); //$NON-NLS-1$
+        jw.key( "service" );
         jw.value( serviceDescription( info.getServiceReference() ) );
-        jw.key( "exception" ); //$NON-NLS-1$
+        jw.key( "exception" );
         jw.value( exceptionMessage( info.getException(), traces ) );
         Bundle bundle = info.getBundle();
         if (null != bundle)
         {
-            jw.key("bundleId"); //$NON-NLS-1$
+            jw.key("bundleId");
             jw.value(bundle.getBundleId());
             String name = (String) bundle.getHeaders().get(Constants.BUNDLE_NAME);
             if (null == name)
@@ -180,7 +180,7 @@ public class LogServlet extends SimpleWebConsolePlugin implements OsgiManagerPlu
             {
                 name = bundle.getLocation();
             }
-            jw.key("bundleName"); //$NON-NLS-1$
+            jw.key("bundleName");
             jw.value(name);
         }
         jw.endObject();
@@ -191,7 +191,7 @@ public class LogServlet extends SimpleWebConsolePlugin implements OsgiManagerPlu
     {
         if ( serviceReference == null )
         {
-            return ""; //$NON-NLS-1$
+            return "";
         }
         return serviceReference.toString();
     }
@@ -202,14 +202,14 @@ public class LogServlet extends SimpleWebConsolePlugin implements OsgiManagerPlu
         switch ( level )
         {
         case LogService.LOG_INFO:
-            return "INFO"; //$NON-NLS-1$
+            return "INFO";
         case LogService.LOG_WARNING:
-            return "WARNING"; //$NON-NLS-1$
+            return "WARNING";
         case LogService.LOG_ERROR:
-            return "ERROR"; //$NON-NLS-1$
+            return "ERROR";
         case LogService.LOG_DEBUG:
         default:
-            return "DEBUG"; //$NON-NLS-1$
+            return "DEBUG";
         }
     }
 
@@ -220,7 +220,7 @@ public class LogServlet extends SimpleWebConsolePlugin implements OsgiManagerPlu
     {
         if ( e == null )
         {
-            return ""; //$NON-NLS-1$
+            return "";
         }
         if (traces) {
             String ret = null;
@@ -235,7 +235,7 @@ public class LogServlet extends SimpleWebConsolePlugin implements OsgiManagerPlu
             }
             return ret;
         }
-        return e.getClass().getName() + ": " + e.getMessage(); //$NON-NLS-1$
+        return e.getClass().getName() + ": " + e.getMessage();
     }
 
 }

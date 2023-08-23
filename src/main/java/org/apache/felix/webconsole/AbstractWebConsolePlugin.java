@@ -73,7 +73,7 @@ public abstract class AbstractWebConsolePlugin extends HttpServlet {
      * @deprecated Use the Servlet API for uploads
      */
     @Deprecated
-    public static final String ATTR_FILEUPLOAD = "org.apache.felix.webconsole.fileupload"; //$NON-NLS-1$
+    public static final String ATTR_FILEUPLOAD = "org.apache.felix.webconsole.fileupload";
     
     /** 
      * The name of the request attribute containing a {@link java.io.File} - upload repository path used by
@@ -92,7 +92,7 @@ public abstract class AbstractWebConsolePlugin extends HttpServlet {
      * @deprecated Use the Servlet API for uploads
      */
     @Deprecated
-    public static final String ATTR_FILEUPLOAD_REPO = "org.apache.felix.webconsole.fileupload.repo"; //$NON-NLS-1$
+    public static final String ATTR_FILEUPLOAD_REPO = "org.apache.felix.webconsole.fileupload.repo";
 
     /**
      * Web Console Plugin typically consists of servlet and resources such as images,
@@ -104,7 +104,7 @@ public abstract class AbstractWebConsolePlugin extends HttpServlet {
      *
      *  @see #getResourceProvider()
      */
-    public static final String GET_RESOURCE_METHOD_NAME = "getResource"; //$NON-NLS-1$
+    public static final String GET_RESOURCE_METHOD_NAME = "getResource";
 
     /**
      * The header fragment read from the templates/main_header.html file
@@ -207,9 +207,9 @@ public abstract class AbstractWebConsolePlugin extends HttpServlet {
                 renderTopNavigation( request, pw );
 
                 // wrap content in a separate div
-                pw.println( "<div id='content'>" ); //$NON-NLS-1$
+                pw.println( "<div id='content'>" );
                 renderContent( request, response );
-                pw.println( "</div>" ); //$NON-NLS-1$
+                pw.println( "</div>" );
 
                 // close the main div, body, and html
                 endResponse( pw );
@@ -587,7 +587,7 @@ public abstract class AbstractWebConsolePlugin extends HttpServlet {
                 long lastModified = connection.getLastModified();
                 if ( lastModified > 0 )
                 {
-                    long ifModifiedSince = request.getDateHeader( "If-Modified-Since" ); //$NON-NLS-1$
+                    long ifModifiedSince = request.getDateHeader( "If-Modified-Since" );
                     if ( ifModifiedSince >= ( lastModified / 1000 * 1000 ) )
                     {
                         // Round down to the nearest second for a proper compare
@@ -598,12 +598,12 @@ public abstract class AbstractWebConsolePlugin extends HttpServlet {
                     }
 
                     // have to send, so set the last modified header now
-                    response.setDateHeader( "Last-Modified", lastModified ); //$NON-NLS-1$
+                    response.setDateHeader( "Last-Modified", lastModified );
                 }
 
                 // describe the contents
                 response.setContentType( getServletContext().getMimeType( pi ) );
-                response.setIntHeader( "Content-Length", connection.getContentLength() ); //$NON-NLS-1$
+                response.setIntHeader( "Content-Length", connection.getContentLength() );
 
                 // spool the actual contents
                 OutputStream out = response.getOutputStream();
@@ -676,7 +676,7 @@ public abstract class AbstractWebConsolePlugin extends HttpServlet {
     {
         // assume pathInfo to not be null, else this would not be called
         String current = request.getPathInfo();
-        int slash = current.indexOf( "/", 1 ); //$NON-NLS-1$
+        int slash = current.indexOf( "/", 1 );
         if ( slash < 0 )
         {
             slash = current.length();
@@ -704,14 +704,14 @@ public abstract class AbstractWebConsolePlugin extends HttpServlet {
             }
             if (!langMap.containsKey(locale))
             {
-                locale = "en"; //$NON-NLS-1$
+                locale = "en";
             }
 
-            pw.println("<div id='langSelect'>"); //$NON-NLS-1$
-            pw.println(" <span>"); //$NON-NLS-1$
+            pw.println("<div id='langSelect'>");
+            pw.println(" <span>");
             printLocaleElement(pw, appRoot, locale, langMap.get(locale));
-            pw.println(" </span>"); //$NON-NLS-1$
-            pw.println(" <span class='flags ui-helper-hidden'>"); //$NON-NLS-1$
+            pw.println(" </span>");
+            pw.println(" <span class='flags ui-helper-hidden'>");
             for (Iterator li = langMap.keySet().iterator(); li.hasNext();)
             {
                 // <img src="us.gif" alt="en" title="English"/>
@@ -722,8 +722,8 @@ public abstract class AbstractWebConsolePlugin extends HttpServlet {
                 }
             }
 
-            pw.println(" </span>"); //$NON-NLS-1$
-            pw.println("</div>"); //$NON-NLS-1$
+            pw.println(" </span>");
+            pw.println("</div>");
         }
     }
 
@@ -775,15 +775,15 @@ public abstract class AbstractWebConsolePlugin extends HttpServlet {
 
     private static final void printLocaleElement( PrintWriter pw, String appRoot, Object langCode, Object langName )
     {
-        pw.print("  <img src='"); //$NON-NLS-1$
+        pw.print("  <img src='");
         pw.print(appRoot);
-        pw.print("/res/flags/"); //$NON-NLS-1$
+        pw.print("/res/flags/");
         pw.print(langCode);
-        pw.print(".gif' alt='"); //$NON-NLS-1$
+        pw.print(".gif' alt='");
         pw.print(langCode);
-        pw.print("' title='"); //$NON-NLS-1$
+        pw.print("' title='");
         pw.print(langName);
-        pw.println("'/>"); //$NON-NLS-1$
+        pw.println("'/>");
     }
 
     /**
@@ -900,7 +900,7 @@ public abstract class AbstractWebConsolePlugin extends HttpServlet {
         //    (for example plugin provided CSS links)
         if ( HEADER == null )
         {
-            HEADER = readTemplateFile( AbstractWebConsolePlugin.class, "/templates/main_header.html" ); //$NON-NLS-1$
+            HEADER = readTemplateFile( AbstractWebConsolePlugin.class, "/templates/main_header.html" );
         }
         return HEADER;
     }
@@ -910,7 +910,7 @@ public abstract class AbstractWebConsolePlugin extends HttpServlet {
     {
         if ( FOOTER == null )
         {
-            FOOTER = readTemplateFile( AbstractWebConsolePlugin.class, "/templates/main_footer.html" ); //$NON-NLS-1$
+            FOOTER = readTemplateFile( AbstractWebConsolePlugin.class, "/templates/main_footer.html" );
         }
         return FOOTER;
     }
@@ -962,12 +962,12 @@ public abstract class AbstractWebConsolePlugin extends HttpServlet {
         catch ( IOException e )
         {
             // don't use new Exception(message, cause) because cause is 1.4+
-            throw new RuntimeException( "readTemplateFile: Error loading " + templateFile + ": " + e ); //$NON-NLS-1$ //$NON-NLS-2$
+            throw new RuntimeException( "readTemplateFile: Error loading " + templateFile + ": " + e );
         }
 
         // template file does not exist, return an empty string
-        log( LogService.LOG_ERROR, "readTemplateFile: File '" + templateFile + "' not found through class " + clazz ); //$NON-NLS-1$ //$NON-NLS-2$
-        return ""; //$NON-NLS-1$
+        log( LogService.LOG_ERROR, "readTemplateFile: File '" + templateFile + "' not found through class " + clazz );
+        return "";
     }
 
 
@@ -977,16 +977,16 @@ public abstract class AbstractWebConsolePlugin extends HttpServlet {
         final String[] cssRefs = getCssReferences();
         if ( cssRefs == null )
         {
-            return ""; //$NON-NLS-1$
+            return "";
         }
 
         // build the CSS links from the references
         final StringBuilder buf = new StringBuilder();
         for ( int i = 0; i < cssRefs.length; i++ )
         {
-            buf.append( "<link href='" ); //$NON-NLS-1$
+            buf.append( "<link href='" );
             buf.append( toUrl( cssRefs[i], appRoot ) );
-            buf.append( "' rel='stylesheet' type='text/css' />" ); //$NON-NLS-1$
+            buf.append( "' rel='stylesheet' type='text/css' />" );
         }
 
         return buf.toString();
@@ -1007,7 +1007,7 @@ public abstract class AbstractWebConsolePlugin extends HttpServlet {
      */
     private static final String toUrl( final String url, final String appRoot )
     {
-        if ( url.startsWith( "/" ) ) //$NON-NLS-1$
+        if ( url.startsWith( "/" ) )
         {
             return appRoot + url;
         }

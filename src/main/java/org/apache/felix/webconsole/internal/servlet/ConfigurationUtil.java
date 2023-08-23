@@ -184,7 +184,7 @@ public class ConfigurationUtil
             String pv = ((String) value).trim();
             if (pv.length() != 0)
             {
-                StringTokenizer tok = new StringTokenizer(pv, ",;"); //$NON-NLS-1$
+                StringTokenizer tok = new StringTokenizer(pv, ",;");
                 ret = new String[tok.countTokens()];
                 int i = 0;
                 while (tok.hasMoreTokens())

@@ -47,7 +47,7 @@ public class CapabilitiesRequiredInfoProvider implements BundleInfoProvider
     @Override
     public String getName( Locale locale )
     {
-        return localization.getResourceBundle( locale ).getString( "capabilities.required.info.name" ); //$NON-NLS-1$;
+        return localization.getResourceBundle( locale ).getString( "capabilities.required.info.name" );
     }
 
     @Override
@@ -70,7 +70,7 @@ public class CapabilitiesRequiredInfoProvider implements BundleInfoProvider
 
     private BundleInfo toInfo( BundleRequirement requirement, BundleWiring wiring, String webConsoleRoot, Locale locale )
     {
-        final String descr = localization.getResourceBundle( locale ).getString( "capabilities.required.info.descr" ); //$NON-NLS-1$;
+        final String descr = localization.getResourceBundle( locale ).getString( "capabilities.required.info.descr" );;
         List<BundleWire> wires = wiring.getRequiredWires( requirement.getNamespace() );
         if ( wires == null )
         {
@@ -78,14 +78,14 @@ public class CapabilitiesRequiredInfoProvider implements BundleInfoProvider
         }
         Optional<Bundle> providerBundle = wires.stream()
                 .map( w -> w.getProvider().getBundle() ).findFirst(); // only the first one is returned
-        String name = localization.getResourceBundle( locale ).getString( "capabilities.required.info.key" ); //$NON-NLS-1$;
+        String name = localization.getResourceBundle( locale ).getString( "capabilities.required.info.key" );;
         name = MessageFormat.format( name, requirement.getNamespace(), CapabilitiesPrinter.dumpDirectives( requirement.getDirectives() ) );
         String link = "/#"; // use empty link type to prevent the pattern <name>=<value> being used for printing
         if ( providerBundle.isPresent() )
         {
            name += MessageFormat.format( localization.getResourceBundle( locale ).getString( "capabilities.required.info.key.addition" ), providerBundle.get().getSymbolicName(), providerBundle.get().getBundleId() );
            if ( webConsoleRoot != null ) {
-               link = webConsoleRoot + "/bundles/" + providerBundle.get().getBundleId(); //$NON-NLS-1$
+               link = webConsoleRoot + "/bundles/" + providerBundle.get().getBundleId();
            }
         }
         return new BundleInfo( name, link, BundleInfoType.LINK, descr );

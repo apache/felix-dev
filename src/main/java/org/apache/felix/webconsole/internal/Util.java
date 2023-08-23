@@ -197,9 +197,9 @@ public class Util {
 
     public static void sendJsonOk(final HttpServletResponse response) throws IOException
     {
-        response.setContentType( "application/json" ); //$NON-NLS-1$
-        response.setCharacterEncoding( "UTF-8" ); //$NON-NLS-1$
-        response.getWriter().print( "{ \"status\": true }" ); //$NON-NLS-1$
+        response.setContentType( "application/json" );
+        response.setCharacterEncoding( "UTF-8" );
+        response.getWriter().print( "{ \"status\": true }" );
     }
 
     public static final Locale getLocale( final HttpServletRequest request ) {

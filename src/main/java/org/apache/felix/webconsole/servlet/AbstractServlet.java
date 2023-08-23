@@ -146,7 +146,7 @@ public abstract class AbstractServlet extends HttpServlet {
                 }
 
                 // have to send, so set the last modified header now
-                response.setDateHeader( "Last-Modified", lastModified ); //$NON-NLS-1$
+                response.setDateHeader( "Last-Modified", lastModified );
             }
 
             // describe the contents

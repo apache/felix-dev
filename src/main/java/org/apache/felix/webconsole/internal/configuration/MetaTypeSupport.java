@@ -44,7 +44,7 @@ class MetaTypeSupport
      * Marker value of password fields used as dummy values and
      * indicating unmodified values.
      */
-    static final String PASSWORD_PLACEHOLDER_VALUE = "unmodified"; //$NON-NLS-1$
+    static final String PASSWORD_PLACEHOLDER_VALUE = "unmodified";
 
     static Bundle getBundle( final BundleContext bundleContext, final String bundleLocation ) {
         if ( bundleLocation == null ) {
@@ -78,18 +78,18 @@ class MetaTypeSupport
         }
         else if ( ad.getCardinality() == 0 )
         {
-            value = ""; //$NON-NLS-1$
+            value = "";
         }
         else
         {
             value = new String[0];
         }
 
-        json.key( "name" ); //$NON-NLS-1$
+        json.key( "name" );
         json.value( ad.getName() );
-        json.key( "optional" ); //$NON-NLS-1$
+        json.key( "optional" );
         json.value( ad.isOptional() );
-        json.key( "is_set" ); //$NON-NLS-1$
+        json.key( "is_set" );
         json.value( propValue != null );
 
         // attribute type - overwrite metatype provided type
@@ -97,13 +97,13 @@ class MetaTypeSupport
         // type is string
         int propertyType = getAttributeType( ad );
 
-        json.key( "type" ); //$NON-NLS-1$
+        json.key( "type" );
         if ( ad.getOptionLabels() != null && ad.getOptionLabels().length > 0 )
         {
             json.object();
-            json.key( "labels" ); //$NON-NLS-1$
+            json.key( "labels" );
             json.value( Arrays.asList( ad.getOptionLabels() ) );
-            json.key( "values" ); //$NON-NLS-1$
+            json.key( "values" );
             json.value( Arrays.asList( ad.getOptionValues() ) );
             json.endObject();
         }
@@ -129,12 +129,12 @@ class MetaTypeSupport
             {
                 value = Array.get( value, 0 );
             }
-            json.key( "value" ); //$NON-NLS-1$
+            json.key( "value" );
             json.value( value );
         }
         else
         {
-            json.key( "values" ); //$NON-NLS-1$
+            json.key( "values" );
             json.array();
             final List list = toList( value );
             final Iterator iter = list.iterator();
@@ -155,8 +155,8 @@ class MetaTypeSupport
 
         if ( ad.getDescription() != null )
         {
-            json.key( "description" ); //$NON-NLS-1$
-            json.value( ad.getDescription() + " (" + ad.getID() + ")" ); //$NON-NLS-1$ //$NON-NLS-2$
+            json.key( "description" );
+            json.value( ad.getDescription() + " (" + ad.getID() + ")" );
         }
 
         json.endObject();
@@ -274,7 +274,7 @@ class MetaTypeSupport
         {
             return false;
         }
-        return name.toLowerCase().indexOf( "password" ) != -1; //$NON-NLS-1$
+        return name.toLowerCase().indexOf( "password" ) != -1;
     }
 
     static int getAttributeType( final PropertyDescriptor ad )

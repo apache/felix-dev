@@ -107,8 +107,8 @@ public class ServicesServlet extends SimpleWebConsolePlugin implements OsgiManag
     }
 
     /** the label for the services plugin */
-    public static final String LABEL = "services"; //$NON-NLS-1$
-    private static final String TITLE = "%services.pluginTitle"; //$NON-NLS-1$
+    public static final String LABEL = "services";
+    private static final String TITLE = "%services.pluginTitle";
     private static final String CSS[] = null;
 
     // an LDAP filter, that is used to search services
@@ -121,7 +121,7 @@ public class ServicesServlet extends SimpleWebConsolePlugin implements OsgiManag
         super(LABEL, TITLE, CATEGORY_OSGI, CSS);
 
         // load templates
-        TEMPLATE = readTemplateFile( "/templates/services.html" ); //$NON-NLS-1$
+        TEMPLATE = readTemplateFile( "/templates/services.html" );
     }
 
     private ServiceRegistration<BundleInfoProvider> bipReg;

@@ -53,7 +53,7 @@ public class CapabilitiesProvidedInfoProvider implements BundleInfoProvider
     @Override
     public String getName( Locale locale ) 
     {
-        return localization.getResourceBundle( locale ).getString( "capabilities.provided.info.name" ); //$NON-NLS-1$;
+        return localization.getResourceBundle( locale ).getString( "capabilities.provided.info.name" );
     }
 
     /**
@@ -100,8 +100,8 @@ public class CapabilitiesProvidedInfoProvider implements BundleInfoProvider
 
     private BundleInfo toInfo( BundleCapability capability, BundleWiring wiring, String webConsoleRoot, Locale locale )
     {
-        final String descr = localization.getResourceBundle( locale ).getString( "capabilities.provided.info.descr" ); //$NON-NLS-1$;
-        String name = localization.getResourceBundle( locale ).getString( "capabilities.provided.info.key" ); //$NON-NLS-1$;
+        final String descr = localization.getResourceBundle( locale ).getString( "capabilities.provided.info.descr" );;
+        String name = localization.getResourceBundle( locale ).getString( "capabilities.provided.info.key" );;
         String requirerBundles = wiring.getProvidedWires( capability.getNamespace() ).stream()
                 .map( w -> w.getRequirer().getSymbolicName() + " (" + w.getRequirer().getBundle().getBundleId() + ")" )
                 .collect( Collectors.joining( ", ") );

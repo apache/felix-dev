@@ -36,7 +36,7 @@ import org.osgi.service.cm.ConfigurationAdmin;
 
 public class ConfigurationUtil {
 
-    private static final String PLACEHOLDER_PID = "[Temporary PID replaced by real PID upon save]"; //$NON-NLS-1$
+    private static final String PLACEHOLDER_PID = "[Temporary PID replaced by real PID upon save]";
 
     public static Configuration findConfiguration( final ConfigurationAdmin service, final String pid ) {
         if ( pid != null ) {
