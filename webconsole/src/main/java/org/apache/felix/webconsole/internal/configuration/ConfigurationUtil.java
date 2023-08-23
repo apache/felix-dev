@@ -36,7 +36,7 @@ import org.osgi.service.cm.ConfigurationAdmin;
 
 public class ConfigurationUtil {
 
-    private static final String PLACEHOLDER_PID = "[Temporary PID replaced by real PID upon save]";
+    private static final String PLACEHOLDER_PID = "__Temporary PID replaced by real PID upon save__";
 
     public static Configuration findConfiguration( final ConfigurationAdmin service, final String pid ) {
         if ( pid != null ) {
@@ -59,9 +59,9 @@ public class ConfigurationUtil {
     }
 
 
-    public static Configuration getOrCreateConfiguration( final ConfigurationAdmin service, 
+    public static Configuration getOrCreateConfiguration( final ConfigurationAdmin service,
             final List<ConfigurationHandler> handlers,
-            final String pid, 
+            final String pid,
             final String factoryPid ) throws ValidationException, IOException {
         Configuration cfg = null;
         if ( !PLACEHOLDER_PID.equals(pid) ) {
@@ -76,7 +76,7 @@ public class ConfigurationUtil {
             } else {
                 for(final ConfigurationHandler handler : handlers) {
                     handler.createConfiguration(pid);
-                }        
+                }
                 cfg = service.getConfiguration( pid, null );
             }
         }
@@ -93,7 +93,7 @@ public class ConfigurationUtil {
         return true;
     }
 
- 
+
     public static Configuration getPlaceholderConfiguration( final String factoryPid ) {
         return new PlaceholderConfiguration( factoryPid );
     }
@@ -160,7 +160,7 @@ public class ConfigurationUtil {
         }
 
         @Override
-        public void addAttributes(ConfigurationAttribute... attrs) throws IOException {            
+        public void addAttributes(ConfigurationAttribute... attrs) throws IOException {
             // no attributes
         }
 
@@ -177,7 +177,7 @@ public class ConfigurationUtil {
         }
 
         @Override
-        public void removeAttributes(ConfigurationAttribute... attrs) throws IOException {            
+        public void removeAttributes(ConfigurationAttribute... attrs) throws IOException {
             // no attributes
         }
 
