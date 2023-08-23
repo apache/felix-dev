@@ -56,6 +56,8 @@ public class JakartaServiceTracker implements Closeable, ServiceTrackerCustomize
     private final JakartaSecurityProviderTracker securityProviderTracker;
 
     public JakartaServiceTracker( final PluginHolder pluginHolder, final BundleContext context ) {
+        // try to load wrapper class to fail early
+        new org.apache.felix.http.jakartawrappers.ServletWrapper(null);
         this.pluginHolder = pluginHolder;
         Filter filter = null;
         try {
