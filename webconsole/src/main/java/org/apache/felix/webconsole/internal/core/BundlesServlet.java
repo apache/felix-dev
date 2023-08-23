@@ -429,14 +429,14 @@ public class BundlesServlet extends SimpleWebConsolePlugin implements OsgiManage
                 }
 
                 // write the state only
-                resp.setContentType( "application/json" ); //$NON-NLS-1$
-                resp.setCharacterEncoding( "UTF-8" ); //$NON-NLS-1$
+                resp.setContentType( "application/json" );
+                resp.setCharacterEncoding( "UTF-8" );
                 if ( null == getBundleContext() ) {
                     // refresh package on the web console itself or some of it's dependencies
-                    resp.getWriter().print("false"); //$NON-NLS-1$
+                    resp.getWriter().print("false");
                 } else {
-                    resp.getWriter().print( "{\"fragment\":" + isFragmentBundle( bundle ) //$NON-NLS-1$
-                    + ",\"stateRaw\":" + bundle.getState() + "}" ); //$NON-NLS-1$ //$NON-NLS-2$
+                    resp.getWriter().print( "{\"fragment\":" + isFragmentBundle( bundle )
+                    + ",\"stateRaw\":" + bundle.getState() + "}" );
                 }
                 return;
             }

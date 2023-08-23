@@ -55,7 +55,7 @@ final class ServicesUsedInfoProvider implements BundleInfoProvider
      */
     public String getName( Locale locale )
     {
-        return localization.getResourceBundle( locale ).getString( "services.info.name" ); //$NON-NLS-1$;
+        return localization.getResourceBundle( locale ).getString( "services.info.name" );
     }
 
 
@@ -78,15 +78,15 @@ final class ServicesUsedInfoProvider implements BundleInfoProvider
     {
         final String[] classes = ( String[] ) ref.getProperty( Constants.OBJECTCLASS );
         final Object id = ref.getProperty( Constants.SERVICE_ID );
-        final String descr = localization.getResourceBundle( locale ).getString( "services.info.descr" ); //$NON-NLS-1$;
-        String name = localization.getResourceBundle( locale ).getString( "services.info.key" ); //$NON-NLS-1$;
+        final String descr = localization.getResourceBundle( locale ).getString( "services.info.descr" );;
+        String name = localization.getResourceBundle( locale ).getString( "services.info.key" );;
         name = MessageFormat.format( name, new Object[]
             { id, Arrays.asList( classes ).toString() } );
         if ( webConsoleRoot == null )
         {
             return new BundleInfo( name, id, BundleInfoType.VALUE, descr );
         }
-        return new BundleInfo( name, webConsoleRoot + "/services/" + id, //$NON-NLS-1$
+        return new BundleInfo( name, webConsoleRoot + "/services/" + id,
             BundleInfoType.LINK, descr );
     }
 

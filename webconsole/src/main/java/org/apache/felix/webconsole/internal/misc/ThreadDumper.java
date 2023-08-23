@@ -48,8 +48,8 @@ public class ThreadDumper
         final Class<?>[] nullArgs = null;
         try
         {
-            _getStackTrace = Thread.class.getMethod("getStackTrace", nullArgs); //$NON-NLS-1$
-            _getId = Thread.class.getMethod("getId", nullArgs); //$NON-NLS-1$
+            _getStackTrace = Thread.class.getMethod("getStackTrace", nullArgs);
+            _getId = Thread.class.getMethod("getId", nullArgs);
         }
         catch (Throwable e)
         {
@@ -106,7 +106,7 @@ public class ThreadDumper
             pw.print(getId(thread));
             pw.print('/');
             pw.print(thread.getName());
-            pw.print(" ["); //$NON-NLS-1$
+            pw.print(" [");
             pw.print("priority=");
             pw.print(thread.getPriority());
             pw.print(", alive=");
@@ -135,7 +135,7 @@ public class ThreadDumper
         {
             pw.print("ThreadGroup ");
             pw.print(group.getName());
-            pw.print(" ["); //$NON-NLS-1$
+            pw.print(" [");
             pw.print("maxprio=");
             pw.print(group.getMaxPriority());
 
@@ -200,14 +200,14 @@ public class ThreadDumper
         pw.println("    Stacktrace");
         if (stackTrace == null || Array.getLength(stackTrace) == 0)
         {
-            pw.println("      -"); //$NON-NLS-1$
+            pw.println("      -");
         }
         else
         {
             for (int i = 0, len = Array.getLength(stackTrace); i < len; i++)
             {
                 Object/*StackTraceElement*/stackTraceElement = Array.get(stackTrace, i);
-                pw.print("      "); //$NON-NLS-1$
+                pw.print("      ");
                 pw.println(stackTraceElement);
             }
         }
@@ -286,12 +286,12 @@ public class ThreadDumper
 
     private final String getId(Thread thread)
     {
-        String ret = ""; //$NON-NLS-1$
+        String ret = "";
         if (null != getId)
         {
             try
             {
-                ret = "#" + getId.invoke(thread, (Object[]) null); //$NON-NLS-1$
+                ret = "#" + getId.invoke(thread, (Object[]) null);
             }
             catch (Throwable e)
             {
@@ -366,11 +366,11 @@ final class ThreadComparator implements Comparator<Thread>
         String t2 = thread2.getName();
         if (null == t1)
         {
-            t1 = ""; //$NON-NLS-1$
+            t1 = "";
         }
         if (null == t2)
         {
-            t2 = ""; //$NON-NLS-1$
+            t2 = "";
         }
 
         return t1.toLowerCase().compareTo(t2.toLowerCase());
@@ -413,11 +413,11 @@ final class ThreadGroupComparator implements Comparator<ThreadGroup>
         String t2 = thread2.getName();
         if (null == t1)
         {
-            t1 = ""; //$NON-NLS-1$
+            t1 = "";
         }
         if (null == t2)
         {
-            t2 = ""; //$NON-NLS-1$
+            t2 = "";
         }
 
         return t1.toLowerCase().compareTo(t2.toLowerCase());

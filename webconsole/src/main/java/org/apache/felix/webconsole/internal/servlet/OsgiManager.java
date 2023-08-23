@@ -52,6 +52,7 @@ import javax.servlet.http.HttpServletRequestWrapper;
 import javax.servlet.http.HttpServletResponse;
 
 import org.apache.felix.webconsole.AbstractWebConsolePlugin;
+import org.apache.felix.webconsole.DefaultVariableResolver;
 import org.apache.felix.webconsole.servlet.User;
 import org.apache.felix.webconsole.WebConsoleConstants;
 import org.apache.felix.webconsole.WebConsoleSecurityProvider;
@@ -563,26 +564,29 @@ public class OsgiManager extends GenericServlet {
             return;
         }
 
+        final Locale locale = getConfiguredLocale(request);
+
+        // make sure to set the variable resolver
+        initRequest(request, "", locale);
+
         if (pathInfo.equals("/logout")) {
+            // make sure to set the variable resolver
+            initRequest(request, "", locale);
             logout(request, response);
             return;
         }
 
         int slash = pathInfo.indexOf("/", 1);
-        if (slash < 2)
-        {
+        if (slash < 2) {
             slash = pathInfo.length();
         }
 
-        final Locale locale = getConfiguredLocale(request);
         final String label = pathInfo.substring(1, slash);
         AbstractWebConsolePlugin plugin = getConsolePlugin(label);
 
-        if (plugin == null)
-        {
+        if (plugin == null) {
             final String body404 = MessageFormat.format(
-                resourceBundleManager.getResourceBundle(bundleContext.getBundle(), locale).getString(
-                    "404"),
+                resourceBundleManager.getResourceBundle(bundleContext.getBundle(), locale).getString("404"),
                 new Object[] { request.getContextPath() + request.getServletPath() + '/'
                     + BundlesServlet.NAME });
             response.setCharacterEncoding("utf-8");
@@ -593,6 +597,20 @@ public class OsgiManager extends GenericServlet {
             return;
         }
 
+        // make sure to set the variable resolver
+        initRequest(request, "/".concat(label), locale);
+
+        // fix for https://issues.apache.org/jira/browse/FELIX-3408
+        ensureLocaleCookieSet(request, response, locale);
+
+        // wrap the response for localization and template variable replacement
+        request = wrapRequest(request, locale);
+        response = wrapResponse(request, response, plugin);
+
+        plugin.service(request, response);
+    }
+
+    private void initRequest(final HttpServletRequest request, final String postfix, final Locale locale) {
         @SuppressWarnings("rawtypes")
         final Map labelMap = holder.getLocalizedLabelMap( resourceBundleManager, locale, this.defaultCategory );
         final Object flatLabelMap = labelMap.remove( PluginHolder.ATTR_FLAT_LABEL_MAP );
@@ -603,28 +621,15 @@ public class OsgiManager extends GenericServlet {
         request.setAttribute( ATTR_LABEL_MAP_CATEGORIZED, labelMap );
         final String appRoot = request.getContextPath().concat(request.getServletPath());
         request.setAttribute(ServletConstants.ATTR_APP_ROOT, appRoot);
-        request.setAttribute(ServletConstants.ATTR_PLUGIN_ROOT, appRoot.concat("/").concat(label));
+        request.setAttribute(ServletConstants.ATTR_PLUGIN_ROOT, appRoot.concat(postfix));
         request.setAttribute(ServletConstants.ATTR_CONFIGURATION, configuration);
 
         // deprecated request attributes
         request.setAttribute(ATTR_LABEL_MAP_OLD, flatLabelMap);
         request.setAttribute(ATTR_APP_ROOT_OLD, appRoot);
 
-        // fix for https://issues.apache.org/jira/browse/FELIX-3408
-        ensureLocaleCookieSet(request, response, locale);
-
-        // wrap the response for localization and template variable replacement
-        request = wrapRequest(request, locale);
-        response = wrapResponse(request, response, plugin);
-
-        // make sure to set the variable resolver
-        initRequestVariableResolver(request);
-
-        plugin.service(request, response);
-    }
-
-    private void initRequestVariableResolver(final HttpServletRequest request) {
-        final RequestVariableResolver resolver = new RequestVariableResolver();
+        @SuppressWarnings("deprecation")
+        final RequestVariableResolver resolver = new DefaultVariableResolver();
         request.setAttribute(RequestVariableResolver.REQUEST_ATTRIBUTE, resolver);
         resolver.put( RequestVariableResolver.KEY_APP_ROOT, (String) request.getAttribute( ServletConstants.ATTR_APP_ROOT ) );
         resolver.put( RequestVariableResolver.KEY_PLUGIN_ROOT, (String) request.getAttribute( ServletConstants.ATTR_PLUGIN_ROOT ) );

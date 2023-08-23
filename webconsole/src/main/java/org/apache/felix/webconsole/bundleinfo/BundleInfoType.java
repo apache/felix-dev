@@ -38,20 +38,20 @@ public final class BundleInfoType
      * for security reasons, the protocol cannot be <code>file</code> for
      * external links.
      */
-    public static final BundleInfoType LINK = new BundleInfoType( "link" ); //$NON-NLS-1$
+    public static final BundleInfoType LINK = new BundleInfoType( "link" );
     /**
      * This information type, specifies that the value of the information is URL
      * object, that points to a resource. In that case the UI could consider
      * that as a <em>download</em> link.
      */
-    public static final BundleInfoType RESOURCE = new BundleInfoType( "resource" ); //$NON-NLS-1$
+    public static final BundleInfoType RESOURCE = new BundleInfoType( "resource" );
     /**
      * That information type is for normal information keys, that provide a
      * normal (not link) value as information. The type of the value is
      * <code>Object</code> and UI will visualize it by using it's
      * {@link Object#toString()} method.
      */
-    public static final BundleInfoType VALUE = new BundleInfoType( "value" ); //$NON-NLS-1$
+    public static final BundleInfoType VALUE = new BundleInfoType( "value" );
 
     private final String name;
 
@@ -88,17 +88,17 @@ public final class BundleInfoType
             if ( !( value instanceof String ) )
                 throw new IllegalArgumentException( "Not a String" );
             final String val = ( String ) value;
-            final int idx = val.indexOf( "://" ); //$NON-NLS-1$
+            final int idx = val.indexOf( "://" );
             // check local
             if ( idx == -1 )
             {
-                if ( !val.startsWith( "/" ) ) //$NON-NLS-1$
+                if ( !val.startsWith( "/" ) )
                     throw new IllegalArgumentException( "Invalid local link: " + val );
             }
             else
             {
                 // check external link
-                if ( val.substring( 0, idx ).equalsIgnoreCase( "file" ) ) //$NON-NLS-1$
+                if ( val.substring( 0, idx ).equalsIgnoreCase( "file" ) )
                     throw new IllegalArgumentException( "External link cannot use file protocol: " + value );
             }
         }

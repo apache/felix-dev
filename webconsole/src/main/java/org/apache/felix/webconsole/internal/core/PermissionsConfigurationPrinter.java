@@ -40,9 +40,9 @@ public final class PermissionsConfigurationPrinter extends AbstractConfiguration
 
     private static final String TITLE = "Permissions";
 
-    private static final String PERMISSION_ADMIN_NAME = "org.osgi.service.permissionadmin.PermissionAdmin"; //$NON-NLS-1$
+    private static final String PERMISSION_ADMIN_NAME = "org.osgi.service.permissionadmin.PermissionAdmin";
 
-    private static final String CONDITIONAL_PERMISSION_ADMIN_NAME = "org.osgi.service.condpermadmin.ConditionalPermissionAdmin"; //$NON-NLS-1$
+    private static final String CONDITIONAL_PERMISSION_ADMIN_NAME = "org.osgi.service.condpermadmin.ConditionalPermissionAdmin";
 
 
     /**
@@ -117,7 +117,7 @@ public final class PermissionsConfigurationPrinter extends AbstractConfiguration
                     hasPermissions = true;
                     //final ConditionalPermissionInfo info = (ConditionalPermissionInfo) list.get(i);
                     final ConditionalPermissionInfo info = (ConditionalPermissionInfo) e.nextElement();
-                    pw.print("  "); //$NON-NLS-1$
+                    pw.print("  ");
                     pw.print(info.getName());
 
                     if (getAccessDecision != null)
@@ -125,9 +125,9 @@ public final class PermissionsConfigurationPrinter extends AbstractConfiguration
                         try
                         {
                             final Object ad = getAccessDecision.invoke( info, ( Object[] ) null );
-                            pw.print(" ("); //$NON-NLS-1$
+                            pw.print(" (");
                             pw.print(ad);
-                            pw.print(")"); //$NON-NLS-1$
+                            pw.print(")");
                         }
                         catch (Throwable t)
                         {
@@ -165,7 +165,7 @@ public final class PermissionsConfigurationPrinter extends AbstractConfiguration
         {
             for (int i = 0, len = infos.length; i < len; i++)
             {
-                pw.print("    "); //$NON-NLS-1$
+                pw.print("    ");
                 pw.println(infos[i].getEncoded());
             }
         }
@@ -182,7 +182,7 @@ public final class PermissionsConfigurationPrinter extends AbstractConfiguration
         {
             for (int i = 0, len = infos.length; i < len; i++)
             {
-                pw.print("    "); //$NON-NLS-1$
+                pw.print("    ");
                 pw.println(infos[i].getEncoded());
             }
         }

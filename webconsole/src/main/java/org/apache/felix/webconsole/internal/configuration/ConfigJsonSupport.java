@@ -166,10 +166,10 @@ class ConfigJsonSupport {
 
         final ObjectClassDefinition ocd = this.getObjectClassDefinition(config, pid, locale);
         if ( ocd != null ) {
-            json.key( "title" ).value( ocd.getName() ); //$NON-NLS-1$
+            json.key( "title" ).value( ocd.getName() );
 
             if ( ocd.getDescription() != null ) {
-                json.key( "description" ).value( ocd.getDescription() ); //$NON-NLS-1$
+                json.key( "description" ).value( ocd.getDescription() );
             }
     
             final AttributeDefinition[] optionalArray = ocd.getAttributeDefinitions( ObjectClassDefinition.OPTIONAL );
@@ -177,7 +177,7 @@ class ConfigJsonSupport {
             final List<AttributeDefinition> attributes = filterAttributeDefinitions(config != null ? config.getFactoryPid() : null, pid, ocd.getAttributeDefinitions( ObjectClassDefinition.ALL ));
 
             final Set<String> metatypeAttributes = new HashSet<>( ConfigAdminSupport.CONFIG_PROPERTIES_HIDE );
-            json.key( "properties" ).object(); //$NON-NLS-1$
+            json.key( "properties" ).object();
             for(final AttributeDefinition adi : attributes) {
                 final String attrId = adi.getID();
                 if (! ConfigAdminSupport.CONFIG_PROPERTIES_HIDE.contains(attrId)) {
@@ -204,13 +204,13 @@ class ConfigJsonSupport {
             }
 
         } else {
-            json.key( "title" ).value( pid ); //$NON-NLS-1$
-            json.key( "description" ).value( //$NON-NLS-1$
+            json.key( "title" ).value( pid );
+            json.key( "description" ).value(
                     "This form is automatically generated from existing properties because no property "
                     + "descriptors are available for this configuration. This may be caused by the absence "
                     + "of the OSGi Metatype Service or the absence of a MetaType descriptor for this configuration." );
 
-            json.key( "properties" ).object(); //$NON-NLS-1$
+            json.key( "properties" ).object();
             if ( props != null ) {
                 for ( Enumeration<String> pe = props.keys(); pe.hasMoreElements(); ) {
                     final String id = pe.nextElement();
@@ -250,7 +250,7 @@ class ConfigJsonSupport {
         }
         String location;
         if ( bundleLocation == null ) {
-            location = ""; //$NON-NLS-1$
+            location = "";
         } else {
             // if the configuration is bound to a bundle location which
             // is not related to an installed bundle, we just print the
@@ -264,32 +264,32 @@ class ConfigJsonSupport {
                 if ( name == null ) {
                     location = bundle.getSymbolicName();
                 } else {
-                    location = name + " (" + bundle.getSymbolicName() + ')'; //$NON-NLS-1$
+                    location = name + " (" + bundle.getSymbolicName() + ')';
                 }
 
                 Version v = Version.parseVersion( headers.get( Constants.BUNDLE_VERSION ) );
                 location += ", Version " + v.toString();
             }
         }
-        json.key( "bundleLocation" ); //$NON-NLS-1$
+        json.key( "bundleLocation" );
         json.value( location );
         // raw bundle location and service locations
         final String pid = config.getPid();
-        String serviceLocation = ""; //$NON-NLS-1$
+        String serviceLocation = "";
         try {
             final ServiceReference<?>[] refs = this.servletSupport.getBundleContext().getServiceReferences(
                     (String)null,
-                    "(&(" + Constants.OBJECTCLASS + '=' + ManagedService.class.getName() //$NON-NLS-1$
-                    + ")(" + Constants.SERVICE_PID + '=' + pid + "))"); //$NON-NLS-1$ //$NON-NLS-2$
+                    "(&(" + Constants.OBJECTCLASS + '=' + ManagedService.class.getName()
+                    + ")(" + Constants.SERVICE_PID + '=' + pid + "))");
             if ( refs != null && refs.length > 0 ) {
                 serviceLocation = refs[0].getBundle().getLocation();
             }
         } catch (final Throwable t) {
             this.servletSupport.log( "Error getting service associated with configuration " + pid, t );
         }
-        json.key( "bundle_location" ); //$NON-NLS-1$
+        json.key( "bundle_location" );
         json.value ( bundleLocation );
-        json.key( "service_location" ); //$NON-NLS-1$
+        json.key( "service_location" );
         json.value ( serviceLocation );
     }
 
@@ -364,25 +364,25 @@ class ConfigJsonSupport {
                 if ( include ) {
                     hasConfigurations = true;
                     jw.object();
-                    jw.key("id").value( entry.getKey() ); //$NON-NLS-1$
-                    jw.key( "name").value( entry.getValue() ); //$NON-NLS-1$
+                    jw.key("id").value( entry.getKey() );
+                    jw.key( "name").value( entry.getValue() );
 
                     if ( null != config ) {
                         // FELIX-3848
-                        jw.key("has_config").value( true ); //$NON-NLS-1$
+                        jw.key("has_config").value( true );
 
                         if ( config.getFactoryPid() != null ) {
-                            jw.key("fpid").value( config.getFactoryPid() ); //$NON-NLS-1$
+                            jw.key("fpid").value( config.getFactoryPid() );
                             final String val = getConfigurationFactoryNameHint(config);
                             if ( val != null ) {
-                                jw.key( "nameHint").value(val ); //$NON-NLS-1$
+                                jw.key( "nameHint").value(val );
                             }
                         }
 
                         final Bundle bundle = getBoundBundle( config );
                         if ( null != bundle ) {
-                            jw.key( "bundle").value( bundle.getBundleId() ); //$NON-NLS-1$
-                            jw.key( "bundle_name").value( Util.getName( bundle, loc ) ); //$NON-NLS-1$
+                            jw.key( "bundle").value( bundle.getBundleId() );
+                            jw.key( "bundle_name").value( Util.getName( bundle, loc ) );
                         }
                     }
                     jw.endObject();
@@ -515,8 +515,8 @@ class ConfigJsonSupport {
                 }
                 if ( include ) {
                     jw.object();
-                    jw.key("id").value( entry.getKey() ); //$NON-NLS-1$
-                    jw.key("name").value( entry.getValue() ); //$NON-NLS-1$
+                    jw.key("id").value( entry.getKey() );
+                    jw.key("name").value( entry.getValue() );
                     jw.endObject();    
                 }
             }
