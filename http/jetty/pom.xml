@@ -413,12 +413,12 @@
         <dependency>
             <groupId>org.apache.felix</groupId>
             <artifactId>org.apache.felix.http.base</artifactId>
-            <version>5.0.5-SNAPSHOT</version>
+            <version>5.1.0</version>
         </dependency>
 	<dependency>
             <groupId>org.apache.felix</groupId>
 	    <artifactId>org.apache.felix.http.wrappers</artifactId>
-	    <version>1.0.0-SNAPSHOT</version>
+	    <version>1.0.0</version>
 	</dependency>
         <dependency>
             <groupId>commons-fileupload</groupId>
