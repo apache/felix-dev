@@ -57,12 +57,11 @@ import org.apache.felix.hc.api.ResultLog;
 import org.apache.felix.hc.core.impl.util.lang.StringUtils;
 import org.apache.felix.hc.generalchecks.util.SimpleConstraintChecker;
 import org.apache.felix.utils.json.JSONParser;
+import org.osgi.framework.BundleContext;
 import org.osgi.framework.ServiceReference;
 import org.osgi.service.component.annotations.Activate;
 import org.osgi.service.component.annotations.Component;
 import org.osgi.service.component.annotations.ConfigurationPolicy;
-import org.osgi.service.component.annotations.Reference;
-import org.osgi.service.http.HttpService;
 import org.osgi.service.metatype.annotations.AttributeDefinition;
 import org.osgi.service.metatype.annotations.Designate;
 import org.osgi.service.metatype.annotations.ObjectClassDefinition;
@@ -124,45 +123,63 @@ public class HttpRequestsCheck implements HealthCheck {
 
     }
 
-    private List<RequestSpec> requestSpecs;
-    private int connectTimeoutInMs;
-    private int readTimeoutInMs;
-    private Result.Status statusForFailedContraint;
-    private boolean runInParallel;
+    private final BundleContext bundleContext;
 
-    private String defaultBaseUrl;
+    private final List<RequestSpec> requestSpecs;
+    private final int connectTimeoutInMs;
+    private final int readTimeoutInMs;
+    private final Result.Status statusForFailedContraint;
+    private final boolean runInParallel;
 
-    private FormattingResultLog configErrors;
+    private volatile String defaultBaseUrl;
 
-    @Reference
-    private ServiceReference<HttpService> httpServiceReference;
+    private FormattingResultLog configErrors = new FormattingResultLog();
 
     @Activate
-    protected void activate(Config config) {
+    public  HttpRequestsCheck(Config config, BundleContext bundleContext) {
+        this.bundleContext = bundleContext;
         this.requestSpecs = getRequestSpecs(config.requests());
         this.connectTimeoutInMs = config.connectTimeoutInMs();
         this.readTimeoutInMs = config.readTimeoutInMs();
         this.statusForFailedContraint = config.statusForFailedContraint();
         this.runInParallel = config.runInParallel() && requestSpecs.size() > 1;
 
-        setupDefaultBaseUrl();
-
-        LOG.debug("Default BaseURL: {}", defaultBaseUrl);
         LOG.debug("Activated Requests HC: {}", requestSpecs);
+        this.setupDefaultBaseUrl();
     }
 
     private void setupDefaultBaseUrl() {
-        boolean isHttp = Boolean.parseBoolean(String.valueOf(httpServiceReference.getProperty("org.apache.felix.http.enable")));
-        boolean isHttps = Boolean.parseBoolean(String.valueOf(httpServiceReference.getProperty("org.apache.felix.https.enable")));
-        if (isHttp) {
-            defaultBaseUrl = "http://localhost:"+httpServiceReference.getProperty("org.osgi.service.http.port");
-        } else if (isHttps) {
-            defaultBaseUrl = "http://localhost:"+httpServiceReference.getProperty("org.osgi.service.https.port");
+        // no need to synchronize
+        if ( this.defaultBaseUrl == null ) {
+            // check the properties for these services
+            final String[] services = {"org.osgi.service.http.HttpService", 
+                "org.osgi.service.http.runtime.HttpServiceRuntime",
+                "org.osgi.service.servlet.runtime.HttpServiceRuntime"};
+            for(final String service : services) {
+                final ServiceReference<?> ref = this.bundleContext.getServiceReference(service);
+                if ( ref != null ) {
+                    boolean isHttp = Boolean.parseBoolean(String.valueOf(ref.getProperty("org.apache.felix.http.enable")));
+                    boolean isHttps = Boolean.parseBoolean(String.valueOf(ref.getProperty("org.apache.felix.https.enable")));
+                    if (isHttps) {
+                        defaultBaseUrl = "http://localhost:"+ref.getProperty("org.osgi.service.https.port");
+                    } else if (isHttp) {
+                        defaultBaseUrl = "http://localhost:"+ref.getProperty("org.osgi.service.http.port");
+                    }
+                    if ( this.defaultBaseUrl != null ) {
+                        break;
+                    }
+                }
+            }
+            if ( this.defaultBaseUrl == null ) {
+                this.defaultBaseUrl = "http://localhost:8080";
+                LOG.debug("Default BaseURL: {}", defaultBaseUrl);
+            }
         }
     }
 
     @Override
     public Result execute() {
+        this.setupDefaultBaseUrl();
 
         FormattingResultLog overallLog = new FormattingResultLog();
 
@@ -185,9 +202,6 @@ public class HttpRequestsCheck implements HealthCheck {
     }
 
     private List<RequestSpec> getRequestSpecs(String[] requestSpecStrArr) {
-
-        configErrors = new FormattingResultLog();
-
         List<RequestSpec> requestSpecs = new ArrayList<RequestSpec>();
         for(String requestSpecStr: requestSpecStrArr) {
             try {
