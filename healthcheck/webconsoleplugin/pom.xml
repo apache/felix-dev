@@ -39,7 +39,9 @@
     
     <properties>
         <felix.java.version>8</felix.java.version>
+        <servlet.api>5.0.0</servlet.api>
     </properties>
+
     <scm>
         <connection>scm:git:https://github.com/apache/felix-dev.git</connection>
         <developerConnection>scm:git:https://github.com/apache/felix-dev.git</developerConnection>
@@ -101,9 +103,9 @@
             <scope>provided</scope>
         </dependency>
         <dependency>
-            <groupId>javax.servlet</groupId>
-            <artifactId>servlet-api</artifactId>
-            <version>2.4</version>
+            <groupId>jakarta.servlet</groupId>
+            <artifactId>jakarta.servlet-api</artifactId>
+            <version>${servlet.api}</version>
             <scope>provided</scope>
         </dependency>
         <dependency>
