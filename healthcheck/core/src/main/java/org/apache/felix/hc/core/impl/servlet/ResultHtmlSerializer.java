@@ -151,6 +151,7 @@ public class ResultHtmlSerializer {
         return "status" + status.name();
     }
 
+    @SuppressWarnings("unused")
     private boolean isSingleResult(final Result result) {
         int count = 0;
         for (Entry entry : result) {

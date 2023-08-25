@@ -51,6 +51,7 @@ public class HealthCheckFilter {
         return getHealthCheckServiceReferences(selector, false);
     }
 
+    @SuppressWarnings({"unchecked", "rawtypes"})
     public ServiceReference<HealthCheck>[] getHealthCheckServiceReferences(final HealthCheckSelector selector, boolean combineTagsWithOr) {
         final CharSequence filterBuilder = selector != null ? getServiceFilter(selector, combineTagsWithOr)
                 : getServiceFilter(empty(), combineTagsWithOr);

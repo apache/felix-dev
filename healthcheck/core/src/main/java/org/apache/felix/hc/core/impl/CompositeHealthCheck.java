@@ -90,7 +90,7 @@ public class CompositeHealthCheck implements HealthCheck {
     @Override
     public Result execute() {
         final ComponentContext localCtx = this.componentContext;
-        final ServiceReference referenceToThis = localCtx == null ? null : localCtx.getServiceReference();
+        final ServiceReference<?> referenceToThis = localCtx == null ? null : localCtx.getServiceReference();
         Result result = referenceToThis == null ? null : checkForRecursion(referenceToThis, new HashSet<String>());
         if (result != null) {
             // return recursion error
@@ -107,7 +107,7 @@ public class CompositeHealthCheck implements HealthCheck {
         return result;
     }
 
-    Result checkForRecursion(ServiceReference hcReference, Set<String> alreadyBannedTags) {
+    Result checkForRecursion(ServiceReference<?> hcReference, Set<String> alreadyBannedTags) {
 
         HealthCheckMetadata thisCheckMetadata = new HealthCheckMetadata(hcReference);
 
@@ -136,9 +136,9 @@ public class CompositeHealthCheck implements HealthCheck {
         }
 
         // check each sub composite check
-        ServiceReference[] hcRefsOfCompositeCheck = healthCheckFilter
+        ServiceReference<?>[] hcRefsOfCompositeCheck = healthCheckFilter
                 .getHealthCheckServiceReferences(HealthCheckSelector.tags(tagsForIncludedChecksArr), combineTagsWithOr);
-        for (ServiceReference hcRefOfCompositeCheck : hcRefsOfCompositeCheck) {
+        for (ServiceReference<?> hcRefOfCompositeCheck : hcRefsOfCompositeCheck) {
             if (CompositeHealthCheck.class.getName().equals(hcRefOfCompositeCheck.getProperty(ComponentConstants.COMPONENT_NAME))) {
                 log.debug("Checking sub composite HC {}, {}", hcRefOfCompositeCheck,
                         hcRefOfCompositeCheck.getProperty(ComponentConstants.COMPONENT_NAME));

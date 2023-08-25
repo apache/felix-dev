@@ -11,13 +11,14 @@ Bundle-Vendor: The Apache Software Foundation
 Import-Package:\
   org.osgi.service.http*;resolution:=optional,\
   org.quartz*;resolution:=optional,\
-  javax.servlet*;resolution:=optional,\
+  jakarta.servlet;version="[5,7)";resolution:=optional,\
+  jakarta.servlet.http;version="[5,7)";resolution:=optional,\
   *
 
 Conditional-Package: org.apache.felix.utils.*
 
 Require-Capability: osgi.implementation; \
-                          filter:="(&(osgi.implementation=osgi.http)(version>=1.1.0)(!(version>=2.0.0)))"; \
+                          filter:="(&(osgi.implementation=osgi.http)(version>=2.0.0)(!(version>=3.0.0)))"; \
                           resolution:=optional
 
 -removeheaders:\

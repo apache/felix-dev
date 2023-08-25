@@ -29,14 +29,10 @@ import org.apache.felix.hc.api.execution.HealthCheckExecutionResult;
 import org.apache.felix.hc.core.impl.util.lang.StringUtils;
 import org.osgi.service.component.annotations.Activate;
 import org.osgi.service.component.annotations.Component;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 
 /** Serializes health check results into a verbose text message. */
 @Component(service = ResultTxtVerboseSerializer.class)
 public class ResultTxtVerboseSerializer {
-
-    private static final Logger LOG = LoggerFactory.getLogger(ResultTxtVerboseSerializer.class);
 
     private static final String NEWLINE = "\n"; // not using system prop 'line.separator' as not the local but the calling system is
                                                 // relevant.

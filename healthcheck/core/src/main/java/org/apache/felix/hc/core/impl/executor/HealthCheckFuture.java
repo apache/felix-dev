@@ -64,6 +64,7 @@ public class HealthCheckFuture extends FutureTask<ExecutionResult> {
                 Result resultFromHealthCheck = null;
                 ExecutionResult executionResult = null;
 
+                @SuppressWarnings("unchecked")
                 Object healthCheckObject = bundleContext.getService(metadata.getServiceReference());
                 try {
                     if (healthCheckObject != null) {

@@ -76,20 +76,21 @@ public class U {
                                 mavenBundle("org.apache.felix", "org.apache.felix.shell.remote", "1.1.2"))),
                 provision(
                         bundle(bundleFile.toURI().toString()),
-                        mavenBundle("org.apache.felix", "org.apache.felix.scr", "2.0.14"),
-                        mavenBundle("org.apache.felix", "org.apache.felix.configadmin", "1.8.16"),
-                        mavenBundle("org.apache.felix", "org.apache.felix.metatype", "1.1.6"),
-                        mavenBundle("org.apache.felix", "org.apache.felix.eventadmin", "1.4.10"),
+                        mavenBundle("org.osgi", "org.osgi.util.promise", "1.2.0"),
+                        mavenBundle("org.osgi", "org.osgi.util.function", "1.2.0"),
+                        mavenBundle("org.osgi", "org.osgi.service.component", "1.5.0"),
+                        mavenBundle("org.apache.felix", "org.apache.felix.scr", "2.2.6"),
+                        mavenBundle("org.apache.felix", "org.apache.felix.configadmin", "1.9.26"),
+                        mavenBundle("org.apache.felix", "org.apache.felix.metatype", "1.2.4"),
+                        mavenBundle("org.apache.felix", "org.apache.felix.eventadmin", "1.6.4"),
 
                         mavenBundle("org.apache.felix", "org.apache.felix.healthcheck.api").versionAsInProject(),
 
                         // javax annotation
                         mavenBundle("org.apache.geronimo.specs", "geronimo-annotation_1.3_spec", "1.0"),
 
-                        mavenBundle("org.apache.felix", "org.apache.felix.http.servlet-api", "1.1.2"),
-                        mavenBundle("org.apache.felix", "org.apache.felix.http.jetty", "4.0.2"),
-                        mavenBundle("org.apache.felix", "org.apache.felix.http.whiteboard", "4.0.0"),
-                        mavenBundle("org.apache.felix", "org.apache.felix.http.sslfilter", "1.2.4"),
+                        mavenBundle("org.apache.felix", "org.apache.felix.http.servlet-api", "2.1.0"),
+                        mavenBundle("org.apache.felix", "org.apache.felix.http.jetty", "5.0.6"),
                         
                         
                         mavenBundle().groupId("org.apache.servicemix.bundles").artifactId("org.apache.servicemix.bundles.quartz")
@@ -122,8 +123,9 @@ public class U {
         fail("Did not get " + howMany + " health checks with tags " + Arrays.asList(tags) + " after " + timeout + " msec (last count="
                 + count + ")");
     }
-    
-    
+
+
+    @SuppressWarnings("unchecked")
     static ServiceReference<HealthCheck>[] callSelectHealthCheckReferences(HealthCheckExecutor executor, HealthCheckSelector selector) {
         String methodName = "selectHealthCheckReferences";
         try {
@@ -134,6 +136,4 @@ public class U {
             throw new IllegalStateException("Could not call method "+methodName+ " of class "+executor.getClass(), e);
         }
     }
-    
-
 }
