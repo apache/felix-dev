@@ -32,8 +32,7 @@ import java.util.HashSet;
 /**
  * This is a helper class for dumping thread stacks.
  */
-public class ThreadDumper
-{
+public class ThreadDumper {
 
     private final Method getStackTrace;
     private final Method getId;
@@ -41,19 +40,15 @@ public class ThreadDumper
     /**
      * Base constructor.
      */
-    public ThreadDumper()
-    {
+    public ThreadDumper() {
         Method _getStackTrace = null;
         Method _getId = null;
         final Class<?>[] nullArgs = null;
-        try
-        {
+        try {
             _getStackTrace = Thread.class.getMethod("getStackTrace", nullArgs);
             _getId = Thread.class.getMethod("getId", nullArgs);
-        }
-        catch (Throwable e)
-        {
-            /* ignore - stack traces will be unavailable */
+        } catch (Throwable e) {
+            // ignore - stack traces will be unavailable
         }
         getStackTrace = _getStackTrace;
         getId = _getId;
@@ -66,8 +61,7 @@ public class ThreadDumper
      * @param pw the writer where to print the threads information
      * @param withStackTrace to include or not the stack traces
      */
-    public final void printThreads(PrintWriter pw, boolean withStackTrace)
-    {
+    public final void printThreads(PrintWriter pw, boolean withStackTrace) {
         // first get the root thread group
         ThreadGroup rootGroup = getRootThreadGroup();
 
@@ -82,8 +76,7 @@ public class ThreadDumper
 
         // don't use numGroups, but groups.length, otherwise when we get null elements
         // sorted at the beginning, we will skip the real objects
-        for (int i = 0; i < groups.length; i++)
-        {
+        for (int i = 0; i < groups.length; i++) {
             printThreadGroup(pw, groups[i], withStackTrace);
         }
 
@@ -97,10 +90,8 @@ public class ThreadDumper
      * @param thread the thread for which to print the information
      * @param withStackTrace to include or not the stack traces
      */
-    public final void printThread(PrintWriter pw, Thread thread, boolean withStackTrace)
-    {
-        if (thread != null)
-        {
+    public final void printThread(PrintWriter pw, Thread thread, boolean withStackTrace) {
+        if (thread != null) {
 
             pw.print("  Thread ");
             pw.print(getId(thread));
@@ -119,8 +110,7 @@ public class ThreadDumper
             pw.print(thread.getContextClassLoader());
             pw.println(']');
 
-            if (withStackTrace)
-            {
+            if (withStackTrace) {
                 printClassLoader(pw, thread.getContextClassLoader());
                 printStackTrace(pw, getStackTrace(thread));
                 pw.println();
@@ -129,10 +119,8 @@ public class ThreadDumper
     }
 
     private final void printThreadGroup(PrintWriter pw, ThreadGroup group,
-        boolean withStackTrace)
-    {
-        if (group != null)
-        {
+        boolean withStackTrace) {
+        if (group != null) {
             pw.print("ThreadGroup ");
             pw.print(group.getName());
             pw.print(" [");
@@ -140,12 +128,9 @@ public class ThreadDumper
             pw.print(group.getMaxPriority());
 
             pw.print(", parent=");
-            if (group.getParent() != null)
-            {
+            if (group.getParent() != null) {
                 pw.print(group.getParent().getName());
-            }
-            else
-            {
+            } else {
                 pw.print('-');
             }
 
@@ -159,8 +144,7 @@ public class ThreadDumper
             Thread[] threads = new Thread[numThreads * 2];
             group.enumerate(threads, false);
             Arrays.sort(threads, ThreadComparator.getInstance());
-            for (int i = 0; i < threads.length; i++)
-            {
+            for (int i = 0; i < threads.length; i++) {
                 printThread(pw, threads[i], withStackTrace);
             }
 
@@ -168,23 +152,18 @@ public class ThreadDumper
         }
     }
 
-    private final void printClassLoader(PrintWriter pw, ClassLoader classLoader)
-    {
-        if (classLoader != null)
-        {
+    private final void printClassLoader(PrintWriter pw, ClassLoader classLoader) {
+        if (classLoader != null) {
             pw.print("    ClassLoader=");
             pw.println(classLoader);
             pw.print("      Parent=");
             pw.println(classLoader.getParent());
 
-            if (classLoader instanceof URLClassLoader)
-            {
+            if (classLoader instanceof URLClassLoader) {
                 URLClassLoader loader = (URLClassLoader) classLoader;
                 URL[] urls = loader.getURLs();
-                if (urls != null && urls.length > 0)
-                {
-                    for (int i = 0; i < urls.length; i++)
-                    {
+                if (urls != null && urls.length > 0) {
+                    for (int i = 0; i < urls.length; i++) {
                         pw.print("      ");
                         pw.print(i);
                         pw.print(" - ");
@@ -195,17 +174,12 @@ public class ThreadDumper
         }
     }
 
-    private final void printStackTrace(PrintWriter pw, Object stackTrace)
-    {
+    private final void printStackTrace(PrintWriter pw, Object stackTrace) {
         pw.println("    Stacktrace");
-        if (stackTrace == null || Array.getLength(stackTrace) == 0)
-        {
+        if (stackTrace == null || Array.getLength(stackTrace) == 0) {
             pw.println("      -");
-        }
-        else
-        {
-            for (int i = 0, len = Array.getLength(stackTrace); i < len; i++)
-            {
+        } else {
+            for (int i = 0, len = Array.getLength(stackTrace); i < len; i++) {
                 Object/*StackTraceElement*/stackTraceElement = Array.get(stackTrace, i);
                 pw.print("      ");
                 pw.println(stackTraceElement);
@@ -214,8 +188,7 @@ public class ThreadDumper
     }
 
     private final void printSummary(PrintWriter pw, ThreadGroup rootGroup,
-        ThreadGroup[] groups)
-    {
+        ThreadGroup[] groups) {
         int alive = 0;
         int daemon = 0;
         int interrupted = 0;
@@ -230,36 +203,28 @@ public class ThreadDumper
         // main group will eventually enumerate ALL threads, so don't
         // count a thread, it if is already processed
         Collection<Thread> threadSet = new HashSet<>();
-        for (int j = 0; j < list.size(); j++)
-        {
+        for (int j = 0; j < list.size(); j++) {
             ThreadGroup group = list.get(j);
-            if (null == group)
-            {
+            if (null == group) {
                 continue;
             }
             threadGroupCount++;
-            if (group.isDestroyed())
-            {
+            if (group.isDestroyed()) {
                 threadGroupDestroyed++;
             }
 
             Thread[] threads = new Thread[group.activeCount()];
             group.enumerate(threads);
-            for (int i = 0, size = threads.length; i < size; i++)
-            {
+            for (int i = 0, size = threads.length; i < size; i++) {
                 Thread thread = threads[i];
-                if (null != thread && threadSet.add(thread))
-                {
-                    if (thread.isAlive())
-                    {
+                if (null != thread && threadSet.add(thread)) {
+                    if (thread.isAlive()) {
                         alive++;
                     }
-                    if (thread.isDaemon())
-                    {
+                    if (thread.isDaemon()) {
                         daemon++;
                     }
-                    if (thread.isInterrupted())
-                    {
+                    if (thread.isInterrupted()) {
                         interrupted++;
                     }
                     threadCount++;
@@ -284,18 +249,13 @@ public class ThreadDumper
         pw.println();
     }
 
-    private final String getId(Thread thread)
-    {
+    private final String getId(Thread thread) {
         String ret = "";
-        if (null != getId)
-        {
-            try
-            {
+        if (null != getId) {
+            try {
                 ret = "#" + getId.invoke(thread, (Object[]) null);
-            }
-            catch (Throwable e)
-            {
-                /* ignore */
+            } catch (Throwable e) {
+                //
             }
         }
         return ret;
@@ -304,72 +264,56 @@ public class ThreadDumper
     private final Object/*StackTraceElement[]*/getStackTrace(Thread thread)
     {
         Object/*StackTraceElement[]*/ret = null;
-        if (null != getStackTrace)
-        {
-            try
-            {
-
+        if (null != getStackTrace) {
+            try {
                 ret = getStackTrace.invoke(thread, (Object[]) null);
-
-            }
-            catch (Throwable e)
-            {
+            } catch (Throwable e) {
                 // ignore - no traces available
             }
         }
         return ret;
     }
 
-    private static final ThreadGroup getRootThreadGroup()
-    {
+    private static final ThreadGroup getRootThreadGroup() {
         ThreadGroup rootGroup = Thread.currentThread().getThreadGroup();
-        while (rootGroup.getParent() != null)
-        {
+        while (rootGroup.getParent() != null) {
             rootGroup = rootGroup.getParent();
         }
         return rootGroup;
     }
 }
 
-final class ThreadComparator implements Comparator<Thread>
-{
+final class ThreadComparator implements Comparator<Thread> {
 
-    private ThreadComparator()
-    {
+    private ThreadComparator() {
         // prevent instantiation
     }
 
     private static final Comparator<Thread> instance = new ThreadComparator();
 
-    public static final Comparator<Thread> getInstance()
-    {
+    public static final Comparator<Thread> getInstance() {
         return instance;
     }
 
     @Override
-    public int compare(Thread thread1, Thread thread2)
-    {
+    public int compare(Thread thread1, Thread thread2) {
         if (thread1 == null && thread2 == null)
         {
             return 0;
         }
-        if (thread1 == null)
-        {
+        if (thread1 == null) {
             return 1; // null is always >, moves nulls at the end
         }
-        if (thread2 == null)
-        {
+        if (thread2 == null) {
             return -1; // first is always < than null, moves nulls at the end
         }
 
         String t1 = thread1.getName();
         String t2 = thread2.getName();
-        if (null == t1)
-        {
+        if (null == t1) {
             t1 = "";
         }
-        if (null == t2)
-        {
+        if (null == t2) {
             t2 = "";
         }
 
@@ -378,49 +322,39 @@ final class ThreadComparator implements Comparator<Thread>
 
 }
 
-final class ThreadGroupComparator implements Comparator<ThreadGroup>
-{
+final class ThreadGroupComparator implements Comparator<ThreadGroup> {
 
-    private ThreadGroupComparator()
-    {
+    private ThreadGroupComparator() {
         // prevent instantiation
     }
 
     private static final Comparator<ThreadGroup> instance = new ThreadGroupComparator();
 
-    public static final Comparator<ThreadGroup> getInstance()
-    {
+    public static final Comparator<ThreadGroup> getInstance() {
         return instance;
     }
 
     @Override
-    public int compare(ThreadGroup thread1, ThreadGroup thread2)
-    {
-        if (thread1 == null && thread2 == null)
-        {
+    public int compare(ThreadGroup thread1, ThreadGroup thread2)  {
+        if (thread1 == null && thread2 == null)  {
             return 0;
         }
-        if (thread1 == null)
-        {
+        if (thread1 == null) {
             return 1; // null is always >, moves nulls at the end
         }
-        if (thread2 == null)
-        {
+        if (thread2 == null) {
             return -1; // first is always < than null, moves nulls at the end
         }
 
         String t1 = thread1.getName();
         String t2 = thread2.getName();
-        if (null == t1)
-        {
+        if (null == t1) {
             t1 = "";
         }
-        if (null == t2)
-        {
+        if (null == t2) {
             t2 = "";
         }
 
         return t1.toLowerCase().compareTo(t2.toLowerCase());
     }
-
 }

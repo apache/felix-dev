@@ -18,6 +18,7 @@ package org.apache.felix.webconsole.internal.compendium;
 
 import java.io.PrintWriter;
 
+import org.apache.felix.inventory.Format;
 import org.apache.felix.webconsole.internal.AbstractConfigurationPrinter;
 import org.apache.felix.webconsole.internal.misc.ConfigurationRender;
 import org.osgi.framework.ServiceReference;
@@ -29,76 +30,50 @@ import org.osgi.service.prefs.PreferencesService;
  * PreferencesConfigurationPrinter uses the {@link Preferences} service
  * to print the store bundle preferences.
  */
-public class PreferencesConfigurationPrinter extends AbstractConfigurationPrinter
-{
+public class PreferencesConfigurationPrinter extends AbstractConfigurationPrinter {
 
     private static final String TITLE = "Preferences";
 
-    /**
-     * @see org.apache.felix.webconsole.ConfigurationPrinter#getTitle()
-     */
-    public String getTitle()
-    {
+    @Override
+    protected String getTitle() {
         return TITLE;
     }
 
-    /**
-     * @see org.apache.felix.webconsole.ConfigurationPrinter#printConfiguration(java.io.PrintWriter)
-     */
-    @SuppressWarnings({"rawtypes", "unchecked"})
-    public void printConfiguration(PrintWriter printWriter)
-    {
-        ServiceReference sr = getBundleContext().getServiceReference(
-            PreferencesService.class.getName());
-        if (sr == null)
-        {
+    @Override
+    public void print(final PrintWriter printWriter, final Format format, final boolean isZip) {
+        final ServiceReference<?> sr = getBundleContext().getServiceReference(PreferencesService.class.getName());
+        if (sr == null) {
             printWriter.println("Status: Preferences Service not available");
-        }
-        else
-        {
+        } else {
             PreferencesService ps = (PreferencesService) getBundleContext().getService(sr);
-            try
-            {
+            try {
                 printPreferences(printWriter, ps.getSystemPreferences());
 
                 String[] users = ps.getUsers();
-                for (int i = 0; users != null && i < users.length; i++)
-                {
+                for (int i = 0; users != null && i < users.length; i++) {
                     printWriter.println("*** User Preferences " + users[i] + ":");
                     printPreferences(printWriter, ps.getUserPreferences(users[i]));
                 }
-            }
-            catch (BackingStoreException bse)
-            {
-                // todo or not :-)
-            }
-            finally
-            {
+            } catch (BackingStoreException bse) {
+                // ignore
+            } finally {
                 getBundleContext().ungetService(sr);
             }
         }
     }
 
-    private static final void printPreferences(PrintWriter pw, Preferences prefs)
-        throws BackingStoreException
-    {
-
+    private static final void printPreferences(final PrintWriter pw, final  Preferences prefs)
+    throws BackingStoreException {
         final String[] children = prefs.childrenNames();
         final String[] keys = prefs.keys();
 
-        if (children.length == 0 && keys.length == 0)
-        {
+        if (children.length == 0 && keys.length == 0) {
             pw.println("Status: No Preferences available");
-        }
-        else
-        {
-            for (int i = 0; i < children.length; i++)
-            {
+        } else {
+            for (int i = 0; i < children.length; i++) {
                 printPreferences(pw, prefs.node(children[i]));
             }
-
-            for (int i = 0; i < keys.length; i++)
-            {
+            for (int i = 0; i < keys.length; i++) {
                 ConfigurationRender.infoLine(pw, null, prefs.absolutePath() + "/"
                     + keys[i], prefs.get(keys[i], null));
             }

@@ -27,6 +27,7 @@ import java.util.SortedSet;
 import java.util.TreeMap;
 import java.util.TreeSet;
 
+import org.apache.felix.inventory.Format;
 import org.apache.felix.webconsole.internal.AbstractConfigurationPrinter;
 import org.apache.felix.webconsole.internal.misc.ConfigurationRender;
 import org.osgi.framework.ServiceReference;
@@ -39,142 +40,98 @@ import org.osgi.service.metatype.ObjectClassDefinition;
  * ConfigurationAdminConfigurationPrinter uses the {@link ConfigurationAdmin} service
  * to print the available configurations.
  */
-public class ConfigurationAdminConfigurationPrinter extends AbstractConfigurationPrinter
-{
+public class ConfigurationAdminConfigurationPrinter extends AbstractConfigurationPrinter {
 
     private static final String TITLE = "Configurations";
 
-    /**
-     * @see org.apache.felix.webconsole.ConfigurationPrinter#getTitle()
-     */
     @Override
-    public String getTitle()
-    {
+    protected final String getTitle() {
         return TITLE;
     }
 
-    /**
-     * @see org.apache.felix.webconsole.ConfigurationPrinter#printConfiguration(java.io.PrintWriter)
-     */
     @Override
-    public void printConfiguration(PrintWriter pw)
-    {
+    public void print(final PrintWriter pw, final Format format, final boolean isZip) {
         final ServiceReference<ConfigurationAdmin> sr = getBundleContext().getServiceReference( ConfigurationAdmin.class );
-        try
-        {
+        try {
             final ConfigurationAdmin ca = (sr == null ? null : getBundleContext().getService(sr));
-            if (ca == null)
-            {
+            if (ca == null) {
                 pw.println("Status: Configuration Admin Service not available");
-            }
-            else
-            {
+            } else {
                 MetaTypeServiceSupport metatypeSupport = null;
                 final ServiceReference<?> msr = getBundleContext().getServiceReference( ConfigManager.META_TYPE_NAME );
-                try
-                {
+                try {
 
-                    if ( msr != null )
-                    {
+                    if ( msr != null ) {
                         final Object metaTypeService = getBundleContext().getService( msr );
-                        if ( metaTypeService != null )
-                        {
+                        if ( metaTypeService != null ) {
                             metatypeSupport = new MetaTypeServiceSupport( this.getBundleContext(), metaTypeService );
                         }
                     }
 
                     final Configuration[] configs = ca.listConfigurations(null);
 
-                    if (configs != null && configs.length > 0)
-                    {
+                    if (configs != null && configs.length > 0) {
                         final Set<String> factories = new HashSet<>();
                         final SortedMap<String, Configuration> sm = new TreeMap<>();
-                        for (int i = 0; i < configs.length; i++)
-                        {
+                        for (int i = 0; i < configs.length; i++) {
                             sm.put(configs[i].getPid(), configs[i]);
                             String fpid = configs[i].getFactoryPid();
-                            if (null != fpid)
-                            {
+                            if (null != fpid) {
                                 factories.add(fpid);
                             }
                         }
-                        if (factories.isEmpty())
-                        {
+                        if (factories.isEmpty()) {
                             pw.println("Status: " + configs.length
                                 + " configurations available");
-                        }
-                        else
-                        {
+                        } else {
                             pw.println("Status: " + configs.length + " configurations with " + factories.size()
                                     + " different factories available");
                         }
                         pw.println();
 
-                        for (Iterator<Configuration> mi = sm.values().iterator(); mi.hasNext();)
-                        {
+                        for (Iterator<Configuration> mi = sm.values().iterator(); mi.hasNext();) {
                             this.printConfiguration(pw, metatypeSupport, mi.next());
                         }
-                    }
-                    else
-                    {
+                    } else {
                         pw.println("Status: No Configurations available");
                     }
-                }
-                finally
-                {
-                    if ( msr != null )
-                    {
+                } finally {
+                    if ( msr != null ) {
                         getBundleContext().ungetService(msr);
                     }
-
                 }
             }
-        }
-        catch (final Exception ignore)
-        {
+        } catch (final Exception ignore) {
             pw.println("Status: Configuration Admin Service not accessible");
-        }
-        finally
-        {
-            if ( sr != null )
-            {
+        } finally {
+            if ( sr != null ) {
                 getBundleContext().ungetService(sr);
             }
         }
     }
 
-    private void printConfiguration(final PrintWriter pw, final MetaTypeServiceSupport metatypeSupport, final Configuration config)
-    {
+    private void printConfiguration(final PrintWriter pw, final MetaTypeServiceSupport metatypeSupport, final Configuration config) {
         ConfigurationRender.infoLine(pw, "", "PID", config.getPid());
 
-        if (config.getFactoryPid() != null)
-        {
+        if (config.getFactoryPid() != null) {
             ConfigurationRender.infoLine(pw, "  ", "Factory PID", config.getFactoryPid());
         }
 
-        if ( config.getBundleLocation() != null )
-        {
+        if ( config.getBundleLocation() != null ) {
             ConfigurationRender.infoLine(pw, "  ", "BundleLocation", config.getBundleLocation());
         }
 
         Dictionary<String, Object> props = config.getProperties();
-        if (props != null)
-        {
+        if (props != null) {
             final Set<String> obfuscateProperties = new HashSet<>();
-            if ( metatypeSupport != null )
-            {
-                if ( config != null )
-                {
+            if ( metatypeSupport != null ) {
+                if ( config != null ) {
                     final ObjectClassDefinition ocd = metatypeSupport.getObjectClassDefinition( config, null );
-                    if ( ocd != null )
-                    {
+                    if ( ocd != null ) {
                         final AttributeDefinition[] ad = ocd.getAttributeDefinitions( ObjectClassDefinition.ALL );
-                        if ( ad != null )
-                        {
-                            for(final AttributeDefinition def : ad)
-                            {
-                               if ( def.getType() == AttributeDefinition.PASSWORD )
-                               {
+                        if ( ad != null ) {
+                            for(final AttributeDefinition def : ad) {
+                               if ( def.getType() == AttributeDefinition.PASSWORD ) {
                                    obfuscateProperties.add(def.getID());
                                }
                             }
@@ -184,16 +141,13 @@ public class ConfigurationAdminConfigurationPrinter extends AbstractConfiguratio
             }
 
             final SortedSet<String> keys = new TreeSet<>();
-            for (Enumeration<String> ke = props.keys(); ke.hasMoreElements();)
-            {
+            for (Enumeration<String> ke = props.keys(); ke.hasMoreElements();) {
                 keys.add(ke.nextElement());
             }
 
-            for(final String key : keys)
-            {
+            for(final String key : keys) {
                 // pid, factory pid and bundle location are already printed
-                if ( ConfigAdminSupport.CONFIG_PROPERTIES_HIDE.contains(key) )
-                {
+                if ( ConfigAdminSupport.CONFIG_PROPERTIES_HIDE.contains(key) ) {
                     continue;
                 }
                 final Object value = (obfuscateProperties.contains(key) || MetaTypeSupport.isPasswordProperty(key)) ? "********" : props.get(key);
@@ -203,5 +157,4 @@ public class ConfigurationAdminConfigurationPrinter extends AbstractConfiguratio
 
         pw.println();
     }
-
 }

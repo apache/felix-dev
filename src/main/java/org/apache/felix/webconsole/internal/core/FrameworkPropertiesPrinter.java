@@ -26,6 +26,7 @@ import java.util.Map.Entry;
 import java.util.TreeMap;
 import java.util.stream.Collectors;
 
+import org.apache.felix.inventory.Format;
 import org.apache.felix.webconsole.internal.AbstractConfigurationPrinter;
 import org.apache.felix.webconsole.internal.misc.ConfigurationRender;
 import org.osgi.framework.Bundle;
@@ -33,23 +34,21 @@ import org.osgi.framework.Constants;
 import org.osgi.framework.dto.FrameworkDTO;
 
 
-public class FrameworkPropertiesPrinter extends AbstractConfigurationPrinter
-{
+public class FrameworkPropertiesPrinter extends AbstractConfigurationPrinter {
 
     private static final String TITLE = "Framework Properties";
 
-    public String getTitle()
-    {
+    @Override
+    protected final String getTitle() {
         return TITLE;
     }
 
-    public void printConfiguration( PrintWriter printWriter )
-    {
-        getFrameworkProperties().entrySet().stream().forEach( e -> ConfigurationRender.infoLine( printWriter, null, e.getKey(), e.getValue() ) );
+    @Override
+    public void print(final PrintWriter pw, final Format format, final boolean isZip) {
+        getFrameworkProperties().entrySet().stream().forEach( e -> ConfigurationRender.infoLine( pw, null, e.getKey(), e.getValue() ) );
     }
 
-    private Map<String,String> getFrameworkProperties() 
-    {
+    private Map<String,String> getFrameworkProperties() {
         Bundle systemBundle = getBundleContext().getBundle( Constants.SYSTEM_BUNDLE_ID );
         FrameworkDTO framework = systemBundle.adapt( FrameworkDTO.class );
         // sorted map of https://docs.osgi.org/javadoc/osgi.core/8.0.0/org/osgi/framework/dto/FrameworkDTO.html#properties
@@ -61,7 +60,7 @@ public class FrameworkPropertiesPrinter extends AbstractConfigurationPrinter
                 TreeMap::new ) );
     }
 
-    private static final String getStringValue( Object object ) {
+    private static final String getStringValue( final Object object ) {
         // numerical type, Boolean, String, DTO or an array of any of the former
         if ( object.getClass().isArray() ) {
             StringBuilder values = new StringBuilder( "[" );
@@ -74,13 +73,9 @@ public class FrameworkPropertiesPrinter extends AbstractConfigurationPrinter
             }
             values.append( "]" );
             return values.toString();
-        } 
-        else if ( object instanceof String )
-        {
+        } else if ( object instanceof String ) {
             return object.toString();
-        } 
-        else
-        {
+        } else {
             return  object.toString() + " (" + object.getClass() + ")";
         }
     }
