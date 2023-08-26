@@ -21,6 +21,7 @@ import java.io.PrintWriter;
 import java.text.MessageFormat;
 import java.util.TreeMap;
 
+import org.apache.felix.inventory.Format;
 import org.apache.felix.webconsole.internal.AbstractConfigurationPrinter;
 import org.osgi.framework.Bundle;
 import org.osgi.framework.Constants;
@@ -30,18 +31,9 @@ import org.osgi.framework.wiring.BundleRevision;
 /**
  * The <code>BundlesConfigurationPrinter</code> prints out the bundle list.
  */
-public class BundlesConfigurationPrinter
-    extends AbstractConfigurationPrinter {
+public class BundlesConfigurationPrinter extends AbstractConfigurationPrinter {
 
-    /**
-     * @see org.apache.felix.webconsole.ConfigurationPrinter#getTitle()
-     */
-    public String getTitle() {
-        return "Bundlelist";
-    }
-
-    private String getHeaderValue(final Bundle b, final String name)
-    {
+    private String getHeaderValue(final Bundle b, final String name) {
         String val = (String)b.getHeaders().get(name);
         if ( val == null ) {
             val = "";
@@ -66,10 +58,13 @@ public class BundlesConfigurationPrinter
         return rev != null && (rev.getTypes() & BundleRevision.TYPE_FRAGMENT) == BundleRevision.TYPE_FRAGMENT;
     }
 
-    /**
-     * @see org.apache.felix.webconsole.ConfigurationPrinter#printConfiguration(java.io.PrintWriter)
-     */
-    public void printConfiguration( final PrintWriter pw ) {
+    @Override
+    protected final String getTitle() {
+        return "Bundlelist";
+    }
+
+    @Override
+    public void print(final PrintWriter pw, final Format format, final boolean isZip) {
         final Bundle[] bundles = BundleContextUtil.getWorkingBundleContext(this.getBundleContext()).getBundles();
         // create a map for sorting first
         final TreeMap<String, String> bundlesMap = new TreeMap<>();

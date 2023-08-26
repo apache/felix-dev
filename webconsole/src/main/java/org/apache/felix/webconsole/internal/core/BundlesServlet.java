@@ -53,10 +53,11 @@ import javax.servlet.http.HttpServletResponse;
 import javax.servlet.http.Part;
 
 import org.apache.commons.io.IOUtils;
+import org.apache.felix.inventory.Format;
+import org.apache.felix.inventory.InventoryPrinter;
 import org.apache.felix.utils.json.JSONWriter;
 import org.apache.felix.utils.manifest.Clause;
 import org.apache.felix.utils.manifest.Parser;
-import org.apache.felix.webconsole.ConfigurationPrinter;
 import org.apache.felix.webconsole.SimpleWebConsolePlugin;
 import org.apache.felix.webconsole.WebConsoleConstants;
 import org.apache.felix.webconsole.bundleinfo.BundleInfo;
@@ -91,8 +92,7 @@ import org.osgi.util.tracker.ServiceTrackerCustomizer;
  * the list of bundles, installed on the framework. It also adds ability to control
  * the lifecycle of the bundles, like start, stop, uninstall, install.
  */
-public class BundlesServlet extends SimpleWebConsolePlugin implements OsgiManagerPlugin, ConfigurationPrinter
-{
+public class BundlesServlet extends SimpleWebConsolePlugin implements OsgiManagerPlugin, InventoryPrinter {
 
     /** the label of the bundles plugin - used by other plugins to reference to plugin details */
     public static final String NAME = "bundles";
@@ -127,7 +127,7 @@ public class BundlesServlet extends SimpleWebConsolePlugin implements OsgiManage
     // see #activate and #isBootDelegated
     private boolean[] bootPkgWildcards;
 
-    private ServiceRegistration<ConfigurationPrinter> configurationPrinter;
+    private ServiceRegistration<InventoryPrinter> configurationPrinter;
     private ServiceTracker<BundleInfoProvider, BundleInfoProvider> bundleInfoTracker;
 
     // templates
@@ -138,8 +138,7 @@ public class BundlesServlet extends SimpleWebConsolePlugin implements OsgiManage
     private ServiceRegistration<BundleInfoProvider> bipCapabilitiesRequired;
 
     /** Default constructor */
-    public BundlesServlet()
-    {
+    public BundlesServlet() {
         super(NAME, TITLE, CATEGORY_OSGI, CSS);
 
         // load templates
@@ -182,11 +181,9 @@ public class BundlesServlet extends SimpleWebConsolePlugin implements OsgiManage
         StringTokenizer st = new StringTokenizer( bootDelegation, " ," );
         bootPkgs = new String[st.countTokens()];
         bootPkgWildcards = new boolean[bootPkgs.length];
-        for ( int i = 0; i < bootPkgs.length; i++ )
-        {
+        for ( int i = 0; i < bootPkgs.length; i++ ) {
             bootDelegation = st.nextToken();
-            if ( bootDelegation.endsWith( "*" ) )
-            {
+            if ( bootDelegation.endsWith( "*" ) ) {
                 bootPkgWildcards[i] = true;
                 bootDelegation = bootDelegation.substring( 0, bootDelegation.length() - 1 );
             }
@@ -194,55 +191,44 @@ public class BundlesServlet extends SimpleWebConsolePlugin implements OsgiManage
         }
 
         Hashtable<String, Object> props = new Hashtable<>();
-        props.put( WebConsoleConstants.CONFIG_PRINTER_MODES, new String[] { ConfigurationPrinter.MODE_TXT,
-                ConfigurationPrinter.MODE_ZIP } );
-        configurationPrinter = bundleContext.registerService( ConfigurationPrinter.class, this, props );
+        props.put(InventoryPrinter.TITLE, this.getTitle());
+        props.put(InventoryPrinter.NAME, this.getLabel());
+        configurationPrinter = bundleContext.registerService( InventoryPrinter.class, this, props );
         bipCapabilitiesProvided = bundleContext.registerService( BundleInfoProvider.class, new CapabilitiesProvidedInfoProvider( bundleContext.getBundle() ), null );
         bipCapabilitiesRequired = bundleContext.registerService( BundleInfoProvider.class, new CapabilitiesRequiredInfoProvider( bundleContext.getBundle() ), null );
     }
-
 
     /**
      * @see org.apache.felix.webconsole.SimpleWebConsolePlugin#deactivate()
      */
     @Override
-    public void deactivate()
-    {
-        if ( configurationPrinter != null )
-        {
+    public void deactivate() {
+        if ( configurationPrinter != null ) {
             configurationPrinter.unregister();
             configurationPrinter = null;
         }
 
-        if ( bundleInfoTracker != null )
-        {
+        if ( bundleInfoTracker != null ) {
             bundleInfoTracker.close();
             bundleInfoTracker = null;
         }
 
-        if ( bipCapabilitiesProvided != null )
-        {
+        if ( bipCapabilitiesProvided != null ) {
             bipCapabilitiesProvided.unregister();
             bipCapabilitiesProvided = null;
         }
-        if ( bipCapabilitiesRequired != null )
-        {
+        if ( bipCapabilitiesRequired != null ) {
             bipCapabilitiesRequired.unregister();
             bipCapabilitiesRequired = null;
         }
         super.deactivate();
     }
 
+    //---------- InventoryPrinter
 
-    //---------- ConfigurationPrinter
-
-    /**
-     * @see org.apache.felix.webconsole.ConfigurationPrinter#printConfiguration(java.io.PrintWriter)
-     */
     @Override
     @SuppressWarnings({"rawtypes"})
-    public void printConfiguration( PrintWriter pw )
-    {
+    public void print(PrintWriter pw, Format format, boolean isZip) {
         try
         {
             final Map<String, Object> map = createObjectStructure(null, null, null, true, Locale.ENGLISH, null, null );

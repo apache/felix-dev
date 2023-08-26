@@ -17,42 +17,49 @@
 package org.apache.felix.webconsole.internal;
 
 
-import org.apache.felix.webconsole.ConfigurationPrinter;
+import java.util.Dictionary;
+import java.util.Hashtable;
+
+import org.apache.felix.inventory.InventoryPrinter;
 import org.osgi.framework.BundleContext;
 import org.osgi.framework.ServiceRegistration;
 
 /**
  * AbstractConfigurationPrinter is an utility class, that provides a basic implementation
- * of {@link ConfigurationPrinter} and {@link OsgiManagerPlugin} interfaces.
+ * of {@link InventoryPrinter} and {@link OsgiManagerPlugin} interfaces.
  */
-@SuppressWarnings("deprecation")
-public abstract class AbstractConfigurationPrinter implements ConfigurationPrinter, OsgiManagerPlugin
-{
+public abstract class AbstractConfigurationPrinter implements InventoryPrinter, OsgiManagerPlugin {
 
-    private BundleContext bundleContext;
+    private volatile BundleContext bundleContext;
 
-    private ServiceRegistration<ConfigurationPrinter> registration;
-
+    private volatile ServiceRegistration<InventoryPrinter> registration;
 
     /**
      * @see org.apache.felix.webconsole.internal.OsgiManagerPlugin#activate(org.osgi.framework.BundleContext)
      */
-    public void activate( BundleContext bundleContext )
-    {
+    public void activate( BundleContext bundleContext ) {
         this.bundleContext = bundleContext;
-        this.registration = bundleContext.registerService( ConfigurationPrinter.class, this, null );
-    }
+        final Dictionary<String, Object> props = new Hashtable<>();
+        props.put(InventoryPrinter.TITLE, this.getTitle());
+        props.put(InventoryPrinter.NAME, this.getLabel());
 
+        this.registration = bundleContext.registerService( InventoryPrinter.class, this, props );
+    }
 
     /**
      * @see org.apache.felix.webconsole.internal.OsgiManagerPlugin#deactivate()
      */
-    public void deactivate()
-    {
-        this.registration.unregister();
+    public void deactivate() {
+        if ( this.registration != null ) {
+            try {
+                this.registration.unregister();
+            } catch ( final IllegalStateException ise ) {
+                // ignore, bundle context already invalid
+            }
+            this.registration = null;
+        }
         this.bundleContext = null;
     }
-
 
     /**
      * Returns the <code>BundleContext</code> with which this plugin has been
@@ -62,8 +69,21 @@ public abstract class AbstractConfigurationPrinter implements ConfigurationPrint
      *
      * @return the bundle context or <code>null</code> if the bundle is not activated.
      */
-    protected BundleContext getBundleContext()
-    {
+    protected BundleContext getBundleContext() {
         return bundleContext;
+    }
+
+    /**
+     * Get the title
+     * @return The title
+     */
+    protected abstract String getTitle();
+
+    /**
+     * Get the label
+     * @return The label
+     */
+    protected String getLabel() {
+        return this.getTitle();
     }
 }

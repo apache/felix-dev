@@ -26,6 +26,7 @@ import java.util.Map;
 import java.util.function.Predicate;
 import java.util.stream.Collectors;
 
+import org.apache.felix.inventory.Format;
 import org.apache.felix.webconsole.internal.AbstractConfigurationPrinter;
 import org.apache.felix.webconsole.internal.misc.ConfigurationRender;
 import org.osgi.framework.Bundle;
@@ -36,111 +37,90 @@ import org.osgi.framework.wiring.BundleWire;
 import org.osgi.framework.wiring.BundleWiring;
 
 
-public class CapabilitiesPrinter extends AbstractConfigurationPrinter
-{
+public class CapabilitiesPrinter extends AbstractConfigurationPrinter {
 
     private static final String TITLE = "Capabilities";
 
     static final List<String> EXCLUDED_NAMESPACES = Arrays.asList( PackageNamespace.PACKAGE_NAMESPACE, HostNamespace.HOST_NAMESPACE );
     static final Predicate<String> EXCLUDED_NAMESPACES_PREDICATE = new ExcludedNamespacesPredicate();
 
-    public String getTitle()
-    {
-        return TITLE;
-    }
-
-    static final class ExcludedNamespacesPredicate implements Predicate<String>
-    {
+    static final class ExcludedNamespacesPredicate implements Predicate<String> {
         @Override
         public boolean test(String namespace) {
             return !EXCLUDED_NAMESPACES.contains(namespace);
         }
     }
 
-    public void printConfiguration( PrintWriter printWriter )
-    {
-        for ( Bundle bundle : getBundleContext().getBundles() )
-        {
+    @Override
+    protected final String getTitle() {
+        return TITLE;
+    }
+
+    @Override
+    public void print(final PrintWriter printWriter, final Format format, final boolean isZip) {
+        for ( final Bundle bundle : getBundleContext().getBundles() ) {
             BundleWiring wiring = bundle.adapt( BundleWiring.class );
-            if ( wiring == null )
-            {
+            if ( wiring == null ) {
                 continue;
             }
             List<BundleCapability> capabilities = wiring.getCapabilities( null );
-            if ( capabilities == null )
-            {
+            if ( capabilities == null ) {
                 continue;
             }
             // which capabilities to filter?
             List<BundleCapability> filteredCapabilities = capabilities.stream()
                     .filter( c -> EXCLUDED_NAMESPACES_PREDICATE.test(c.getNamespace()) )
                     .collect( Collectors.toList() );
-            if ( filteredCapabilities.isEmpty() )
-            {
+            if ( filteredCapabilities.isEmpty() ) {
                 // skip bundles not exporting capabilities
                 continue;
             }
             
             ConfigurationRender.infoLine( printWriter, null,  "Bundle", bundle.getSymbolicName() + " (" + bundle.getBundleId() + ")" );
-            for ( BundleCapability capability : filteredCapabilities )
-            {
+            for ( BundleCapability capability : filteredCapabilities ) {
                 ConfigurationRender.infoLine( printWriter, "  ", "Capability namespace", capability.getNamespace() );
                 String attributes = dumpTypedAttributes( capability.getAttributes() );
-                if ( !attributes.isEmpty() ) 
-                {
+                if ( !attributes.isEmpty() ) {
                     ConfigurationRender.infoLine( printWriter, "    ", "Attributes", attributes );
                 }
                 String directives = dumpDirectives( capability.getDirectives() );
-                if ( !directives.isEmpty() )
-                {
+                if ( !directives.isEmpty() ) {
                     ConfigurationRender.infoLine( printWriter, "    ", "Directives", directives );
                 }
                 List<BundleWire> wires = wiring.getRequiredWires( capability.getNamespace() );
-                if ( wires == null )
-                {
+                if ( wires == null ) {
                     continue;
                 }
                 String requirerBundles = wires.stream()
                         .map( w -> w.getRequirer().getSymbolicName() + " (" + w.getRequirer().getBundle().getBundleId() + ") with directives: " + dumpDirectives( w.getRequirement().getDirectives() ) )
                         .collect( Collectors.joining( ", ") );
-                if ( !requirerBundles.isEmpty() )
-                {
+                if ( !requirerBundles.isEmpty() ) {
                     ConfigurationRender.infoLine( printWriter, "    ", "Required By", requirerBundles );
                 }
             }
         }
     }
 
-    static String dumpTypedAttributes( Map<String, Object> typedAttributes )
-    {
+    static String dumpTypedAttributes( Map<String, Object> typedAttributes ) {
         StringBuilder attributes = new StringBuilder();
         boolean isFirst = true;
-        for ( Map.Entry<String, Object> entry : typedAttributes.entrySet() )
-        {
+        for ( Map.Entry<String, Object> entry : typedAttributes.entrySet() ) {
             String value;
-            if ( entry.getValue().getClass().isArray() ) 
-            {
+            if ( entry.getValue().getClass().isArray() ) {
                 StringBuilder values = new StringBuilder( "[" );
-                for ( int i=0; i<Array.getLength(entry.getValue()); i++ ) 
-                {
-                    if ( i > 0 )
-                    {
+                for ( int i=0; i<Array.getLength(entry.getValue()); i++ ) {
+                    if ( i > 0 ) {
                         values.append( ", " );
                     }
                     values.append( Array.get( entry.getValue(), i ) );
                 }
                 value = values.append( "]" ).toString();
-            }
-            else 
-            {
+            } else {
                 value = entry.getValue().toString();
             }
-            if ( isFirst )
-            {
+            if ( isFirst ) {
                 isFirst = false;
-            }
-            else
-            {
+            } else {
                 attributes.append( ", " );
             }
             attributes.append( entry.getKey() ).append( "=" ).append( value );
@@ -148,8 +128,7 @@ public class CapabilitiesPrinter extends AbstractConfigurationPrinter
         return attributes.toString();
     }
 
-    static String dumpDirectives( Map<String, String> directives )
-    {
+    static String dumpDirectives( Map<String, String> directives ) {
         return directives.entrySet().stream().map( e -> e.getKey() + "=" + e.getValue() ).collect( Collectors.joining( " ," ) );
     }
 }

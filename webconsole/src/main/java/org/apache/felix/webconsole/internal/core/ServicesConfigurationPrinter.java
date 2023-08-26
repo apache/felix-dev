@@ -21,9 +21,9 @@ package org.apache.felix.webconsole.internal.core;
 import java.io.PrintWriter;
 import java.text.MessageFormat;
 import java.util.Arrays;
-import java.util.Comparator;
 import java.util.Locale;
 
+import org.apache.felix.inventory.Format;
 import org.apache.felix.webconsole.internal.AbstractConfigurationPrinter;
 import org.apache.felix.webconsole.internal.Util;
 import org.osgi.framework.Bundle;
@@ -35,8 +35,8 @@ import org.osgi.framework.ServiceReference;
  * ServicesConfigurationPrinter provides a configuration printer for inspecting the
  * registered services.
  */
-public class ServicesConfigurationPrinter extends AbstractConfigurationPrinter
-{
+public class ServicesConfigurationPrinter extends AbstractConfigurationPrinter {
+
     private static final String TITLE = "Services";
 
     private static final MessageFormat INFO = new MessageFormat(
@@ -49,30 +49,20 @@ public class ServicesConfigurationPrinter extends AbstractConfigurationPrinter
     // don't create empty reference array all the time, create it only once - it is immutable
     private static final ServiceReference<?>[] NO_REFS = new ServiceReference[0];
 
-    /**
-     * @see org.apache.felix.webconsole.ConfigurationPrinter#getTitle()
-     */
     @Override
-    public final String getTitle()
-    {
+    protected final String getTitle() {
         return TITLE;
     }
 
-    /**
-     * @see org.apache.felix.webconsole.ConfigurationPrinter#printConfiguration(java.io.PrintWriter)
-     */
     @Override
-    public final void printConfiguration(PrintWriter pw)
-    {
+    public void print(final PrintWriter pw, final Format format, final boolean isZip) {
         final Object[] data = new Object[4]; // used as message formatter parameters
         final ServiceReference<?> refs[] = getServices();
         pw.print("Status: ");
         pw.println(ServicesServlet.getStatusLine(refs));
 
-        for (int i = 0; refs != null && i < refs.length; i++)
-        {
-            try
-            {
+        for (int i = 0; refs != null && i < refs.length; i++) {
+            try {
                 final Bundle bundle = refs[i].getBundle();
                 final Bundle[] usingBundles = refs[i].getUsingBundles();
 
@@ -82,8 +72,7 @@ public class ServicesConfigurationPrinter extends AbstractConfigurationPrinter
 
                 // print registration properties
                 String[] keys = refs[i].getPropertyKeys();
-                for (int j = 0; keys != null && j < keys.length; j++)
-                {
+                for (int j = 0; keys != null && j < keys.length; j++) {
                     final String key = keys[j];
                     // skip common keys - already added above
                     if (Constants.SERVICE_ID.equals(key) || Constants.OBJECTCLASS.equals(key)
@@ -97,20 +86,16 @@ public class ServicesConfigurationPrinter extends AbstractConfigurationPrinter
                 }
 
                 // using bundles
-                for (int j = 0; usingBundles != null && j < usingBundles.length; j++)
-                {
+                for (int j = 0; usingBundles != null && j < usingBundles.length; j++) {
                     pw.println(USING.format(params(usingBundles[j], data)));
                 }
-            }
-            catch (Throwable t)
-            {
+            } catch (Throwable t) {
                 // a problem handling a service - ignore and continue with the next
             }
         }
     }
 
-    private static final Object[] params(Bundle bundle, Object[] data)
-    {
+    private static final Object[] params(Bundle bundle, Object[] data) {
         data[0] = String.valueOf(bundle.getBundleId());
         data[1] = Util.getName(bundle, Locale.ENGLISH);
         data[2] = bundle.getSymbolicName();
@@ -118,8 +103,7 @@ public class ServicesConfigurationPrinter extends AbstractConfigurationPrinter
         return data;
     }
 
-    private static final Object[] params(ServiceReference<?> ref, Object[] data)
-    {
+    private static final Object[] params(ServiceReference<?> ref, Object[] data) {
         data[0] = ServicesServlet.propertyAsString(ref, Constants.SERVICE_ID);
         data[1] = ServicesServlet.propertyAsString(ref, Constants.OBJECTCLASS);
         data[2] = ServicesServlet.propertyAsString(ref, Constants.SERVICE_PID);
