@@ -108,7 +108,6 @@ public abstract class AbstractServlet extends HttpServlet {
      *
      * @param request The request object
      * @param response The response object
-     * @return <code>true</code> if the request causes a resource to be sent back.
      *
      * @throws IOException If an error occurs accessing or spooling the resource.
      */

@@ -38,14 +38,14 @@ public class RequestVariableResolver extends HashMap<String, Object> {
     /**
      * The name of the key providing the absolute path of the Web Console root.
      * This key is guaaranteed to be set for plugins.
-     * @see ServletConstants.ATTR_APP_ROOT
+     * @see ServletConstants#ATTR_APP_ROOT
      */
     public static final String KEY_APP_ROOT = "appRoot";
 
     /**
      * The name of the key providing the absolute path of the current plugin.
      * This key is guaaranteed to be set for plugins.
-     * @see ServletConstants.ATTR_PLUGIN_ROOT
+     * @see ServletConstants#ATTR_PLUGIN_ROOT
      */
     public static final String KEY_PLUGIN_ROOT = "pluginRoot";
 

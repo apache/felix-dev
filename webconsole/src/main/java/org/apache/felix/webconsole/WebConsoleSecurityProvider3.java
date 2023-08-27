@@ -38,7 +38,9 @@ import org.osgi.service.http.context.ServletContextHelper;
  * {@link ServletContextHelper#REMOTE_USER}, {@link ServletContextHelper#AUTHORIZATION} attributes from the request and the session.
  * 
  * @since 4.2.8; Web Console Bundle 4.2.8
+ * @deprecated Use the {@link org.apache.felix.webconsole.spi.SecurityProvider} instead.
  */
+@Deprecated
 @ConsumerType
 public interface WebConsoleSecurityProvider3 extends WebConsoleSecurityProvider2 {
 

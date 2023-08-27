@@ -39,7 +39,6 @@ public abstract class ServletConstants {
      * <p>
      * This property is required for the service to be used as a plugin. 
      * Otherwise the service is just ignored by the web console.
-     * <p>
      */
     public static final String PLUGIN_TITLE = "felix.webconsole.title";
 

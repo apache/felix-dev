@@ -47,7 +47,10 @@ import org.osgi.util.tracker.ServiceTrackerCustomizer;
  * <li>Methods for (un)registering the web console plugin service</li>
  * <li>Default implementation for resource loading</li>
  * </ul>
+ *
+ * @deprecated Either register a servlet using Servlet API 5 or use {@link org.apache.felix.webconsole.servlet.AbstractServlet}
  */
+@Deprecated
 public abstract class SimpleWebConsolePlugin extends AbstractWebConsolePlugin
 {
 

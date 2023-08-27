@@ -43,7 +43,10 @@ import org.apache.commons.fileupload.servlet.ServletRequestContext;
 /**
  * The <code>WebConsoleUtil</code> provides various utility methods for use
  * by Web Console plugins.
+ *
+ * @deprecated Some of the methods can be replaced with direct Servlet API calls.
  */
+@Deprecated
 public final class WebConsoleUtil
 {
 
@@ -72,7 +75,7 @@ public final class WebConsoleUtil
      * @param request The request whose attribute is returned (or set)
      *
      * @return The {@link VariableResolver} for the given request.
-     * @deprecated Use the {@link getRequestVariableResolver} instead.
+     * @deprecated Use the {@link org.apache.felix.webconsole.servlet.RequestVariableResolver} instead.
      */
     @Deprecated
     public static VariableResolver getVariableResolver( final ServletRequest request ) {
@@ -96,7 +99,7 @@ public final class WebConsoleUtil
      *
      * @param request The request whose attribute is set
      * @param resolver The {@link VariableResolver} to place into the request
-     * @deprecated Use the {@link RequestVaraibleResolver} instead.
+     * @deprecated Use the {@link org.apache.felix.webconsole.servlet.RequestVariableResolver} instead.
      */
     @Deprecated
     public static void setVariableResolver( final ServletRequest request, final VariableResolver resolver )  {
@@ -322,7 +325,6 @@ public final class WebConsoleUtil
      * @param value the value to decode
      * @return the decoded string
      */
-    @SuppressWarnings("deprecation")
     public static String urlDecode( final String value )
     {
         // shortcut for empty or missing values

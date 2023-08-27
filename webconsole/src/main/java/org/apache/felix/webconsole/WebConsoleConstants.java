@@ -23,7 +23,10 @@ import org.apache.felix.webconsole.servlet.RequestVariableResolver;
 /**
  * WebConsoleConstants provides some common constants that are used by plugin
  * developers.
+ *
+ * @deprecated Either register a servlet using Servlet API 5 or use {@link org.apache.felix.webconsole.servlet.AbstractServlet}
  */
+@Deprecated
 public interface WebConsoleConstants {
 
     /**
