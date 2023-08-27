@@ -10,66 +10,68 @@
 	language governing permissions and limitations under the License. -->
 <project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/maven-v4_0_0.xsd">
 
-	<modelVersion>4.0.0</modelVersion>
-	<parent>
-		<groupId>org.apache.felix</groupId>
-		<artifactId>felix-parent</artifactId>
-		<version>7</version>
-		<relativePath>../../../pom/pom.xml</relativePath>
-	</parent>
+    <modelVersion>4.0.0</modelVersion>
+    <parent>
+        <groupId>org.apache.felix</groupId>
+        <artifactId>felix-parent</artifactId>
+        <version>7</version>
+        <relativePath>../../../pom/pom.xml</relativePath>
+    </parent>
 
-	<artifactId>org.apache.felix.webconsole.plugins.obr</artifactId>
-	<packaging>bundle</packaging>
-	<version>1.0.5-SNAPSHOT</version>
+    <artifactId>org.apache.felix.webconsole.plugins.obr</artifactId>
+    <packaging>bundle</packaging>
+    <version>1.0.5-SNAPSHOT</version>
 
-	<name>Apache Felix Web Console OBR Plugin</name>
-	<description>
+    <name>Apache Felix Web Console OBR Plugin</name>
+    <description>
         This Apache Felix OSGi web console plugin provides method to install bundles from a bundle repository.
     </description>
 
-	<scm>
-		<connection>scm:git:https://github.com/apache/felix-dev.git</connection>
-		<developerConnection>scm:git:https://github.com/apache/felix-dev.git</developerConnection>
-		<url>https://gitbox.apache.org/repos/asf?p=felix-dev.git</url>
-	</scm>
+    <scm>
+        <connection>scm:git:https://github.com/apache/felix-dev.git</connection>
+        <developerConnection>scm:git:https://github.com/apache/felix-dev.git</developerConnection>
+        <url>https://gitbox.apache.org/repos/asf?p=felix-dev.git</url>
+    </scm>
 
     <properties>
-	    <felix.java.version>11</felix.java.version>
+        <felix.java.version>11</felix.java.version>
+        <servlet.api>5.0.0</servlet.api>
     </properties>
 
-	<build>
-		<plugins>
-			<!-- translate UTF-8 encoded properties files to ISO-8859-1 -->
-			<plugin>
-				<groupId>org.codehaus.mojo</groupId>
-				<artifactId>native2ascii-maven-plugin</artifactId>
+    <build>
+        <plugins>
+            <!-- translate UTF-8 encoded properties files to ISO-8859-1 -->
+            <plugin>
+                <groupId>org.codehaus.mojo</groupId>
+                <artifactId>native2ascii-maven-plugin</artifactId>
                 <version>1.0-beta-1</version>
-				<executions>
-					<execution>
-						<goals>
-							<goal>native2ascii</goal>
-						</goals>
-						<configuration>
-							<encoding>UTF-8</encoding>
-						</configuration>
-					</execution>
-				</executions>
-			</plugin>
+                <executions>
+                    <execution>
+                        <goals>
+                            <goal>native2ascii</goal>
+                        </goals>
+                        <configuration>
+                            <encoding>UTF-8</encoding>
+                        </configuration>
+                    </execution>
+                </executions>
+            </plugin>
 
-			<plugin>
-				<groupId>org.apache.felix</groupId>
-				<artifactId>maven-bundle-plugin</artifactId>
-				<version>5.1.9</version>
-				<extensions>true</extensions>
-				<configuration>
-					<instructions>
-						<Bundle-SymbolicName>
-							${artifactId}
-                        </Bundle-SymbolicName>
-						<Bundle-Activator>
-							org.apache.felix.webconsole.plugins.obr.internal.Activator
-                        </Bundle-Activator>
-						<DynamicImport-Package>
+            <plugin>
+                <groupId>org.apache.felix</groupId>
+                <artifactId>maven-bundle-plugin</artifactId>
+                <version>5.1.9</version>
+                <extensions>true</extensions>
+                <configuration>
+                    <instructions>
+                        <Bundle-SymbolicName>${project.artifactId}</Bundle-SymbolicName>
+			<Bundle-Activator>org.apache.felix.webconsole.plugins.obr.internal.Activator</Bundle-Activator>
+                        <Import-Package>
+                            jakarta.servlet;version="[5,7)",
+                            jakarta.servlet.http;version="[5,7)",
+                            *
+                        </Import-Package>
+                        <DynamicImport-Package>
                             org.apache.felix.bundlerepository,
                             org.osgi.service.obr
                         </DynamicImport-Package>
@@ -79,9 +81,9 @@
                         <Embed-Dependency>
                              org.apache.felix.utils;inline=org/apache/felix/utils/json/JSONWriter**
                         </Embed-Dependency>
- 					</instructions>
-				</configuration>
-			</plugin>
+                    </instructions>
+                </configuration>
+            </plugin>
             <plugin>
                 <groupId>org.apache.rat</groupId>
                 <artifactId>apache-rat-plugin</artifactId>
@@ -95,40 +97,40 @@
                     </excludes>
                 </configuration>
             </plugin>
-		</plugins>
-	</build>
+        </plugins>
+    </build>
 
-	<dependencies>
-		<dependency>
-			<groupId>jakarta.servlet</groupId>
-			<artifactId>jakarta.servlet-api</artifactId>
-			<version>5.0.0</version>
-			<scope>provided</scope>
-		</dependency>
-		<dependency>
-			<groupId>org.osgi</groupId>
-			<artifactId>osgi.core</artifactId>
-			<version>6.0.0</version>
-			<scope>provided</scope>
-		</dependency>
+    <dependencies>
+        <dependency>
+            <groupId>jakarta.servlet</groupId>
+            <artifactId>jakarta.servlet-api</artifactId>
+	    <version>${servlet.api}</version>
+            <scope>provided</scope>
+        </dependency>
+        <dependency>
+            <groupId>org.osgi</groupId>
+            <artifactId>osgi.core</artifactId>
+            <version>6.0.0</version>
+            <scope>provided</scope>
+        </dependency>
         <dependency>
             <groupId>org.slf4j</groupId>
             <artifactId>slf4j-api</artifactId>
             <version>1.7.36</version>
             <scope>provided</scope>
         </dependency>
-		<dependency>
+        <dependency>
             <groupId>org.apache.felix</groupId>
-			<artifactId>org.apache.felix.utils</artifactId>
-			<version>1.11.8</version>
-			<scope>provided</scope>
-		</dependency>
-		<dependency>
-			<groupId>org.apache.felix</groupId>
-			<artifactId>org.apache.felix.webconsole</artifactId>
-			<version>4.8.13-SNAPSHOT</version>
-			<scope>provided</scope>
-		</dependency>
+            <artifactId>org.apache.felix.utils</artifactId>
+            <version>1.11.8</version>
+            <scope>provided</scope>
+        </dependency>
+        <dependency>
+            <groupId>org.apache.felix</groupId>
+            <artifactId>org.apache.felix.webconsole</artifactId>
+            <version>4.8.13-SNAPSHOT</version>
+            <scope>provided</scope>
+        </dependency>
 
         <!-- OSGi and Apache Felix OBR API -->
         <dependency>
@@ -145,5 +147,5 @@
             <scope>provided</scope>
             <optional>true</optional>
         </dependency>
-	</dependencies>
+    </dependencies>
 </project>
