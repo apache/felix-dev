@@ -36,7 +36,6 @@ public interface User {
      * Return the user object.
      * This method might return {@code null} if no web console security provider is configured and
      * access to the console is allowed without authentication.
-     * This is the same value as the request attribute from {@link WebConsoleSecurityProvider2#USER_ATTRIBUTE}.
      * @return The user object or {@code null}
      */
     Object getUserObject();

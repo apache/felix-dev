@@ -36,7 +36,9 @@ import org.osgi.annotation.versioning.ConsumerType;
  * {@link WebConsoleSecurityProvider#authenticate(String, String)} method.
  *
  * @since 3.1.2; Web Console Bundle 3.1.4
+ * @deprecated Use the {@link org.apache.felix.webconsole.spi.SecurityProvider} instead.
  */
+@Deprecated
 @ConsumerType
 public interface WebConsoleSecurityProvider2 extends WebConsoleSecurityProvider {
 

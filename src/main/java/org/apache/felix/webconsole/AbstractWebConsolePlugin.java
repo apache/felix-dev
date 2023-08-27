@@ -62,7 +62,10 @@ import org.osgi.service.log.LogService;
  * To help rendering the response the Apache Felix Web Console bundle provides two
  * options. One of the options is to extend the AbstractWebConsolePlugin overwriting
  * the {@link #renderContent(HttpServletRequest, HttpServletResponse)} method.
+ *
+ * @deprecated Either register a servlet using Servlet API 5 or use {@link org.apache.felix.webconsole.servlet.AbstractServlet}
  */
+@Deprecated
 public abstract class AbstractWebConsolePlugin extends HttpServlet {
 
     /** Pseudo class version ID to keep the IDE quite. */
@@ -135,7 +138,6 @@ public abstract class AbstractWebConsolePlugin extends HttpServlet {
 
     private BundleContext bundleContext;
 
-    @SuppressWarnings("deprecation")
     private static volatile BrandingPlugin brandingPlugin = DefaultBrandingPlugin.getInstance();
 
     private static volatile int logLevel;
@@ -671,7 +673,7 @@ public abstract class AbstractWebConsolePlugin extends HttpServlet {
      * @param request the HTTP request coming from the user
      * @param pw the writer, where the HTML data is rendered
      */
-    @SuppressWarnings({ "rawtypes", "deprecation" })
+    @SuppressWarnings({ "rawtypes" })
     protected void renderTopNavigation( HttpServletRequest request, PrintWriter pw )
     {
         // assume pathInfo to not be null, else this would not be called

@@ -114,7 +114,7 @@ public class OsgiManager extends GenericServlet {
     /**
      * The name of the (internal) request attribute providing the categorized
      * label map structure.
-     * @deprecated use {@link WebConsoleConstants#ATTR_LABEL_MAP_CATEGORIZED} instead
+     * @deprecated use {@link WebConsoleConstants#ATTR_LABEL_MAP} instead
      */
     @Deprecated
     public static final String ATTR_LABEL_MAP_CATEGORIZED = WebConsoleConstants.ATTR_LABEL_MAP + ".categorized";

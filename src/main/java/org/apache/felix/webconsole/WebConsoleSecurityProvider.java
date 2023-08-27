@@ -26,7 +26,9 @@ import org.osgi.annotation.versioning.ConsumerType;
  * Web Console.
  *
  * @since 3.1.0; Web Console Bundle 3.1.0
+ * @deprecated Use the {@link org.apache.felix.webconsole.spi.SecurityProvider} instead.
  */
+@Deprecated
 @ConsumerType
 public interface WebConsoleSecurityProvider {
 

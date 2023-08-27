@@ -63,7 +63,6 @@ public class JakartaServletAdapter extends AbstractWebConsolePlugin {
     /**
      * Creates a new wrapper for a Web Console Plugin
      *
-     * @param label the label
      * @param plugin the plugin itself
      * @param serviceReference reference to the plugin
      */
