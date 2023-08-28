@@ -14,7 +14,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package org.apache.felix.http.base.internal.jakartawrappers;
+package org.apache.felix.http.base.internal.wrappers;
 
 import org.apache.felix.http.jakartawrappers.FilterWrapper;
 import org.jetbrains.annotations.NotNull;

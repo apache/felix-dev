@@ -21,7 +21,7 @@ package org.apache.felix.http.base.internal.runtime;
 import java.util.Map;
 import java.util.Objects;
 
-import org.apache.felix.http.base.internal.jakartawrappers.PreprocessorWrapper;
+import org.apache.felix.http.base.internal.wrappers.PreprocessorWrapper;
 import org.jetbrains.annotations.NotNull;
 import org.osgi.framework.ServiceReference;
 import org.osgi.service.servlet.whiteboard.HttpWhiteboardConstants;
