@@ -28,14 +28,15 @@
 
     <name>Apache Felix Http SSL Filter</name>
     <artifactId>org.apache.felix.http.sslfilter</artifactId>
-    <version>1.2.7-SNAPSHOT</version>
+    <version>1.2.8</version>
     <packaging>bundle</packaging>
 
     <scm>
         <connection>scm:git:https://github.com/apache/felix-dev.git</connection>
         <developerConnection>scm:git:https://github.com/apache/felix-dev.git</developerConnection>
         <url>https://gitbox.apache.org/repos/asf?p=felix-dev.git</url>
-    </scm>
+      <tag>org.apache.felix.http.sslfilter-1.2.8</tag>
+  </scm>
 
     <build>
         <plugins>
