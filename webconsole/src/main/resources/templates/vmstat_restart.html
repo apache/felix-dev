@@ -1,0 +1,18 @@
+﻿<script type="text/javascript" src="${appRoot}/res/ui/vmstat.js"></script>
+<script type="text/javascript">
+// <![CDATA[
+var data = ${data};
+// ]]>
+</script>
+
+<!-- status line -->
+<p class="statline">${vmstat.restarting}</p>
+
+<form id="reloadform" method="get" action="">
+	<div style="width:100%; text-align: center">
+		<input class="ui-state-error" type="submit" value="${reload}" />
+		${vmstat.reloading.in} <span id="reloadcountdowncell">&nbsp;</span>
+		<script type="text/javascript">shutdown(${data.reloadTimeout}, "reloadform", "reloadcountdowncell");</script>
+	</div>
+</form>
+
