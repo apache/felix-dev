@@ -31,6 +31,7 @@ import org.apache.felix.http.jakartawrappers.HttpServletRequestWrapper;
 import org.apache.felix.http.jakartawrappers.HttpServletResponseWrapper;
 import org.apache.felix.http.javaxwrappers.ServletWrapper;
 import org.apache.felix.webconsole.WebConsoleConstants;
+import org.apache.felix.webconsole.WebConsoleSecurityProvider;
 import org.apache.felix.webconsole.WebConsoleSecurityProvider3;
 import org.apache.felix.webconsole.internal.Util;
 import org.apache.felix.webconsole.internal.servlet.Plugin.ServletPlugin;
@@ -47,6 +48,7 @@ import org.osgi.util.tracker.ServiceTrackerCustomizer;
 
 import jakarta.servlet.Servlet;
 
+@SuppressWarnings("deprecation")
 public class JakartaServiceTracker implements Closeable, ServiceTrackerCustomizer<Servlet, JakartaServiceTracker.JakartaServletPlugin> {
 
     private final ServiceTracker<Servlet, JakartaServletPlugin> servletTracker;
@@ -132,9 +134,9 @@ public class JakartaServiceTracker implements Closeable, ServiceTrackerCustomize
         }
     }
 
-    public static class JakartaSecurityProviderTracker implements ServiceTrackerCustomizer<SecurityProvider, ServiceRegistration<WebConsoleSecurityProvider3>> {
+    public static class JakartaSecurityProviderTracker implements ServiceTrackerCustomizer<SecurityProvider, ServiceRegistration<WebConsoleSecurityProvider>> {
 
-        private final ServiceTracker<SecurityProvider, ServiceRegistration<WebConsoleSecurityProvider3>> tracker;
+        private final ServiceTracker<SecurityProvider, ServiceRegistration<WebConsoleSecurityProvider>> tracker;
 
         private final BundleContext bundleContext;
 
@@ -149,7 +151,7 @@ public class JakartaServiceTracker implements Closeable, ServiceTrackerCustomize
         }
 
         @Override
-        public ServiceRegistration<WebConsoleSecurityProvider3> addingService( final ServiceReference<SecurityProvider> reference ) {
+        public ServiceRegistration<WebConsoleSecurityProvider> addingService( final ServiceReference<SecurityProvider> reference ) {
             final SecurityProvider provider = this.bundleContext.getService(reference);
             if ( provider != null ) {
                 final JakartaSecurityProvider jakartaSecurityProvider = new JakartaSecurityProvider(provider);
@@ -157,19 +159,19 @@ public class JakartaServiceTracker implements Closeable, ServiceTrackerCustomize
                 if (reference.getProperty(Constants.SERVICE_RANKING) != null) {
                     props.put(Constants.SERVICE_RANKING, reference.getProperty(Constants.SERVICE_RANKING));
                 }
-                final ServiceRegistration<WebConsoleSecurityProvider3> reg = this.bundleContext.registerService(WebConsoleSecurityProvider3.class, jakartaSecurityProvider, props);
+                final ServiceRegistration<WebConsoleSecurityProvider> reg = this.bundleContext.registerService(WebConsoleSecurityProvider.class, jakartaSecurityProvider, props);
                 return reg;
             }
             return null;
         }
 
         @Override
-        public void modifiedService( final ServiceReference<SecurityProvider> reference, final ServiceRegistration<WebConsoleSecurityProvider3> service ) {
+        public void modifiedService( final ServiceReference<SecurityProvider> reference, final ServiceRegistration<WebConsoleSecurityProvider> service ) {
             // nothing to do
         }
 
         @Override
-        public void removedService( final ServiceReference<SecurityProvider> reference, final ServiceRegistration<WebConsoleSecurityProvider3> service ) {
+        public void removedService( final ServiceReference<SecurityProvider> reference, final ServiceRegistration<WebConsoleSecurityProvider> service ) {
             this.bundleContext.ungetService(reference);
             try {
                 service.unregister();
