@@ -43,6 +43,7 @@ import org.osgi.framework.ServiceReference;
  * {@link org.apache.felix.webconsole.WebConsoleConstants#PLUGIN_TITLE}
  * service attribute using jakarta.servlet.Servlet
  */
+@SuppressWarnings("deprecation")
 public class JakartaServletAdapter extends AbstractWebConsolePlugin {
 
     /** serial UID */
@@ -220,7 +221,7 @@ public class JakartaServletAdapter extends AbstractWebConsolePlugin {
         } catch (final jakarta.servlet.ServletException s) {
             throw ServletExceptionUtil.getServletException(s);
         }
-        // if a GET request and plugin did not create a response yet, call super to get full HTML response
+        // if a plugin did not create a response yet, call doGet to get a response
         if ( !checkResponse.isDone()) {
             this.doGet( req, resp );
         }

@@ -44,11 +44,24 @@ import jakarta.servlet.http.HttpServletResponse;
  * requests to resources with a path of "LABEL/res/*" are automatically
  * handled.
  * <p>
- * For html (content) requests, the web console automatically draws the header,
+ * For html (content) requests, the web console automatically renders the header,
  * footer and navigation.
  * <p>
  * Support for Jakarta servlets requires that the Jakarta Servlet API and the
  * Apache Felix Http Wrappers are available in the runtime.
+ * <p>
+ * If you are upgrading from {@link org.apache.felix.webconsole.AbstractWebConsolePlugin}
+ * there are some changes to be aware of:
+ * <ul>
+ * <li>Resources are detected via the {@link #getResource(String)} method.</li>
+ * <li>Regardless of the http method, if the corresponding doXXX method does not create
+ *    a response, the {@link #renderContent(HttpServletRequest, HttpServletResponse)}
+ *    method is invoked.</li>
+ * <li>If a doXXX method other than doGet wants to create a response, it must not call
+ *    doGet or renderContent directly. It rather just does not create any response and
+ *    returns. In this case the web console will invoke the renderContent method
+ *    afterwards.</li>
+ * </ul>
  *
  * @see ServletConstants#PLUGIN_LABEL
  * @see ServletConstants#PLUGIN_TITLE
