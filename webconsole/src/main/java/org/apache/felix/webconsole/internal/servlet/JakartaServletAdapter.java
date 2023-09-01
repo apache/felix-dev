@@ -221,9 +221,8 @@ public class JakartaServletAdapter extends AbstractWebConsolePlugin {
             throw ServletExceptionUtil.getServletException(s);
         }
         // if a GET request and plugin did not create a response yet, call super to get full HTML response
-        if ( !checkResponse.isDone() && req.getMethod().equals( "GET" ) ) {
-            // handle the GET request here and call into plugin on renderContent
-            super.service( req, resp );
+        if ( !checkResponse.isDone()) {
+            this.doGet( req, resp );
         }
     }
 
