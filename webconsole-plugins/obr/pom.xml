@@ -20,7 +20,7 @@
 
     <artifactId>org.apache.felix.webconsole.plugins.obr</artifactId>
     <packaging>bundle</packaging>
-    <version>1.0.5-SNAPSHOT</version>
+    <version>1.1.0</version>
 
     <name>Apache Felix Web Console OBR Plugin</name>
     <description>
@@ -31,7 +31,8 @@
         <connection>scm:git:https://github.com/apache/felix-dev.git</connection>
         <developerConnection>scm:git:https://github.com/apache/felix-dev.git</developerConnection>
         <url>https://gitbox.apache.org/repos/asf?p=felix-dev.git</url>
-    </scm>
+      <tag>org.apache.felix.webconsole.plugins.obr-1.1.0</tag>
+  </scm>
 
     <properties>
         <felix.java.version>11</felix.java.version>
