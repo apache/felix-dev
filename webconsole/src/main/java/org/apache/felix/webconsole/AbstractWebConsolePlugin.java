@@ -138,9 +138,9 @@ public abstract class AbstractWebConsolePlugin extends HttpServlet {
 
     private BundleContext bundleContext;
 
-    private static volatile BrandingPlugin brandingPlugin = DefaultBrandingPlugin.getInstance();
+    private static volatile BrandingPlugin BRANDING_PLUGIN = DefaultBrandingPlugin.getInstance();
 
-    private static volatile int logLevel;
+    private static volatile int LOGLEVEL;
 
 
     //---------- HttpServlet Overwrites ----------------------------------------
@@ -450,7 +450,7 @@ public abstract class AbstractWebConsolePlugin extends HttpServlet {
      */
     public void log( int level, String message )
     {
-        if ( logLevel >= level )
+        if ( LOGLEVEL >= level )
         {
             ServletConfig config = getServletConfig();
             if ( config != null )
@@ -484,7 +484,7 @@ public abstract class AbstractWebConsolePlugin extends HttpServlet {
      */
     public void log( int level, String message, Throwable t )
     {
-        if ( logLevel >= level )
+        if ( LOGLEVEL >= level )
         {
             ServletConfig config = getServletConfig();
             if ( config != null )
@@ -655,12 +655,12 @@ public abstract class AbstractWebConsolePlugin extends HttpServlet {
         r.put("head.title", title);
         r.put("head.label", getLabel());
         r.put("head.cssLinks", getCssLinks(appRoot));
-        r.put("brand.name", brandingPlugin.getBrandName());
-        r.put("brand.product.url", brandingPlugin.getProductURL());
-        r.put("brand.product.name", brandingPlugin.getProductName());
-        r.put("brand.product.img", toUrl( brandingPlugin.getProductImage(), appRoot ));
-        r.put("brand.favicon", toUrl( brandingPlugin.getFavIcon(), appRoot ));
-        r.put("brand.css", toUrl( brandingPlugin.getMainStyleSheet(), appRoot ));
+        r.put("brand.name", BRANDING_PLUGIN.getBrandName());
+        r.put("brand.product.url", BRANDING_PLUGIN.getProductURL());
+        r.put("brand.product.name", BRANDING_PLUGIN.getProductName());
+        r.put("brand.product.img", toUrl( BRANDING_PLUGIN.getProductImage(), appRoot ));
+        r.put("brand.favicon", toUrl( BRANDING_PLUGIN.getFavIcon(), appRoot ));
+        r.put("brand.css", toUrl( BRANDING_PLUGIN.getMainStyleSheet(), appRoot ));
         pw.println( getHeader() );
 
         return pw;
@@ -851,7 +851,7 @@ public abstract class AbstractWebConsolePlugin extends HttpServlet {
      */
     @Deprecated
     public static BrandingPlugin getBrandingPlugin() {
-        return AbstractWebConsolePlugin.brandingPlugin;
+        return AbstractWebConsolePlugin.BRANDING_PLUGIN;
     }
 
     /**
@@ -865,11 +865,11 @@ public abstract class AbstractWebConsolePlugin extends HttpServlet {
      * @deprecated
      */
     @Deprecated
-    public static final void setBrandingPlugin(BrandingPlugin brandingPlugin) {
-        if(brandingPlugin == null){
-            AbstractWebConsolePlugin.brandingPlugin = DefaultBrandingPlugin.getInstance();
+    public static final void setBrandingPlugin(final BrandingPlugin brandingPlugin) {
+        if (brandingPlugin == null){
+            AbstractWebConsolePlugin.BRANDING_PLUGIN = DefaultBrandingPlugin.getInstance();
         } else {
-            AbstractWebConsolePlugin.brandingPlugin = brandingPlugin;
+            AbstractWebConsolePlugin.BRANDING_PLUGIN = brandingPlugin;
         }
     }
 
@@ -883,8 +883,8 @@ public abstract class AbstractWebConsolePlugin extends HttpServlet {
      * @param logLevel the maximum allowed log level. If message is logged with
      *        lower level it will not be forwarded to the logger.
      */
-    public static final void setLogLevel( int logLevel ) {
-        AbstractWebConsolePlugin.logLevel = logLevel;
+    public static final void setLogLevel( final int logLevel ) {
+        AbstractWebConsolePlugin.LOGLEVEL = logLevel;
     }
 
     private final String getHeader() {

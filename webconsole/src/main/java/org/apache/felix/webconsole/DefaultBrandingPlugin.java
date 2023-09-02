@@ -18,9 +18,7 @@
  */
 package org.apache.felix.webconsole;
 
-import java.io.IOException;
-import java.io.InputStream;
-import java.util.Properties;
+import org.apache.felix.webconsole.internal.servlet.BrandingPluginImpl;
 
 /**
  * The <code>DefaultBrandingPlugin</code> class is the default implementation
@@ -88,61 +86,17 @@ import java.util.Properties;
  * @deprecated Plugins should never use the branding plugin directly
  */
 @Deprecated
-public class DefaultBrandingPlugin implements BrandingPlugin {
+public class DefaultBrandingPlugin extends BrandingPluginImpl implements BrandingPlugin {
 
-    /**
-     * The name of the bundle entry providing branding properties for this
-     * default branding plugin (value is "/META-INF/webconsole.properties").
-     */
-    private static final String BRANDING_PROPERTIES = "/META-INF/webconsole.properties";
-
-    private static DefaultBrandingPlugin instance;
-
-    private final String brandName;
-
-    private final String productName;
-
-    private final String productURL;
-
-    private final String productImage;
-
-    private final String vendorName;
-
-    private final String vendorURL;
-
-    private final String vendorImage;
-
-    private final String favIcon;
-
-    private final String mainStyleSheet;
+    private static volatile DefaultBrandingPlugin instance;
 
     private DefaultBrandingPlugin() {
-        Properties props = new Properties();
-
-        // try to load the branding properties
-        try (InputStream ins = getClass().getResourceAsStream( BRANDING_PROPERTIES )) {
-            if ( ins != null ) {
-                props.load( ins );
-            }
-        } catch ( IOException ignore ) {
-            // ignore - will use defaults
-        }
-
-        // set the fields from the properties now
-        brandName = props.getProperty( "webconsole.brand.name", "Apache Felix Web Console" );
-        productName = props.getProperty( "webconsole.product.name", "Apache Felix" );
-        productURL = props.getProperty( "webconsole.product.url", "https://felix.apache.org" );
-        productImage = props.getProperty( "webconsole.product.image", "/res/imgs/logo.png" );
-        vendorName = props.getProperty( "webconsole.vendor.name", "The Apache Software Foundation" );
-        vendorURL = props.getProperty( "webconsole.vendor.url", "https://www.apache.org" );
-        vendorImage = props.getProperty( "webconsole.vendor.image", "/res/imgs/logo.png" );
-        favIcon = props.getProperty( "webconsole.favicon", "/res/imgs/favicon.ico" );
-        mainStyleSheet = props.getProperty( "webconsole.stylesheet", "/res/ui/webconsole.css" );
+        super();
     }
 
     /**
      * Retrieves the shared instance
-     * 
+     *
      * @return the singleton instance of the object
      */
     public static DefaultBrandingPlugin getInstance() {
@@ -150,50 +104,5 @@ public class DefaultBrandingPlugin implements BrandingPlugin {
             instance = new DefaultBrandingPlugin();
         }
         return instance;
-    }
-
-    @Override
-    public String getBrandName() {
-        return brandName;
-    }
-
-    @Override
-    public String getProductName() {
-        return productName;
-    }
-
-    @Override
-    public String getProductURL() {
-        return productURL;
-    }
-
-    @Override
-    public String getProductImage() {
-        return productImage;
-    }
-
-    @Override
-    public String getVendorName() {
-        return vendorName;
-    }
-
-    @Override
-    public String getVendorURL() {
-        return vendorURL;
-    }
-
-    @Override
-    public String getVendorImage() {
-        return vendorImage;
-    }
-
-    @Override
-    public String getFavIcon() {
-        return favIcon;
-    }
-
-    @Override
-    public String getMainStyleSheet() {
-        return mainStyleSheet;
     }
 }

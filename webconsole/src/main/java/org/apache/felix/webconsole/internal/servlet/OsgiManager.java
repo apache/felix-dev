@@ -856,11 +856,9 @@ public class OsgiManager extends GenericServlet {
     }
 
     private HttpServletResponse wrapResponse(final HttpServletRequest request,
-        final HttpServletResponse response, final AbstractWebConsolePlugin plugin)
-    {
+        final HttpServletResponse response, final AbstractWebConsolePlugin plugin) {
         final Locale locale = request.getLocale();
-        final ResourceBundle resourceBundle = resourceBundleManager.getResourceBundle(
-            plugin.getBundle(), locale);
+        final ResourceBundle resourceBundle = resourceBundleManager.getResourceBundle(plugin.getBundle(), locale);
         return new FilteringResponseWrapper(response, resourceBundle, request);
     }
 
@@ -883,18 +881,20 @@ public class OsgiManager extends GenericServlet {
         }
 
         @Override
-        public BrandingPlugin addingService(ServiceReference<BrandingPlugin> reference) {
+        public BrandingPlugin addingService(final ServiceReference<BrandingPlugin> reference) {
             final BrandingPlugin plugin = super.addingService(reference);
-            if (plugin instanceof org.apache.felix.webconsole.BrandingPlugin) {
-                AbstractWebConsolePlugin.setBrandingPlugin((org.apache.felix.webconsole.BrandingPlugin)plugin);
-            } else {
-                AbstractWebConsolePlugin.setBrandingPlugin(new BrandingPluginAdapter(plugin));
+            if (plugin != null) {
+                if (plugin instanceof org.apache.felix.webconsole.BrandingPlugin) {
+                    AbstractWebConsolePlugin.setBrandingPlugin((org.apache.felix.webconsole.BrandingPlugin)plugin);
+                } else {
+                    AbstractWebConsolePlugin.setBrandingPlugin(new BrandingPluginAdapter(plugin));
+                }
             }
             return plugin;
         }
 
         @Override
-        public void removedService(ServiceReference<BrandingPlugin> reference, BrandingPlugin service) {
+        public void removedService(final ServiceReference<BrandingPlugin> reference, BrandingPlugin service) {
             AbstractWebConsolePlugin.setBrandingPlugin(null);
             try {
                 super.removedService(reference, service);
