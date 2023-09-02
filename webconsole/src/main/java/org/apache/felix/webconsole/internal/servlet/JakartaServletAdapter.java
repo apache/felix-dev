@@ -151,6 +151,7 @@ public class JakartaServletAdapter extends AbstractWebConsolePlugin {
     private static final class CheckHttpServletResponse extends HttpServletResponseWrapper {
 
         private boolean done = false;
+
         public CheckHttpServletResponse(HttpServletResponse response) {
             super(response);
         }
@@ -214,14 +215,13 @@ public class JakartaServletAdapter extends AbstractWebConsolePlugin {
     public void service( HttpServletRequest req, HttpServletResponse resp )
     throws ServletException, IOException {
         final CheckHttpServletResponse checkResponse = new CheckHttpServletResponse(resp);
-        // call plugin first
+        // call plugin service method first
         try {
-            plugin.service( (jakarta.servlet.http.HttpServletRequest)HttpServletRequestWrapper.getWrapper(req), 
-                (jakarta.servlet.http.HttpServletResponse)HttpServletResponseWrapper.getWrapper(resp) );
+            plugin.service( (jakarta.servlet.http.HttpServletRequest)HttpServletRequestWrapper.getWrapper(req), checkResponse);
         } catch (final jakarta.servlet.ServletException s) {
             throw ServletExceptionUtil.getServletException(s);
         }
-        // if a plugin did not create a response yet, call doGet to get a response
+        // if plugin did not create a response yet, call doGet to get a response
         if ( !checkResponse.isDone()) {
             this.doGet( req, resp );
         }
