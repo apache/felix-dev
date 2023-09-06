@@ -25,33 +25,31 @@ import java.text.MessageFormat;
 import java.util.Date;
 import java.util.Map;
 
-import javax.servlet.ServletException;
-import javax.servlet.http.HttpServletRequest;
-import javax.servlet.http.HttpServletResponse;
 
 import org.apache.felix.utils.json.JSONWriter;
-import org.apache.felix.webconsole.SimpleWebConsolePlugin;
-import org.apache.felix.webconsole.WebConsoleConstants;
-import org.apache.felix.webconsole.WebConsoleUtil;
-import org.apache.felix.webconsole.internal.OsgiManagerPlugin;
+import org.apache.felix.webconsole.internal.servlet.AbstractOsgiManagerPlugin;
 import org.apache.felix.webconsole.internal.servlet.OsgiManager;
 import org.apache.felix.webconsole.servlet.RequestVariableResolver;
+import org.apache.felix.webconsole.servlet.ServletConstants;
 import org.osgi.framework.Bundle;
 import org.osgi.framework.BundleException;
 import org.osgi.framework.Constants;
 import org.osgi.framework.startlevel.FrameworkStartLevel;
 
+import jakarta.servlet.ServletException;
+import jakarta.servlet.http.HttpServletRequest;
+import jakarta.servlet.http.HttpServletResponse;
+
 /**
  * VMStatPlugin provides the System Information tab. This particular plugin uses
  * more than one templates.
  */
-public class VMStatPlugin extends SimpleWebConsolePlugin implements OsgiManagerPlugin {
+public class VMStatPlugin extends AbstractOsgiManagerPlugin {
 
     private static final long serialVersionUID = 2293375003997163600L;
 
     private static final String LABEL = "vmstat";
     private static final String TITLE = "%vmstat.pluginTitle";
-    private static final String CSS[] = null;
 
     private static final String ATTR_TERMINATED = "terminated";
 
@@ -67,19 +65,33 @@ public class VMStatPlugin extends SimpleWebConsolePlugin implements OsgiManagerP
     private final String TPL_VM_RESTART;
 
 
-    /** Default constructor */
-    public VMStatPlugin() {
-        super( LABEL, TITLE, CATEGORY_OSGI_MANAGER, CSS );
-
+    /** 
+     * Default constructor 
+     * @throws IOException If template can't be read
+     */
+    public VMStatPlugin() throws IOException {
         // load templates
         TPL_VM_MAIN = readTemplateFile(  "/templates/vmstat.html"  );
         TPL_VM_STOP = readTemplateFile( "/templates/vmstat_stop.html" );
         TPL_VM_RESTART = readTemplateFile( "/templates/vmstat_restart.html" );
     }
 
-    /**
-     * @see javax.servlet.http.HttpServlet#doPost(javax.servlet.http.HttpServletRequest, javax.servlet.http.HttpServletResponse)
-     */
+    @Override
+    protected String getCategory() {
+        return CATEGORY_OSGI_MANAGER;
+    }
+
+    @Override
+    protected String getLabel() {
+        return LABEL;
+    }
+
+    @Override
+    protected String getTitle() {
+        return TITLE;
+    }
+
+    @Override
     protected void doPost( HttpServletRequest request, HttpServletResponse response )
     throws ServletException, IOException {
         final String action = request.getParameter( "action");
@@ -87,12 +99,12 @@ public class VMStatPlugin extends SimpleWebConsolePlugin implements OsgiManagerP
         if ( "setStartLevel".equals( action )) {
             final FrameworkStartLevel fsl = this.getBundleContext().getBundle(Constants.SYSTEM_BUNDLE_LOCATION).adapt(FrameworkStartLevel.class);
             if ( fsl != null ){
-                int bundleSL = WebConsoleUtil.getParameterInt( request, "bundleStartLevel", -1 );
+                int bundleSL = getParameterInt( request, "bundleStartLevel", -1 );
                 if ( bundleSL > 0 && bundleSL != fsl.getInitialBundleStartLevel() ) {
                     fsl.setInitialBundleStartLevel( bundleSL );
                 }
 
-                int systemSL = WebConsoleUtil.getParameterInt( request, "systemStartLevel", -1 );
+                int systemSL = getParameterInt( request, "systemStartLevel", -1 );
                 if ( systemSL > 0 && systemSL != fsl.getStartLevel() ) {
                     fsl.setStartLevel( systemSL );
                 }
@@ -141,10 +153,10 @@ public class VMStatPlugin extends SimpleWebConsolePlugin implements OsgiManagerP
 
     @Override
     @SuppressWarnings("unchecked")
-    protected void renderContent( HttpServletRequest request, HttpServletResponse response ) throws IOException {
+    public void renderContent( HttpServletRequest request, HttpServletResponse response ) throws IOException {
         final FrameworkStartLevel fsl = this.getBundleContext().getBundle(Constants.SYSTEM_BUNDLE_LOCATION).adapt(FrameworkStartLevel.class);
 
-        Map<String, Object> configuration = (Map<String, Object>) request.getAttribute( WebConsoleConstants.ATTR_CONFIGURATION );
+        Map<String, Object> configuration = (Map<String, Object>) request.getAttribute( ServletConstants.ATTR_CONFIGURATION );
         String body;
 
         if ( request.getAttribute( ATTR_TERMINATED ) != null ) {

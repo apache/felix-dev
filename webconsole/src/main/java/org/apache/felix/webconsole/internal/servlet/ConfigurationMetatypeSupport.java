@@ -88,10 +88,10 @@ class ConfigurationMetatypeSupport extends ConfigurationSupport implements MetaT
         final Locale localeObj = Util.parseLocaleString( locale );
         final ResourceBundle rb = osgiManager.resourceBundleManager.getResourceBundle( osgiManager.getBundleContext()
             .getBundle(), localeObj );
-        final Map defaultConfig = osgiManager.getDefaultConfiguration();
+        final Map<String, Object> defaultConfig = osgiManager.getDefaultConfiguration();
 
         // simple configuration properties
-        final ArrayList adList = new ArrayList();
+        final ArrayList<AttributeDefinition> adList = new ArrayList<>();
         for ( int i = 0; i < CONF_PROPS.length; i++ )
         {
             final String key = CONF_PROPS[i++];
@@ -130,8 +130,8 @@ class ConfigurationMetatypeSupport extends ConfigurationSupport implements MetaT
             { "4", "3", "2", "1" } ) );
 
         // list plugins - requires localized plugin titles
-        final TreeMap namesByClassName = new TreeMap();
-        final String[] defaultPluginsClasses = OsgiManager.PLUGIN_MAP;
+        final TreeMap<String, String> namesByClassName = new TreeMap<>();
+        final String[] defaultPluginsClasses = PluginHolder.PLUGIN_MAP;
         for ( int i = 0; i < defaultPluginsClasses.length; i++ )
         {
             final String clazz = defaultPluginsClasses[i++];

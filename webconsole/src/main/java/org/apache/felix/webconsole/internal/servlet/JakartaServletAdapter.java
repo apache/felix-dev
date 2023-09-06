@@ -18,24 +18,21 @@
  */
 package org.apache.felix.webconsole.internal.servlet;
 
-
 import java.io.IOException;
-import java.util.*;
+import java.util.Arrays;
+import java.util.Collection;
+import java.util.Iterator;
 
-import javax.servlet.Servlet;
-import javax.servlet.ServletConfig;
-import javax.servlet.ServletException;
-import javax.servlet.http.HttpServletRequest;
-import javax.servlet.http.HttpServletResponse;
-
-import org.apache.felix.http.jakartawrappers.HttpServletRequestWrapper;
-import org.apache.felix.http.jakartawrappers.HttpServletResponseWrapper;
-import org.apache.felix.http.jakartawrappers.ServletConfigWrapper;
-import org.apache.felix.http.javaxwrappers.ServletExceptionUtil;
-import org.apache.felix.webconsole.AbstractWebConsolePlugin;
 import org.apache.felix.webconsole.servlet.AbstractServlet;
 import org.apache.felix.webconsole.servlet.ServletConstants;
 import org.osgi.framework.ServiceReference;
+
+import jakarta.servlet.Servlet;
+import jakarta.servlet.ServletConfig;
+import jakarta.servlet.ServletException;
+import jakarta.servlet.http.HttpServletRequest;
+import jakarta.servlet.http.HttpServletResponse;
+import jakarta.servlet.http.HttpServletResponseWrapper;
 
 /**
  * The <code>JakartaServletAdapter</code> is an adapter to the
@@ -43,23 +40,13 @@ import org.osgi.framework.ServiceReference;
  * {@link org.apache.felix.webconsole.WebConsoleConstants#PLUGIN_TITLE}
  * service attribute using jakarta.servlet.Servlet
  */
-@SuppressWarnings("deprecation")
-public class JakartaServletAdapter extends AbstractWebConsolePlugin {
+public class JakartaServletAdapter extends AbstractInternalPlugin {
 
     /** serial UID */
     private static final long serialVersionUID = 1L;
 
-    // the plugin label (aka address)
-    private final String label;
-
-    // the plugin title
-    private final String title;
-
     // the actual plugin to forward rendering requests to
     private final AbstractServlet plugin;
-
-    // the CSS references (null if none)
-    private final String[] cssReferences;
 
     /**
      * Creates a new wrapper for a Web Console Plugin
@@ -68,77 +55,34 @@ public class JakartaServletAdapter extends AbstractWebConsolePlugin {
      * @param serviceReference reference to the plugin
      */
     public JakartaServletAdapter( final AbstractServlet plugin, ServiceReference<Servlet> serviceReference ) {
-        this.label = (String) serviceReference.getProperty( ServletConstants.PLUGIN_LABEL );
-        this.title = (String) serviceReference.getProperty( ServletConstants.PLUGIN_TITLE );
+        super((String)serviceReference.getProperty(ServletConstants.PLUGIN_LABEL), toStringArray( serviceReference.getProperty( ServletConstants.PLUGIN_CSS_REFERENCES ) ));
         this.plugin = plugin;
-        this.cssReferences = toStringArray( serviceReference.getProperty( ServletConstants.PLUGIN_CSS_REFERENCES ) );
 
         // activate this abstract plugin (mainly to set the bundle context)
         activate( serviceReference.getBundle().getBundleContext() );
-    }
-
-
-    //---------- AbstractWebConsolePlugin API
-
-    @Override
-    public String getLabel() {
-        return label;
-    }
-
-    @Override
-    public String getTitle() {
-        return this.title;
-    }
-
-    @Override
-    protected String[] getCssReferences() {
-        return cssReferences;
-    }
-
-    @Override
-    protected void renderContent( final HttpServletRequest req, final HttpServletResponse res )
-    throws ServletException, IOException {
-        try {
-            plugin.renderContent( (jakarta.servlet.http.HttpServletRequest)HttpServletRequestWrapper.getWrapper(req), 
-                (jakarta.servlet.http.HttpServletResponse)HttpServletResponseWrapper.getWrapper(res) );
-        } catch (final jakarta.servlet.ServletException s) {
-            throw ServletExceptionUtil.getServletException(s);
-        }
     }
 
     /**
      * Returns the registered plugin class to be able to call the
      * <code>getResource()</code> method on that object for this plugin to
      * provide additional resources.
-     *
-     * @see org.apache.felix.webconsole.AbstractWebConsolePlugin#getResourceProvider()
      */
     protected Object getResourceProvider() {
         return plugin;
     }
 
-
-    //---------- Servlet API overwrite
-
-    /**
-     * Initializes this servlet as well as the plugin servlet.
-     *
-     * @see javax.servlet.GenericServlet#init(javax.servlet.ServletConfig)
+    /** 
+     * Initialize the plugin
      */
-    public void init( ServletConfig config ) throws ServletException {
-        // no need to activate the plugin, this has already been done
-        // when the instance was setup
+    @Override
+    public void init( final ServletConfig config ) throws ServletException {
         try {
             // base classe initialization
             super.init( config );
 
             // plugin initialization
-            try {
-                plugin.init( new ServletConfigWrapper(config) );
-            } catch ( final jakarta.servlet.ServletException s) {
-                throw ServletExceptionUtil.getServletException(s);
-            }
-        } catch ( ServletException se ) {
+            plugin.init( config );
+        } catch ( final ServletException se ) {
             // if init fails, the plugin will not be destroyed and thus
             // the plugin not deactivated. Do it here
             deactivate();
@@ -152,7 +96,7 @@ public class JakartaServletAdapter extends AbstractWebConsolePlugin {
 
         private boolean done = false;
 
-        public CheckHttpServletResponse(HttpServletResponse response) {
+        public CheckHttpServletResponse(final HttpServletResponse response) {
             super(response);
         }
 
@@ -209,29 +153,29 @@ public class JakartaServletAdapter extends AbstractWebConsolePlugin {
      * until the abstract web console plugin calls the
      * {@link #renderContent(HttpServletRequest, HttpServletResponse)}
      * method.
-     *
-     * @see javax.servlet.http.HttpServlet#service(javax.servlet.ServletRequest, javax.servlet.ServletResponse)
      */
-    public void service( HttpServletRequest req, HttpServletResponse resp )
+    @Override
+    public void service(final HttpServletRequest req, final HttpServletResponse resp )
     throws ServletException, IOException {
         final CheckHttpServletResponse checkResponse = new CheckHttpServletResponse(resp);
         // call plugin service method first
-        try {
-            plugin.service( (jakarta.servlet.http.HttpServletRequest)HttpServletRequestWrapper.getWrapper(req), checkResponse);
-        } catch (final jakarta.servlet.ServletException s) {
-            throw ServletExceptionUtil.getServletException(s);
-        }
+        plugin.service( req, checkResponse);
+
         // if plugin did not create a response yet, call doGet to get a response
         if ( !checkResponse.isDone()) {
             this.doGet( req, resp );
         }
     }
 
+    @Override
+    protected void renderContent(final HttpServletRequest req, final HttpServletResponse res) throws ServletException, IOException {
+        this.plugin.renderContent(req, res);        
+    }
+
     /**
      * Destroys this servlet as well as the plugin servlet.
-     *
-     * @see javax.servlet.GenericServlet#destroy()
      */
+    @Override
     public void destroy() {
         try {
             plugin.destroy();
@@ -245,7 +189,7 @@ public class JakartaServletAdapter extends AbstractWebConsolePlugin {
     //---------- internal
 
     @SuppressWarnings("rawtypes")
-    private String[] toStringArray( final Object value ) {
+    private static String[] toStringArray( final Object value ) {
         if ( value instanceof String )
         {
             return new String[]

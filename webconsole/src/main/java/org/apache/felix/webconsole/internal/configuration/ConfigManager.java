@@ -19,22 +19,16 @@ package org.apache.felix.webconsole.internal.configuration;
 import java.io.IOException;
 import java.io.PrintWriter;
 import java.io.StringWriter;
+import java.net.URLDecoder;
+import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Locale;
 import java.util.Map;
 
-import javax.servlet.ServletException;
-import javax.servlet.http.HttpServletRequest;
-import javax.servlet.http.HttpServletResponse;
-
 import org.apache.felix.utils.json.JSONWriter;
-import org.apache.felix.webconsole.SimpleWebConsolePlugin;
-import org.apache.felix.webconsole.WebConsoleConstants;
-import org.apache.felix.webconsole.WebConsoleUtil;
-import org.apache.felix.webconsole.internal.OsgiManagerPlugin;
 import org.apache.felix.webconsole.internal.Util;
-import org.apache.felix.webconsole.internal.misc.ServletSupport;
+import org.apache.felix.webconsole.internal.servlet.AbstractOsgiManagerPlugin;
 import org.apache.felix.webconsole.servlet.RequestVariableResolver;
 import org.apache.felix.webconsole.spi.ConfigurationHandler;
 import org.apache.felix.webconsole.spi.ValidationException;
@@ -46,13 +40,16 @@ import org.osgi.service.cm.Configuration;
 import org.osgi.util.tracker.ServiceTracker;
 import org.osgi.util.tracker.ServiceTrackerCustomizer;
 
+import jakarta.servlet.ServletException;
+import jakarta.servlet.http.HttpServletRequest;
+import jakarta.servlet.http.HttpServletResponse;
+
 
 /**
  * The <code>ConfigManager</code> class is the Web Console plugin to
  * manage configurations.
  */
-public class ConfigManager extends SimpleWebConsolePlugin implements OsgiManagerPlugin, ServletSupport
-{
+public class ConfigManager extends AbstractOsgiManagerPlugin {
 
     private static final long serialVersionUID = 5021174538498622428L;
 
@@ -85,12 +82,33 @@ public class ConfigManager extends SimpleWebConsolePlugin implements OsgiManager
     // service tracker for SPI
     private ServiceTracker<ConfigurationHandler, ConfigurationHandler> spiTracker;
 
-    /** Default constructor */
-    public ConfigManager() {
-        super(LABEL, TITLE, CATEGORY_OSGI, CSS);
-
+    /** 
+     * Default constructor 
+     * @throws IOException If template can't be read
+     */
+    public ConfigManager() throws IOException {
         // load templates
         TEMPLATE = readTemplateFile( "/templates/config.html" );
+    }
+    
+    @Override
+    protected String getCategory() {
+        return CATEGORY_OSGI;
+    }
+
+    @Override
+    protected String[] getCssReferences() {
+        return CSS;
+    }
+
+    @Override
+    protected String getLabel() {
+        return LABEL;
+    }
+
+    @Override
+    protected String getTitle() {
+        return TITLE;
     }
 
     @Override
@@ -129,9 +147,6 @@ public class ConfigManager extends SimpleWebConsolePlugin implements OsgiManager
         super.deactivate();
     }
 
-    /**
-     * @see javax.servlet.http.HttpServlet#doPost(javax.servlet.http.HttpServletRequest, javax.servlet.http.HttpServletResponse)
-     */
     @Override
     protected void doPost( HttpServletRequest request, HttpServletResponse response ) throws IOException {
         // service unavailable if config admin is not available
@@ -145,7 +160,7 @@ public class ConfigManager extends SimpleWebConsolePlugin implements OsgiManager
         String pid = request.getParameter( ConfigManager.PID );
         if ( pid == null ) {
             String info = request.getPathInfo();
-            pid = WebConsoleUtil.urlDecode( info.substring( info.lastIndexOf( '/' ) + 1 ) );
+            pid = URLDecoder.decode( info.substring( info.lastIndexOf( '/' ) + 1 ), StandardCharsets.UTF_8 );
         }
         // ignore this request if the PID is invalid / not provided
         if ( pid == null || pid.length() == 0 || !ConfigurationUtil.isAllowedPid(pid)) {
@@ -183,7 +198,7 @@ public class ConfigManager extends SimpleWebConsolePlugin implements OsgiManager
                         redirect = redirect.concat("?").concat(PID_FILTER).concat("=").concat(pidFilter);
                     }
 
-                    WebConsoleUtil.sendRedirect(request, response, redirect);
+                    Util.sendRedirect(request, response, redirect);
                 } catch ( final ValidationException ve) {
                     response.sendError(400, ve.getMessage());
                 }
@@ -217,18 +232,14 @@ public class ConfigManager extends SimpleWebConsolePlugin implements OsgiManager
         // send the result
         response.setContentType( "application/json" );
         response.setCharacterEncoding( "UTF-8" );
-        final Locale loc = Util.getLocale( request );
+        final Locale loc = request.getLocale();
         final String locale = ( loc != null ) ? loc.toString() : null;
         cas.getJsonSupport().printConfigurationJson( response.getWriter(), pid, config, pidFilter, locale );
     }
 
-
-    /**
-     * @see org.apache.felix.webconsole.AbstractWebConsolePlugin#doGet(javax.servlet.http.HttpServletRequest, javax.servlet.http.HttpServletResponse)
-     */
     @Override
     protected void doGet( HttpServletRequest request, HttpServletResponse response )
-            throws ServletException, IOException {
+    throws ServletException, IOException {
         // check for "post" requests from previous versions
         if ( "true".equals(request.getParameter("post")) ) {
             this.doPost(request, response);
@@ -279,7 +290,7 @@ public class ConfigManager extends SimpleWebConsolePlugin implements OsgiManager
             }
 
 
-            final Locale loc = Util.getLocale( request );
+            final Locale loc = request.getLocale();
             final String locale = ( loc != null ) ? loc.toString() : null;
 
             final PrintWriter pw = response.getWriter();
@@ -354,7 +365,7 @@ public class ConfigManager extends SimpleWebConsolePlugin implements OsgiManager
      * @see org.apache.felix.webconsole.AbstractWebConsolePlugin#renderContent(javax.servlet.http.HttpServletRequest, javax.servlet.http.HttpServletResponse)
      */
     @Override
-    protected void renderContent( HttpServletRequest request, HttpServletResponse response ) throws IOException
+    public void renderContent( HttpServletRequest request, HttpServletResponse response ) throws IOException
     {
 
         // extract the configuration PID from the request path
@@ -402,7 +413,7 @@ public class ConfigManager extends SimpleWebConsolePlugin implements OsgiManager
             response.sendError(400);
         }
 
-        final Locale loc = Util.getLocale( request );
+        final Locale loc = request.getLocale();
         final String locale = ( loc != null ) ? loc.toString() : null;
 
 
@@ -411,8 +422,8 @@ public class ConfigManager extends SimpleWebConsolePlugin implements OsgiManager
         jw.object();
         final ConfigAdminSupport cas = getConfigurationAdminSupport();
         // check for osgi installer plugin
-        @SuppressWarnings({"unchecked", "deprecation" })
-        final Map<String, Object> labelMap = (Map<String, Object>) request.getAttribute(WebConsoleConstants.ATTR_LABEL_MAP);
+        @SuppressWarnings("unchecked")
+        final Map<String, Object> labelMap = (Map<String, Object>) request.getAttribute(ATTR_LABEL_MAP);
         jw.key("jsonsupport").value( labelMap.containsKey("osgi-installer-config-printer") );
         final boolean hasMetatype = cas.getMetaTypeSupport() != null;
         jw.key("status").value( cas != null ? Boolean.TRUE : Boolean.FALSE);
@@ -441,7 +452,7 @@ public class ConfigManager extends SimpleWebConsolePlugin implements OsgiManager
         final String referer = request.getParameter( REFERER );
         final boolean factoryCreate = "true".equals( request.getParameter(FACTORY_CREATE) );
 
-        final RequestVariableResolver vars = this.getVariableResolver(request);
+        final RequestVariableResolver vars = (RequestVariableResolver) request.getAttribute(RequestVariableResolver.REQUEST_ATTRIBUTE);
         vars.put( "__data__", json.toString() ); 
         vars.put( "selectedPid", pid != null ? pid : "" );
         vars.put( "configurationReferer", referer != null ? referer : "" );
@@ -469,11 +480,6 @@ public class ConfigManager extends SimpleWebConsolePlugin implements OsgiManager
             return new ConfigAdminSupport( this, configurationAdmin, handlers );
         }
         return null;
-    }
-
-    @Override
-    public BundleContext getBundleContext() {
-        return super.getBundleContext();
     }
 }
 

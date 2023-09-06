@@ -47,24 +47,18 @@ import java.util.TreeMap;
 import java.util.jar.JarFile;
 import java.util.jar.Manifest;
 
-import javax.servlet.ServletException;
-import javax.servlet.http.HttpServletRequest;
-import javax.servlet.http.HttpServletResponse;
-import javax.servlet.http.Part;
-
 import org.apache.commons.io.IOUtils;
 import org.apache.felix.inventory.Format;
 import org.apache.felix.inventory.InventoryPrinter;
 import org.apache.felix.utils.json.JSONWriter;
 import org.apache.felix.utils.manifest.Clause;
 import org.apache.felix.utils.manifest.Parser;
-import org.apache.felix.webconsole.SimpleWebConsolePlugin;
-import org.apache.felix.webconsole.WebConsoleConstants;
 import org.apache.felix.webconsole.bundleinfo.BundleInfo;
 import org.apache.felix.webconsole.bundleinfo.BundleInfoProvider;
-import org.apache.felix.webconsole.internal.OsgiManagerPlugin;
 import org.apache.felix.webconsole.internal.Util;
+import org.apache.felix.webconsole.internal.servlet.AbstractOsgiManagerPlugin;
 import org.apache.felix.webconsole.servlet.RequestVariableResolver;
+import org.apache.felix.webconsole.servlet.ServletConstants;
 import org.osgi.framework.Bundle;
 import org.osgi.framework.BundleContext;
 import org.osgi.framework.BundleException;
@@ -86,13 +80,18 @@ import org.osgi.service.packageadmin.PackageAdmin;
 import org.osgi.util.tracker.ServiceTracker;
 import org.osgi.util.tracker.ServiceTrackerCustomizer;
 
+import jakarta.servlet.ServletException;
+import jakarta.servlet.http.HttpServletRequest;
+import jakarta.servlet.http.HttpServletResponse;
+import jakarta.servlet.http.Part;
+
 
 /**
  * The <code>BundlesServlet</code> provides the bundles plugins, used to display
  * the list of bundles, installed on the framework. It also adds ability to control
  * the lifecycle of the bundles, like start, stop, uninstall, install.
  */
-public class BundlesServlet extends SimpleWebConsolePlugin implements OsgiManagerPlugin, InventoryPrinter {
+public class BundlesServlet extends AbstractOsgiManagerPlugin implements InventoryPrinter {
 
     /** the label of the bundles plugin - used by other plugins to reference to plugin details */
     public static final String NAME = "bundles";
@@ -137,17 +136,35 @@ public class BundlesServlet extends SimpleWebConsolePlugin implements OsgiManage
 
     private ServiceRegistration<BundleInfoProvider> bipCapabilitiesRequired;
 
-    /** Default constructor */
-    public BundlesServlet() {
-        super(NAME, TITLE, CATEGORY_OSGI, CSS);
-
+    /**
+     * Default constructor 
+     * @throws IOException If template can't be read
+     */
+    public BundlesServlet() throws IOException {
         // load templates
         TEMPLATE_MAIN = readTemplateFile( "/templates/bundles.html" );
     }
+    
+    @Override
+    protected String getCategory() {
+        return CATEGORY_OSGI;
+    }
 
-    /**
-     * @see org.apache.felix.webconsole.AbstractWebConsolePlugin#activate(org.osgi.framework.BundleContext)
-     */
+    @Override
+    protected String[] getCssReferences() {
+        return CSS;
+    }
+
+    @Override
+    protected String getLabel() {
+        return NAME;
+    }
+
+    @Override
+    protected String getTitle() {
+        return TITLE;
+    }
+
     @Override
     public void activate( BundleContext bundleContext ) {
         super.activate( bundleContext );
@@ -198,9 +215,6 @@ public class BundlesServlet extends SimpleWebConsolePlugin implements OsgiManage
         bipCapabilitiesRequired = bundleContext.registerService( BundleInfoProvider.class, new CapabilitiesRequiredInfoProvider( bundleContext.getBundle() ), null );
     }
 
-    /**
-     * @see org.apache.felix.webconsole.SimpleWebConsolePlugin#deactivate()
-     */
     @Override
     public void deactivate() {
         if ( configurationPrinter != null ) {
@@ -307,13 +321,8 @@ public class BundlesServlet extends SimpleWebConsolePlugin implements OsgiManage
 
     //---------- BaseWebConsolePlugin
 
-    /**
-     * @see org.apache.felix.webconsole.AbstractWebConsolePlugin#doGet(javax.servlet.http.HttpServletRequest, javax.servlet.http.HttpServletResponse)
-     */
     @Override
-    protected void doGet( HttpServletRequest request, HttpServletResponse response ) throws ServletException,
-    IOException
-    {
+    protected void doGet( HttpServletRequest request, HttpServletResponse response ) throws ServletException, IOException {
         final RequestInfo reqInfo = new RequestInfo(request);
         if ( "upload".equals(reqInfo.pathInfo) )
         {
@@ -327,7 +336,7 @@ public class BundlesServlet extends SimpleWebConsolePlugin implements OsgiManage
         }
         if ( reqInfo.extension.equals("json")  )
         {
-            final String pluginRoot = ( String ) request.getAttribute( WebConsoleConstants.ATTR_PLUGIN_ROOT );
+            final String pluginRoot = ( String ) request.getAttribute( ServletConstants.ATTR_PLUGIN_ROOT );
             final String servicesRoot = getServicesRoot( request );
             try
             {
@@ -345,9 +354,6 @@ public class BundlesServlet extends SimpleWebConsolePlugin implements OsgiManage
         super.doGet( request, response );
     }
 
-    /**
-     * @see javax.servlet.http.HttpServlet#doPost(javax.servlet.http.HttpServletRequest, javax.servlet.http.HttpServletResponse)
-     */
     @Override
     protected void doPost( HttpServletRequest req, HttpServletResponse resp )
     throws ServletException, IOException {
@@ -357,8 +363,8 @@ public class BundlesServlet extends SimpleWebConsolePlugin implements OsgiManage
 
         if ( "refreshPackages".equals( action ) ) {
             // refresh packages and give it most 15 seconds to finish
-            final FrameworkWiring fw = getBundleContext().getBundle(Constants.SYSTEM_BUNDLE_LOCATION).adapt(FrameworkWiring.class);
-            BaseUpdateInstallHelper.refreshPackages( fw, getBundleContext(), 15000L, null );
+            final FrameworkWiring fw = this.bundleContext.getBundle(Constants.SYSTEM_BUNDLE_LOCATION).adapt(FrameworkWiring.class);
+            BaseUpdateInstallHelper.refreshPackages( fw, this.bundleContext, 15000L, null );
             success = true;
         } else if ( "install".equals( action ) ) {
             installBundles( req );
@@ -399,8 +405,8 @@ public class BundlesServlet extends SimpleWebConsolePlugin implements OsgiManage
                     }
                 } else if ( "refresh".equals( action ) ) {
                     // refresh bundle wiring and give at most 5 seconds to finish
-                    final FrameworkWiring fw = getBundleContext().getBundle(Constants.SYSTEM_BUNDLE_LOCATION).adapt(FrameworkWiring.class);
-                    BaseUpdateInstallHelper.refreshPackages( fw, getBundleContext(), 5000L, bundle );
+                    final FrameworkWiring fw = this.bundleContext.getBundle(Constants.SYSTEM_BUNDLE_LOCATION).adapt(FrameworkWiring.class);
+                    BaseUpdateInstallHelper.refreshPackages( fw, this.bundleContext, 5000L, bundle );
                 } else if ( "update".equals( action ) ) {
                     // update the bundle
                     update( bundle );
@@ -417,7 +423,7 @@ public class BundlesServlet extends SimpleWebConsolePlugin implements OsgiManage
                 // write the state only
                 resp.setContentType( "application/json" );
                 resp.setCharacterEncoding( "UTF-8" );
-                if ( null == getBundleContext() ) {
+                if ( null == this.bundleContext ) {
                     // refresh package on the web console itself or some of it's dependencies
                     resp.getWriter().print("false");
                 } else {
@@ -428,8 +434,8 @@ public class BundlesServlet extends SimpleWebConsolePlugin implements OsgiManage
             }
         }
 
-        if ( success && null != getBundleContext() ) {
-            final String pluginRoot = ( String ) req.getAttribute( WebConsoleConstants.ATTR_PLUGIN_ROOT );
+        if ( success && null != this.bundleContext ) {
+            final String pluginRoot = ( String ) req.getAttribute( ServletConstants.ATTR_PLUGIN_ROOT );
             final String servicesRoot = getServicesRoot( req );
             try {
                 this.renderJSON( resp, null, pluginRoot, servicesRoot, req.getLocale(), req.getParameter(FILTER_PARAM), bundleException );
@@ -442,7 +448,7 @@ public class BundlesServlet extends SimpleWebConsolePlugin implements OsgiManage
     }
 
     private String getServicesRoot(HttpServletRequest request) {
-        return ( ( String ) request.getAttribute( WebConsoleConstants.ATTR_APP_ROOT ) ) +
+        return ( ( String ) request.getAttribute( ServletConstants.ATTR_APP_ROOT ) ) +
                 "/" + ServicesServlet.LABEL + "/";
     }
 
@@ -457,7 +463,7 @@ public class BundlesServlet extends SimpleWebConsolePlugin implements OsgiManage
             final long bundleId = Long.parseLong( pathInfo );
             if ( bundleId >= 0 )
             {
-                return BundleContextUtil.getWorkingBundleContext(this.getBundleContext()).getBundle( bundleId );
+                return BundleContextUtil.getWorkingBundleContext(this.bundleContext).getBundle( bundleId );
             }
         }
         catch ( NumberFormatException nfe )
@@ -475,7 +481,7 @@ public class BundlesServlet extends SimpleWebConsolePlugin implements OsgiManage
             }
 
             // search
-            final Bundle[] bundles = BundleContextUtil.getWorkingBundleContext(this.getBundleContext()).getBundles();
+            final Bundle[] bundles = BundleContextUtil.getWorkingBundleContext(this.bundleContext).getBundles();
             for(int i=0; i<bundles.length; i++) {
                 final Bundle bundle = bundles[i];
                 // check symbolic name first
@@ -505,12 +511,12 @@ public class BundlesServlet extends SimpleWebConsolePlugin implements OsgiManage
      * @see org.apache.felix.webconsole.AbstractWebConsolePlugin#renderContent(javax.servlet.http.HttpServletRequest, javax.servlet.http.HttpServletResponse)
      */
     @Override
-    protected void renderContent( HttpServletRequest request, HttpServletResponse response ) throws IOException
+    public void renderContent( HttpServletRequest request, HttpServletResponse response ) throws IOException
     {
         // get request info from request attribute
         final RequestInfo reqInfo = getRequestInfo(request);
 
-        final Bundle systemBundle = this.getBundleContext().getBundle(Constants.SYSTEM_BUNDLE_LOCATION);
+        final Bundle systemBundle = this.bundleContext.getBundle(Constants.SYSTEM_BUNDLE_LOCATION);
         final FrameworkStartLevel fsl = systemBundle.adapt(FrameworkStartLevel.class);
         final int startLevel = fsl.getInitialBundleStartLevel();
 
@@ -520,7 +526,7 @@ public class BundlesServlet extends SimpleWebConsolePlugin implements OsgiManage
         vars.put( "drawDetails", reqInfo.bundleRequested ? Boolean.TRUE : Boolean.FALSE );
         vars.put( "currentBundle", (reqInfo.bundleRequested && reqInfo.bundle != null ? String.valueOf(reqInfo.bundle.getBundleId()) : "null"));
 
-        final String pluginRoot = ( String ) request.getAttribute( WebConsoleConstants.ATTR_PLUGIN_ROOT );
+        final String pluginRoot = ( String ) request.getAttribute( ServletConstants.ATTR_PLUGIN_ROOT );
         final String servicesRoot = getServicesRoot ( request );
         StringWriter w = new StringWriter();
         try
@@ -571,7 +577,7 @@ public class BundlesServlet extends SimpleWebConsolePlugin implements OsgiManage
         }
         else if (filter != null)
         {
-            Filter f = getBundleContext().createFilter(filter);
+            Filter f = this.bundleContext.createFilter(filter);
             ArrayList<Bundle> list = new ArrayList<Bundle>(allBundles.length);
             final String localeString = locale.toString();
             for (int i = 0, size = allBundles.length; i < size; i++)
@@ -713,7 +719,7 @@ public class BundlesServlet extends SimpleWebConsolePlugin implements OsgiManage
 
     private final Bundle[] getBundles()
     {
-        return BundleContextUtil.getWorkingBundleContext(this.getBundleContext()).getBundles();
+        return BundleContextUtil.getWorkingBundleContext(this.bundleContext).getBundles();
     }
 
 
@@ -1538,14 +1544,14 @@ public class BundlesServlet extends SimpleWebConsolePlugin implements OsgiManage
         Bundle updateBundle = null;
         if ( Constants.SYSTEM_BUNDLE_SYMBOLICNAME.equals( symbolicName ) )
         {
-            updateBundle = getBundleContext().getBundle( 0 );
+            updateBundle = this.bundleContext.getBundle( 0 );
         }
         else
         {
             if ( uploadId != -1 ) {
-                updateBundle = BundleContextUtil.getWorkingBundleContext(this.getBundleContext()).getBundle(uploadId);
+                updateBundle = BundleContextUtil.getWorkingBundleContext(this.bundleContext).getBundle(uploadId);
             } else {
-                Bundle[] bundles = BundleContextUtil.getWorkingBundleContext(this.getBundleContext()).getBundles();
+                Bundle[] bundles = BundleContextUtil.getWorkingBundleContext(this.bundleContext).getBundles();
                 for ( int i = 0; i < bundles.length; i++ )
                 {
                     boolean isSameBSN = (bundles[i].getSymbolicName() != null && bundles[i].getSymbolicName().equals( symbolicName ));
@@ -1609,7 +1615,7 @@ public class BundlesServlet extends SimpleWebConsolePlugin implements OsgiManage
     private void installBackground( final File bundleFile, final String location, final int startlevel,
             final boolean doStart, final boolean refreshPackages ) {
 
-        InstallHelper t = new InstallHelper( this, getBundleContext(), bundleFile, location, startlevel, doStart,
+        InstallHelper t = new InstallHelper( this, this.bundleContext, bundleFile, location, startlevel, doStart,
                 refreshPackages );
         t.start();
     }

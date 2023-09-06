@@ -23,7 +23,7 @@ import java.io.File;
 import java.io.InputStream;
 
 import org.apache.felix.bundlerepository.Reason;
-import org.apache.felix.webconsole.SimpleWebConsolePlugin;
+import org.apache.felix.webconsole.internal.misc.ServletSupport;
 import org.osgi.framework.Bundle;
 import org.osgi.framework.BundleException;
 import org.osgi.framework.Constants;
@@ -40,13 +40,13 @@ class UpdateHelper extends BaseUpdateInstallHelper
     private final Bundle bundle;
 
 
-    UpdateHelper( final SimpleWebConsolePlugin plugin, final Bundle bundle, boolean refreshPackages )
+    UpdateHelper( final ServletSupport plugin, final Bundle bundle, boolean refreshPackages )
     {
         this( plugin, bundle, null, refreshPackages );
     }
 
 
-    UpdateHelper( final SimpleWebConsolePlugin plugin, final Bundle bundle, final File bundleFile,
+    UpdateHelper( final ServletSupport plugin, final Bundle bundle, final File bundleFile,
         boolean refreshPackages )
     {
         super( plugin, "Background Update " + bundle.getSymbolicName() + " (" + bundle.getBundleId() + ")",

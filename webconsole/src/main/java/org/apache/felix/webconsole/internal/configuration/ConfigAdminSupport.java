@@ -33,8 +33,6 @@ import java.util.Set;
 import java.util.Vector;
 import java.util.regex.Pattern;
 
-import javax.servlet.http.HttpServletRequest;
-
 import org.apache.felix.webconsole.internal.misc.ServletSupport;
 import org.apache.felix.webconsole.spi.ConfigurationHandler;
 import org.apache.felix.webconsole.spi.ValidationException;
@@ -43,6 +41,8 @@ import org.osgi.framework.InvalidSyntaxException;
 import org.osgi.service.cm.Configuration;
 import org.osgi.service.cm.ConfigurationAdmin;
 import org.osgi.service.metatype.AttributeDefinition;
+
+import jakarta.servlet.http.HttpServletRequest;
 
 
 class ConfigAdminSupport {

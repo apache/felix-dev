@@ -23,20 +23,15 @@ import java.io.IOException;
 import java.io.PrintWriter;
 import java.io.StringWriter;
 import java.io.Writer;
+import java.lang.reflect.Array;
 import java.util.Locale;
 
-import javax.servlet.ServletException;
-import javax.servlet.http.HttpServletRequest;
-import javax.servlet.http.HttpServletResponse;
-
 import org.apache.felix.utils.json.JSONWriter;
-import org.apache.felix.webconsole.SimpleWebConsolePlugin;
-import org.apache.felix.webconsole.WebConsoleConstants;
-import org.apache.felix.webconsole.WebConsoleUtil;
 import org.apache.felix.webconsole.bundleinfo.BundleInfoProvider;
-import org.apache.felix.webconsole.internal.OsgiManagerPlugin;
 import org.apache.felix.webconsole.internal.Util;
+import org.apache.felix.webconsole.internal.servlet.AbstractOsgiManagerPlugin;
 import org.apache.felix.webconsole.servlet.RequestVariableResolver;
+import org.apache.felix.webconsole.servlet.ServletConstants;
 import org.osgi.framework.Bundle;
 import org.osgi.framework.BundleContext;
 import org.osgi.framework.Constants;
@@ -45,11 +40,15 @@ import org.osgi.framework.ServiceReference;
 import org.osgi.framework.ServiceRegistration;
 import org.owasp.encoder.Encode;
 
+import jakarta.servlet.ServletException;
+import jakarta.servlet.http.HttpServletRequest;
+import jakarta.servlet.http.HttpServletResponse;
+
 
 /**
  * ServicesServlet provides a plugin for inspecting the registered services.
  */
-public class ServicesServlet extends SimpleWebConsolePlugin implements OsgiManagerPlugin
+public class ServicesServlet extends AbstractOsgiManagerPlugin
 {
     // don't create empty reference array all the time, create it only once - it is immutable
     private static final ServiceReference<?>[] NO_REFS = new ServiceReference[0];
@@ -109,19 +108,34 @@ public class ServicesServlet extends SimpleWebConsolePlugin implements OsgiManag
     /** the label for the services plugin */
     public static final String LABEL = "services";
     private static final String TITLE = "%services.pluginTitle";
-    private static final String CSS[] = null;
 
     // an LDAP filter, that is used to search services
     private static final String FILTER_PARAM = "filter";
 
     private final String TEMPLATE;
 
-    /** Default constructor */
-    public ServicesServlet() {
-        super(LABEL, TITLE, CATEGORY_OSGI, CSS);
-
+    /** 
+     * Default constructor
+     * @throws IOException If template can't be read
+     */
+    public ServicesServlet() throws IOException {
         // load templates
         TEMPLATE = readTemplateFile( "/templates/services.html" );
+    }
+    
+    @Override
+    protected String getCategory() {
+        return CATEGORY_OSGI;
+    }
+
+    @Override
+    protected String getLabel() {
+        return LABEL;
+    }
+
+    @Override
+    protected String getTitle() {
+        return TITLE;
     }
 
     private ServiceRegistration<BundleInfoProvider> bipReg;
@@ -193,8 +207,7 @@ public class ServicesServlet extends SimpleWebConsolePlugin implements OsgiManag
     }
 
 
-    static final String getStatusLine( final ServiceReference<?>[] services )
-    {
+    static String getStatusLine( final ServiceReference<?>[] services ) {
         final int count = services.length;
         final StringBuilder buffer = new StringBuilder();
         buffer.append( count );
@@ -205,11 +218,52 @@ public class ServicesServlet extends SimpleWebConsolePlugin implements OsgiManag
         return buffer.toString();
     }
 
+    /**
+     * This method will stringify a Java object. It is mostly used to print the values
+     * of unknown properties. This method will correctly handle if the passed object
+     * is array and will property display it.
+     *
+     * If the value is byte[] the elements are shown as Hex
+     *
+     * @param value the value to convert
+     * @return the string representation of the value
+     */
+    static String toString(final Object value) {
+        if (value == null) {
+            return "n/a";
+        } else if (value.getClass().isArray()) {
+            final StringBuilder sb = new StringBuilder();
+            int len = Array.getLength(value);
+            sb.append('[');
 
-    static final String propertyAsString( ServiceReference<?> ref, String name )
-    {
+            for(int i = 0; i < len; ++i) {
+                final Object element = Array.get(value, i);
+                if (element instanceof Byte) {
+                    sb.append("0x");
+                    final String x = Integer.toHexString(((Byte)element).intValue() & 255);
+                    if (1 == x.length()) {
+                        sb.append('0');
+                    }
+
+                    sb.append(x);
+                } else {
+                    sb.append(toString(element));
+                }
+
+                if (i < len - 1) {
+                    sb.append(", ");
+                }
+            }
+
+            return sb.append(']').toString();
+        } else {
+            return value.toString();
+        }
+    }
+
+    static String propertyAsString( ServiceReference<?> ref, String name ) {
         final Object value = ref.getProperty( name );
-        return WebConsoleUtil.toString( value );
+        return toString( value );
     }
 
 
@@ -375,13 +429,8 @@ public class ServicesServlet extends SimpleWebConsolePlugin implements OsgiManag
 
     }
 
-
-    /**
-     * @see org.apache.felix.webconsole.AbstractWebConsolePlugin#doGet(javax.servlet.http.HttpServletRequest, javax.servlet.http.HttpServletResponse)
-     */
-    protected void doGet( HttpServletRequest request, HttpServletResponse response ) throws ServletException,
-    IOException
-    {
+    @Override
+    protected void doGet( HttpServletRequest request, HttpServletResponse response ) throws ServletException, IOException {
         if (request.getPathInfo().indexOf("/res/") == -1)
         { // not resource
             final RequestInfo reqInfo = new RequestInfo( request );
@@ -406,11 +455,11 @@ public class ServicesServlet extends SimpleWebConsolePlugin implements OsgiManag
     /**
      * @see org.apache.felix.webconsole.AbstractWebConsolePlugin#renderContent(javax.servlet.http.HttpServletRequest, javax.servlet.http.HttpServletResponse)
      */
-    protected void renderContent( HttpServletRequest request, HttpServletResponse response ) throws IOException {
+    public void renderContent( HttpServletRequest request, HttpServletResponse response ) throws IOException {
         // get request info from request attribute
         final RequestInfo reqInfo = getRequestInfo( request );
 
-        final String appRoot = ( String ) request.getAttribute( WebConsoleConstants.ATTR_APP_ROOT );
+        final String appRoot = ( String ) request.getAttribute( ServletConstants.ATTR_APP_ROOT );
         StringWriter w = new StringWriter();
         final String filter = request.getParameter(FILTER_PARAM);
         writeJSON(w, reqInfo.service, request.getLocale(), filter);

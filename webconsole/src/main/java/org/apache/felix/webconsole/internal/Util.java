@@ -22,13 +22,13 @@ import java.util.Arrays;
 import java.util.Comparator;
 import java.util.Locale;
 
-import javax.servlet.http.HttpServletRequest;
-import javax.servlet.http.HttpServletResponse;
-
 import org.osgi.framework.Bundle;
 import org.osgi.framework.Constants;
 import org.osgi.framework.ServiceReference;
 import org.osgi.framework.Version;
+
+import jakarta.servlet.http.HttpServletRequest;
+import jakarta.servlet.http.HttpServletResponse;
 
 
 /**
@@ -195,23 +195,30 @@ public class Util {
         }
     }
 
-    public static void sendJsonOk(final HttpServletResponse response) throws IOException
-    {
+    public static void sendJsonOk(final HttpServletResponse response) throws IOException {
         response.setContentType( "application/json" );
         response.setCharacterEncoding( "UTF-8" );
         response.getWriter().print( "{ \"status\": true }" );
     }
 
-    public static final Locale getLocale( final HttpServletRequest request ) {
-        try {
-            return request.getLocale();
-        } catch ( Throwable t ) {
-            // expected in standard OSGi Servlet 2.1 environments
-            // fallback to using the default locale
-            return Locale.getDefault();
-        }
+   /**
+     * Sets response headers to force the client to not cache the response
+     * sent back. This method must be called before the response is committed
+     * otherwise it will have no effect.
+     * <p>
+     * This method sets the <code>Cache-Control</code>, <code>Expires</code>,
+     * and <code>Pragma</code> headers.
+     *
+     * @param response The response for which to set the cache prevention
+     */
+    public static void setNoCache(final HttpServletResponse response) {
+        response.setHeader("Cache-Control", "no-cache");
+        response.addHeader("Cache-Control", "no-store");
+        response.addHeader("Cache-Control", "must-revalidate");
+        response.addHeader("Cache-Control", "max-age=0");
+        response.setHeader("Expires", "Thu, 01 Jan 1970 01:00:00 GMT");
+        response.setHeader("Pragma", "no-cache");
     }
-
 
     public static String getStringProperty( final ServiceReference<?> service, final String propertyName ) {
         final Object property = service.getProperty( propertyName );
@@ -219,5 +226,38 @@ public class Util {
             return ( String ) property;
         }
         return null;
+    }
+
+    /**
+     * Utility method to handle relative redirects.
+     * Some application servers like Web Sphere handle relative redirects differently
+     * therefore we should make an absolute URL before invoking send redirect.
+     *
+     * @param request the HTTP request coming from the user
+     * @param response the HTTP response, where data is rendered
+     * @param redirectUrl the redirect URI.
+     * @throws IOException If an input or output exception occurs
+     * @throws IllegalStateException   If the response was committed or if a partial
+     *  URL is given and cannot be converted into a valid URL
+     */
+    public static void sendRedirect(final HttpServletRequest request, final HttpServletResponse response, String redirectUrl) 
+    throws IOException {
+        // check for relative URL
+        if ( !redirectUrl.startsWith("/") ) {
+            String base = request.getContextPath() + request.getServletPath() + request.getPathInfo();
+            int i = base.lastIndexOf('/');
+            if (i > -1) {
+                base = base.substring(0, i);
+            } else {
+                i = base.indexOf(':');
+                base = (i > -1) ? base.substring(i + 1, base.length()) : "";
+            }
+            if (!base.startsWith("/")) {
+                base = '/' + base;
+            }
+            redirectUrl = base + '/' + redirectUrl;
+
+        }
+        response.sendRedirect(redirectUrl);
     }
 }

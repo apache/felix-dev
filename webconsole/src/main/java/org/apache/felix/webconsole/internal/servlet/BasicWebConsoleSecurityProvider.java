@@ -17,20 +17,20 @@
 package org.apache.felix.webconsole.internal.servlet;
 
 import java.io.IOException;
-import java.io.UnsupportedEncodingException;
+import java.nio.charset.StandardCharsets;
 
-import javax.servlet.http.HttpServletRequest;
-import javax.servlet.http.HttpServletResponse;
-
-import org.apache.felix.webconsole.WebConsoleSecurityProvider2;
+import org.apache.felix.webconsole.spi.SecurityProvider;
 import org.osgi.framework.BundleContext;
-import org.osgi.service.http.context.ServletContextHelper;
+import org.osgi.service.servlet.context.ServletContextHelper;
+
+import jakarta.servlet.http.HttpServletRequest;
+import jakarta.servlet.http.HttpServletResponse;
 
 /**
  * Basic implementation of WebConsoleSecurityProvider to replace logic that
  * was previously in OsgiManagerHttpContext
  */
-public class BasicWebConsoleSecurityProvider implements WebConsoleSecurityProvider2 {
+public class BasicWebConsoleSecurityProvider implements SecurityProvider {
 
     static final String HEADER_WWW_AUTHENTICATE = "WWW-Authenticate";
 
@@ -38,26 +38,26 @@ public class BasicWebConsoleSecurityProvider implements WebConsoleSecurityProvid
 
     static final String AUTHENTICATION_SCHEME_BASIC = "Basic";
 
+    public static volatile String REALM;
+
     private final String username;
 
     private final Password password;
 
-    private final String realm;
+    private final BundleContext bundleContext;
 
-    private BundleContext bundleContext;
+    public BasicWebConsoleSecurityProvider(final BundleContext bundleContext) {
+        this(bundleContext, null, null);
+    }
 
-    public BasicWebConsoleSecurityProvider(BundleContext bundleContext, String username, String password,
-            String realm) {
-        super();
+    public BasicWebConsoleSecurityProvider(final BundleContext bundleContext, final String username, final String password) {
         this.bundleContext = bundleContext;
         this.username = username;
         this.password = new Password(password);
-        this.realm = realm;
     }
 
-    public Object authenticate(String username, String password) {
-        if ( this.username.equals( username ) && this.password.matches( password.getBytes() ) )
-        {
+    public Object authenticate(final String username, final String password) {
+        if ( this.username.equals( username ) && this.password.matches( password.getBytes() ) ) {
             if (bundleContext.getProperty(OsgiManager.FRAMEWORK_PROP_SECURITY_PROVIDERS) == null) {
                 // Only allow username and password authentication if no mandatory security providers are registered
                 return true;
@@ -70,51 +70,41 @@ public class BasicWebConsoleSecurityProvider implements WebConsoleSecurityProvid
      * All users authenticated with the repository are granted access for all roles in the Web Console.
      */
     @Override
-    public boolean authorize(Object user, String role) {
+    public boolean authorize(final Object user, final String role) {
         return true;
     }
 
     @Override
-    public boolean authenticate(HttpServletRequest request, HttpServletResponse response) {
+    public Object authenticate(final HttpServletRequest request, final HttpServletResponse response) {
         // Return immediately if the header is missing
         String authHeader = request.getHeader( HEADER_AUTHORIZATION );
-        if ( authHeader != null && authHeader.length() > 0 )
-        {
+        if ( authHeader != null && authHeader.length() > 0 ) {
 
             // Get the authType (Basic, Digest) and authInfo (user/password)
             // from
             // the header
             authHeader = authHeader.trim();
-            int blank = authHeader.indexOf( ' ' );
-            if ( blank > 0 )
-            {
-                String authType = authHeader.substring( 0, blank );
-                String authInfo = authHeader.substring( blank ).trim();
+            final int blank = authHeader.indexOf( ' ' );
+            if ( blank > 0 ) {
+                final String authType = authHeader.substring( 0, blank );
+                final String authInfo = authHeader.substring( blank ).trim();
 
                 // Check whether authorization type matches
-                if ( authType.equalsIgnoreCase( AUTHENTICATION_SCHEME_BASIC ) )
-                {
-                    try
-                    {
-                        byte[][] userPass = base64Decode( authInfo );
+                if ( authType.equalsIgnoreCase( AUTHENTICATION_SCHEME_BASIC ) ) {
+                    try {
+                        final byte[][] userPass = base64Decode( authInfo );
                         final String username = toString( userPass[0] );
 
                         // authenticate
-                        if ( authenticate( username, toString(userPass[1]) ) != null )
-                        {
+                        if ( authenticate( username, toString(userPass[1]) ) != null ) {
                             // as per the spec, set attributes
                             request.setAttribute( ServletContextHelper.AUTHENTICATION_TYPE, HttpServletRequest.BASIC_AUTH );
                             request.setAttribute( ServletContextHelper.REMOTE_USER, username );
 
-                            // set web console user attribute
-                            request.setAttribute( WebConsoleSecurityProvider2.USER_ATTRIBUTE, username );
-
                             // succeed
-                            return true;
+                            return username;
                         }
-                    }
-                    catch ( Exception e )
-                    {
+                    } catch (final  Exception e )  {
                         // Ignore
                     }
                 }
@@ -122,52 +112,40 @@ public class BasicWebConsoleSecurityProvider implements WebConsoleSecurityProvid
         }
 
         // request authentication
-        try
-        {
-            response.setHeader( HEADER_WWW_AUTHENTICATE, AUTHENTICATION_SCHEME_BASIC + " realm=\"" + this.realm + "\"" );
+        try {
+            response.setHeader( HEADER_WWW_AUTHENTICATE, AUTHENTICATION_SCHEME_BASIC + " realm=\"" + REALM + "\"" );
             response.setStatus( HttpServletResponse.SC_UNAUTHORIZED );
             response.setContentLength( 0 );
             response.flushBuffer();
-        }
-        catch ( IOException ioe )
-        {
+        } catch (final  IOException ioe ) {
             // failed sending the response ... cannot do anything about it
         }
 
-        // inform HttpService that authentication failed
-        return false;
+        // inform that authentication failed
+        return null;
     }
 
-    static byte[][] base64Decode( String srcString )
-    {
-        byte[] transformed = Base64.decodeBase64( srcString );
-        for ( int i = 0; i < transformed.length; i++ )
-        {
-            if ( transformed[i] == ':' )
-            {
-                byte[] user = new byte[i];
-                byte[] pass = new byte[transformed.length - i - 1];
+    @Override
+    public void logout(final HttpServletRequest request, final HttpServletResponse response) {
+        // nothing to do
+    }
+
+    static byte[][] base64Decode(final String srcString ) {
+        final byte[] transformed = Base64.decodeBase64( srcString );
+        for ( int i = 0; i < transformed.length; i++ ) {
+            if ( transformed[i] == ':' ) {
+                final byte[] user = new byte[i];
+                final byte[] pass = new byte[transformed.length - i - 1];
                 System.arraycopy( transformed, 0, user, 0, user.length );
                 System.arraycopy( transformed, i + 1, pass, 0, pass.length );
-                return new byte[][]
-                    { user, pass };
+                return new byte[][] { user, pass };
             }
         }
 
-        return new byte[][]
-            { transformed, new byte[0] };
+        return new byte[][] { transformed, new byte[0] };
     }
 
-    static String toString( final byte[] src )
-    {
-        try
-        {
-            return new String( src, "ISO-8859-1" );
-        }
-        catch ( UnsupportedEncodingException uee )
-        {
-            return new String( src );
-        }
+    static String toString( final byte[] src ) {
+        return new String(src, StandardCharsets.ISO_8859_1);
     }
-
 }

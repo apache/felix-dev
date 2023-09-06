@@ -28,7 +28,7 @@ import java.util.Collections;
 import java.util.Iterator;
 import java.util.List;
 
-import org.apache.felix.webconsole.SimpleWebConsolePlugin;
+import org.apache.felix.webconsole.internal.misc.ServletSupport;
 import org.osgi.framework.Bundle;
 import org.osgi.framework.BundleContext;
 import org.osgi.framework.BundleException;
@@ -44,7 +44,7 @@ import org.osgi.service.log.LogService;
 abstract class BaseUpdateInstallHelper implements Runnable
 {
 
-    private final SimpleWebConsolePlugin plugin;
+    private final ServletSupport plugin;
 
     private final File bundleFile;
 
@@ -53,7 +53,7 @@ abstract class BaseUpdateInstallHelper implements Runnable
     private Thread updateThread;
 
 
-    BaseUpdateInstallHelper( SimpleWebConsolePlugin plugin, String name, File bundleFile, boolean refreshPackages )
+    BaseUpdateInstallHelper( ServletSupport plugin, String name, File bundleFile, boolean refreshPackages )
     {
         this.plugin = plugin;
         this.bundleFile = bundleFile;
@@ -78,7 +78,7 @@ abstract class BaseUpdateInstallHelper implements Runnable
     }
 
 
-    protected final SimpleWebConsolePlugin getLog()
+    protected final ServletSupport getLog()
     {
         return plugin;
     }
@@ -121,7 +121,7 @@ abstract class BaseUpdateInstallHelper implements Runnable
             // installation or update, since we might be updating
             // our selves in which case the bundle context will be
             // invalid by the time we want to call the update
-            final Bundle systemBundle = plugin.getBundle().getBundleContext().getBundle(Constants.SYSTEM_BUNDLE_LOCATION);
+            final Bundle systemBundle = plugin.getBundleContext().getBundle(Constants.SYSTEM_BUNDLE_LOCATION);
             final FrameworkWiring fw = refreshPackages ? systemBundle.adapt(FrameworkWiring.class) : null;
 
             // same for the startlevel
@@ -168,7 +168,7 @@ abstract class BaseUpdateInstallHelper implements Runnable
 
                 if ( bundle != null ) {
                     // refresh packages and give it at most 5 seconds to finish
-                    refreshPackages(fw, plugin.getBundle().getBundleContext(), 5000L, bundle );
+                    refreshPackages(fw, plugin.getBundleContext(), 5000L, bundle );
                 }
             } catch (Exception ex) {
                 rethrow = ex;
