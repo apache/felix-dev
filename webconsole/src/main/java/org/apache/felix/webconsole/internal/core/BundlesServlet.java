@@ -1500,7 +1500,7 @@ public class BundlesServlet extends SimpleWebConsolePlugin implements OsgiManage
                     IOUtils.copy(bundleStream, out);
                 }
             } catch ( final Exception e ) {
-                log( LogService.LOG_ERROR, "Problem accessing uploaded bundle file: " + part.getName(), e );
+                log( LogService.LOG_ERROR, "Problem accessing uploaded bundle file: " + part.getSubmittedFileName(), e );
 
                 // remove the tmporary file
                 if ( tmpFile != null && tmpFile.exists()) {
@@ -1516,7 +1516,7 @@ public class BundlesServlet extends SimpleWebConsolePlugin implements OsgiManage
                 final boolean refreshPackages = refreshPackagesItem != null;
                 final boolean parallelVersion = parallelVersionItem != null;
 
-                bundleLocation = "inputstream:".concat(part.getName());
+                bundleLocation = "inputstream:".concat(part.getSubmittedFileName());
                 installBundle( bundleLocation, tmpFile, startLevel, start, refreshPackages, parallelVersion, uploadId);
             }
         }
