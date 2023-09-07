@@ -37,6 +37,13 @@ import org.osgi.annotation.versioning.ConsumerType;
 public interface SecurityProvider {
 
     /**
+     * Security providers can be registered with an optional id which can be used
+     * in the configuration of the webconsole to require this provider to be available.
+     * @since 1.2.1
+     */
+    String PROPERTY_ID = "webconsole.security.provider.id";
+
+    /**
      * Checks whether the authenticated user has the given role permission.
      *
      * @param user The object referring to the authenticated user. This is the

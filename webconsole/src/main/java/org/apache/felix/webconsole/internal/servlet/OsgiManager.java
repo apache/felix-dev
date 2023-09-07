@@ -67,6 +67,7 @@ import org.apache.felix.webconsole.internal.servlet.Plugin.InternalPlugin;
 import org.apache.felix.webconsole.servlet.RequestVariableResolver;
 import org.apache.felix.webconsole.servlet.ServletConstants;
 import org.apache.felix.webconsole.spi.BrandingPlugin;
+import org.apache.felix.webconsole.spi.SecurityProvider;
 import org.osgi.framework.Bundle;
 import org.osgi.framework.BundleContext;
 import org.osgi.framework.Constants;
@@ -149,8 +150,6 @@ public class OsgiManager extends GenericServlet {
     private static final String FRAMEWORK_RELOAD_TIMEOUT = "felix.webconsole.reload.timeout";
 
     static final String FRAMEWORK_PROP_SECURITY_PROVIDERS = "felix.webconsole.security.providers";
-
-    static final String SECURITY_PROVIDER_PROPERTY_NAME = "webconsole.security.provider.id";
 
     static final String PROP_MANAGER_ROOT = "manager.root";
 
@@ -1193,7 +1192,7 @@ public class OsgiManager extends GenericServlet {
         public WebConsoleSecurityProvider addingService(ServiceReference<WebConsoleSecurityProvider> reference) {
             final WebConsoleSecurityProvider provider = bundleContext.getService(reference);
             if (provider != null) {
-                final Object nameObj = reference.getProperty(SECURITY_PROVIDER_PROPERTY_NAME);
+                final Object nameObj = reference.getProperty(SecurityProvider.PROPERTY_ID);
                 if (nameObj instanceof String) {
                     final String name = (String) nameObj;
                     final Long id = (Long) reference.getProperty(Constants.SERVICE_ID);

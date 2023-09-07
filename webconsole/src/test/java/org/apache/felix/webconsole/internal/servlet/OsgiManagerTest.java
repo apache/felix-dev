@@ -38,6 +38,7 @@ import java.util.concurrent.atomic.AtomicReference;
 import javax.servlet.Servlet;
 
 import org.apache.felix.webconsole.WebConsoleSecurityProvider;
+import org.apache.felix.webconsole.spi.SecurityProvider;
 import org.junit.Test;
 import org.mockito.Mockito;
 import org.mockito.invocation.InvocationOnMock;
@@ -90,7 +91,7 @@ public class OsgiManagerTest {
         assertEquals(0, updateCalled.size());
 
         ServiceReference sref2 = Mockito.mock(ServiceReference.class);
-        Mockito.when(sref2.getProperty(OsgiManager.SECURITY_PROVIDER_PROPERTY_NAME)).thenReturn("xyz");
+        Mockito.when(sref2.getProperty(SecurityProvider.PROPERTY_ID)).thenReturn("xyz");
         Mockito.when(sref2.getProperty(Constants.SERVICE_ID)).thenReturn(1L);
         Mockito.when(bc.getService(sref2)).thenReturn(Mockito.mock(WebConsoleSecurityProvider.class));
         stc.addingService(sref2);
@@ -111,12 +112,12 @@ public class OsgiManagerTest {
             }
         };
         ServiceReference sref1 = Mockito.mock(ServiceReference.class);
-        Mockito.when(sref1.getProperty(OsgiManager.SECURITY_PROVIDER_PROPERTY_NAME)).thenReturn("abc");
+        Mockito.when(sref1.getProperty(SecurityProvider.PROPERTY_ID)).thenReturn("abc");
         Mockito.when(sref1.getProperty(Constants.SERVICE_ID)).thenReturn(1L);
         Mockito.when(bc.getService(sref1)).thenReturn(Mockito.mock(WebConsoleSecurityProvider.class));
 
         ServiceReference sref2 = Mockito.mock(ServiceReference.class);
-        Mockito.when(sref2.getProperty(OsgiManager.SECURITY_PROVIDER_PROPERTY_NAME)).thenReturn("xyz");
+        Mockito.when(sref2.getProperty(SecurityProvider.PROPERTY_ID)).thenReturn("xyz");
         Mockito.when(sref2.getProperty(Constants.SERVICE_ID)).thenReturn(2L);
         Mockito.when(bc.getService(sref2)).thenReturn(Mockito.mock(WebConsoleSecurityProvider.class));
 

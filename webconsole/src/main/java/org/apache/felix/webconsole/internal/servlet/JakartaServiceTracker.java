@@ -159,6 +159,9 @@ public class JakartaServiceTracker implements Closeable, ServiceTrackerCustomize
                 if (reference.getProperty(Constants.SERVICE_RANKING) != null) {
                     props.put(Constants.SERVICE_RANKING, reference.getProperty(Constants.SERVICE_RANKING));
                 }
+                if (reference.getProperty(SecurityProvider.PROPERTY_ID) != null) {
+                    props.put(SecurityProvider.PROPERTY_ID, reference.getProperty(SecurityProvider.PROPERTY_ID));
+                }
                 final ServiceRegistration<WebConsoleSecurityProvider> reg = this.bundleContext.registerService(WebConsoleSecurityProvider.class, jakartaSecurityProvider, props);
                 return reg;
             }
