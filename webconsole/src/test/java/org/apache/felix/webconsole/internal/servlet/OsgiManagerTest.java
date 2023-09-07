@@ -37,7 +37,7 @@ import java.util.concurrent.atomic.AtomicReference;
 
 import javax.servlet.Servlet;
 
-import org.apache.felix.webconsole.WebConsoleSecurityProvider;
+import org.apache.felix.webconsole.spi.SecurityProvider;
 import org.junit.Test;
 import org.mockito.Mockito;
 import org.mockito.invocation.InvocationOnMock;
@@ -50,7 +50,7 @@ import org.osgi.framework.FrameworkUtil;
 import org.osgi.framework.InvalidSyntaxException;
 import org.osgi.framework.ServiceReference;
 import org.osgi.framework.ServiceRegistration;
-import org.osgi.service.http.context.ServletContextHelper;
+import org.osgi.service.servlet.context.ServletContextHelper;
 import org.osgi.util.tracker.ServiceTrackerCustomizer;
 
 public class OsgiManagerTest {
@@ -90,9 +90,9 @@ public class OsgiManagerTest {
         assertEquals(0, updateCalled.size());
 
         ServiceReference sref2 = Mockito.mock(ServiceReference.class);
-        Mockito.when(sref2.getProperty(OsgiManager.SECURITY_PROVIDER_PROPERTY_NAME)).thenReturn("xyz");
+        Mockito.when(sref2.getProperty(SecurityProvider.PROPERTY_ID)).thenReturn("xyz");
         Mockito.when(sref2.getProperty(Constants.SERVICE_ID)).thenReturn(1L);
-        Mockito.when(bc.getService(sref2)).thenReturn(Mockito.mock(WebConsoleSecurityProvider.class));
+        Mockito.when(bc.getService(sref2)).thenReturn(Mockito.mock(SecurityProvider.class));
         stc.addingService(sref2);
         assertEquals(Collections.singleton("xyz"), mgr.registeredSecurityProviders);
         assertEquals(1, updateCalled.size());
@@ -111,14 +111,14 @@ public class OsgiManagerTest {
             }
         };
         ServiceReference sref1 = Mockito.mock(ServiceReference.class);
-        Mockito.when(sref1.getProperty(OsgiManager.SECURITY_PROVIDER_PROPERTY_NAME)).thenReturn("abc");
+        Mockito.when(sref1.getProperty(SecurityProvider.PROPERTY_ID)).thenReturn("abc");
         Mockito.when(sref1.getProperty(Constants.SERVICE_ID)).thenReturn(1L);
-        Mockito.when(bc.getService(sref1)).thenReturn(Mockito.mock(WebConsoleSecurityProvider.class));
+        Mockito.when(bc.getService(sref1)).thenReturn(Mockito.mock(SecurityProvider.class));
 
         ServiceReference sref2 = Mockito.mock(ServiceReference.class);
-        Mockito.when(sref2.getProperty(OsgiManager.SECURITY_PROVIDER_PROPERTY_NAME)).thenReturn("xyz");
+        Mockito.when(sref2.getProperty(SecurityProvider.PROPERTY_ID)).thenReturn("xyz");
         Mockito.when(sref2.getProperty(Constants.SERVICE_ID)).thenReturn(2L);
-        Mockito.when(bc.getService(sref2)).thenReturn(Mockito.mock(WebConsoleSecurityProvider.class));
+        Mockito.when(bc.getService(sref2)).thenReturn(Mockito.mock(SecurityProvider.class));
 
         ServiceTrackerCustomizer stc = mgr.new UpdateDependenciesStateCustomizer();
         stc.addingService(sref1);
@@ -149,13 +149,13 @@ public class OsgiManagerTest {
         final List<String> invocations = new ArrayList<String>();
         ServiceTrackerCustomizer stc = mgr.new UpdateDependenciesStateCustomizer() {
             @Override
-            public WebConsoleSecurityProvider addingService(ServiceReference<WebConsoleSecurityProvider> reference) {
+            public SecurityProvider addingService(ServiceReference<SecurityProvider> reference) {
                 invocations.add("added:" + reference);
                 return null;
             }
 
             @Override
-            public void removedService(ServiceReference<WebConsoleSecurityProvider> reference, WebConsoleSecurityProvider service) {
+            public void removedService(ServiceReference<SecurityProvider> reference, SecurityProvider service) {
                 invocations.add("removed:" + reference);
             }
         };
@@ -245,7 +245,7 @@ public class OsgiManagerTest {
         final OsgiManager mgr = new OsgiManager(bc);
 
         Mockito.verify(bc, Mockito.times(1))
-            .registerService(Mockito.eq(WebConsoleSecurityProvider.class), Mockito.isA(WebConsoleSecurityProvider.class), Mockito.isA(Dictionary.class));
+            .registerService(Mockito.eq(SecurityProvider.class), Mockito.isA(SecurityProvider.class), Mockito.isA(Dictionary.class));
         Mockito.verify(bc, Mockito.times(1))
             .registerService(Mockito.eq(ServletContextHelper.class), Mockito.isA(ServletContextHelper.class), Mockito.isA(Dictionary.class));
         Mockito.verify(bc, Mockito.times(1))
@@ -255,7 +255,7 @@ public class OsgiManagerTest {
 
         // Should not re-register the services, as they were already registered
         Mockito.verify(bc, Mockito.times(1))
-            .registerService(Mockito.eq(WebConsoleSecurityProvider.class), Mockito.isA(WebConsoleSecurityProvider.class), Mockito.isA(Dictionary.class));
+            .registerService(Mockito.eq(SecurityProvider.class), Mockito.isA(SecurityProvider.class), Mockito.isA(Dictionary.class));
         Mockito.verify(bc, Mockito.times(1))
             .registerService(Mockito.eq(ServletContextHelper.class), Mockito.isA(ServletContextHelper.class), Mockito.isA(Dictionary.class));
         Mockito.verify(bc, Mockito.times(1))

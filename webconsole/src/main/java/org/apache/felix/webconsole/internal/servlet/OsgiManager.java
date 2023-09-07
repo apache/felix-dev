@@ -145,8 +145,6 @@ public class OsgiManager extends HttpServlet {
 
     static final String FRAMEWORK_PROP_SECURITY_PROVIDERS = "felix.webconsole.security.providers";
 
-    public static final String SECURITY_PROVIDER_PROPERTY_NAME = "webconsole.security.provider.id";
-
     static final String PROP_MANAGER_ROOT = "manager.root";
 
     static final String PROP_DEFAULT_RENDER = "default.render";
@@ -1102,7 +1100,7 @@ public class OsgiManager extends HttpServlet {
         public SecurityProvider addingService(ServiceReference<SecurityProvider> reference) {
             final SecurityProvider provider = bundleContext.getService(reference);
             if (provider != null) {
-                final Object nameObj = reference.getProperty(SECURITY_PROVIDER_PROPERTY_NAME);
+                final Object nameObj = reference.getProperty(SecurityProvider.PROPERTY_ID);
                 if (nameObj instanceof String) {
                     final String name = (String) nameObj;
                     final Long id = (Long) reference.getProperty(Constants.SERVICE_ID);
