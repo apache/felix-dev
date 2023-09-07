@@ -39,7 +39,7 @@ public interface SecurityProvider {
     /**
      * Security providers can be registered with an optional id which can be used
      * in the configuration of the webconsole to require this provider to be available.
-     * @since 1.2.1
+     * @since 1.3.0
      */
     String PROPERTY_ID = "webconsole.security.provider.id";
 
