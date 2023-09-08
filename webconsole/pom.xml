@@ -28,7 +28,7 @@
 
     <artifactId>org.apache.felix.webconsole</artifactId>
     <packaging>bundle</packaging>
-    <version>4.9.3-SNAPSHOT</version>
+    <version>4.9.4</version>
 
     <name>Apache Felix Web Management Console</name>
     <description>
@@ -52,7 +52,7 @@
         <connection>scm:git:https://github.com/apache/felix-dev.git</connection>
         <developerConnection>scm:git:https://github.com/apache/felix-dev.git</developerConnection>
         <url>https://gitbox.apache.org/repos/asf?p=felix-dev.git</url>
-      <tag>HEAD</tag>
+      <tag>org.apache.felix.webconsole-4.9.4</tag>
   </scm>
 
     <build>
