@@ -82,34 +82,6 @@ public class OsgiManager extends HttpServlet {
     private static final long serialVersionUID = 1L;
 
     /**
-     * Old name of the request attribute providing the root to the web console.
-     * This attribute is no deprecated and replaced by
-     * {@link ServletConstants#ATTR_APP_ROOT}.
-     *
-     * @deprecated use {@link ServletConstants#ATTR_APP_ROOT} instead
-     */
-    @Deprecated
-    private static final String ATTR_APP_ROOT_OLD = OsgiManager.class.getName() + ".appRoot";
-
-    /**
-     * Old name of the request attribute providing the mappings from label to
-     * page title. This attribute is now deprecated and replaced by
-     * {@link AbstractOsgiManagerPlugin#ATTR_LABEL_MAP}.
-     *
-     * @deprecated use {@link AbstractOsgiManagerPlugin#ATTR_LABEL_MAP} instead
-     */
-    @Deprecated
-    private static final String ATTR_LABEL_MAP_OLD = OsgiManager.class.getName() + ".labelMap";
-
-    /**
-     * The name of the (internal) request attribute providing the categorized
-     * label map structure.
-     * @deprecated use {@link AbstractOsgiManagerPlugin#ATTR_LABEL_MAP} instead
-     */
-    @Deprecated
-    public static final String ATTR_LABEL_MAP_CATEGORIZED = AbstractOsgiManagerPlugin.ATTR_LABEL_MAP + ".categorized";
-
-    /**
      * The name and value of a parameter which will prevent redirection to a
      * render after the action has been executed (value is "_noredir_"). This
      * may be used by programmatic action submissions.
@@ -553,15 +525,11 @@ public class OsgiManager extends HttpServlet {
         // the official request attributes
         request.setAttribute(org.apache.felix.webconsole.WebConsoleConstants.ATTR_LANG_MAP, getLangMap());
         request.setAttribute(AbstractOsgiManagerPlugin.ATTR_LABEL_MAP, flatLabelMap);
-        request.setAttribute( ATTR_LABEL_MAP_CATEGORIZED, labelMap );
+        request.setAttribute(AbstractOsgiManagerPlugin.ATTR_LABEL_MAP_CATEGORIZED, labelMap );
         final String appRoot = request.getContextPath().concat(request.getServletPath());
         request.setAttribute(ServletConstants.ATTR_APP_ROOT, appRoot);
         request.setAttribute(ServletConstants.ATTR_PLUGIN_ROOT, appRoot.concat(postfix));
         request.setAttribute(ServletConstants.ATTR_CONFIGURATION, configuration);
-
-        // deprecated request attributes
-        request.setAttribute(ATTR_LABEL_MAP_OLD, flatLabelMap);
-        request.setAttribute(ATTR_APP_ROOT_OLD, appRoot);
 
         final RequestVariableResolver resolver = new org.apache.felix.webconsole.DefaultVariableResolver();
         request.setAttribute(RequestVariableResolver.REQUEST_ATTRIBUTE, resolver);

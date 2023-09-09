@@ -44,6 +44,12 @@ public abstract class AbstractOsgiManagerPlugin extends AbstractServlet implemen
      */
     public static final String ATTR_LABEL_MAP = "felix.webconsole.labelMap";
 
+    /**
+     * The name of the (internal) request attribute providing the categorized
+     * label map structure.
+     */
+    public static final String ATTR_LABEL_MAP_CATEGORIZED = AbstractOsgiManagerPlugin.ATTR_LABEL_MAP + ".categorized";
+
     // used to obtain services. Structure is: service name -> ServiceTracker
     private final Map<String, ServiceTracker<?, ?>> services = new HashMap<>();
 

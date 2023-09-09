@@ -17,8 +17,12 @@
 package org.apache.felix.webconsole.internal;
 
 
+import java.io.FileNotFoundException;
 import java.io.IOException;
+import java.io.InputStream;
+import java.io.StringWriter;
 import java.lang.reflect.Array;
+import java.nio.charset.StandardCharsets;
 import java.util.Arrays;
 import java.util.Collection;
 import java.util.Comparator;
@@ -339,6 +343,30 @@ public class Util {
     public static String toString(final ServiceReference<?> ref) {
         return "Service " + ref.getProperty(Constants.SERVICE_ID) + "(" + ref + ") from bundle " +
             ref.getBundle().getSymbolicName() + ":" + ref.getBundle().getVersion() + "(" + ref.getBundle().getBundleId() + ")";
+    }
+
+    public static final String readTemplateFile( final Class<?> clazz, final String templateFile) throws IOException {
+        try(final InputStream templateStream = clazz.getResourceAsStream( templateFile )) {
+            if ( templateStream != null ) {
+                try ( final StringWriter w = new StringWriter()) {
+                    final byte[] buf = new byte[2048];
+                    int l;
+                    while ( ( l = templateStream.read(buf)) > 0 ) {
+                        w.write(new String(buf, 0, l, StandardCharsets.UTF_8));
+                    }
+                    String str = w.toString();
+                    switch ( str.charAt(0) ) { // skip BOM
+                        case 0xFEFF: // UTF-16/UTF-32, big-endian
+                        case 0xFFFE: // UTF-16, little-endian
+                        case 0xEFBB: // UTF-8
+                            return str.substring(1);
+                    }
+                    return str;
+                }
+            }
+        }
+
+        throw new FileNotFoundException("Template " + templateFile + " not found");
     }
 
     /** Logger for the webconsole */
