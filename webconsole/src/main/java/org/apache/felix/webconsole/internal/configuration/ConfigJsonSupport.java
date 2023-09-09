@@ -53,7 +53,6 @@ import org.osgi.service.cm.Configuration;
 import org.osgi.service.cm.ConfigurationAdmin;
 import org.osgi.service.cm.ManagedService;
 import org.osgi.service.cm.ManagedServiceFactory;
-import org.osgi.service.log.LogService;
 import org.osgi.service.metatype.AttributeDefinition;
 import org.osgi.service.metatype.ObjectClassDefinition;
 
@@ -89,7 +88,7 @@ class ConfigJsonSupport {
                 this.configForm( result, pid, config, pidFilter, locale );
                 result.endObject();
             } catch ( final Exception e ) {
-                this.servletSupport.log( LogService.LOG_ERROR, "Error reading configuration PID " + pid, e );
+                Util.LOGGER.error("Error reading configuration PID {}", pid, e );
             }
         }
 
@@ -286,7 +285,7 @@ class ConfigJsonSupport {
                 serviceLocation = refs[0].getBundle().getLocation();
             }
         } catch (final Throwable t) {
-            this.servletSupport.log( LogService.LOG_ERROR,  "Error getting service associated with configuration " + pid, t );
+            Util.LOGGER.error("Error getting service associated with configuration {}", pid, t );
         }
         json.key( "bundle_location" );
         json.value ( bundleLocation );
@@ -391,7 +390,7 @@ class ConfigJsonSupport {
             }
             jw.endArray();
         } catch (final Exception e) {
-            this.servletSupport.log( LogService.LOG_ERROR, "listConfigurations: Unexpected problem encountered", e);
+            Util.LOGGER.error("listConfigurations: Unexpected problem encountered", e);
         }
         return hasConfigurations;
     }
@@ -523,7 +522,7 @@ class ConfigJsonSupport {
             }
             jw.endArray();
         } catch (final Exception e) {
-            this.servletSupport.log( LogService.LOG_ERROR, "listFactoryConfigurations: Unexpected problem encountered", e);
+            Util.LOGGER.error("listFactoryConfigurations: Unexpected problem encountered", e);
         }
     }
 

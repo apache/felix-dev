@@ -39,7 +39,6 @@ import org.osgi.framework.Constants;
 import org.osgi.framework.Filter;
 import org.osgi.framework.InvalidSyntaxException;
 import org.osgi.framework.ServiceReference;
-import org.osgi.service.log.LogService;
 import org.osgi.util.tracker.ServiceTracker;
 import org.osgi.util.tracker.ServiceTrackerCustomizer;
 
@@ -135,10 +134,10 @@ public class PluginHolder implements ServiceTrackerCustomizer<Servlet, Plugin> {
         this.servletTracker.open();
         try {
             this.legacyTracker = new LegacyServicesTracker(this, this.getBundleContext());
-            this.osgiManager.log(LogService.LOG_INFO, "Servlet 3 bridge enabled");
+            Util.LOGGER.info("Servlet 3 bridge enabled");
         } catch ( final Throwable t) {
             // ignore
-            this.osgiManager.log(LogService.LOG_INFO, "Servlet 3 bridge not enabled");
+            Util.LOGGER.info("Servlet 3 bridge not enabled");
         }
     }
 
@@ -382,15 +381,14 @@ public class PluginHolder implements ServiceTrackerCustomizer<Servlet, Plugin> {
                 if (!first.init()) {
                     list.remove(plugin);
                 } else if (oldPlugin != null) {
-                    osgiManager.log(LogService.LOG_WARNING, "Overwriting existing plugin " + oldPlugin.getId() 
-                            + " having label " + plugin.getLabel() + " with new plugin " + plugin.getId()
-                            + " due to higher ranking " );
+                    Util.LOGGER.warn("Overwriting existing plugin {} having label {} with new plugin {} due to higher ranking ", 
+                        oldPlugin.getId(), plugin.getLabel(), plugin.getId() );
                     oldPlugin.dispose();
                 }
             }
             if (first == oldPlugin) {
-                osgiManager.log(LogService.LOG_WARNING, "Ignoring new plugin " + plugin.getId()
-                        + " having existing label " + plugin.getLabel() + " due to lower ranking than old plugin " + oldPlugin.getId() );
+                Util.LOGGER.warn("Ignoring new plugin {} having existing label {} due to lower ranking than old plugin {}", 
+                        plugin.getId(), plugin.getLabel(), oldPlugin.getId() );
             }
         }
     }

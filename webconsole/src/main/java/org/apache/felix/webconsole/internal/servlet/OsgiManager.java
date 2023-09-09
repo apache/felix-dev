@@ -57,15 +57,12 @@ import org.osgi.framework.InvalidSyntaxException;
 import org.osgi.framework.ServiceFactory;
 import org.osgi.framework.ServiceReference;
 import org.osgi.framework.ServiceRegistration;
-import org.osgi.service.log.LogService;
 import org.osgi.service.servlet.context.ServletContextHelper;
 import org.osgi.service.servlet.whiteboard.HttpWhiteboardConstants;
 import org.osgi.util.tracker.ServiceTracker;
 import org.osgi.util.tracker.ServiceTrackerCustomizer;
 
 import jakarta.servlet.Servlet;
-import jakarta.servlet.ServletConfig;
-import jakarta.servlet.ServletContext;
 import jakarta.servlet.ServletException;
 import jakarta.servlet.http.Cookie;
 import jakarta.servlet.http.HttpServlet;
@@ -133,8 +130,6 @@ public class OsgiManager extends HttpServlet {
 
     private static final String FRAMEWORK_PROP_PASSWORD = "felix.webconsole.password";
 
-    private static final String FRAMEWORK_PROP_LOG_LEVEL = "felix.webconsole.loglevel";
-
     private static final String FRAMEWORK_PROP_LOCALE = "felix.webconsole.locale";
 
     private static final String FRAMEWORK_SHUTDOWN_TIMEOUT = "felix.webconsole.shutdown.timeout";
@@ -157,8 +152,6 @@ public class OsgiManager extends HttpServlet {
 
     static final String PROP_ENABLED_PLUGINS = "plugins";
 
-    static final String PROP_LOG_LEVEL = "loglevel";
-
     static final String PROP_LOCALE = "locale";
 
     static final String PROP_ENABLE_SECRET_HEURISTIC = "secret.heuristic.enabled";
@@ -170,8 +163,6 @@ public class OsgiManager extends HttpServlet {
 
     /** The timeout for VMStat plugin page reload */
     public static final String PROP_RELOAD_TIMEOUT = "reload.timeout";
-
-    public static final int DEFAULT_LOG_LEVEL = LogService.LOG_WARNING;
 
     static final String DEFAULT_PAGE = BundlesServlet.NAME;
 
@@ -226,6 +217,7 @@ public class OsgiManager extends HttpServlet {
 
     private ServiceTracker<SecurityProvider, SecurityProvider> securityProviderTracker;
 
+    @SuppressWarnings("rawtypes")
     private ServiceRegistration configurationListener;
 
     // list of OsgiManagerPlugin instances activated during init. All these
@@ -258,10 +250,9 @@ public class OsgiManager extends HttpServlet {
 
     final ResourceBundleManager resourceBundleManager;
 
-    private volatile int logLevel = DEFAULT_LOG_LEVEL;
-
     private volatile String defaultCategory = DEFAULT_CATEGORY;
 
+    @SuppressWarnings("rawtypes")
     public OsgiManager(BundleContext bundleContext) {
         this.bundleContext = bundleContext;
         this.holder = new PluginHolder(this, bundleContext);
@@ -302,8 +293,6 @@ public class OsgiManager extends HttpServlet {
             ConfigurationUtil.getProperty( bundleContext, FRAMEWORK_PROP_USER_NAME, DEFAULT_USER_NAME ) );
         this.defaultConfiguration.put( PROP_PASSWORD,
             ConfigurationUtil.getProperty( bundleContext, FRAMEWORK_PROP_PASSWORD, DEFAULT_PASSWORD ) );
-        this.defaultConfiguration.put( PROP_LOG_LEVEL,
-            ConfigurationUtil.getProperty( bundleContext, FRAMEWORK_PROP_LOG_LEVEL, DEFAULT_LOG_LEVEL ) );
         this.defaultConfiguration.put( PROP_LOCALE,
             ConfigurationUtil.getProperty( bundleContext, FRAMEWORK_PROP_LOCALE, null ) );
         this.defaultConfiguration.put( PROP_SHUTDOWN_TIMEOUT,
@@ -375,9 +364,9 @@ public class OsgiManager extends HttpServlet {
                 // message is just a class name, try to be more descriptive
                 message = "Class " + message + " missing";
             }
-            this.log(LogService.LOG_INFO, pluginClassName + " not enabled. Reason: " + message);
+            Util.LOGGER.info("{} not enabled. Reason: {}", pluginClassName, message);
         } catch (final Throwable t) {
-            this.log(LogService.LOG_INFO, "Failed to instantiate plugin " + pluginClassName + ". Reason: " + t);
+            Util.LOGGER.info("Failed to instantiate plugin: {}. Reason: {}", pluginClassName, t.getMessage(), t);
         }
         return null;
     }
@@ -387,8 +376,8 @@ public class OsgiManager extends HttpServlet {
             // register servlet context helper, servlet, resources
             this.registerHttpWhiteboardServices();
         } else {
-            log(LogService.LOG_INFO, "Not all requirements met for the Web Console. Required security providers: "
-                    + this.registeredSecurityProviders + " Registered security providers: " + this.registeredSecurityProviders);
+            Util.LOGGER.info("Not all requirements met for the Web Console. Required security providers: {}."
+                + " Registered security providers: {}", this.registeredSecurityProviders, this.registeredSecurityProviders);
             // Not all requirements met, unregister services
             this.unregisterHttpWhiteboardServices();
         }
@@ -402,8 +391,7 @@ public class OsgiManager extends HttpServlet {
         resourceBundleManager.dispose();
 
         // stop listening for brandings
-        if (brandingTracker != null)
-        {
+        if (brandingTracker != null) {
             brandingTracker.close();
             brandingTracker = null;
         }
@@ -422,15 +410,13 @@ public class OsgiManager extends HttpServlet {
         this.unregisterHttpWhiteboardServices();
 
         // stop listening for configuration
-        if (configurationListener != null)
-        {
+        if (configurationListener != null) {
             configurationListener.unregister();
             configurationListener = null;
         }
 
         // stop tracking security provider
-        if (securityProviderTracker != null)
-        {
+        if (securityProviderTracker != null) {
             securityProviderTracker.close();
             securityProviderTracker = null;
         }
@@ -449,13 +435,10 @@ public class OsgiManager extends HttpServlet {
     public void service(final HttpServletRequest req, final HttpServletResponse res)
     throws ServletException, IOException {
         // don't really expect to be called within a non-HTTP environment
-        try
-        {
-            AccessController.doPrivileged(new PrivilegedExceptionAction<Object>()
-            {
+        try {
+            AccessController.doPrivileged(new PrivilegedExceptionAction<Object>() {
                 @Override
-                public Object run() throws Exception
-                {
+                public Object run() throws Exception {
                     final HttpServletRequest wrapper = new HttpServletRequestWrapper((HttpServletRequest) req) {
                         @Override
                         public String getServletPath() {
@@ -471,20 +454,13 @@ public class OsgiManager extends HttpServlet {
                     return null;
                 }
             });
-        }
-        catch (PrivilegedActionException e)
-        {
+        } catch (PrivilegedActionException e) {
             Exception x = e.getException();
-            if (x instanceof IOException)
-            {
+            if (x instanceof IOException) {
                 throw (IOException) x;
-            }
-            else if (x instanceof ServletException)
-            {
+            } else if (x instanceof ServletException) {
                 throw (ServletException) x;
-            }
-            else
-            {
+            } else {
                 throw new IOException(x.toString());
             }
         }
@@ -568,6 +544,7 @@ public class OsgiManager extends HttpServlet {
         plugin.getConsolePlugin().service(request, response);
     }
 
+    @SuppressWarnings("deprecation")
     private void initRequest(final HttpServletRequest request, final String postfix, final Locale locale) {
         @SuppressWarnings("rawtypes")
         final Map labelMap = holder.getLocalizedLabelMap( resourceBundleManager, locale, this.defaultCategory );
@@ -586,13 +563,13 @@ public class OsgiManager extends HttpServlet {
         request.setAttribute(ATTR_LABEL_MAP_OLD, flatLabelMap);
         request.setAttribute(ATTR_APP_ROOT_OLD, appRoot);
 
-        @SuppressWarnings("deprecation")
         final RequestVariableResolver resolver = new org.apache.felix.webconsole.DefaultVariableResolver();
         request.setAttribute(RequestVariableResolver.REQUEST_ATTRIBUTE, resolver);
         resolver.put( RequestVariableResolver.KEY_APP_ROOT, (String) request.getAttribute( ServletConstants.ATTR_APP_ROOT ) );
         resolver.put( RequestVariableResolver.KEY_PLUGIN_ROOT, (String) request.getAttribute( ServletConstants.ATTR_PLUGIN_ROOT ) );
     }
 
+    @SuppressWarnings("deprecation")
     private final void logout(final HttpServletRequest request, final HttpServletResponse response) throws IOException {
         final SecurityProvider securityProvider = securityProviderTracker.getService();
         securityProvider.logout(request, response);
@@ -708,68 +685,8 @@ public class OsgiManager extends HttpServlet {
      * Returns the Service PID used to retrieve configuration and to describe
      * the configuration properties.
      */
-    String getConfigurationPid()
-    {
+    String getConfigurationPid() {
         return getClass().getName();
-    }
-
-
-    /**
-     * Calls the <code>ServletContext.log(String)</code> method if the
-     * configured log level is less than or equal to the given <code>level</code>.
-     * <p>
-     * Note, that the <code>level</code> parameter is only used to decide whether
-     * the <code>GenericServlet.log(String)</code> method is called or not. The
-     * actual implementation of the <code>GenericServlet.log</code> method is
-     * outside of the control of this method.
-     * <p>
-     * If the servlet has not been initialized yet or has already been destroyed
-     * the message is printed to stderr.
-     *
-     * @param level The log level at which to log the message
-     * @param message The message to log
-     */
-    public void log(final int level, final String message) {
-        this.log(level, message, null);
-    }
-
-    /**
-     * Calls the <code>ServletContext.log(String, Throwable)</code> method if
-     * the configured log level is less than or equal to the given
-     * <code>level</code>.
-     * <p>
-     * Note, that the <code>level</code> parameter is only used to decide whether
-     * the <code>GenericServlet.log(String, Throwable)</code> method is called
-     * or not. The actual implementation of the <code>GenericServlet.log</code>
-     * method is outside of the control of this method.
-     * <p>
-     * If the servlet has not been initialized yet or has already been destroyed
-     * the message is printed to stderr.
-     *
-     * @param level The log level at which to log the message
-     * @param message The message to log
-     * @param t The <code>Throwable</code> to log with the message
-     */
-    public void log(final int level, final String message, final Throwable t) {
-        if (logLevel >= level) {
-            final ServletConfig config = getServletConfig();
-            if ( config != null ) {
-                final ServletContext context = config.getServletContext();
-                if ( context != null ) {
-                    if (t != null) {
-                        context.log( message, t );
-                    } else {
-                        context.log( message );
-                    }
-                    return;
-                }
-            }
-
-            System.err.println( message );
-            if ( t != null ) {
-                t.printStackTrace( System.err );
-            }
-        }
     }
 
     private HttpServletRequest wrapRequest(final HttpServletRequest request, final Locale locale) {
@@ -939,7 +856,7 @@ public class OsgiManager extends HttpServlet {
                 this.servletRegistration = getBundleContext().registerService(Servlet.class, this, props);                
             }
         } catch (final Exception e) {
-            log(LogService.LOG_ERROR, "registerHttpWhiteboardServices: Problem setting up", e);
+            Util.LOGGER.error("registerHttpWhiteboardServices: Problem setting up", e);
             this.unregisterHttpWhiteboardServices();
         }
     }
@@ -981,7 +898,7 @@ public class OsgiManager extends HttpServlet {
         return defaultConfiguration;
     }
 
-    synchronized void updateConfiguration( final Dictionary<String, Object> osgiConfig) {
+    synchronized void updateConfiguration( final Dictionary<String, ?> osgiConfig) {
         final Map<String, Object> config = new HashMap<String, Object>( this.defaultConfiguration );
 
         if ( osgiConfig != null ) {
@@ -995,11 +912,6 @@ public class OsgiManager extends HttpServlet {
 
         final Object locale = config.get(PROP_LOCALE);
         this.configuredLocale = locale == null || locale.toString().trim().length() == 0 ? null : Util.parseLocaleString(locale.toString().trim());
-
-        this.logLevel = ConfigurationUtil.getProperty(config, PROP_LOG_LEVEL, DEFAULT_LOG_LEVEL);
-        AbstractOsgiManagerPlugin.LOGLEVEL = logLevel;
-        org.apache.felix.webconsole.AbstractWebConsolePlugin.setLogLevel(logLevel);
-        AbstractPluginAdapter.setLogLevel(logLevel);
 
         // default plugin page configuration
         holder.setDefaultPluginLabel(ConfigurationUtil.getProperty(config, PROP_DEFAULT_RENDER, DEFAULT_PAGE));

@@ -32,8 +32,6 @@ import org.osgi.util.tracker.ServiceTracker;
 import org.osgi.util.tracker.ServiceTrackerCustomizer;
 
 import jakarta.servlet.Servlet;
-import jakarta.servlet.ServletConfig;
-import jakarta.servlet.ServletContext;
 import jakarta.servlet.http.HttpServletRequest;
 
 public abstract class AbstractOsgiManagerPlugin extends AbstractServlet implements OsgiManagerPlugin, ServletSupport {
@@ -45,11 +43,6 @@ public abstract class AbstractOsgiManagerPlugin extends AbstractServlet implemen
      * The type of this request attribute is <code>Map&lt;String, String&gt;</code>.
      */
     public static final String ATTR_LABEL_MAP = "felix.webconsole.labelMap";
-
-    /**
-     * Log level to be used by the web console
-     */
-    public static volatile int LOGLEVEL;
 
     // used to obtain services. Structure is: service name -> ServiceTracker
     private final Map<String, ServiceTracker<?, ?>> services = new HashMap<>();
@@ -158,70 +151,6 @@ public abstract class AbstractOsgiManagerPlugin extends AbstractServlet implemen
         }
         return ret;
     }
-
-    /**
-     * Calls the <code>ServletContext.log(String)</code> method if the
-     * configured log level is less than or equal to the given <code>level</code>.
-     * <p>
-     * Note, that the <code>level</code> paramter is only used to decide whether
-     * the <code>GenericServlet.log(String)</code> method is called or not. The
-     * actual implementation of the <code>GenericServlet.log</code> method is
-     * outside of the control of this method.
-     * <p>
-     * If the servlet has not been initialized yet or has already been destroyed
-     * the message is printed to stderr.
-     *
-     * @param level The log level at which to log the message
-     * @param message The message to log
-     */
-    public void log( int level, String message ) {
-        if ( LOGLEVEL >= level ) {
-            ServletConfig config = getServletConfig();
-            if ( config != null ) {
-                ServletContext context = config.getServletContext();
-                if ( context != null ) {
-                    context.log( message );
-                    return;
-                }
-            }
-
-            System.err.println( message );
-        }
-    }
-
-
-    /**
-     * Calls the <code>ServletContext.log(String, Throwable)</code> method if
-     * the configured log level is less than or equal to the given
-     * <code>level</code>.
-     * <p>
-     * Note, that the <code>level</code> paramter is only used to decide whether
-     * the <code>GenericServlet.log(String, Throwable)</code> method is called
-     * or not. The actual implementation of the <code>GenericServlet.log</code>
-     * method is outside of the control of this method.
-     *
-     * @param level The log level at which to log the message
-     * @param message The message to log
-     * @param t The <code>Throwable</code> to log with the message
-     */
-    public void log( int level, String message, Throwable t ) {
-        if ( LOGLEVEL >= level ) {
-            ServletConfig config = getServletConfig();
-            if ( config != null ) {
-                ServletContext context = config.getServletContext();
-                if ( context != null ) {
-                    context.log( message, t );
-                    return;
-                }
-            }
-
-            System.err.println( message );
-            if ( t != null ) {
-                t.printStackTrace( System.err );
-            }
-        }
-    }
-
 
     @Override
     public BundleContext getBundleContext() {

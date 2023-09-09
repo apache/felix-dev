@@ -33,10 +33,7 @@ import java.util.TreeMap;
 import org.apache.felix.webconsole.servlet.RequestVariableResolver;
 import org.apache.felix.webconsole.servlet.ServletConstants;
 import org.apache.felix.webconsole.spi.BrandingPlugin;
-import org.osgi.framework.Bundle;
 import org.osgi.framework.BundleContext;
-import jakarta.servlet.ServletConfig;
-import jakarta.servlet.ServletContext;
 import jakarta.servlet.ServletException;
 import jakarta.servlet.ServletRequest;
 import jakarta.servlet.http.HttpServlet;
@@ -65,8 +62,6 @@ public abstract class AbstractPluginAdapter extends HttpServlet {
     private static final String FOOTER = readTemplateFile( "/templates/main_footer.html" );
 
     private static volatile BrandingPlugin BRANDING_PLUGIN = new BrandingPluginImpl();
-
-    private static volatile int LOGLEVEL;
 
     private volatile BundleContext bundleContext;
 
@@ -199,75 +194,6 @@ public abstract class AbstractPluginAdapter extends HttpServlet {
         return bundleContext;
     }
 
-    /**
-     * Returns the <code>Bundle</code> pertaining to the
-     * {@link #getBundleContext() bundle context} with which this plugin has
-     * been activated. If the plugin has not be activated by calling the
-     * {@link #activate(BundleContext)} method, this method returns
-     * <code>null</code>.
-     *
-     * @return the bundle or <code>null</code> if the plugin is not activated.
-     */
-    private final Bundle getBundle() {
-        final BundleContext bundleContext = getBundleContext();
-        return ( bundleContext != null ) ? bundleContext.getBundle() : null;
-    }
-
-    /**
-     * Calls the <code>ServletContext.log(String)</code> method if the
-     * configured log level is less than or equal to the given <code>level</code>.
-     * <p>
-     * Note, that the <code>level</code> paramter is only used to decide whether
-     * the <code>GenericServlet.log(String)</code> method is called or not. The
-     * actual implementation of the <code>GenericServlet.log</code> method is
-     * outside of the control of this method.
-     * <p>
-     * If the servlet has not been initialized yet or has already been destroyed
-     * the message is printed to stderr.
-     *
-     * @param level The log level at which to log the message
-     * @param message The message to log
-     */
-    public void log(final int level, final String message ) {
-        this.log(level, message, null);
-    }
-
-    /**
-     * Calls the <code>ServletContext.log(String, Throwable)</code> method if
-     * the configured log level is less than or equal to the given
-     * <code>level</code>.
-     * <p>
-     * Note, that the <code>level</code> paramter is only used to decide whether
-     * the <code>GenericServlet.log(String, Throwable)</code> method is called
-     * or not. The actual implementation of the <code>GenericServlet.log</code>
-     * method is outside of the control of this method.
-     *
-     * @param level The log level at which to log the message
-     * @param message The message to log
-     * @param t The <code>Throwable</code> to log with the message
-     */
-    public void log(final int level, final String message, final Throwable t ) {
-        if ( LOGLEVEL >= level ) {
-            final ServletConfig config = getServletConfig();
-            if ( config != null ) {
-                final ServletContext context = config.getServletContext();
-                if ( context != null ) {
-                    if ( t != null ) {
-                        context.log( message, t );
-                    } else {
-                        context.log( message );
-                    }
-                    return;
-                }
-            }
-
-            System.err.println( message );
-            if ( t != null ) {
-                t.printStackTrace( System.err );
-            }
-        }
-    }
-    
     /**
      * Spool the resource
      * @throws IOException If an error occurs accessing or spooling the resource.
@@ -494,20 +420,6 @@ public abstract class AbstractPluginAdapter extends HttpServlet {
         } else {
             AbstractPluginAdapter.BRANDING_PLUGIN = brandingPlugin;
         }
-    }
-
-    /**
-     * Sets the log level to be applied for calls to the {@link #log(int, String)}
-     * and {@link #log(int, String, Throwable)} methods.
-     * <p>
-     * Note: This method is intended to be used internally by the Web Console
-     * to update the log level according to the Web Console configuration.
-     *
-     * @param logLevel the maximum allowed log level. If message is logged with
-     *        lower level it will not be forwarded to the logger.
-     */
-    public static final void setLogLevel( final int logLevel ) {
-        AbstractPluginAdapter.LOGLEVEL = logLevel;
     }
 
     private static final String readTemplateFile( final String templateFile) {

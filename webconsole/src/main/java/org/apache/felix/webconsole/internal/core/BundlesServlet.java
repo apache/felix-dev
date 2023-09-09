@@ -74,7 +74,6 @@ import org.osgi.framework.startlevel.FrameworkStartLevel;
 import org.osgi.framework.wiring.BundleRevision;
 import org.osgi.framework.wiring.FrameworkWiring;
 import org.osgi.service.cm.ConfigurationAdmin;
-import org.osgi.service.log.LogService;
 import org.osgi.service.packageadmin.ExportedPackage;
 import org.osgi.service.packageadmin.PackageAdmin;
 import org.osgi.util.tracker.ServiceTracker;
@@ -91,6 +90,7 @@ import jakarta.servlet.http.Part;
  * the list of bundles, installed on the framework. It also adds ability to control
  * the lifecycle of the bundles, like start, stop, uninstall, install.
  */
+@SuppressWarnings("deprecation")
 public class BundlesServlet extends AbstractOsgiManagerPlugin implements InventoryPrinter {
 
     /** the label of the bundles plugin - used by other plugins to reference to plugin details */
@@ -314,7 +314,7 @@ public class BundlesServlet extends AbstractOsgiManagerPlugin implements Invento
         }
         catch ( Exception e )
         {
-            log( "Problem rendering Bundle details for configuration status", e );
+            Util.LOGGER.error( "Problem rendering Bundle details for configuration status", e );
         }
     }
 
@@ -393,7 +393,7 @@ public class BundlesServlet extends AbstractOsgiManagerPlugin implements Invento
                         bundle.start();
                     } catch ( BundleException be ) {
                         bundleException = be;
-                        log( "Cannot start", be );
+                        Util.LOGGER.error( "Cannot start", be );
                     }
                 } else if ( "stop".equals( action ) ) {
                     // stop bundle
@@ -401,7 +401,7 @@ public class BundlesServlet extends AbstractOsgiManagerPlugin implements Invento
                         bundle.stop();
                     } catch ( BundleException be ) {
                         bundleException = be;
-                        log( "Cannot stop", be );
+                        Util.LOGGER.error( "Cannot stop", be );
                     }
                 } else if ( "refresh".equals( action ) ) {
                     // refresh bundle wiring and give at most 5 seconds to finish
@@ -416,7 +416,7 @@ public class BundlesServlet extends AbstractOsgiManagerPlugin implements Invento
                         bundle.uninstall();
                     } catch ( BundleException be ) {
                         bundleException = be;
-                        log( "Cannot uninstall", be );
+                        Util.LOGGER.error( "Cannot uninstall", be );
                     }
                 }
 
@@ -1035,8 +1035,8 @@ public class BundlesServlet extends AbstractOsgiManagerPlugin implements Invento
                 Object[] val;
                 if ( imports.size() > 0 )
                 {
-                    final List importList = new ArrayList();
-                    for ( Iterator ii = imports.values().iterator(); ii.hasNext(); )
+                    final List<StringBuilder> importList = new ArrayList<>();
+                    for ( Iterator<Clause> ii = imports.values().iterator(); ii.hasNext(); )
                     {
                         Clause r4Import = ( Clause ) ii.next();
                         ExportedPackage ep = ( ExportedPackage ) candidates.get( r4Import.getName() );
@@ -1239,14 +1239,14 @@ public class BundlesServlet extends AbstractOsgiManagerPlugin implements Invento
     }
 
 
-    private Object collectImport(String name, Version version, boolean optional,
+    private StringBuilder collectImport(String name, Version version, boolean optional,
             ExportedPackage export, final String pluginRoot )
     {
         return collectImport( name, ( version == null ) ? null : version.toString(), optional, export, pluginRoot );
     }
 
 
-    private Object collectImport( String name, String version, boolean optional, ExportedPackage export,
+    private StringBuilder collectImport( String name, String version, boolean optional, ExportedPackage export,
             final String pluginRoot )
     {
         StringBuilder val = new StringBuilder();
@@ -1484,8 +1484,7 @@ public class BundlesServlet extends AbstractOsgiManagerPlugin implements Invento
             try {
                 startLevel = Integer.parseInt( startLevelItem );
             } catch ( NumberFormatException nfe ) {
-                log( LogService.LOG_INFO, "Cannot parse start level parameter " + startLevelItem
-                        + " to a number, not setting start level" );
+                Util.LOGGER.info("Cannot parse start level parameter {} to a number, not setting start level", startLevelItem );
             }
         }
 
@@ -1503,7 +1502,7 @@ public class BundlesServlet extends AbstractOsgiManagerPlugin implements Invento
                     IOUtils.copy(bundleStream, out);
                 }
             } catch ( final Exception e ) {
-                log( LogService.LOG_ERROR, "Problem accessing uploaded bundle file: " + part.getSubmittedFileName(), e );
+                Util.LOGGER.error("Problem accessing uploaded bundle file: {}", part.getSubmittedFileName(), e );
 
                 // remove the tmporary file
                 if ( tmpFile != null && tmpFile.exists()) {
@@ -1594,7 +1593,7 @@ public class BundlesServlet extends AbstractOsgiManagerPlugin implements Invento
                 return new AbstractMap.SimpleImmutableEntry<>(sn, v);
             }
         } catch ( final IOException ioe ) {
-            log( LogService.LOG_WARNING, "Cannot extract symbolic name and version of bundle file " + bundleFile, ioe );
+            Util.LOGGER.warn("Cannot extract symbolic name and version of bundle file {}", bundleFile, ioe );
         } finally {
             if ( jar != null ) {
                 try {

@@ -23,19 +23,6 @@ import org.osgi.framework.BundleContext;
 public interface ServletSupport {
 
     /**
-     * Log the message
-     * @param msg a log message
-     */
-    void log(int level, String msg);
-
-    /**
-     * Log the message
-     * @param message a log message
-     * @param t a throwable
-     */
-    void log(int level, String message, Throwable t);
-
-    /**
      * Get the bundle context
      * @return The bundle contect
      */

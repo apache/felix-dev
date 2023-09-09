@@ -27,6 +27,7 @@ import java.util.Map;
 
 
 import org.apache.felix.utils.json.JSONWriter;
+import org.apache.felix.webconsole.internal.Util;
 import org.apache.felix.webconsole.internal.servlet.AbstractOsgiManagerPlugin;
 import org.apache.felix.webconsole.internal.servlet.OsgiManager;
 import org.apache.felix.webconsole.servlet.RequestVariableResolver;
@@ -127,7 +128,7 @@ public class VMStatPlugin extends AbstractOsgiManagerPlugin {
                         // ignore
                     }
 
-                    log( "Shutting down server now!" );
+                    Util.LOGGER.info( "Shutting down server now!" );
 
                     // stopping bundle 0 (system bundle) stops the framework
                     try {
@@ -137,7 +138,7 @@ public class VMStatPlugin extends AbstractOsgiManagerPlugin {
                             systemBundle.stop();
                         }
                     } catch ( BundleException be ) {
-                        log( "Problem stopping or restarting the Framework", be );
+                        Util.LOGGER.error( "Problem stopping or restarting the Framework", be );
                     }
                 }
             };

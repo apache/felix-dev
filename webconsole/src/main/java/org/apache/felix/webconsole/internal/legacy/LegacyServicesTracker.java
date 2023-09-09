@@ -44,7 +44,6 @@ import org.osgi.framework.Filter;
 import org.osgi.framework.InvalidSyntaxException;
 import org.osgi.framework.ServiceReference;
 import org.osgi.framework.ServiceRegistration;
-import org.osgi.service.log.LogService;
 import org.osgi.util.tracker.ServiceTracker;
 import org.osgi.util.tracker.ServiceTrackerCustomizer;
 
@@ -74,7 +73,7 @@ public class LegacyServicesTracker implements Closeable, ServiceTrackerCustomize
         }
         this.servletTracker = new ServiceTracker<>(context, filter, this);
         servletTracker.open();
-        this.securityProviderTracker = new LegacySecurityProviderTracker(pluginHolder, context);
+        this.securityProviderTracker = new LegacySecurityProviderTracker(context);
     }
 
     @Override
@@ -87,8 +86,7 @@ public class LegacyServicesTracker implements Closeable, ServiceTrackerCustomize
     public LegacyServletPlugin addingService( final ServiceReference<Servlet> reference ) {
         final String label = Util.getStringProperty( reference, ServletConstants.PLUGIN_LABEL );
         if ( label != null ) {
-            this.pluginHolder.getOsgiManager().log(LogService.LOG_WARNING,
-                "Legacy webconsole plugin found. Update this to the Jakarta Servlet API: "  + reference);
+            Util.LOGGER.warn("Legacy webconsole plugin found. Update this to the Jakarta Servlet API: {}", Util.toString(reference));
 
             final LegacyServletPlugin plugin = new LegacyServletPlugin(this.pluginHolder, reference, label);
             pluginHolder.addPlugin(plugin);
@@ -142,11 +140,8 @@ public class LegacyServicesTracker implements Closeable, ServiceTrackerCustomize
 
         private final BundleContext bundleContext;
 
-        private final PluginHolder pluginHolder;
-
-        public LegacySecurityProviderTracker(final PluginHolder holder, final BundleContext context ) {
+        public LegacySecurityProviderTracker(final BundleContext context ) {
             this.bundleContext = context;
-            this.pluginHolder = holder;
             this.tracker = new ServiceTracker<>(context, WebConsoleSecurityProvider.class, this);
             tracker.open();
         }
@@ -157,8 +152,7 @@ public class LegacyServicesTracker implements Closeable, ServiceTrackerCustomize
 
         @Override
         public ServiceRegistration<SecurityProvider> addingService( final ServiceReference<WebConsoleSecurityProvider> reference ) {
-            this.pluginHolder.getOsgiManager().log(LogService.LOG_WARNING,
-                "Legacy webconsole plugin found. Update this to the Jakarta Servlet API: "  + reference);
+            Util.LOGGER.warn("Legacy webconsole plugin found. Update this to the Jakarta Servlet API: {}", Util.toString(reference));
             final WebConsoleSecurityProvider provider = this.bundleContext.getService(reference);
             if ( provider != null ) {
                 final SecurityProvider wrapper = provider instanceof WebConsoleSecurityProvider2 

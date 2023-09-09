@@ -29,6 +29,8 @@ import org.osgi.framework.Bundle;
 import org.osgi.framework.Constants;
 import org.osgi.framework.ServiceReference;
 import org.osgi.framework.Version;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
@@ -332,5 +334,13 @@ public class Util {
         } else {
             return value.toString();
         }
-     }
+    }
+
+    public static String toString(final ServiceReference<?> ref) {
+        return "Service " + ref.getProperty(Constants.SERVICE_ID) + "(" + ref + ") from bundle " +
+            ref.getBundle().getSymbolicName() + ":" + ref.getBundle().getVersion() + "(" + ref.getBundle().getBundleId() + ")";
+    }
+
+    /** Logger for the webconsole */
+    public static final Logger LOGGER = LoggerFactory.getLogger("org.apache.felix.webconsole");    
 }

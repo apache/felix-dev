@@ -176,7 +176,7 @@ public class ServicesServlet extends AbstractOsgiManagerPlugin
         }
         catch ( InvalidSyntaxException e )
         {
-            log( "Unable to search for services using filter " + filterStr, e );
+            Util.LOGGER.error( "Unable to search for services using filter {}", filterStr, e );
             // this shouldn't happen
             return null;
         }
@@ -199,7 +199,7 @@ public class ServicesServlet extends AbstractOsgiManagerPlugin
         }
         catch ( InvalidSyntaxException e )
         {
-            log( "Unable to access service reference list.", e );
+            Util.LOGGER.error( "Unable to access service reference list.", e );
         }
 
         // no services or invalid filter syntax (unlikely)

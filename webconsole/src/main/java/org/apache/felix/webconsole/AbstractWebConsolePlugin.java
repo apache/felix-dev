@@ -37,14 +37,13 @@ import java.util.Map;
 import java.util.SortedMap;
 import java.util.TreeMap;
 
-import javax.servlet.ServletConfig;
-import javax.servlet.ServletContext;
 import javax.servlet.ServletException;
 import javax.servlet.ServletRequest;
 import javax.servlet.http.HttpServlet;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 
+import org.apache.felix.webconsole.internal.Util;
 import org.apache.felix.webconsole.internal.servlet.OsgiManager;
 import org.apache.felix.webconsole.servlet.RequestVariableResolver;
 import org.osgi.framework.Bundle;
@@ -139,8 +138,6 @@ public abstract class AbstractWebConsolePlugin extends HttpServlet {
     private BundleContext bundleContext;
 
     private static volatile BrandingPlugin BRANDING_PLUGIN = DefaultBrandingPlugin.getInstance();
-
-    private static volatile int LOGLEVEL;
 
 
     //---------- HttpServlet Overwrites ----------------------------------------
@@ -432,76 +429,35 @@ public abstract class AbstractWebConsolePlugin extends HttpServlet {
         return getResourceMethod;
     }
 
-
     /**
-     * Calls the <code>ServletContext.log(String)</code> method if the
-     * configured log level is less than or equal to the given <code>level</code>.
-     * <p>
-     * Note, that the <code>level</code> paramter is only used to decide whether
-     * the <code>GenericServlet.log(String)</code> method is called or not. The
-     * actual implementation of the <code>GenericServlet.log</code> method is
-     * outside of the control of this method.
-     * <p>
-     * If the servlet has not been initialized yet or has already been destroyed
-     * the message is printed to stderr.
+     * Logs the message in the level
      *
      * @param level The log level at which to log the message
      * @param message The message to log
      */
-    public void log( int level, String message )
-    {
-        if ( LOGLEVEL >= level )
-        {
-            ServletConfig config = getServletConfig();
-            if ( config != null )
-            {
-                ServletContext context = config.getServletContext();
-                if ( context != null )
-                {
-                    context.log( message );
-                    return;
-                }
-            }
-
-            System.err.println( message );
-        }
+    public void log(final int level, final String message ) {
+        log(level, message, null);
     }
 
-
     /**
-     * Calls the <code>ServletContext.log(String, Throwable)</code> method if
-     * the configured log level is less than or equal to the given
-     * <code>level</code>.
-     * <p>
-     * Note, that the <code>level</code> paramter is only used to decide whether
-     * the <code>GenericServlet.log(String, Throwable)</code> method is called
-     * or not. The actual implementation of the <code>GenericServlet.log</code>
-     * method is outside of the control of this method.
+     * Logs the message in the level
      *
      * @param level The log level at which to log the message
      * @param message The message to log
      * @param t The <code>Throwable</code> to log with the message
      */
-    public void log( int level, String message, Throwable t )
-    {
-        if ( LOGLEVEL >= level )
-        {
-            ServletConfig config = getServletConfig();
-            if ( config != null )
-            {
-                ServletContext context = config.getServletContext();
-                if ( context != null )
-                {
-                    context.log( message, t );
-                    return;
-                }
-            }
-
-            System.err.println( message );
-            if ( t != null )
-            {
-                t.printStackTrace( System.err );
-            }
+    public void log(final int level, final String message, final Throwable t ) {
+        final String text = "[".concat(this.getTitle()).concat("] ").concat(message);
+        switch(level) {
+            case LogService.LOG_DEBUG: Util.LOGGER.debug(text, t);
+                                       break;
+            case LogService.LOG_INFO:  Util.LOGGER.info(text, t);
+                                       break;
+            case LogService.LOG_WARNING: Util.LOGGER.warn(text, t);
+                                         break;
+            case LogService.LOG_ERROR: Util.LOGGER.error(text, t);
+                                        break;
+            default: Util.LOGGER.debug(message, t);
         }
     }
     
@@ -884,7 +840,7 @@ public abstract class AbstractWebConsolePlugin extends HttpServlet {
      *        lower level it will not be forwarded to the logger.
      */
     public static final void setLogLevel( final int logLevel ) {
-        AbstractWebConsolePlugin.LOGLEVEL = logLevel;
+        // nothing to do
     }
 
     private final String getHeader() {

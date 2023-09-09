@@ -23,11 +23,11 @@ import java.io.File;
 import java.io.InputStream;
 
 import org.apache.felix.bundlerepository.Reason;
+import org.apache.felix.webconsole.internal.Util;
 import org.apache.felix.webconsole.internal.misc.ServletSupport;
 import org.osgi.framework.Bundle;
 import org.osgi.framework.BundleException;
 import org.osgi.framework.Constants;
-import org.osgi.service.log.LogService;
 import org.osgi.service.obr.RepositoryAdmin;
 import org.osgi.service.obr.Requirement;
 import org.osgi.service.obr.Resolver;
@@ -102,20 +102,16 @@ class UpdateHelper extends BaseUpdateInstallHelper
         return null;
     }
 
-    private boolean updateFromBundleLocation()
-    {
-        getLog().log( LogService.LOG_DEBUG, "Trying to update with Bundle.update()" );
+    private boolean updateFromBundleLocation() {
+        Util.LOGGER.debug("Trying to update with Bundle.update()" );
 
-        try
-        {
+        try {
             bundle.update();
-            getLog().log( LogService.LOG_INFO, "Bundle updated from bundle provided (update) location" );
+            Util.LOGGER.info("Bundle updated from bundle provided (update) location" );
             return true;
-        }
-        catch ( Throwable ioe )
-        {
+        } catch ( Throwable ioe ) {
             // BundleException, IllegalStateException or SecurityException? lets use OBR then
-            getLog().log( LogService.LOG_DEBUG, "Update failure using Bundle.update()", ioe );
+            Util.LOGGER.debug("Update failure using Bundle.update()", ioe );
         }
 
         // not installed from the bundle location
@@ -128,7 +124,7 @@ class UpdateHelper extends BaseUpdateInstallHelper
         org.apache.felix.bundlerepository.RepositoryAdmin ra = ( org.apache.felix.bundlerepository.RepositoryAdmin ) getService( "org.apache.felix.bundlerepository.RepositoryAdmin" );
         if ( ra != null )
         {
-            getLog().log( LogService.LOG_DEBUG, "Trying to update from OSGi Bundle Repository (Apache Felix API)" );
+            Util.LOGGER.debug("Trying to update from OSGi Bundle Repository (Apache Felix API)" );
 
             final org.apache.felix.bundlerepository.Resolver resolver = ra.resolver();
 
@@ -162,20 +158,17 @@ class UpdateHelper extends BaseUpdateInstallHelper
 
                     // deploy the resolved bundles and ensure they are started
                     resolver.deploy( org.apache.felix.bundlerepository.Resolver.START );
-                    getLog().log( LogService.LOG_INFO, "Bundle updated from OSGi Bundle Repository" );
+                    Util.LOGGER.info("Bundle updated from OSGi Bundle Repository" );
 
                     return true;
                 }
             }
             else
             {
-                getLog().log( LogService.LOG_INFO,
-                "Nothing to update, OSGi Bundle Repository does not provide more recent version" );
+                Util.LOGGER.info("Nothing to update, OSGi Bundle Repository does not provide more recent version" );
             }
-        }
-        else
-        {
-            getLog().log( LogService.LOG_DEBUG, "Cannot updated from OSGi Bundle Repository: Service not available" );
+        } else {
+            Util.LOGGER.debug("Cannot updated from OSGi Bundle Repository: Service not available" );
         }
 
         // fallback to false, nothing done
@@ -187,7 +180,7 @@ class UpdateHelper extends BaseUpdateInstallHelper
         RepositoryAdmin ra = ( RepositoryAdmin ) getService( "org.osgi.service.obr.RepositoryAdmin" );
         if ( ra != null )
         {
-            getLog().log( LogService.LOG_DEBUG, "Trying to update from OSGi Bundle Repository (OSGi API)" );
+            Util.LOGGER.debug("Trying to update from OSGi Bundle Repository (OSGi API)" );
 
             final Resolver resolver = ra.resolver();
 
@@ -201,37 +194,28 @@ class UpdateHelper extends BaseUpdateInstallHelper
 
             final Resource[] resources = ra.discoverResources( filter );
             final Resource resource = selectHighestVersion( resources );
-            if ( resource != null )
-            {
+            if ( resource != null ) {
                 resolver.add( resource );
 
-                if ( !resolver.resolve() )
-                {
+                if ( !resolver.resolve() ) {
                     logRequirements( "Cannot updated bundle from OBR due to unsatisfied requirements", resolver
                         .getUnsatisfiedRequirements() );
-                }
-                else
-                {
+                } else {
                     logResource( "Installing Requested Resources", resolver.getAddedResources() );
                     logResource( "Installing Required Resources", resolver.getRequiredResources() );
                     logResource( "Installing Optional Resources", resolver.getOptionalResources() );
 
                     // deploy the resolved bundles and ensure they are started
                     resolver.deploy( true );
-                    getLog().log( LogService.LOG_INFO, "Bundle updated from OSGi Bundle Repository" );
+                    Util.LOGGER.info("Bundle updated from OSGi Bundle Repository" );
 
                     return true;
                 }
+            } else {
+                Util.LOGGER.info("Nothing to update, OSGi Bundle Repository does not provide more recent version" );
             }
-            else
-            {
-                getLog().log( LogService.LOG_INFO,
-                    "Nothing to update, OSGi Bundle Repository does not provide more recent version" );
-            }
-        }
-        else
-        {
-            getLog().log( LogService.LOG_DEBUG, "Cannot updated from OSGi Bundle Repository: Service not available" );
+        } else {
+            Util.LOGGER.debug("Cannot updated from OSGi Bundle Repository: Service not available" );
         }
 
         // fallback to false, nothing done
@@ -272,11 +256,9 @@ class UpdateHelper extends BaseUpdateInstallHelper
     {
         if ( res != null && res.length > 0 )
         {
-            getLog().log( LogService.LOG_INFO, message );
-            for ( int i = 0; i < res.length; i++ )
-            {
-                getLog().log( LogService.LOG_INFO,
-                    "  " + i + ": " + res[i].getSymbolicName() + ", " + res[i].getVersion() );
+            Util.LOGGER.info(message );
+            for ( int i = 0; i < res.length; i++ ) {
+                Util.LOGGER.info("  " + i + ": " + res[i].getSymbolicName() + ", " + res[i].getVersion() );
             }
         }
     }
@@ -284,7 +266,7 @@ class UpdateHelper extends BaseUpdateInstallHelper
 
     private void logRequirements( String message, Reason[] reasons )
     {
-        getLog().log( LogService.LOG_ERROR, message );
+        Util.LOGGER.error( message );
         for ( int i = 0; reasons != null && i < reasons.length; i++ )
         {
             String moreInfo = reasons[i].getRequirement().getComment();
@@ -292,8 +274,7 @@ class UpdateHelper extends BaseUpdateInstallHelper
             {
                 moreInfo = reasons[i].getRequirement().getFilter().toString();
             }
-            getLog().log( LogService.LOG_ERROR,
-                "  " + i + ": " + reasons[i].getRequirement().getName() + " (" + moreInfo + ")" );
+            Util.LOGGER.error("  " + i + ": " + reasons[i].getRequirement().getName() + " (" + moreInfo + ")" );
         }
     }
 
@@ -326,23 +307,18 @@ class UpdateHelper extends BaseUpdateInstallHelper
     }
 
 
-    private void logResource( String message, Resource[] res )
-    {
-        if ( res != null && res.length > 0 )
-        {
-            getLog().log( LogService.LOG_INFO, message );
-            for ( int i = 0; i < res.length; i++ )
-            {
-                getLog().log( LogService.LOG_INFO,
-                    "  " + i + ": " + res[i].getSymbolicName() + ", " + res[i].getVersion() );
+    private void logResource( String message, Resource[] res ) {
+        if ( res != null && res.length > 0 ) {
+            Util.LOGGER.info( message );
+            for ( int i = 0; i < res.length; i++ ) {
+                Util.LOGGER.info("  " + i + ": " + res[i].getSymbolicName() + ", " + res[i].getVersion() );
             }
         }
     }
 
 
-    private void logRequirements( String message, Requirement[] reasons )
-    {
-        getLog().log( LogService.LOG_ERROR, message );
+    private void logRequirements( String message, Requirement[] reasons ) {
+        Util.LOGGER.error( message );
         for ( int i = 0; reasons != null && i < reasons.length; i++ )
         {
             String moreInfo = reasons[i].getComment();
@@ -350,7 +326,7 @@ class UpdateHelper extends BaseUpdateInstallHelper
             {
                 moreInfo = reasons[i].getFilter().toString();
             }
-            getLog().log( LogService.LOG_ERROR, "  " + i + ": " + reasons[i].getName() + " (" + moreInfo + ")" );
+            Util.LOGGER.error( "  " + i + ": " + reasons[i].getName() + " (" + moreInfo + ")" );
         }
     }
 }
