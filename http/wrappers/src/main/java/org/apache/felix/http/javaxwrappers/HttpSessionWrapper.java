@@ -16,6 +16,7 @@
  */
 package org.apache.felix.http.javaxwrappers;
 
+import java.util.Collections;
 import java.util.Enumeration;
 
 import org.jetbrains.annotations.NotNull;
@@ -71,7 +72,7 @@ public class HttpSessionWrapper implements javax.servlet.http.HttpSession {
     @SuppressWarnings("deprecation")
     @Override
     public javax.servlet.http.HttpSessionContext getSessionContext() {
-        return new HttpSessionContextWrapper(session.getSessionContext());
+        throw new UnsupportedOperationException("Deprecated");
     }
 
     @Override
@@ -79,10 +80,9 @@ public class HttpSessionWrapper implements javax.servlet.http.HttpSession {
         return session.getAttribute(name);
     }
 
-    @SuppressWarnings("deprecation")
     @Override
     public Object getValue(String name) {
-        return session.getValue(name);
+        return session.getAttribute(name);
     }
 
     @Override
@@ -90,10 +90,9 @@ public class HttpSessionWrapper implements javax.servlet.http.HttpSession {
         return session.getAttributeNames();
     }
 
-    @SuppressWarnings("deprecation")
     @Override
     public String[] getValueNames() {
-        return session.getValueNames();
+        return Collections.list(session.getAttributeNames()).toArray(new String[0]);
     }
 
     @Override
@@ -101,10 +100,9 @@ public class HttpSessionWrapper implements javax.servlet.http.HttpSession {
         session.setAttribute(name, value);
     }
 
-    @SuppressWarnings("deprecation")
     @Override
     public void putValue(String name, Object value) {
-        session.putValue(name, value);
+        session.setAttribute(name, value);
     }
 
     @Override
@@ -112,10 +110,9 @@ public class HttpSessionWrapper implements javax.servlet.http.HttpSession {
         session.removeAttribute(name);
     }
 
-    @SuppressWarnings("deprecation")
     @Override
     public void removeValue(String name) {
-        session.removeValue(name);
+        session.removeAttribute(name);
     }
 
     @Override

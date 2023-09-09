@@ -305,10 +305,9 @@ public class ServletRequestWrapper implements javax.servlet.ServletRequest {
         return null;
     }
 
-    @SuppressWarnings("deprecation")
     @Override
     public String getRealPath(final String path) {
-        return this.request.getRealPath(path);
+        return this.request.getServletContext().getRealPath(path);
     }
 
     @Override

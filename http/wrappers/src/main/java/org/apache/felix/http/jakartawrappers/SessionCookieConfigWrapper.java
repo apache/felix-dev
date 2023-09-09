@@ -16,6 +16,8 @@
  */
 package org.apache.felix.http.jakartawrappers;
 
+import java.util.Map;
+
 import org.jetbrains.annotations.NotNull;
 
 import jakarta.servlet.SessionCookieConfig;
@@ -103,5 +105,20 @@ public class SessionCookieConfigWrapper implements SessionCookieConfig {
     @Override
     public int getMaxAge() {
         return config.getMaxAge();
+    }
+
+    @Override
+    public String getAttribute(final String name) {
+        throw new UnsupportedOperationException();
+    }
+
+    @Override
+    public Map<String, String> getAttributes() {
+        throw new UnsupportedOperationException();
+    }
+
+    @Override
+    public void setAttribute(final String name, final String value) {
+        throw new UnsupportedOperationException();
     }
 }

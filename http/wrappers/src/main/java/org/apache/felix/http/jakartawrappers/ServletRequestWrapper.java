@@ -53,6 +53,7 @@ import org.jetbrains.annotations.NotNull;
 import jakarta.servlet.AsyncContext;
 import jakarta.servlet.DispatcherType;
 import jakarta.servlet.RequestDispatcher;
+import jakarta.servlet.ServletConnection;
 import jakarta.servlet.ServletContext;
 import jakarta.servlet.ServletInputStream;
 import jakarta.servlet.ServletRequest;
@@ -308,12 +309,6 @@ public class ServletRequestWrapper implements ServletRequest {
         return null;
     }
 
-    @SuppressWarnings("deprecation")
-    @Override
-    public String getRealPath(final String path) {
-        return this.request.getRealPath(path);
-    }
-
     @Override
     public int getRemotePort() {
         return this.request.getRemotePort();
@@ -377,5 +372,20 @@ public class ServletRequestWrapper implements ServletRequest {
         case REQUEST : return DispatcherType.REQUEST;
         }
         return null;
+    }
+
+    @Override
+    public String getProtocolRequestId() {
+        throw new UnsupportedOperationException();
+    }
+
+    @Override
+    public String getRequestId() {
+        throw new UnsupportedOperationException();
+    }
+
+    @Override
+    public ServletConnection getServletConnection() {
+        throw new UnsupportedOperationException();
     }
 }

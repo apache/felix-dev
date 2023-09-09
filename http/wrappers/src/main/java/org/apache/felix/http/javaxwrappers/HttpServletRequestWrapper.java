@@ -178,10 +178,9 @@ public class HttpServletRequestWrapper extends ServletRequestWrapper
         return this.request.isRequestedSessionIdFromURL();
     }
 
-    @SuppressWarnings("deprecation")
     @Override
     public boolean isRequestedSessionIdFromUrl() {
-        return this.request.isRequestedSessionIdFromUrl();
+        return this.request.isRequestedSessionIdFromURL();
     }
 
     @Override

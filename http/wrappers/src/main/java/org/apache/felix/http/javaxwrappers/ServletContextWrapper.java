@@ -133,10 +133,9 @@ public class ServletContextWrapper implements javax.servlet.ServletContext {
         return Collections.emptyEnumeration();
     }
 
-    @SuppressWarnings("deprecation")
     @Override
     public Enumeration<String> getServletNames() {
-        return this.context.getServletNames();
+        return Collections.emptyEnumeration();
     }
 
     @Override
@@ -144,10 +143,9 @@ public class ServletContextWrapper implements javax.servlet.ServletContext {
         this.context.log(msg);
     }
 
-    @SuppressWarnings("deprecation")
     @Override
     public void log(final Exception exception, final String msg) {
-        this.context.log(exception, msg);
+        this.context.log(msg, exception);
     }
 
     @Override
