@@ -24,6 +24,7 @@ import java.io.IOException;
 import java.io.UnsupportedEncodingException;
 import java.lang.reflect.Array;
 import java.net.URLDecoder;
+import java.nio.charset.StandardCharsets;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -38,6 +39,7 @@ import org.apache.commons.fileupload.FileUploadException;
 import org.apache.commons.fileupload.disk.DiskFileItemFactory;
 import org.apache.commons.fileupload.servlet.ServletFileUpload;
 import org.apache.commons.fileupload.servlet.ServletRequestContext;
+import org.apache.felix.webconsole.internal.Util;
 
 
 /**
@@ -325,19 +327,13 @@ public final class WebConsoleUtil
      * @param value the value to decode
      * @return the decoded string
      */
-    public static String urlDecode( final String value )
-    {
+    public static String urlDecode( final String value ) {
         // shortcut for empty or missing values
-        if ( value == null || value.length() == 0 )
-        {
+        if ( value == null || value.length() == 0 ) {
             return value;
         }
 
-        try {
-            return URLDecoder.decode( value, "UTF-8" );
-        } catch (UnsupportedEncodingException e) {
-            return URLDecoder.decode( value );
-        }
+        return URLDecoder.decode(value, StandardCharsets.UTF_8);
     }
 
     /**
@@ -351,35 +347,6 @@ public final class WebConsoleUtil
      * @return the string representation of the value
      */
     public static final String toString(Object value) {
-        if (value == null) {
-            return "n/a";
-        } else if (value.getClass().isArray()) {
-            final StringBuilder sb = new StringBuilder();
-            int len = Array.getLength(value);
-            sb.append('[');
-
-            for(int i = 0; i < len; ++i) {
-                final Object element = Array.get(value, i);
-                if (element instanceof Byte) {
-                    sb.append("0x");
-                    final String x = Integer.toHexString(((Byte)element).intValue() & 255);
-                    if (1 == x.length()) {
-                        sb.append('0');
-                    }
-
-                    sb.append(x);
-                } else {
-                    sb.append(toString(element));
-                }
-
-                if (i < len - 1) {
-                    sb.append(", ");
-                }
-            }
-
-            return sb.append(']').toString();
-        } else {
-            return value.toString();
-        }
+        return Util.toString(value);
      }
 }

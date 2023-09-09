@@ -118,10 +118,10 @@
                         </Export-Package>
                         <!-- Import-Package header is also used for the all bundle -->
                         <Import-Package>
-                            javax.servlet.*;version="[3,5)",
+                            jakarta.servlet.*;version="[5,7)",
                             !javax.portlet,
-                            !jakarta.servlet,
-                            !jakarta.servlet.http,
+                            !javax.servlet,
+                            !javax.servlet.http,
                             !org.apache.felix.http.javaxwrappers,
                             !org.apache.felix.http.jakartawrappers,
                             !org.apache.felix.bundlerepository,
@@ -146,8 +146,8 @@
                             org.osgi.service.permissionadmin;version="[1.2,2)",
                             org.osgi.service.prefs;version="[1.1,2)",
                             org.osgi.service.wireadmin;version="[1.0,2)",
-                            jakarta.servlet;version="[5,7)",
-                            jakarta.servlet.http;version="[5,7)",
+                            javax.servlet;version="[3.1,5)",
+                            javax.servlet.http;version="[3.1,5)",
                             org.apache.felix.http.javaxwrappers;version="[1,2)",
                             org.apache.felix.http.jakartawrappers;version="[1,2)"
                         </DynamicImport-Package>
@@ -368,7 +368,7 @@
         <dependency>
             <groupId>jakarta.servlet</groupId>
             <artifactId>jakarta.servlet-api</artifactId>
-	    <version>${servlet.api}</version>
+            <version>${servlet.api}</version>
             <scope>provided</scope>
         </dependency>
         <dependency>

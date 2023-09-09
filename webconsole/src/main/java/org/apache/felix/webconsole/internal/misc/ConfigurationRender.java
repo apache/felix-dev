@@ -19,11 +19,9 @@ package org.apache.felix.webconsole.internal.misc;
 
 import java.io.PrintWriter;
 
-import org.apache.felix.webconsole.WebConsoleUtil;
+import org.apache.felix.webconsole.internal.Util;
 
-
-public class ConfigurationRender
-{
+public class ConfigurationRender {
 
     /**
      * Renders an info line - element in the framework configuration. The info line will
@@ -41,8 +39,7 @@ public class ConfigurationRender
      */
     public static final void infoLine( PrintWriter pw, String indent, String label, Object value )
     {
-        if ( indent != null )
-        {
+        if ( indent != null ) {
             pw.print( indent );
         }
 
@@ -52,7 +49,7 @@ public class ConfigurationRender
             pw.print( " = " );
         }
 
-        pw.print( WebConsoleUtil.toString( value ) );
+        pw.print( Util.toString( value ) );
 
         pw.println();
     }

@@ -47,7 +47,9 @@ public class BasicWebConsoleSecurityProvider implements SecurityProvider {
     private final BundleContext bundleContext;
 
     public BasicWebConsoleSecurityProvider(final BundleContext bundleContext) {
-        this(bundleContext, null, null);
+        this.bundleContext = bundleContext;
+        this.username = null;
+        this.password = null;
     }
 
     public BasicWebConsoleSecurityProvider(final BundleContext bundleContext, final String username, final String password) {

@@ -18,14 +18,10 @@
  */
 package org.apache.felix.webconsole.internal.servlet;
 
-import java.net.URL;
-import java.util.Collections;
 import java.util.Enumeration;
 import java.util.NoSuchElementException;
 
-import org.apache.felix.http.javaxwrappers.ServletWrapper;
 import org.apache.felix.webconsole.internal.Util;
-import org.apache.felix.webconsole.internal.WebConsolePluginAdapter;
 import org.apache.felix.webconsole.servlet.AbstractServlet;
 import org.apache.felix.webconsole.servlet.ServletConstants;
 import org.osgi.framework.Bundle;
@@ -45,9 +41,9 @@ public class Plugin implements ServletConfig, Comparable<Plugin> {
 
     private final ServiceReference<Servlet> serviceReference; // used for comparing conflicting services
 
-    private final String title;
+    protected volatile String title;
 
-    private final String category;
+    protected volatile String category;
 
     private volatile Servlet consolePlugin;
 
@@ -160,28 +156,14 @@ public class Plugin implements ServletConfig, Comparable<Plugin> {
         return this.getServiceReference().toString();
     }
 
-    protected Servlet getService() {
-        return getHolder().getBundleContext().getService( this.getServiceReference() );
-    }
-
     protected Servlet doGetConsolePlugin() {
-        final Servlet service = getService();
+        final Servlet service = getHolder().getBundleContext().getService( this.getServiceReference() );
         if ( service != null ) {
+            final String[] css = Util.toStringArray( this.getServiceReference().getProperty( ServletConstants.PLUGIN_CSS_REFERENCES ) );
             if ( service instanceof AbstractServlet ) {
-                return new JakartaServletAdapter((AbstractServlet)service, this.getServiceReference());
+                return new EnhancedPluginAdapter((AbstractServlet)service, this.getServiceReference(), this.getLabel(), this.getTitle(), css);
             }
-            final String prefix = "/".concat(this.getLabel());
-            final String resStart = prefix.concat("/res/");
-            return new ServletWrapper(service) {
-
-                @SuppressWarnings("unused")
-                public URL getResource(String path) {
-                    if (path != null && path.startsWith(resStart)) {
-                        return service.getClass().getResource(path.substring(prefix.length()));
-                    }
-                    return null;
-                }
-            };
+            return new SimplePluginAdapter(service, serviceReference, this.getLabel(), this.getTitle(), css);
         }
         return null;
     }

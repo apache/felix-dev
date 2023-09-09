@@ -39,8 +39,6 @@ import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ConcurrentSkipListSet;
 
-import org.apache.felix.webconsole.AbstractWebConsolePlugin;
-import org.apache.felix.webconsole.DefaultVariableResolver;
 import org.apache.felix.webconsole.servlet.User;
 import org.apache.felix.webconsole.internal.OsgiManagerPlugin;
 import org.apache.felix.webconsole.internal.Util;
@@ -589,7 +587,7 @@ public class OsgiManager extends HttpServlet {
         request.setAttribute(ATTR_APP_ROOT_OLD, appRoot);
 
         @SuppressWarnings("deprecation")
-        final RequestVariableResolver resolver = new DefaultVariableResolver();
+        final RequestVariableResolver resolver = new org.apache.felix.webconsole.DefaultVariableResolver();
         request.setAttribute(RequestVariableResolver.REQUEST_ATTRIBUTE, resolver);
         resolver.put( RequestVariableResolver.KEY_APP_ROOT, (String) request.getAttribute( ServletConstants.ATTR_APP_ROOT ) );
         resolver.put( RequestVariableResolver.KEY_PLUGIN_ROOT, (String) request.getAttribute( ServletConstants.ATTR_PLUGIN_ROOT ) );
@@ -731,23 +729,8 @@ public class OsgiManager extends HttpServlet {
      * @param level The log level at which to log the message
      * @param message The message to log
      */
-    void log(int level, String message)
-    {
-        if (logLevel >= level)
-        {
-            ServletConfig config = getServletConfig();
-            if ( config != null )
-            {
-                ServletContext context = config.getServletContext();
-                if ( context != null )
-                {
-                    context.log( message );
-                    return;
-                }
-            }
-
-            System.err.println( message );
-        }
+    public void log(final int level, final String message) {
+        this.log(level, message, null);
     }
 
     /**
@@ -767,37 +750,30 @@ public class OsgiManager extends HttpServlet {
      * @param message The message to log
      * @param t The <code>Throwable</code> to log with the message
      */
-    void log(int level, String message, Throwable t)
-    {
-        if (logLevel >= level)
-        {
-            ServletConfig config = getServletConfig();
-            if ( config != null )
-            {
-                ServletContext context = config.getServletContext();
-                if ( context != null )
-                {
-                    context.log( message, t );
+    public void log(final int level, final String message, final Throwable t) {
+        if (logLevel >= level) {
+            final ServletConfig config = getServletConfig();
+            if ( config != null ) {
+                final ServletContext context = config.getServletContext();
+                if ( context != null ) {
+                    if (t != null) {
+                        context.log( message, t );
+                    } else {
+                        context.log( message );
+                    }
                     return;
                 }
             }
 
             System.err.println( message );
-            if ( t != null )
-            {
+            if ( t != null ) {
                 t.printStackTrace( System.err );
             }
         }
     }
 
-    private HttpServletRequest wrapRequest(final HttpServletRequest request,
-        final Locale locale)
-    {
-        return new HttpServletRequestWrapper(request)
-        {
-            /**
-             * @see javax.servlet.ServletRequestWrapper#getLocale()
-             */
+    private HttpServletRequest wrapRequest(final HttpServletRequest request, final Locale locale) {
+        return new HttpServletRequestWrapper(request)  {
             @Override
             public Locale getLocale()
             {
@@ -836,17 +812,19 @@ public class OsgiManager extends HttpServlet {
             final BrandingPlugin plugin = super.addingService(reference);
             if (plugin != null) {
                 if (plugin instanceof org.apache.felix.webconsole.BrandingPlugin) {
-                    AbstractWebConsolePlugin.setBrandingPlugin((org.apache.felix.webconsole.BrandingPlugin)plugin);
+                    org.apache.felix.webconsole.AbstractWebConsolePlugin.setBrandingPlugin((org.apache.felix.webconsole.BrandingPlugin)plugin);
                 } else {
-                    AbstractWebConsolePlugin.setBrandingPlugin(new BrandingPluginAdapter(plugin));
+                    org.apache.felix.webconsole.AbstractWebConsolePlugin.setBrandingPlugin(new BrandingPluginAdapter(plugin));
                 }
+                AbstractPluginAdapter.setBrandingPlugin(plugin);
             }
             return plugin;
         }
 
         @Override
         public void removedService(final ServiceReference<BrandingPlugin> reference, BrandingPlugin service) {
-            AbstractWebConsolePlugin.setBrandingPlugin(null);
+            org.apache.felix.webconsole.AbstractWebConsolePlugin.setBrandingPlugin(null);
+            AbstractPluginAdapter.setBrandingPlugin(null);
             try {
                 super.removedService(reference, service);
             } catch ( final IllegalStateException ise) {
@@ -1020,8 +998,9 @@ public class OsgiManager extends HttpServlet {
 
         this.logLevel = ConfigurationUtil.getProperty(config, PROP_LOG_LEVEL, DEFAULT_LOG_LEVEL);
         AbstractOsgiManagerPlugin.LOGLEVEL = logLevel;
-        AbstractWebConsolePlugin.setLogLevel(logLevel);
-    
+        org.apache.felix.webconsole.AbstractWebConsolePlugin.setLogLevel(logLevel);
+        AbstractPluginAdapter.setLogLevel(logLevel);
+
         // default plugin page configuration
         holder.setDefaultPluginLabel(ConfigurationUtil.getProperty(config, PROP_DEFAULT_RENDER, DEFAULT_PAGE));
 

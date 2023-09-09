@@ -35,8 +35,6 @@ import java.util.List;
 import java.util.Set;
 import java.util.concurrent.atomic.AtomicReference;
 
-import javax.servlet.Servlet;
-
 import org.apache.felix.webconsole.spi.SecurityProvider;
 import org.junit.Test;
 import org.mockito.Mockito;
@@ -52,6 +50,8 @@ import org.osgi.framework.ServiceReference;
 import org.osgi.framework.ServiceRegistration;
 import org.osgi.service.servlet.context.ServletContextHelper;
 import org.osgi.util.tracker.ServiceTrackerCustomizer;
+
+import jakarta.servlet.Servlet;
 
 public class OsgiManagerTest {
     @Test
@@ -248,7 +248,7 @@ public class OsgiManagerTest {
             .registerService(Mockito.eq(SecurityProvider.class), Mockito.isA(SecurityProvider.class), Mockito.isA(Dictionary.class));
         Mockito.verify(bc, Mockito.times(1))
             .registerService(Mockito.eq(ServletContextHelper.class), Mockito.isA(ServletContextHelper.class), Mockito.isA(Dictionary.class));
-        Mockito.verify(bc, Mockito.times(1))
+        Mockito.verify(bc, Mockito.times(7))
             .registerService(Mockito.eq(Servlet.class), Mockito.isA(Servlet.class), Mockito.isA(Dictionary.class));
 
         mgr.registerHttpWhiteboardServices();
@@ -258,7 +258,7 @@ public class OsgiManagerTest {
             .registerService(Mockito.eq(SecurityProvider.class), Mockito.isA(SecurityProvider.class), Mockito.isA(Dictionary.class));
         Mockito.verify(bc, Mockito.times(1))
             .registerService(Mockito.eq(ServletContextHelper.class), Mockito.isA(ServletContextHelper.class), Mockito.isA(Dictionary.class));
-        Mockito.verify(bc, Mockito.times(1))
+        Mockito.verify(bc, Mockito.times(7))
             .registerService(Mockito.eq(Servlet.class), Mockito.isA(Servlet.class), Mockito.isA(Dictionary.class));
     }
 

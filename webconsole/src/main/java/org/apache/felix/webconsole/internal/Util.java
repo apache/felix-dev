@@ -18,8 +18,11 @@ package org.apache.felix.webconsole.internal;
 
 
 import java.io.IOException;
+import java.lang.reflect.Array;
 import java.util.Arrays;
+import java.util.Collection;
 import java.util.Comparator;
+import java.util.Iterator;
 import java.util.Locale;
 
 import org.osgi.framework.Bundle;
@@ -260,4 +263,74 @@ public class Util {
         }
         response.sendRedirect(redirectUrl);
     }
+
+    @SuppressWarnings("rawtypes")
+    public static String[] toStringArray( final Object value ) {
+        if ( value instanceof String ) {
+            return new String[] { ( String ) value };
+        } else if ( value != null ) {
+            final Collection col;
+            if ( value.getClass().isArray() ) {
+                col = Arrays.asList( ( Object[] ) value );
+            } else if ( value instanceof Collection ) {
+                col = ( Collection ) value;
+            } else {
+                col = null;
+            }
+
+            if ( col != null && !col.isEmpty() ) {
+                final String[] entries = new String[col.size()];
+                int i = 0;
+                for (final Iterator cli = col.iterator(); cli.hasNext(); i++ )  {
+                    entries[i] = String.valueOf( cli.next() );
+                }
+                return entries;
+            }
+        }
+
+        return null;
+    }
+
+    /**
+     * This method will stringify a Java object. It is mostly used to print the values
+     * of unknown properties. This method will correctly handle if the passed object
+     * is array and will property display it.
+     *
+     * If the value is byte[] the elements are shown as Hex
+     *
+     * @param value the value to convert
+     * @return the string representation of the value
+     */
+    public static final String toString(Object value) {
+        if (value == null) {
+            return "n/a";
+        } else if (value.getClass().isArray()) {
+            final StringBuilder sb = new StringBuilder();
+            int len = Array.getLength(value);
+            sb.append('[');
+
+            for(int i = 0; i < len; ++i) {
+                final Object element = Array.get(value, i);
+                if (element instanceof Byte) {
+                    sb.append("0x");
+                    final String x = Integer.toHexString(((Byte)element).intValue() & 255);
+                    if (1 == x.length()) {
+                        sb.append('0');
+                    }
+
+                    sb.append(x);
+                } else {
+                    sb.append(toString(element));
+                }
+
+                if (i < len - 1) {
+                    sb.append(", ");
+                }
+            }
+
+            return sb.append(']').toString();
+        } else {
+            return value.toString();
+        }
+     }
 }

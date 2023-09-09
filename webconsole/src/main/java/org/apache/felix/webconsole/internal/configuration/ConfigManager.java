@@ -361,9 +361,6 @@ public class ConfigManager extends AbstractOsgiManagerPlugin {
         super.doGet( request, response );
     }
 
-    /**
-     * @see org.apache.felix.webconsole.AbstractWebConsolePlugin#renderContent(javax.servlet.http.HttpServletRequest, javax.servlet.http.HttpServletResponse)
-     */
     @Override
     public void renderContent( HttpServletRequest request, HttpServletResponse response ) throws IOException
     {

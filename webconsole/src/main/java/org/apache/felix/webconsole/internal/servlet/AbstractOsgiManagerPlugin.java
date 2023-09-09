@@ -41,9 +41,6 @@ public abstract class AbstractOsgiManagerPlugin extends AbstractServlet implemen
     /**
      * The name of the request attribute providing a mapping of labels to page
      * titles of registered console plugins (value is "felix.webconsole.labelMap").
-     * This map may be used to render a navigation of the console plugins as the
-     * {@link AbstractWebConsolePlugin#renderTopNavigation(javax.servlet.http.HttpServletRequest, java.io.PrintWriter)}
-     * method does.
      * <p>
      * The type of this request attribute is <code>Map&lt;String, String&gt;</code>.
      */

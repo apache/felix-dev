@@ -51,6 +51,7 @@ final class OsgiManagerHttpContext extends ServletContextHelper {
     }
 
     @Override
+    @SuppressWarnings("deprecation")
     public boolean handleSecurity( final HttpServletRequest r, final HttpServletResponse response ) {
         final SecurityProvider provider = tracker.getService();
 

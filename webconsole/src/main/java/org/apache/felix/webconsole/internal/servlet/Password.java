@@ -34,8 +34,7 @@ import java.security.SecureRandom;
  * the password and <i>password</i> is the password
  * hashed with the indicated hash algorithm.
  */
-class Password
-{
+class Password {
 
     // the default hash algorithm (part of the Java Platform since 1.4)
     private static final String DEFAULT_HASH_ALGO = "SHA-256";
@@ -55,7 +54,6 @@ class Password
     // the hashed or plain password
     private final String password;
 
-
     /**
      * Returns {@code true} if the given {@code textPassword} is hashed
      * and encoded as described in the class comment.
@@ -64,11 +62,9 @@ class Password
      * @return
      * @throws NullPointerException if {@code textPassword} is {@code null}.
      */
-    static boolean isPasswordHashed( final String textPassword )
-    {
+    static boolean isPasswordHashed( final String textPassword ) {
         return getEndOfHashAlgorithm( textPassword ) >= 0;
     }
-
 
     /**
      * Returns the given plain {@code textPassword} as an encoded hashed
@@ -78,14 +74,12 @@ class Password
      * @return
      * @throws NullPointerException if {@code textPassword} is {@code null}.
      */
-    static String hashPassword( final String textPassword )
-    {
+    static String hashPassword( final String textPassword ) {
         String salt = generateSalt(DEFAULT_SALT_SIZE);
         return hashPassword( DEFAULT_HASH_ALGO, DEFAULT_ITERATIONS, salt, textPassword  );
     }
 
-    Password( String textPassword )
-    {
+    Password( final String textPassword ) {
         this.hashAlgo = getPasswordHashAlgorithm( textPassword );
         this.password = getPassword(textPassword);
     }
@@ -100,15 +94,12 @@ class Password
      * @return
      * @throws NullPointerException if {@code toCompare} is {@code null}.
      */
-    boolean matches( final byte[] toCompare )
-    {
-        if (this.hashAlgo != null) 
-        {
+    boolean matches( final byte[] toCompare ) {
+        if (this.hashAlgo != null)  {
             int startPos = 0;
             String salt = extractSalt(this.password, startPos);
             int iterations = NO_ITERATIONS;
-            if (salt != null) 
-            {
+            if (salt != null) {
                 startPos += salt.length()+1;
                 iterations = extractIterations(this.password, startPos);
                
@@ -122,8 +113,7 @@ class Password
         
     }
     
-    private static String hashPassword( final String hashAlgorithm, final int iterations, final  String salt, final String password )
-    {
+    private static String hashPassword( final String hashAlgorithm, final int iterations, final  String salt, final String password ) {
         
         final StringBuilder buf = new StringBuilder();
         buf.append( '{' ).append( hashAlgorithm.toLowerCase() ).append( '}' );
@@ -143,11 +133,9 @@ class Password
         return buf.toString();
     }
 
-    private static String getPasswordHashAlgorithm( final String textPassword )
-    {
+    private static String getPasswordHashAlgorithm( final String textPassword ) {
         final int endHash = getEndOfHashAlgorithm( textPassword );
-        if ( endHash >= 0 )
-        {
+        if ( endHash >= 0 ) {
             return textPassword.substring( 1, endHash );
         }
 
@@ -155,11 +143,9 @@ class Password
         return null;
     }
 
-    private static String getPassword( final String textPassword )
-    {
+    private static String getPassword( final String textPassword ) {
         final int endHash = getEndOfHashAlgorithm( textPassword );
-        if ( endHash >= 0 )
-        {
+        if ( endHash >= 0 ) {
             final String encodedPassword = textPassword.substring( endHash + 1 );
             return  encodedPassword;
         }
@@ -168,13 +154,10 @@ class Password
     }
 
 
-    private static int getEndOfHashAlgorithm( final String textPassword )
-    {
-        if ( textPassword.startsWith( "{" ) )
-        {
+    private static int getEndOfHashAlgorithm( final String textPassword ) {
+        if ( textPassword.startsWith( "{" ) ) {
             final int endHash = textPassword.indexOf( "}" );
-            if ( endHash > 0 )
-            {
+            if ( endHash > 0 ) {
                 return endHash;
             }
         }
@@ -182,82 +165,63 @@ class Password
         return -1;
     }
 
-    private static byte[] hashPassword( final String pwd, final String salt, final int iterations, final String hashAlg )
-    {
-        try
-        {
-            StringBuilder data = new StringBuilder();
-            if (salt != null) 
-            {
+    private static byte[] hashPassword( final String pwd, final String salt, final int iterations, final String hashAlg ) {
+        try {
+            final StringBuilder data = new StringBuilder();
+            if (salt != null) {
                 data.append(salt);
             }
             data.append(pwd);
             byte[] bytes =  Base64.getBytesUtf8( data.toString());
             final MessageDigest md = MessageDigest.getInstance( hashAlg );
-            for (int i = 0; i < iterations; i++) 
-            {
+            for (int i = 0; i < iterations; i++) {
                 md.reset();
                 bytes = md.digest(bytes);
             }
             return bytes;
-        }
-        catch ( NoSuchAlgorithmException e )
-        {
+        } catch ( final NoSuchAlgorithmException e ) {
             throw new IllegalStateException( "Cannot hash the password: " + e );
         }
     }
     
-    private static boolean compareSecure( final String a,final String b ) 
-    {
+    private static boolean compareSecure( final String a, final String b ) {
         int len = a.length();
-        if (len != b.length()) 
-        {
+        if (len != b.length()) {
             return false;
         }
-        if (len == 0) 
-        {
+        if (len == 0) {
             return true;
         }
         // don't use conditional operations inside the loop
         int bits = 0;
-        for (int i = 0; i < len; i++) 
-        {
+        for (int i = 0; i < len; i++) {
             // this will never reset any bits
             bits |= a.charAt(i) ^ b.charAt(i);
         }
         return bits == 0;
     }
     
-    private static String generateSalt( final  int saltSize ) 
-    {
-        SecureRandom random = new SecureRandom();
-        byte[] salt = new byte[saltSize];
+    private static String generateSalt( final  int saltSize ) {
+        final SecureRandom random = new SecureRandom();
+        final byte[] salt = new byte[saltSize];
         random.nextBytes(salt);
         return toHex(salt);
     }
     
-    private static String toHex( final byte[] array )
-    {
-        BigInteger bi = new BigInteger(1, array);
-        String hex = bi.toString(16);
-        int paddingLength = (array.length * 2) - hex.length();
-        if(paddingLength > 0) 
-        {
+    private static String toHex( final byte[] array ) {
+        final BigInteger bi = new BigInteger(1, array);
+        final String hex = bi.toString(16);
+        final int paddingLength = (array.length * 2) - hex.length();
+        if (paddingLength > 0) {
             return String.format("%0" + paddingLength + "d", 0) + hex;
-        }
-        else 
-        {
-            return hex;
-        }
+        } 
+        return hex;
     }
     
-    private static String extractSalt( final String hashedPwd, final int start ) 
-    {
-        if (hashedPwd != null) 
-        {
-            int end = hashedPwd.indexOf(DELIMITER, start);
-            if (end > -1) 
-            {
+    private static String extractSalt( final String hashedPwd, final int start ) {
+        if (hashedPwd != null) {
+            final int end = hashedPwd.indexOf(DELIMITER, start);
+            if (end > -1) {
                 return hashedPwd.substring(start, end);
             }
         }
@@ -265,19 +229,14 @@ class Password
         return null;
     }
     
-    private static int extractIterations( final String hashedPwd, int start ) 
-    {
-        if (hashedPwd != null) 
-        {
-            int end = hashedPwd.indexOf(DELIMITER, start);
-            if (end > -1) 
-            {
-                String str = hashedPwd.substring(start, end);
-                try 
-                {
+    private static int extractIterations( final String hashedPwd, final int start ) {
+        if (hashedPwd != null)  {
+            final int end = hashedPwd.indexOf(DELIMITER, start);
+            if (end > -1) {
+                final String str = hashedPwd.substring(start, end);
+                try {
                     return Integer.parseInt(str);
-                } catch (NumberFormatException e) 
-                {
+                } catch (NumberFormatException e) {
                     //nothing to do
                 }
             }
@@ -285,5 +244,4 @@ class Password
         // no extra iterations
         return NO_ITERATIONS;
     }
-
 }

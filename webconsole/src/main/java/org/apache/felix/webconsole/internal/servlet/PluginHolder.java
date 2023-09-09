@@ -135,10 +135,10 @@ public class PluginHolder implements ServiceTrackerCustomizer<Servlet, Plugin> {
         this.servletTracker.open();
         try {
             this.legacyTracker = new LegacyServicesTracker(this, this.getBundleContext());
-            this.osgiManager.log(LogService.LOG_INFO, "Servlet 2/3 bridge enabled");
+            this.osgiManager.log(LogService.LOG_INFO, "Servlet 3 bridge enabled");
         } catch ( final Throwable t) {
             // ignore
-            this.osgiManager.log(LogService.LOG_INFO, "Servlet 2/3 bridge not enabled");
+            this.osgiManager.log(LogService.LOG_INFO, "Servlet 3 bridge not enabled");
         }
     }
 
@@ -165,6 +165,10 @@ public class PluginHolder implements ServiceTrackerCustomizer<Servlet, Plugin> {
         this.plugins.clear();
         this.servletContext = null;
         this.defaultPluginLabel = null;
+    }
+
+    public OsgiManager getOsgiManager() {
+        return this.osgiManager;
     }
 
     /**
@@ -307,7 +311,7 @@ public class PluginHolder implements ServiceTrackerCustomizer<Servlet, Plugin> {
      * Returns the bundle context of the Web Console itself.
      * @return the bundle context of the Web Console itself.
      */
-    BundleContext getBundleContext() {
+    public BundleContext getBundleContext() {
         return bundleContext;
     }
 
@@ -366,7 +370,7 @@ public class PluginHolder implements ServiceTrackerCustomizer<Servlet, Plugin> {
         removePlugin( plugin );
     }
 
-    void addPlugin( final Plugin plugin ) {
+    public void addPlugin( final Plugin plugin ) {
         synchronized ( plugins ) {
             final List<Plugin> list = plugins.computeIfAbsent(plugin.getLabel(), k -> new ArrayList<>());
             final Plugin oldPlugin = list.isEmpty() ? null : list.get(0);
@@ -391,7 +395,7 @@ public class PluginHolder implements ServiceTrackerCustomizer<Servlet, Plugin> {
         }
     }
 
-    void removePlugin( final Plugin plugin ) {
+    public void removePlugin( final Plugin plugin ) {
         synchronized ( plugins ) {
             final List<Plugin> list = plugins.get( plugin.getLabel() );
             if ( list != null ) {

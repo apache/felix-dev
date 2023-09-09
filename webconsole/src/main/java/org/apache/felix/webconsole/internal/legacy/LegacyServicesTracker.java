@@ -20,25 +20,22 @@ package org.apache.felix.webconsole.internal.legacy;
 
 
 import java.io.Closeable;
-import java.net.URL;
 import java.util.Dictionary;
 import java.util.Hashtable;
 
 import javax.servlet.Servlet;
 
+import org.apache.felix.http.jakartawrappers.ServletWrapper;
 import org.apache.felix.http.javaxwrappers.HttpServletRequestWrapper;
 import org.apache.felix.http.javaxwrappers.HttpServletResponseWrapper;
-import org.apache.felix.http.javaxwrappers.ServletWrapper;
-import org.apache.felix.webconsole.WebConsoleConstants;
+import org.apache.felix.webconsole.AbstractWebConsolePlugin;
 import org.apache.felix.webconsole.WebConsoleSecurityProvider;
 import org.apache.felix.webconsole.WebConsoleSecurityProvider2;
 import org.apache.felix.webconsole.WebConsoleSecurityProvider3;
 import org.apache.felix.webconsole.internal.Util;
 import org.apache.felix.webconsole.internal.servlet.BasicWebConsoleSecurityProvider;
-import org.apache.felix.webconsole.internal.servlet.OsgiManager;
 import org.apache.felix.webconsole.internal.servlet.Plugin;
 import org.apache.felix.webconsole.internal.servlet.PluginHolder;
-import org.apache.felix.webconsole.servlet.AbstractServlet;
 import org.apache.felix.webconsole.servlet.ServletConstants;
 import org.apache.felix.webconsole.spi.SecurityProvider;
 import org.osgi.framework.BundleContext;
@@ -47,16 +44,17 @@ import org.osgi.framework.Filter;
 import org.osgi.framework.InvalidSyntaxException;
 import org.osgi.framework.ServiceReference;
 import org.osgi.framework.ServiceRegistration;
+import org.osgi.service.log.LogService;
 import org.osgi.util.tracker.ServiceTracker;
 import org.osgi.util.tracker.ServiceTrackerCustomizer;
 
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 
+@SuppressWarnings("deprecation")
+public class LegacyServicesTracker implements Closeable, ServiceTrackerCustomizer<Servlet, LegacyServicesTracker.LegacyServletPlugin> {
 
-public class LegacyServicesTracker implements Closeable, ServiceTrackerCustomizer<Servlet, LegacyServicesTracker.JakartaServletPlugin> {
-
-    private final ServiceTracker<Servlet, JakartaServletPlugin> servletTracker;
+    private final ServiceTracker<Servlet, LegacyServletPlugin> servletTracker;
 
     private final PluginHolder pluginHolder;
 
@@ -76,7 +74,7 @@ public class LegacyServicesTracker implements Closeable, ServiceTrackerCustomize
         }
         this.servletTracker = new ServiceTracker<>(context, filter, this);
         servletTracker.open();
-        this.securityProviderTracker = new LegacySecurityProviderTracker(context);
+        this.securityProviderTracker = new LegacySecurityProviderTracker(pluginHolder, context);
     }
 
     @Override
@@ -86,10 +84,13 @@ public class LegacyServicesTracker implements Closeable, ServiceTrackerCustomize
     }
 
     @Override
-    public JakartaServletPlugin addingService( final ServiceReference<Servlet> reference ) {
-        final String label = Util.getStringProperty( reference, WebConsoleConstants.PLUGIN_LABEL );
+    public LegacyServletPlugin addingService( final ServiceReference<Servlet> reference ) {
+        final String label = Util.getStringProperty( reference, ServletConstants.PLUGIN_LABEL );
         if ( label != null ) {
-            final JakartaServletPlugin plugin = new JakartaServletPlugin(this.pluginHolder, reference, label);
+            this.pluginHolder.getOsgiManager().log(LogService.LOG_WARNING,
+                "Legacy webconsole plugin found. Update this to the Jakarta Servlet API: "  + reference);
+
+            final LegacyServletPlugin plugin = new LegacyServletPlugin(this.pluginHolder, reference, label);
             pluginHolder.addPlugin(plugin);
             return plugin;
         }
@@ -97,56 +98,55 @@ public class LegacyServicesTracker implements Closeable, ServiceTrackerCustomize
     }
 
     @Override
-    public void modifiedService( final ServiceReference<Servlet> reference, final JakartaServletPlugin service ) {
+    public void modifiedService( final ServiceReference<Servlet> reference, final LegacyServletPlugin service ) {
         this.removedService(reference, service);
         this.addingService(reference);
     }
 
     @Override
-    public void removedService( final ServiceReference<Servlet> reference, final JakartaServletPlugin service ) {
+    public void removedService( final ServiceReference<Servlet> reference, final LegacyServletPlugin service ) {
         this.pluginHolder.removePlugin(service);
     }
 
-    public static class JakartaServletPlugin extends Plugin {
+    public static class LegacyServletPlugin extends Plugin {
             
-        @SuppressWarnings({"unchecked", "rawtypes"})
-        public JakartaServletPlugin(PluginHolder holder, ServiceReference<jakarta.servlet.Servlet> serviceReference,
-                String label) {
+        @SuppressWarnings({ "rawtypes", "unchecked"})
+        public LegacyServletPlugin(final PluginHolder holder, final ServiceReference<Servlet> serviceReference, final String label) {
             super(holder, (ServiceReference)serviceReference, label);
         }
 
-        protected jakarta.servlet.Servlet getService() {
-            final Servlet servlet = (Servlet) getHolder().getBundleContext().getService( (ServiceReference)this.getServiceReference() );
+        @SuppressWarnings({ "rawtypes", "unchecked"})
+        @Override
+        protected jakarta.servlet.Servlet doGetConsolePlugin() {
+            Servlet servlet = (Servlet) getHolder().getBundleContext().getService( (ServiceReference)this.getServiceReference() );
             if (servlet != null) {
-                if ( servlet instanceof AbstractServlet ) {
-                    return new JakartaServletAdapter((AbstractServlet)servlet, this.getServiceReference());
-                }
-                final String prefix = "/".concat(this.getLabel());
-                final String resStart = prefix.concat("/res/");
-                return new ServletWrapper(servlet) {
-
-                    @SuppressWarnings("unused")
-                    public URL getResource(String path) {
-                        if (path != null && path.startsWith(resStart)) {
-                            return servlet.getClass().getResource(path.substring(prefix.length()));
-                        }
-                        return null;
+                if ( servlet instanceof AbstractWebConsolePlugin ) {
+                    if (this.title == null) {
+                        this.title = ((AbstractWebConsolePlugin)servlet).getTitle();
                     }
-                };
+                    if (this.category == null) {
+                        this.category = ((AbstractWebConsolePlugin)servlet).getCategory();
+                    }
+                } else {
+                    servlet = new WebConsolePluginAdapter(getLabel(), servlet, (ServiceReference)this.getServiceReference());
+                }
+                return new ServletWrapper(servlet);
             }
             return null;
         }
     }
 
-    @SuppressWarnings("deprecation")
     public static class LegacySecurityProviderTracker implements ServiceTrackerCustomizer<WebConsoleSecurityProvider, ServiceRegistration<SecurityProvider>> {
 
         private final ServiceTracker<WebConsoleSecurityProvider, ServiceRegistration<SecurityProvider>> tracker;
 
         private final BundleContext bundleContext;
 
-        public LegacySecurityProviderTracker( final BundleContext context ) {
+        private final PluginHolder pluginHolder;
+
+        public LegacySecurityProviderTracker(final PluginHolder holder, final BundleContext context ) {
             this.bundleContext = context;
+            this.pluginHolder = holder;
             this.tracker = new ServiceTracker<>(context, WebConsoleSecurityProvider.class, this);
             tracker.open();
         }
@@ -157,6 +157,8 @@ public class LegacyServicesTracker implements Closeable, ServiceTrackerCustomize
 
         @Override
         public ServiceRegistration<SecurityProvider> addingService( final ServiceReference<WebConsoleSecurityProvider> reference ) {
+            this.pluginHolder.getOsgiManager().log(LogService.LOG_WARNING,
+                "Legacy webconsole plugin found. Update this to the Jakarta Servlet API: "  + reference);
             final WebConsoleSecurityProvider provider = this.bundleContext.getService(reference);
             if ( provider != null ) {
                 final SecurityProvider wrapper = provider instanceof WebConsoleSecurityProvider2 
@@ -178,8 +180,8 @@ public class LegacyServicesTracker implements Closeable, ServiceTrackerCustomize
                 if (reference.getProperty(Constants.SERVICE_RANKING) != null) {
                     props.put(Constants.SERVICE_RANKING, reference.getProperty(Constants.SERVICE_RANKING));
                 }
-                if (reference.getProperty(OsgiManager.SECURITY_PROVIDER_PROPERTY_NAME) != null) {
-                    props.put(OsgiManager.SECURITY_PROVIDER_PROPERTY_NAME, reference.getProperty(OsgiManager.SECURITY_PROVIDER_PROPERTY_NAME));
+                if (reference.getProperty(SecurityProvider.PROPERTY_ID) != null) {
+                    props.put(SecurityProvider.PROPERTY_ID, reference.getProperty(SecurityProvider.PROPERTY_ID));
                 }
                 return reference.getBundle().getBundleContext().registerService(SecurityProvider.class, wrapper, props);
             }
@@ -202,7 +204,6 @@ public class LegacyServicesTracker implements Closeable, ServiceTrackerCustomize
         }
     }
 
-    @SuppressWarnings("deprecation")
     public static class SecurityProviderWrapper implements SecurityProvider {
             
         private final WebConsoleSecurityProvider provider;
