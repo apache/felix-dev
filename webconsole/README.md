@@ -14,19 +14,101 @@ The required dependencies are:
 - OWASP Encoder 1.2 (or higher)
 - [Apache Felix Inventory](https://felix.apache.org/documentation/subprojects/apache-felix-inventory.html) 2.0.0 (or higher)
 
-The web console includes some plugins which will be enabled if additional dependencies are satisfied:
-
-- OSGi Log Service : A plugin to show the logging output
-- OSGi Configuration Admin Service and OSGi Metatype Service : The Configuration Admin and Metatype services are used to support simple form based configuration administration
-
 ## Installation
 
 The installation of the web console is straight forward. Provide an OSGi Framework with the mentioned required dependenices and install the bundle.
 
+## Configuration
+
+The Web Console can be configured via framework properties as well as via a configuration through the OSGi Configuration Admin Service. The framework properties can be used in case your runtime does not provide a OSGi Configuration Admin Service.
+
+### OSGi Configuration Admin
+
+The Web Console can be configurated through a configuration using the service PID `org.apache.felix.webconsole.internal.servlet.OsgiManager`. This configuration supports the following properties:
+
+| Property | Default Value | Description |
+|---|---|---|
+| `manager.root`| `/system/console`| The root path to the OSGi Management Console. |
+| `default.render` | `bundles`| The name of the default configuration page  when invoking the OSGi Management console. |
+| `realm` | `OSGi Management Console` | The name of the HTTP Authentication Realm. |
+| `username` | `admin` | The name of the user allowed to access the OSGi Management Console. To disable authentication clear this value. |
+| `password` | `admin` | The password for the user allowed to access the OSGi Management Console. |
+| `plugins` | all plugins enabled | The labels of the plugins enabled and displayed. |
+| `locale` | -- | If set, this locale forces the localization to use this locale instead of the one requested by the web browser. |
+| `http.service.filter` | -- | OSGi filter used to select the Http Service to which the Web Console binds. The value of this property (if not empty) is combined with the object class selection term to get the actual service selection filter like `(&(objectClass=org.osgi.service.http.HttpService)(filter))`. This property must not have leading or ending parentheses. For example, to bind to the service with service ID 15 set the property to `service.id=15`. By default (if this property is not set or set to an empty string) the Web Console binds with any Http Service available. |
+
+### Framework Properties
+
+Some of the configuration properties supported through the OSGi Configuration Admin service can also be set globally and statically as framework properties.
+Such framework properties will also be considered actual default values for missing properties in Configuration Admin configuration as well as for the Metatype descriptor.
+
+| Framework Property | Configuration Admin Property |
+|---|---|
+| `felix.webconsole.manager.root` | `manager.root` |
+| `felix.webconsole.realm` | `realm` |
+| `felix.webconsole.username` | `username` |
+| `felix.webconsole.password` | `password` |
+| `felix.webconsole.locale` | `locale` |
+
+Please note that setting any of these properties as framework property makes them visible to all bundles deployed. This is particularly to be considered in case of the `felix.webconsole.password` property (as for authentication, the use of a [Web Console Security Provider](https://felix.apache.org/subprojects/apache-felix-web-console/web-console-security-provider) is suggested anyway).
+
+## Security
+
+The Web Console only has very basic security at the moment supporting only HTTP Basic authentication. This security is enabled by default and may be disabled by simply clearing the `username` property.
+
+To enhance the security of the Web Console you are strongly encouraged to change at least the `password` for the admin user.
+
+As of Web Console 3.1.0 this simple user setup can be extended by providing link:{{ refs.web-console-security-provider.adoc[Web Console Security Provider].
+See that page for more information.
+
+## Extending the Web Console
+
+The Web Console can be extended by registering an OSGi service for the interface `jakarta.servlet.Servlet` with the service property `felix.webconsole.label` set to the label (last segment in the URL) of the page and `felix.webconsole.title` set to the display title of the plugin. The respective service is called a Web Console Plugin or a plugin for short.
+
+Please refer to [Extending the Apache Felix Web Console](https://felix.apache.org/subprojects/apache-felix-web-console/extending-the-apache-felix-web-console) for full documentation on extending the Web Console.
+
+## RESTful API
+
+While the Web Console does not have a full featured and documented REST-ful API, most plugins try to follow REST approaches. For example the bundles plugin is able to send information on all bundles or a single bundle.
+
+An attempt is made to document the current state of REST-like APIs at link [Web Console RESTful API](https://felix.apache.org/subprojects/apache-felix-web-console/web-console-restful-api).
+
+## Issues
+
+Should you have any questions using the Web Console, please send a note to one of our [Mailing Lists](https://felix.apache.org/documentation/community/project-info.html#_mailing_lists).
+
+Please report any issues with the Web Console in our [issue tracking system](https://issues.apache.org/jira/browse/Felix) and be sure to report for the _Web Console_ component. See our [Issue Tracking](https://felix.apache.org/documentation/community/project-info.html#_issue_tracking) page for more details.
 
 ## Plugins
 
+The web console includes some plugins which will be enabled if additional dependencies are satisfied:
+
+- OSGi Log Service : A plugin to show the logging output
+
 Additional plugins can be found in the [plugins directory](https://github.com/apache/felix-dev/tree/master/webconsole-plugins).
+
+### OSGi Configuration Admin Service
+
+If an OSGi Configuration Admin Service is available at runtime, the Configuration Manager plugin can be used to manage OSGi configurations. For human readbable configuration descriptions it is advisable to also install an OSGi Metatype service.
+
+The Configuration Manager is available via `+http://localhost:8888/system/console/configMgr+`. It display all configurable OSGi services.
+
+#### Configuration Factories
+
+The Configuration Manager has special support for configuration factories by allowing to add new items via the "plus" buttons or editing or removing existing ones.
+
+By default for each confguration factory item a unique ID is displayed, which is quite cryptic, for example: `org.apache.felix.jaas.Configuration.factory.18a6be2a-3173-4120-8f56-77fabff7b7ea`. The developer of the service using a configuration factory can define a special `name hint` configuration propery which defines a name template that is used to build the configuration factory item name when displayed in the Configuration Manager. The name of this property is `webconsole.configurationFactory.nameHint`. It allows referencing other service property names as placeholders by enclosing in brackets.
+
+Example:
+
+```
+webconsole.configurationFactory.nameHint = "{jaas.realmName}, {jaas.classname}"
+jaas.realmName = "myRealm"
+jaas.classname = "myClass"
+```
+
+In this case the Configuration Manager displays the name "myRealm, myClass" as display name for the configuration entry which is much more human-readable than the cryptic name. The Configuration Manager will not display the property `webconsole.configurationFactory.nameHint` as a configuration property.
+
 
 ## Releases
 
