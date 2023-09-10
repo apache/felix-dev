@@ -38,15 +38,8 @@
     </description>
     
     <properties>
-        <webconsole.exports>
-            org.apache.felix.webconsole;provide:=true,
-            org.apache.felix.webconsole.bundleinfo;provide:=true,
-            org.apache.felix.webconsole.i18n;provide:=true,
-            org.apache.felix.webconsole.servlet,
-            org.apache.felix.webconsole.spi
-	</webconsole.exports>
-	<servlet.api>5.0.0</servlet.api>
-	<felix.java.version>11</felix.java.version>
+        <servlet.api>5.0.0</servlet.api>
+        <felix.java.version>11</felix.java.version>
     </properties>
 
     <scm>
@@ -108,15 +101,11 @@
                             The Apache Software Foundation
                         </Bundle-Vendor>
                         <Bundle-DocURL>
-                            http://felix.apache.org/site/apache-felix-web-console.html
+                            https://felix.apache.org/site/apache-felix-web-console.html
                         </Bundle-DocURL>
                         <Bundle-Activator>
                             org.apache.felix.webconsole.internal.OsgiManagerActivator
                         </Bundle-Activator>
-                        <Export-Package>
-                            ${webconsole.exports}
-                        </Export-Package>
-                        <!-- Import-Package header is also used for the all bundle -->
                         <Import-Package>
                             jakarta.servlet.*;version="[5,7)",
                             !javax.portlet,
@@ -135,7 +124,6 @@
                             !org.osgi.service.wireadmin,
                             *
                         </Import-Package>
-                        <!-- DynamicImport-Package header is also used for the all bundle -->
                         <DynamicImport-Package>
                             org.apache.felix.bundlerepository;version="[2.0,3)",
                             org.osgi.service.obr;version="[1.0,2)",
@@ -198,158 +186,11 @@
                         <exclude>src/main/resources/res/lib/themes/**</exclude>
                         <exclude>src/main/resources/res/ui/ui.tabs.paging.js</exclude>
                         <exclude>src/main/resources/templates/*.html</exclude>
-                        <exclude>src/main/debug-resources/res/lib/**</exclude>
                     </excludes>
                 </configuration>
             </plugin>
         </plugins>
     </build>
-
-   <profiles>
-       <!--
-           The "all-in-one-bundle" profile builds a bundle including certain
-           3rd party libraries and classes, namely: Commons IO (needed by 
-           Commons FileUpload), Commons FileUpload.
-           The "all-in-one-bundle" can be used in deployments where these
-           dependencies need not be deployed separately.
-       -->
-       <profile>
-           <id>all-in-one-bundle</id>
-           <activation><activeByDefault>true</activeByDefault></activation>
-           <build>
-               <plugins>
-                   <plugin>
-                       <groupId>org.apache.felix</groupId>
-                       <artifactId>maven-bundle-plugin</artifactId>
-                       <executions>
-                           <execution>
-                               <id>all-in-one-bundle</id>
-                               <goals>
-                                   <goal>bundle</goal>
-                               </goals>
-                               <configuration>
-                                   <classifier>all</classifier>
-                                   <instructions>
-                                       <Bundle-Name>
-                                           ${project.name} (All In One)
-                                       </Bundle-Name>
-                                       <Bundle-Version>
-                                           ${project.version}-all
-                                       </Bundle-Version>
-                                       <Export-Package>
-                                           org.apache.commons.fileupload,
-                                           org.apache.commons.fileupload.disk,
-                                           org.apache.commons.fileupload.servlet,
-                                           org.apache.commons.fileupload.util,
-                                           org.apache.commons.io.*,
-                                           org.apache.felix.inventory,
-                                           ${webconsole.exports}
-                                       </Export-Package>
-                                       <Embed-Dependency>
-                                           <!-- Import/Export-Package parsing -->
-                                           org.apache.felix.utils;inline=org/apache/felix/utils/manifest/**,
-                                           org.apache.felix.utils;inline=org/apache/felix/utils/json/**,
-                                           org.apache.felix.inventory;inline=true,
-                                           commons-fileupload;inline=true,
-                                           commons-io;inline=true
-                                       </Embed-Dependency>
-                                       <_removeheaders>
-                                           Embed-Dependency,Private-Package,Include-Resource
-                                       </_removeheaders>
-                                   </instructions>
-                               </configuration>
-                           </execution>
-                       </executions>
-                   </plugin>
-                   <!--
-                  <plugin>
-                    <groupId>org.apache.maven.plugins</groupId>
-                    <artifactId>maven-remote-resources-plugin</artifactId>
-                    <executions>
-                      <execution>
-                        <goals>
-                          <goal>process</goal>
-                        </goals>
-                        <configuration>
-                          <resourceBundles>
-                            <resourceBundle>org.apache:apache-jar-resource-bundle:1.4</resourceBundle>
-                          </resourceBundles>
-                        </configuration>
-                      </execution>
-                    </executions>
-                  </plugin>
-                  -->
-               </plugins>
-            </build>
-            <dependencies>
-                <dependency>
-                    <groupId>org.apache.felix</groupId>
-                    <artifactId>org.apache.felix.inventory</artifactId>
-                    <version>2.0.0</version>
-                    <scope>provided</scope>
-                </dependency>
-            </dependencies>
-        </profile>
-        
-       <!--
-           The "debug" profile builds a bundle using the non-minified
-           JQuery libraries and CSS files instead to make debugging
-           JQuery related issues easier.
-       -->
-       <profile>
-           <id>debug-bundle</id>
-           <activation><activeByDefault>true</activeByDefault></activation>
-           <build>
-               <plugins>
-                   <plugin>
-                       <groupId>org.apache.felix</groupId>
-                       <artifactId>maven-bundle-plugin</artifactId>
-                       <executions>
-                           <execution>
-                               <id>debug-bundle</id>
-                               <goals>
-                                   <goal>bundle</goal>
-                               </goals>
-                               <configuration>
-                                   <classifier>debug</classifier>
-                                   <instructions>
-                                       <Bundle-Name>
-                                           ${project.name} (JQuery Debug)
-                                       </Bundle-Name>
-                                       <Bundle-Version>
-                                           ${project.version}-debug
-                                       </Bundle-Version>
-                                       <Include-Resource>
-                                           {maven-resources},
-                                           res=src/main/debug-resources/res
-                                       </Include-Resource>
-                                   </instructions>
-                               </configuration>
-                           </execution>
-                       </executions>
-                   </plugin>
-                   <!--
-                  <plugin>
-                    <groupId>org.apache.maven.plugins</groupId>
-                    <artifactId>maven-remote-resources-plugin</artifactId>
-                    <executions>
-                      <execution>
-                        <goals>
-                          <goal>process</goal>
-                        </goals>
-                        <configuration>
-                          <resourceBundles>
-                            <resourceBundle>org.apache:apache-jar-resource-bundle:1.4</resourceBundle>
-                          </resourceBundles>
-                        </configuration>
-                      </execution>
-                    </executions>
-                  </plugin>
-                  -->
-               </plugins>
-            </build>
-        </profile>
-    </profiles>
 
     <dependencies>
         <dependency>
@@ -381,6 +222,12 @@
             <groupId>org.apache.felix</groupId>
             <artifactId>org.apache.felix.http.wrappers</artifactId>
             <version>1.0.0</version>
+            <scope>provided</scope>
+        </dependency>
+        <dependency>
+            <groupId>org.apache.felix</groupId>
+            <artifactId>org.apache.felix.inventory</artifactId>
+            <version>2.0.0</version>
             <scope>provided</scope>
         </dependency>
         <dependency>
