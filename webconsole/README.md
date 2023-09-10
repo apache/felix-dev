@@ -58,7 +58,7 @@ The Web Console only has very basic security at the moment supporting only HTTP 
 
 To enhance the security of the Web Console you are strongly encouraged to change at least the `password` for the admin user.
 
-As of Web Console 3.1.0 this simple user setup can be extended by providing link:{{ refs.web-console-security-provider.adoc[Web Console Security Provider].
+As of Web Console 3.1.0 this simple user setup can be extended by providing link:[Web Console Security Provider](https://felix.apache.org/subprojects/apache-felix-web-console/web-console-security-provider).
 See that page for more information.
 
 ## Extending the Web Console
@@ -201,7 +201,7 @@ In this case the Configuration Manager displays the name "myRealm, myClass" as d
 
 #### Bug
 
-- [FELIX-6563](https://issues.apache.org/jira/browse/FELIX-6563) : [Regression] Webconsole REST API doesn't return Confguration PID when creating a new configuration
+- [FELIX-6563](https://issues.apache.org/jira/browse/FELIX-6563) : Regression - Webconsole REST API doesn't return Confguration PID when creating a new configuration
 
 ### Changes in 4.8.2 (23/May/22)
 
@@ -421,7 +421,7 @@ In this case the Configuration Manager displays the name "myRealm, myClass" as d
 
 - [FELIX-4941](https://issues.apache.org/jira/browse/FELIX-4941) : Configuration Properties not defined in Metatype are lost after update
 - [FELIX-4795](https://issues.apache.org/jira/browse/FELIX-4795) : Servlet API 3.x not supported 
-- [FELIX-5223](https://issues.apache.org/jira/browse/FELIX-5223) : [IE11][Edge]: Fields in OSGI Configuration Manager are not editable 
+- [FELIX-5223](https://issues.apache.org/jira/browse/FELIX-5223) : IE11 and Edge: Fields in OSGI Configuration Manager are not editable 
 
 
 ### Changes in 4.2.14 (06/Oct/15)
@@ -446,8 +446,8 @@ In this case the Configuration Manager displays the name "myRealm, myClass" as d
 
 #### Improvement
 
-- [FELIX-5018](https://issues.apache.org/jira/browse/FELIX-5018) : [webconsole] "create factory configuration" link for config screen
-- [FELIX-5019](https://issues.apache.org/jira/browse/FELIX-5019) : [webconsole] "referer" parameter for configuration open/create link
+- [FELIX-5018](https://issues.apache.org/jira/browse/FELIX-5018) : "create factory configuration" link for config screen
+- [FELIX-5019](https://issues.apache.org/jira/browse/FELIX-5019) : "referer" parameter for configuration open/create link
 
 
 ### Changes in 4.2.10 (20/Jul/15)
@@ -673,7 +673,7 @@ In this case the Configuration Manager displays the name "myRealm, myClass" as d
 
 #### Improvement
 
-- [FELIX-2541](https://issues.apache.org/jira/browse/FELIX-) : [Licenses Page] Add support for DEPENDENCIES files
+- [FELIX-2541](https://issues.apache.org/jira/browse/FELIX-) : Licenses Page : Add support for DEPENDENCIES files
 - [FELIX-2614](https://issues.apache.org/jira/browse/FELIX-) : Mark unresolved packages
 - [FELIX-2616](https://issues.apache.org/jira/browse/FELIX-) : Russian l10n files for Web Console
 - [FELIX-2639](https://issues.apache.org/jira/browse/FELIX-) : Improve Security Provider support
@@ -900,8 +900,8 @@ In this case the Configuration Manager displays the name "myRealm, myClass" as d
 - [FELIX-1020](https://issues.apache.org/jira/browse/FELIX-1020) : Footer redered before content in bundle plugin
 - [FELIX-1160](https://issues.apache.org/jira/browse/FELIX-1160) : WebConsole Manifest.MF should specify required version for Servlet API (2.4)
 - [FELIX-1164](https://issues.apache.org/jira/browse/FELIX-1164) : Updating a configuration containing a property configured with unbound array size
-- [FELIX-1224](https://issues.apache.org/jira/browse/FELIX-1224) : Component display depends on ManagedService[Factory] instances to be registered for components
-- [FELIX-1230](https://issues.apache.org/jira/browse/FELIX-1230) : Configuration Page depends on ManagedService[Factory] instances to be registered for components
+- [FELIX-1224](https://issues.apache.org/jira/browse/FELIX-1224) : Component display depends on ManagedService/Factory instances to be registered for components
+- [FELIX-1230](https://issues.apache.org/jira/browse/FELIX-1230) : Configuration Page depends on ManagedService/Factory instances to be registered for components
 - [FELIX-1270](https://issues.apache.org/jira/browse/FELIX-1270) : Displaying the bundle detail view resolves a bundle
 - [FELIX-1275](https://issues.apache.org/jira/browse/FELIX-1275) : On the Bundles page, when bundle details are displayed inline, the links to imported and importing bundles are invalid.
 - [FELIX-1389](https://issues.apache.org/jira/browse/FELIX-1389) : Main div is not closed
