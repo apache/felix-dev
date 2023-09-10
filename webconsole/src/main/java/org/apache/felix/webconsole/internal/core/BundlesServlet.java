@@ -18,14 +18,13 @@ package org.apache.felix.webconsole.internal.core;
 
 
 import java.io.File;
-import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
-import java.io.OutputStream;
 import java.io.PrintWriter;
 import java.io.StringWriter;
 import java.io.Writer;
 import java.lang.reflect.Array;
+import java.nio.file.Files;
 import java.text.MessageFormat;
 import java.util.AbstractMap;
 import java.util.ArrayList;
@@ -47,7 +46,6 @@ import java.util.TreeMap;
 import java.util.jar.JarFile;
 import java.util.jar.Manifest;
 
-import org.apache.commons.io.IOUtils;
 import org.apache.felix.inventory.Format;
 import org.apache.felix.inventory.InventoryPrinter;
 import org.apache.felix.utils.json.JSONWriter;
@@ -1497,9 +1495,8 @@ public class BundlesServlet extends AbstractOsgiManagerPlugin implements Invento
             try {
                 // copy the data to a file for better processing
                 tmpFile = File.createTempFile( "install", ".tmp" );
-                try (final InputStream bundleStream = part.getInputStream();
-                     final OutputStream out = new FileOutputStream(tmpFile)) {
-                    IOUtils.copy(bundleStream, out);
+                try (final InputStream bundleStream = part.getInputStream()) {
+                    Files.copy(bundleStream, tmpFile.toPath());
                 }
             } catch ( final Exception e ) {
                 Util.LOGGER.error("Problem accessing uploaded bundle file: {}", part.getSubmittedFileName(), e );

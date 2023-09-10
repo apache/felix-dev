@@ -65,26 +65,14 @@ public abstract class AbstractWebConsolePlugin extends HttpServlet {
     private static final long serialVersionUID = 1L;
 
     /**
-     * The name of the request attribute containing the map of FileItems from the POST request.
+     * This attribute is not supported anymore
      * @deprecated Use the Servlet API for uploads
      */
     @Deprecated
     public static final String ATTR_FILEUPLOAD = "org.apache.felix.webconsole.fileupload";
     
-    /** 
-     * The name of the request attribute containing a {@link java.io.File} - upload repository path used by
-     * {@link org.apache.commons.fileupload.disk.DiskFileItemFactory}.<p>
-     * 
-     * The Web Console plugin, that utilizes file upload capabilities of the web console SHOULD:
-     * <ol>
-     * <li>Obtain the file using {@link org.osgi.framework.BundleContext#getDataFile(String)}
-     * <li>Set the file as request attribute
-     * <li>Use {@link WebConsoleUtil#getParameter(HttpServletRequest, String)} to obtain the file(s)
-     * </ol>
-     * 
-     * Without setting this attribute, your plugin will not work if there is a security manager enabled.
-     * It is guaranteed, that your plugin has permissions to read/write/delete files to the location, 
-     * provided by the bundle context.
+    /**
+     * This attribute is not supported anymore
      * @deprecated Use the Servlet API for uploads
      */
     @Deprecated

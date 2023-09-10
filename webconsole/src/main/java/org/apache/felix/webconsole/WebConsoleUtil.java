@@ -19,24 +19,13 @@
 package org.apache.felix.webconsole;
 
 
-import java.io.File;
 import java.io.IOException;
 import java.net.URLDecoder;
 import java.nio.charset.StandardCharsets;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
-
 import javax.servlet.ServletRequest;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 
-import org.apache.commons.fileupload.FileItem;
-import org.apache.commons.fileupload.FileUploadBase;
-import org.apache.commons.fileupload.FileUploadException;
-import org.apache.commons.fileupload.disk.DiskFileItemFactory;
-import org.apache.commons.fileupload.servlet.ServletFileUpload;
-import org.apache.commons.fileupload.servlet.ServletRequestContext;
 import org.apache.felix.webconsole.internal.Util;
 
 
@@ -47,11 +36,9 @@ import org.apache.felix.webconsole.internal.Util;
  * @deprecated Some of the methods can be replaced with direct Servlet API calls.
  */
 @Deprecated
-public final class WebConsoleUtil
-{
+public final class WebConsoleUtil {
 
-    private WebConsoleUtil()
-    {
+    private WebConsoleUtil() {
         /* no instantiation */
     }
 
@@ -108,82 +95,15 @@ public final class WebConsoleUtil
 
 
     /**
-     * An utility method, that is used to filter out simple parameter from file
-     * parameter when multipart transfer encoding is used.
-     *
-     * This method processes the request and sets a request attribute
-     * {@link AbstractWebConsolePlugin#ATTR_FILEUPLOAD}. The attribute value is a {@link Map}
-     * where the key is a String specifying the field name and the value
-     * is a {@link org.apache.commons.fileupload.FileItem}.
-     *
+     * An utility method to get a parameter value
      * @param request the HTTP request coming from the user
      * @param name the name of the parameter
-     * @return if not multipart transfer encoding is used - the value is the
-     *  parameter value or <code>null</code> if not set. If multipart is used,
-     *  and the specified parameter is field - then the value of the parameter
-     *  is returned.
+     * @return The value or {@code null}.
      * @deprecated Use the Servlet API for uploads
      */
     @Deprecated
     public static final String getParameter( final HttpServletRequest request, final String name ) {
-        // just get the parameter if not a multipart/form-data POST
-        if ( !FileUploadBase.isMultipartContent( new ServletRequestContext( request ) ) ) {
-            return request.getParameter( name );
-        }
-
-        // check, whether we already have the parameters
-        @SuppressWarnings("unchecked")
-        Map<String, FileItem[]> params = ( Map<String, FileItem[]> ) request.getAttribute( AbstractWebConsolePlugin.ATTR_FILEUPLOAD );
-        if ( params == null ) {
-            // parameters not read yet, read now
-            // Create a factory for disk-based file items
-            DiskFileItemFactory factory = new DiskFileItemFactory();
-            factory.setSizeThreshold( 256000 );
-            // See https://issues.apache.org/jira/browse/FELIX-4660
-            final Object repo = request.getAttribute( AbstractWebConsolePlugin.ATTR_FILEUPLOAD_REPO );
-            if ( repo instanceof File ) {
-                factory.setRepository( (File) repo );
-            }
-
-            // Create a new file upload handler
-            ServletFileUpload upload = new ServletFileUpload( factory );
-            upload.setSizeMax( -1 );
-            upload.setFileCountMax(50);
-
-            // Parse the request
-            params = new HashMap<>();
-            try {
-                final List<FileItem> items = upload.parseRequest( request );
-                for(final FileItem fi : items) {
-                    FileItem[] current = ( FileItem[] ) params.get( fi.getFieldName() );
-                    if ( current == null ) {
-                        current = new FileItem[] { fi };
-                    } else {
-                        FileItem[] newCurrent = new FileItem[current.length + 1];
-                        System.arraycopy( current, 0, newCurrent, 0, current.length );
-                        newCurrent[current.length] = fi;
-                        current = newCurrent;
-                    }
-                    params.put( fi.getFieldName(), current );
-                }
-            } catch ( FileUploadException fue ) {
-                // fail
-                return null;
-            }
-            request.setAttribute( AbstractWebConsolePlugin.ATTR_FILEUPLOAD, params );
-        }
-
-        final FileItem[] param = ( FileItem[] ) params.get( name );
-        if ( param != null ) {
-            for ( int i = 0; i < param.length; i++ ) {
-                if ( param[i].isFormField() ) {
-                    return param[i].getString();
-                }
-            }
-        }
-
-        // no valid string parameter, fail
-        return null;
+        return request.getParameter( name );
     }
 
     /**
