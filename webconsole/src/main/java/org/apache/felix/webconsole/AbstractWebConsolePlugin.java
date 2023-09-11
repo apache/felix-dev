@@ -626,25 +626,15 @@ public abstract class AbstractWebConsolePlugin extends HttpServlet {
     }
 
     /**
-     * An utility method, that is used to filter out simple parameter from file
-     * parameter when multipart transfer encoding is used.
-     *
-     * This method processes the request and sets a request attribute
-     * {@link #ATTR_FILEUPLOAD}. The attribute value is a {@link Map}
-     * where the key is a String specifying the field name and the value
-     * is a {@link org.apache.commons.fileupload.FileItem}.
-     *
-     * @param request the HTTP request coming from the user
-     * @param name the name of the parameter
-     * @return if not multipart transfer encoding is used - the value is the
-     *  parameter value or <code>null</code> if not set. If multipart is used,
-     *  and the specified parameter is field - then the value of the parameter
-     *  is returned.
+     * Do not use this method anymore. Use the Servlet API for request parameter
+     * handling.
+     * @param request The request object
+     * @param name The name of the parameter
+     * @return The parameter value or <code>null</code> if the parameter is not set
      * @deprecated Use the Servlet API for uploads
      */
     @Deprecated
-    public static final String getParameter( HttpServletRequest request, String name )
-    {
+    public static final String getParameter( HttpServletRequest request, String name ) {
         return WebConsoleUtil.getParameter(request, name);
     }
 

@@ -127,7 +127,7 @@ In this case the Configuration Manager displays the name "myRealm, myClass" as d
 - [FELIX-6654](https://issues.apache.org/jira/browse/FELIX-6654) : Remove support for commons fileupload
 
 
-### Changes in 4.9.4 (NOT RELEASED)
+### Changes in 4.9.4 (11/Sep/23)
 
 #### Improvement
 
