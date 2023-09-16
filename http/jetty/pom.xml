@@ -142,7 +142,7 @@
             <plugin>
                 <groupId>org.apache.felix</groupId>
                 <artifactId>maven-bundle-plugin</artifactId>
-                <version>5.1.4</version>
+                <version>5.1.9</version>
                 <extensions>true</extensions>
                 <configuration>
                     <instructions>
@@ -230,8 +230,6 @@
                             Private-Package,Conditional-Package
                         </_removeheaders>
                     </instructions>
-                    <!-- Skip Baselining due to Jetty API -->
-                    <skip>true</skip>
                 </configuration>
                 <executions>
                     <execution>
