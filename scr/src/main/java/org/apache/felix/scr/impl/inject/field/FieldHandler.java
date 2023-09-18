@@ -379,11 +379,13 @@ public class FieldHandler
 
         private void resolve(final FieldHandler handler, final ComponentLogger logger)
         {
-            logger.log(Level.DEBUG, "getting field: {0}", null,
+            // Trace as it is very often called and has no real information for client's debugging
+            // as the result will always be logged inside setSearchResult()
+            logger.log(Level.TRACE, "getting field: {0}", null,
                 handler.metadata.getField());
 
             // resolve the field
-        	    final FieldUtils.FieldSearchResult result = FieldUtils.searchField( handler.componentClass, handler.metadata.getField(), logger );
+            final FieldUtils.FieldSearchResult result = FieldUtils.searchField( handler.componentClass, handler.metadata.getField(), logger );
             handler.setSearchResult(result, logger);
         }
 

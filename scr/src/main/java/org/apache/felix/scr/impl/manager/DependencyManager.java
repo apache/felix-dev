@@ -322,7 +322,8 @@ public class DependencyManager<S, T> implements ReferenceManager<S, T>
         public void addedService(ServiceReference<T> serviceReference, RefPair<S, T> refPair, int trackingCount,
             int serviceCount, ExtendedServiceEvent event)
         {
-            m_componentManager.getLogger().log(Level.DEBUG,
+            // Trace as the real dynamic behavior (activating, binding, ...) is logged below for all cases
+            m_componentManager.getLogger().log(Level.TRACE,
                 "dm {0} tracking {1} MultipleDynamic added {2} (enter)",
                     null, getName(), trackingCount, serviceReference );
             boolean tracked = false;
@@ -356,7 +357,8 @@ public class DependencyManager<S, T> implements ReferenceManager<S, T>
                         null, getName(), trackingCount, isTrackerOpened(), isOptional() );
                 }
             }
-            m_componentManager.getLogger().log(Level.DEBUG,
+            // Trace as the real dynamic behavior (activating, binding, ...) is logged above for all cases
+            m_componentManager.getLogger().log(Level.TRACE,
                 "dm {0} tracking {1} MultipleDynamic added {2} (exit)",
                     null, getName(), trackingCount, serviceReference );
             if (!tracked)

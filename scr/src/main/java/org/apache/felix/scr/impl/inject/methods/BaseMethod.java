@@ -159,12 +159,24 @@ public abstract class BaseMethod<P extends BaseParameter, T>
         final String targetPackage = getPackageName( targetClass );
         Class<?> theClass = targetClass;
 
+        if (logger.isLogEnabled(Level.DEBUG))
+        {
+            // the result of this search will be written in setMethod() 
+            // which is always called after findMethod()
+            // This is 'Debug' however, as the class information, where the search 
+            // was conducted, is quite important for the client's own debugging
+            logger.log(Level.DEBUG,
+                    "Locating method " + getMethodName() + " within class " + theClass.getName(), null );
+        }
+
         while (true)
         {
 
-            if (logger.isLogEnabled(Level.DEBUG))
+            if (logger.isLogEnabled(Level.TRACE))
             {
-                logger.log(Level.DEBUG,
+                // Trace as this is going through the whole hierachy and will log for non-existing methods 
+                // a lot of lines for e.g. the class Object not containing an activate method
+                logger.log(Level.TRACE,
                         "Locating method " + getMethodName() + " in class " + theClass.getName(), null );
             }
 
@@ -359,10 +371,11 @@ public abstract class BaseMethod<P extends BaseParameter, T>
         {
             // thrown if no method is declared with the given name and
             // parameters
-            if (logger.isLogEnabled(Level.DEBUG))
+            if (logger.isLogEnabled(Level.TRACE))
             {
                 String argList = ( parameterTypes != null ) ? Arrays.asList( parameterTypes ).toString() : "";
-                logger.log(Level.DEBUG, "Declared Method {0}.{1}({2}) not found", null,
+                // Trace as this is very often the case (e.g. no activate, no modified, ...)
+                logger.log(Level.TRACE, "Declared Method {0}.{1}({2}) not found", null,
                         clazz.getName(), name, argList );
             }
         }
@@ -614,7 +627,8 @@ public abstract class BaseMethod<P extends BaseParameter, T>
 
         private <P extends BaseParameter, T> void resolve( final BaseMethod<P, T> baseMethod, ComponentLogger logger )
         {
-            logger.log(Level.DEBUG, "getting {0}: {1}", null,
+            // Trace as we have more information inside findMethod to share
+            logger.log(Level.TRACE, "getting {0}: {1}", null,
                     baseMethod.getMethodNamePrefix(), baseMethod.getMethodName() );
 
             // resolve the method
