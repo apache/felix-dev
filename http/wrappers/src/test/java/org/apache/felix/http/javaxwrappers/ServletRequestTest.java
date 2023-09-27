@@ -36,7 +36,6 @@ import java.util.Map;
 import jakarta.servlet.AsyncContext;
 import jakarta.servlet.DispatcherType;
 import jakarta.servlet.RequestDispatcher;
-import jakarta.servlet.ServletConnection;
 import jakarta.servlet.ServletContext;
 import jakarta.servlet.ServletInputStream;
 import jakarta.servlet.ServletResponse;
@@ -58,6 +57,11 @@ public class ServletRequestTest {
             @Override
             public Object getAttribute(String name) {
                 return attributes.get(name);
+            }
+
+            @Override
+            public String getRealPath(String path) {
+                return null;
             }
 
             @Override
@@ -227,21 +231,6 @@ public class ServletRequestTest {
             @Override
             public AsyncContext startAsync(jakarta.servlet.ServletRequest servletRequest, ServletResponse servletResponse)
                     throws IllegalStateException {
-                return null;
-            }
-
-            @Override
-            public String getProtocolRequestId() {
-                return null;
-            }
-
-            @Override
-            public String getRequestId() {
-                return null;
-            }
-
-            @Override
-            public ServletConnection getServletConnection() {
                 return null;
             }
         };
