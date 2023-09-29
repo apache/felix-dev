@@ -39,6 +39,29 @@
     <build>
         <plugins>
             <plugin>
+                <artifactId>maven-dependency-plugin</artifactId>
+                <version>3.6.0</version>
+                <executions>
+                    <execution>
+                        <id>process-servlet-5</id>
+                        <goals>
+                            <goal>unpack</goal>
+                        </goals>
+                        <configuration>
+                            <artifactItems>
+                                <artifactItem>
+                                    <groupId>jakarta.servlet</groupId>
+                                    <artifactId>jakarta.servlet-api</artifactId>
+                                    <version>5.0.0</version>
+                                    <includes>**/HttpSessionContext.class</includes>
+                                </artifactItem>
+                            </artifactItems>
+                            <outputDirectory>${project.build.directory}/classes</outputDirectory>
+                        </configuration>
+                    </execution>
+                </executions>
+            </plugin>
+            <plugin>
                 <groupId>org.apache.felix</groupId>
                 <artifactId>maven-bundle-plugin</artifactId>
                 <version>5.1.9</version>
