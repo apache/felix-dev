@@ -49,7 +49,7 @@
             <plugin>
                 <groupId>org.apache.felix</groupId>
                 <artifactId>maven-bundle-plugin</artifactId>
-                <version>5.1.4</version>
+                <version>5.1.9</version>
                 <extensions>true</extensions>
                 <configuration>
                     <instructions>
@@ -166,12 +166,12 @@
         <dependency>
             <groupId>org.apache.felix</groupId>
             <artifactId>org.apache.felix.http.base</artifactId>
-            <version>5.1.1-SNAPSHOT</version>
+            <version>5.1.2</version>
         </dependency>
 	<dependency>
             <groupId>org.apache.felix</groupId>
 	    <artifactId>org.apache.felix.http.wrappers</artifactId>
-	    <version>1.0.1-SNAPSHOT</version>
+	    <version>1.0.2</version>
 	</dependency>
     </dependencies>
 </project>
