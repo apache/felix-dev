@@ -31,11 +31,6 @@
       <tag>HEAD</tag>
   </scm>
 
-    <properties>
-        <!-- Skip baselining -->
-        <baseline.skip>true</baseline.skip>
-    </properties>
-
     <build>
         <plugins>
             <plugin>
