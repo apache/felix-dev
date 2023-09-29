@@ -53,7 +53,7 @@
                                     <groupId>jakarta.servlet</groupId>
                                     <artifactId>jakarta.servlet-api</artifactId>
                                     <version>5.0.0</version>
-                                    <includes>**/HttpSessionContext.class</includes>
+                                    <includes>**/HttpSessionContext.class,**/HttpUtils.class,**/SingleThreadModel.class</includes>
                                 </artifactItem>
                             </artifactItems>
                             <outputDirectory>${project.build.directory}/classes</outputDirectory>
