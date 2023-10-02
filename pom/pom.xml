@@ -22,7 +22,7 @@
     <parent>
         <groupId>org.apache</groupId>
         <artifactId>apache</artifactId>
-        <version>23</version>
+        <version>30</version>
         <relativePath />
     </parent>
 
@@ -75,8 +75,7 @@
         <connection>scm:git:https://github.com/apache/felix-dev.git</connection>
         <developerConnection>scm:git:https://github.com/apache/felix-dev.git</developerConnection>
         <url>https://gitbox.apache.org/repos/asf?p=felix-dev.git;f=pom</url>
-    <tag>felix-parent-7</tag>
-  </scm>
+    </scm>
 
     <distributionManagement>
         <site>
@@ -105,42 +104,42 @@
                 <plugin>
                     <groupId>org.apache.maven.plugins</groupId>
                     <artifactId>maven-enforcer-plugin</artifactId>
-                    <version>3.0.0-M3</version>
+                    <version>3.4.1</version>
                 </plugin>
                 <plugin>
                     <groupId>org.apache.maven.plugins</groupId>
                     <artifactId>maven-project-info-reports-plugin</artifactId>
-                    <version>3.0.0</version>
+                    <version>3.4.5</version>
                 </plugin>
                 <plugin>
                     <groupId>org.apache.maven.plugins</groupId>
                     <artifactId>maven-jxr-plugin</artifactId>
-                    <version>3.0.0</version>
+                    <version>3.3.0</version>
                 </plugin>
                 <plugin>
-                    <groupId>org.codehaus.mojo</groupId>
-                    <artifactId>ianal-maven-plugin</artifactId>
-                    <version>1.0-alpha-1</version>
+                    <groupId>org.apache.geronimo.genesis.plugins</groupId>
+                    <artifactId>tools-maven-plugin</artifactId>
+                    <version>1.4</version>
                 </plugin>
                 <plugin>
                     <groupId>org.apache.rat</groupId>
                     <artifactId>apache-rat-plugin</artifactId>
-                    <version>0.13</version>
+                    <version>0.15</version>
                 </plugin>
                 <plugin>
                     <groupId>org.apache.maven.plugins</groupId>
                     <artifactId>maven-compiler-plugin</artifactId>
-                    <version>3.8.1</version>
+                    <version>3.10.1</version>
                 </plugin>
                 <plugin>
                     <groupId>org.apache.maven.plugins</groupId>
                     <artifactId>maven-javadoc-plugin</artifactId>
-                    <version>3.2.0</version>
+                    <version>3.6.0</version>
                 </plugin>
                 <plugin>
                     <groupId>org.codehaus.mojo</groupId>
                     <artifactId>animal-sniffer-maven-plugin</artifactId>
-                    <version>1.18</version>
+                    <version>1.23</version>
                     <configuration>
                         <signature>
                             <groupId>org.codehaus.mojo.signature</groupId>
@@ -157,7 +156,7 @@
                 <plugin>
                     <groupId>org.apache.maven.plugins</groupId>
                     <artifactId>maven-surefire-report-plugin</artifactId>
-                    <version>2.19.1</version>
+                    <version>3.1.2</version>
                </plugin>
             </plugins>
         </pluginManagement>
@@ -224,10 +223,11 @@
                 <artifactId>maven-release-plugin</artifactId>
             </plugin>
             <plugin>
-                <groupId>org.codehaus.mojo</groupId>
-                <artifactId>ianal-maven-plugin</artifactId>
+                <groupId>org.apache.geronimo.genesis.plugins</groupId>
+                <artifactId>tools-maven-plugin</artifactId>
                 <executions>
                     <execution>
+                        <id>verify-legal-files</id>
                         <goals>
                             <goal>verify-legal-files</goal>
                         </goals>
