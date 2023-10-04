@@ -93,6 +93,7 @@ public class BundlesServlet extends AbstractOsgiManagerPlugin implements Invento
 
     /** the label of the bundles plugin - used by other plugins to reference to plugin details */
     public static final String NAME = "bundles";
+    public static final String PRINTER_NAME = "Bundles";
     private static final String TITLE = "%bundles.pluginTitle";
     private static final String CSS[] = { "/res/ui/bundles.css" };
 
@@ -207,7 +208,7 @@ public class BundlesServlet extends AbstractOsgiManagerPlugin implements Invento
 
         Hashtable<String, Object> props = new Hashtable<>();
         props.put(InventoryPrinter.TITLE, this.getTitle());
-        props.put(InventoryPrinter.NAME, this.getLabel());
+        props.put(InventoryPrinter.NAME, PRINTER_NAME);
         configurationPrinter = bundleContext.registerService( InventoryPrinter.class, this, props );
         bipCapabilitiesProvided = bundleContext.registerService( BundleInfoProvider.class, new CapabilitiesProvidedInfoProvider( bundleContext.getBundle() ), null );
         bipCapabilitiesRequired = bundleContext.registerService( BundleInfoProvider.class, new CapabilitiesRequiredInfoProvider( bundleContext.getBundle() ), null );
