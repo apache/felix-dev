@@ -9,6 +9,13 @@ For documentation have a look at [The Apache Felix Website](https://felix.apache
 
 ## Release Notes
 
+### Changes in 4.9.6
+
+####
+
+- [FELIX-6658](https://issues.apache.org/jira/browse/FELIX-6658) : URLs for status printers changed
+
+
 ### Changes in 4.9.4 (11/Sep/23)
 
 #### Improvement
