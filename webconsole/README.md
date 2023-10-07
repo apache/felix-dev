@@ -9,7 +9,7 @@ For documentation have a look at [The Apache Felix Website](https://felix.apache
 
 ## Release Notes
 
-### Changes in 4.9.6
+### Changes in 4.9.6 (7/Oct/23)
 
 ####
 
