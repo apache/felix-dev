@@ -213,6 +213,7 @@ selects all `HealthCheck` having the `osgi` tag but not the `security` tag, for 
 For advanced use cases it is also possible to use the API directly by using the interface `org.apache.felix.hc.api.execution.HealthCheckExecutor`.
 
 ### Configuring the Health Check Executor
+
 The health check executor can **optionally** be configured via service PID `org.apache.felix.hc.core.impl.executor.HealthCheckExecutorImpl`:
 
 Property    | Type     | Default | Description  
@@ -228,15 +229,17 @@ Property    | Type     | Default | Description
 Health checks that define the service property `hc.mbean.name` will automatically get the JMX bean with that name, the domain `org.apache.felix.healthcheck` and with the type `HealthCheck` registered. The bean provides access to the `Result` (status, logs, etc.)
 
 ### Health Check Servlet
+
 The health check servlet allows to query the checks via http. It provides
 similar features to the Web Console plugin described above, with output in HTML, JSON (plain or jsonp) and TXT (concise or verbose) formats (see HTML format rendering page for more documentation).
 
 The Health Checks Servlet is disabled by default, to enable it create an OSGi configuration like
 
-    PID = org.apache.felix.hc.core.impl.servlet.HealthCheckExecutorServlet
+    FACTORY_PID = package org.apache.felix.hc.core.impl.servlet.HealthCheckExecutorServlet
     servletPath = /system/health
+    servletContextName = org.osgi.service.http
 
-which specifies the servlet's base path. That URL then returns an HTML page, by default with the results of all active health checks and
+which specifies the servlet's base path and the servlet context to use. That URL then returns an HTML page, by default with the results of all active health checks and
 with instructions at the end of the page about URL parameters which can be used to select specific Health Checks and control their execution and output format.
 
 Note that by design **the Health Checks Servlet doesn't do any access control by itself** to ensure it can detect unhealthy states of the authentication itself. Make sure the configured path is only accessible to relevant infrastructure and operations people. Usually all `/system/*` paths are only accessible from a local network and not routed to the Internet.
