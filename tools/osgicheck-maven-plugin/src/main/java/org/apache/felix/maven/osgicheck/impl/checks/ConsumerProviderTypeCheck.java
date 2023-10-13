@@ -115,7 +115,7 @@ public class ConsumerProviderTypeCheck implements Check {
                 ctx.reportError("Class " + className + " declares ConsumerType and ProducerType");
             }
         } catch (final IllegalArgumentException | IOException ioe) {
-            ctx.reportError("Unable to scan annotations " + ioe.getMessage());
+            ctx.reportError("Unable to scan annotations in class file " + classFile, ioe);
         }
     }
 
