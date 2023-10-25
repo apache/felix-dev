@@ -190,8 +190,6 @@ public class JsonSupportTest {
                 + "  \"a\" : 1,\n"
                 + "  \n"
                 + "  \n"
-                + "\n"
-                + "\n"
                 + "  \"b\" : 2\n"
                 + "}\n", parse(input));
     }

@@ -20,6 +20,7 @@ package org.apache.felix.cm.json.io.impl;
 
 import java.io.FilterReader;
 import java.io.IOException;
+import java.io.BufferedReader;
 import java.io.Reader;
 import java.io.StringReader;
 import java.io.StringWriter;
@@ -231,80 +232,88 @@ public class JsonSupport {
      * @throws IOException If something fails
      */
     public static Reader createCommentRemovingReader(final Reader reader) throws IOException {
-        final String contents;
-        try (final StringWriter writer = new StringWriter() ){
-            final char[] buf = new char[2048];
-            int l;
-            while ( (l = reader.read(buf)) > 0 ) {
-                writer.write(buf, 0, l);
-            }
-            writer.flush();
-            contents = writer.toString();
-        }
-        final StringReader stringReader = new StringReader(removeComments(contents));
-        return new FilterReader(stringReader) {
-
-            boolean closed = false;
-            @Override
-            public void close() throws IOException {
-                if (!closed) {
-                    closed = true;
-                    reader.close();
-                    super.close();
-                }
-            }
-        };
+        return new CommentRemovingReader(reader);
     }
 
-    /**
-     * Helper method to remove comments from JSON
-     * @param comments The JSON with comments
-     * @return The JSON without comments
+     /**
+     * Helper class to create a BufferedReader that implicitly removes inline and blockcomments from the input
      */
-    private static String removeComments(final String comments) {
-        final StringBuilder sb = new StringBuilder(comments);
-        int index = 0;
-        boolean insideQuote = false;
-        while ( index < sb.length()) {
-            switch ( sb.charAt(index) ) {
-            case '"' : if ( index == 0 || sb.charAt(index - 1) != '\\') {
-                           insideQuote = !insideQuote;
-                       }
-                       index++;
-                       break;
-            case '/' : if ( !insideQuote && index + 1 < sb.length()) {
-                           if ( sb.charAt(index + 1) == '/') {
-                               // line comment
-                               int m = index + 2;
-                               while ( m < sb.length() && sb.charAt(m) != '\n' ) {
-                                   m++;
-                               }
-                               sb.delete(index, m);
-                           } else if ( sb.charAt(index + 1 ) == '*') {
-                               // block comment
-                               int m = index + 2;
-                               int newlines = 0;
-                               while ( m < sb.length() && (sb.charAt(m) != '/' || sb.charAt(m - 1) != '*')) {
-                                   if ( sb.charAt(m) == '\n') {
-                                       newlines++;
-                                   }
-                                   m++;
-                               }
-                               if ( m == sb.length() ) {
-                                   index = m; // invalid - just go to the end
-                               } else {
-                                   sb.delete(index,  m+1);
-                                   for(int x = 0; x<newlines; x++) {
-                                       sb.insert(index, '\n');
-                                   }
-                               }
-                           }
-                       }
-                       index++;
-                       break;
-            default: index++;
+    private static class CommentRemovingReader extends FilterReader {
+
+        private boolean closed = false;
+        private boolean insideComment = false;
+        private boolean insideLineComment = false;
+            
+        public CommentRemovingReader(Reader reader) {
+            super(new BufferedReader(reader));
+        }
+
+        @Override
+        public int read() throws IOException {
+            return 0;
+        }
+
+        @Override
+        public int read(char[] cbuf, int off, int len) throws IOException {
+            int charsRead = super.read(cbuf, off, len);
+    if (charsRead > 0) {
+        StringBuilder filteredContent = new StringBuilder();
+        StringBuilder currentLine = new StringBuilder();
+        
+
+        for (int i = off; i < off + charsRead; i++) {
+            char c = cbuf[i];
+
+            // Handle comments
+            if (!insideComment && c == '/') {
+                if (i < off + charsRead - 1) {
+                    if (cbuf[i + 1] == '*') {
+                        insideComment = true;
+                        i++; // Skip '*' character
+                        continue;
+                    } else if (cbuf[i + 1] == '/') {
+                        insideLineComment = true;
+                        i++; // Skip '/' character
+                        continue;
+                    }
+                }
+            }
+
+            // Skip characters inside multiline comments
+            if (insideComment && c == '*' && i < off + charsRead - 1 && cbuf[i + 1] == '/') {
+                insideComment = false;
+                i++; // Skip '/' character
+                continue;
+            }
+
+            // Skip characters inside single-line comments
+            if (insideLineComment && c == '\n') {
+                insideLineComment = false;
+            }
+
+            // Preserve characters outside comments
+            if (!insideComment && !insideLineComment) {
+                currentLine.append(c);
             }
         }
-        return sb.toString();
+
+        filteredContent.append(currentLine.toString());
+
+        char[] filteredChars = filteredContent.toString().toCharArray();
+        int filteredLen = Math.min(filteredChars.length, len);
+        System.arraycopy(filteredChars, 0, cbuf, off, filteredLen);
+        return filteredLen;
+    }
+    return charsRead;
+        }
+
+        @Override
+        public void close() throws IOException {
+            if (!closed) {
+                closed = true;
+                in.close();
+                super.close();
+            }
+        }
     }
 }
