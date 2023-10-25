@@ -20,6 +20,7 @@ package org.apache.felix.cm.json.io.impl;
 
 import java.io.FilterReader;
 import java.io.IOException;
+import java.io.BufferedReader;
 import java.io.Reader;
 import java.io.StringReader;
 import java.io.StringWriter;
@@ -231,29 +232,7 @@ public class JsonSupport {
      * @throws IOException If something fails
      */
     public static Reader createCommentRemovingReader(final Reader reader) throws IOException {
-        final String contents;
-        try (final StringWriter writer = new StringWriter() ){
-            final char[] buf = new char[2048];
-            int l;
-            while ( (l = reader.read(buf)) > 0 ) {
-                writer.write(buf, 0, l);
-            }
-            writer.flush();
-            contents = writer.toString();
-        }
-        final StringReader stringReader = new StringReader(removeComments(contents));
-        return new FilterReader(stringReader) {
-
-            boolean closed = false;
-            @Override
-            public void close() throws IOException {
-                if (!closed) {
-                    closed = true;
-                    reader.close();
-                    super.close();
-                }
-            }
-        };
+        return new CommentRemovingReader(reader);
     }
 
     /**
@@ -306,5 +285,45 @@ public class JsonSupport {
             }
         }
         return sb.toString();
+    }
+
+     /**
+     * Helper class to create a BufferedReader that implicitly removes inline and blockcomments from the input
+     */
+    private static class CommentRemovingReader extends FilterReader {
+
+        private boolean closed = false;
+            
+        public CommentRemovingReader(Reader reader) {
+            super(new BufferedReader(reader));
+        }
+
+        @Override
+        public int read() throws IOException {
+            return 0;
+        }
+
+        @Override
+        public int read(char[] cbuf, int off, int len) throws IOException {
+            int charsRead = super.read(cbuf, off, len);
+            if (charsRead > 0) {
+                String input = new String(cbuf, off, charsRead);
+                String filteredContent = removeComments(input);
+                char[] filteredChars = filteredContent.toCharArray();
+                int filteredLen = Math.min(filteredChars.length, len);
+                System.arraycopy(filteredChars, 0, cbuf, off, filteredLen);
+                return filteredLen;
+            }
+            return charsRead;
+        }
+
+        @Override
+        public void close() throws IOException {
+            if (!closed) {
+                closed = true;
+                in.close();
+                super.close();
+            }
+        }
     }
 }
