@@ -256,55 +256,55 @@ public class JsonSupport {
         @Override
         public int read(char[] cbuf, int off, int len) throws IOException {
             int charsRead = super.read(cbuf, off, len);
-    if (charsRead > 0) {
-        StringBuilder filteredContent = new StringBuilder();
-        StringBuilder currentLine = new StringBuilder();
-        
+                if (charsRead > 0) {
+                    StringBuilder filteredContent = new StringBuilder();
+                    StringBuilder currentLine = new StringBuilder();
+                    
 
-        for (int i = off; i < off + charsRead; i++) {
-            char c = cbuf[i];
+                    for (int i = off; i < off + charsRead; i++) {
+                        char c = cbuf[i];
 
-            // Handle comments
-            if (!insideComment && c == '/') {
-                if (i < off + charsRead - 1) {
-                    if (cbuf[i + 1] == '*') {
-                        insideComment = true;
-                        i++; // Skip '*' character
-                        continue;
-                    } else if (cbuf[i + 1] == '/') {
-                        insideLineComment = true;
-                        i++; // Skip '/' character
-                        continue;
+                        // Handle comments
+                        if (!insideComment && c == '/') {
+                            if (i < off + charsRead - 1) {
+                                if (cbuf[i + 1] == '*') {
+                                    insideComment = true;
+                                    i++; // Skip '*' character
+                                    continue;
+                                } else if (cbuf[i + 1] == '/') {
+                                    insideLineComment = true;
+                                    i++; // Skip '/' character
+                                    continue;
+                                }
+                            }
+                        }
+
+                        // Skip characters inside multiline comments
+                        if (insideComment && c == '*' && i < off + charsRead - 1 && cbuf[i + 1] == '/') {
+                            insideComment = false;
+                            i++; // Skip '/' character
+                            continue;
+                        }
+
+                        // Skip characters inside single-line comments
+                        if (insideLineComment && c == '\n') {
+                            insideLineComment = false;
+                        }
+
+                        // Preserve characters outside comments
+                        if (!insideComment && !insideLineComment) {
+                            currentLine.append(c);
+                        }
                     }
+
+                    filteredContent.append(currentLine.toString());
+
+                    char[] filteredChars = filteredContent.toString().toCharArray();
+                    int filteredLen = Math.min(filteredChars.length, len);
+                    System.arraycopy(filteredChars, 0, cbuf, off, filteredLen);
+                    return filteredLen;
                 }
-            }
-
-            // Skip characters inside multiline comments
-            if (insideComment && c == '*' && i < off + charsRead - 1 && cbuf[i + 1] == '/') {
-                insideComment = false;
-                i++; // Skip '/' character
-                continue;
-            }
-
-            // Skip characters inside single-line comments
-            if (insideLineComment && c == '\n') {
-                insideLineComment = false;
-            }
-
-            // Preserve characters outside comments
-            if (!insideComment && !insideLineComment) {
-                currentLine.append(c);
-            }
-        }
-
-        filteredContent.append(currentLine.toString());
-
-        char[] filteredChars = filteredContent.toString().toCharArray();
-        int filteredLen = Math.min(filteredChars.length, len);
-        System.arraycopy(filteredChars, 0, cbuf, off, filteredLen);
-        return filteredLen;
-    }
-    return charsRead;
+                return charsRead;
         }
 
         @Override
