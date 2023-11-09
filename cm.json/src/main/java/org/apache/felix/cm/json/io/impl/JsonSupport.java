@@ -279,6 +279,12 @@ public class JsonSupport {
                             }
                         }
 
+                        //if inside a multiline comment, count newlines
+                        if (insideComment && !insideLineComment && c == '\n') {
+                            currentLine.append(c);
+                            continue;
+                        }
+
                         // Skip characters inside multiline comments
                         if (insideComment && c == '*' && i < off + charsRead - 1 && cbuf[i + 1] == '/') {
                             insideComment = false;
