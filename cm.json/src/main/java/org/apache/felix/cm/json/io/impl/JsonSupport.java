@@ -243,6 +243,7 @@ public class JsonSupport {
         private boolean closed = false;
         private boolean insideComment = false;
         private boolean insideLineComment = false;
+        private boolean insideString = false;
             
         public CommentRemovingReader(Reader reader) {
             super(new BufferedReader(reader));
@@ -260,22 +261,44 @@ public class JsonSupport {
                     StringBuilder filteredContent = new StringBuilder();
                     StringBuilder currentLine = new StringBuilder();
                     
-
                     for (int i = off; i < off + charsRead; i++) {
                         char c = cbuf[i];
+                        
 
-                        // Handle comments
-                        if (!insideComment && c == '/') {
-                            if (i < off + charsRead - 1) {
-                                if (cbuf[i + 1] == '*') {
-                                    insideComment = true;
-                                    i++; // Skip '*' character
-                                    continue;
-                                } else if (cbuf[i + 1] == '/') {
-                                    insideLineComment = true;
-                                    i++; // Skip '/' character
-                                    continue;
-                                }
+                        // Detect String start/end if not inside a comment
+                        if (!insideComment && !insideLineComment) {
+                            if (c == '"') {
+                                insideString = !insideString;
+                            }
+                        }
+
+
+                        // Handle comments only if not inside a string
+                        if (!insideString) {
+                            // Detect start of single-line comment
+                            if (!insideComment && c == '/' && i < off + charsRead - 1 && cbuf[i + 1] == '/') {
+                                insideLineComment = true;
+                                i++; // Skip '/' character
+                                continue;
+                            }
+
+                            // Detect start of multi-line comment
+                            if (!insideComment && c == '/' && i < off + charsRead - 1 && cbuf[i + 1] == '*') {
+                                insideComment = true;
+                                i++; // Skip '*' character
+                                continue;
+                            }
+
+                            // Detect end of multi-line comment
+                            if (insideComment && c == '*' && i < off + charsRead - 1 && cbuf[i + 1] == '/') {
+                                insideComment = false;
+                                i++; // Skip '/' character
+                                continue;
+                            }
+
+                            // Skip characters inside single-line comments
+                            if (insideLineComment && c == '\n') {
+                                insideLineComment = false;
                             }
                         }
 

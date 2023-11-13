@@ -195,4 +195,103 @@ public class JsonSupportTest {
                 + "  \"b\" : 2\n"
                 + "}\n", parse(input));
     }
+
+    // Test comment in the middle of a string
+    @Test
+    public void testCommentInString() throws IOException {
+        final String input = "{\n"
+                             + "  \"a\" : \"// comment\",\n"
+                             + "  \"b\" : 2\n"
+                             + "}\n";
+
+        assertEquals("{\n"
+                + "  \"a\" : \"// comment\",\n"
+                + "  \"b\" : 2\n"
+                + "}\n", parse(input));
+    }
+
+    @Test
+    public void testMultilineCommentInString() throws IOException {
+        final String input = "{\n"
+                             + "  \"a\" : \"/* comment */\",\n"
+                             + "  \"b\" : 2\n"
+                             + "  \"c\" : \"value /* comment */\"\n"
+                             + "}\n";
+
+        assertEquals("{\n"
+                + "  \"a\" : \"/* comment */\",\n"
+                + "  \"b\" : 2\n"
+                + "  \"c\" : \"value /* comment */\"\n"
+                + "}\n", parse(input));
+    }
+
+    @Test
+    public void testMultilineCommentInStringWithStripping() throws IOException {
+        final String input = "{\n"
+                             + "  \"a\" : \"/* comment */\",\n"
+                             + "  \"b\" : 2\n"
+                             + "  \"c\" : \"value /* comment */\"\n"
+                             + "  // comment\n"
+                             + "  /** And more\n"
+                             + "   * comments\n"
+                             + "   */\n"
+                             + "}\n";
+
+        assertEquals("{\n"
+                + "  \"a\" : \"/* comment */\",\n"
+                + "  \"b\" : 2\n"
+                + "  \"c\" : \"value /* comment */\"\n"
+                + "  \n"
+                + "  \n"
+                + "\n"
+                + "\n"
+                + "}\n", parse(input));
+    }
+    
+    @Test
+    public void testMultiLineStartTokenInString() throws IOException {
+        final String input = "{\n"
+                             + "  \"a\" : \"test/*\",\n"
+                             + "  \"b\" : 2\n"
+                             + "}\n";
+
+        assertEquals("{\n"
+                + "  \"a\" : \"test/*\",\n"
+                + "  \"b\" : 2\n"
+                + "}\n", parse(input));
+    }
+
+    @Test
+    public void testStripLineCommentWithQuotes() throws IOException {
+        final String input = "// Some comment \"with quote \n" 
+                                + "{\n"
+                                + "  \"a\" : 1,\n"
+                                + "  \"b\" : 2\n"
+                                + "}\n";
+        assertEquals("\n" +
+                "{\n"
+                + "  \"a\" : 1,\n"
+                + "  \"b\" : 2\n"
+                + "}\n", parse(input));
+    }
+
+    @Test
+    public void testStripMultiLineCommentWithQuotes() throws IOException {
+        final String input = "{\n"
+                                + "  \"a\" : 1,\n"
+                                + "  // another comment\n"
+                                + "  /** And \"more\n"
+                                + "   * comments\"\n"
+                                + "   */\n"
+                                + "  \"b\" : 2\n"
+                                + "}\n";
+        assertEquals("{\n"
+                + "  \"a\" : 1,\n"
+                + "  \n"
+                + "  \n"
+                + "\n"
+                + "\n"
+                + "  \"b\" : 2\n"
+                + "}\n", parse(input));
+    }
 }
