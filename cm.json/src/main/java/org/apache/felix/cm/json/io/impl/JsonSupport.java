@@ -300,24 +300,24 @@ public class JsonSupport {
                             if (insideLineComment && c == '\n') {
                                 insideLineComment = false;
                             }
-                        }
+                            
+                            // Preserve newline characters inside multiline comments
+                            if (insideComment && !insideLineComment && c == '\n') {
+                                currentLine.append(c);
+                                continue;
+                            }
 
-                        // Preserve newline characters inside multiline comments
-                        if (insideComment && !insideLineComment && c == '\n') {
-                            currentLine.append(c);
-                            continue;
-                        }
+                            // Skip characters inside multiline comments
+                            if (insideComment && c == '*' && i < off + charsRead - 1 && cbuf[i + 1] == '/') {
+                                insideComment = false;
+                                i++; // Skip '/' character
+                                continue;
+                            }
 
-                        // Skip characters inside multiline comments
-                        if (insideComment && c == '*' && i < off + charsRead - 1 && cbuf[i + 1] == '/') {
-                            insideComment = false;
-                            i++; // Skip '/' character
-                            continue;
-                        }
-
-                        // Skip characters inside single-line comments
-                        if (insideLineComment && c == '\n') {
-                            insideLineComment = false;
+                            // Skip characters inside single-line comments
+                            if (insideLineComment && c == '\n') {
+                                insideLineComment = false;
+                            }
                         }
 
                         // Preserve characters outside comments
