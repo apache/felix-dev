@@ -294,4 +294,17 @@ public class JsonSupportTest {
                 + "  \"b\" : 2\n"
                 + "}\n", parse(input));
     }
+
+    //test case for escaped quotes in string properties
+    @Test
+    public void testEscapedQuotes() throws IOException {
+        final String input = "{\n"
+                             + "  \"a\" : \"\\\"\",\n"
+                             + "}\n";
+
+        assertEquals("{\n"
+                + "  \"a\" : \"\\\"\",\n"
+                + "}\n", parse(input));
+    }
+
 }

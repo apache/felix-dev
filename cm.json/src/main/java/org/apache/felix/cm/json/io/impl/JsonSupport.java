@@ -268,6 +268,12 @@ public class JsonSupport {
                         // Detect String start/end if not inside a comment
                         if (!insideComment && !insideLineComment) {
                             if (c == '"') {
+                                // handle escaped quotes inside strings
+                                if (i > 0 && cbuf[i - 1] == '\\') {
+                                    // escaped quote inside a string, include both the backslash and the quote
+                                    currentLine.append(c);
+                                    continue;
+                                }
                                 insideString = !insideString;
                             }
                         }
