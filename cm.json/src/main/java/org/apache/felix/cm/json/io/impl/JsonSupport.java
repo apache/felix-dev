@@ -302,7 +302,7 @@ public class JsonSupport {
                             }
                         }
 
-                        //if inside a multiline comment, count newlines
+                        // Preserve newline characters inside multiline comments
                         if (insideComment && !insideLineComment && c == '\n') {
                             currentLine.append(c);
                             continue;
