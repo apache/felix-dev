@@ -31,7 +31,7 @@
     <packaging>pom</packaging>
 
     <name>Apache Felix</name>
-    <version>8-SNAPSHOT</version>
+    <version>8</version>
     <url>https://felix.apache.org/</url>
     <inceptionYear>2006</inceptionYear>
     <description>Apache Felix is a community effort to implement the OSGi Framework and Service platform and other interesting OSGi-related technologies.</description>
@@ -46,7 +46,7 @@
         <site.javadoc.exclude>*.impl:*.internal:</site.javadoc.exclude>
         <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
         <project.reporting.outputEncoding>UTF-8</project.reporting.outputEncoding>
-        <project.build.outputTimestamp>10</project.build.outputTimestamp>
+        <project.build.outputTimestamp>1700719885</project.build.outputTimestamp>
     </properties>
 
     <issueManagement>
@@ -75,7 +75,8 @@
         <connection>scm:git:https://github.com/apache/felix-dev.git</connection>
         <developerConnection>scm:git:https://github.com/apache/felix-dev.git</developerConnection>
         <url>https://gitbox.apache.org/repos/asf?p=felix-dev.git;f=pom</url>
-    </scm>
+      <tag>felix-parent-8</tag>
+  </scm>
 
     <distributionManagement>
         <site>
