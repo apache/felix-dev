@@ -220,25 +220,19 @@ public class PerBundleServletContextImpl implements ExtServletContext {
         return delegatee.getNamedDispatcher(name);
     }
 
-    @SuppressWarnings("deprecation")
-    @Override
     public Servlet getServlet(String name) throws ServletException
     {
-        return delegatee.getServlet(name);
+		throw new UnsupportedOperationException("Deprecated method not supported");
     }
 
-    @SuppressWarnings("deprecation")
-    @Override
     public Enumeration<Servlet> getServlets()
     {
-        return delegatee.getServlets();
+		throw new UnsupportedOperationException("Deprecated method not supported");
     }
 
-    @SuppressWarnings("deprecation")
-    @Override
     public Enumeration<String> getServletNames()
     {
-        return delegatee.getServletNames();
+		throw new UnsupportedOperationException("Deprecated method not supported");
     }
 
     @Override
@@ -247,11 +241,9 @@ public class PerBundleServletContextImpl implements ExtServletContext {
         delegatee.log(msg);
     }
 
-    @SuppressWarnings("deprecation")
-    @Override
     public void log(Exception exception, String msg)
     {
-        delegatee.log(exception, msg);
+        delegatee.log(msg, exception);
     }
 
     @Override

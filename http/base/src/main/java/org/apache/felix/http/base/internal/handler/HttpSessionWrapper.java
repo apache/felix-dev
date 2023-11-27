@@ -31,7 +31,6 @@ import jakarta.servlet.ServletContext;
 import jakarta.servlet.http.HttpSession;
 import jakarta.servlet.http.HttpSessionBindingEvent;
 import jakarta.servlet.http.HttpSessionBindingListener;
-import jakarta.servlet.http.HttpSessionContext;
 import jakarta.servlet.http.HttpSessionEvent;
 
 import org.apache.felix.http.base.internal.HttpConfig;
@@ -41,7 +40,6 @@ import org.apache.felix.http.base.internal.context.ExtServletContext;
  * The session wrapper keeps track of the internal session, manages their attributes
  * separately and also handles session timeout.
  */
-@SuppressWarnings("deprecation")
 public class HttpSessionWrapper implements HttpSession
 {
     /** All special attributes are prefixed with this prefix. */
@@ -301,14 +299,12 @@ public class HttpSessionWrapper implements HttpSession
         return this.context;
     }
 
-    @Override
     public Object getValue(String name)
     {
         this.checkInvalid();
         return this.getAttribute(name);
     }
 
-    @Override
     public String[] getValueNames()
     {
         this.checkInvalid();
@@ -380,7 +376,6 @@ public class HttpSessionWrapper implements HttpSession
         return this.isNew;
     }
 
-    @Override
     public void putValue(final String name, final Object value)
     {
         this.checkInvalid();
@@ -406,7 +401,6 @@ public class HttpSessionWrapper implements HttpSession
         }
     }
 
-    @Override
     public void removeValue(final String name)
     {
         this.checkInvalid();
@@ -466,13 +460,6 @@ public class HttpSessionWrapper implements HttpSession
         } catch ( final IllegalStateException iae) {
             // this might throw if delegate is invalid
         }
-    }
-
-    @Override
-    public HttpSessionContext getSessionContext()
-    {
-        // no need to check validity conforming to the javadoc
-        return this.delegate.getSessionContext();
     }
 
     private static final class SessionBindingValueListenerWrapper implements Serializable

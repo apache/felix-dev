@@ -159,25 +159,19 @@ public abstract class ExtServletContextWrapper implements ExtServletContext
 		return delegate.getNamedDispatcher(name);
 	}
 
-	@Override
-    @SuppressWarnings("deprecation")
     public Servlet getServlet(final String name) throws ServletException
 	{
-		return delegate.getServlet(name);
+		throw new UnsupportedOperationException("Deprecated method not supported");
 	}
 
-	@Override
-    @SuppressWarnings("deprecation")
     public Enumeration<Servlet> getServlets()
     {
-		return delegate.getServlets();
+		throw new UnsupportedOperationException("Deprecated method not supported");
 	}
 
-	@Override
-    @SuppressWarnings("deprecation")
     public Enumeration<String> getServletNames()
     {
-		return delegate.getServletNames();
+		throw new UnsupportedOperationException("Deprecated method not supported");
 	}
 
 	@Override
@@ -186,11 +180,9 @@ public abstract class ExtServletContextWrapper implements ExtServletContext
 		delegate.log(msg);
 	}
 
-	@Override
-    @SuppressWarnings("deprecation")
     public void log(final Exception exception, final String msg)
 	{
-		delegate.log(exception, msg);
+		delegate.log(msg, exception);
 	}
 
 	@Override
