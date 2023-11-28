@@ -307,4 +307,19 @@ public class JsonSupportTest {
                 + "}\n", parse(input));
     }
 
+    @Test
+    public void testSlashAtEndOfRead() throws Exception {
+        String input = "This is a test string // Next string \n"
+                + "next line" ;
+        Reader reader = JsonSupport.createCommentRemovingReader(new StringReader(input));
+
+        char[] buffer = new char[22];
+        int numRead = reader.read(buffer, 0, 22);
+        assertEquals("This is a test string ", new String(buffer, 0, numRead));
+
+        buffer = new char[30];
+        numRead = reader.read(buffer, 0, 30);
+        assertEquals("\nnext line", new String(buffer, 0, numRead));
+    }
+
 }
