@@ -39,7 +39,7 @@
     <properties>
         <ipojo.import.packages>[1.12.1,2.0.0)</ipojo.import.packages>
         <ipojo.manipulator.version>${project.version}</ipojo.manipulator.version>
-        <asm.version>9.2</asm.version>
+        <asm.version>9.6</asm.version>
     </properties>
 
     <dependencies>
