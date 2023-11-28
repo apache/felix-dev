@@ -244,6 +244,8 @@ public class JsonSupport {
         private boolean insideComment = false;
         private boolean insideLineComment = false;
         private boolean insideString = false;
+        private boolean isSkippedSlash = false;
+        private char oldChar = 0; // priming with 0 as it is not part of comment or string escaping chars
             
         public CommentRemovingReader(Reader reader) {
             super(new BufferedReader(reader));
@@ -268,84 +270,109 @@ public class JsonSupport {
                         // Detect String start/end if not inside a comment
                         if (!insideComment && !insideLineComment) {
                             if (c == '"') {
-                                // handle escaped quotes inside strings
-                                if (i > 0 && cbuf[i - 1] == '\\') {
-                                    // escaped quote inside a string, include both the backslash and the quote
-                                    currentLine.append(c);
-                                    continue;
+                                // only flip if not escaped quotes
+                                if (oldChar != '\\') {
+                                    insideString = !insideString;
                                 }
-                                insideString = !insideString;
+                                currentLine.append(c);
+                                oldChar = c;
+                                continue;
                             }
                         }
 
 
                         // Handle comments only if not inside a string
                         if (!insideString) {
-                            // Detect start of single-line comment
-                            if (!insideComment && c == '/' && i < off + charsRead - 1 && cbuf[i + 1] == '/') {
-                                insideLineComment = true;
-                                i++; // Skip '/' character
+                            // Detect potential start of a comment by detecting a slash
+                            if(!insideComment && !insideLineComment && c == '/') {
+                                // If the previous character was also a slash, we are inside a single-line comment
+                                if (oldChar == '/') {
+                                    insideLineComment = true;
+                                    isSkippedSlash = false;
+                                } else {
+                                    // skipping slash for verification if this is comment - will be ammended on next char if non-comment
+                                    isSkippedSlash = true;
+                                }
+                                oldChar = c;
+                                continue;
+                            }
+                            // Detect potential start of a multiline comment by detecting a star
+                            if(!insideComment && !insideLineComment && c == '*') {
+                                // If the previous character was also a slash, we are inside a multi-line comment
+                                if (oldChar == '/') {
+                                    insideComment = true;
+                                    isSkippedSlash = false;
+                                } else {
+                                    // otherwise this is not a comment, just a star
+                                    currentLine.append(c);
+                                }
+                                oldChar = c;
                                 continue;
                             }
 
-                            // Detect start of multi-line comment
-                            if (!insideComment && c == '/' && i < off + charsRead - 1 && cbuf[i + 1] == '*') {
-                                insideComment = true;
-                                i++; // Skip '*' character
-                                continue;
+                            // if if we skipped over a / above and we're not within a comment, we need to append the oldChar to the currentLine
+                            if (!insideComment && !insideLineComment  && isSkippedSlash) {
+                                currentLine.append('/');
+                                isSkippedSlash = false;
                             }
 
-                            // Detect end of multi-line comment
-                            if (insideComment && c == '*' && i < off + charsRead - 1 && cbuf[i + 1] == '/') {
-                                insideComment = false;
-                                i++; // Skip '/' character
-                                continue;
-                            }
-
-                            // Skip characters inside single-line comments
+                            // Detect potential end of a linecomment by detecting a newline
                             if (insideLineComment && c == '\n') {
                                 insideLineComment = false;
+                                currentLine.append(c);
+                                oldChar = c;
+                                continue;
                             }
                             
-                            // Preserve newline characters inside multiline comments
-                            if (insideComment && !insideLineComment && c == '\n') {
-                                currentLine.append(c);
+                            // Skip over characters inside single-line comments
+                            if (insideLineComment) {
+                                oldChar = c;
                                 continue;
                             }
 
-                            // Skip characters inside multiline comments
-                            if (insideComment && c == '*' && i < off + charsRead - 1 && cbuf[i + 1] == '/') {
+                         // Detect potential end of a multiline comment by detecting a slash that is preceded by a star
+                            if (insideComment && c == '/' && oldChar == '*') {
                                 insideComment = false;
-                                i++; // Skip '/' character
+                                oldChar = c;
                                 continue;
                             }
 
-                            // Skip characters inside single-line comments
-                            if (insideLineComment && c == '\n') {
-                                insideLineComment = false;
+                            // Skip over characters inside multi-line comments but preserve newlines
+                            if (insideComment) {
+                                if(c == '\n') {
+                                    currentLine.append(c);
+                                }
+                                oldChar = c;
+                                continue;
                             }
                         }
-
-                        // Preserve characters outside comments
-                        if (!insideComment && !insideLineComment) {
-                            currentLine.append(c);
-                        }
+                    // Preserve characters outside comments
+                    if (!insideComment && !insideLineComment) {
+                        currentLine.append(c);
                     }
-
-                    filteredContent.append(currentLine.toString());
-
-                    char[] filteredChars = filteredContent.toString().toCharArray();
-                    int filteredLen = Math.min(filteredChars.length, len);
-                    System.arraycopy(filteredChars, 0, cbuf, off, filteredLen);
-                    return filteredLen;
+                    oldChar = c;
                 }
-                return charsRead;
+
+                filteredContent.append(currentLine.toString());
+
+                char[] filteredChars = filteredContent.toString().toCharArray();
+                int filteredLen = Math.min(filteredChars.length, len);
+                System.arraycopy(filteredChars, 0, cbuf, off, filteredLen);
+                return filteredLen;
+                
+            }
+            return charsRead;
         }
 
         @Override
         public void close() throws IOException {
             if (!closed) {
                 closed = true;
+                closed = false;
+                insideComment = false;
+                insideLineComment = false;
+                insideString = false;
+                isSkippedSlash = false;
                 in.close();
                 super.close();
             }
