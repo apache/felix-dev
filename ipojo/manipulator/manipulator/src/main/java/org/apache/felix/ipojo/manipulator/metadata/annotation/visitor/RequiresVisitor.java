@@ -106,7 +106,7 @@ public class RequiresVisitor extends AnnotationVisitor {
      * @param name : field name.
      */
     public RequiresVisitor(ComponentWorkbench workbench, String name) {
-        super(Opcodes.ASM7);
+        super(Opcodes.ASM9);
         this.workbench = workbench;
         this.m_field = name;
     }

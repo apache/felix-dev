@@ -41,7 +41,7 @@ public class HandlerBindingDiscovery extends AnnotationVisitor implements Annota
      * Constructs a new {@link org.objectweb.asm.AnnotationVisitor}.
      */
     public HandlerBindingDiscovery() {
-        super(Opcodes.ASM7);
+        super(Opcodes.ASM9);
     }
 
     public AnnotationVisitor visitAnnotation(final String desc) {

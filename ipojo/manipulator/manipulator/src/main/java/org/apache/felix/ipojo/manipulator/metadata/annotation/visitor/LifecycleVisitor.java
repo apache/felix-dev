@@ -42,7 +42,7 @@ public class LifecycleVisitor extends AnnotationVisitor {
     private Transition transition;
 
     public LifecycleVisitor(ComponentWorkbench workbench, String name, Transition transition) {
-        super(Opcodes.ASM7);
+        super(Opcodes.ASM9);
         this.workbench = workbench;
         this.name = name;
         this.transition = transition;

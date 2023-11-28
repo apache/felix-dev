@@ -33,7 +33,7 @@ public class AnnotationRecorder extends AnnotationVisitor implements Replay {
     private List<Replay> m_replays = new ArrayList<Replay>();
 
     public AnnotationRecorder() {
-        super(Opcodes.ASM7);
+        super(Opcodes.ASM9);
     }
 
     public void visit(final String name, final Object value) {

@@ -36,7 +36,7 @@ public class TypeStereotypeVisitor extends AnnotationVisitor {
     private final AnnotationType m_annotationType;
 
     public TypeStereotypeVisitor(final ClassVisitor delegate, AnnotationType annotationType) {
-        super(Opcodes.ASM7);
+        super(Opcodes.ASM9);
         this.m_delegate = delegate;
         m_annotationType = annotationType;
     }

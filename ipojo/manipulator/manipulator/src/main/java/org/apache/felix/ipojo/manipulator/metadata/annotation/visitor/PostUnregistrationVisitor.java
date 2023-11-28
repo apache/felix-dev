@@ -35,7 +35,7 @@ public class PostUnregistrationVisitor extends AnnotationVisitor {
     private String name;
 
     public PostUnregistrationVisitor(ComponentWorkbench workbench, String name) {
-        super(Opcodes.ASM7);
+        super(Opcodes.ASM9);
         this.workbench = workbench;
         this.name = name;
     }

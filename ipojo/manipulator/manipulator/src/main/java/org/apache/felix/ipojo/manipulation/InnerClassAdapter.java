@@ -72,7 +72,7 @@ public class InnerClassAdapter extends ClassVisitor implements Opcodes {
      */
     public InnerClassAdapter(String name, ClassVisitor visitor, String outerClassName,
                              Manipulator manipulator) {
-        super(Opcodes.ASM7, visitor);
+        super(Opcodes.ASM9, visitor);
         m_name = name;
         m_simpleName = m_name.substring(m_name.indexOf("$") + 1);
         m_outer = outerClassName;

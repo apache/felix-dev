@@ -35,7 +35,7 @@ public class ChainedAnnotationVisitor extends AnnotationVisitor {
     private List<AnnotationVisitor> m_visitors = new ArrayList<AnnotationVisitor>();
 
     public ChainedAnnotationVisitor() {
-        super(Opcodes.ASM7);
+        super(Opcodes.ASM9);
     }
 
     public List<AnnotationVisitor> getVisitors() {

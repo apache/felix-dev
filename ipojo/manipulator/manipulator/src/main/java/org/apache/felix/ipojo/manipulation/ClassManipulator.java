@@ -141,7 +141,7 @@ public class ClassManipulator extends ClassVisitor implements Opcodes {
      * @param manipulator : the manipulator having analyzed the class.
      */
     public ClassManipulator(ClassVisitor visitor, Manipulator manipulator) {
-        super(Opcodes.ASM7, visitor);
+        super(Opcodes.ASM9, visitor);
         m_manipulator = manipulator;
         m_fields = manipulator.getFields().keySet();
         m_finalFields = manipulator.getFinalFields();

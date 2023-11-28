@@ -54,7 +54,7 @@ public class SubArrayVisitor extends AnnotationVisitor {
      * @param name : attribute name.
      */
     public SubArrayVisitor(Element elem, String name) {
-        super(Opcodes.ASM7);
+        super(Opcodes.ASM9);
         m_elem = elem;
         m_name = name;
     }

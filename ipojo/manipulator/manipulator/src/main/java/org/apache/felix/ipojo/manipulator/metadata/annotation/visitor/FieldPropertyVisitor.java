@@ -82,7 +82,7 @@ public class FieldPropertyVisitor extends AnnotationVisitor {
      * @param field : field name.
      */
     public FieldPropertyVisitor(String field, Element parent) {
-        super(Opcodes.ASM7);
+        super(Opcodes.ASM9);
         m_parent = parent;
         m_field = field;
     }

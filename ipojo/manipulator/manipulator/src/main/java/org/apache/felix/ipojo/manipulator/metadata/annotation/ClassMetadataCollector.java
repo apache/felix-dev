@@ -58,7 +58,7 @@ public class ClassMetadataCollector extends ClassVisitor {
     private Element instanceMetadata;
 
     public ClassMetadataCollector(BindingRegistry registry, Reporter reporter) {
-        super(Opcodes.ASM7);
+        super(Opcodes.ASM9);
         this.registry = registry;
         this.reporter = reporter;
         node = new ClassNode();

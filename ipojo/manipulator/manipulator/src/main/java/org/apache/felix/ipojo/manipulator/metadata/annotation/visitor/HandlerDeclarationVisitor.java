@@ -53,7 +53,7 @@ public class HandlerDeclarationVisitor extends AnnotationVisitor {
     private Reporter reporter;
 
     public HandlerDeclarationVisitor(ComponentWorkbench workbench, DocumentBuilder builder, Reporter reporter) {
-        super(Opcodes.ASM7);
+        super(Opcodes.ASM9);
         this.workbench = workbench;
         this.builder = builder;
         this.reporter = reporter;

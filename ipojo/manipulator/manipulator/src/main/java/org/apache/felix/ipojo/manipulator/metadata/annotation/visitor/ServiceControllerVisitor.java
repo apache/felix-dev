@@ -48,7 +48,7 @@ public class ServiceControllerVisitor extends AnnotationVisitor {
      * @param field : field name.
      */
     public ServiceControllerVisitor(String field, Element provides) {
-        super(Opcodes.ASM7);
+        super(Opcodes.ASM9);
         this.provides = provides;
         controller.addAttribute(new Attribute("field", field));
     }

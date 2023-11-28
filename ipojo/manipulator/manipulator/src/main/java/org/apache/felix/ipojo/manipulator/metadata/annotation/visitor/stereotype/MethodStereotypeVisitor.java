@@ -34,7 +34,7 @@ public class MethodStereotypeVisitor extends AnnotationVisitor {
     private final AnnotationType m_annotationType;
 
     public MethodStereotypeVisitor(final MethodVisitor delegate, AnnotationType annotationType) {
-        super(Opcodes.ASM7);
+        super(Opcodes.ASM9);
         this.m_delegate = delegate;
         m_annotationType = annotationType;
     }

@@ -35,7 +35,7 @@ public class GenericVisitor extends AnnotationVisitor {
     protected Element element;
 
     public GenericVisitor(Element element) {
-        super(Opcodes.ASM7);
+        super(Opcodes.ASM9);
         this.element = element;
     }
 
