@@ -23,9 +23,16 @@ import java.util.List;
 
 import org.osgi.dto.DTO;
 
+/**
+ * DTO for a reference
+ */
 public class DSRef extends DTO {
+    /** Reference name */
     public String name;
+    /** Referenced interface */
     public String iface;
+    /** Optional filter */
     public String filter;
+    /** List of candidates - might be empty. */
     public List<DSComp> candidates = new ArrayList<>();
 }

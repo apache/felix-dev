@@ -23,14 +23,14 @@ import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Dictionary;
 
-import junit.framework.TestCase;
-
 import org.apache.felix.cm.integration.helper.ConfigureThread;
 import org.apache.felix.cm.integration.helper.ManagedServiceFactoryThread;
 import org.apache.felix.cm.integration.helper.ManagedServiceThread;
 import org.junit.Test;
 import org.junit.runner.RunWith;
-import org.ops4j.pax.exam.junit.JUnit4TestRunner;
+import org.ops4j.pax.exam.junit.PaxExam;
+
+import junit.framework.TestCase;
 
 
 /**
@@ -40,7 +40,7 @@ import org.ops4j.pax.exam.junit.JUnit4TestRunner;
  * <p>
  * @see <a href="https://issues.apache.org/jira/browse/FELIX-1545">FELIX-1545</a>
  */
-@RunWith(JUnit4TestRunner.class)
+@RunWith(PaxExam.class)
 public class ConfigUpdateStressTest extends ConfigurationTestBase
 {
 

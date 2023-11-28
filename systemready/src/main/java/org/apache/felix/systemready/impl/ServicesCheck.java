@@ -63,14 +63,14 @@ public class ServicesCheck implements SystemReadyCheck {
         @AttributeDefinition(name = "Services list", description = "The services that need to be registered for the check to pass")
         String[] services_list();
 
-        @AttributeDefinition(name = "Check type") 
+        @AttributeDefinition(name = "Check type")
         StateType type() default StateType.ALIVE;
     }
 
     private List<String> servicesList;
 
     private Map<String, Tracker> trackers;
-    
+
     private DSRootCause analyzer;
 
     private StateType type;
@@ -102,14 +102,14 @@ public class ServicesCheck implements SystemReadyCheck {
 
     @Override
     public CheckStatus getStatus() {
-        boolean allPresent = trackers.values().stream().allMatch(Tracker::present);
+        final List<String> missing = getMissing();
+        boolean allPresent = missing.isEmpty();
         // TODO: RED on timeouts
         final CheckStatus.State state = State.fromBoolean(allPresent);
-        return new CheckStatus(getName(), type, state, getDetails()); // TODO: out of sync? do we care?
+        return new CheckStatus(getName(), type, state, getDetails(missing)); // TODO: out of sync? do we care?
     }
 
-    private String getDetails() {
-        List<String> missing = getMissing();
+    private String getDetails(List<String> missing) {
         StringBuilder missingSt = new StringBuilder();
         RootCausePrinter printer = new RootCausePrinter(st -> missingSt.append(st + "\n"));
         for (String iface : missing) {

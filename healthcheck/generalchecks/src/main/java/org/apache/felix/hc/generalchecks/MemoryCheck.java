@@ -34,7 +34,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 @HealthCheckService(name = MemoryCheck.HC_NAME)
-@Component(configurationPolicy = ConfigurationPolicy.REQUIRE)
+@Component(configurationPolicy = ConfigurationPolicy.REQUIRE, immediate = true)
 @Designate(ocd = MemoryCheck.Config.class, factory = false)
 public class MemoryCheck implements HealthCheck {
 
@@ -81,7 +81,7 @@ public class MemoryCheck implements HealthCheck {
         long usedMemory = currentlyAllocatedByJVM - freeMemory;
         log.debug("Used memory: {}", bytesHumanReadable(usedMemory));
         long maxMemoryAvailableToJVM = runtime.maxMemory();
-        
+
         double memoryUsedPercentage = ((double) usedMemory / maxMemoryAvailableToJVM * 100d);
 
         Result.Status status =

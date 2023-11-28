@@ -16,7 +16,7 @@
  */
 package org.apache.felix.http.proxy;
 
-import javax.servlet.ServletException;
+import jakarta.servlet.ServletException;
 
 import org.osgi.framework.BundleContext;
 

@@ -60,7 +60,8 @@ public class ConfigurationComponentFactoryTest extends ComponentTestBase
 
         TestCase.assertNull( SimpleComponent.INSTANCE );
 
-        final ComponentFactory factory = getComponentFactory( componentfactory );
+        @SuppressWarnings("unused") // TODO not sure why this call is here
+        final ComponentFactory<?> factory = getComponentFactory(componentfactory);
 
         final String factoryConfigPid = createFactoryConfiguration( componentname, "?" );
         delay();

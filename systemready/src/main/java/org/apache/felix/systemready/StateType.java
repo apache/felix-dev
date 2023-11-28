@@ -18,6 +18,11 @@
  */
 package org.apache.felix.systemready;
 
+/**
+ * This framework is deprecated.
+ * @deprecated Use the Apache Felix Healthchecks instead.
+ */
+@Deprecated
 public enum StateType {
-	ALIVE, READY;
+	ALIVE, READY
 }

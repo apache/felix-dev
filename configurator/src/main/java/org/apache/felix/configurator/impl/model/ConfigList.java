@@ -118,7 +118,10 @@ public class ConfigList implements Serializable, Iterable<Config> {
                 if ( current.getBundleId() == cfg.getBundleId()
                   && current.getProperties().equals(cfg.getProperties()) ) {
                     if ( current.getState() == ConfigState.UNINSTALL ) {
-                        cfg.setState(ConfigState.INSTALLED);
+                    	
+                    	if ( cfg.getPolicy()!=ConfigPolicy.FORCE)
+                    		cfg.setState(ConfigState.INSTALLED);
+                    	
                         current.setState(ConfigState.UNINSTALLED);
                     }
                     break;

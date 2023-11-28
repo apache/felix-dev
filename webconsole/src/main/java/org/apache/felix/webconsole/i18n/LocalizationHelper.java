@@ -40,10 +40,10 @@ public class LocalizationHelper {
      *            the bundle that provides the localization resources. See the
      *            standard OSGi-type localization support.
      */
-    public LocalizationHelper(Bundle bundle) {
-	if (null == bundle)
-	    throw new NullPointerException();
-	this.cache = new ResourceBundleCache(bundle);
+    public LocalizationHelper(final Bundle bundle) {
+	    if (null == bundle)
+	        throw new NullPointerException();
+	    this.cache = new ResourceBundleCache(bundle);
     }
 
     /**
@@ -54,6 +54,6 @@ public class LocalizationHelper {
      * @return the resource bundle (could be empty, but never <code>null</code>)
      */
     public ResourceBundle getResourceBundle(final Locale locale) {
-	return cache.getResourceBundle(locale);
+	    return cache.getResourceBundle(locale);
     }
 }

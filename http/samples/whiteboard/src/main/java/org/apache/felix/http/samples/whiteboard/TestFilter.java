@@ -16,7 +16,7 @@
  */
 package org.apache.felix.http.samples.whiteboard;
 
-import javax.servlet.*;
+import jakarta.servlet.*;
 import java.io.IOException;
 
 public class TestFilter

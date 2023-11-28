@@ -23,7 +23,6 @@ import static org.ops4j.pax.exam.CoreOptions.mavenBundle;
 import static org.ops4j.pax.exam.CoreOptions.options;
 import static org.ops4j.pax.exam.CoreOptions.provision;
 import static org.ops4j.pax.exam.CoreOptions.systemProperty;
-import static org.ops4j.pax.exam.CoreOptions.vmOption;
 
 import java.io.File;
 import java.util.ArrayList;
@@ -34,7 +33,6 @@ import java.util.List;
 import java.util.Map;
 import java.util.Queue;
 import java.util.concurrent.ConcurrentLinkedQueue;
-import java.util.concurrent.CopyOnWriteArrayList;
 
 import javax.inject.Inject;
 
@@ -68,7 +66,7 @@ public abstract class AbstractTest implements Runnable {
     private EventAdmin eventAdmin;
 
     /** Event admin reference. */
-    private ServiceReference eventAdminReference;
+    private ServiceReference<EventAdmin> eventAdminReference;
 
     private volatile boolean running = false;
 
@@ -81,8 +79,8 @@ public abstract class AbstractTest implements Runnable {
     private volatile String prefix;
 
     private volatile long startTime;
-    
-    private final Queue<Event> eventRecievedList = new ConcurrentLinkedQueue();
+
+    private final Queue<Event> eventRecievedList = new ConcurrentLinkedQueue<>();
 
     /** Wait lock for syncing. */
     private final Object waitLock = new Object();
@@ -108,10 +106,10 @@ public abstract class AbstractTest implements Runnable {
      * @param sync
      */
     protected void send(String topic, Dictionary<String, Object> properties, int index, boolean sync) {
-        
-    	if(properties == null)
+
+    	if (properties == null)
     	{
-    		properties = new Hashtable();
+    		properties = new Hashtable<>();
     	}
         properties.put("thread", Thread.currentThread().getId());
         properties.put("index", index);
@@ -232,11 +230,10 @@ public abstract class AbstractTest implements Runnable {
     /**
      * Helper method to get a service of the given type
      */
-    @SuppressWarnings("unchecked")
 	protected <T> T getService(Class<T> clazz) {
-    	final ServiceReference ref = bundleContext.getServiceReference(clazz.getName());
+    	final ServiceReference<T> ref = bundleContext.getServiceReference(clazz);
     	assertNotNull("getService(" + clazz.getName() + ") must find ServiceReference", ref);
-    	final T result = (T)(bundleContext.getService(ref));
+    	final T result = (bundleContext.getService(ref));
     	assertNotNull("getService(" + clazz.getName() + ") must find service", result);
     	return result;
     }
@@ -244,10 +241,10 @@ public abstract class AbstractTest implements Runnable {
     protected EventAdmin getEventAdmin() {
         if ( eventAdminReference == null || eventAdminReference.getBundle() == null ) {
             eventAdmin = null;
-            eventAdminReference = bundleContext.getServiceReference(EventAdmin.class.getName());
+            eventAdminReference = bundleContext.getServiceReference(EventAdmin.class);
         }
         if ( eventAdmin == null && eventAdminReference != null ) {
-            eventAdmin = (EventAdmin) bundleContext.getService(eventAdminReference);
+            eventAdmin = bundleContext.getService(eventAdminReference);
         }
         return eventAdmin;
     }
@@ -274,7 +271,7 @@ public abstract class AbstractTest implements Runnable {
              // with build server issue
              new DirectURLJUnitBundlesOption(),
              systemProperty("pax.exam.invoker").value("junit"),
-             //vmOption("-Xrunjdwp:transport=dt_socket,server=y,suspend=y,address=5005"), 
+             //vmOption("-Xrunjdwp:transport=dt_socket,server=y,suspend=y,address=5005"),
              bundle("link:classpath:META-INF/links/org.ops4j.pax.exam.invoker.junit.link")
         );
     }
@@ -293,7 +290,7 @@ public abstract class AbstractTest implements Runnable {
         {
         	Integer index = (Integer)currentEvent.getProperty("index");
         	Long threadId = (Long)currentEvent.getProperty("thread");
-        	
+
         	if(index != null && threadId != null){
         		Integer previousIndex = orderVerifyMap.get(threadId);
         		if(previousIndex == null)

@@ -19,24 +19,24 @@
 package org.apache.felix.cm.integration;
 
 
-import junit.framework.TestCase;
-
 import org.apache.felix.cm.integration.helper.ManagedServiceTestActivator;
 import org.apache.felix.cm.integration.helper.ManagedServiceTestActivator2;
 import org.apache.felix.cm.integration.helper.MultiManagedServiceTestActivator;
 import org.junit.Test;
 import org.junit.runner.RunWith;
-import org.ops4j.pax.exam.junit.JUnit4TestRunner;
+import org.ops4j.pax.exam.junit.PaxExam;
 import org.osgi.framework.Bundle;
 import org.osgi.framework.BundleException;
 import org.osgi.service.cm.Configuration;
+
+import junit.framework.TestCase;
 
 
 /**
  * The <code>MultiServicePIDTest</code> tests the case of multiple services
  * bound with the same PID
  */
-@RunWith(JUnit4TestRunner.class)
+@RunWith(PaxExam.class)
 public class MultiServicePIDTest extends ConfigurationTestBase
 {
     static

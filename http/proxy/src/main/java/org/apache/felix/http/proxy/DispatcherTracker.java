@@ -16,8 +16,8 @@
  */
 package org.apache.felix.http.proxy;
 
-import javax.servlet.ServletConfig;
-import javax.servlet.http.HttpServlet;
+import jakarta.servlet.ServletConfig;
+import jakarta.servlet.http.HttpServlet;
 
 import org.osgi.framework.BundleContext;
 import org.osgi.framework.Constants;

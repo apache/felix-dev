@@ -18,6 +18,7 @@
  */
 package org.apache.felix.webconsole;
 
+import org.osgi.annotation.versioning.ConsumerType;
 
 /**
  * The <code>WebConsoleSecurityProvider</code> is a service interface allowing
@@ -25,9 +26,11 @@ package org.apache.felix.webconsole;
  * Web Console.
  *
  * @since 3.1.0; Web Console Bundle 3.1.0
+ * @deprecated Use the {@link org.apache.felix.webconsole.spi.SecurityProvider} instead.
  */
-public interface WebConsoleSecurityProvider
-{
+@Deprecated
+@ConsumerType
+public interface WebConsoleSecurityProvider {
 
     /**
      * Authenticates the user with the given user name and password.
@@ -44,7 +47,7 @@ public interface WebConsoleSecurityProvider
 
 
     /**
-     * Checks whether bthe authenticated user has the given role permission.
+     * Checks whether the authenticated user has the given role permission.
      *
      * @param user The object referring to the authenticated user. This is the
      *      object returned from the {@link #authenticate(String, String)}

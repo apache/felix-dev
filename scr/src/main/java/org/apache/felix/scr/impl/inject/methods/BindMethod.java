@@ -687,7 +687,8 @@ implements org.apache.felix.scr.impl.inject.ReferenceMethod
         int i = 0;
         for ( ValueUtils.ValueType pt: m_paramTypes )
         {
-            result[i] = ValueUtils.getValue(getComponentClass().getName(), pt, method.getParameterTypes()[i], key, refPair);
+            result[i] = ValueUtils.getValue(getComponentClass().getName(), pt,
+                method.getParameterTypes()[i], key, refPair, null);
             i++;
         }
         return result;

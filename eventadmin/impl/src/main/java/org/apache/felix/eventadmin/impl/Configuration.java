@@ -50,38 +50,38 @@ import org.osgi.service.metatype.MetaTypeProvider;
  * The service knows about the following properties which are read at bundle startup:
  * <p>
  * <p>
- *      <tt>org.apache.felix.eventadmin.ThreadPoolSize</tt> - The size of the thread
+ *      {@code org.apache.felix.eventadmin.ThreadPoolSize} - The size of the thread
  *          pool.
  * </p>
  * The default value is 10. Increase in case of a large amount of synchronous events
- * where the <tt>EventHandler</tt> services in turn send new synchronous events in
+ * where the {@code EventHandler} services in turn send new synchronous events in
  * the event dispatching thread or a lot of timeouts are to be expected. A value of
  * less then 2 triggers the default value. A value of 2 effectively disables thread
  * pooling.
  * </p>
  * <p>
  * <p>
- *      <tt>org.apache.felix.eventadmin.Timeout</tt> - The black-listing timeout in
+ *      {@code org.apache.felix.eventadmin.Timeout} - The deny-listing timeout in
  *          milliseconds
  * </p>
  * The default value is 5000. Increase or decrease at own discretion. A value of less
  * then 100 turns timeouts off. Any other value is the time in milliseconds granted
- * to each <tt>EventHandler</tt> before it gets blacklisted.
+ * to each {@code EventHandler} before it gets put on the denylist.
  * </p>
  * <p>
  * <p>
- *      <tt>org.apache.felix.eventadmin.RequireTopic</tt> - Are <tt>EventHandler</tt>
+ *      {@code org.apache.felix.eventadmin.RequireTopic} - Are {@code EventHandler}
  *          required to be registered with a topic?
  * </p>
- * The default is <tt>true</tt>. The specification says that <tt>EventHandler</tt>
+ * The default is {@code true}. The specification says that {@code EventHandler}
  * must register with a list of topics they are interested in. Setting this value to
- * <tt>false</tt> will enable that handlers without a topic are receiving all events
+ * {@code false} will enable that handlers without a topic are receiving all events
  * (i.e., they are treated the same as with a topic=*).
  * </p>
  * <p>
  * <p>
- *      <tt>org.apache.felix.eventadmin.IgnoreTimeout</tt> - Configure
- *         <tt>EventHandler</tt>s to be called without a timeout.
+ *      {@code org.apache.felix.eventadmin.IgnoreTimeout} - Configure
+ *         {@code EventHandler}s to be called without a timeout.
  * </p>
  * <p>
  * If a timeout is configured by default all event handlers are called using the timeout.
@@ -99,7 +99,7 @@ import org.osgi.service.metatype.MetaTypeProvider;
  * </p>
  * <p>
  * <p>
- *      <tt>org.apache.felix.eventadmin.IgnoreTopic</tt> - Configure
+ *      {@code org.apache.felix.eventadmin.IgnoreTopic} - Configure
  *         topics to be ignore and not delivered to registered handlers.
  * </p>
  * <p>
@@ -167,12 +167,15 @@ public class Configuration
     private volatile EventAdminImpl m_admin;
 
     // The registration of the security decorator factory (i.e., the service)
-    private volatile ServiceRegistration m_registration;
+    private volatile ServiceRegistration<EventAdmin> m_registration;
+
+    // The registration of the mbean
+    private volatile ServiceRegistration<Object> m_mbeanreg;
 
     // all adapters
     private AbstractAdapter[] m_adapters;
 
-    private ServiceRegistration m_managedServiceReg;
+    private ServiceRegistration<?> m_managedServiceReg;
 
     // the access control context
     private final AccessControlContext acc;
@@ -285,7 +288,7 @@ public class Configuration
 
             // The timeout in milliseconds - A value of less then 100 turns timeouts off.
             // Any other value is the time in milliseconds granted to each EventHandler
-            // before it gets blacklisted.
+            // before it gets denied.
             m_timeout = getIntProperty(PROP_TIMEOUT,
                     m_bundleContext.getProperty(PROP_TIMEOUT), 5000, Integer.MIN_VALUE);
 
@@ -434,8 +437,13 @@ public class Configuration
             // register the admin wrapped in a service factory (SecureEventAdminFactory)
             // that hands-out the m_admin object wrapped in a decorator that checks
             // appropriated permissions of each calling bundle
-            m_registration = m_bundleContext.registerService(EventAdmin.class.getName(),
+            m_registration = m_bundleContext.registerService(EventAdmin.class,
                     new SecureEventAdminFactory(m_admin), null);
+
+            final Dictionary<String, Object> mbeanProps = new Hashtable<>();
+            mbeanProps.put("jmx.objectname", "org.apache.felix.eventadmin:type=handlerinfo,name=EventAdmin");
+
+            m_mbeanreg = m_bundleContext.registerService(Object.class, m_admin.getHandlerInfoMBean(), mbeanProps);
         }
         else
         {
@@ -469,6 +477,10 @@ public class Configuration
                 m_managedServiceReg = null;
             }
             // We need to unregister manually
+            if ( m_mbeanreg != null ) {
+                m_mbeanreg.unregister();
+                m_mbeanreg = null;
+            }
             if ( m_registration != null )
             {
                 m_registration.unregister();

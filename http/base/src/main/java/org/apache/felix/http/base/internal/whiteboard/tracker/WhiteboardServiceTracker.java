@@ -94,8 +94,12 @@ public abstract class WhiteboardServiceTracker<T> extends ServiceTracker<T, Serv
 
     private void modified(final ServiceReference<T> ref)
     {
-        removed(ref);
-        added(ref);
+        final WhiteboardServiceInfo<T> newInfo = this.getServiceInfo(ref);
+        final WhiteboardServiceInfo<T> oldInfo = this.allInfos.get(ref.getProperty(Constants.SERVICE_ID));
+        if (oldInfo == null || !newInfo.isSame(oldInfo)) {
+            removed(ref);
+            added(ref);
+        }
     }
 
     private void added(final ServiceReference<T> ref)

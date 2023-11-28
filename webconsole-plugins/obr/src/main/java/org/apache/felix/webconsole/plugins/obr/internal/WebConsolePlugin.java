@@ -20,83 +20,97 @@ package org.apache.felix.webconsole.plugins.obr.internal;
 
 
 import java.io.IOException;
+import java.util.Dictionary;
 import java.util.Enumeration;
+import java.util.Hashtable;
 
-import javax.servlet.ServletException;
-import javax.servlet.http.HttpServletRequest;
-import javax.servlet.http.HttpServletResponse;
+import jakarta.servlet.ServletException;
+import jakarta.servlet.http.HttpServletRequest;
+import jakarta.servlet.http.HttpServletResponse;
 
-import org.apache.felix.webconsole.DefaultVariableResolver;
-import org.apache.felix.webconsole.SimpleWebConsolePlugin;
-import org.apache.felix.webconsole.WebConsoleUtil;
+import org.apache.felix.webconsole.servlet.AbstractServlet;
+import org.apache.felix.webconsole.servlet.RequestVariableResolver;
+import org.apache.felix.webconsole.servlet.ServletConstants;
+import org.osgi.framework.BundleContext;
+import org.osgi.framework.ServiceRegistration;
+
+import jakarta.servlet.Servlet;
 
 
 /**
  * This class provides a plugin for rendering the available OSGi Bundle Repositories
  * and the resources they provide.
  */
-class WebConsolePlugin extends SimpleWebConsolePlugin
+class WebConsolePlugin extends AbstractServlet
 {
-    private static final String LABEL = "obr"; //$NON-NLS-1$
-    private static final String TITLE = "%obr.pluginTitle"; //$NON-NLS-1$
-    private static final String CATEGORY = "OSGi"; //$NON-NLS-1$
-    private static final String CSS[] = { "/" + LABEL + "/res/plugin.css" }; //$NON-NLS-1$ //$NON-NLS-2$
+    private static final String LABEL = "obr";
+    private static final String TITLE = "%obr.pluginTitle";
+    private static final String CATEGORY = "OSGi";
+    private static final String CSS[] = { "/" + LABEL + "/res/plugin.css" };
 
     // templates
     private final String TEMPLATE;
 
     private AbstractBundleRepositoryRenderHelper helper;
 
+    private ServiceRegistration<Servlet> registration;
+
+    private BundleContext bundleContext;
 
     /**
      *
      */
     public WebConsolePlugin()
     {
-        super( LABEL, TITLE, CSS );
-
         // load templates
-        TEMPLATE = readTemplateFile("/res/plugin.html"); //$NON-NLS-1$
+        try {
+            TEMPLATE = readTemplateFile("/res/plugin.html");
+        } catch (IOException e) {
+            throw new RuntimeException("Unable to read template");
+        }
     }
 
+    public WebConsolePlugin register(final BundleContext context) {
+        this.bundleContext = context;
+        final Dictionary<String, Object> props = new Hashtable<>();
+        props.put(ServletConstants.PLUGIN_LABEL, LABEL);
+        props.put(ServletConstants.PLUGIN_TITLE, TITLE);
+        props.put(ServletConstants.PLUGIN_CATEGORY, CATEGORY);
+        props.put(ServletConstants.PLUGIN_CSS_REFERENCES, CSS);
 
-    public String getCategory()
-    {
-        return CATEGORY;
+        this.registration = context.registerService(Servlet.class, this, props);
+        return this;
     }
 
-
-    /**
-     * @see org.apache.felix.webconsole.SimpleWebConsolePlugin#deactivate()
-     */
     public void deactivate()
     {
+        if (this.registration != null) {
+            try {
+                this.registration.unregister();
+            } catch ( final IllegalStateException ignore) {
+                // ignore
+            }
+            this.registration = null;
+        }
         if ( helper != null )
         {
             helper.dispose();
             helper = null;
         }
-
-        super.deactivate();
     }
 
-
-    /**
-     * @see org.apache.felix.webconsole.AbstractWebConsolePlugin#renderContent(javax.servlet.http.HttpServletRequest, javax.servlet.http.HttpServletResponse)
-     */
-    protected void renderContent( HttpServletRequest request, HttpServletResponse response ) throws IOException
+    @Override
+    public void renderContent( HttpServletRequest request, HttpServletResponse response ) throws IOException
     {
         // prepare variables
-        DefaultVariableResolver vars = ( ( DefaultVariableResolver ) WebConsoleUtil.getVariableResolver( request ) );
-        vars.put( "__data__", getData( request ) ); //$NON-NLS-1$
+        RequestVariableResolver vars = this.getVariableResolver(request);
+        vars.put( "__data__", getData( request ) );
 
         response.getWriter().print( TEMPLATE );
     }
 
 
-    /**
-     * @see javax.servlet.http.HttpServlet#doPost(javax.servlet.http.HttpServletRequest, javax.servlet.http.HttpServletResponse)
-     */
+    @Override
     protected void doPost( HttpServletRequest request, HttpServletResponse response ) throws ServletException,
         IOException
     {
@@ -106,21 +120,21 @@ class WebConsolePlugin extends SimpleWebConsolePlugin
             return;
         }
 
-        final String action = request.getParameter( "action" ); //$NON-NLS-1$
-        final String deploy = request.getParameter( "deploy" ); //$NON-NLS-1$
-        final String deploystart = request.getParameter( "deploystart" ); //$NON-NLS-1$
-        final String optional = request.getParameter( "optional" ); //$NON-NLS-1$
+        final String action = request.getParameter( "action" );
+        final String deploy = request.getParameter( "deploy" );
+        final String deploystart = request.getParameter( "deploystart" );
+        final String optional = request.getParameter( "optional" );
 
         if ( action != null )
         {
-            doAction( action, request.getParameter( "url" ) ); //$NON-NLS-1$
+            doAction( action, request.getParameter( "url" ) );
             response.getWriter().print( getData( request ) );
             return;
         }
 
         if ( deploy != null || deploystart != null )
         {
-            doDeploy( request.getParameterValues( "bundle" ), deploystart != null, optional != null ); //$NON-NLS-1$
+            doDeploy( request.getParameterValues( "bundle" ), deploystart != null, optional != null );
             doGet( request, response );
             return;
         }
@@ -135,7 +149,7 @@ class WebConsolePlugin extends SimpleWebConsolePlugin
         {
             try
             {
-                helper = new FelixBundleRepositoryRenderHelper( this, getBundleContext() );
+                helper = new FelixBundleRepositoryRenderHelper( this.bundleContext );
             }
             catch ( Throwable felixt )
             {
@@ -143,7 +157,7 @@ class WebConsolePlugin extends SimpleWebConsolePlugin
 
                 try
                 {
-                    helper = new OsgiBundleRepositoryRenderHelper( this, getBundleContext() );
+                    helper = new OsgiBundleRepositoryRenderHelper( this.bundleContext );
                 }
                 catch ( Throwable osgit )
                 {
@@ -168,7 +182,7 @@ class WebConsolePlugin extends SimpleWebConsolePlugin
         AbstractBundleRepositoryRenderHelper helper = getHelper();
         if ( helper == null || !helper.hasRepositoryAdmin() )
         {
-            return "{}"; //$NON-NLS-1$
+            return "{}";
         }
 
         RequestInfo info = new RequestInfo( request );
@@ -177,22 +191,22 @@ class WebConsolePlugin extends SimpleWebConsolePlugin
         String list = info.getList();
         if ( list != null )
         {
-            if ( "-".equals( list ) ) //$NON-NLS-1$
+            if ( "-".equals( list ) )
             {
-                StringBuffer sb = new StringBuffer( "(!(|" ); //$NON-NLS-1$
+                StringBuffer sb = new StringBuffer( "(!(|" );
                 for ( int c = 0; c < 26; c++ )
                 {
-                    sb.append( "(presentationname=" ).append( ( char ) ( 'a' + c ) ) //$NON-NLS-1$
-                      .append( "*)(presentationname=" ).append( ( char ) ( 'A' + c ) ) //$NON-NLS-1$
-                      .append( "*)" ); //$NON-NLS-1$
+                    sb.append( "(presentationname=" ).append( ( char ) ( 'a' + c ) )
+                      .append( "*)(presentationname=" ).append( ( char ) ( 'A' + c ) )
+                      .append( "*)" );
                 }
-                sb.append( "))" ); //$NON-NLS-1$
+                sb.append( "))" );
                 filter = sb.toString();
             }
             else
             {
-                filter = "(|(presentationname=" + list.toLowerCase() //$NON-NLS-1$
-                    + "*)(presentationname=" + list.toUpperCase() + "*))"; //$NON-NLS-1$ //$NON-NLS-2$
+                filter = "(|(presentationname=" + list.toLowerCase()
+                    + "*)(presentationname=" + list.toUpperCase() + "*))";
             }
         }
         else
@@ -202,33 +216,33 @@ class WebConsolePlugin extends SimpleWebConsolePlugin
             {
                 if ( query.indexOf( '=' ) > 0 )
                 {
-                    if ( query.startsWith( "(" ) ) //$NON-NLS-1$
+                    if ( query.startsWith( "(" ) )
                     {
                         filter = query;
                     }
                     else
                     {
-                        filter = "(" + query + ")"; //$NON-NLS-1$ //$NON-NLS-2$
+                        filter = "(" + query + ")";
                     }
                 }
                 else
                 {
-                    filter = "(|(presentationame=*" + query + "*)(symbolicname=*" + query + "*))"; //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$
+                    filter = "(|(presentationame=*" + query + "*)(symbolicname=*" + query + "*))";
                 }
             }
             else
             {
-                StringBuffer sb = new StringBuffer( "(&" ); //$NON-NLS-1$
+                StringBuffer sb = new StringBuffer( "(&" );
                 for ( Enumeration e = request.getParameterNames(); e.hasMoreElements(); )
                 {
                     String k = ( String ) e.nextElement();
                     String v = request.getParameter( k );
                     if ( v != null && v.length() > 0
-                        && !"details".equals( k )  //$NON-NLS-1$
-                        && !"deploy".equals( k ) //$NON-NLS-1$
-                        && !"deploystart".equals( k )  //$NON-NLS-1$
-                        && !"bundle".equals( k )  //$NON-NLS-1$
-                        && !"optional".equals( k ) ) //$NON-NLS-1$
+                        && !"details".equals( k ) 
+                        && !"deploy".equals( k )
+                        && !"deploystart".equals( k ) 
+                        && !"bundle".equals( k ) 
+                        && !"optional".equals( k ) )
                     {
                         sb.append( '(' ).append( k ).append( '=' ).append( v ).append( ')' );
                     }
@@ -238,7 +252,7 @@ class WebConsolePlugin extends SimpleWebConsolePlugin
             }
         }
 
-        return helper.getData( filter, info.showDetails(), getBundleContext().getBundles() );
+        return helper.getData( filter, info.showDetails(), this.bundleContext.getBundles() );
     }
 
 
@@ -287,7 +301,7 @@ class WebConsolePlugin extends SimpleWebConsolePlugin
         {
             if ( query == null )
             {
-                String query = WebConsoleUtil.urlDecode( request.getParameter( "query" ) ); //$NON-NLS-1$
+                String query = request.getParameter( "query" );
                 boolean details = false;
                 if ( query == null && request.getPathInfo().length() > 5 )
                 {
@@ -297,12 +311,12 @@ class WebConsolePlugin extends SimpleWebConsolePlugin
                     if ( slash < 0 )
                     {
                         // symbolic name only, version ??
-                        query = "(symbolicname=" + path + ")"; //$NON-NLS-1$ //$NON-NLS-2$
+                        query = "(symbolicname=" + path + ")";
                     }
                     else
                     {
-                        query = "(&(symbolicname=" + path.substring( 0, slash )  //$NON-NLS-1$
-                            + ")(version=" + path.substring( slash + 1 ) + "))"; //$NON-NLS-1$ //$NON-NLS-2$
+                        query = "(&(symbolicname=" + path.substring( 0, slash ) 
+                            + ")(version=" + path.substring( slash + 1 ) + "))";
                         details = true;
                     }
                 }
@@ -318,10 +332,10 @@ class WebConsolePlugin extends SimpleWebConsolePlugin
         {
             if ( list == null )
             {
-                list = WebConsoleUtil.urlDecode( request.getParameter( "list" ) ); //$NON-NLS-1$
+                list = request.getParameter( "list" );
                 if ( list == null && !request.getParameterNames().hasMoreElements() && getQuery() == null )
                 {
-                    list = "a"; //$NON-NLS-1$
+                    list = "a";
                 }
             }
             return list;

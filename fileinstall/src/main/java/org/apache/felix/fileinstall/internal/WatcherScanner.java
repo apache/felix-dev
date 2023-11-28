@@ -103,7 +103,11 @@ public class WatcherScanner extends Scanner {
                 storedChecksums.remove(file);
                 changed.remove(file);
             }
-
+            // Double check known files because modifications from externally mounted
+            // file systems are not well handled by inotify in Linux.
+            for (File file : new HashSet<File>(storedChecksums.keySet())) {
+                verifyChecksum(files, file, false);
+            }
             return files;
         }
     }

@@ -20,9 +20,10 @@ package org.apache.felix.http.jetty.internal;
 
 import java.io.InputStream;
 import java.util.ArrayList;
-import java.util.zip.Deflater;
 
 import org.apache.felix.http.base.internal.HttpConfig;
+import org.apache.felix.http.base.internal.logger.SystemLogger;
+import org.eclipse.jetty.server.CustomRequestLog;
 import org.eclipse.jetty.server.handler.gzip.GzipHandler;
 import org.eclipse.jetty.server.session.HouseKeeper;
 import org.osgi.framework.Bundle;
@@ -107,15 +108,11 @@ class ConfigMetaTypeProvider implements MetaTypeProvider
 
         adList.add(new AttributeDefinitionImpl(JettyConfig.FELIX_KEYSTORE_PASSWORD,
                 "Keystore Password",
-                "Password to access the Keystore. Only used if HTTPS is enabled.",
-                null,
-                bundle.getBundleContext().getProperty(JettyConfig.FELIX_KEYSTORE_PASSWORD)));
+                "Password to access the Keystore. Only used if HTTPS is enabled."));
 
         adList.add(new AttributeDefinitionImpl(JettyConfig.FELIX_KEYSTORE_KEY_PASSWORD,
                 "Key Password",
-                "Password to unlock the secret key from the Keystore. Only used if HTTPS is enabled.",
-                null,
-                bundle.getBundleContext().getProperty(JettyConfig.FELIX_KEYSTORE_KEY_PASSWORD)));
+                "Password to unlock the secret key from the Keystore. Only used if HTTPS is enabled."));
 
         adList.add(new AttributeDefinitionImpl(JettyConfig.FELIX_TRUSTSTORE,
                 "Truststore",
@@ -125,9 +122,7 @@ class ConfigMetaTypeProvider implements MetaTypeProvider
 
         adList.add(new AttributeDefinitionImpl(JettyConfig.FELIX_TRUSTSTORE_PASSWORD,
                 "Truststore Password",
-                "Password to access the Truststore. Only used if HTTPS is enabled.",
-                null,
-                bundle.getBundleContext().getProperty(JettyConfig.FELIX_TRUSTSTORE_PASSWORD)));
+                "Password to access the Truststore. Only used if HTTPS is enabled."));
 
         adList.add(new AttributeDefinitionImpl(JettyConfig.FELIX_HTTPS_CLIENT_CERT,
                 "Client Certificate",
@@ -347,11 +342,6 @@ class ConfigMetaTypeProvider implements MetaTypeProvider
                 String.format("The minimum response size to trigger dynamic compression. Default is %d.", GzipHandler.DEFAULT_MIN_GZIP_SIZE),
                 GzipHandler.DEFAULT_MIN_GZIP_SIZE,
                 bundle.getBundleContext().getProperty(JettyConfig.FELIX_JETTY_GZIP_MIN_GZIP_SIZE)));
-        adList.add(new AttributeDefinitionImpl(JettyConfig.FELIX_JETTY_GZIP_COMPRESSION_LEVEL,
-                "Gzip Compression Level",
-                String.format("The compression level to use. Default is %d.", Deflater.DEFAULT_COMPRESSION),
-                Deflater.DEFAULT_COMPRESSION,
-                bundle.getBundleContext().getProperty(JettyConfig.FELIX_JETTY_GZIP_COMPRESSION_LEVEL)));
         adList.add(new AttributeDefinitionImpl(JettyConfig.FELIX_JETTY_GZIP_INFLATE_BUFFER_SIZE,
                 "Gzip Inflate Buffer Size",
                 "The size in bytes of the buffer to inflate compressed request, or <= 0 for no inflation. Default is -1.",
@@ -362,14 +352,6 @@ class ConfigMetaTypeProvider implements MetaTypeProvider
                 "True if Deflater#SYNC_FLUSH should be used, else Deflater#NO_FLUSH will be used. Default is false.",
                 false,
                 bundle.getBundleContext().getProperty(JettyConfig.FELIX_JETTY_GZIP_SYNC_FLUSH)));
-        adList.add(new AttributeDefinitionImpl(JettyConfig.FELIX_JETTY_GZIP_EXCLUDED_USER_AGENT,
-                "Gzip Exclude User Agents",
-                "The regular expressions matching additional user agents to exclude. Default is none.",
-                AttributeDefinition.STRING,
-                null,
-                2147483647,
-                null, null,
-                getStringArray(bundle.getBundleContext().getProperty(JettyConfig.FELIX_JETTY_GZIP_EXCLUDED_USER_AGENT))));
         adList.add(new AttributeDefinitionImpl(JettyConfig.FELIX_JETTY_GZIP_INCLUDED_METHODS,
                 "Gzip Include Methods",
                 "The additional http methods to include in compression. Default is none.",
@@ -423,6 +405,14 @@ class ConfigMetaTypeProvider implements MetaTypeProvider
                 "If this property is set, the container session is automatically validated.",
                 HttpConfig.DEFAULT_INVALIDATE_SESSION,
                 bundle.getBundleContext().getProperty(HttpConfig.PROP_INVALIDATE_SESSION)));
+        adList.add(new AttributeDefinitionImpl(HttpConfig.PROP_CONTAINER_ADDED_ATTRIBUTE,
+                "Attributes added by server.",
+                "The attributes added by underlying session. Use this to invalidate session.",
+                AttributeDefinition.STRING,
+                new String[] {"org.eclipse.jetty.security.sessionCreatedSecure"},
+                2147483647,
+                null, null,
+                getStringArray(bundle.getBundleContext().getProperty(HttpConfig.PROP_CONTAINER_ADDED_ATTRIBUTE))));
         adList.add(new AttributeDefinitionImpl(HttpConfig.PROP_UNIQUE_SESSION_ID,
                 "Unique Session Id",
                 "If this property is set, each http context gets a unique session id (derived from the container session).",
@@ -432,6 +422,67 @@ class ConfigMetaTypeProvider implements MetaTypeProvider
                 "If not -1, stop timeout for the server in milliseconds.", -1L,
                 bundle.getBundleContext().getProperty(JettyConfig.FELIX_JETTY_STOP_TIMEOUT)));
 
+        adList.add(new AttributeDefinitionImpl(JettyConfig.FELIX_HTTP2_ENABLE,
+                "Enable Http/2",
+                "Whether to enable HTTP/2. Default is false.",
+                false,
+                bundle.getBundleContext().getProperty(JettyConfig.FELIX_HTTP2_ENABLE)));
+        adList.add(new AttributeDefinitionImpl(JettyConfig.FELIX_JETTY_HTTP2_MAX_CONCURRENT_STREAMS,
+                "Http/2 Max Concurrent Streams",
+                "The max number of concurrent streams per connection. Default is 128.",
+                128,
+                bundle.getBundleContext().getProperty(JettyConfig.FELIX_JETTY_HTTP2_MAX_CONCURRENT_STREAMS)));
+        adList.add(new AttributeDefinitionImpl(JettyConfig.FELIX_JETTY_HTTP2_INITIAL_STREAM_RECV_WINDOW,
+                "Http/2 Initial Stream Recieve Window",
+                "The initial stream receive window (client to server). Default is 524288.",
+                524288,
+                bundle.getBundleContext().getProperty(JettyConfig.FELIX_JETTY_HTTP2_INITIAL_STREAM_RECV_WINDOW)));
+        adList.add(new AttributeDefinitionImpl(JettyConfig.FELIX_JETTY_HTTP2_INITIAL_SESSION_RECV_WINDOW,
+                "Http/2 Initial Session Recieve Window",
+                "The initial session receive window (client to server). Default is 1048576.",
+                1048576,
+                bundle.getBundleContext().getProperty(JettyConfig.FELIX_JETTY_HTTP2_INITIAL_SESSION_RECV_WINDOW)));
+
+        adList.add(new AttributeDefinitionImpl(JettyConfig.FELIX_JETTY_ALPN_PROTOCOLS,
+                "ALPN Protocols",
+                "The ALPN protocols to consider. Default is h2, http/1.1.",
+                AttributeDefinition.STRING,
+                new String[] {"h2", "http/1.1"},
+                2147483647,
+                null, null,
+                getStringArray(bundle.getBundleContext().getProperty(JettyConfig.FELIX_JETTY_ALPN_PROTOCOLS))));
+        adList.add(new AttributeDefinitionImpl(JettyConfig.FELIX_JETTY_ALPN_DEFAULT_PROTOCOL,
+                "ALPN Default Protocol",
+                "The default protocol when negotiation fails. Default is http/1.1.",
+                "http/1.1",
+                bundle.getBundleContext().getProperty(JettyConfig.FELIX_JETTY_ALPN_DEFAULT_PROTOCOL)));
+
+        // most important request logging attributes
+        adList.add(new AttributeDefinitionImpl(JettyConfig.FELIX_HTTP_REQUEST_LOG_FILE_PATH,
+                "Request Log File Path",
+                "The path to the log file which is receiving request log entries. If empty no request log file is created",
+                null,
+                bundle.getBundleContext().getProperty(JettyConfig.FELIX_HTTP_REQUEST_LOG_FILE_PATH)));
+        adList.add(new AttributeDefinitionImpl(JettyConfig.FELIX_HTTP_REQUEST_LOG_FILE_FORMAT,
+                "Request Log File Format",
+                "The format of the request log file entries. Only relevant if 'Request Log File Path' is set. Valid placeholders are described in https://www.eclipse.org/jetty/documentation/jetty-11/operations-guide/index.html#og-module-requestlog",
+                CustomRequestLog.NCSA_FORMAT,
+                bundle.getBundleContext().getProperty(JettyConfig.FELIX_HTTP_REQUEST_LOG_FILE_FORMAT)));
+        adList.add(new AttributeDefinitionImpl(JettyConfig.FELIX_HTTP_REQUEST_LOG_OSGI_ENABLE,
+                "Enable SLF4J Request Logging",
+                "Select to log requests through SLF4J logger with given name (on level INFO)",
+                false,
+                bundle.getBundleContext().getProperty(JettyConfig.FELIX_HTTP_REQUEST_LOG_OSGI_ENABLE)));
+        adList.add(new AttributeDefinitionImpl(JettyConfig.FELIX_HTTP_REQUEST_LOG_OSGI_LOGGER_NAME,
+                "SLF4J Request Log Logger Name",
+                "The name of the SLF4J request logger. Only relevant if 'Enable SLF4J Request Logging' is checked.",
+                SystemLogger.LOGGER.getName(),
+                bundle.getBundleContext().getProperty(JettyConfig.FELIX_HTTP_REQUEST_LOG_OSGI_LOGGER_NAME)));
+        adList.add(new AttributeDefinitionImpl(JettyConfig.FELIX_HTTP_REQUEST_LOG_FORMAT,
+                "SLF4J Request Log Format",
+                "The format of the request log entries. Only relevant if 'Enable SLF4J Request Logging' is checked. Valid placeholders are described in https://www.eclipse.org/jetty/documentation/jetty-11/operations-guide/index.html#og-module-requestlog",
+                CustomRequestLog.NCSA_FORMAT,
+                bundle.getBundleContext().getProperty(JettyConfig.FELIX_HTTP_REQUEST_LOG_FORMAT)));
         return new ObjectClassDefinition()
         {
 
@@ -491,6 +542,16 @@ class ConfigMetaTypeProvider implements MetaTypeProvider
         private final String[] optionLabels;
         private final String[] optionValues;
 
+        /**
+         * Constructor for password properties
+         * @param id The id of the property
+         * @param name The property name
+         * @param description The property description
+         */
+        AttributeDefinitionImpl( final String id, final String name, final String description )
+        {
+            this( id, name, description, PASSWORD, (String[])null, 0, null, null, (String[])null );
+        }
 
         AttributeDefinitionImpl( final String id, final String name, final String description, final String defaultValue, final String overrideValue )
         {

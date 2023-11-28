@@ -20,6 +20,8 @@ package org.apache.felix.framework;
 
 import java.io.File;
 import java.io.IOException;
+import java.util.Iterator;
+import java.util.List;
 import java.util.StringTokenizer;
 
 import org.apache.felix.framework.ext.SecurityProvider;
@@ -33,8 +35,11 @@ import org.apache.felix.framework.security.util.PropertiesCache;
 import org.apache.felix.framework.util.SecureAction;
 import org.osgi.framework.BundleActivator;
 import org.osgi.framework.BundleContext;
+import org.osgi.framework.BundleEvent;
 import org.osgi.framework.BundleException;
+import org.osgi.framework.BundleListener;
 import org.osgi.framework.Constants;
+import org.osgi.framework.wiring.BundleRevisions;
 import org.osgi.service.condpermadmin.ConditionalPermissionAdmin;
 import org.osgi.service.permissionadmin.PermissionAdmin;
 
@@ -150,9 +155,12 @@ public final class SecurityActivator implements BundleActivator
             LocalPermissions localPermissions = new LocalPermissions(
                 permissions);
 
+            final Conditions conditions = new Conditions(action);
             cpai = new ConditionalPermissionAdminImpl(permissions,
-                new Conditions(action), localPermissions, new PropertiesCache(
+                conditions, localPermissions, new PropertiesCache(
                     cpaCache, tmp, action), pai);
+
+            context.addBundleListener(new UninstallListener(conditions));
         }
 
         if ((pai != null) || (cpai != null))
@@ -230,5 +238,31 @@ public final class SecurityActivator implements BundleActivator
         String result = context.getProperty(key);
 
         return (result != null) ? result : defaultValue;
+    }
+
+    private static final class UninstallListener implements BundleListener
+    {
+        private final Conditions conditions;
+
+        UninstallListener(Conditions conditions)
+        {
+            this.conditions = conditions;
+        }
+
+        public void bundleChanged(BundleEvent event)
+        {
+            if (event.getType() == BundleEvent.UNINSTALLED)
+            {
+                List revisions = ((BundleRevisions)event.getBundle().adapt(BundleRevisions.class)).getRevisions();
+                if (revisions != null)
+                {
+                    Iterator iter = revisions.iterator();
+                    while (iter.hasNext())
+                    {
+                        conditions.remove((BundleRevisionImpl) iter.next());
+                    }
+                }
+            }
+        }
     }
 }

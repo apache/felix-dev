@@ -16,6 +16,27 @@
  */
 package org.apache.felix.eventadmin.perftests;
 
+import static org.ops4j.pax.exam.Constants.START_LEVEL_SYSTEM_BUNDLES;
+import static org.ops4j.pax.exam.CoreOptions.bundle;
+import static org.ops4j.pax.exam.CoreOptions.mavenBundle;
+import static org.ops4j.pax.exam.CoreOptions.options;
+import static org.ops4j.pax.exam.CoreOptions.provision;
+import static org.ops4j.pax.exam.CoreOptions.systemProperty;
+import static org.ops4j.pax.exam.CoreOptions.vmOption;
+
+import java.io.File;
+import java.util.ArrayList;
+import java.util.Collection;
+import java.util.Dictionary;
+import java.util.Hashtable;
+import java.util.concurrent.ArrayBlockingQueue;
+import java.util.concurrent.CountDownLatch;
+import java.util.concurrent.ThreadPoolExecutor;
+import java.util.concurrent.TimeUnit;
+import java.util.concurrent.atomic.AtomicLong;
+
+import javax.inject.Inject;
+
 import org.junit.After;
 import org.junit.Test;
 import org.junit.runner.RunWith;
@@ -33,21 +54,6 @@ import org.osgi.service.event.EventHandler;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import javax.inject.Inject;
-import java.io.File;
-import java.util.ArrayList;
-import java.util.Collection;
-import java.util.Dictionary;
-import java.util.Hashtable;
-import java.util.concurrent.ArrayBlockingQueue;
-import java.util.concurrent.CountDownLatch;
-import java.util.concurrent.ThreadPoolExecutor;
-import java.util.concurrent.TimeUnit;
-import java.util.concurrent.atomic.AtomicLong;
-
-import static org.ops4j.pax.exam.Constants.START_LEVEL_SYSTEM_BUNDLES;
-import static org.ops4j.pax.exam.CoreOptions.*;
-
 @RunWith(PaxExam.class)
 public class PerformanceTestIT {
     // the name of the system property providing the bundle file to be installed and tested
@@ -62,7 +68,7 @@ public class PerformanceTestIT {
     protected BundleContext bundleContext;
 
     /** Event admin reference. */
-    private ServiceReference eventAdminReference;
+    private ServiceReference<EventAdmin> eventAdminReference;
 
     /** Event admin. */
     private EventAdmin eventAdmin;
@@ -102,10 +108,10 @@ public class PerformanceTestIT {
     protected EventAdmin loadEventAdmin() {
         if ( eventAdminReference == null || eventAdminReference.getBundle() == null ) {
             eventAdmin = null;
-            eventAdminReference = bundleContext.getServiceReference(EventAdmin.class.getName());
+            eventAdminReference = bundleContext.getServiceReference(EventAdmin.class);
         }
         if ( eventAdmin == null && eventAdminReference != null ) {
-            eventAdmin = (EventAdmin) bundleContext.getService(eventAdminReference);
+            eventAdmin = bundleContext.getService(eventAdminReference);
         }
         return eventAdmin;
     }
@@ -278,7 +284,7 @@ public class PerformanceTestIT {
 
 
     private static abstract class Listener implements EventHandler {
-        private ServiceRegistration registration;
+        private ServiceRegistration<EventHandler> registration;
 
         protected Listener() {
         }
@@ -290,7 +296,7 @@ public class PerformanceTestIT {
             } else {
                 props.put("event.topics", "*");
             }
-            this.registration = bundleContext.registerService(EventHandler.class.getName(), this, props);
+            this.registration = bundleContext.registerService(EventHandler.class, this, props);
         }
 
         public void unregister() {

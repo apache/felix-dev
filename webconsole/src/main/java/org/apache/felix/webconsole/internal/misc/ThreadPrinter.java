@@ -20,44 +20,25 @@ package org.apache.felix.webconsole.internal.misc;
 
 import java.io.PrintWriter;
 
-import org.apache.felix.webconsole.ModeAwareConfigurationPrinter;
+import org.apache.felix.inventory.Format;
 import org.apache.felix.webconsole.internal.AbstractConfigurationPrinter;
 
 /**
  * This class provides the Threads tab in the configuration status.
  */
-public class ThreadPrinter extends AbstractConfigurationPrinter implements ModeAwareConfigurationPrinter
-{
+public class ThreadPrinter extends AbstractConfigurationPrinter {
 
     private static final String TITLE = "Threads";
 
-    private static final String LABEL = "_threads";
-
     private final ThreadDumper dumper = new ThreadDumper();
 
-    /**
-     * @see org.apache.felix.webconsole.ConfigurationPrinter#getTitle()
-     */
-    public String getTitle()
-    {
+    @Override
+    protected String getTitle() {
         return TITLE;
     }
 
-    /**
-     * @see org.apache.felix.webconsole.ConfigurationPrinter#printConfiguration(java.io.PrintWriter)
-     */
-    public void printConfiguration(PrintWriter pw)
-    {
-        printConfiguration(pw, MODE_TXT);
+    @Override
+    public void print(final PrintWriter pw, final Format format, final boolean isZip) {
+        dumper.printThreads(pw, isZip);
     }
-
-    /**
-     * @see ModeAwareConfigurationPrinter#printConfiguration(java.io.PrintWriter, java.lang.String)
-     */
-    public void printConfiguration(PrintWriter pw, String mode)
-    {
-
-        dumper.printThreads(pw, MODE_ZIP.equals(mode));
-    }
-
 }

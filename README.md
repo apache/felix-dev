@@ -11,6 +11,11 @@ Directly related projects:
 
 - **main** `/main*` - provides an executable jar that launches the Felix framework.
 
+## OSGi Core
+
+- [**Log Service**](https://docs.osgi.org/specification/osgi.core/8.0.0/service.log.html) `/log*`
+- [**Resolver**](https://osgi.org/specification/osgi.core/7.0.0/service.resolver.html) `/resolver`
+
 ## OSGi Compendium
 
 Several sub-projects cover various [**OSGi Compendium**](https://osgi.org/specification/osgi.cmpn/7.0.0/) specifications such as:
@@ -26,10 +31,8 @@ Several sub-projects cover various [**OSGi Compendium**](https://osgi.org/specif
 - [**Http Service**](https://osgi.org/specification/osgi.cmpn/7.0.0/service.http.html) `/http`
 - [**Http Whiteboard**](https://osgi.org/specification/osgi.cmpn/7.0.0/service.http.whiteboard.html) `/http`
 - [**IO**](https://osgi.org/specification/osgi.cmpn/7.0.0/service.io.html) `/io`
-- [**Log Service**](https://osgi.org/specification/osgi.cmpn/7.0.0/service.log.html) `/log*`
 - [**Metatype**](https://osgi.org/specification/osgi.cmpn/7.0.0/service.metatype.html) `/metatype`
 - [**Preferences**](https://osgi.org/specification/osgi.cmpn/7.0.0/service.prefs.html) `/prefs`
-- [**Resolver**](https://osgi.org/specification/osgi.core/7.0.0/service.resolver.html) `/resolver`
 - [**UPnP**](https://osgi.org/specification/osgi.cmpn/7.0.0/service.upnp.html) `/upnp`
 - [**User Admin**](https://osgi.org/specification/osgi.cmpn/7.0.0/service.useradmin.html) `/useradmin`
 - [**Wire Admin**](https://osgi.org/specification/osgi.cmpn/7.0.0/service.wireadmin.html) `/wireadmin`
@@ -49,6 +52,7 @@ Several projects provide extra features to an OSGi runtime.
 - **ipojo** `/ipojo` - A *service component runtime* aiming to simplify OSGi application development.
 - **jaas support** `/jaas` - Bundle to simplify JAAS usage within OSGi environment.
 - **logback** `/logback` - A simple integration of the OSGi R7 Log (1.4) service to Logback backend.
+- **OSGi metrics** `/metrics/osgi` - Collecting and publishing metrics related to OSGi applications
 - **rootcause** `/rootcause` - Finding the root cause of problems with OSGi declarative services components.
 - **utils** `/utils` - Utility classes for OSGi (intended for embedding within other bundles.)
 - **webconsole** `/webconsole*` - Web Based Management Console for OSGi Frameworks.

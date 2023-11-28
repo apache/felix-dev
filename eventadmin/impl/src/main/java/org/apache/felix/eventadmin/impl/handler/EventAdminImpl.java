@@ -18,6 +18,9 @@
  */
 package org.apache.felix.eventadmin.impl.handler;
 
+import java.util.ArrayList;
+import java.util.List;
+
 import org.apache.felix.eventadmin.impl.tasks.AsyncDeliverTasks;
 import org.apache.felix.eventadmin.impl.tasks.DefaultThreadPool;
 import org.apache.felix.eventadmin.impl.tasks.SyncDeliverTasks;
@@ -28,13 +31,13 @@ import org.osgi.service.event.EventAdmin;
 
 /**
  * This is the actual implementation of the OSGi R4 Event Admin Service (see the
- * Compendium 113 for details). The implementation uses a <tt>HandlerTasks</tt>
- * in order to determine applicable <tt>EventHandler</tt> for a specific event and
- * subsequently dispatches the event to the handlers via <tt>DeliverTasks</tt>.
- * To do this, it uses two different <tt>DeliverTasks</tt> one for asynchronous and
- * one for synchronous event delivery depending on whether its <tt>post()</tt> or
- * its <tt>send()</tt> method is called. Note that the actual work is done in the
- * implementations of the <tt>DeliverTasks</tt>. Additionally, a stop method is
+ * Compendium 113 for details). The implementation uses a {@code HandlerTasks}
+ * in order to determine applicable {@code EventHandler} for a specific event and
+ * subsequently dispatches the event to the handlers via {@code DeliverTasks}.
+ * To do this, it uses two different {@code DeliverTasks} one for asynchronous and
+ * one for synchronous event delivery depending on whether its {@code post()} or
+ * its {@code send()} method is called. Note that the actual work is done in the
+ * implementations of the {@code DeliverTasks}. Additionally, a stop method is
  * provided that prevents subsequent events to be delivered.
  *
  * @author <a href="mailto:dev@felix.apache.org">Felix Project Team</a>
@@ -54,10 +57,15 @@ public class EventAdminImpl implements EventAdmin
     private Matchers.Matcher[] m_ignoreTopics;
 
     /**
-     * The constructor of the <tt>EventAdmin</tt> implementation.
+     * The constructor of the {@code EventAdmin} implementation.
      *
+     * @param bundleContext The event admin bundle context
      * @param syncPool The synchronous thread pool
      * @param asyncPool The asynchronous thread pool
+     * @param timeout The timeout
+     * @param ignoreTimeout The configuration for ignoring timeouts
+     * @param requireTopic Are topics required?
+     * @param ignoreTopics The configuration to ignore topics
      */
     public EventAdminImpl(
                     final BundleContext bundleContext,
@@ -159,6 +167,10 @@ public class EventAdminImpl implements EventAdmin
 
     /**
      * Update the event admin with new configuration.
+     * @param timeout The timeout
+     * @param ignoreTimeout The configuration for ignoring timeouts
+     * @param requireTopic Are topics required?
+     * @param ignoreTopics The configuration to ignore topics
      */
     public void update(final int timeout,
                     final String[] ignoreTimeout,
@@ -173,7 +185,7 @@ public class EventAdminImpl implements EventAdmin
     }
 
     /**
-     * This is a utility method that will throw a <tt>NullPointerException</tt>
+     * This is a utility method that will throw a {@code NullPointerException}
      * in case that the given object is null. The message will be of the form
      * "${name} + may not be null".
      */
@@ -183,5 +195,25 @@ public class EventAdminImpl implements EventAdmin
         {
             throw new NullPointerException(name + " may not be null");
         }
+    }
+
+    public interface EventHandlerMBean {
+
+        String[] getDeniedEventHandlers();
+    }
+
+    public Object getHandlerInfoMBean() {
+        return new EventHandlerMBean() {
+
+            @Override
+            public String[] getDeniedEventHandlers() {
+                final List<String> names = new ArrayList<>();
+                for(final EventHandlerProxy p : tracker.getDeniedHandlers()) {
+                    names.add(p.getInfo());
+                }
+
+                return names.toArray(new String[names.size()]);
+            }
+        };
     }
 }

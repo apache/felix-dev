@@ -30,26 +30,25 @@ import java.io.IOException;
 import java.util.HashSet;
 import java.util.Set;
 
-import javax.servlet.Servlet;
-import javax.servlet.ServletConfig;
-import javax.servlet.ServletException;
-
 import org.apache.felix.http.base.internal.context.ExtServletContext;
 import org.apache.felix.http.base.internal.handler.HttpServiceServletHandler;
 import org.apache.felix.http.base.internal.handler.ServletHandler;
 import org.apache.felix.http.base.internal.runtime.ServletInfo;
 import org.apache.felix.http.base.internal.runtime.dto.FailedDTOHolder;
 import org.junit.Test;
-import org.mockito.Matchers;
+import org.mockito.ArgumentMatchers;
 import org.osgi.framework.Bundle;
 import org.osgi.framework.BundleContext;
 import org.osgi.framework.Constants;
 import org.osgi.framework.InvalidSyntaxException;
 import org.osgi.framework.ServiceReference;
-import org.osgi.service.http.runtime.dto.DTOConstants;
-import org.osgi.service.http.runtime.dto.FailedErrorPageDTO;
-import org.osgi.service.http.runtime.dto.ServletContextDTO;
-import org.osgi.service.http.whiteboard.HttpWhiteboardConstants;
+import org.osgi.service.servlet.runtime.dto.DTOConstants;
+import org.osgi.service.servlet.runtime.dto.ServletContextDTO;
+import org.osgi.service.servlet.whiteboard.HttpWhiteboardConstants;
+
+import jakarta.servlet.Servlet;
+import jakarta.servlet.ServletConfig;
+import jakarta.servlet.ServletException;
 
 public class ErrorPageRegistryTest
 {
@@ -84,7 +83,7 @@ public class ErrorPageRegistryTest
         final ServletHandler h1 = createServletHandler(1L, 0, "404", "java.io.IOException");
         reg.addServlet(h1);
 
-        verify(h1.getServlet()).init(Matchers.any(ServletConfig.class));
+        verify(h1.getServlet()).init(ArgumentMatchers.any(ServletConfig.class));
 
         // one entry in reg
         clear(dto, holder);
@@ -135,8 +134,8 @@ public class ErrorPageRegistryTest
         final ServletHandler h2 = createServletHandler(2L, 10, "404", "some.other.Exception");
         reg.addServlet(h2);
 
-        verify(h1.getServlet()).init(Matchers.any(ServletConfig.class));
-        verify(h2.getServlet()).init(Matchers.any(ServletConfig.class));
+        verify(h1.getServlet()).init(ArgumentMatchers.any(ServletConfig.class));
+        verify(h2.getServlet()).init(ArgumentMatchers.any(ServletConfig.class));
 
         // two entries in DTO
         clear(dto, holder);
@@ -271,7 +270,7 @@ public class ErrorPageRegistryTest
     private static ServletInfo createServletInfo(final long id, final int ranking, final String... codes) throws InvalidSyntaxException
     {
         final BundleContext bCtx = mock(BundleContext.class);
-        when(bCtx.createFilter(Matchers.anyString())).thenReturn(null);
+        when(bCtx.createFilter(ArgumentMatchers.anyString())).thenReturn(null);
         final Bundle bundle = mock(Bundle.class);
         when(bundle.getBundleContext()).thenReturn(bCtx);
 
@@ -293,6 +292,6 @@ public class ErrorPageRegistryTest
         final ExtServletContext ctx = mock(ExtServletContext.class);
         final Servlet servlet = mock(Servlet.class);
 
-        return new HttpServiceServletHandler(ctx, si, servlet);
+        return new HttpServiceServletHandler(-1, ctx, si, servlet);
     }
 }

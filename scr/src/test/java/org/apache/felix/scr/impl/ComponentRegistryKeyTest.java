@@ -29,7 +29,6 @@ public class ComponentRegistryKeyTest extends TestCase
     private final ComponentRegistryKey b2_a_0 = key( 2, "a" );
 
     private final ComponentRegistryKey b1_a_1 = key( 1, "a" );
-    private final ComponentRegistryKey b2_a_1 = key( 2, "a" );
 
     private final ComponentRegistryKey b1_b = key( 1, "b" );
     private final ComponentRegistryKey b2_b = key( 2, "b" );
@@ -63,6 +62,7 @@ public class ComponentRegistryKeyTest extends TestCase
         return new ComponentRegistryKey( new MockBundle()
         {
 //            @Override
+            @Override
             public long getBundleId()
             {
                 return bundleId;

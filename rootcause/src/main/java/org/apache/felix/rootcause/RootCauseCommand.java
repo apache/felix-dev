@@ -31,16 +31,19 @@ import org.osgi.service.component.runtime.dto.ComponentDescriptionDTO;
         }
         )
 public class RootCauseCommand {
-    
+
     @Reference
     ServiceComponentRuntime scr;
-    
+
     public DSComp rootcause(String componentName) {
         ComponentDescriptionDTO cdesc = scr.getComponentDescriptionDTOs().stream()
             .filter(desc -> desc.name.equals(componentName))
             .findFirst().get();
-        DSComp rootCause = new DSRootCause(scr).getRootCause(cdesc);
-        new RootCausePrinter().print(rootCause);
+        DSComp rootCause = null;
+        if ( cdesc != null ) {
+            rootCause = new DSRootCause(scr).getRootCause(cdesc);
+            new RootCausePrinter().print(rootCause);
+        }
         return rootCause;
     }
 }

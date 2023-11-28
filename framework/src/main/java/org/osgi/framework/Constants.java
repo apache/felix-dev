@@ -1,5 +1,5 @@
 /*
- * Copyright (c) OSGi Alliance (2000, 2018). All Rights Reserved.
+ * Copyright (c) OSGi Alliance (2000, 2020). All Rights Reserved.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -29,7 +29,7 @@ import org.osgi.framework.launch.Framework;
  * otherwise indicated.
  * 
  * @since 1.1
- * @author $Id: 41e648afb56767a610f279a9c7effef47dfcbf2e $
+ * @author $Id: 57af8721d5f7e08f9b8a1d9f109a5ebb94bf9646 $
  */
 @ProviderType
 public interface Constants {
@@ -1025,7 +1025,6 @@ public interface Constants {
 	/**
 	 * Framework environment property identifying whether the Framework supports
 	 * bootclasspath extension bundles.
-	 * 
 	 * <p>
 	 * If the value of this property is {@code true}, then the Framework
 	 * supports bootclasspath extension bundles. The default value is
@@ -1035,6 +1034,7 @@ public interface Constants {
 	 * {@code BundleContext.getProperty} method.
 	 * 
 	 * @since 1.3
+	 * @deprecated As of 1.10.
 	 */
 	String	SUPPORTS_BOOTCLASSPATH_EXTENSION		= "org.osgi.supports.bootclasspath.extension";
 
@@ -1574,7 +1574,7 @@ public interface Constants {
 	String	SERVICE_IMPORTED_CONFIGS				= "service.imported.configs";
 
 	/**
-	 * Service property identifying the intents that this service implement.
+	 * Service property identifying the intents that this service implements.
 	 * This property has a dual purpose:
 	 * <ul>
 	 * <li>A bundle can use this service property to notify the distribution
@@ -1833,8 +1833,8 @@ public interface Constants {
 	 * Service property identifying the monotonically increasing change count of
 	 * a service.
 	 * <p>
-	 * A service may optional provide this property to indicate there has been a
-	 * change in some data provided by the service. The change count must be
+	 * A service may provide this property to indicate there has been a change
+	 * in some data provided by the service. The change count must be
 	 * incremented with a positive value every time the data provided by the
 	 * service is changed. The service announces the modified change count by
 	 * updating its service properties with the new value for this service

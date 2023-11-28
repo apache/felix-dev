@@ -18,23 +18,24 @@ package org.apache.felix.http.base.internal.handler;
 
 import java.io.IOException;
 
-import javax.servlet.Filter;
-import javax.servlet.FilterChain;
-import javax.servlet.ServletException;
-import javax.servlet.ServletRequest;
-import javax.servlet.ServletResponse;
-
 import org.apache.felix.http.base.internal.context.ExtServletContext;
 import org.apache.felix.http.base.internal.logger.SystemLogger;
 import org.apache.felix.http.base.internal.runtime.FilterInfo;
 import org.jetbrains.annotations.NotNull;
-import org.osgi.service.http.runtime.dto.DTOConstants;
+import org.osgi.framework.BundleContext;
+import org.osgi.service.servlet.runtime.dto.DTOConstants;
+
+import jakarta.servlet.Filter;
+import jakarta.servlet.FilterChain;
+import jakarta.servlet.ServletException;
+import jakarta.servlet.ServletRequest;
+import jakarta.servlet.ServletResponse;
 
 /**
  * The filter handler handles the initialization and destruction of filter
  * objects.
  */
-public abstract class FilterHandler implements Comparable<FilterHandler>
+public class FilterHandler implements Comparable<FilterHandler>
 {
     private final long contextServiceId;
 
@@ -42,17 +43,21 @@ public abstract class FilterHandler implements Comparable<FilterHandler>
 
     private final ExtServletContext context;
 
+    private final BundleContext bundleContext;
+
     private volatile Filter filter;
 
     protected volatile int useCount;
 
     public FilterHandler(final long contextServiceId,
             final ExtServletContext context,
-            final FilterInfo filterInfo)
+            final FilterInfo filterInfo,
+            final BundleContext bundleContext)
     {
         this.contextServiceId = contextServiceId;
         this.context = context;
         this.filterInfo = filterInfo;
+        this.bundleContext = bundleContext;
     }
 
     @Override
@@ -76,11 +81,6 @@ public abstract class FilterHandler implements Comparable<FilterHandler>
         return filter;
     }
 
-    protected void setFilter(final Filter f)
-    {
-        this.filter = f;
-    }
-
     public FilterInfo getFilterInfo()
     {
         return this.filterInfo;
@@ -94,7 +94,7 @@ public abstract class FilterHandler implements Comparable<FilterHandler>
             final Filter local = this.filter;
             if ( local != null )
             {
-                name = local.getClass().getName();
+                name = this.filterInfo.getClassName(local);
             }
         }
         return name;
@@ -112,6 +112,8 @@ public abstract class FilterHandler implements Comparable<FilterHandler>
             return -1;
         }
 
+        this.filter = getFilterInfo().getService(this.bundleContext);
+
         if (this.filter == null)
         {
             return DTOConstants.FAILURE_REASON_SERVICE_NOT_GETTABLE;
@@ -123,11 +125,12 @@ public abstract class FilterHandler implements Comparable<FilterHandler>
         }
         catch (final Exception e)
         {
-            SystemLogger.error(this.getFilterInfo().getServiceReference(),
-                    "Error during calling init() on filter " + this.filter,
-                    e);
+            SystemLogger.LOGGER.error(SystemLogger.formatMessage(this.getFilterInfo().getServiceReference(),
+                    "Error during calling init() on filter ".concat(this.filterInfo.getClassName(this.filter))), e);
+            getFilterInfo().ungetService(this.bundleContext, this.filter);
             return DTOConstants.FAILURE_REASON_EXCEPTION_ON_INIT;
         }
+
         this.useCount++;
         return -1;
     }
@@ -149,28 +152,28 @@ public abstract class FilterHandler implements Comparable<FilterHandler>
 
     public boolean destroy()
     {
-        if (this.filter == null)
+        final Filter f = this.getFilter();
+        if ( f != null )
         {
-            return false;
-        }
-
-        this.useCount--;
-        if ( this.useCount == 0 )
-        {
-            try
+            this.useCount--;
+            if ( this.useCount == 0 )
             {
-                filter.destroy();
-            }
-            catch ( final Exception ignore )
-            {
-                // we ignore this
-                SystemLogger.error(this.getFilterInfo().getServiceReference(),
-                        "Error during calling destroy() on filter " + this.filter,
-                        ignore);
-            }
+                filter = null;
+                try
+                {
+                    f.destroy();
+                }
+                catch ( final Exception ignore )
+                {
+                    // we ignore this
+                    SystemLogger.LOGGER.error(SystemLogger.formatMessage(this.getFilterInfo().getServiceReference(),
+                            "Error during calling destroy() on filter ".concat(this.getFilterInfo().getClassName(f))), ignore);
+                }
 
-            filter = null;
-            return true;
+                getFilterInfo().ungetService(this.bundleContext, f);
+
+                return true;
+            }
         }
         return false;
     }

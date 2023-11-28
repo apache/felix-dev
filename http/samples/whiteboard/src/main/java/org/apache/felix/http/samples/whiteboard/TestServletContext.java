@@ -17,7 +17,7 @@
 package org.apache.felix.http.samples.whiteboard;
 
 import org.osgi.framework.Bundle;
-import org.osgi.service.http.context.ServletContextHelper;
+import org.osgi.service.servlet.context.ServletContextHelper;
 
 /**
  * Simple sample servlet context

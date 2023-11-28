@@ -34,14 +34,9 @@ class FrameworkStartLevelImpl implements FrameworkStartLevel, Runnable
 {
     static final String THREAD_NAME = "FelixStartLevel";
 
-    private static final int BUNDLE_IDX = 0;
-    private static final int STARTLEVEL_IDX = 1;
-
     private final Felix m_felix;
     private final ServiceRegistry m_registry;
-    private final List m_requests = new ArrayList();
-    private final List<FrameworkListener[]> m_requestListeners
-        = new ArrayList<FrameworkListener[]>();
+    private final List<StartLevelRequest> m_requests = new ArrayList<>();
     private ServiceRegistration<StartLevel> m_slReg;
     private Thread m_thread = null;
 
@@ -131,8 +126,7 @@ class FrameworkStartLevelImpl implements FrameworkStartLevel, Runnable
                 throw new IllegalStateException("No inital startlevel yet");
             }
             // Queue request.
-            m_requestListeners.add(listeners);
-            m_requests.add(new Integer(startlevel));
+            m_requests.add(new StartLevelRequest(null, startlevel, listeners));
             m_requests.notifyAll();
         }
     }
@@ -145,7 +139,7 @@ class FrameworkStartLevelImpl implements FrameworkStartLevel, Runnable
     **/
     /* package */ void setStartLevelAndWait(int startlevel)
     {
-        Object request = new Integer(startlevel);
+        StartLevelRequest request = new StartLevelRequest(null, startlevel);
         synchronized (request)
         {
             synchronized (m_requests)
@@ -153,7 +147,6 @@ class FrameworkStartLevelImpl implements FrameworkStartLevel, Runnable
                 // Start thread if necessary.
                 startThread();
                 // Queue request.
-                m_requestListeners.add(null);
                 m_requests.add(request);
                 m_requests.notifyAll();
             }
@@ -241,8 +234,7 @@ class FrameworkStartLevelImpl implements FrameworkStartLevel, Runnable
                 // Synchronously persists the start level.
                 m_bundle.setStartLevel(startlevel);
                 // Queue request.
-                m_requestListeners.add(null);
-                m_requests.add(new Object[] { m_bundle, new Integer(startlevel) });
+                m_requests.add(new StartLevelRequest(m_bundle, startlevel));
                 m_requests.notifyAll();
             }
         }
@@ -262,11 +254,10 @@ class FrameworkStartLevelImpl implements FrameworkStartLevel, Runnable
     {
         // This thread loops forever, thus it should
         // be a daemon thread.
-        Object previousRequest = null;
+        StartLevelRequest previousRequest = null;
         while (true)
         {
-            Object request = null;
-            FrameworkListener[] listeners = null;
+            StartLevelRequest request = null;
             synchronized (m_requests)
             {
                 // Wait for a request.
@@ -290,22 +281,20 @@ class FrameworkStartLevelImpl implements FrameworkStartLevel, Runnable
 
                 // Get the requested start level.
                 request = m_requests.remove(0);
-                listeners = m_requestListeners.remove(0);
             }
 
-            // If the request object is an Integer, then the request
-            // is to set the framework start level. If the request is
-            // an Object array, then the request is to set the start
-            // level for a bundle.
+            // If the request object has no bundle, then the request
+            // is to set the framework start level, otherwise the
+            // request is to set the start level for a bundle.
             // NOTE: We don't catch any exceptions here, because
             // the invoked methods shield us from exceptions by
             // catching Throwables when they invoke callbacks.
-            if (request instanceof Integer)
+            if (request.getBundle() == null)
             {
                 // Set the new framework start level.
                 try
                 {
-                    m_felix.setActiveStartLevel(((Integer) request).intValue(), listeners);
+                    m_felix.setActiveStartLevel(request.getStartLevel(), request.getListeners());
                 }
                 catch (IllegalStateException ise)
                 {
@@ -333,9 +322,7 @@ class FrameworkStartLevelImpl implements FrameworkStartLevel, Runnable
             }
             else
             {
-                Bundle bundle = (Bundle) ((Object[]) request)[BUNDLE_IDX];
-                int startlevel = ((Integer) ((Object[]) request)[STARTLEVEL_IDX]).intValue();
-                m_felix.setBundleStartLevel(bundle, startlevel);
+                m_felix.setBundleStartLevel(request.getBundle(), request.getStartLevel());
             }
 
             // Notify any waiting thread that this request is done.
@@ -343,6 +330,39 @@ class FrameworkStartLevelImpl implements FrameworkStartLevel, Runnable
             {
                 request.notifyAll();
             }
+        }
+    }
+
+    /**
+     * This class holds a start level request. If the bundle is null then the
+     * request is to set the framework start level.
+     */
+    private static final class StartLevelRequest
+    {
+        private final Bundle m_bundle;
+        private final int m_startLevel;
+        private final FrameworkListener[] m_listeners;
+
+        private StartLevelRequest(Bundle bundle, int startLevel, FrameworkListener... listeners)
+        {
+            m_bundle = bundle;
+            m_startLevel = startLevel;
+            m_listeners = listeners;
+        }
+
+        private Bundle getBundle()
+        {
+            return m_bundle;
+        }
+
+        private int getStartLevel()
+        {
+            return m_startLevel;
+        }
+
+        public FrameworkListener[] getListeners()
+        {
+            return m_listeners;
         }
     }
 }

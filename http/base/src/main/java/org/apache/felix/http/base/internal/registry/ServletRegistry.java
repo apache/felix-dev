@@ -29,19 +29,18 @@ import java.util.Set;
 import java.util.TreeMap;
 import java.util.concurrent.ConcurrentHashMap;
 
-import org.jetbrains.annotations.NotNull;
-
 import org.apache.felix.http.base.internal.handler.ServletHandler;
 import org.apache.felix.http.base.internal.runtime.ServletInfo;
 import org.apache.felix.http.base.internal.runtime.dto.BuilderConstants;
 import org.apache.felix.http.base.internal.runtime.dto.ResourceDTOBuilder;
 import org.apache.felix.http.base.internal.runtime.dto.ServletDTOBuilder;
-import org.osgi.service.http.runtime.dto.DTOConstants;
-import org.osgi.service.http.runtime.dto.FailedResourceDTO;
-import org.osgi.service.http.runtime.dto.FailedServletDTO;
-import org.osgi.service.http.runtime.dto.ResourceDTO;
-import org.osgi.service.http.runtime.dto.ServletContextDTO;
-import org.osgi.service.http.runtime.dto.ServletDTO;
+import org.jetbrains.annotations.NotNull;
+import org.osgi.service.servlet.runtime.dto.DTOConstants;
+import org.osgi.service.servlet.runtime.dto.FailedResourceDTO;
+import org.osgi.service.servlet.runtime.dto.FailedServletDTO;
+import org.osgi.service.servlet.runtime.dto.ResourceDTO;
+import org.osgi.service.servlet.runtime.dto.ServletContextDTO;
+import org.osgi.service.servlet.runtime.dto.ServletDTO;
 
 /**
  * The servlet registry keeps the mappings for all servlets (by using their pattern)
@@ -79,8 +78,8 @@ public final class ServletRegistry
             final PathResolution pr = entry.resolve(relativeRequestURI);
             if ( pr != null )
             {
-                // TODO - we should have all patterns under which this servlet is actively registered
                 pr.patterns = new String[] {entry.getPattern()};
+                pr.matchedPattern = entry.getPattern();
                 return pr;
             }
         }

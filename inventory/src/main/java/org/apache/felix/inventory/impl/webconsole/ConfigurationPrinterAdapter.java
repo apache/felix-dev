@@ -42,7 +42,7 @@ public class ConfigurationPrinterAdapter
     private final Method printMethod;
     private final Method attachmentMethod;
 
-    private static final List CUSTOM_MODES = new ArrayList();
+    private static final List<String> CUSTOM_MODES = new ArrayList<>();
     static
     {
         CUSTOM_MODES.add(ConsoleConstants.MODE_TXT);
@@ -55,9 +55,9 @@ public class ConfigurationPrinterAdapter
      * This is done manually to avoid having the configuration printer class
      * available.
      */
-    private static boolean isConfigurationPrinter(final Class clazz)
+    private static boolean isConfigurationPrinter(final Class<?> clazz)
     {
-        final Class[] interf = clazz.getInterfaces();
+        final Class<?>[] interf = clazz.getInterfaces();
         for (int i = 0; i < interf.length; i++)
         {
             if (interf[i].getName().equals(ConsoleConstants.INTERFACE_CONFIGURATION_PRINTER))
@@ -210,7 +210,7 @@ public class ConfigurationPrinterAdapter
      */
     public String[] getPrinterModes()
     {
-        final Set list = new HashSet();
+        final Set<String> list = new HashSet<>();
         if (this.match(ConsoleConstants.MODE_TXT) || this.match(ConsoleConstants.MODE_ZIP))
         {
             list.add(Format.TEXT.toString());
@@ -279,7 +279,7 @@ public class ConfigurationPrinterAdapter
         return title + " (" + printer.getClass() + ")";
     }
 
-    private static Method getMethod(final Class clazz, final String mName, final Class[] params, final boolean declaredByClass)
+    private static Method getMethod(final Class<?> clazz, final String mName, final Class<?>[] params, final boolean declaredByClass)
     {
         try
         {

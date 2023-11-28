@@ -577,7 +577,7 @@ public class CapabilitySet
     {
         // If the LHS expects a string, then we can just return
         // the RHS since it is a string.
-        if (lhs.getClass() == rhsString.getClass())
+        if (lhs instanceof String)
         {
             return rhsString;
         }

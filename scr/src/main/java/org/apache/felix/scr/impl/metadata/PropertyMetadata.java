@@ -28,7 +28,9 @@ import java.util.StringTokenizer;
  *
  */
 public class PropertyMetadata {
+    // true if property is from a reference target attribute
 
+    private final boolean m_referenceTarget;
 	// Name of the property (required)
 	private String m_name;
 
@@ -42,6 +44,16 @@ public class PropertyMetadata {
 
 	// Flag that indicates if this PropertyMetadata has been validated and thus has become immutable
 	private boolean m_validated = false;
+
+    public PropertyMetadata()
+    {
+        this(false);
+    }
+
+    public PropertyMetadata(boolean referenceTarget)
+    {
+        m_referenceTarget = referenceTarget;
+    }
 
 	/**
 	 * Set the name
@@ -130,6 +142,10 @@ public class PropertyMetadata {
         return m_value;
     }
 
+    public boolean isReferenceTarget()
+    {
+        return m_referenceTarget;
+    }
     /**
      * Method used to verify if the semantics of this metadata are correct
      */

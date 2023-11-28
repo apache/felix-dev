@@ -91,7 +91,7 @@ public class ComponentFactoryImpl<S> extends AbstractComponentManager<S> impleme
 
     protected TargetedPID m_targetedPID;
 
-    public ComponentFactoryImpl( ComponentContainer<S> container, ComponentMethods componentMethods )
+    public ComponentFactoryImpl(ComponentContainer<S> container, ComponentMethods<S> componentMethods)
     {
         super( container, componentMethods );
         m_componentInstances = new IdentityHashMap<>();
@@ -308,12 +308,6 @@ public int hashCode()
         props.put( Constants.SERVICE_VENDOR, "The Apache Software Foundation" );
 
         return props;
-    }
-
-    @Override
-    boolean hasInstance()
-    {
-        return false;
     }
 
     @Override

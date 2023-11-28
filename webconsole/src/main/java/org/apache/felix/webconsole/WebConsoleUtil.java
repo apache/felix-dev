@@ -19,36 +19,26 @@
 package org.apache.felix.webconsole;
 
 
-import java.io.File;
 import java.io.IOException;
-import java.lang.reflect.Array;
 import java.net.URLDecoder;
-import java.util.HashMap;
-import java.util.Iterator;
-import java.util.List;
-import java.util.Map;
-
+import java.nio.charset.StandardCharsets;
 import javax.servlet.ServletRequest;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 
-import org.apache.commons.fileupload.FileItem;
-import org.apache.commons.fileupload.FileUploadBase;
-import org.apache.commons.fileupload.FileUploadException;
-import org.apache.commons.fileupload.disk.DiskFileItemFactory;
-import org.apache.commons.fileupload.servlet.ServletFileUpload;
-import org.apache.commons.fileupload.servlet.ServletRequestContext;
+import org.apache.felix.webconsole.internal.Util;
 
 
 /**
  * The <code>WebConsoleUtil</code> provides various utility methods for use
  * by Web Console plugins.
+ *
+ * @deprecated Some of the methods can be replaced with direct Servlet API calls.
  */
-public final class WebConsoleUtil
-{
+@Deprecated
+public final class WebConsoleUtil {
 
-    private WebConsoleUtil()
-    {
+    private WebConsoleUtil() {
         /* no instantiation */
     }
 
@@ -72,23 +62,21 @@ public final class WebConsoleUtil
      * @param request The request whose attribute is returned (or set)
      *
      * @return The {@link VariableResolver} for the given request.
+     * @deprecated Use the {@link org.apache.felix.webconsole.servlet.RequestVariableResolver} instead.
      */
-    public static VariableResolver getVariableResolver( final ServletRequest request )
-    {
+    @Deprecated
+    public static VariableResolver getVariableResolver( final ServletRequest request ) {
         final Object resolverObj = request.getAttribute( WebConsoleConstants.ATTR_CONSOLE_VARIABLE_RESOLVER );
-        if ( resolverObj instanceof VariableResolver )
-        {
+        if ( resolverObj instanceof VariableResolver ) {
             return ( VariableResolver ) resolverObj;
         }
 
         final DefaultVariableResolver resolver = new DefaultVariableResolver();
-        // FIXME: don't we need a constant for the values below?
-        resolver.put( "appRoot", request.getAttribute( WebConsoleConstants.ATTR_APP_ROOT ) ); //$NON-NLS-1$
-        resolver.put( "pluginRoot", request.getAttribute( WebConsoleConstants.ATTR_PLUGIN_ROOT ) ); //$NON-NLS-1$
+        resolver.put( "appRoot", (String) request.getAttribute( WebConsoleConstants.ATTR_APP_ROOT ) );
+        resolver.put( "pluginRoot", (String) request.getAttribute( WebConsoleConstants.ATTR_PLUGIN_ROOT ) );
         setVariableResolver( request, resolver );
         return resolver;
     }
-
 
     /**
      * Sets the {@link VariableResolver} as the
@@ -98,101 +86,24 @@ public final class WebConsoleUtil
      *
      * @param request The request whose attribute is set
      * @param resolver The {@link VariableResolver} to place into the request
+     * @deprecated Use the {@link org.apache.felix.webconsole.servlet.RequestVariableResolver} instead.
      */
-    public static void setVariableResolver( final ServletRequest request, final VariableResolver resolver )
-    {
+    @Deprecated
+    public static void setVariableResolver( final ServletRequest request, final VariableResolver resolver )  {
         request.setAttribute( WebConsoleConstants.ATTR_CONSOLE_VARIABLE_RESOLVER, resolver );
     }
 
 
     /**
-     * An utility method, that is used to filter out simple parameter from file
-     * parameter when multipart transfer encoding is used.
-     *
-     * This method processes the request and sets a request attribute
-     * {@link AbstractWebConsolePlugin#ATTR_FILEUPLOAD}. The attribute value is a {@link Map}
-     * where the key is a String specifying the field name and the value
-     * is a {@link org.apache.commons.fileupload.FileItem}.
-     *
+     * An utility method to get a parameter value
      * @param request the HTTP request coming from the user
      * @param name the name of the parameter
-     * @return if not multipart transfer encoding is used - the value is the
-     *  parameter value or <code>null</code> if not set. If multipart is used,
-     *  and the specified parameter is field - then the value of the parameter
-     *  is returned.
+     * @return The value or {@code null}.
+     * @deprecated Use the Servlet API for uploads
      */
-    public static final String getParameter( HttpServletRequest request, String name )
-    {
-        // just get the parameter if not a multipart/form-data POST
-        if ( !FileUploadBase.isMultipartContent( new ServletRequestContext( request ) ) )
-        {
-            return request.getParameter( name );
-        }
-
-        // check, whether we already have the parameters
-        Map params = ( Map ) request.getAttribute( AbstractWebConsolePlugin.ATTR_FILEUPLOAD );
-        if ( params == null )
-        {
-            // parameters not read yet, read now
-            // Create a factory for disk-based file items
-            DiskFileItemFactory factory = new DiskFileItemFactory();
-            factory.setSizeThreshold( 256000 );
-            // See https://issues.apache.org/jira/browse/FELIX-4660
-            final Object repo = request.getAttribute( AbstractWebConsolePlugin.ATTR_FILEUPLOAD_REPO );
-            if ( repo instanceof File )
-            {
-                factory.setRepository( (File) repo );
-            }
-
-            // Create a new file upload handler
-            ServletFileUpload upload = new ServletFileUpload( factory );
-            upload.setSizeMax( -1 );
-
-            // Parse the request
-            params = new HashMap();
-            try
-            {
-                List items = upload.parseRequest( request );
-                for ( Iterator fiter = items.iterator(); fiter.hasNext(); )
-                {
-                    FileItem fi = ( FileItem ) fiter.next();
-                    FileItem[] current = ( FileItem[] ) params.get( fi.getFieldName() );
-                    if ( current == null )
-                    {
-                        current = new FileItem[]
-                                { fi };
-                    }
-                    else
-                    {
-                        FileItem[] newCurrent = new FileItem[current.length + 1];
-                        System.arraycopy( current, 0, newCurrent, 0, current.length );
-                        newCurrent[current.length] = fi;
-                        current = newCurrent;
-                    }
-                    params.put( fi.getFieldName(), current );
-                }
-            }
-            catch ( FileUploadException fue )
-            {
-                // TODO: log
-            }
-            request.setAttribute( AbstractWebConsolePlugin.ATTR_FILEUPLOAD, params );
-        }
-
-        FileItem[] param = ( FileItem[] ) params.get( name );
-        if ( param != null )
-        {
-            for ( int i = 0; i < param.length; i++ )
-            {
-                if ( param[i].isFormField() )
-                {
-                    return param[i].getString();
-                }
-            }
-        }
-
-        // no valid string parameter, fail
-        return null;
+    @Deprecated
+    public static final String getParameter( final HttpServletRequest request, final String name ) {
+        return request.getParameter( name );
     }
 
     /**
@@ -211,16 +122,16 @@ public final class WebConsoleUtil
             final HttpServletResponse response,
             String redirectUrl) throws IOException {
         // check for relative URL
-        if ( !redirectUrl.startsWith("/") ) { //$NON-NLS-1$
+        if ( !redirectUrl.startsWith("/") ) {
             String base = request.getContextPath() + request.getServletPath() + request.getPathInfo();
             int i = base.lastIndexOf('/');
             if (i > -1) {
                 base = base.substring(0, i);
             } else {
                 i = base.indexOf(':');
-                base = (i > -1) ? base.substring(i + 1, base.length()) : ""; //$NON-NLS-1$
+                base = (i > -1) ? base.substring(i + 1, base.length()) : "";
             }
-            if (!base.startsWith("/")) { //$NON-NLS-1$
+            if (!base.startsWith("/")) {
                 base = '/' + base;
             }
             redirectUrl = base + '/' + redirectUrl;
@@ -240,12 +151,12 @@ public final class WebConsoleUtil
      * @param response The response for which to set the cache prevention
      */
     public static final void setNoCache(final HttpServletResponse response) {
-        response.setHeader("Cache-Control", "no-cache"); //$NON-NLS-1$ //$NON-NLS-2$
-        response.addHeader("Cache-Control", "no-store"); //$NON-NLS-1$ //$NON-NLS-2$
-        response.addHeader("Cache-Control", "must-revalidate"); //$NON-NLS-1$ //$NON-NLS-2$
-        response.addHeader("Cache-Control", "max-age=0"); //$NON-NLS-1$ //$NON-NLS-2$
-        response.setHeader("Expires", "Thu, 01 Jan 1970 01:00:00 GMT"); //$NON-NLS-1$ //$NON-NLS-2$
-        response.setHeader("Pragma", "no-cache"); //$NON-NLS-1$ //$NON-NLS-2$
+        response.setHeader("Cache-Control", "no-cache");
+        response.addHeader("Cache-Control", "no-store");
+        response.addHeader("Cache-Control", "must-revalidate");
+        response.addHeader("Cache-Control", "max-age=0");
+        response.setHeader("Expires", "Thu, 01 Jan 1970 01:00:00 GMT");
+        response.setHeader("Pragma", "no-cache");
     }
 
     /**
@@ -254,48 +165,45 @@ public final class WebConsoleUtil
      *
      * @param text the text to escape
      * @return the escaped text
+     * @deprecated It is better to use specialized encoders instead
      */
-    public static final String escapeHtml(String text)
-    {
-        StringBuffer sb = new StringBuffer(text.length() * 4 / 3);
-        synchronized (sb) // faster buffer operations
-        {
-            char ch, oldch = '_';
-            for (int i = 0; i < text.length(); i++)
+    @Deprecated
+    public static final String escapeHtml(String text) {
+        StringBuilder sb = new StringBuilder(text.length() * 4 / 3);
+        char ch, oldch = '_';
+        for (int i = 0; i < text.length(); i++) {
+            switch (ch = text.charAt(i))
             {
-                switch (ch = text.charAt(i))
-                {
-                case '<':
-                    sb.append("&lt;"); //$NON-NLS-1$
-                    break;
-                case '>':
-                    sb.append("&gt;"); //$NON-NLS-1$
-                    break;
-                case '&':
-                    sb.append("&amp;"); //$NON-NLS-1$
-                    break;
-                case ' ':
-                    sb.append("&nbsp;"); //$NON-NLS-1$
-                    break;
-                case '\'':
-                    sb.append("&apos;"); //$NON-NLS-1$
-                    break;
-                case '"':
-                    sb.append("&quot;"); //$NON-NLS-1$
-                    break;
-                case '\r':
-                case '\n':
-                    if (oldch != '\r' && oldch != '\n') // don't add twice <br>
-                        sb.append("<br/>\n"); //$NON-NLS-1$
-                    break;
-                default:
-                    sb.append(ch);
-                }
-                oldch = ch;
+            case '<':
+                sb.append("&lt;");
+                break;
+            case '>':
+                sb.append("&gt;");
+                break;
+            case '&':
+                sb.append("&amp;");
+                break;
+            case ' ':
+                sb.append("&nbsp;");
+                break;
+            case '\'':
+                sb.append("&apos;");
+                break;
+            case '"':
+                sb.append("&quot;");
+                break;
+            case '\r':
+            case '\n':
+                if (oldch != '\r' && oldch != '\n') // don't add twice <br>
+                    sb.append("<br/>\n");
+                break;
+            default:
+                sb.append(ch);
             }
-
-            return sb.toString();
+            oldch = ch;
         }
+
+        return sb.toString();
     }
 
     /**
@@ -337,24 +245,13 @@ public final class WebConsoleUtil
      * @param value the value to decode
      * @return the decoded string
      */
-    public static String urlDecode( final String value )
-    {
+    public static String urlDecode( final String value ) {
         // shortcut for empty or missing values
-        if ( value == null || value.length() == 0 )
-        {
+        if ( value == null || value.length() == 0 ) {
             return value;
         }
 
-        try
-        {
-            return URLDecoder.decode( value, "UTF-8" ); //$NON-NLS-1$
-        }
-        catch ( Throwable t )
-        {
-            // expected NoSuchMethodError: if platform does not support it
-            // expected UnsupportedEncoding (not really: UTF-8 is required)
-            return URLDecoder.decode( value );
-        }
+        return URLDecoder.decode(value, StandardCharsets.UTF_8);
     }
 
     /**
@@ -367,50 +264,7 @@ public final class WebConsoleUtil
      * @param value the value to convert
      * @return the string representation of the value
      */
-    public static final String toString(Object value)
-    {
-        if (value == null)
-        {
-            return "n/a"; //$NON-NLS-1$
-        }
-        else if (value.getClass().isArray())
-        {
-            final StringBuffer sb = new StringBuffer();
-            final int len = Array.getLength(value);
-            synchronized (sb)
-            { // it's faster to synchronize ALL loop calls
-                sb.append('[');
-                for (int i = 0; i < len; i++)
-                {
-                    final Object element = Array.get(value, i);
-                    if (element instanceof Byte)
-                    {
-                        // convert byte[] to hex string
-                        sb.append("0x"); //$NON-NLS-1$
-                        final String x = Integer.toHexString(((Byte) element).intValue() & 0xff);
-                        if (1 == x.length())
-                        {
-                            sb.append('0');
-                        }
-                        sb.append(x);
-                    }
-                    else
-                    {
-                        sb.append(toString(element));
-                    }
-
-                    if (i < len - 1)
-                    {
-                        sb.append(", "); //$NON-NLS-1$
-                    }
-                }
-                return sb.append(']').toString();
-            }
-        }
-        else
-        {
-            return value.toString();
-        }
-
-    }
+    public static final String toString(Object value) {
+        return Util.toString(value);
+     }
 }

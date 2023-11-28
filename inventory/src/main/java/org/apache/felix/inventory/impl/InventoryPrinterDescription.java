@@ -18,15 +18,17 @@ package org.apache.felix.inventory.impl;
 
 import java.util.ArrayList;
 import java.util.Arrays;
-import org.apache.felix.inventory.InventoryPrinter;
+import java.util.List;
+
 import org.apache.felix.inventory.Format;
+import org.apache.felix.inventory.InventoryPrinter;
 import org.osgi.framework.Constants;
 import org.osgi.framework.ServiceReference;
 
 /**
  * Helper class for a configuration printer.
  */
-public class InventoryPrinterDescription implements Comparable
+public class InventoryPrinterDescription implements Comparable<InventoryPrinterDescription>
 {
 
     private final ServiceReference reference;
@@ -58,7 +60,7 @@ public class InventoryPrinterDescription implements Comparable
         else if (formatsCfg instanceof String[])
         {
             final String[] formatsCfgArray = (String[]) formatsCfg;
-            final ArrayList formatList = new ArrayList();
+            final List<Format> formatList = new ArrayList<>();
             for (int i = 0; i < formatsCfgArray.length; i++)
             {
                 final Format format = Format.valueOf(formatsCfgArray[i]);
@@ -69,7 +71,7 @@ public class InventoryPrinterDescription implements Comparable
             }
             if (!formatList.isEmpty())
             {
-                formats = (Format[]) formatList.toArray(new Format[formatList.size()]);
+                formats = formatList.toArray(new Format[formatList.size()]);
             }
         }
 
@@ -146,21 +148,25 @@ public class InventoryPrinterDescription implements Comparable
     /**
      * @see java.lang.Comparable#compareTo(java.lang.Object)
      */
-    public int compareTo(final Object spa)
+    @Override
+    public int compareTo(final InventoryPrinterDescription spa)
     {
-        return this.reference.compareTo(((InventoryPrinterDescription) spa).reference);
+        return this.reference.compareTo(spa.reference);
     }
 
+    @Override
     public boolean equals(final Object obj)
     {
         return this.reference.equals(obj);
     }
 
+    @Override
     public int hashCode()
     {
         return this.reference.hashCode();
     }
 
+    @Override
     public String toString()
     {
         return "InventoryPrinterDescription [title=" + title + ", name=" + name + ", formats=" + Arrays.asList(formats)

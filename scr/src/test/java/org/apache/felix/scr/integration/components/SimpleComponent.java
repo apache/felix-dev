@@ -41,7 +41,7 @@ public class SimpleComponent
 
     public static final Set<SimpleComponent> PREVIOUS_INSTANCES = new HashSet<SimpleComponent>();
 
-    public static SimpleComponent INSTANCE;
+    public volatile static SimpleComponent INSTANCE;
 
     private Map<?, ?> m_config;
 
@@ -49,11 +49,11 @@ public class SimpleComponent
 
     public ComponentContext m_activateContext;
 
-    public SimpleService m_singleRef;
+    public volatile SimpleService m_singleRef;
 
-    public int m_singleRefBind = 0;
+    public volatile int m_singleRefBind = 0;
 
-    public int m_singleRefUnbind = 0;
+    public volatile int m_singleRefUnbind = 0;
 
     public final Set<SimpleService> m_multiRef = new HashSet<SimpleService>();
 

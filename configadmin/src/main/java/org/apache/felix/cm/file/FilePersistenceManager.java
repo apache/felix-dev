@@ -719,7 +719,6 @@ public class FilePersistenceManager implements PersistenceManager
     @SuppressWarnings("rawtypes")
     private void _store( final String pid, final Dictionary props ) throws IOException
     {
-        OutputStream out = null;
         File tmpFile = null;
         try
         {
@@ -731,9 +730,9 @@ public class FilePersistenceManager implements PersistenceManager
 
             // write the configuration to a temporary file
             tmpFile = File.createTempFile( cfgFile.getName(), TMP_EXT, cfgDir );
-            out = new FileOutputStream( tmpFile );
-            ConfigurationHandler.write( out, props );
-            out.close();
+            try(OutputStream out = new FileOutputStream( tmpFile )) {
+                ConfigurationHandler.write( out, props );
+            }
 
             // after writing the file, rename it but ensure, that no other
             // might at the same time open the new file
@@ -756,22 +755,11 @@ public class FilePersistenceManager implements PersistenceManager
                 {
                     throw new IOException( "Failed to rename configuration file from '" + tmpFile + "' to '" + cfgFile );
                 }
+                tmpFile = null;
             }
         }
         finally
         {
-            if ( out != null )
-            {
-                try
-                {
-                    out.close();
-                }
-                catch ( IOException ioe )
-                {
-                    // ignore
-                }
-            }
-
             if (tmpFile != null && tmpFile.exists())
             {
                 tmpFile.delete();

@@ -19,10 +19,13 @@
 package org.apache.felix.http.base.internal.runtime;
 
 import java.util.Map;
+import java.util.Objects;
 
+import org.apache.felix.http.base.internal.wrappers.PreprocessorWrapper;
+import org.jetbrains.annotations.NotNull;
 import org.osgi.framework.ServiceReference;
-import org.osgi.service.http.whiteboard.HttpWhiteboardConstants;
-import org.osgi.service.http.whiteboard.Preprocessor;
+import org.osgi.service.servlet.whiteboard.HttpWhiteboardConstants;
+import org.osgi.service.servlet.whiteboard.Preprocessor;
 
 /**
  * Provides registration information for a {@link Preprocessor}.
@@ -31,7 +34,7 @@ import org.osgi.service.http.whiteboard.Preprocessor;
  * slightly from the corresponding DTO
  * </p>
  */
-public final class PreprocessorInfo extends WhiteboardServiceInfo<Preprocessor>
+public class PreprocessorInfo extends WhiteboardServiceInfo<Preprocessor>
 {
     /**
      * The preprocessor initialization parameters as provided during registration of the preprocessor.
@@ -50,5 +53,33 @@ public final class PreprocessorInfo extends WhiteboardServiceInfo<Preprocessor>
     public Map<String, String> getInitParameters()
     {
         return initParams;
+    }
+
+
+    @Override
+    public @NotNull String getType() {
+        return "Preprocessor";
+    }
+
+    /**
+     * Get the class name of the preprocessor
+     * @param preprocessor The preprocesor
+     * @return The class name
+     */
+    public @NotNull String getClassName(@NotNull final Preprocessor preprocessor) {
+        if (preprocessor instanceof PreprocessorWrapper ) {
+            return ((PreprocessorWrapper)preprocessor).getPreprocessor().getClass().getName();
+        }
+        return preprocessor.getClass().getName();
+    }
+
+
+    @Override
+    public boolean isSame(AbstractInfo<Preprocessor> other) {
+        if (!super.isSame(other)) {
+            return false;
+        }
+        final PreprocessorInfo o = (PreprocessorInfo) other;
+        return Objects.equals(this.initParams, o.initParams);
     }
 }

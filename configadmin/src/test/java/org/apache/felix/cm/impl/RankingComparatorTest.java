@@ -265,7 +265,6 @@ public class RankingComparatorTest
             return 0;
         }
 
-
         @Override
         public String toString()
         {

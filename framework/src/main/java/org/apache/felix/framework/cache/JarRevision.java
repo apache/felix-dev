@@ -147,7 +147,7 @@ class JarRevision extends BundleArchiveRevision
                             // set request properties such as proxy auth.
                             URL url = BundleCache.getSecureAction().createURL(
                                 null, getLocation(), null);
-                            conn = url.openConnection();
+                            conn = BundleCache.getSecureAction().openURLConnection(url);
 
                             // Support for http proxy authentication.
                             String auth = BundleCache.getSecureAction()

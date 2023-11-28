@@ -16,8 +16,8 @@
 #
 
 ant:ant:1.5
-biz.aQute.bnd:biz.aQute.bnd.gradle:5.0.1
-biz.aQute.bnd:biz.aQute.bndlib:5.0.1
+biz.aQute.bnd:biz.aQute.bnd.gradle:5.2.0
+biz.aQute.bnd:biz.aQute.bndlib:5.2.0
 org.apache.felix:org.apache.felix.framework:5.6.10
 org.apache.felix:org.apache.felix.eventadmin:1.4.4
 org.apache.felix:org.apache.felix.gogo.command:1.0.2
@@ -31,11 +31,11 @@ org.apache.felix:org.apache.felix.log:1.0.1
 org.apache.felix:org.apache.felix.metatype:1.1.2
 org.apache.felix:org.apache.felix.http.jetty:3.4.8
 org.apache.felix:org.apache.felix.webconsole:4.3.4
-org.apache.felix:org.apache.felix.dependencymanager:4.6.0
-org.apache.felix:org.apache.felix.dependencymanager.annotation:5.0.1
-org.apache.felix:org.apache.felix.dependencymanager.lambda:1.2.1
-org.apache.felix:org.apache.felix.dependencymanager.runtime:4.0.7
-org.apache.felix:org.apache.felix.dependencymanager.shell:4.0.8
+org.apache.felix:org.apache.felix.dependencymanager:4.6.1
+org.apache.felix:org.apache.felix.dependencymanager.annotation:5.0.2
+org.apache.felix:org.apache.felix.dependencymanager.lambda:1.2.2
+org.apache.felix:org.apache.felix.dependencymanager.runtime:4.0.8
+org.apache.felix:org.apache.felix.dependencymanager.shell:4.0.9
 org.jline:jline-builtins:3.3.0
 org.apache.servicemix.bundles:org.apache.servicemix.bundles.junit:4.12_1
 org.mockito:mockito-core:1.10.19

@@ -63,8 +63,18 @@ input.placeholder-active { color: #AAA !important }
 
 .topPaddedText {
 	padding-top: 0.4em !important;
+	white-space: pre-wrap;
 }
 
 .iconMarginTop {
 	margin-top: .25em;
+}
+.pid {
+	font-style: italic
+}
+.pid:before {
+	content: " ("
+}
+.pid:after {
+	content: ")"
 }

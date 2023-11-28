@@ -83,6 +83,10 @@ public class ScrConfigurationImpl implements ScrConfiguration
 
     private boolean cacheMetadata;
 
+    private boolean isLogEnabled;
+
+    private boolean isLogExtensionEnabled;
+
     private long lockTimeout = DEFAULT_LOCK_TIMEOUT_MILLISECONDS;
 
     private long stopTimeout = DEFAULT_STOP_TIMEOUT_MILLISECONDS;
@@ -119,7 +123,7 @@ public class ScrConfigurationImpl implements ScrConfiguration
         // overriden by configuration admin later.
         // Note that if the managed service is registered first then it is random which will win since
         // configuration may be delivered asynchronously
-        configure( null, false );
+        configure( null, true );
 
         managedServiceRef = bundleContext.registerService("org.osgi.service.cm.ManagedService", new ScrManagedServiceServiceFactory(this),
                 msProps);
@@ -157,7 +161,7 @@ public class ScrConfigurationImpl implements ScrConfiguration
     }
 
     // Called from the ScrManagedService.updated method to reconfigure
-    void configure( Dictionary<String, ?> config, boolean fromConfig )
+    void configure( Dictionary<String, ?> config, boolean initialStart )
     {
         Boolean newGlobalExtender;
         Boolean oldGlobalExtender;
@@ -165,7 +169,7 @@ public class ScrConfigurationImpl implements ScrConfiguration
         {
             if ( config == null )
             {
-                if (!fromConfig)
+                if (initialStart)
                 {
                     if (this.bundleContext == null)
                     {
@@ -178,6 +182,8 @@ public class ScrConfigurationImpl implements ScrConfiguration
                         serviceChangecountTimeout = DEFAULT_SERVICE_CHANGECOUNT_TIMEOUT_MILLISECONDS;
                         newGlobalExtender = false;
                         cacheMetadata = false;
+                        isLogEnabled = true;
+                        isLogExtensionEnabled = false;
                     }
                     else
                     {
@@ -190,6 +196,8 @@ public class ScrConfigurationImpl implements ScrConfiguration
                         serviceChangecountTimeout = getServiceChangecountTimeout();
                         newGlobalExtender = getDefaultGlobalExtender();
                         cacheMetadata = getDefaultCacheMetadata();
+                        isLogEnabled = getDefaultLogEnabled();
+                        isLogExtensionEnabled = getDefaultLogExtension();
                     }
                 }
                 else
@@ -210,6 +218,8 @@ public class ScrConfigurationImpl implements ScrConfiguration
                 newGlobalExtender = VALUE_TRUE.equalsIgnoreCase( String.valueOf( config.get( PROP_GLOBAL_EXTENDER) ) );
                 cacheMetadata = VALUE_TRUE.equalsIgnoreCase(
                     String.valueOf(config.get(PROP_CACHE_METADATA)));
+                isLogEnabled = checkIfLogEnabled(config);
+                isLogExtensionEnabled = VALUE_TRUE.equalsIgnoreCase(String.valueOf(config.get(PROP_LOG_EXTENSION)));
             }
             if ( scrCommand != null )
             {
@@ -218,13 +228,14 @@ public class ScrConfigurationImpl implements ScrConfiguration
             oldGlobalExtender = this.globalExtender;
             this.globalExtender = newGlobalExtender;
         }
+        activator.setLogger();
         if ( newGlobalExtender != oldGlobalExtender )
         {
-            activator.restart( newGlobalExtender );
+            activator.restart( newGlobalExtender, initialStart );
         }
     }
 
-    /**
+	/**
      * Returns the current log level.
      * Note that this log level is not used with an R7 LogService implementation.
      * @return
@@ -249,7 +260,7 @@ public class ScrConfigurationImpl implements ScrConfiguration
         return keepInstances;
     }
 
-    @Override
+	@Override
     public boolean infoAsService()
     {
         return infoAsService;
@@ -402,4 +413,39 @@ public class ScrConfigurationImpl implements ScrConfiguration
         // default log level (errors only)
         return Level.ERROR;
     }
+
+    @Override
+    public boolean isLogEnabled() 
+    {
+        return isLogEnabled;
+    }
+
+    @Override
+    public boolean isLogExtensionEnabled() 
+    {
+        return isLogExtensionEnabled;
+    }
+    
+    private boolean getDefaultLogExtension() 
+    {
+        return VALUE_TRUE.equalsIgnoreCase(bundleContext.getProperty(PROP_LOG_EXTENSION));
+    }
+    
+    private boolean getDefaultLogEnabled() 
+    {
+        String isLogEnabled = bundleContext.getProperty(PROP_LOG_ENABLED);
+        return isLogEnabled == null ? true : VALUE_TRUE.equalsIgnoreCase(isLogEnabled);
+    }
+    
+    private boolean checkIfLogEnabled(Dictionary<String, ?> properties) 
+    {
+        Object isLogEnabled = properties.get(PROP_LOG_ENABLED);
+        if (isLogEnabled == null) 
+        {
+            return true;
+        }
+        return isLogEnabled == null ? true : Boolean.parseBoolean(isLogEnabled.toString());
+    }
+    
+
 }

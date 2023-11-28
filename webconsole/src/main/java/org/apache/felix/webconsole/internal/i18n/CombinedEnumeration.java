@@ -32,28 +32,28 @@ import java.util.Set;
  * So if both enumerations would produce the same result, say "123", only the
  * first would be returned.
  */
-class CombinedEnumeration implements Enumeration
+class CombinedEnumeration implements Enumeration<String>
 {
 
     // the first enumeration to iterate
-    private final Enumeration first;
+    private final Enumeration<String> first;
 
     // the second enumeration to iterate once the first is exhausted
-    private final Enumeration second;
+    private final Enumeration<String> second;
 
     // the set of values already returned to prevent duplicate entries
-    private final Set seenKeys;
+    private final Set<String> seenKeys;
 
     // preview to the next return value for nextElement(), null at the end
-    private Object nextKey;
+    private String nextKey;
 
 
-    CombinedEnumeration( final Enumeration first, final Enumeration second )
+    CombinedEnumeration( final Enumeration<String> first, final Enumeration<String> second )
     {
         this.first = first;
         this.second = second;
 
-        this.seenKeys = new HashSet();
+        this.seenKeys = new HashSet<>();
         this.nextKey = seek();
     }
 
@@ -64,14 +64,14 @@ class CombinedEnumeration implements Enumeration
     }
 
 
-    public Object nextElement()
+    public String nextElement()
     {
         if ( !hasMoreElements() )
         {
             throw new NoSuchElementException();
         }
 
-        Object result = nextKey;
+        String result = nextKey;
         nextKey = seek();
         return result;
     }
@@ -82,11 +82,11 @@ class CombinedEnumeration implements Enumeration
      * (unique) element is available, null is returned. The element returned
      * is also added to the set of seen elements to prevent duplicate provision
      */
-    private Object seek()
+    private String seek()
     {
         while ( first.hasMoreElements() )
         {
-            final Object next = first.nextElement();
+            final String next = first.nextElement();
             if ( !seenKeys.contains( next ) )
             {
                 seenKeys.add( next );
@@ -95,7 +95,7 @@ class CombinedEnumeration implements Enumeration
         }
         while ( second.hasMoreElements() )
         {
-            final Object next = second.nextElement();
+            final String next = second.nextElement();
             if ( !seenKeys.contains( next ) )
             {
                 seenKeys.add( next );

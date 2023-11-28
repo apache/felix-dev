@@ -34,7 +34,7 @@ public abstract class AbstractAdapter
     /**
      * The constructor of the adapter.
      *
-     * @param admin The <tt>EventAdmin</tt> to use for posting events.
+     * @param admin The {@code EventAdmin} to use for posting events.
      */
     public AbstractAdapter(final EventAdmin admin)
     {

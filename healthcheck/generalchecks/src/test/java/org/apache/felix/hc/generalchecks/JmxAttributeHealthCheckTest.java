@@ -24,7 +24,7 @@ import static org.mockito.Mockito.when;
 import java.util.HashMap;
 
 import org.apache.felix.hc.api.Result;
-import org.apache.felix.hc.generalchecks.JmxAttributeCheck;
+import org.apache.felix.hc.api.Result.Status;
 import org.junit.Test;
 
 public class JmxAttributeHealthCheckTest {
@@ -36,6 +36,7 @@ public class JmxAttributeHealthCheckTest {
         when(configuration.mbean_name()).thenReturn(objectName);
         when(configuration.attribute_name()).thenReturn(attributeName);
         when(configuration.attribute_value_constraint()).thenReturn(constraint);
+        when(configuration.statusForFailedContraint()).thenReturn(Status.WARN);
 
         hc.activate(configuration, new HashMap<String,Object>());
 

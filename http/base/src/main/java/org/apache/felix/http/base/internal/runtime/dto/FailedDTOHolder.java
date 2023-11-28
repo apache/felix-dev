@@ -30,13 +30,13 @@ import org.apache.felix.http.base.internal.runtime.PreprocessorInfo;
 import org.apache.felix.http.base.internal.runtime.ResourceInfo;
 import org.apache.felix.http.base.internal.runtime.ServletContextHelperInfo;
 import org.apache.felix.http.base.internal.runtime.ServletInfo;
-import org.osgi.service.http.runtime.dto.FailedErrorPageDTO;
-import org.osgi.service.http.runtime.dto.FailedFilterDTO;
-import org.osgi.service.http.runtime.dto.FailedListenerDTO;
-import org.osgi.service.http.runtime.dto.FailedPreprocessorDTO;
-import org.osgi.service.http.runtime.dto.FailedResourceDTO;
-import org.osgi.service.http.runtime.dto.FailedServletContextDTO;
-import org.osgi.service.http.runtime.dto.FailedServletDTO;
+import org.osgi.service.servlet.runtime.dto.FailedErrorPageDTO;
+import org.osgi.service.servlet.runtime.dto.FailedFilterDTO;
+import org.osgi.service.servlet.runtime.dto.FailedListenerDTO;
+import org.osgi.service.servlet.runtime.dto.FailedPreprocessorDTO;
+import org.osgi.service.servlet.runtime.dto.FailedResourceDTO;
+import org.osgi.service.servlet.runtime.dto.FailedServletContextDTO;
+import org.osgi.service.servlet.runtime.dto.FailedServletDTO;
 
 public final class FailedDTOHolder
 {
@@ -121,7 +121,7 @@ public final class FailedDTOHolder
         }
         else
         {
-            SystemLogger.error("Unsupported info type: " + info.getClass(), null);
+            SystemLogger.LOGGER.error("Unsupported info type: {}", info.getClass());
         }
     }
 }

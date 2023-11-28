@@ -16,19 +16,25 @@
  */
 package org.apache.felix.configadmin.plugin.interpolation;
 
+import static java.util.stream.Collectors.toList;
+
 import java.io.File;
 import java.io.IOException;
+import java.lang.reflect.Array;
 import java.nio.charset.Charset;
 import java.nio.file.Files;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Collection;
+import java.util.Collections;
 import java.util.Dictionary;
 import java.util.Enumeration;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.function.Function;
+import java.util.stream.Stream;
 
-import org.osgi.framework.BundleContext;
 import org.osgi.framework.Constants;
 import org.osgi.framework.ServiceReference;
 import org.osgi.service.cm.ConfigurationPlugin;
@@ -42,6 +48,8 @@ class InterpolationConfigurationPlugin implements ConfigurationPlugin {
     private static final String TYPE_PROP = "prop";
 
     private static final String TYPE_SECRET = "secret";
+
+    private static final String TYPE_CONF = "conf";
 
     private static final String DIRECTIVE_TYPE = "type";
 
@@ -90,18 +98,18 @@ class InterpolationConfigurationPlugin implements ConfigurationPlugin {
         TYPE_MAP.put("char[]", char[].class);
     }
 
-    private final BundleContext context;
-    private final File directory;
+    private final Function<String, String> propertiesProvider;
+    private final List<File> directory;
 
     private final Charset encodingCharset;
 
-    InterpolationConfigurationPlugin(BundleContext bc, String dir, String fileEncoding) {
-        context = bc;
+    InterpolationConfigurationPlugin(Function<String, String> pp, String dir, String fileEncoding) {
+        propertiesProvider = pp;
         if (dir != null) {
-            directory = new File(dir);
+            directory = Stream.of(dir.split("\\s*,\\s*")).map(File::new).collect(toList());
             getLog().info("Configured directory for secrets: {}", dir);
         } else {
-            directory = null;
+            directory = Collections.emptyList();
         }
         if (fileEncoding == null) {
             encodingCharset = Charset.defaultCharset();
@@ -122,41 +130,52 @@ class InterpolationConfigurationPlugin implements ConfigurationPlugin {
             String key = keys.nextElement();
             Object val = properties.get(key);
             if (val instanceof String) {
-                Object newVal = getNewValue(key, (String) val, pid);
+                Object newVal = getNewValue(key, (String) val, pid, properties);
                 if (newVal != null && !newVal.equals(val)) {
                     properties.put(key, newVal);
                     getLog().info("Replaced value of configuration property '{}' for PID {}", key, pid);
                 }
             } else if (val instanceof String[]) {
                 String[] array = (String[]) val;
-                String[] newArray = null;
+                List<String> newArray = null;
                 for (int i = 0; i < array.length; i++) {
-                    Object newVal = getNewValue(key, array[i], pid);
+                    Object newVal = getNewValue(key, array[i], pid, properties);
                     if (newVal != null && !newVal.equals(array[i])) {
                         if (newArray == null) {
-                            newArray = new String[array.length];
-                            System.arraycopy(array, 0, newArray, 0, array.length);
+                            newArray = new ArrayList<>();
+                            for(int m=0;m<i;m++) {
+                                newArray.add(array[m]);
+                            }
                         }
-                        newArray[i] = newVal.toString();
+                        if ( newVal.getClass().isArray() ) {
+                            for(int m=0;m<Array.getLength(newVal);m++ ) {
+                                newArray.add(Array.get(newVal, m).toString());
+                            }
+                        } else {
+                            newArray.add(newVal.toString());
+                        }
+                    } else if ( newArray != null ) {
+                        newArray.add(array[i]);
                     }
                 }
                 if (newArray != null) {
-                    properties.put(key, newArray);
+                    final String[] update = newArray.toArray(new String[newArray.size()]);
+                    properties.put(key, update);
                     getLog().info("Replaced value of configuration property '{}' for PID {}", key, pid);
                 }
             }
         }
     }
 
-    private Object getNewValue(final String key, final String value, final Object pid) {
-        final Object result = replace(key, value, pid);
+    private Object getNewValue(final String key, final String value, final Object pid, final Dictionary<String, Object> properties) {
+        final Object result = replace(key, value, pid, properties);
         if (value.equals(result)) {
             return null;
         }
         return result;
     }
 
-    Object replace(final String key, final String value, final Object pid) {
+    Object replace(final String key, final String value, final Object pid, final Dictionary<String, Object> properties) {
         final Object result = Interpolator.replace(value, (type, name, dir) -> {
             String v = null;
             if (TYPE_ENV.equals(type)) {
@@ -167,6 +186,9 @@ class InterpolationConfigurationPlugin implements ConfigurationPlugin {
 
             } else if (TYPE_SECRET.equals(type)) {
                 v = getVariableFromFile(key, name, pid);
+
+            } else if (TYPE_CONF.equals(type)) {
+                v = getVariableFromConfiguration(name, properties);
             }
             if (v == null) {
                 v = dir.get(DIRECTIVE_DEFAULT);
@@ -179,16 +201,50 @@ class InterpolationConfigurationPlugin implements ConfigurationPlugin {
         return result;
     }
 
+    String getVariableFromConfiguration(final String name, final Dictionary<String, Object> properties) {
+        Object val = properties.get(name);
+        String result;
+        if (val.getClass().isArray()) {
+            if (val instanceof int[]) {
+                result = Arrays.toString((int[])val);
+            } else if (val instanceof long[]) {
+                result = Arrays.toString((long[])val);
+            } else if (val instanceof float[]) {
+                result = Arrays.toString((float[])val);
+            } else if (val instanceof double[]) {
+                result = Arrays.toString((double[])val);
+            } else if (val instanceof byte[]) {
+                result = Arrays.toString((byte[])val);
+            } else if (val instanceof short[]) {
+                result = Arrays.toString((short[])val);
+            } else if (val instanceof boolean[]) {
+                result = Arrays.toString((boolean[])val);
+            } else if (val instanceof char[]) {
+                result = Arrays.toString((char[])val);
+            } else {
+                result =Arrays.toString((Object[])val);
+            }
+        } else {
+            result = String.valueOf(val);
+        }
+        // prevent circular references
+        if (result.startsWith("$[conf:")) {
+            getLog().warn("There is a cycle in '{}' for PID {}, returning {}", name, properties.get(Constants.SERVICE_PID), name);
+            return name;
+        }
+        return result;
+    }
+
     String getVariableFromEnvironment(final String name) {
         return System.getenv(name);
     }
 
     String getVariableFromProperty(final String name) {
-        return context.getProperty(name);
+        return propertiesProvider.apply(name);
     }
 
     String getVariableFromFile(final String key, final String name, final Object pid) {
-        if (directory == null) {
+        if (directory.isEmpty()) {
             getLog().warn("Cannot replace property value {} for PID {}. No directory configured via framework property " +
                     Activator.DIR_PROPERTY, key, pid);
             return null;
@@ -199,16 +255,20 @@ class InterpolationConfigurationPlugin implements ConfigurationPlugin {
             return null;
         }
 
-        File file = new File(directory, name);
-        if (!file.isFile()) {
-            getLog().warn("Cannot replace variable. Configured path is not a regular file: " + file);
+        List<File> files = directory.stream().map(d -> new File(d, name)).filter(File::exists).collect(toList());
+        if (files.stream().noneMatch(File::isFile)) {
+            getLog().warn("Cannot replace variable. Configured paths are not regular files: " + files);
             return null;
         }
 
-        if (!file.getAbsolutePath().startsWith(directory.getAbsolutePath())) {
+        if (files.stream().map(File::getAbsolutePath).noneMatch(s -> directory.stream().anyMatch(dir -> s.startsWith(dir.getAbsolutePath())))) {
             getLog().error("Illegal secret location: " + name + " Going out the directory structure is not allowed");
             return null;
         }
+
+        File file = files.stream().findFirst().orElseThrow(
+            () -> new IllegalStateException(
+                "Something went terribly wrong. This should not be possible."));
 
         byte[] bytes;
         try {
@@ -230,7 +290,11 @@ class InterpolationConfigurationPlugin implements ConfigurationPlugin {
      * @param delimiter The delimiter for array types (optional)
      * @return The converted value
      */
-    Object convertType(final String type, final String value, final String delimiter) {
+    Object convertType(String type, final String value, final String delimiter) {
+        // if delimiter is specifed but no type, assume String[]
+        if ( delimiter != null && type == null ) {
+            type = "String[]";
+        }
         if (type == null) {
             return value;
         }
@@ -253,7 +317,7 @@ class InterpolationConfigurationPlugin implements ConfigurationPlugin {
      * the delimiter (avoiding splitting), unless that backslash is preceded by
      * another backslash, in which case the two backslashes are replaced by a single
      * one and the value is split after the backslash.
-     * 
+     *
      * @param value     The value to split
      * @param delimiter The delimiter
      * @return The resulting array

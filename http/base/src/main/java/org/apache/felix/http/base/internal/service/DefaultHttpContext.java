@@ -16,13 +16,12 @@
  */
 package org.apache.felix.http.base.internal.service;
 
-import org.osgi.service.http.HttpContext;
-import org.osgi.framework.Bundle;
-import javax.servlet.http.HttpServletRequest;
-import javax.servlet.http.HttpServletResponse;
 import java.net.URL;
 
-public final class DefaultHttpContext 
+import org.osgi.framework.Bundle;
+import org.osgi.service.http.HttpContext;
+
+public final class DefaultHttpContext
     implements HttpContext
 {
     private Bundle bundle;
@@ -32,11 +31,13 @@ public final class DefaultHttpContext
         this.bundle = bundle;
     }
 
+    @Override
     public String getMimeType(String name)
     {
         return null;
     }
 
+    @Override
     public URL getResource(String name)
     {
         if (name.startsWith("/")) {
@@ -46,7 +47,8 @@ public final class DefaultHttpContext
         return this.bundle.getResource(name);
     }
 
-    public boolean handleSecurity(HttpServletRequest req, HttpServletResponse res)
+    @Override
+    public boolean handleSecurity(final javax.servlet.http.HttpServletRequest req, final javax.servlet.http.HttpServletResponse res)
     {
         return true;
     }

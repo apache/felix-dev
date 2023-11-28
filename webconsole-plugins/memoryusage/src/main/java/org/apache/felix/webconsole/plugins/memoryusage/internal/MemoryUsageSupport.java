@@ -82,7 +82,7 @@ final class MemoryUsageSupport implements NotificationListener, ServiceListener
     private long nextDumpTime = -1;
 
     // log service
-    private ServiceReference logServiceReference;
+    private ServiceReference<?> logServiceReference;
     private Object logService;
 
     MemoryUsageSupport(final BundleContext context)

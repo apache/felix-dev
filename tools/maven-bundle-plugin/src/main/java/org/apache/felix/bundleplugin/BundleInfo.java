@@ -36,7 +36,7 @@ public class BundleInfo
      * {@link Map} &lt; {@link String}, {@link Set} &lt; {@link Artifact} > >
      * Used to check for duplicated exports. Key is package name and value list of artifacts where it's exported.
      */
-    private Map<String, Set<Artifact>> m_exportedPackages = new HashMap<String, Set<Artifact>>();
+    private Map<String, Set<Artifact>> m_exportedPackages = new HashMap<>();
 
 
     public void addExportedPackage( String packageName, Artifact artifact )
@@ -44,7 +44,7 @@ public class BundleInfo
         Set<Artifact> artifacts = getExportedPackages().get( packageName );
         if ( artifacts == null )
         {
-            artifacts = new HashSet<Artifact>();
+            artifacts = new HashSet<>();
             m_exportedPackages.put( packageName, artifacts );
         }
         artifacts.add( artifact );
@@ -64,7 +64,7 @@ public class BundleInfo
      */
     public Map<String, Set<Artifact>> getDuplicatedExports()
     {
-        Map<String, Set<Artifact>> duplicatedExports = new HashMap<String, Set<Artifact>>();
+        Map<String, Set<Artifact>> duplicatedExports = new HashMap<>();
 
         for ( Iterator<Map.Entry<String, Set<Artifact>>> it = getExportedPackages().entrySet().iterator(); it.hasNext(); )
         {
@@ -73,7 +73,7 @@ public class BundleInfo
             if ( artifacts.size() > 1 )
             {
                 /* remove warnings caused by different versions of same artifact */
-                Set<String> artifactKeys = new HashSet<String>();
+                Set<String> artifactKeys = new HashSet<>();
 
                 String packageName = entry.getKey();
                 for ( Iterator<Artifact> it2 = artifacts.iterator(); it2.hasNext(); )
@@ -104,7 +104,7 @@ public class BundleInfo
             Set<Artifact> artifactsWithPackage = getExportedPackages().get( packageName );
             if ( artifactsWithPackage == null )
             {
-                artifactsWithPackage = new HashSet<Artifact>();
+                artifactsWithPackage = new HashSet<>();
                 getExportedPackages().put( packageName, artifactsWithPackage );
             }
             artifactsWithPackage.addAll( artifacts );

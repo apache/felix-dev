@@ -1,5 +1,5 @@
 /*
- * Copyright (c) OSGi Alliance (2010, 2013). All Rights Reserved.
+ * Copyright (c) OSGi Alliance (2010, 2020). All Rights Reserved.
  * 
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -18,12 +18,11 @@ package org.osgi.framework.hooks.weaving;
 
 /**
  * A weaving exception used to indicate that the class load should be failed but
- * the weaving hook must not be blacklisted by the framework.
- * 
+ * the weaving hook must not be deny listed by the framework.
  * <p>
  * This exception conforms to the general purpose exception chaining mechanism.
  * 
- * @author $Id: 7575fc1b015fea7c77397391df6c8d2085513e76 $
+ * @author $Id: 29ebe6460fbe20ce8037f14a162c72f633b1de31 $
  */
 
 public class WeavingException extends RuntimeException {

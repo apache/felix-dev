@@ -25,33 +25,27 @@ import java.util.Properties;
 import java.util.SortedSet;
 import java.util.TreeSet;
 
+import org.apache.felix.inventory.Format;
 import org.apache.felix.webconsole.internal.AbstractConfigurationPrinter;
 
 
-public class SystemPropertiesPrinter extends AbstractConfigurationPrinter
-{
+public class SystemPropertiesPrinter extends AbstractConfigurationPrinter {
 
     private static final String TITLE = "System Properties";
 
-    private static final String LABEL = "_systemproperties";
-
-
-    public String getTitle()
-    {
+    @Override
+    protected String getTitle() {
         return TITLE;
     }
 
-
-    public void printConfiguration( PrintWriter printWriter )
-    {
+    @Override
+    public void print(final PrintWriter pw, final Format format, final boolean isZip) {
         Properties props = System.getProperties();
-        SortedSet keys = new TreeSet( props.keySet() );
-        for ( Iterator ki = keys.iterator(); ki.hasNext(); )
-        {
+        SortedSet<?> keys = new TreeSet<>( props.keySet() );
+        for ( Iterator<?> ki = keys.iterator(); ki.hasNext(); ) {
             Object key = ki.next();
-            ConfigurationRender.infoLine( printWriter, null, ( String ) key, props.get( key ) );
+            ConfigurationRender.infoLine( pw, null, ( String ) key, props.get( key ) );
         }
 
     }
-
 }

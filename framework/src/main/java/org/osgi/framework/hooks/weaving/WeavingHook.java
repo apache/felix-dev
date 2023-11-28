@@ -1,5 +1,5 @@
 /*
- * Copyright (c) OSGi Alliance (2010, 2013). All Rights Reserved.
+ * Copyright (c) OSGi Alliance (2010, 2020). All Rights Reserved.
  * 
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -36,30 +36,29 @@ import org.osgi.annotation.versioning.ConsumerType;
  * bytes as modified by previously called weaving hooks.
  * 
  * @ThreadSafe
- * @author $Id: 8d99df5b0f3e7ffa9573695923afe86de9835fde $
+ * @author $Id: e5b54121d2cab7caefbae3b718421b28e5a9ede7 $
  */
 @ConsumerType
 public interface WeavingHook {
 	/**
 	 * Weaving hook method.
-	 * 
+	 * <p>
 	 * This method can modify the specified woven class object to weave the
 	 * class being defined.
-	 * 
 	 * <p>
 	 * If this method throws any exception, the framework must log the exception
 	 * and fail the class load in progress. This weaving hook service must be
-	 * blacklisted by the framework and must not be called again. The
-	 * blacklisting of this weaving hook service must expire when this weaving
-	 * hook service is unregistered. However, this method can throw a
+	 * deny listed by the framework and must not be called again. The deny
+	 * listing of this weaving hook service must expire when this weaving hook
+	 * service is unregistered. However, this method can throw a
 	 * {@link WeavingException} to deliberately fail the class load in progress
-	 * without being blacklisted by the framework.
+	 * without being deny listed by the framework.
 	 * 
 	 * @param wovenClass The {@link WovenClass} object that represents the data
-	 *        that will be used to define the class.
+	 *            that will be used to define the class.
 	 * @throws WeavingException If this weaving hook wants to deliberately fail
-	 *         the class load in progress without being blacklisted by the
-	 *         framework
+	 *             the class load in progress without being deny listed by the
+	 *             framework
 	 */
 	public void weave(WovenClass wovenClass);
 }

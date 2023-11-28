@@ -122,7 +122,7 @@ public class MultiReleaseVersionTest extends TestCase
         return f;
     }
 
-    private static void deleteDir(File root) throws IOException
+    public static void deleteDir(File root) throws IOException
     {
         if (root.isDirectory())
         {

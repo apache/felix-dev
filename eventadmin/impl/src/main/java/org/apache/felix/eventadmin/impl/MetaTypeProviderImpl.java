@@ -111,9 +111,9 @@ public class MetaTypeProviderImpl
                     m_asyncThreadPoolRatio));
 
             adList.add( new AttributeDefinitionImpl( Configuration.PROP_TIMEOUT, "Timeout",
-                    "The black-listing timeout in milliseconds. The default value is 5000. Increase or decrease " +
+                    "The deny-list timeout in milliseconds. The default value is 5000. Increase or decrease " +
                     "at own discretion. A value of less then 100 turns timeouts off. Any other value is the time " +
-                    "in milliseconds granted to each event handler before it gets blacklisted",
+                    "in milliseconds granted to each event handler before it gets denied",
                     m_timeout ) );
 
             adList.add( new AttributeDefinitionImpl( Configuration.PROP_REQUIRE_TOPIC, "Require Topic",

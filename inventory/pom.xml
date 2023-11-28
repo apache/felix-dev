@@ -22,13 +22,13 @@
     <parent>
         <groupId>org.apache.felix</groupId>
         <artifactId>felix-parent</artifactId>
-        <version>4</version>
+        <version>7</version>
         <relativePath>../pom/pom.xml</relativePath>
     </parent>
 
     <artifactId>org.apache.felix.inventory</artifactId>
     <packaging>bundle</packaging>
-    <version>1.0.7-SNAPSHOT</version>
+    <version>2.0.1-SNAPSHOT</version>
 
     <name>Apache Felix Inventory</name>
     <description>Apache Felix Inventory provides some mechanisms to get the current state of the system and therefore provides an inventory of the system.</description>
@@ -37,7 +37,8 @@
         <connection>scm:git:https://github.com/apache/felix-dev.git</connection>
         <developerConnection>scm:git:https://github.com/apache/felix-dev.git</developerConnection>
         <url>https://gitbox.apache.org/repos/asf?p=felix-dev.git</url>
-    </scm>
+      <tag>HEAD</tag>
+  </scm>
 
     <build>
         <plugins>
@@ -45,14 +46,14 @@
                 <artifactId>maven-javadoc-plugin</artifactId>
                 <configuration>
                     <excludePackageNames>
-                        *.impl
+                        org.apache.felix.inventory.impl:org.apache.felix.inventory.impl.helper:org.apache.felix.inventory.impl.webconsole
                     </excludePackageNames>
                 </configuration>
             </plugin>
             <plugin>
                 <groupId>org.apache.felix</groupId>
                 <artifactId>maven-bundle-plugin</artifactId>
-                <version>3.3.0</version>
+                <version>5.1.9</version>
                 <extensions>true</extensions>
                     <configuration>
                     <instructions>
@@ -64,15 +65,13 @@
                             org.apache.felix.inventory.impl.Activator
                         </Bundle-Activator>
                         <Import-Package>
-                            javax.servlet;resolution:=optional,
-                            javax.servlet.http;resolution:=optional,
+                            jakarta.servlet;version="[5.0,7)";resolution:=optional,
+                            jakarta.servlet.http;version="[5.0,7)";resolution:=optional,
                             *
                         </Import-Package>
-                        <Export-Package>
-                            org.apache.felix.inventory
-                        </Export-Package>
                         <DynamicImport-Package>
-                            javax.servlet, javax.servlet.http
+                            jakarta.servlet;version="[5.0,7)",
+                            jakarta.servlet.http;version="[5.0,7)"
                         </DynamicImport-Package>
                     </instructions>
                 </configuration>
@@ -100,14 +99,16 @@
             <scope>provided</scope>
         </dependency>
         <dependency>
-            <groupId>javax.servlet</groupId>
-            <artifactId>servlet-api</artifactId>
-            <version>2.4</version>
+            <groupId>jakarta.servlet</groupId>
+            <artifactId>jakarta.servlet-api</artifactId>
+            <version>5.0.0</version>
             <scope>provided</scope>
         </dependency>
         <dependency>
             <groupId>junit</groupId>
             <artifactId>junit</artifactId>
+            <version>4.13.1</version>
+            <scope>test</scope>
         </dependency>
     </dependencies>
 </project>

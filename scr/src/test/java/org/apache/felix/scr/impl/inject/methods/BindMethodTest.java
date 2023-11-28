@@ -23,7 +23,6 @@ import org.apache.felix.scr.impl.MockBundle;
 import org.apache.felix.scr.impl.inject.BindParameters;
 import org.apache.felix.scr.impl.inject.RefPair;
 import org.apache.felix.scr.impl.inject.internal.ComponentMethodsImpl;
-import org.apache.felix.scr.impl.inject.methods.BindMethod;
 import org.apache.felix.scr.impl.logger.ComponentLogger;
 import org.apache.felix.scr.impl.logger.MockComponentLogger;
 import org.apache.felix.scr.impl.manager.ComponentActivator;
@@ -50,11 +49,12 @@ import junit.framework.TestCase;
 public class BindMethodTest extends TestCase
 {
 
-    private ServiceReference m_serviceReference;
+    private ServiceReference<FakeService> m_serviceReference;
     private FakeService m_serviceInstance;
     private BundleContext m_context;
 
 
+    @SuppressWarnings("unchecked")
     @Override
     public void setUp()
     {
@@ -447,23 +447,26 @@ public class BindMethodTest extends TestCase
     private void testMethod( final String methodName, final T1 component, final DSVersion dsVersion,
         final String expectCallPerformed )
     {
-        ComponentContainer container = newContainer();
-        SingleComponentManager icm = new SingleComponentManager( container, new ComponentMethodsImpl() );
+        ComponentContainer<Object> container = newContainer();
+        SingleComponentManager<Object> icm = new SingleComponentManager<>(container,
+            new ComponentMethodsImpl<>());
         BindMethod bm = new BindMethod( methodName, component.getClass(),
                 FakeService.class.getName(), dsVersion, false );
-        RefPair refPair = new SingleRefPair( m_serviceReference );
-        ComponentContextImpl<T1> cc = new ComponentContextImpl(icm, new MockBundle(), null);
+        RefPair<Object, FakeService> refPair = new SingleRefPair<>(m_serviceReference);
+        ComponentContextImpl<Object> cc = new ComponentContextImpl<>(icm,
+            new MockBundle(), null);
         assertTrue( bm.getServiceObject( new BindParameters(cc, refPair), m_context ) );
         BindParameters bp = new BindParameters(cc, refPair);
         bm.invoke( component, bp, null );
         assertEquals( expectCallPerformed, component.callPerformed );
     }
 
-    private ComponentContainer newContainer()
+    private ComponentContainer<Object> newContainer()
     {
         final ComponentActivator activator = Mockito.mock(ComponentActivator.class);
         final ComponentMetadata metadata = newMetadata();
-        ComponentContainer container = new ComponentContainer() {
+        ComponentContainer<Object> container = new ComponentContainer<Object>()
+        {
 
             @Override
             public ComponentActivator getActivator()
@@ -478,13 +481,8 @@ public class BindMethodTest extends TestCase
             }
 
             @Override
-            public void disposed(SingleComponentManager component)
+            public void disposed(SingleComponentManager<Object> component)
             {
-            }
-
-            public boolean isEnabled()
-            {
-                return false;
             }
 
             @Override

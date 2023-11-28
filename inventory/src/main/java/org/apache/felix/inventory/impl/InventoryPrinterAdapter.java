@@ -37,18 +37,19 @@ import org.osgi.framework.ServiceRegistration;
  *
  * The adapter simplifies accessing and working with the inventory printer.
  */
-public class InventoryPrinterAdapter implements InventoryPrinterHandler, Comparable
+public class InventoryPrinterAdapter implements InventoryPrinterHandler, Comparable<InventoryPrinterAdapter>
 {
 
     /**
      * Comparator for adapters based on the service ranking.
      */
-    public static final Comparator RANKING_COMPARATOR = new Comparator()
+    public static final Comparator<InventoryPrinterAdapter> RANKING_COMPARATOR = new Comparator<InventoryPrinterAdapter>()
     {
 
-        public int compare(final Object o1, final Object o2)
+        @Override
+        public int compare(final InventoryPrinterAdapter o1, final InventoryPrinterAdapter o2)
         {
-            return ((InventoryPrinterAdapter) o1).description.compareTo(((InventoryPrinterAdapter) o2).description);
+            return o1.description.compareTo(o2.description);
         }
     };
 
@@ -77,18 +78,20 @@ public class InventoryPrinterAdapter implements InventoryPrinterHandler, Compara
             final Object value = this.description.getServiceReference().getProperty(InventoryPrinter.WEBCONSOLE);
             if (value == null || !"false".equalsIgnoreCase(value.toString()))
             {
-                final Dictionary props = new Hashtable();
+                final Dictionary<String, Object> props = new Hashtable<>();
                 props.put(ConsoleConstants.PLUGIN_LABEL, "status-" + this.description.getName());
                 props.put(ConsoleConstants.PLUGIN_TITLE, this.description.getTitle());
                 props.put(ConsoleConstants.PLUGIN_CATEGORY, ConsoleConstants.WEB_CONSOLE_CATEGORY);
                 this.registration = context.registerService(ConsoleConstants.INTERFACE_SERVLET, new ServiceFactory()
                 {
 
+                    @Override
                     public void ungetService(final Bundle bundle, final ServiceRegistration registration, final Object service)
                     {
                         // nothing to do
                     }
 
+                    @Override
                     public Object getService(final Bundle bundle, final ServiceRegistration registration)
                     {
                         return new WebConsolePlugin(manager, description.getName());
@@ -111,6 +114,7 @@ public class InventoryPrinterAdapter implements InventoryPrinterHandler, Compara
     /**
      * The human readable title for the inventory printer.
      */
+    @Override
     public String getTitle()
     {
         return this.description.getTitle();
@@ -119,6 +123,7 @@ public class InventoryPrinterAdapter implements InventoryPrinterHandler, Compara
     /**
      * The unique name of the printer.
      */
+    @Override
     public String getName()
     {
         return this.description.getName();
@@ -127,6 +132,7 @@ public class InventoryPrinterAdapter implements InventoryPrinterHandler, Compara
     /**
      * All supported formats.
      */
+    @Override
     public Format[] getFormats()
     {
         return this.description.getFormats();
@@ -136,6 +142,7 @@ public class InventoryPrinterAdapter implements InventoryPrinterHandler, Compara
      * @see org.apache.felix.inventory.ZipAttachmentProvider#addAttachments(java.util.zip.ZipOutputStream,
      *      java.lang.String)
      */
+    @Override
     public void addAttachments(final ZipOutputStream zos, final String namePrefix) throws IOException
     {
         if (printer instanceof ZipAttachmentProvider)
@@ -147,6 +154,7 @@ public class InventoryPrinterAdapter implements InventoryPrinterHandler, Compara
     /**
      * Whether the printer supports this format.
      */
+    @Override
     public boolean supports(final Format format)
     {
         for (int i = 0; i < this.description.getFormats().length; i++)
@@ -163,6 +171,7 @@ public class InventoryPrinterAdapter implements InventoryPrinterHandler, Compara
      * @see org.apache.felix.inventory.InventoryPrinter#print(org.apache.felix.inventory.Format,
      *      java.io.PrintWriter)
      */
+    @Override
     public void print(final PrintWriter printWriter, final Format format, final boolean isZip)
     {
         if (this.supports(format))
@@ -176,21 +185,28 @@ public class InventoryPrinterAdapter implements InventoryPrinterHandler, Compara
         return this.description;
     }
 
-    public int compareTo(final Object spa)
+    @Override
+    public int compareTo(final InventoryPrinterAdapter spa)
     {
-        return this.description.getSortKey().compareTo(((InventoryPrinterAdapter) spa).description.getSortKey());
+        return this.description.getSortKey().compareTo(spa.description.getSortKey());
     }
 
+    @Override
     public int hashCode()
     {
         return this.description.getSortKey().hashCode();
     }
 
+    @Override
     public boolean equals(final Object spa)
     {
+        if ( !(spa instanceof InventoryPrinterAdapter)) {
+            return false;
+        }
         return this.description.getSortKey().equals(((InventoryPrinterAdapter) spa).description.getSortKey());
     }
 
+    @Override
     public String toString()
     {
         return printer.getClass() + "(" + super.toString() + ")";

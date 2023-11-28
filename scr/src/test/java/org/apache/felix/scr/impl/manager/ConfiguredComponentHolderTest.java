@@ -47,7 +47,7 @@ public class ConfiguredComponentHolderTest extends TestCase
 
         holder.enableComponents(false);
         // assert single component and no map
-        final SingleComponentManager cmgr = getSingleManager( holder );
+        final SingleComponentManager<Object> cmgr = getSingleManager(holder);
         assertNotNull( "Expect single component manager", cmgr );
         assertEquals( "Expect no other component manager list", 1, getComponentManagers( holder ).size());
     }
@@ -62,30 +62,30 @@ public class ConfiguredComponentHolderTest extends TestCase
 
         holder.enableComponents(false);
         // assert single component and no map
-        final SingleComponentManager cmgr = getSingleManager( holder );
+        final SingleComponentManager<Object> cmgr = getSingleManager(holder);
         assertNotNull( "Expect single component manager", cmgr );
         assertEquals( "Expect no other component manager list", 1, getComponentManagers( holder ).size());
 
         // configure with the singleton configuration
-        final Dictionary config = new Hashtable();
+        final Dictionary<String, Object> config = new Hashtable<>();
         config.put( "value", name );
         TargetedPID targetedPid = new TargetedPID(name);
 		holder.configurationUpdated( targetedPid, null, config, 0 );
 
         // assert single component and no map
-        final SingleComponentManager cmgrAfterConfig = getSingleManager( holder );
+        final SingleComponentManager<Object> cmgrAfterConfig = getSingleManager(holder);
         assertNotNull( "Expect single component manager", cmgrAfterConfig );
         assertEquals( "Expect no other component manager list", 1, getComponentManagers( holder ).size());
 
 //        // assert configuration of single component
-        final Map componentConfig = ( ( MockImmediateComponentManager ) cmgrAfterConfig ).getConfiguration();
+final Map<String, Object> componentConfig = ((MockImmediateComponentManager<Object>) cmgrAfterConfig).getConfiguration();
         assertEquals( "Expect exact configuration set", config, componentConfig );
 
         // unconfigure singleton
         holder.configurationDeleted( targetedPid, null );
 
         // assert single component and no map
-        final SingleComponentManager cmgrAfterUnconfig = getSingleManager( holder );
+        final SingleComponentManager<Object> cmgrAfterUnconfig = getSingleManager(holder);
         assertNotNull( "Expect single component manager", cmgrAfterUnconfig );
         assertEquals( "Expect no other component manager list", 1, getComponentManagers( holder ).size());
 
@@ -104,40 +104,43 @@ public class ConfiguredComponentHolderTest extends TestCase
         holder.enableComponents(false);
 
         // assert single component and no map
-        final SingleComponentManager cmgr = getSingleManager( holder );
+        final SingleComponentManager<Object> cmgr = getSingleManager(holder);
         assertNotNull( "Expect single component manager", cmgr );
         assertEquals( "Expect no other component manager list", 1, getComponentManagers( holder ).size());
 
         // configure with configuration
         final String pid1 = "test.factory.0001";
-        final Dictionary config1 = new Hashtable();
+        final Dictionary<String, Object> config1 = new Hashtable<>();
         config1.put( "value", pid1 );
         TargetedPID targetedFactoryPid = new TargetedPID(name);
 		TargetedPID targetedPid1 = new TargetedPID(pid1);
 		holder.configurationUpdated( targetedPid1, targetedFactoryPid, config1, 0 );
 
         // assert single component and single-entry map
-        final SingleComponentManager cmgrAfterConfig = getSingleManager( holder );
-        final List<SingleComponentManager> cmgrsAfterConfig = getComponentManagers( holder );
+        final SingleComponentManager<Object> cmgrAfterConfig = getSingleManager(holder);
+        final List<AbstractComponentManager<Object>> cmgrsAfterConfig = getComponentManagers(
+            holder);
         assertNotNull( "Expect single component manager", cmgrAfterConfig );
         assertNotNull( "Expect component manager list", cmgrsAfterConfig );
         assertEquals( "Expect one component manager in list", 1, cmgrsAfterConfig.size() );
 
         // add another configuration
         final String pid2 = "test.factory.0002";
-        final Dictionary config2 = new Hashtable();
+        final Dictionary<String, Object> config2 = new Hashtable<>();
         config1.put( "value", pid2 );
         TargetedPID targetedPid2 = new TargetedPID(pid2);
 		holder.configurationUpdated( targetedPid2, targetedFactoryPid, config2, 1 );
 
-        final List<SingleComponentManager> cmgrsAfterConfig2 = getComponentManagers( holder );
+        final List<AbstractComponentManager<Object>> cmgrsAfterConfig2 = getComponentManagers(
+            holder);
         assertNotNull( "Expect component manager list", cmgrsAfterConfig2 );
         assertEquals( "Expect two component manager in list", 2, cmgrsAfterConfig2.size() );
 
         // remove second configuration
         holder.configurationDeleted( targetedPid2, targetedFactoryPid );
 
-        final List<SingleComponentManager> cmgrsAfterUnConfig2 = getComponentManagers( holder );
+        final List<AbstractComponentManager<Object>> cmgrsAfterUnConfig2 = getComponentManagers(
+            holder);
         assertNotNull( "Expect component manager list", cmgrsAfterUnConfig2 );
 //TODO Multipids fix correct assertion        assertEquals( "Expect one component manager in list", 1, cmgrsAfterUnConfig2.size() );
 
@@ -146,7 +149,8 @@ public class ConfiguredComponentHolderTest extends TestCase
         holder.configurationDeleted( targetedPid1, targetedFactoryPid );
 
         // assert single component and single-entry map
-        final List<SingleComponentManager> cmgrsAfterConfigUnconfig = getComponentManagers( holder );
+        final List<AbstractComponentManager<Object>> cmgrsAfterConfigUnconfig = getComponentManagers(
+            holder);
         assertNotNull( "Expect component manager list", cmgrsAfterConfigUnconfig );
 //TODO Multipids fix correct assertion        assertEquals( "Expect one component manager in list", 1, cmgrsAfterConfigUnconfig.size() );
 
@@ -154,7 +158,8 @@ public class ConfiguredComponentHolderTest extends TestCase
         holder.configurationDeleted( targetedPid2, targetedFactoryPid );
 
         // assert single component and single-entry map
-        final List<SingleComponentManager> cmgrsAfterAllUnconfig = getComponentManagers( holder );
+        final List<AbstractComponentManager<Object>> cmgrsAfterAllUnconfig = getComponentManagers(
+            holder);
         assertNotNull( "Expect single component manager", cmgrsAfterAllUnconfig );
 //TODO Multipids fix correct assertion        assertEquals( "Expect no component manager list", 1, cmgrsAfterAllUnconfig.size() );
 
@@ -172,20 +177,22 @@ public class ConfiguredComponentHolderTest extends TestCase
     }
 
 
-    private static SingleComponentManager getSingleManager( ConfigurableComponentHolder holder )
+    private static SingleComponentManager<Object> getSingleManager(
+        ConfigurableComponentHolder<Object> holder)
     {
-    	List<SingleComponentManager> managers = getComponentManagers(holder);
+        List<AbstractComponentManager<Object>> managers = getComponentManagers(holder);
     	assertEquals(1, managers.size());
-    	return managers.get(0);
+        return (SingleComponentManager<Object>) managers.get(0);
     }
 
 
-    private static List<SingleComponentManager> getComponentManagers( ConfigurableComponentHolder holder )
+    private static List<AbstractComponentManager<Object>> getComponentManagers(
+        ConfigurableComponentHolder<Object> holder)
     {
     	return holder.getComponentManagers();
     }
 
-    private static class TestingConfiguredComponentHolder extends ConfigurableComponentHolder
+    private static class TestingConfiguredComponentHolder extends ConfigurableComponentHolder<Object>
     {
         TestingConfiguredComponentHolder( ComponentMetadata metadata )
         {
@@ -194,14 +201,16 @@ public class ConfiguredComponentHolderTest extends TestCase
 
 
         @Override
-        protected SingleComponentManager createComponentManager(boolean factoryConfiguration)
+        protected SingleComponentManager<Object> createComponentManager(
+            boolean factoryConfiguration)
         {
-            return new MockImmediateComponentManager( this );
+            return new MockImmediateComponentManager<Object>(this);
         }
 
         @Override
-        protected ComponentMethods createComponentMethods() {
-            return new ComponentMethodsImpl();
+        protected ComponentMethods<Object> createComponentMethods()
+        {
+            return new ComponentMethodsImpl<Object>();
         }
     }
 
@@ -211,21 +220,15 @@ public class ConfiguredComponentHolderTest extends TestCase
         private Map<String, Object> m_configuration;
 
 
-        public MockImmediateComponentManager( ComponentContainer container )
+        public MockImmediateComponentManager(ComponentContainer<S> container)
         {
-            super( container, new ComponentMethodsImpl() );
+            super(container, new ComponentMethodsImpl<S>());
         }
 
 
         Map<String, Object> getConfiguration()
         {
             return m_configuration;
-        }
-
-
-        public boolean hasConfiguration()
-        {
-            return m_configuration != null;
         }
 
         @Override

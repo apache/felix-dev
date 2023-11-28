@@ -28,23 +28,23 @@ import java.util.Collections;
 import java.util.Iterator;
 import java.util.List;
 
-import org.apache.commons.io.IOUtils;
-import org.apache.felix.webconsole.SimpleWebConsolePlugin;
+import org.apache.felix.webconsole.internal.Util;
+import org.apache.felix.webconsole.internal.misc.ServletSupport;
 import org.osgi.framework.Bundle;
 import org.osgi.framework.BundleContext;
 import org.osgi.framework.BundleException;
 import org.osgi.framework.Constants;
 import org.osgi.framework.FrameworkEvent;
 import org.osgi.framework.FrameworkListener;
+import org.osgi.framework.startlevel.BundleStartLevel;
+import org.osgi.framework.startlevel.FrameworkStartLevel;
 import org.osgi.framework.wiring.FrameworkWiring;
-import org.osgi.service.log.LogService;
-import org.osgi.service.startlevel.StartLevel;
 
 
 abstract class BaseUpdateInstallHelper implements Runnable
 {
 
-    private final SimpleWebConsolePlugin plugin;
+    private final ServletSupport plugin;
 
     private final File bundleFile;
 
@@ -53,7 +53,7 @@ abstract class BaseUpdateInstallHelper implements Runnable
     private Thread updateThread;
 
 
-    BaseUpdateInstallHelper( SimpleWebConsolePlugin plugin, String name, File bundleFile, boolean refreshPackages )
+    BaseUpdateInstallHelper( ServletSupport plugin, String name, File bundleFile, boolean refreshPackages )
     {
         this.plugin = plugin;
         this.bundleFile = bundleFile;
@@ -72,19 +72,12 @@ abstract class BaseUpdateInstallHelper implements Runnable
     protected abstract Bundle doRun( InputStream bundleStream ) throws BundleException;
 
 
-    protected final Object getService( String serviceName )
-    {
+    protected final Object getService( String serviceName ) {
         return plugin.getService( serviceName );
     }
 
 
-    protected final SimpleWebConsolePlugin getLog()
-    {
-        return plugin;
-    }
-
-    protected Bundle getTargetBundle()
-    {
+    protected Bundle getTargetBundle() {
         return null;
     }
 
@@ -97,15 +90,8 @@ abstract class BaseUpdateInstallHelper implements Runnable
     protected Bundle doRun() throws Exception
     {
         // now deploy the resolved bundles
-        InputStream bundleStream = null;
-        try
-        {
-            bundleStream = new FileInputStream( bundleFile );
+        try( final InputStream bundleStream = new FileInputStream( bundleFile )) {
             return doRun( bundleStream );
-        }
-        finally
-        {
-            IOUtils.closeQuietly( bundleStream );
         }
     }
 
@@ -123,16 +109,16 @@ abstract class BaseUpdateInstallHelper implements Runnable
     public final void run()
     {
         // now deploy the resolved bundles
-        try
-        {
+        try {
             // we need the framework wiring before we call the bundle
             // installation or update, since we might be updating
             // our selves in which case the bundle context will be
             // invalid by the time we want to call the update
-            final FrameworkWiring fw = refreshPackages ? plugin.getBundle().getBundleContext().getBundle(Constants.SYSTEM_BUNDLE_LOCATION).adapt(FrameworkWiring.class) : null;
+            final Bundle systemBundle = plugin.getBundleContext().getBundle(Constants.SYSTEM_BUNDLE_LOCATION);
+            final FrameworkWiring fw = refreshPackages ? systemBundle.adapt(FrameworkWiring.class) : null;
 
             // same for the startlevel
-            StartLevel startLevel = null;
+            final FrameworkStartLevel startLevel = systemBundle.adapt(FrameworkStartLevel.class);
 
             Bundle bundle = getTargetBundle();
 
@@ -141,26 +127,23 @@ abstract class BaseUpdateInstallHelper implements Runnable
 
             // If the bundle has been started we want to stop it first, then update it, refresh it, and restart it
             // because otherwise, it will be stopped and started twice (once by the update and once by the refresh)
-            if ((state & (Bundle.ACTIVE | Bundle.STARTING)) != 0)
-            {
+            if ((state & (Bundle.ACTIVE | Bundle.STARTING)) != 0) {
                 // we need the StartLevel service  before we stop the bundle
                 // before the update, since we might be stopping
                 // our selves in which case the bundle context will be
                 // invalid by the time we want to call the startlevel
-                startLevel = (StartLevel) getService(StartLevel.class.getName());
 
                 // We want to start the bundle afterwards without affecting the persistent state of the bundle
                 // However, we can only use the transient options if the framework startlevel is not less than the
                 // bundle startlevel (in case that there is no starlevel service we assume we are good).
-                if (startLevel == null || startLevel.getStartLevel() >= startLevel.getBundleStartLevel(bundle))
-                {
+                final BundleStartLevel bsl = bundle.adapt(BundleStartLevel.class);
+                if (startLevel == null || bsl == null || startLevel.getStartLevel() >= bsl.getStartLevel()) {
                     startFlags |= Bundle.START_TRANSIENT;
                 }
 
                 // If the bundle is in the starting state it might be lazy and not started yet - hence, start it
                 // according to its policy.
-                if (state == Bundle.STARTING)
-                {
+                if (state == Bundle.STARTING) {
                     startFlags |= Bundle.START_ACTIVATION_POLICY;
                 }
 
@@ -171,46 +154,30 @@ abstract class BaseUpdateInstallHelper implements Runnable
 
             // We want to catch an exception during update to be able to restart the bundle if we stopped it previously
             Exception rethrow = null;
-            try
-            {
+            try {
                 // perform the action!
                 bundle = doRun();
 
 
-                if ( bundle != null )
-                {
+                if ( bundle != null ) {
                     // refresh packages and give it at most 5 seconds to finish
-                    refreshPackages(fw, plugin.getBundle().getBundleContext(), 5000L, bundle );
+                    refreshPackages(fw, plugin.getBundleContext(), 5000L, bundle );
                 }
-            }
-            catch (Exception ex)
-            {
+            } catch (Exception ex) {
                 rethrow = ex;
                 throw ex;
-            }
-            finally
-            {
+            } finally {
                 // If we stopped the bundle lets try to restart it (we created the correct flags above already).
-                if ((state & (Bundle.ACTIVE | Bundle.STARTING)) != 0)
-                {
-                    try
-                    {
+                if ((state & (Bundle.ACTIVE | Bundle.STARTING)) != 0) {
+                    try {
                         bundle.start(startFlags);
-                    }
-                    catch (Exception ex)
-                    {
-                        if (rethrow == null)
-                        {
+                    } catch (Exception ex) {
+                        if (rethrow == null) {
                             throw ex;
-                        }
-                        else
-                        {
-                            try
-                            {
-                                getLog().log( LogService.LOG_ERROR, "Cannot restart bundle: " + bundle + " after exception during update!", ex);
-                            }
-                            catch ( Exception secondary )
-                            {
+                        } else {
+                            try{
+                                Util.LOGGER.error("Cannot restart bundle: {} after exception during update!", bundle, ex);
+                            } catch ( Exception secondary ) {
                                 // at the time this exception happens the log used might have
                                 // been destroyed and is not available to use any longer. So
                                 // we only can write to stderr at this time to at least get
@@ -222,15 +189,10 @@ abstract class BaseUpdateInstallHelper implements Runnable
                     }
                 }
             }
-        }
-        catch ( Exception e )
-        {
-            try
-            {
-                getLog().log( LogService.LOG_ERROR, "Cannot install or update bundle from " + bundleFile, e );
-            }
-            catch ( Exception secondary )
-            {
+        } catch ( Exception e ) {
+            try {
+                Util.LOGGER.error("Cannot install or update bundle from {}", bundleFile, e );
+            } catch ( Exception secondary ) {
                 // at the time this exception happens the log used might have
                 // been destroyed and is not available to use any longer. So
                 // we only can write to stderr at this time to at least get
@@ -238,11 +200,8 @@ abstract class BaseUpdateInstallHelper implements Runnable
                 System.err.println( "Cannot install or update bundle from " + bundleFile );
                 e.printStackTrace( System.err );
             }
-        }
-        finally
-        {
-            if ( bundleFile != null )
-            {
+        } finally {
+            if ( bundleFile != null ) {
                 bundleFile.delete();
             }
 

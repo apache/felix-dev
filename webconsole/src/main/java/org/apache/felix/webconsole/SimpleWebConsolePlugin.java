@@ -20,14 +20,23 @@ package org.apache.felix.webconsole;
 
 
 import java.net.URL;
+import java.util.Dictionary;
 import java.util.HashMap;
 import java.util.Hashtable;
 import java.util.Iterator;
+import java.util.Locale;
 import java.util.Map;
+import java.util.ResourceBundle;
 
+import javax.servlet.Servlet;
+
+import org.apache.felix.webconsole.i18n.LocalizationHelper;
+import org.osgi.framework.Bundle;
 import org.osgi.framework.BundleContext;
+import org.osgi.framework.ServiceReference;
 import org.osgi.framework.ServiceRegistration;
 import org.osgi.util.tracker.ServiceTracker;
+import org.osgi.util.tracker.ServiceTrackerCustomizer;
 
 
 /**
@@ -38,7 +47,10 @@ import org.osgi.util.tracker.ServiceTracker;
  * <li>Methods for (un)registering the web console plugin service</li>
  * <li>Default implementation for resource loading</li>
  * </ul>
+ *
+ * @deprecated Either register a servlet using Servlet API 5 or use {@link org.apache.felix.webconsole.servlet.AbstractServlet}
  */
+@Deprecated
 public abstract class SimpleWebConsolePlugin extends AbstractWebConsolePlugin
 {
 
@@ -55,11 +67,13 @@ public abstract class SimpleWebConsolePlugin extends AbstractWebConsolePlugin
 
     // used for service registration
     private final Object regLock = new Object();
-    private ServiceRegistration reg;
+    private ServiceRegistration<Servlet> reg;
 
     // used to obtain services. Structure is: service name -> ServiceTracker
-    private final Map services = new HashMap();
+    private final Map<String, ServiceTracker<?, ?>> services = new HashMap<>();
 
+    // localized title as servlet name
+    private String servletName;
 
     /**
      * Creates new Simple Web Console Plugin with the default category
@@ -108,6 +122,41 @@ public abstract class SimpleWebConsolePlugin extends AbstractWebConsolePlugin
         this.labelResLen = labelRes.length() - 1;
     }
 
+
+    /* (non-Javadoc)
+     * @see org.apache.felix.webconsole.AbstractWebConsolePlugin#activate(org.osgi.framework.BundleContext)
+     */
+    @Override
+    public void activate(BundleContext bundleContext) {
+        super.activate(bundleContext);
+
+        // FELIX-6341 - dig out the localized title for use in log messages
+        Bundle bundle = bundleContext.getBundle();
+        if (bundle != null) {
+            LocalizationHelper localization = new LocalizationHelper( bundle );
+            ResourceBundle rb = localization.getResourceBundle(Locale.getDefault());
+            if (rb != null) {
+                if ( this.title != null && this.title.startsWith( "%" ) ) {
+                    String key = this.title.substring(1);
+                    if (rb.containsKey(key)) {
+                        this.servletName = rb.getString(key);
+                    }
+                }
+            }
+        }
+    }
+
+    /* (non-Javadoc)
+     * @see org.apache.felix.webconsole.AbstractWebConsolePlugin#getServletName()
+     */
+    @Override
+    public String getServletName() {
+        // use the localized title if we have one
+        if (servletName != null) {
+            return servletName;
+        }
+        return super.getServletName();
+    }
 
     /**
      * @see org.apache.felix.webconsole.AbstractWebConsolePlugin#getLabel()
@@ -175,20 +224,17 @@ public abstract class SimpleWebConsolePlugin extends AbstractWebConsolePlugin
      * @param bc the bundle context used for service registration.
      * @return self
      */
-    public final SimpleWebConsolePlugin register( BundleContext bc )
-    {
-        synchronized ( regLock )
-        {
+    public final SimpleWebConsolePlugin register( BundleContext bc ) {
+        synchronized ( regLock ) {
             activate( bc ); // don't know why this is needed!
 
-            Hashtable props = new Hashtable();
+            final Dictionary<String, Object> props = new Hashtable<>();
             props.put( WebConsoleConstants.PLUGIN_LABEL, getLabel() );
             props.put( WebConsoleConstants.PLUGIN_TITLE, getTitle() );
-            if ( getCategory() != null )
-            {
+            if ( getCategory() != null ) {
                 props.put( WebConsoleConstants.PLUGIN_CATEGORY, getCategory() );
             }
-            reg = bc.registerService( "javax.servlet.Servlet", this, props ); //$NON-NLS-1$
+            reg = bc.registerService( Servlet.class, this, props );
         }
         return this;
     }
@@ -198,14 +244,17 @@ public abstract class SimpleWebConsolePlugin extends AbstractWebConsolePlugin
      * An utility method that removes the service, registered by the
      * {@link #register(BundleContext)} method.
      */
-    public final void unregister()
-    {
-        synchronized ( regLock )
-        {
+    public final void unregister() {
+        synchronized ( regLock ) {
             deactivate(); // is this needed?
 
-            if ( reg != null )
-                reg.unregister();
+            if ( reg != null ) {
+                try {
+                    reg.unregister();
+                } catch ( final IllegalStateException ise ) {
+                    // ignore, bundle context already invalid
+                }
+            }
             reg = null;
         }
     }
@@ -222,12 +271,27 @@ public abstract class SimpleWebConsolePlugin extends AbstractWebConsolePlugin
      * @param serviceName the service name to obtain
      * @return the service or <code>null</code> if missing.
      */
-    public final Object getService( String serviceName )
-    {
-        ServiceTracker serviceTracker = ( ServiceTracker ) services.get( serviceName );
-        if ( serviceTracker == null )
-        {
-            serviceTracker = new ServiceTracker( getBundleContext(), serviceName, null );
+    @SuppressWarnings({"rawtypes", "unchecked"})
+    public final Object getService( String serviceName ) {
+        ServiceTracker<?,?> serviceTracker = services.get( serviceName );
+        if ( serviceTracker == null ) {
+            serviceTracker = new ServiceTracker( getBundleContext(), serviceName, new ServiceTrackerCustomizer() {
+                    public Object addingService( ServiceReference reference ) {
+                        return getBundleContext().getService( reference );
+                    }
+
+                    public void removedService( ServiceReference reference, Object service ) {
+                        try {
+                            getBundleContext().ungetService( reference );
+                        } catch ( IllegalStateException ise ) {
+                            // ignore, bundle context was shut down
+                        }
+                    }
+
+                    public void modifiedService( ServiceReference reference, Object service ) {
+                        // nothing to do
+                    }
+            } );
             serviceTracker.open();
 
             services.put( serviceName, serviceTracker );
@@ -244,15 +308,12 @@ public abstract class SimpleWebConsolePlugin extends AbstractWebConsolePlugin
      *
      * @see org.apache.felix.webconsole.AbstractWebConsolePlugin#deactivate()
      */
-    public void deactivate()
-    {
-        for ( Iterator ti = services.values().iterator(); ti.hasNext(); )
-        {
-            ServiceTracker tracker = ( ServiceTracker ) ti.next();
+    public void deactivate() {
+        for ( Iterator<ServiceTracker<?, ?>> ti = services.values().iterator(); ti.hasNext(); ) {
+            ServiceTracker<?, ?> tracker = ti.next();
             tracker.close();
             ti.remove();
         }
         super.deactivate();
     }
-
 }

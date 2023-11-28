@@ -27,6 +27,7 @@ import org.osgi.framework.Constants;
 import java.io.File;
 import java.io.IOException;
 import java.io.InputStream;
+import java.io.UncheckedIOException;
 import java.net.MalformedURLException;
 import java.net.URL;
 import java.util.Enumeration;
@@ -48,9 +49,10 @@ public class DirectoryContent implements Content
     private final File m_rootDir;
     private final File m_dir;
     private Map m_nativeLibMap;
+    private final String m_canonicalRoot;
 
     public DirectoryContent(Logger logger, Map configMap,
-        WeakZipFileFactory zipFactory, Object revisionLock, File rootDir, File dir)
+                            WeakZipFileFactory zipFactory, Object revisionLock, File rootDir, File dir)
     {
         m_logger = logger;
         m_configMap = configMap;
@@ -58,6 +60,16 @@ public class DirectoryContent implements Content
         m_revisionLock = revisionLock;
         m_rootDir = rootDir;
         m_dir = dir;
+        String canonicalPath = null;
+        try {
+            canonicalPath = BundleCache.getSecureAction().getCanonicalPath(m_dir);
+        } catch (IOException e) {
+            throw new UncheckedIOException(e);
+        }
+        if (!canonicalPath.endsWith(File.separator)) {
+            canonicalPath = canonicalPath + File.separator;
+        }
+        m_canonicalRoot = canonicalPath;
     }
 
     public File getFile()
@@ -72,18 +84,43 @@ public class DirectoryContent implements Content
 
     public boolean hasEntry(String name) throws IllegalStateException
     {
-        if ((name.length() > 0) && (name.charAt(0) == '/'))
-        {
-            name = name.substring(1);
-        }
+        name = getName(name);
 
         // Return true if the file associated with the entry exists,
         // unless the entry name ends with "/", in which case only
         // return true if the file is really a directory.
-        File file = new File(m_dir, name);
+        File file = null;
+        try
+        {
+            file = getFile(name);
+        }
+        catch (IOException e)
+        {
+            return false;
+        }
         return BundleCache.getSecureAction().fileExists(file)
-            && (name.endsWith("/")
+                && (name.endsWith("/")
                 ? BundleCache.getSecureAction().isFileDirectory(file) : true);
+    }
+
+    @Override
+    public boolean isDirectory(String name)
+    {
+        name = getName(name);
+
+        // Return true if the file associated with the entry exists,
+        // unless the entry name ends with "/", in which case only
+        // return true if the file is really a directory.
+        File file = null;
+        try
+        {
+            file = getFile(name);
+        }
+        catch (IOException e)
+        {
+            return false;
+        }
+        return BundleCache.getSecureAction().isFileDirectory(file);
     }
 
     public Enumeration<String> getEntries()
@@ -97,64 +134,79 @@ public class DirectoryContent implements Content
 
     public byte[] getEntryAsBytes(String name) throws IllegalStateException
     {
-        if ((name.length() > 0) && (name.charAt(0) == '/'))
-        {
-            name = name.substring(1);
-        }
+        name = getName(name);
 
         // Get the embedded resource.
 
-        File file = new File(m_dir, name);
         try
         {
+            File file = getFile(name);
 
-            return BundleCache.getSecureAction().fileExists(file) ? BundleCache.read(BundleCache.getSecureAction().getFileInputStream(file), file.length()) : null;
+            return BundleCache.getSecureAction().fileExists(file) ? BundleCache.read(BundleCache.getSecureAction().getInputStream(file), file.length()) : null;
         }
         catch (Exception ex)
         {
             m_logger.log(
-                Logger.LOG_ERROR,
-                "DirectoryContent: Unable to read bytes for file " + name + " from file " + file.getAbsolutePath(), ex);
+                    Logger.LOG_ERROR,
+                    "DirectoryContent: Unable to read bytes for file " + name + " from file " + new File(m_dir, name).getAbsolutePath(), ex);
             return null;
         }
     }
 
     public InputStream getEntryAsStream(String name)
-        throws IllegalStateException, IOException
+            throws IllegalStateException, IOException
     {
-        if ((name.length() > 0) && (name.charAt(0) == '/'))
-        {
-            name = name.substring(1);
-        }
+        name = getName(name);
 
-        File file = new File(m_dir, name);
         try
         {
-            return BundleCache.getSecureAction().fileExists(file) ? BundleCache.getSecureAction().getFileInputStream(file) : null;
+            File file = getFile(name);
+            return BundleCache.getSecureAction().fileExists(file) ? BundleCache.getSecureAction().getInputStream(file) : null;
         }
         catch (Exception ex)
         {
             m_logger.log(
-                Logger.LOG_ERROR,
-                "DirectoryContent: Unable to create inputstream for file " + name + " from file " + file.getAbsolutePath(), ex);
+                    Logger.LOG_ERROR,
+                    "DirectoryContent: Unable to create inputstream for file " + name + " from file " + new File(m_dir, name).getAbsolutePath(), ex);
             return null;
         }
     }
 
-    public URL getEntryAsURL(String name)
+    private String getName(String name)
     {
-        if ((name.length() > 0) && (name.charAt(0) == '/'))
-        {
+        if ((name.length() > 0) && (name.charAt(0) == '/')) {
             name = name.substring(1);
         }
+        return name;
+    }
+
+    private File getFile(String name) throws IOException
+    {
+        File result = new File(m_dir, name);
+
+        String canonicalPath = BundleCache.getSecureAction().getCanonicalPath(result);
+        if (BundleCache.getSecureAction().isFileDirectory(result) && !canonicalPath.endsWith(File.separator))
+        {
+            canonicalPath += File.separator;
+        }
+        if (!canonicalPath.startsWith(m_canonicalRoot))
+        {
+            throw new IOException("File outside the root: " + canonicalPath);
+        }
+        return result;
+    }
+
+    public URL getEntryAsURL(String name)
+    {
+        name = getName(name);
 
         if (hasEntry(name))
         {
             try
             {
-                return BundleCache.getSecureAction().toURI(new File(m_dir, name)).toURL();
+                return BundleCache.getSecureAction().toURI(getFile(name)).toURL();
             }
-            catch (MalformedURLException e)
+            catch (IOException e)
             {
                 return null;
             }
@@ -165,6 +217,21 @@ public class DirectoryContent implements Content
         }
     }
 
+    @Override
+    public long getContentTime(String name)
+    {
+        name = getName(name);
+
+        File file = null;
+        try {
+            file = getFile(name);
+        } catch (IOException e) {
+            return 0L;
+        }
+
+        return BundleCache.getSecureAction().getLastModified(file);
+    }
+
     public Content getEntryAsContent(String entryName)
     {
         // If the entry name refers to the content itself, then
@@ -172,7 +239,7 @@ public class DirectoryContent implements Content
         if (entryName.equals(FelixConstants.CLASS_PATH_DOT))
         {
             return new DirectoryContent(
-                m_logger, m_configMap, m_zipFactory, m_revisionLock, m_rootDir, m_dir);
+                    m_logger, m_configMap, m_zipFactory, m_revisionLock, m_rootDir, m_dir);
         }
 
         // Remove any leading slash, since all bundle class path
@@ -180,9 +247,9 @@ public class DirectoryContent implements Content
         entryName = (entryName.startsWith("/")) ? entryName.substring(1) : entryName;
 
         if (entryName.trim().startsWith(".." + File.separatorChar) ||
-            entryName.contains(File.separator + ".." + File.separatorChar) ||
-            entryName.trim().endsWith(File.separator + "..") ||
-            entryName.trim().equals(".."))
+                entryName.contains(File.separator + ".." + File.separatorChar) ||
+                entryName.trim().endsWith(File.separator + "..") ||
+                entryName.trim().equals(".."))
         {
             return null;
         }
@@ -190,33 +257,38 @@ public class DirectoryContent implements Content
         // Any embedded JAR files will be extracted to the embedded directory.
         File embedDir = new File(m_rootDir, m_dir.getName() + EMBEDDED_DIRECTORY);
 
-        // Determine if the entry is an emdedded JAR file or
+        // Determine if the entry is an embedded JAR file or
         // directory in the bundle JAR file. Ignore any entries
         // that do not exist per the spec.
-        File file = new File(m_dir, entryName);
+        File file = null;
+        try {
+            file = getFile(entryName);
+        } catch (IOException e) {
+            return null;
+        }
         if (BundleCache.getSecureAction().isFileDirectory(file))
         {
             return new DirectoryContent(
-                m_logger, m_configMap, m_zipFactory, m_revisionLock, m_rootDir, file);
+                    m_logger, m_configMap, m_zipFactory, m_revisionLock, m_rootDir, file);
         }
         else if (BundleCache.getSecureAction().fileExists(file)
-            && entryName.endsWith(".jar"))
+                && entryName.endsWith(".jar"))
         {
             File extractDir = new File(embedDir,
-                (entryName.lastIndexOf('/') >= 0)
-                    ? entryName.substring(0, entryName.lastIndexOf('/'))
-                    : entryName);
+                    (entryName.lastIndexOf('/') >= 0)
+                            ? entryName.substring(0, entryName.lastIndexOf('/'))
+                            : entryName);
 
             return new JarContent(
-                m_logger, m_configMap, m_zipFactory, m_revisionLock,
-                extractDir, file, null);
+                    m_logger, m_configMap, m_zipFactory, m_revisionLock,
+                    extractDir, file, null);
         }
 
         // The entry could not be found, so return null.
         return null;
     }
 
-// TODO: SECURITY - This will need to consider security.
+    // TODO: SECURITY - This will need to consider security.
     public String getEntryAsNativeLibrary(String entryName)
     {
         // Return result.
@@ -227,9 +299,9 @@ public class DirectoryContent implements Content
         entryName = (entryName.startsWith("/")) ? entryName.substring(1) : entryName;
 
         if (entryName.trim().startsWith(".." + File.separatorChar) ||
-            entryName.contains(File.separator + ".." + File.separatorChar) ||
-            entryName.trim().endsWith(File.separator + "..") ||
-            entryName.trim().equals(".."))
+                entryName.contains(File.separator + ".." + File.separatorChar) ||
+                entryName.trim().endsWith(File.separator + "..") ||
+                entryName.trim().equals(".."))
         {
             return null;
         }
@@ -239,9 +311,18 @@ public class DirectoryContent implements Content
 
         // The entry must exist and refer to a file, not a directory,
         // since we are expecting it to be a native library.
-        File entryFile = new File(m_dir, entryName);
+        File entryFile = null;
+        try
+        {
+            entryFile = getFile(entryName);
+        }
+        catch (IOException e)
+        {
+            return null;
+        }
+
         if (BundleCache.getSecureAction().fileExists(entryFile)
-            && !BundleCache.getSecureAction().isFileDirectory(entryFile))
+                && !BundleCache.getSecureAction().isFileDirectory(entryFile))
         {
             // Extracting the embedded native library file impacts all other
             // existing contents for this revision, so we have to grab the
@@ -261,16 +342,16 @@ public class DirectoryContent implements Content
                 libCount = (libCount == null) ? new Integer(0) : new Integer(libCount.intValue() + 1);
                 m_nativeLibMap.put(entryName, libCount);
                 File libFile = new File(
-                    libDir, libCount.toString() + File.separatorChar + entryName);
+                        libDir, libCount.toString() + File.separatorChar + entryName);
 
                 if (!BundleCache.getSecureAction().fileExists(libFile))
                 {
                     if (!BundleCache.getSecureAction().fileExists(libFile.getParentFile())
-                        && !BundleCache.getSecureAction().mkdirs(libFile.getParentFile()))
+                            && !BundleCache.getSecureAction().mkdirs(libFile.getParentFile()))
                     {
                         m_logger.log(
-                            Logger.LOG_ERROR,
-                            "Unable to create library directory.");
+                                Logger.LOG_ERROR,
+                                "Unable to create library directory.");
                     }
                     else
                     {
@@ -278,7 +359,7 @@ public class DirectoryContent implements Content
 
                         try
                         {
-                            is = BundleCache.getSecureAction().getFileInputStream(entryFile);
+                            is = BundleCache.getSecureAction().getInputStream(entryFile);
 
                             // Create the file.
                             BundleCache.copyStreamToFile(is, libFile);
@@ -286,7 +367,7 @@ public class DirectoryContent implements Content
                             // Perform exec permission command on extracted library
                             // if one is configured.
                             String command = (String) m_configMap.get(
-                                Constants.FRAMEWORK_EXECPERMISSION);
+                                    Constants.FRAMEWORK_EXECPERMISSION);
                             if (command != null)
                             {
                                 Properties props = new Properties();
@@ -302,8 +383,8 @@ public class DirectoryContent implements Content
                         catch (Exception ex)
                         {
                             m_logger.log(
-                                Logger.LOG_ERROR,
-                                "Extracting native library.", ex);
+                                    Logger.LOG_ERROR,
+                                    "Extracting native library.", ex);
                         }
                     }
                 }
@@ -349,7 +430,7 @@ public class DirectoryContent implements Content
 
             // Convert the file separator character to slashes.
             String abs = BundleCache.getSecureAction()
-                .getAbsolutePath(m_children[m_counter]).replace(File.separatorChar, '/');
+                    .getAbsolutePath(m_children[m_counter]).replace(File.separatorChar, '/');
 
             // Remove the leading path of the reference directory, since the
             // entry paths are supposed to be relative to the root.
@@ -380,7 +461,7 @@ public class DirectoryContent implements Content
                             File[] tmp = new File[combined.length + grandchildren.length];
                             System.arraycopy(combined, 0, tmp, 0, combined.length);
                             System.arraycopy(
-                                grandchildren, 0, tmp, combined.length, grandchildren.length);
+                                    grandchildren, 0, tmp, combined.length, grandchildren.length);
                             combined = tmp;
                         }
                     }

@@ -138,7 +138,14 @@ public abstract class RegionConfigurationSupport
     {
         if ( referenceCount.decrementAndGet() == 0 )
         {
-            this.m_registration.unregister();
+            try
+            {
+                this.m_registration.unregister();
+            }
+            catch (IllegalStateException e)
+            {
+                // ignore; just trying to clean up
+            }
             this.m_registration = null;
             return true;
         }

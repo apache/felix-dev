@@ -17,46 +17,34 @@
 package org.apache.felix.webconsole.internal;
 
 
-import java.util.ArrayList;
+import java.io.FileNotFoundException;
+import java.io.IOException;
+import java.io.InputStream;
+import java.io.StringWriter;
+import java.lang.reflect.Array;
+import java.nio.charset.StandardCharsets;
 import java.util.Arrays;
+import java.util.Collection;
 import java.util.Comparator;
-import java.util.Enumeration;
+import java.util.Iterator;
 import java.util.Locale;
 
 import org.osgi.framework.Bundle;
 import org.osgi.framework.Constants;
+import org.osgi.framework.ServiceReference;
 import org.osgi.framework.Version;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
+import jakarta.servlet.http.HttpServletRequest;
+import jakarta.servlet.http.HttpServletResponse;
 
 
 /**
  * The <code>Util</code> class contains various utility methods used internally
  * by the web console implementation and the build-in plugins.
  */
-public class Util
-{
-
-    // FIXME: from the constants below only PARAM_ACTION is used, consider removal of others?
-
-    /** web apps subpage */
-    public static final String PAGE_WEBAPPS = "/webapps";
-
-    /** vm statistics subpage */
-    public static final String PAGE_VM_STAT = "/vmstat";
-
-    /** Logs subpage */
-    public static final String PAGE_LOGS = "/logs";
-
-    /** Parameter name */
-    public static final String PARAM_ACTION = "action";
-
-    /** Parameter name */
-    public static final String PARAM_CONTENT = "content";
-
-    /** Parameter name */
-    public static final String PARAM_SHUTDOWN = "shutdown";
-
-    /** Parameter value */
-    public static final String VALUE_SHUTDOWN = "shutdown";
+public class Util {
 
     /**
      * Return a display name for the given <code>bundle</code>:
@@ -124,25 +112,6 @@ public class Util
         Arrays.sort( bundles, new BundleNameComparator( locale ) );
     }
 
-
-    /**
-     * This method is the same as Collections#list(Enumeration). The reason to
-     * duplicate it here, is that it is missing in OSGi/Minimum execution
-     * environment.
-     *
-     * @param e the enumeration which to convert
-     * @return the list containing all enumeration entries.
-     */
-    public static final ArrayList list( Enumeration e )
-    {
-        ArrayList l = new ArrayList();
-        while ( e.hasMoreElements() )
-        {
-            l.add( e.nextElement() );
-        }
-        return l;
-    }
-
     /**
      * This method expects a locale string in format language_COUNTRY, or
      * language. The method will determine which is the correct form of locale
@@ -180,22 +149,14 @@ public class Util
         return new Locale(language, country);
     }
 
-    private static final class BundleNameComparator implements Comparator
+    private static final class BundleNameComparator implements Comparator<Bundle>
     {
         private final Locale locale;
 
 
-        BundleNameComparator( final Locale locale )
-        {
+        BundleNameComparator( final Locale locale ) {
             this.locale = locale;
         }
-
-
-        public int compare( Object o1, Object o2 )
-        {
-            return compare( ( Bundle ) o1, ( Bundle ) o2 );
-        }
-
 
         public int compare( Bundle b1, Bundle b2 )
         {
@@ -242,4 +203,172 @@ public class Util
             return 1;
         }
     }
+
+    public static void sendJsonOk(final HttpServletResponse response) throws IOException {
+        response.setContentType( "application/json" );
+        response.setCharacterEncoding( "UTF-8" );
+        response.getWriter().print( "{ \"status\": true }" );
+    }
+
+   /**
+     * Sets response headers to force the client to not cache the response
+     * sent back. This method must be called before the response is committed
+     * otherwise it will have no effect.
+     * <p>
+     * This method sets the <code>Cache-Control</code>, <code>Expires</code>,
+     * and <code>Pragma</code> headers.
+     *
+     * @param response The response for which to set the cache prevention
+     */
+    public static void setNoCache(final HttpServletResponse response) {
+        response.setHeader("Cache-Control", "no-cache");
+        response.addHeader("Cache-Control", "no-store");
+        response.addHeader("Cache-Control", "must-revalidate");
+        response.addHeader("Cache-Control", "max-age=0");
+        response.setHeader("Expires", "Thu, 01 Jan 1970 01:00:00 GMT");
+        response.setHeader("Pragma", "no-cache");
+    }
+
+    public static String getStringProperty( final ServiceReference<?> service, final String propertyName ) {
+        final Object property = service.getProperty( propertyName );
+        if ( property instanceof String ) {
+            return ( String ) property;
+        }
+        return null;
+    }
+
+    /**
+     * Utility method to handle relative redirects.
+     * Some application servers like Web Sphere handle relative redirects differently
+     * therefore we should make an absolute URL before invoking send redirect.
+     *
+     * @param request the HTTP request coming from the user
+     * @param response the HTTP response, where data is rendered
+     * @param redirectUrl the redirect URI.
+     * @throws IOException If an input or output exception occurs
+     * @throws IllegalStateException   If the response was committed or if a partial
+     *  URL is given and cannot be converted into a valid URL
+     */
+    public static void sendRedirect(final HttpServletRequest request, final HttpServletResponse response, String redirectUrl) 
+    throws IOException {
+        // check for relative URL
+        if ( !redirectUrl.startsWith("/") ) {
+            String base = request.getContextPath() + request.getServletPath() + request.getPathInfo();
+            int i = base.lastIndexOf('/');
+            if (i > -1) {
+                base = base.substring(0, i);
+            } else {
+                i = base.indexOf(':');
+                base = (i > -1) ? base.substring(i + 1, base.length()) : "";
+            }
+            if (!base.startsWith("/")) {
+                base = '/' + base;
+            }
+            redirectUrl = base + '/' + redirectUrl;
+
+        }
+        response.sendRedirect(redirectUrl);
+    }
+
+    @SuppressWarnings("rawtypes")
+    public static String[] toStringArray( final Object value ) {
+        if ( value instanceof String ) {
+            return new String[] { ( String ) value };
+        } else if ( value != null ) {
+            final Collection col;
+            if ( value.getClass().isArray() ) {
+                col = Arrays.asList( ( Object[] ) value );
+            } else if ( value instanceof Collection ) {
+                col = ( Collection ) value;
+            } else {
+                col = null;
+            }
+
+            if ( col != null && !col.isEmpty() ) {
+                final String[] entries = new String[col.size()];
+                int i = 0;
+                for (final Iterator cli = col.iterator(); cli.hasNext(); i++ )  {
+                    entries[i] = String.valueOf( cli.next() );
+                }
+                return entries;
+            }
+        }
+
+        return null;
+    }
+
+    /**
+     * This method will stringify a Java object. It is mostly used to print the values
+     * of unknown properties. This method will correctly handle if the passed object
+     * is array and will property display it.
+     *
+     * If the value is byte[] the elements are shown as Hex
+     *
+     * @param value the value to convert
+     * @return the string representation of the value
+     */
+    public static final String toString(Object value) {
+        if (value == null) {
+            return "n/a";
+        } else if (value.getClass().isArray()) {
+            final StringBuilder sb = new StringBuilder();
+            int len = Array.getLength(value);
+            sb.append('[');
+
+            for(int i = 0; i < len; ++i) {
+                final Object element = Array.get(value, i);
+                if (element instanceof Byte) {
+                    sb.append("0x");
+                    final String x = Integer.toHexString(((Byte)element).intValue() & 255);
+                    if (1 == x.length()) {
+                        sb.append('0');
+                    }
+
+                    sb.append(x);
+                } else {
+                    sb.append(toString(element));
+                }
+
+                if (i < len - 1) {
+                    sb.append(", ");
+                }
+            }
+
+            return sb.append(']').toString();
+        } else {
+            return value.toString();
+        }
+    }
+
+    public static String toString(final ServiceReference<?> ref) {
+        return "Service " + ref.getProperty(Constants.SERVICE_ID) + "(" + ref + ") from bundle " +
+            ref.getBundle().getSymbolicName() + ":" + ref.getBundle().getVersion() + "(" + ref.getBundle().getBundleId() + ")";
+    }
+
+    public static final String readTemplateFile( final Class<?> clazz, final String templateFile) throws IOException {
+        try(final InputStream templateStream = clazz.getResourceAsStream( templateFile )) {
+            if ( templateStream != null ) {
+                try ( final StringWriter w = new StringWriter()) {
+                    final byte[] buf = new byte[2048];
+                    int l;
+                    while ( ( l = templateStream.read(buf)) > 0 ) {
+                        w.write(new String(buf, 0, l, StandardCharsets.UTF_8));
+                    }
+                    String str = w.toString();
+                    switch ( str.charAt(0) ) { // skip BOM
+                        case 0xFEFF: // UTF-16/UTF-32, big-endian
+                        case 0xFFFE: // UTF-16, little-endian
+                        case 0xEFBB: // UTF-8
+                            return str.substring(1);
+                    }
+                    return str;
+                }
+            }
+        }
+
+        throw new FileNotFoundException("Template " + templateFile + " not found");
+    }
+
+    /** Logger for the webconsole */
+    public static final Logger LOGGER = LoggerFactory.getLogger("org.apache.felix.webconsole");    
 }

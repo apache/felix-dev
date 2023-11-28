@@ -28,7 +28,7 @@
     </parent>
 
     <artifactId>org.apache.felix.healthcheck.api</artifactId>
-    <version>2.0.3-SNAPSHOT</version>
+    <version>2.0.5-SNAPSHOT</version>
 
     <name>Apache Felix Health Check API</name>
     <inceptionYear>2013</inceptionYear>
@@ -38,10 +38,11 @@
     </description>
 
     <scm>
-        <connection>scm:git:https://github.com/apache/felix-dev.git</connection>
-        <developerConnection>scm:git:https://github.com/apache/felix-dev.git</developerConnection>
+        <connection>scm:git:ssh://git@github.com/apache/felix-dev.git</connection>
+        <developerConnection>scm:git:ssh://git@github.com/apache/felix-dev.git</developerConnection>
         <url>https://gitbox.apache.org/repos/asf?p=felix-dev.git</url>
-    </scm>
+      <tag>HEAD</tag>
+  </scm>
 
 
     <build>
@@ -105,7 +106,7 @@
         <dependency>
             <groupId>junit</groupId>
             <artifactId>junit</artifactId>
-            <version>4.12</version>
+            <version>4.13.1</version>
             <scope>test</scope>
         </dependency>
         <dependency>

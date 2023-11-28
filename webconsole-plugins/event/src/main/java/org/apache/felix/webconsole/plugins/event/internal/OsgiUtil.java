@@ -18,7 +18,11 @@
  */
 package org.apache.felix.webconsole.plugins.event.internal;
 
-import java.util.*;
+import java.util.ArrayList;
+import java.util.Collection;
+import java.util.Dictionary;
+import java.util.Iterator;
+import java.util.List;
 
 /**
  * The <code>OsgiUtil</code> is a utility class providing some usefull utility
@@ -26,7 +30,7 @@ import java.util.*;
  */
 public class OsgiUtil {
 
-    public static boolean toBoolean(Dictionary props, String key, boolean defaultValue)
+    public static boolean toBoolean(Dictionary<String, ?> props, String key, boolean defaultValue)
     {
         Object propValue = toObject( props, key );
         if (propValue instanceof Boolean)
@@ -41,13 +45,13 @@ public class OsgiUtil {
         return defaultValue;
     }
 
-    public static String toString(Dictionary props, String key, String defaultValue)
+    public static String toString(Dictionary<String, ?> props, String key, String defaultValue)
     {
         Object propValue = toObject( props, key );
         return (propValue != null) ? propValue.toString() : defaultValue;
     }
 
-    public static int toInteger(Dictionary props, String key, int defaultValue)
+    public static int toInteger(Dictionary<String, ?> props, String key, int defaultValue)
     {
         Object propValue = toObject( props, key );
         if (propValue instanceof Integer)
@@ -69,7 +73,7 @@ public class OsgiUtil {
         return defaultValue;
     }
 
-    public static Object toObject(Dictionary props, String key)
+    public static Object toObject(Dictionary<String, ?> props, String key)
     {
         if (props == null || key == null )
         {
@@ -87,7 +91,7 @@ public class OsgiUtil {
         }
         else if (propValue instanceof Collection)
         {
-            Collection prop = (Collection) propValue;
+            Collection<?> prop = (Collection<?>) propValue;
             return prop.isEmpty() ? null : prop.iterator().next();
         }
         else
@@ -96,7 +100,7 @@ public class OsgiUtil {
         }
     }
 
-    public static String[] toStringArray(Dictionary props, String key, String[] defaultArray)
+    public static String[] toStringArray(Dictionary<String, ?> props, String key, String[] defaultArray)
     {
         if (props == null || key == null )
         {
@@ -125,7 +129,7 @@ public class OsgiUtil {
         {
             // other array
             Object[] valueArray = (Object[]) propValue;
-            List values = new ArrayList(valueArray.length);
+            List<String> values = new ArrayList<>(valueArray.length);
             for(int i=0; i<valueArray.length; i++)
             {
                 final Object value = valueArray[i];
@@ -134,15 +138,15 @@ public class OsgiUtil {
                     values.add(value.toString());
                 }
             }
-            return (String[]) values.toArray(new String[values.size()]);
+            return values.toArray(new String[values.size()]);
 
         }
         else if (propValue instanceof Collection)
         {
             // collection
-            Collection valueCollection = (Collection) propValue;
-            List valueList = new ArrayList(valueCollection.size());
-            final Iterator i = valueCollection.iterator();
+            Collection<?> valueCollection = (Collection<?>) propValue;
+            List<String> valueList = new ArrayList<>(valueCollection.size());
+            final Iterator<?> i = valueCollection.iterator();
             while ( i.hasNext() )
             {
                 final Object value = i.next();
@@ -151,7 +155,7 @@ public class OsgiUtil {
                     valueList.add(value.toString());
                 }
             }
-            return (String[]) valueList.toArray(new String[valueList.size()]);
+            return valueList.toArray(new String[valueList.size()]);
         }
 
         return defaultArray;

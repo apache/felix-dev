@@ -43,20 +43,26 @@ import java.util.concurrent.locks.ReentrantLock;
 import org.apache.felix.scr.impl.config.ScrConfigurationImpl;
 import org.apache.felix.scr.impl.inject.internal.ClassUtils;
 import org.apache.felix.scr.impl.logger.InternalLogger.Level;
+import org.apache.felix.scr.impl.logger.ScrLoggerFactory;
 import org.apache.felix.scr.impl.logger.ScrLogger;
 import org.apache.felix.scr.impl.manager.ComponentHolder;
 import org.apache.felix.scr.impl.metadata.ComponentMetadata;
 import org.apache.felix.scr.impl.metadata.MetadataStoreHelper.MetaDataReader;
 import org.apache.felix.scr.impl.metadata.MetadataStoreHelper.MetaDataWriter;
+import org.apache.felix.scr.impl.metadata.ReferenceMetadata;
 import org.apache.felix.scr.impl.runtime.ServiceComponentRuntimeImpl;
 import org.osgi.framework.Bundle;
 import org.osgi.framework.BundleContext;
 import org.osgi.framework.BundleEvent;
 import org.osgi.framework.Constants;
+import org.osgi.framework.InvalidSyntaxException;
+import org.osgi.framework.ServiceReference;
 import org.osgi.framework.ServiceRegistration;
+import org.osgi.framework.namespace.HostNamespace;
 import org.osgi.framework.wiring.BundleRevision;
 import org.osgi.framework.wiring.BundleWire;
 import org.osgi.framework.wiring.BundleWiring;
+import org.osgi.framework.wiring.FrameworkWiring;
 import org.osgi.namespace.extender.ExtenderNamespace;
 import org.osgi.service.component.ComponentConstants;
 import org.osgi.service.component.runtime.ServiceComponentRuntime;
@@ -75,6 +81,8 @@ public class Activator extends AbstractExtender
 
     //Either this bundle's context or the framework bundle context, depending on the globalExtender setting.
     private BundleContext m_globalContext;
+
+    private ServiceReference<?> m_trueCondition;
 
     // this bundle
     private Bundle m_bundle;
@@ -114,15 +122,41 @@ public class Activator extends AbstractExtender
     {
         m_context = context;
         m_bundle = context.getBundle();
-        // require the log service
-        logger = new ScrLogger(m_configuration, m_context);
-        // set bundle context for PackageAdmin tracker
-        ClassUtils.setBundleContext( context );
+        m_trueCondition = findTrueCondition(context);
+        ClassUtils.setFrameworkWiring(context.getBundle(Constants.SYSTEM_BUNDLE_LOCATION).adapt(FrameworkWiring.class));
         // get the configuration
         m_configuration.start( m_context ); //this will call restart, which calls super.start.
     }
 
-    public void restart(boolean globalExtender)
+
+    private ServiceReference<?> findTrueCondition(BundleContext context)
+    {
+        try
+        {
+            ServiceReference<?>[] foundTrue = context.getServiceReferences(
+                ReferenceMetadata.CONDITION_SERVICE_CLASS, ReferenceMetadata.CONDITION_TRUE_FILTER);
+            if (foundTrue == null || foundTrue.length == 0)
+            {
+                return null;
+            }
+            for (ServiceReference<?> ref : foundTrue)
+            {
+                Bundle b = ref.getBundle();
+                if (b != null && b.getBundleId() == 0)
+                {
+                    return ref;
+                }
+            }
+            return null;
+        }
+        catch (InvalidSyntaxException e)
+        {
+            // should never happen; blow up if it does
+            throw new RuntimeException(e);
+        }
+    }
+
+    public void restart(boolean globalExtender, boolean initialStart)
     {
         m_componentMetadataStore = load(m_context, logger,
             m_configuration.cacheMetadata());
@@ -135,14 +169,14 @@ public class Activator extends AbstractExtender
         {
             m_globalContext = m_context;
         }
-        if ( ClassUtils.m_packageAdmin != null )
+        if (!initialStart)
         {
             logger.log(Level.INFO,
                 "Stopping to restart with new globalExtender setting: {0}", null,
                 globalExtender);
 
-            //this really is a restart, not the initial start
-            // the initial start where m_globalContext is null should skip this as m_packageAdmin should not yet be set.
+            // this really is a restart, not the initial start;
+            // first stop the extender
             try
             {
                 super.stop( context );
@@ -208,17 +242,41 @@ public class Activator extends AbstractExtender
         super.stop( context );
         m_configuration.stop();
         store(m_componentMetadataStore, context, logger, m_configuration.cacheMetadata());
-        logger.closeTracker();
+        logger.close();
+    }
+
+    public ServiceReference<?> getTrueCondition()
+    {
+        return m_trueCondition;
     }
 
     @Override
     public void bundleChanged(BundleEvent event)
     {
         super.bundleChanged(event);
-        if (event.getType() == BundleEvent.UPDATED
-            || event.getType() == BundleEvent.UNINSTALLED)
+        int eType = event.getType();
+        if (eType == BundleEvent.UPDATED
+            || eType == BundleEvent.UNINSTALLED
+            || eType == BundleEvent.UNRESOLVED)
         {
             m_componentMetadataStore.remove(event.getBundle().getBundleId());
+        }
+        if (eType == BundleEvent.RESOLVED)
+        {
+            BundleRevision revision = event.getBundle().adapt(BundleRevision.class);
+            if (revision != null && (revision.getTypes() & BundleRevision.TYPE_FRAGMENT) == BundleRevision.TYPE_FRAGMENT)
+            {
+                BundleWiring wiring = revision.getWiring();
+                List<BundleWire> hostWires = wiring != null ? wiring.getRequiredWires(HostNamespace.HOST_NAMESPACE) : null;
+                if (hostWires != null && !hostWires.isEmpty())
+                {
+                    for (BundleWire hostWire : hostWires)
+                    {
+                        // invalidate any hosts of newly resolved fragments
+                        m_componentMetadataStore.remove(hostWire.getProvider().getBundle().getBundleId());
+                    }
+                }
+            }
         }
     }
 
@@ -369,6 +427,7 @@ public class Activator extends AbstractExtender
         // dispose component registry
         if ( m_componentRegistry != null )
         {
+            m_componentRegistry.shutdown();
             m_componentRegistry = null;
         }
 
@@ -378,7 +437,7 @@ public class Activator extends AbstractExtender
             m_componentActor.terminate();
             m_componentActor = null;
         }
-        ClassUtils.close();
+        ClassUtils.setFrameworkWiring(null);
     }
 
     //---------- Component Management -----------------------------------------
@@ -550,7 +609,7 @@ public class Activator extends AbstractExtender
         try
         {
             BundleComponentActivator ga = new BundleComponentActivator( this.logger, m_componentRegistry, m_componentActor,
-                context, m_configuration, cached);
+                context, m_configuration, cached, getTrueCondition());
             ga.initialEnable();
             if (cached == null)
             {
@@ -650,5 +709,18 @@ public class Activator extends AbstractExtender
                 logger.log(Level.WARN, msg, t);
             }
         }
+    }
+
+    public void setLogger()
+    {
+        // TODO we only set the logger once
+        // If the need arises to be able to dynamically set the logger type
+        // then more work is needed to do that switch
+        // for now we only can configure 'ds.log.extension' and 'ds.log.enabled' with context properties
+        if (logger == null)
+        {
+            logger = ScrLoggerFactory.create(m_context, m_configuration);
+        }
+
     }
 }

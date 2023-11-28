@@ -19,7 +19,14 @@
 package org.apache.felix.scr.integration;
 
 
+import java.util.Collection;
+import java.util.Collections;
+import java.util.HashSet;
 import java.util.Hashtable;
+import java.util.LinkedList;
+import java.util.List;
+import java.util.concurrent.atomic.AtomicBoolean;
+import java.util.concurrent.atomic.AtomicReference;
 
 import org.apache.felix.scr.integration.components.SimpleComponent;
 import org.apache.felix.scr.integration.components.SimpleComponent2;
@@ -46,7 +53,7 @@ public class ServiceBindGreedyTest extends ComponentTestBase
     static
     {
         // uncomment to enable debugging of this test class
-        // paxRunnerVmOption = DEBUG_VM_OPTION;
+        //paxRunnerVmOption = DEBUG_VM_OPTION;
 
         descriptorFile = "/integration_test_simple_components_service_binding_greedy.xml";
     }
@@ -132,6 +139,7 @@ public class ServiceBindGreedyTest extends ComponentTestBase
         delay();
 
         // two services with service ranking (srv6 > srv5)
+        @SuppressWarnings("unused")
         final SimpleServiceImpl srv5 = SimpleServiceImpl.create( bundleContext, "srv5", 10 );
         final SimpleServiceImpl srv6 = SimpleServiceImpl.create( bundleContext, "srv6", 20 );
 
@@ -165,6 +173,122 @@ public class ServiceBindGreedyTest extends ComponentTestBase
         TestCase.assertTrue( comp32.m_multiRef.isEmpty() );
     }
 
+    @Test
+    public void test_optional_single_dynamic_multi_thread1() throws Exception
+    {
+        do_test_optional_single_dynamic_multi_thread(false);
+    }
+
+    @Test
+    public void test_optional_single_dynamic_multi_thread2() throws Throwable
+    {
+        do_test_optional_single_dynamic_multi_thread(true);
+    }
+
+    AtomicBoolean enabledConfig = new AtomicBoolean();
+    private void do_test_optional_single_dynamic_multi_thread(
+        Boolean unregPreExistingFirst)
+        throws Exception
+    {
+        String name = "test_optional_single_dynamic";
+        final int numRanks = 1000;
+        final int ranksPerThread = 100;
+        final SimpleServiceImpl preExistingServ = SimpleServiceImpl.create(bundleContext,
+            "preExistingServ", numRanks / 4);
+
+        if (enabledConfig.compareAndSet(false, true))
+        {
+            getDisabledConfigurationAndEnable(name, ComponentConfigurationDTO.ACTIVE);
+        }
+        final SimpleComponent comp = SimpleComponent.INSTANCE;
+        TestCase.assertNotNull(comp);
+        TestCase.assertEquals(preExistingServ, comp.m_singleRef);
+        TestCase.assertTrue(comp.m_multiRef.isEmpty());
+
+        final List<Integer> ranks = Collections.synchronizedList(
+            new LinkedList<Integer>());
+        for (int i = 0; i < numRanks; i++)
+        {
+            ranks.add(i);
+        }
+        Collections.shuffle(ranks);
+
+        Collection<Thread> threads = new HashSet<>();
+        final List<SimpleServiceImpl> registrations = Collections.synchronizedList(
+            new LinkedList<SimpleServiceImpl>());
+        final AtomicReference<SimpleServiceImpl> highest = new AtomicReference<>();
+        for (int i = 0; i < numRanks; i = i + ranksPerThread)
+        {
+            threads.add(new Thread(new Runnable()
+            {
+                @Override
+                public void run()
+                {
+                    for (int j = 0; j < ranksPerThread; j++)
+                    {
+                        int rank = ranks.remove(0);
+                        SimpleServiceImpl srv = SimpleServiceImpl.create(bundleContext,
+                            "srv" + rank, rank);
+                        registrations.add(srv);
+                        if (rank == numRanks - 1)
+                        {
+                            highest.set(srv);
+                        }
+                    }
+                };
+            }));
+        }
+        for (Thread t : threads)
+        {
+            t.start();
+        }
+        for (Thread t : threads)
+        {
+            t.join();
+        }
+
+        TestCase.assertNotNull(highest.get());
+        TestCase.assertEquals(highest.get(), comp.m_singleRef);
+        TestCase.assertTrue(comp.m_multiRef.isEmpty());
+
+        threads.clear();
+        for (int i = 0; i < numRanks; i = i + ranksPerThread)
+        {
+            threads.add(new Thread(new Runnable()
+            {
+                @Override
+                public void run()
+                {
+                    for (int j = 0; j < ranksPerThread; j++)
+                    {
+                        registrations.remove(0).drop();
+                    }
+                };
+            }));
+        }
+        if (unregPreExistingFirst)
+        {
+            preExistingServ.drop();
+        }
+        for (Thread t : threads)
+        {
+            t.start();
+        }
+        for (Thread t : threads)
+        {
+            t.join();
+        }
+        if (!unregPreExistingFirst)
+        {
+            TestCase.assertEquals(preExistingServ, comp.m_singleRef);
+            TestCase.assertTrue(comp.m_multiRef.isEmpty());
+            preExistingServ.drop();
+        }
+
+        TestCase.assertEquals("Found bound reference: " + comp.m_singleRefBind + '-'
+            + comp.m_singleRefUnbind, null, comp.m_singleRef);
+        TestCase.assertTrue(comp.m_multiRef.isEmpty());
+    }
 
     @Test
     public void test_required_single_dynamic() throws Exception
@@ -247,6 +371,7 @@ public class ServiceBindGreedyTest extends ComponentTestBase
         delay();
 
         // two services with service ranking (srv6 > srv5)
+        @SuppressWarnings("unused")
         final SimpleServiceImpl srv5 = SimpleServiceImpl.create( bundleContext, "srv5", 10 );
         final SimpleServiceImpl srv6 = SimpleServiceImpl.create( bundleContext, "srv6", 20 );
 
@@ -566,16 +691,18 @@ public class ServiceBindGreedyTest extends ComponentTestBase
         //        TestCase.assertEquals( Component.STATE_FACTORY, component.getState() );
 
         // create a component instance
-        final ServiceReference[] refs = bundleContext.getServiceReferences( ComponentFactory.class.getName(), "("
+        final ServiceReference<?>[] refs = bundleContext.getServiceReferences(
+            ComponentFactory.class.getName(), "("
                 + ComponentConstants.COMPONENT_FACTORY + "=" + factoryPid + ")" );
         TestCase.assertNotNull( refs );
         TestCase.assertEquals( 1, refs.length );
-        final ComponentFactory factory = ( ComponentFactory ) bundleContext.getService( refs[0] );
+        final ComponentFactory<?> factory = (ComponentFactory<?>) bundleContext.getService(
+            refs[0]);
         TestCase.assertNotNull( factory );
 
         Hashtable<String, String> props = new Hashtable<String, String>();
         props.put( PROP_NAME_FACTORY, PROP_NAME_FACTORY );
-        final ComponentInstance instance = factory.newInstance( props );
+        final ComponentInstance<?> instance = factory.newInstance(props);
         TestCase.assertNotNull( instance );
         TestCase.assertNotNull( instance.getInstance() );
         TestCase.assertEquals( SimpleComponent.INSTANCE, instance.getInstance() );
@@ -658,6 +785,7 @@ public class ServiceBindGreedyTest extends ComponentTestBase
         //        }
 
         // registeranother service, factory must come back, instance not
+        @SuppressWarnings("unused")
         final SimpleServiceImpl srv2 = SimpleServiceImpl.create( bundleContext, "srv2" );
         delay();
 
@@ -778,6 +906,7 @@ public class ServiceBindGreedyTest extends ComponentTestBase
         delay();
 
         // two services with service ranking (srv6 > srv5)
+        @SuppressWarnings("unused")
         final SimpleServiceImpl srv5 = SimpleServiceImpl.create( bundleContext, "srv5", 10 );
         final SimpleServiceImpl srv6 = SimpleServiceImpl.create( bundleContext, "srv6", 20 );
 
@@ -906,6 +1035,7 @@ public class ServiceBindGreedyTest extends ComponentTestBase
         delay();
 
         // two services with service ranking (srv6 > srv5)
+        @SuppressWarnings("unused")
         final SimpleServiceImpl srv5 = SimpleServiceImpl.create( bundleContext, "srv5", 10 );
         final SimpleServiceImpl srv6 = SimpleServiceImpl.create( bundleContext, "srv6", 20 );
 

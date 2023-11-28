@@ -19,8 +19,8 @@ under the License.
 <project>
   <parent>
     <groupId>org.apache.felix</groupId>
-    <artifactId>felix</artifactId>
-    <version>1.0.4</version>
+    <artifactId>felix-parent</artifactId>
+    <version>7</version>
     <relativePath>../../pom/pom.xml</relativePath>
   </parent>
   <modelVersion>4.0.0</modelVersion>
@@ -30,13 +30,13 @@ under the License.
   <version>0.9.0-SNAPSHOT</version>
   <dependencies>
     <dependency>
-      <groupId>${pom.groupId}</groupId>
-      <artifactId>org.osgi.core</artifactId>
-      <version>1.0.0</version>
+      <groupId>org.osgi</groupId>
+      <artifactId>osgi.core</artifactId>
+      <version>7.0.0</version>
       <scope>provided</scope>
     </dependency>
     <dependency>
-      <groupId>${pom.groupId}</groupId>
+      <groupId>org.apache.felix</groupId>
       <artifactId>org.apache.felix.examples.dictionaryservice</artifactId>
       <version>0.9.0-SNAPSHOT</version>
       <scope>provided</scope>
@@ -47,11 +47,11 @@ under the License.
       <plugin>
         <groupId>org.apache.felix</groupId>
         <artifactId>maven-bundle-plugin</artifactId>
-        <version>1.4.0</version>
+        <version>5.1.1</version>
         <extensions>true</extensions>
         <configuration>
           <instructions>
-            <Bundle-SymbolicName>${pom.artifactId}</Bundle-SymbolicName>
+            <Bundle-SymbolicName>${project.artifactId}</Bundle-SymbolicName>
             <Bundle-Name>Example Spell Check Service</Bundle-Name>
             <Bundle-Vendor>The Apache Software Foundation</Bundle-Vendor>
             <Bundle-Description>

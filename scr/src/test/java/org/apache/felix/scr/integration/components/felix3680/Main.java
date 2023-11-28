@@ -78,6 +78,8 @@ public class Main implements Runnable
             {
                 exec.execute(new Runnable()
                 {
+                    @SuppressWarnings("deprecation")
+                    @Override
                     public void run()
                     {
                         if (enable)
@@ -130,9 +132,9 @@ public class Main implements Runnable
         _logService = logService;
     }
 
-    void bindA(ServiceReference sr)
+    void bindA(ServiceReference<A> sr)
     {
-        A a = (A) sr.getBundle().getBundleContext().getService(sr);
+        A a = sr.getBundle().getBundleContext().getService(sr);
         if (a == null)
         {
             throw new IllegalStateException("bindA: bundleContext.getService returned null");
@@ -144,7 +146,7 @@ public class Main implements Runnable
         _enabledLatch.countDown();
     }
 
-    void unbindA(ServiceReference sr)
+    void unbindA(ServiceReference<A> sr)
     {
         if (_counter.decrementAndGet() != 0)
         {
@@ -153,6 +155,7 @@ public class Main implements Runnable
         _disabledLatch.countDown();
     }
 
+    @SuppressWarnings("deprecation")
     void start(ComponentContext ctx)
     {
         _logService.log(LogService.LOG_INFO, "Main.start");
@@ -168,6 +171,8 @@ public class Main implements Runnable
         _thread.interrupt();
     }
 
+    @SuppressWarnings("deprecation")
+    @Override
     public void run()
     {
         Executor exec = Executors.newFixedThreadPool(50);
@@ -227,6 +232,7 @@ public class Main implements Runnable
         }
     }
 
+    @SuppressWarnings("deprecation")
     private void dumpComponents()
     {
         StringWriter sw = new StringWriter();

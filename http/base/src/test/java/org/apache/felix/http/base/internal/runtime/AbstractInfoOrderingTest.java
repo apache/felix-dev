@@ -19,9 +19,9 @@
 package org.apache.felix.http.base.internal.runtime;
 
 import static java.lang.Integer.signum;
-import static junit.framework.Assert.assertEquals;
-import static junit.framework.Assert.fail;
+import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertTrue;
+import static org.junit.Assert.fail;
 
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -29,6 +29,7 @@ import java.util.Collection;
 import java.util.Collections;
 import java.util.List;
 
+import org.jetbrains.annotations.NotNull;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.junit.runners.Parameterized;
@@ -62,7 +63,9 @@ public class AbstractInfoOrderingTest
                 { 1, 0, 0, -2, 1 },
                 { 1, 0, 0, -1, 2 },
                 { 1, 0, 0, -1, 1 },
-                { 1, 0, 0, -2, -1 }
+                { 1, 0, 0, -2, -1 },
+                { 1, Integer.MIN_VALUE, 0, Integer.MIN_VALUE, 4},
+                { 1, Integer.MIN_VALUE, Integer.MIN_VALUE, Integer.MIN_VALUE, 5}
            });
     }
 
@@ -88,7 +91,7 @@ public class AbstractInfoOrderingTest
         assertEquals(expected, signum(testInfo.compareTo(other)));
         if ( expected != 0 )
         {
-            final List<AbstractInfo> list = new ArrayList<AbstractInfo>();
+            final List<AbstractInfo<TestInfo>> list = new ArrayList<>();
             list.add(testInfo);
             list.add(other);
             Collections.sort(list);
@@ -144,6 +147,11 @@ public class AbstractInfoOrderingTest
         public TestInfo(int ranking, long serviceId)
         {
             super(ranking, serviceId);
+        }
+
+        @Override
+        public @NotNull String getType() {
+            return "Test";
         }
     }
 }

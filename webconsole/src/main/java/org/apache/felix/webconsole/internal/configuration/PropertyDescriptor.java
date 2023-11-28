@@ -100,4 +100,8 @@ class PropertyDescriptor
         return false;
     }
     
+    public boolean hasMetatype()
+    {
+        return false;
+    }
 }

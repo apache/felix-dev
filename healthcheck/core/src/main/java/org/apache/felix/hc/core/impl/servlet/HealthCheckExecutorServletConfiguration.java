@@ -19,14 +19,17 @@ package org.apache.felix.hc.core.impl.servlet;
 
 import org.osgi.service.metatype.annotations.AttributeDefinition;
 import org.osgi.service.metatype.annotations.ObjectClassDefinition;
+import org.osgi.service.metatype.annotations.Option;
 
 @ObjectClassDefinition(name = "Apache Felix Health Check Executor Servlet", description = "Serializes health check results into html, json or txt format")
 @interface HealthCheckExecutorServletConfiguration {
 
     String SERVLET_PATH_DEFAULT = "/system/health";
 
-    @AttributeDefinition(name = "Path", description = "Servlet path (defaults to " + SERVLET_PATH_DEFAULT
-            + " in order to not be accessible via Apache/Internet)")
+	@AttributeDefinition(name = "Servlet Context Name", description = "Servlet Context Name to register the servlet with. If not specified, the default context is used.")
+    String servletContextName();
+
+    @AttributeDefinition(name = "Servlet Path", description = "Servlet path (defaults to " + SERVLET_PATH_DEFAULT + ")")
     String servletPath() default SERVLET_PATH_DEFAULT;
 
     @AttributeDefinition(name = "Http Status Mapping", description = "Maps HC result status values to http response codes. Can be overwritten via request parameter 'httpStatus'")
@@ -41,8 +44,31 @@ import org.osgi.service.metatype.annotations.ObjectClassDefinition;
     @AttributeDefinition(name = "Combine Tags with OR", description = "If true, will execute checks that have any of the given tags. If false, will only execute checks that have *all* of the given tags.")
     boolean combineTagsWithOr() default true;
     
-    @AttributeDefinition(name = "Default Format", description = "Default format if format is not provided in URL")
+    @AttributeDefinition(name = "Default Format", description = "Default format if format is not provided in URL",
+        options = {
+            @Option(label = "HTML", value = HealthCheckExecutorServlet.FORMAT_HTML),
+            @Option(label = "JSON", value = HealthCheckExecutorServlet.FORMAT_JSON),
+            @Option(label = "JSONP", value = HealthCheckExecutorServlet.FORMAT_JSONP),
+            @Option(label = "TXT", value = HealthCheckExecutorServlet.FORMAT_TXT),
+            @Option(label = "VERBOSE TXT", value = HealthCheckExecutorServlet.FORMAT_VERBOSE_TXT)
+        })
     String format() default HealthCheckExecutorServlet.FORMAT_HTML;
+
+    @AttributeDefinition(name = "Allowed Formats", description = "Allow list for formats passed in via the URL",
+        options = {
+            @Option(label = "HTML", value = HealthCheckExecutorServlet.FORMAT_HTML),
+            @Option(label = "JSON", value = HealthCheckExecutorServlet.FORMAT_JSON),
+            @Option(label = "JSONP", value = HealthCheckExecutorServlet.FORMAT_JSONP),
+            @Option(label = "TXT", value = HealthCheckExecutorServlet.FORMAT_TXT),
+            @Option(label = "VERBOSE TXT", value = HealthCheckExecutorServlet.FORMAT_VERBOSE_TXT)
+        })
+    String[] allowed_formats() default {
+        HealthCheckExecutorServlet.FORMAT_HTML, 
+        HealthCheckExecutorServlet.FORMAT_JSON, 
+        HealthCheckExecutorServlet.FORMAT_JSONP, 
+        HealthCheckExecutorServlet.FORMAT_TXT,
+        HealthCheckExecutorServlet.FORMAT_VERBOSE_TXT
+    };
 
     @AttributeDefinition(name = "Disabled", description = "Allows to disable the servlet if required for security reasons")
     boolean disabled() default false;
@@ -50,7 +76,9 @@ import org.osgi.service.metatype.annotations.ObjectClassDefinition;
     @AttributeDefinition(name = "CORS Access-Control-Allow-Origin", description = "Sets the Access-Control-Allow-Origin CORS header. If blank no header is sent.")
     String cors_accessControlAllowOrigin() default "*";
 
+    @AttributeDefinition(name = "Disable Request Configuration", description = "If set, parameters passed in via the request are ignored (except for format)")
+    boolean disable_request_configuration() default false;
+
     @AttributeDefinition
     String webconsole_configurationFactory_nameHint() default "{servletPath} default format:{format} default tags:{tags} ";
-
 }

@@ -49,6 +49,7 @@ public class HealthCheckExecCommand {
 
         boolean isDebug = false;
         boolean combineWithOr = true;
+        boolean isName = false;
         HealthCheckSelector selector = HealthCheckSelector.empty();
         for (String param : params) {
             if(param.startsWith("-")) {
@@ -56,27 +57,32 @@ public class HealthCheckExecCommand {
                     isDebug = true;
                 } else if("-a".equals(param)) {
                     combineWithOr = false;
+                } else if("-n".equals(param)) {
+                    isName = true;
                 } else if("-h".equals(param)) {
                     return getHelpText();
                 } else {
                     System.out.println("unrecognized option: "+param);
                 }
             } else {
-                selector = HealthCheckSelector.tags(param.split(","));
+                if(isName) {
+                    selector = selector.withNames(param.split(","));
+                } else {
+                    selector = selector.withTags(param.split(","));
+                }
             }
         }
-        if(selector.tags() == null) {
-            return getHelpText();
-        }
         
+        boolean defaultTagUsed = selector.tags() == null && selector.names() == null;
+
         HealthCheckExecutionOptions options = new HealthCheckExecutionOptions();
         options.setCombineTagsWithOr(combineWithOr);
         List<HealthCheckExecutionResult> executionResult = healthCheckExecutor.execute(selector, options);
         String result = resultTxtVerboseSerializer.serialize(new CompositeResult(new FormattingResultLog(), executionResult), executionResult, isDebug);
-        return result;
+        return (defaultTagUsed ? "Configured default tag used for execution\n" : "") + result;
     }
 
     private String getHelpText() {
-        return "Usage: hc:exec [-v] [-a] tag1,tag2\n  -v verbose/debug\n  -a combine tags with and";
+        return "Usage:\n  hc:exec [-v] [-a] [tag1,tag2] [-n \"Name 1,Name 2\"]\n  -v verbose/debug\n  -a combine tags with 'and' logic\n  -n name(s) to be executed";
     }
 }

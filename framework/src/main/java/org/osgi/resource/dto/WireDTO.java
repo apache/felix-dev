@@ -22,7 +22,7 @@ import org.osgi.resource.Wire;
 /**
  * Data Transfer Object for a Wire.
  * 
- * @author $Id$
+ * @author $Id: 017ea7cc366de436fe9a416f47d79ac6fe65ceb4 $
  * @NotThreadSafe
  */
 public class WireDTO extends DTO {

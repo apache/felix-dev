@@ -1,6 +1,6 @@
 # Apache Felix Configuration Admin Service
 
-The OSGi Componendium Configuration Admin Service specifies a service, which allows for easy management of configuration data for configurable components. Basically a configuration is a list of name-value pairs. A cnfiguration is managed by management applications by asking the Configuration Admin Service for such configuration. After updating the configuration, it is sent back to the Configuration Admin Service. The Configuration Admin Service is like a central hub, which cares for persisting this configuration and also for distributing the configuration to interested parties. One class of such parties are the components to be configured. These are registered as `ManagedService` services. There is also a notion of `ManagedServiceFactory`, which allows for multiple configurations of the same kind to be applied.
+The OSGi Componendium Configuration Admin Service specifies a service, which allows for easy management of configuration data for configurable components. Basically a configuration is a list of name-value pairs. A configuration is managed by management applications by asking the Configuration Admin Service for such configuration. After updating the configuration, it is sent back to the Configuration Admin Service. The Configuration Admin Service is like a central hub, which cares for persisting this configuration and also for distributing the configuration to interested parties. One class of such parties are the components to be configured. These are registered as `ManagedService` services. There is also a notion of `ManagedServiceFactory`, which allows for multiple configurations of the same kind to be applied.
 
 For more information, its suggested you read [Chapter 104, Configuration Admin Service Specification](https://osgi.org/specification/osgi.cmpn/7.0.0/service.cm.html), of the OSGi Compendium Services Specification book. 
 
@@ -187,6 +187,8 @@ The Apache Felix implementation is configurable with Framework properties. Here 
 |--|--|--|--|
 | `felix.cm.loglevel` | int | `2` | Logging level to use in the absence of an OSGi LogService. See the *Logging* section below. |
 | `felix.cm.dir` | String | `BundleContext.getDataFile("config")` | Location of the Configuration Admin configuration files. See the *Configuration Files* section below. |
+| `felix.cm.pm` | String | none | The name of the framework context property defining the persistence manager to be used. If this property is not set or empty, the built-in persistence manager (`name=file`) is used. If it is specified it refers to the `name` property of a persistence manager (`org.apache.felix.cm.PersistenceManager`) and that persistence manager needs to be registered. |
+| `felix.cm.config.plugins` | String[] | none | The name of the framework context property defining the required configuration plugins. If this property is specified it refers to the `config.plugin.id` property of a configuration plugin (`org.osgi.service.cm.ConfigurationPlugin`) and that configuration plugin must be registered and available. |
 
 ### Logging
 

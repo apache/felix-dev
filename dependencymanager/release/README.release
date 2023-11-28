@@ -33,21 +33,22 @@ Create a tagged version
 
 Creating a tagged version of the sources can be done directly through svn (replace r<n> by the actual release number, like "r1"):
 
-svn copy https://svn.apache.org/repos/asf/felix/trunk/dependencymanager https://svn.apache.org/repos/asf/felix/releases/org.apache.felix.dependencymanager-r<n> -m "Release of Apache Felix Dependency Manager r<n>"
+git tag -a org.apache.felix.dependencymanager-r<n> -m "Release of Apache Felix Dependency Manager r<n>"
+git push origin org.apache.felix.dependencymanager-r<n>
 
 Staging a release candidate
 ===========================
 
 Staging a release starts by checking out a tagged version of the sources (replace r<n> by the actual release number, like "r1"):
 
-svn co https://svn.apache.org/repos/asf/felix/releases/org.apache.felix.dependencymanager-r<n>
+git clone -–depth 1 -b org.apache.felix.dependencymanager-r<n> http://gitbox.apache.org/repos/asf/felix-dev.git felix-dev-org.apache.felix.dependencymanager-r<n>
 
 The next step is to build/test the software and create the release/staging/ directory (where the source/jars will be packaged):
 (replace r<n> by the actual release number, like "r1")
 
 Use a Java8 JDK
 
-$ cd org.apache.felix.dependencymanager-r<n>
+$ cd felix-dev-org.apache.felix.dependencymanager-r<n>/dependencymanager
 $ ./gradlew rat 
 $ ./gradlew org.apache.felix.dependencymanager.annotation:jar
 $ ./gradlew jar
@@ -81,7 +82,7 @@ Start a vote on the dev@felix.apache.org list, for example (be sure to replace r
 To: "Felix Developers List" <dev@felix.apache.org>
 Subject: [VOTE] Release of Apache Felix Dependency Manager release r<n>
 
-Hi,
+I would like to call for a vote on the Dependency Manager top level release r<n>
 
 We solved N issues in this release:
 http://issues.apache.org/jira/...
@@ -93,16 +94,23 @@ Staging repository:
 https://dist.apache.org/repos/dist/dev/felix/apache-felix-dependencymanager-r<n>/
 
 You can use this UNIX script to download the release and verify the signatures:
-http://svn.apache.org/repos/asf/felix/trunk/dependencymanager/release/check_staged_release.sh
+
+https://github.com/apache/felix-dev/blob/master/dependencymanager/release/check_staged_release.sh
 
 Usage:
-sh check_staged_release.sh r<n> /tmp/felix-staging
 
-This script, unlike the original Felix check_stage_release.sh, will download staging from https://dist.apache.org/repos/dist/dev/felix instead of 
-http://repository.apache.org/content/repositories.
+      sh check_staged_release.sh r<n> /tmp/felix-staging
 
+This script, unlike the original Felix check_stage_release.sh, is specific
+to the Dependency Manager release process (see FELIX-4818) and will
+download staging from https://dist.apache.org/repos/dist/dev/felix instead
+of http://repository.apache.org/content/repositories.
 
-Please vote to approve this release:
+To rebuild the DM binaries from the source, jdk8 must be used, and you can refer to:
+
+https://github.com/apache/felix-dev/blob/master/dependencymanager/release/resources/src/README.src
+
+Please cast your votes to approve this release:
 
 [ ] +1 Approve the release
 [ ] -1 Veto the release (please provide specific comments)

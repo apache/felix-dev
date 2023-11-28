@@ -29,14 +29,10 @@ import org.apache.felix.hc.api.execution.HealthCheckExecutionResult;
 import org.apache.felix.hc.core.impl.util.lang.StringUtils;
 import org.osgi.service.component.annotations.Activate;
 import org.osgi.service.component.annotations.Component;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 
 /** Serializes health check results into a verbose text message. */
 @Component(service = ResultTxtVerboseSerializer.class)
 public class ResultTxtVerboseSerializer {
-
-    private static final Logger LOG = LoggerFactory.getLogger(ResultTxtVerboseSerializer.class);
 
     private static final String NEWLINE = "\n"; // not using system prop 'line.separator' as not the local but the calling system is
                                                 // relevant.
@@ -62,27 +58,47 @@ public class ResultTxtVerboseSerializer {
         colWidthLog = totalWidth - colWidthWithoutLog;
     }
 
-    public String serialize(final Result overallResult, final List<HealthCheckExecutionResult> executionResults, boolean includeDebug) {
+    // without overall result, only the execution results are listed without header
+    public String serialize(String label, final List<HealthCheckExecutionResult> executionResults, boolean includeDebug) {
+        StringBuilder resultStr = new StringBuilder();
 
-        LOG.debug("Sending verbose txt response... ");
+        resultStr.append(label + "\n");
+        resultStr.append(serializeResults(executionResults, includeDebug));
+
+        return resultStr.toString();
+    }
+
+    public String serialize(final Result overallResult, final List<HealthCheckExecutionResult> executionResults, boolean includeDebug) {
 
         StringBuilder resultStr = new StringBuilder();
 
         resultStr.append(StringUtils.repeat("-", totalWidth) + NEWLINE);
-        resultStr.append(center("Overall Health Result: " + overallResult.getStatus().toString(), totalWidth) + NEWLINE);
+        resultStr.append(
+                center("Overall Health Result: " + overallResult.getStatus().toString(), totalWidth) + NEWLINE);
         resultStr.append(StringUtils.repeat("-", totalWidth) + NEWLINE);
+
         resultStr.append(rightPad("Name", colWidthName));
         resultStr.append(rightPad("Result", colWidthResult));
         resultStr.append(rightPad("Timing", colWidthTiming));
         resultStr.append("Logs" + NEWLINE);
         resultStr.append(StringUtils.repeat("-", totalWidth) + NEWLINE);
 
+        resultStr.append(serializeResults(executionResults, includeDebug));
+        resultStr.append(StringUtils.repeat("-", totalWidth) + NEWLINE);
+
+        return resultStr.toString();
+
+    }
+    
+    private String serializeResults(final List<HealthCheckExecutionResult> executionResults, boolean includeDebug) {
+
+        StringBuilder resultStr = new StringBuilder();
+
         final DateFormat dfShort = new SimpleDateFormat("HH:mm:ss.SSS");
 
         for (HealthCheckExecutionResult healthCheckResult : executionResults) {
             appendVerboseTxtForResult(resultStr, healthCheckResult, includeDebug, dfShort);
         }
-        resultStr.append(StringUtils.repeat("-", totalWidth) + NEWLINE);
 
         return resultStr.toString();
 
@@ -141,7 +157,7 @@ public class ResultTxtVerboseSerializer {
         return s.replaceAll("(.{1,"+maxWidth+"})(?: +|$)\\n?|(.{"+maxWidth+"})", "$1$2"+newlineDelimiter).trim();
     }
     
-    static String rightPad(String s, int size) {
+    public static String rightPad(String s, int size) {
         if(s.length() < size) {
             return s + StringUtils.repeat(" ", size - s.length());
         } else {

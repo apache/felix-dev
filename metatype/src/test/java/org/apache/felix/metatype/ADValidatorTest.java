@@ -27,7 +27,7 @@ import junit.framework.TestCase;
 
 /**
  * Test cases for {@link ADValidator}.
- * 
+ *
  * @author <a href="mailto:dev@felix.apache.org">Felix Project Team</a>
  */
 public class ADValidatorTest extends TestCase
@@ -150,7 +150,7 @@ public class ADValidatorTest extends TestCase
         // adhere maximal values
         assertEquals("", ADValidator.validate(ad, "c, d, e"));
 
-        Map options = new HashMap();
+        Map<String, String> options = new HashMap<>();
         options.put("b", "B");
         options.put("c", "C");
         options.put("d", "D");
@@ -349,18 +349,19 @@ public class ADValidatorTest extends TestCase
 
         // optional value
         assertEquals("", ADValidator.validate(ad, null));
-        // 2nd value is missing; but that's ok
+        // 2nd value is empty; but that's ok
         assertEquals("", ADValidator.validate(ad, "321, , 123"));
 
         ad.setRequired(true);
         ad.setMin("3");
 
+
         // mandatory value
         assertEquals(AD.VALIDATE_MISSING, ADValidator.validate(ad, null));
-        // 2nd value is missing
-        assertEquals(AD.VALIDATE_MISSING, ADValidator.validate(ad, "321, , 123"));
         // 2nd value is too short
         assertEquals(AD.VALIDATE_LESS_THAN_MINIMUM, ADValidator.validate(ad, "321,12,123"));
+        // 2nd value is empty and therefore too short
+        assertEquals(AD.VALIDATE_LESS_THAN_MINIMUM, ADValidator.validate(ad, "321, , 123"));
         // adhere minimum lengths
         assertEquals("", ADValidator.validate(ad, "123, 123, 123"));
         // adhere maximum lengths

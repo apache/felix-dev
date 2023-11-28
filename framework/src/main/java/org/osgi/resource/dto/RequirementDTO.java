@@ -23,7 +23,7 @@ import org.osgi.resource.Requirement;
 /**
  * Data Transfer Object for a Requirement.
  * 
- * @author $Id$
+ * @author $Id: dfa21db37ca5ba2be4524dc8cbfa5adae20a8043 $
  * @NotThreadSafe
  */
 public class RequirementDTO extends DTO {

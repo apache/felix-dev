@@ -147,7 +147,7 @@ abstract class AbstractBaselinePlugin
      * Project types which this plugin supports.
      */
     @Parameter
-    protected List<String> supportedProjectTypes = Arrays.asList( new String[] { "jar", "bundle" } );
+    protected List<String> supportedProjectTypes = Arrays.asList("jar", "bundle");
 
     @Component
     protected BuildContext buildContext;

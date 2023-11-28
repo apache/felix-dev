@@ -23,18 +23,18 @@ import java.util.HashSet;
 import java.util.Map;
 import java.util.Set;
 
-import javax.servlet.Servlet;
-import javax.servlet.ServletContext;
-import javax.servlet.ServletException;
-
 import org.apache.felix.http.base.internal.context.ExtServletContext;
 import org.apache.felix.http.base.internal.logger.SystemLogger;
 import org.apache.felix.http.base.internal.runtime.ServletInfo;
 import org.apache.felix.http.base.internal.util.PatternUtil;
+import org.apache.felix.http.javaxwrappers.ServletWrapper;
+import org.jetbrains.annotations.NotNull;
 import org.osgi.framework.Bundle;
 import org.osgi.service.http.HttpContext;
 import org.osgi.service.http.HttpService;
 import org.osgi.service.http.NamespaceException;
+
+import jakarta.servlet.ServletContext;
 
 /**
  * This implementation of the {@link HttpService} implements the front end
@@ -44,10 +44,17 @@ import org.osgi.service.http.NamespaceException;
 public final class PerBundleHttpServiceImpl implements HttpService
 {
     private final Bundle bundle;
-    private final Set<Servlet> localServlets = new HashSet<>();
+    private final Set<javax.servlet.Servlet> localServlets = new HashSet<>();
     private final ServletContextManager contextManager;
     private final SharedHttpServiceImpl sharedHttpService;
 
+    /**
+     * Create a new http service front end
+     * @param bundle The using bundle
+     * @param sharedHttpService The shared service
+     * @param context The context
+     * @param sharedContextAttributes Shared context attributes?
+     */
     public PerBundleHttpServiceImpl(final Bundle bundle,
             final SharedHttpServiceImpl sharedHttpService,
             final ServletContext context,
@@ -77,7 +84,7 @@ public final class PerBundleHttpServiceImpl implements HttpService
     }
 
     /**
-     * No need to sync this method, syncing is done via {@link #registerServlet(String, Servlet, Dictionary, HttpContext)}
+     * No need to sync this method, syncing is done via {@link #registerServlet(String, javax.servlet.Servlet, Dictionary, HttpContext)}
      * @see org.osgi.service.http.HttpService#registerResources(java.lang.String, java.lang.String, org.osgi.service.http.HttpContext)
      */
     @Override
@@ -94,12 +101,14 @@ public final class PerBundleHttpServiceImpl implements HttpService
         }
         try
         {
-            final Servlet servlet = new ResourceServlet(name);
-            registerServlet(alias, servlet, null, context);
+            final HttpResourceServlet servlet = new HttpResourceServlet(name);
+            final javax.servlet.Servlet wrapper = new ServletWrapper(servlet);
+            servlet.setWrapper(wrapper);
+            registerServlet(alias, wrapper, null, context);
         }
-        catch (ServletException e)
+        catch (javax.servlet.ServletException e)
         {
-            SystemLogger.error("Failed to register resources", e);
+            SystemLogger.LOGGER.error("Failed to register resources", e);
         }
     }
 
@@ -107,7 +116,8 @@ public final class PerBundleHttpServiceImpl implements HttpService
      * @see org.osgi.service.http.HttpService#registerServlet(java.lang.String, javax.servlet.Servlet, java.util.Dictionary, org.osgi.service.http.HttpContext)
      */
     @Override
-    public void registerServlet(String alias, Servlet servlet, Dictionary initParams, HttpContext context) throws ServletException, NamespaceException
+    public void registerServlet(String alias, javax.servlet.Servlet servlet, @SuppressWarnings("rawtypes") Dictionary initParams, HttpContext context)
+            throws javax.servlet.ServletException, NamespaceException
     {
         if (servlet == null)
         {
@@ -121,6 +131,7 @@ public final class PerBundleHttpServiceImpl implements HttpService
         final Map<String, String> paramMap = new HashMap<>();
         if (initParams != null && initParams.size() > 0)
         {
+            @SuppressWarnings("rawtypes")
             Enumeration e = initParams.keys();
             while (e.hasMoreElements())
             {
@@ -138,7 +149,7 @@ public final class PerBundleHttpServiceImpl implements HttpService
         {
             if (this.localServlets.contains(servlet))
             {
-                throw new ServletException("Servlet instance " + servlet + " already registered");
+                throw new javax.servlet.ServletException("Servlet instance " + servlet + " already registered");
             }
             this.localServlets.add(servlet);
         }
@@ -170,7 +181,7 @@ public final class PerBundleHttpServiceImpl implements HttpService
     @Override
     public void unregister(final String alias)
     {
-        final Servlet servlet = this.sharedHttpService.unregister(alias);
+        final javax.servlet.Servlet servlet = this.sharedHttpService.unregister(alias);
         if ( servlet != null )
         {
             synchronized ( this.localServlets )
@@ -180,16 +191,19 @@ public final class PerBundleHttpServiceImpl implements HttpService
         }
     }
 
+    /**
+     * Remove all registered servlets
+     */
     public void unregisterAll()
     {
-        final Set<Servlet> servlets = new HashSet<>(this.localServlets);
-        for (final Servlet servlet : servlets)
+        final Set<javax.servlet.Servlet> servlets = new HashSet<>(this.localServlets);
+        for (final javax.servlet.Servlet servlet : servlets)
         {
             unregisterServlet(servlet);
         }
     }
 
-    private void unregisterServlet(final Servlet servlet)
+    private void unregisterServlet(final javax.servlet.Servlet servlet)
     {
         if (servlet != null)
         {
@@ -201,7 +215,12 @@ public final class PerBundleHttpServiceImpl implements HttpService
         }
     }
 
-    public ExtServletContext getServletContext(HttpContext context)
+    /**
+     * Get a servlet context
+     * @param context http context
+     * @return servlet context
+     */
+    public @NotNull ExtServletContext getServletContext(HttpContext context)
     {
         if (context == null)
         {

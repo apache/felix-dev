@@ -30,24 +30,6 @@ import java.util.Map;
 import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
 
-import javax.servlet.Filter;
-import javax.servlet.FilterRegistration;
-import javax.servlet.RequestDispatcher;
-import javax.servlet.Servlet;
-import javax.servlet.ServletContext;
-import javax.servlet.ServletContextAttributeEvent;
-import javax.servlet.ServletException;
-import javax.servlet.ServletRegistration;
-import javax.servlet.ServletRequestAttributeListener;
-import javax.servlet.ServletRequestListener;
-import javax.servlet.SessionCookieConfig;
-import javax.servlet.SessionTrackingMode;
-import javax.servlet.descriptor.JspConfigDescriptor;
-import javax.servlet.http.HttpServletRequest;
-import javax.servlet.http.HttpServletResponse;
-import javax.servlet.http.HttpSessionAttributeListener;
-import javax.servlet.http.HttpSessionListener;
-
 import org.apache.felix.http.base.internal.HttpConfig;
 import org.apache.felix.http.base.internal.context.ExtServletContext;
 import org.apache.felix.http.base.internal.dispatch.RequestDispatcherImpl;
@@ -59,10 +41,31 @@ import org.apache.felix.http.base.internal.registry.PerContextHandlerRegistry;
 import org.apache.felix.http.base.internal.registry.ServletResolution;
 import org.apache.felix.http.base.internal.util.MimeTypes;
 import org.apache.felix.http.base.internal.util.UriUtils;
+import org.apache.felix.http.javaxwrappers.ServletRequestWrapper;
+import org.apache.felix.http.javaxwrappers.ServletResponseWrapper;
 import org.osgi.framework.Bundle;
 import org.osgi.service.http.HttpContext;
 
-@SuppressWarnings("deprecation")
+import jakarta.servlet.Filter;
+import jakarta.servlet.FilterRegistration;
+import jakarta.servlet.RequestDispatcher;
+import jakarta.servlet.Servlet;
+import jakarta.servlet.ServletContext;
+import jakarta.servlet.ServletContextAttributeEvent;
+import jakarta.servlet.ServletException;
+import jakarta.servlet.ServletRegistration;
+import jakarta.servlet.ServletRegistration.Dynamic;
+import jakarta.servlet.ServletRequestAttributeListener;
+import jakarta.servlet.ServletRequestListener;
+import jakarta.servlet.SessionCookieConfig;
+import jakarta.servlet.SessionTrackingMode;
+import jakarta.servlet.descriptor.JspConfigDescriptor;
+import jakarta.servlet.http.HttpServletRequest;
+import jakarta.servlet.http.HttpServletResponse;
+import jakarta.servlet.http.HttpSessionAttributeListener;
+import jakarta.servlet.http.HttpSessionListener;
+import jakarta.servlet.http.MappingMatch;
+
 public class ServletContextImpl implements ExtServletContext
 {
     private final Bundle bundle;
@@ -71,6 +74,14 @@ public class ServletContextImpl implements ExtServletContext
     private final Map<String, Object> attributes;
     private final PerContextHandlerRegistry handlerRegistry;
 
+    /**
+     * Create a new servlet context implementation
+     * @param bundle The bundle
+     * @param context The context
+     * @param httpContext The http context
+     * @param sharedAttributes shared attribtes
+     * @param registry The registry
+     */
     public ServletContextImpl(final Bundle bundle,
             final ServletContext context,
             final HttpContext httpContext,
@@ -334,10 +345,9 @@ public class ServletContextImpl implements ExtServletContext
         return this.context.getServerInfo();
     }
 
-    @Override
     public Servlet getServlet(String name) throws ServletException
     {
-        return this.context.getServlet(name);
+		throw new UnsupportedOperationException("Deprecated method not supported");
     }
 
     @Override
@@ -346,10 +356,9 @@ public class ServletContextImpl implements ExtServletContext
         return HttpServiceFactory.HTTP_SERVICE_CONTEXT_NAME;
     }
 
-    @Override
     public Enumeration<String> getServletNames()
     {
-        return this.context.getServletNames();
+		throw new UnsupportedOperationException("Deprecated method not supported");
     }
 
     @Override
@@ -364,10 +373,9 @@ public class ServletContextImpl implements ExtServletContext
         return this.context.getServletRegistrations();
     }
 
-    @Override
     public Enumeration<Servlet> getServlets()
     {
-        return this.context.getServlets();
+		throw new UnsupportedOperationException("Deprecated method not supported");
     }
 
     @Override
@@ -403,7 +411,8 @@ public class ServletContextImpl implements ExtServletContext
     @Override
     public boolean handleSecurity(HttpServletRequest req, HttpServletResponse res) throws IOException
     {
-        return this.httpContext.handleSecurity(req, res);
+        return this.httpContext.handleSecurity((javax.servlet.http.HttpServletRequest)ServletRequestWrapper.getWrapper(req),
+                (javax.servlet.http.HttpServletResponse)ServletResponseWrapper.getWrapper(res));
     }
 
     @Override
@@ -411,22 +420,21 @@ public class ServletContextImpl implements ExtServletContext
         // nothing to do
     }
 
-    @Override
     public void log(Exception cause, String message)
     {
-        SystemLogger.error(message, cause);
+        SystemLogger.LOGGER.error(message, cause);
     }
 
     @Override
     public void log(String message)
     {
-        SystemLogger.info(message);
+        SystemLogger.LOGGER.info(message);
     }
 
     @Override
     public void log(String message, Throwable cause)
     {
-        SystemLogger.error(message, cause);
+        SystemLogger.LOGGER.error(message, cause);
     }
 
     @Override
@@ -507,8 +515,8 @@ public class ServletContextImpl implements ExtServletContext
         	final ServletResolution resolution = new ServletResolution();
         	resolution.handler = servletHandler;
             resolution.handlerRegistry = this.handlerRegistry;
-            // TODO - what is the path of a named servlet?
-            final RequestInfo requestInfo = new RequestInfo("", null, null, null);
+            final RequestInfo requestInfo = new RequestInfo("", null, null, null, name,
+                    "", "", MappingMatch.EXACT, true);
             dispatcher = new RequestDispatcherImpl(resolution, requestInfo);
         }
         else
@@ -534,7 +542,6 @@ public class ServletContextImpl implements ExtServletContext
             query = path.substring(q + 1);
             path = path.substring(0, q);
         }
-        // TODO remove path parameters...
         final String encodedRequestURI = path == null ? "" : removeDotSegments(path);
         final String requestURI = decodePath(encodedRequestURI);
 
@@ -542,17 +549,57 @@ public class ServletContextImpl implements ExtServletContext
         final PathResolution pathResolution = this.handlerRegistry.resolve(requestURI);
         if ( pathResolution != null )
         {
-        	final ServletResolution resolution = new ServletResolution();
-        	resolution.handler = pathResolution.handler;
-            resolution.handlerRegistry = this.handlerRegistry;
-            final RequestInfo requestInfo = new RequestInfo(pathResolution.servletPath, pathResolution.pathInfo, query, UriUtils.concat(this.getContextPath(), encodedRequestURI));
-            dispatcher = new RequestDispatcherImpl(resolution, requestInfo);
+            pathResolution.handlerRegistry = this.handlerRegistry;
+            final RequestInfo requestInfo = new RequestInfo(pathResolution.servletPath,
+                    pathResolution.pathInfo,
+                    query,
+                    UriUtils.concat(this.getContextPath(), encodedRequestURI),
+                    pathResolution.handler.getName(),
+                    pathResolution.matchedPattern,
+                    pathResolution.matchValue, pathResolution.match, false);
+            dispatcher = new RequestDispatcherImpl(pathResolution, requestInfo);
         }
         else
         {
         	dispatcher = null;
         }
         return dispatcher;
+    }
+
+
+    @Override
+    public Dynamic addJspFile(final String servletName, final String jspFile) {
+        throw new UnsupportedOperationException();
+    }
+
+    @Override
+    public int getSessionTimeout() {
+        return context.getSessionTimeout();
+    }
+
+    @Override
+    public void setSessionTimeout(final int sessionTimeout) {
+        throw new IllegalStateException();
+    }
+
+    @Override
+    public String getRequestCharacterEncoding() {
+        return context.getRequestCharacterEncoding();
+    }
+
+    @Override
+    public void setRequestCharacterEncoding(final String encoding) {
+        throw new IllegalStateException();
+    }
+
+    @Override
+    public String getResponseCharacterEncoding() {
+        return context.getResponseCharacterEncoding();
+    }
+
+    @Override
+    public void setResponseCharacterEncoding(final String encoding) {
+        throw new IllegalStateException();
     }
 
     @Override

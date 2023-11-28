@@ -21,6 +21,7 @@ package org.apache.felix.http.jetty.internal;
 import java.util.SortedSet;
 import java.util.TreeSet;
 
+import org.apache.felix.http.base.internal.util.ServiceUtils;
 import org.apache.felix.http.jetty.LoadBalancerCustomizerFactory;
 import org.eclipse.jetty.server.HttpConfiguration.Customizer;
 import org.osgi.framework.BundleContext;
@@ -55,7 +56,7 @@ public class LoadBalancerCustomizerFactoryTracker extends ServiceTracker<LoadBal
         if ( highestReference.compareTo(reference) == 0 )
         {
             boolean updated = false;
-            final LoadBalancerCustomizerFactory factory = bundleContext.getService(reference);
+            final LoadBalancerCustomizerFactory factory = ServiceUtils.safeGetService(bundleContext, reference);
             if (factory != null)
             {
                 final Customizer customizer = factory.createCustomizer();
@@ -66,7 +67,7 @@ public class LoadBalancerCustomizerFactoryTracker extends ServiceTracker<LoadBal
                 }
                 else
                 {
-                    bundleContext.ungetService(reference);
+                    ServiceUtils.safeUngetService(bundleContext, reference);
                 }
             }
             if ( !updated)
@@ -115,7 +116,7 @@ public class LoadBalancerCustomizerFactoryTracker extends ServiceTracker<LoadBal
                 }
                 else
                 {
-                    final LoadBalancerCustomizerFactory factory = bundleContext.getService(highestReference);
+                    final LoadBalancerCustomizerFactory factory = ServiceUtils.safeGetService(bundleContext, highestReference);
                     if (factory != null)
                     {
                         final Customizer customizer = factory.createCustomizer();
@@ -126,7 +127,7 @@ public class LoadBalancerCustomizerFactoryTracker extends ServiceTracker<LoadBal
                         }
                         else
                         {
-                            bundleContext.ungetService(highestReference);
+                            ServiceUtils.safeUngetService(bundleContext, highestReference);
                         }
                     }
 
@@ -140,7 +141,7 @@ public class LoadBalancerCustomizerFactoryTracker extends ServiceTracker<LoadBal
                     }
                 }
             } while ( !done);
-            bundleContext.ungetService(reference);
+            ServiceUtils.safeUngetService(bundleContext, reference);
         }
     }
 }

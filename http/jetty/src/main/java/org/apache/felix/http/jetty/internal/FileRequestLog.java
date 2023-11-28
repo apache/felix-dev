@@ -24,9 +24,10 @@ import java.util.Dictionary;
 import java.util.Hashtable;
 
 import org.apache.felix.http.base.internal.logger.SystemLogger;
-import org.eclipse.jetty.server.AsyncNCSARequestLog;
-import org.eclipse.jetty.server.NCSARequestLog;
+import org.eclipse.jetty.server.AsyncRequestLogWriter;
+import org.eclipse.jetty.server.CustomRequestLog;
 import org.eclipse.jetty.server.RequestLog;
+import org.eclipse.jetty.server.RequestLogWriter;
 import org.osgi.framework.BundleContext;
 import org.osgi.framework.ServiceRegistration;
 
@@ -36,41 +37,33 @@ class FileRequestLog {
     public static final String DEFAULT_NAME = "file";
     public static final String SVC_PROP_FILEPATH = "filepath";
 
-    private final NCSARequestLog delegate;
+    private final CustomRequestLog delegate;
     private final String logFilePath;
     private final String serviceName;
-    private ServiceRegistration<RequestLog> registration = null;
+    private volatile ServiceRegistration<RequestLog> registration;
 
     FileRequestLog(JettyConfig config) {
         logFilePath = config.getRequestLogFilePath();
         serviceName = config.getRequestLogFileServiceName() != null ? config.getRequestLogFileServiceName() : DEFAULT_NAME;
+        final RequestLogWriter writer;
         if (config.isRequestLogFileAsync()) {
-            delegate = new AsyncNCSARequestLog(logFilePath, null);
+            writer = new AsyncRequestLogWriter(logFilePath);
         } else {
-            delegate = new NCSARequestLog(logFilePath);
+            writer = new RequestLogWriter(logFilePath);
         }
+        writer.setAppend(config.isRequestLogFileAppend());
+        writer.setRetainDays(config.getRequestLogFileRetainDays());
+        writer.setFilenameDateFormat(config.getRequestLogFilenameDateFormat());
 
-        delegate.setAppend(config.isRequestLogFileAppend());
-        delegate.setRetainDays(config.getRequestLogFileRetainDays());
-        delegate.setFilenameDateFormat(config.getRequestLogFilenameDateFormat());
-        delegate.setExtended(config.isRequestLogFileExtended());
+        delegate = new CustomRequestLog(writer, config.getRequestLogFileFormat());
         delegate.setIgnorePaths(config.getRequestLogFileIgnorePaths());
-        delegate.setLogCookies(config.isRequestLogFileLogCookies());
-        delegate.setLogServer(config.isRequestLogFileLogServer());
-        delegate.setLogLatency(config.isRequestLogFileLogLatency());
-        if (config.getRequestLogDateFormat() != null) {
-            delegate.setLogDateFormat(config.getRequestLogDateFormat());
-        }
-        if (config.getRequestLogTimeZone() != null) {
-            delegate.setLogTimeZone(config.getRequestLogTimeZone());
-        }
     }
 
     synchronized void start(BundleContext context) throws IOException, IllegalStateException {
         File logFile = new File(logFilePath).getAbsoluteFile();
         File logFileDir = logFile.getParentFile();
         if (logFileDir != null && !logFileDir.isDirectory()) {
-            SystemLogger.info("Creating directory " + logFileDir.getAbsolutePath());
+            SystemLogger.LOGGER.info("Creating directory {}", logFileDir.getAbsolutePath());
             Files.createDirectories(logFileDir.toPath(), PosixFilePermissions.asFileAttribute(PosixFilePermissions.fromString("rwx------")));
         }
 
@@ -84,7 +77,7 @@ class FileRequestLog {
             svcProps.put(SVC_PROP_FILEPATH, logFilePath);
             registration = context.registerService(RequestLog.class, delegate, svcProps);
         } catch (Exception e) {
-            SystemLogger.error("Error starting File Request Log", e);
+            SystemLogger.LOGGER.error("Error starting File Request Log", e);
         }
     }
 
@@ -95,7 +88,7 @@ class FileRequestLog {
             }
             delegate.stop();
         } catch (Exception e) {
-            SystemLogger.error("Error shutting down File Request Log", e);
+            SystemLogger.LOGGER.error("Error shutting down File Request Log", e);
         } finally {
             registration = null;
         }

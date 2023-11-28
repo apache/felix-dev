@@ -17,7 +17,10 @@
 package org.apache.felix.webconsole.plugins.event.internal.converter;
 
 import org.apache.felix.webconsole.plugins.event.internal.EventInfo;
-import org.osgi.framework.*;
+import org.osgi.framework.Bundle;
+import org.osgi.framework.Constants;
+import org.osgi.framework.ServiceEvent;
+import org.osgi.framework.ServiceReference;
 
 public class ServiceEventConverter {
 
@@ -29,7 +32,7 @@ public class ServiceEventConverter {
             return null;
         }
 
-        final ServiceReference ref = event.getServiceReference();
+        final ServiceReference<?> ref = event.getServiceReference();
 
         final StringBuffer buffer = new StringBuffer( "Service " );
         final Object pid = ref.getProperty( Constants.SERVICE_PID );

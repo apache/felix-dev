@@ -21,7 +21,6 @@ package org.apache.felix.eventadmin.impl.adapter;
 import java.util.Dictionary;
 import java.util.Hashtable;
 
-import org.apache.felix.eventadmin.impl.util.LogWrapper;
 import org.osgi.framework.BundleContext;
 import org.osgi.framework.Constants;
 import org.osgi.framework.ServiceEvent;
@@ -40,11 +39,11 @@ public class ServiceEventAdapter extends AbstractAdapter implements ServiceListe
 {
     /**
      * The constructor of the adapter. This will register the adapter with the
-     * given context as a <tt>ServiceListener</tt> and subsequently, will
+     * given context as a {@code ServiceListener} and subsequently, will
      * post received events via the given EventAdmin.
      *
      * @param context The bundle context with which to register as a listener.
-     * @param admin The <tt>EventAdmin</tt> to use for posting events.
+     * @param admin The {@code EventAdmin} to use for posting events.
      */
     public ServiceEventAdapter(final BundleContext context, final EventAdmin admin)
     {
@@ -60,7 +59,7 @@ public class ServiceEventAdapter extends AbstractAdapter implements ServiceListe
 
     /**
      * Once a Service event is received this method assembles and posts an event
-     * via the <tt>EventAdmin</tt> as specified in 113.6.5 OSGi R4 compendium.
+     * via the {@code EventAdmin} as specified in 113.6.5 OSGi R4 compendium.
      *
      * @param event The event to adapt.
      */
@@ -71,53 +70,22 @@ public class ServiceEventAdapter extends AbstractAdapter implements ServiceListe
 
         properties.put(EventConstants.EVENT, event);
 
-        properties.put(EventConstants.SERVICE, event
-            .getServiceReference());
+        properties.put(EventConstants.SERVICE, event.getServiceReference());
 
-        final Object id = event.getServiceReference().getProperty(
-            EventConstants.SERVICE_ID);
+        properties.put(EventConstants.SERVICE_ID,
+                event.getServiceReference().getProperty(EventConstants.SERVICE_ID));
 
-        if (null != id)
-        {
-            try
-            {
-                properties.put(EventConstants.SERVICE_ID, new Long(id
-                    .toString()));
-            } catch (NumberFormatException ne)
-            {
-                // LOG and IGNORE
-                LogWrapper.getLogger().log(event.getServiceReference(),
-                    LogWrapper.LOG_WARNING, "Exception parsing " +
-                    EventConstants.SERVICE_ID + "=" + id, ne);
-            }
-        }
+        properties.put(EventConstants.SERVICE_OBJECTCLASS,
+                event.getServiceReference().getProperty(Constants.OBJECTCLASS));
 
         final Object pid = event.getServiceReference().getProperty(
-            EventConstants.SERVICE_PID);
-
+                EventConstants.SERVICE_PID);
         if (null != pid)
         {
-            properties.put(EventConstants.SERVICE_PID, pid.toString());
+            properties.put(EventConstants.SERVICE_PID, pid);
         }
 
-        final Object objectClass = event.getServiceReference()
-            .getProperty(Constants.OBJECTCLASS);
-
-        if (null != objectClass)
-        {
-            if (objectClass instanceof String[])
-            {
-                properties.put(EventConstants.SERVICE_OBJECTCLASS,
-                    objectClass);
-            }
-            else
-            {
-                properties.put(EventConstants.SERVICE_OBJECTCLASS,
-                    new String[] { objectClass.toString() });
-            }
-        }
-
-        final StringBuffer topic = new StringBuffer(ServiceEvent.class
+        final StringBuilder topic = new StringBuilder(ServiceEvent.class
             .getName().replace('.', '/')).append('/');
 
         switch (event.getType())

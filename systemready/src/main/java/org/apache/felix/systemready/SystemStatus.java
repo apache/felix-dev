@@ -23,10 +23,15 @@ import java.util.stream.Stream;
 
 import org.apache.felix.systemready.CheckStatus.State;
 
+/**
+ * This framework is deprecated.
+ * @deprecated Use the Apache Felix Healthchecks instead.
+ */
+@Deprecated
 public class SystemStatus {
     private Collection<CheckStatus> checkStates;
 	private State state;
-    
+
     public SystemStatus(Collection<CheckStatus> checkStates) {
         this.checkStates = checkStates;
         Stream<State> states = checkStates.stream()
@@ -37,7 +42,7 @@ public class SystemStatus {
     public CheckStatus.State getState() {
         return this.state;
     }
-    
+
     public Collection<CheckStatus> getCheckStates() {
         return checkStates;
     }

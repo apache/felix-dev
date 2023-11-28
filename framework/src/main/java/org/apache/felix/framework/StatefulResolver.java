@@ -31,7 +31,6 @@ import java.util.Map.Entry;
 import java.util.NoSuchElementException;
 import java.util.Set;
 import java.util.concurrent.Executor;
-import java.util.concurrent.ExecutorService;
 import java.util.concurrent.LinkedBlockingQueue;
 import java.util.concurrent.ThreadFactory;
 import java.util.concurrent.ThreadPoolExecutor;
@@ -45,7 +44,6 @@ import org.apache.felix.framework.resolver.ResolveException;
 import org.apache.felix.framework.util.FelixConstants;
 import org.apache.felix.framework.util.ShrinkableCollection;
 import org.apache.felix.framework.util.Util;
-import org.apache.felix.framework.util.manifestparser.NativeLibrary;
 import org.apache.felix.framework.wiring.BundleRequirementImpl;
 import org.apache.felix.framework.wiring.BundleWireImpl;
 import org.apache.felix.resolver.ResolverImpl;
@@ -57,6 +55,7 @@ import org.osgi.framework.CapabilityPermission;
 import org.osgi.framework.Constants;
 import org.osgi.framework.PackagePermission;
 import org.osgi.framework.ServiceReference;
+import org.osgi.framework.ServiceRegistration;
 import org.osgi.framework.hooks.resolver.ResolverHook;
 import org.osgi.framework.hooks.resolver.ResolverHookFactory;
 import org.osgi.framework.wiring.BundleCapability;
@@ -91,6 +90,7 @@ class StatefulResolver
     private final Map<String, List<BundleRevision>> m_singletons;
     // Selected singleton bundle revisions.
     private final Set<BundleRevision> m_selectedSingletons;
+    private volatile ServiceRegistration<?> m_serviceRegistration;
 
     StatefulResolver(Felix felix, ServiceRegistry registry)
     {
@@ -168,10 +168,20 @@ class StatefulResolver
 
     void start()
     {
-        m_registry.registerService(m_felix,
-                new String[] { Resolver.class.getName() },
+        m_serviceRegistration = m_registry.registerService(m_felix,
+                new String[]{Resolver.class.getName()},
                 new ResolverImpl(m_logger, 1),
                 null);
+    }
+
+    void stop()
+    {
+        ServiceRegistration reg = m_serviceRegistration;
+        if (reg != null)
+        {
+            reg.unregister();
+            m_serviceRegistration = null;
+        }
     }
 
     synchronized void addRevision(BundleRevision br)

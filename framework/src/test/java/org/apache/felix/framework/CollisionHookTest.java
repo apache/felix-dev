@@ -214,7 +214,7 @@ public class CollisionHookTest extends TestCase
 
         try
         {
-            new BundleImpl(felixMock, null, archive);
+            new BundleImpl(felixMock, new BundleImpl(), archive);
             fail("Should have thrown a BundleException because the collision hook is not enabled");
         }
         catch (BundleException be)
@@ -290,7 +290,7 @@ public class CollisionHookTest extends TestCase
 
         try
         {
-            new BundleImpl(felixMock, null, archive);
+            new BundleImpl(felixMock, new BundleImpl(), archive);
             fail("Should have thrown a BundleException because the installed bundle is not unique");
         }
         catch (BundleException be)

@@ -22,12 +22,12 @@ import java.io.IOException;
 import java.util.EventListener;
 import java.util.Hashtable;
 
-import javax.servlet.Servlet;
-import javax.servlet.ServletConfig;
-import javax.servlet.ServletException;
-import javax.servlet.ServletRequest;
-import javax.servlet.ServletResponse;
-import javax.servlet.http.HttpServlet;
+import jakarta.servlet.Servlet;
+import jakarta.servlet.ServletConfig;
+import jakarta.servlet.ServletException;
+import jakarta.servlet.ServletRequest;
+import jakarta.servlet.ServletResponse;
+import jakarta.servlet.http.HttpServlet;
 
 import org.apache.felix.http.base.internal.AbstractHttpActivator;
 import org.apache.felix.http.base.internal.EventDispatcher;
@@ -103,6 +103,6 @@ public final class BridgeActivator extends AbstractHttpActivator
         props.put(Constants.SERVICE_VENDOR, VENDOR);
         getBundleContext().registerService(EventListener.class.getName(), dispatcher, props);
 
-        SystemLogger.info("Started bridged http services");
+        SystemLogger.LOGGER.info("Started bridged http services");
     }
 }

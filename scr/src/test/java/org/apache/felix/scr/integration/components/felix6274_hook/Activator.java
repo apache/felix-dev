@@ -24,7 +24,6 @@ import java.util.Iterator;
 import org.osgi.framework.Bundle;
 import org.osgi.framework.BundleActivator;
 import org.osgi.framework.BundleContext;
-import org.osgi.framework.Version;
 import org.osgi.framework.hooks.resolver.ResolverHook;
 import org.osgi.framework.hooks.resolver.ResolverHookFactory;
 import org.osgi.framework.namespace.PackageNamespace;
@@ -68,23 +67,20 @@ public class Activator implements BundleActivator, ResolverHookFactory, Resolver
     public void filterMatches(BundleRequirement requirement,
         Collection<BundleCapability> candidates)
     {
-        Bundle b = requirement.getResource().getBundle();
-
+        Bundle b = requirement.getRevision().getBundle();
         if (PackageNamespace.PACKAGE_NAMESPACE.equals(requirement.getNamespace())
             && "org.osgi.service.log".equals(
                 candidates.iterator().next().getAttributes().get(
                     PackageNamespace.PACKAGE_NAMESPACE))
-            && "org.apache.felix.log".equals(b.getSymbolicName())
-            && Version.valueOf("1.0.1").equals(b.getVersion()))
+            && (b.getSymbolicName() != null && !b.getSymbolicName().contains("6274_1")))
         {
-            // Felix log 1.0.1 incorrectly allows import of R7 log
+            // force bundles to import felix log package
             Iterator<BundleCapability> iCaps = candidates.iterator();
             while (iCaps.hasNext())
             {
-                if (!iCaps.next().getRevision().getBundle().equals(
-                    requirement.getRevision().getBundle()))
+                if (!"org.apache.felix.log".equals(
+                    iCaps.next().getRevision().getBundle().getSymbolicName()))
                 {
-                    System.out.println("TJW - removed");
                     iCaps.remove();
                 }
             }

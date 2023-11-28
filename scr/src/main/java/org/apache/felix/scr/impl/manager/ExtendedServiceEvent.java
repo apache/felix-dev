@@ -25,6 +25,7 @@ import java.util.List;
 import org.osgi.framework.ServiceEvent;
 import org.osgi.framework.ServiceReference;
 
+@SuppressWarnings("serial")
 public class ExtendedServiceEvent extends ServiceEvent
 {
     private List<AbstractComponentManager<?>> managers;
@@ -34,7 +35,7 @@ public class ExtendedServiceEvent extends ServiceEvent
         super(source.getType(), source.getServiceReference());
     }
 
-    public ExtendedServiceEvent(int type, ServiceReference ref)
+    public ExtendedServiceEvent(int type, ServiceReference<?> ref)
     {
         super(type, ref);
     }

@@ -33,18 +33,22 @@ public class B
 
     private List<A> as = new ArrayList<A>();
 
+    @SuppressWarnings("unused")
     private boolean activated;
 
+    @SuppressWarnings("unused")
     private void activate(ComponentContext cc)
     {
         activated = true;
     }
 
+    @SuppressWarnings("unused")
     private void setA(A a)
     {
         as.add( a );
     }
 
+    @SuppressWarnings("unused")
     private void unsetA(A a)
     {
         as.remove( a );

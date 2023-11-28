@@ -22,14 +22,11 @@ import static org.hamcrest.Matchers.equalTo;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNull;
 import static org.junit.Assert.assertThat;
+import static org.junit.Assert.assertTrue;
 import static org.ops4j.pax.tinybundles.core.TinyBundles.bundle;
 
 import javax.inject.Inject;
 
-import org.apache.felix.rootcause.DSComp;
-import org.apache.felix.rootcause.DSRef;
-import org.apache.felix.rootcause.DSRootCause;
-import org.apache.felix.rootcause.RootCausePrinter;
 import org.apache.felix.rootcause.examples.CompWithCyclicRef;
 import org.apache.felix.rootcause.examples.CompWithMissingConfig;
 import org.apache.felix.rootcause.examples.CompWithMissingRef;
@@ -54,9 +51,9 @@ public class DSRootCauseTest extends BaseTest {
 
     @Inject
     ServiceComponentRuntime scr;
-    
+
     DSRootCause dsRootCause;
-    
+
     @Configuration
     public Option[] configuration() {
         return new Option[] {
@@ -70,13 +67,13 @@ public class DSRootCauseTest extends BaseTest {
                         )
         };
     }
-    
+
     @Before
     public void before() {
         dsRootCause = new DSRootCause(scr);
     }
 
-    
+
     @Test
     public void testMissingConfig() throws InterruptedException {
         ComponentDescriptionDTO desc = getComponentDesc(CompWithMissingConfig.class);
@@ -85,7 +82,7 @@ public class DSRootCauseTest extends BaseTest {
         assertEquals("CompWithMissingConfig", rootCause.desc.name);
         assertNull(rootCause.config);
     }
-    
+
     @Test
     public void testMissingRef() throws InterruptedException {
         ComponentDescriptionDTO desc = getComponentDesc(CompWithMissingRef.class);
@@ -98,7 +95,7 @@ public class DSRootCauseTest extends BaseTest {
         assertEquals("CompWithMissingConfig", candidate.desc.name);
         assertNull(candidate.config);
     }
-    
+
     @Test
     public void testMissingRef2() throws InterruptedException {
         ComponentDescriptionDTO desc = getComponentDesc(CompWithMissingRef2.class);
@@ -111,19 +108,21 @@ public class DSRootCauseTest extends BaseTest {
         assertEquals("CompWithMissingRef", candidate.desc.name);
         assertNull(candidate.config);
     }
-    
+
     @Test
     public void testNoService() throws InterruptedException {
         ComponentDescriptionDTO desc = getComponentDesc(CompWithoutService.class);
         DSComp rootCause = dsRootCause.getRootCause(desc);
-        assertThat(rootCause.desc.serviceInterfaces.length, equalTo(0)); 
+        assertThat(rootCause.desc.serviceInterfaces.length, equalTo(0));
         new RootCausePrinter().print(rootCause);
     }
-    
-    @Test(expected = IllegalStateException.class)
+
+    @Test
     public void testCyclic() throws InterruptedException {
         ComponentDescriptionDTO desc = getComponentDesc(CompWithCyclicRef.class);
-        dsRootCause.getRootCause(desc);
+        DSComp rootCause = dsRootCause.getRootCause(desc);
+        assertEquals(1, rootCause.unsatisfied.size());
+        assertTrue(rootCause.unsatisfied.get(0).candidates.isEmpty());
     }
 
 }

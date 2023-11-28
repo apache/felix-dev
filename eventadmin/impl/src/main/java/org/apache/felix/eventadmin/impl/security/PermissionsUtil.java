@@ -33,11 +33,11 @@ public abstract class PermissionsUtil
     private static volatile boolean createPermissions = true;
 
     /**
-     * Creates a <tt>TopicPermission</tt> for the given topic and the type PUBLISH
+     * Creates a {@code TopicPermission} for the given topic and the type PUBLISH
      *
      * @param topic The target topic
      *
-     * @return The created permission or <tt>null</tt> in case the
+     * @return The created permission or {@code null} in case the
      *         permission could not be created.
      *
      * @see org.osgi.service.event.TopicPermission
@@ -60,12 +60,12 @@ public abstract class PermissionsUtil
     }
 
     /**
-     * Creates a <tt>TopicPermission</tt> for the given topic and the type SUBSCRIBE
+     * Creates a {@code TopicPermission} for the given topic and the type SUBSCRIBE
      * Note that a
      *
      * @param topic The target topic
      *
-     * @return The created permission or a <tt>null</tt> in case the
+     * @return The created permission or a {@code null} in case the
      *      permission could not be created.
      *
      * @see org.osgi.service.event.TopicPermission

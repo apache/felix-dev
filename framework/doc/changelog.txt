@@ -1,3 +1,67 @@
+Changes from 7.0.4 to 7.0.5
+---------------------------
+
+** Bug
+    * [FELIX-6536] - DirectoryRevision causes java.io.IOException: File outside the root on windows
+
+Changes from 7.0.3 to 7.0.4
+---------------------------
+
+** Bug
+    * [FELIX-6522] - Empty name is not allowed in JDK17+
+    * [FELIX-6533] - Felix released as milestone version cannot parse it's own version id
+    * [FELIX-6534] - System bundle findEntries returns entries in case of fragments
+
+** Improvement
+    * [FELIX-6516] - Remove synchronization on Integer in Felix Framework
+    * [FELIX-6529] - Improve memory usage ManifestParser using String deduplication
+    * [FELIX-6535] - Cleanup path handling in DirectoryContent
+
+Changes from 7.0.1 to 7.0.3
+---------------------------
+
+** Bug
+    * [FELIX-6429] - IllegalArgumentException that should not happen
+    * [FELIX-6442] - NPE when generating ServiceReferenceDTOs
+    * [FELIX-6467] - `AllPermission` not checked when updating `ConditionalPermissionAdmin`
+    * [FELIX-6468] - felix.main-7.0.1 jar file entries have bogus timestamps
+
+
+Changes from 7.0.0 to 7.0.1
+---------------------------
+
+** Improvement
+    * [FELIX-6287] - Support running on module path
+    * [FELIX-6398] - Update framework packages to osgi.core 8
+
+** Bug
+    * [FELIX-6416] - Special case JDK9+ URLClassLoader url resource loading
+    * [FELIX-6430] - Felix uses sun.misc.Unsafe, crashed on JDK 17
+
+Changes from 6.0.4 to 7.0.0
+---------------------------
+
+** Improvement
+    * [FELIX-6369] - Implement R8 core spec
+    * [FELIX-6175] - default.properties resource file would conflict with other libraries
+
+** Bug
+    * [FELIX-5975] - URLHandlersStreamHandlerProxy - OPEN_CONNECTION_PROXY null
+    * [FELIX-6163] - ServiceTracker should not use System.currentTimeMillis() to check timeouts
+    * [FELIX-6184] - NoClassDefFoundError: jdk/internal/reflect/ConstructorAccessorImpl with Oracle JDK 11.0.3
+    * [FELIX-6294] - Missing trailing slash with Bundle.getResource() for directory entry
+
+Changes from 6.0.3 to 6.0.4
+---------------------------
+
+** Bug
+    * [FELIX-6178] - org.osgi.framework.Bundle#getServicesInUse returns services with usage count = 0
+    * [FELIX-6222] - Support for os.name Capability is missing for Windows Server 2019
+    * [FELIX-6297] - unclosed InputStream on Bundle.start
+    * [FELIX-6318] - Tiny thread-safety bug in BundleWiringImpl
+    * [FELIX-6326] - Cannot read bundled resources with hash in the filename
+    * [FELIX-6331] - Race condition in unget service from service factory
+
 Changes from 6.0.2 to 6.0.3
 ---------------------------
 

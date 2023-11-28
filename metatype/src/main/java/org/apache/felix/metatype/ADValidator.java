@@ -27,29 +27,29 @@ import org.osgi.service.metatype.AttributeDefinition;
 /**
  * Provides various validation routines used by the {@link AD#validate(String)}
  * method.
- * 
+ *
  * @author <a href="mailto:dev@felix.apache.org">Felix Project Team</a>
  */
 final class ADValidator
 {
     /**
-     * Validates a given input string according to the type specified by the given attribute 
+     * Validates a given input string according to the type specified by the given attribute
      * definition.
      * <p>
      * The validation is done in the following way:
      * </p>
      * <ul>
-     * <li>If the input is undefined (ie. <code>null</code>), and the attribute is mandatory, the 
-     * validation fails due to a missing value. If the attribute is optional, the input is 
+     * <li>If the input is undefined (ie. <code>null</code>), and the attribute is mandatory, the
+     * validation fails due to a missing value. If the attribute is optional, the input is
      * accepted;</li>
      * <li>If the input represents a <em>boolean</em> value, it is tested whether it is defined (in
      * case of non-zero cardinality) and represents either <tt>"true"</tt> or <tt>"false"</tt>. The
      * minimum and maximum parameters are <b>not</b> used in this validation;</li>
-     * <li>If the input represents a <em>character</em> value, it is tested whether it is defined 
-     * (in case of non-zero cardinality). The character value must be defined within the character 
+     * <li>If the input represents a <em>character</em> value, it is tested whether it is defined
+     * (in case of non-zero cardinality). The character value must be defined within the character
      * range specified by the minimum and maximum parameters (if defined);</li>
      * <li>If the input represents a <em>numeric</em> value, it is tested whether it is defined (in
-     * case of non-zero cardinality). The numeric value must be defined within the numeric range 
+     * case of non-zero cardinality). The numeric value must be defined within the numeric range
      * specified by the minimum and maximum parameters (if defined);</li>
      * <li>If the input represents a <em>string</em> or <em>password</em>, it is tested whether it
      * is defined (in case of non-zero cardinality). The length of the string value must be in the
@@ -57,9 +57,9 @@ final class ADValidator
      * </ul>
      * <p>
      * For all types of attributes, if it defines option values, the input should be present as one
-     * of the defined option values. 
+     * of the defined option values.
      * </p>
-     * 
+     *
      * @param ad
      *            the attribute definition to use in the validation;
      * @param rawInput
@@ -122,7 +122,7 @@ final class ADValidator
 
     /**
      * Searches for a given search value in a given array of options.
-     * 
+     *
      * @param searchValue
      *            the value to search for;
      * @param optionValues
@@ -152,7 +152,7 @@ final class ADValidator
 
     /**
      * Parses a given string value into a numeric type.
-     * 
+     *
      * @param type
      *            the type to parse;
      * @param value
@@ -195,7 +195,7 @@ final class ADValidator
     /**
      * Parses a given string value as character, allowing <code>null</code>
      * -values and empty values to be given as input.
-     * 
+     *
      * @param value
      *            the value to parse as character, can be <code>null</code> or
      *            an empty value.
@@ -212,10 +212,10 @@ final class ADValidator
     }
 
     /**
-     * Parses a given string value as numeric value, allowing 
-     * <code>null</code>-values and invalid numeric values to be given as 
+     * Parses a given string value as numeric value, allowing
+     * <code>null</code>-values and invalid numeric values to be given as
      * input.
-     * 
+     *
      * @param type the type of number, should only be a numeric type;
      * @param value
      *            the value to parse as integer, can be <code>null</code> or a
@@ -241,7 +241,7 @@ final class ADValidator
 
     /**
      * Validates a given input string as boolean value.
-     * 
+     *
      * @param ad
      *            the attribute definition to use in the validation;
      * @param input
@@ -278,7 +278,7 @@ final class ADValidator
 
     /**
      * Validates a given input string as character value.
-     * 
+     *
      * @param ad
      *            the attribute definition to use in the validation;
      * @param input
@@ -332,7 +332,7 @@ final class ADValidator
 
     /**
      * Validates a given input string as numeric value.
-     * 
+     *
      * @param ad
      *            the attribute definition to use in the validation;
      * @param input
@@ -387,7 +387,7 @@ final class ADValidator
 
     /**
      * Validates a given input string as string (or password).
-     * 
+     *
      * @param ad
      *            the attribute definition to use in the validation;
      * @param input
@@ -406,12 +406,9 @@ final class ADValidator
         for (int i = 0; i < input.length; i++)
         {
             String value = input[i];
-            int length = (value == null) ? 0 : value.length();
-
-            if (ad.isRequired() && ((value == null) || (length == 0)))
+            final int length = value == null ? 0 : value.length();
+            if (ad.isRequired() && value == null)
             {
-                // Possible if the cardinality != 0 and input was something like
-                // "0,,1"...
                 return AD.VALIDATE_MISSING;
             }
             // Check whether the minimum length is adhered for all values...

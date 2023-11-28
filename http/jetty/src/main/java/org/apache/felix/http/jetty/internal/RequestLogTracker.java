@@ -16,16 +16,22 @@
  */
 package org.apache.felix.http.jetty.internal;
 
-import org.apache.felix.http.base.internal.logger.SystemLogger;
-import org.eclipse.jetty.server.Request;
-import org.eclipse.jetty.server.RequestLog;
-import org.eclipse.jetty.server.Response;
-import org.osgi.framework.*;
-import org.osgi.util.tracker.ServiceTracker;
-
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ConcurrentMap;
+
+import org.apache.felix.http.base.internal.logger.SystemLogger;
+import org.apache.felix.http.base.internal.util.ServiceUtils;
+import org.eclipse.jetty.server.Request;
+import org.eclipse.jetty.server.RequestLog;
+import org.eclipse.jetty.server.Response;
+import org.osgi.framework.BundleContext;
+import org.osgi.framework.Constants;
+import org.osgi.framework.Filter;
+import org.osgi.framework.FrameworkUtil;
+import org.osgi.framework.InvalidSyntaxException;
+import org.osgi.framework.ServiceReference;
+import org.osgi.util.tracker.ServiceTracker;
 
 /**
  * An instance of Jetty's RequestLog that dispatches to registered RequestLog services in the service registry. A filter
@@ -38,7 +44,7 @@ import java.util.concurrent.ConcurrentMap;
  */
 class RequestLogTracker extends ServiceTracker<RequestLog, RequestLog>  implements RequestLog {
 
-    private static final int MAX_ERROR_COUNT = 100;
+    public static final int MAX_ERROR_COUNT = 100;
 
     private final ConcurrentMap<ServiceReference<?>, RequestLog> logSvcs = new ConcurrentHashMap<>();
     private final ConcurrentMap<ServiceReference<?>, Integer> naughtyStep = new ConcurrentHashMap<>();
@@ -62,8 +68,10 @@ class RequestLogTracker extends ServiceTracker<RequestLog, RequestLog>  implemen
 
     @Override
     public RequestLog addingService(ServiceReference<RequestLog> reference) {
-        RequestLog logSvc = context.getService(reference);
-        logSvcs.put(reference, logSvc);
+        RequestLog logSvc = ServiceUtils.safeGetService(context, reference);
+        if ( logSvc != null ) {
+            logSvcs.put(reference, logSvc);
+        }
         return logSvc;
     }
 
@@ -71,7 +79,7 @@ class RequestLogTracker extends ServiceTracker<RequestLog, RequestLog>  implemen
     public void removedService(ServiceReference<RequestLog> reference, RequestLog logSvc) {
         logSvcs.remove(reference);
         naughtyStep.remove(reference);
-        context.ungetService(reference);
+        ServiceUtils.safeUngetService(context, reference);
     }
 
     @Override
@@ -90,8 +98,8 @@ class RequestLogTracker extends ServiceTracker<RequestLog, RequestLog>  implemen
      * error limit.
      */
     private void processError(ServiceReference<?> reference, Exception e) {
-        SystemLogger.error(reference, String.format("Error dispatching to request log service ID %d from bundle %s:%s",
-                reference.getProperty(Constants.SERVICE_ID), reference.getBundle().getSymbolicName(), reference.getBundle().getVersion()), e);
+        SystemLogger.LOGGER.error(SystemLogger.formatMessage(reference, String.format("Error dispatching to request log service ID %d from bundle %s:%s",
+                reference.getProperty(Constants.SERVICE_ID), reference.getBundle().getSymbolicName(), reference.getBundle().getVersion())), e);
 
         int naughty = naughtyStep.merge(reference, 1, Integer::sum);
         if (naughty >= MAX_ERROR_COUNT) {
@@ -99,8 +107,8 @@ class RequestLogTracker extends ServiceTracker<RequestLog, RequestLog>  implemen
             // so we will not invoke the service again.
             logSvcs.remove(reference);
             naughtyStep.remove(reference);
-            SystemLogger.error(reference, String.format("RequestLog service ID %d from bundle %s:%s threw too many errors, it will no longer be invoked.",
-                    reference.getProperty(Constants.SERVICE_ID), reference.getBundle().getSymbolicName(), reference.getBundle().getVersion()), null);
+            SystemLogger.LOGGER.error(SystemLogger.formatMessage(reference, String.format("RequestLog service ID %d from bundle %s:%s threw too many errors, it will no longer be invoked.",
+                    reference.getProperty(Constants.SERVICE_ID), reference.getBundle().getSymbolicName(), reference.getBundle().getVersion())));
         }
     }
 }

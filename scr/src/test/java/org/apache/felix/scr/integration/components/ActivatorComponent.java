@@ -36,7 +36,7 @@ public class ActivatorComponent
 
     private static ActivatorComponent activatorComponent;
 
-    private ServiceRegistration registration;
+    private ServiceRegistration<SimpleService> registration;
 
     private SimpleService simpleService;
 
@@ -54,13 +54,14 @@ public class ActivatorComponent
         }
         if ( configuration.containsKey( FLAG_REGISTER_SERVICE ) )
         {
-            registration = context.registerService( SimpleService.class.getName(), new SimpleServiceImpl(), null );
+            registration = context.registerService(SimpleService.class,
+                new SimpleServiceImpl(), null);
         }
         if ( activatorComponent != null )
         {
         	    throw new IllegalStateException( "not the only activator component");
         }
-        this.activatorComponent = this;
+        ActivatorComponent.activatorComponent = this;
     }
 
 

@@ -1,5 +1,5 @@
 /*
- * Copyright (c) OSGi Alliance (2012, 2013). All Rights Reserved.
+ * Copyright (c) OSGi Alliance (2012, 2019). All Rights Reserved.
  * 
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -15,17 +15,17 @@
  */
 
 /**
- * Namespace Package Version 1.1.
+ * Namespace Package Version 1.2.
  * 
  * <p>
  * Bundles should not need to import this package at runtime since all
  * the types in this package just contain constants for capability and 
  * requirement namespaces specified by the OSGi Alliance.
  * 
- * @author $Id$
+ * @author $Id: 43f3804d39ad166dc082926b3a3679be67962fcc $
  */
 
-@Version("1.1")
+@Version("1.2")
 package org.osgi.framework.namespace;
 
 import org.osgi.annotation.versioning.Version;

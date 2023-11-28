@@ -335,9 +335,8 @@ public class ComponentMetadata
         {
             throw new IllegalArgumentException( "Cannot add a null property" );
         }
-        m_propertyMetaData.add( newProperty );
+        m_propertyMetaData.add(newProperty);
     }
-
 
     /**
      * Used to add a factory property to the instance
@@ -949,7 +948,16 @@ public class ComponentMetadata
         for ( PropertyMetadata propMeta: m_propertyMetaData )
         {
             propMeta.validate( this );
-            m_properties.put( propMeta.getName(), propMeta.getValue() );
+            if (m_dsVersion.isDS15() && propMeta.isReferenceTarget())
+            {
+                // for DS 15 the reference target property must not override,
+                // only add if the key does not exist yet
+                m_properties.putIfAbsent(propMeta.getName(), propMeta.getValue());
+            }
+            else
+            {
+                m_properties.put(propMeta.getName(), propMeta.getValue());
+            }
         }
         m_propertyMetaData.clear();
 

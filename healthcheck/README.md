@@ -107,19 +107,17 @@ HEALTH\_CHECK\_ERROR | no | **Actual status unknown** <br>There was an error in 
 
 `HealthCheck` services are created via OSGi configurations. Generic health check service properties are interpreted by the health check executor service. Custom health check service properties can be used by the health check implementation itself to configure its behaviour.
 
-The following generic Health Check properties may be used for all checks:
+The following generic Health Check properties may be used for all checks (**all service properties are optional**):
 
 Property    | Type     | Description  
 ----------- | -------- | ------------
 hc.name     | String   | The name of the health check as shown in UI
 hc.tags     | String[] | List of tags: Both Felix Console Plugin and Health Check servlet support selecting relevant checks by providing a list of tags
 hc.mbean.name | String | Makes the HC result available via given MBean name. If not provided no MBean is created for that `HealthCheck`
-hc.async.cronExpression | String | Used to schedule the execution of a `HealthCheck` at regular intervals, using a cron expression as supported by the [Quartz Cron Trigger](http://www.quartz-scheduler.org/api/previous_versions/1.8.5/org/quartz/CronTrigger.html) module. 
-hc.async.intervalInSec | Long | Used to schedule the execution of a `HealthCheck` at regular intervals, specifying a period in seconds
+hc.async.cronExpression | String | Executes the health check asynchronously using the cron expression provided. Use this for **long running health checks** to avoid execution every time the tag/name is queried. Prefer configuring a HealthCheckMonitor if you only want to regularly execute a HC. 
+hc.async.intervalInSec | Long | Async execution like `hc.async.cronExpression` but using an interval
 hc.resultCacheTtlInMs | Long | Overrides the global default TTL as configured in health check executor for health check responses
 hc.keepNonOkResultsStickyForSec | Long | If given, non-ok results from past executions will be taken into account as well for the given seconds (use Long.MAX_VALUE for indefinitely). Useful for unhealthy system states that disappear but might leave the system at an inconsistent state (e.g. an event queue overflow where somebody needs to intervene manually) or for checks that should only go back to OK with a delay (can be useful for load balancers).
-
-All service properties are optional.
 
 ### Annotations to simplify configuration of custom Health Checks
 
@@ -163,7 +161,7 @@ CPU | org.apache.felix.hc.generalchecks.CpuCheck | no | Checks for CPU usage - `
 Thread Usage | org.apache.felix.hc.generalchecks.ThreadUsageCheck | no | Checks via `ThreadMXBean.findDeadlockedThreads()` for deadlocks and analyses the CPU usage of each thread via a configurable time period (`samplePeriodInMs` defaults to 200ms). Uses `cpuPercentageThresholdWarn` (default 95%) to `WARN` about high thread utilisation.   
 JMX Attribute Check | org.apache.felix.hc.generalchecks.JmxAttributeCheck | yes | Allows to check an arbitrary JMX attribute (using the configured mbean `mbean.name`'s attribute `attribute.name`) against a given constraint `attribute.value.constraint` (see [Constraints](#constraints)). Can check multiple attributes by providing additional config properties with numbers: `mbean2.name` (defaults to `mbean.name` if ommitted), `attribute2.name` and `attribute2.value.constraint` and `mbean3.name`, `attribute3.name` and `attribute3.value.constraint`
 Http Requests Check | org.apache.felix.hc.generalchecks.HttpRequestsCheck | yes | Allows to check a list of URLs against response code, response headers, timing, response content (plain content via RegEx or JSON via path expression). See [Request Spec Syntax](#request-spec-syntax)
-Scripted Check | org.apache.felix.hc.generalchecks.ScriptedHealthCheck | yes | Allows to run an arbitrary script. To configure use either `script` (to provide a script directly) or `scriptUrl` (to link to an external script, usually a file URL). Use `language` property to refer to a registered script engine (e.g. install bundle `groovy-all` to be able to use language `groovy`)
+Scripted Check | org.apache.felix.hc.generalchecks.ScriptedHealthCheck | yes | Allows to run an arbitrary script. To configure use either `script` to provide a script directly or `scriptUrl` to link to an external script (may be a file URL or a link to a JCR file if a Sling Repository exists, e.g. `jcr:/etc/hc/check1.groovy`). Use the `language` property to refer to a registered script engine (e.g. install bundle `groovy-all` to be able to use language `groovy`). The script has the bindings `log`, `scriptHelper` and `bundleContext`. `log` is an instance of `org.apache.felix.hc.api.FormattingResultLog` and is used to define the result of the HC. `scriptHelper.getService(classObj)` can be used as shortcut to retrieve a service. `scriptHelper.getServices(classObj, filter)` can be used to retrieve multiple services for a class using given filter. For all services retrieved via scriptHelper, `ungetService(...)` is called automatically at the end of the script execution. If a Sling repository is available, the bindings `resourceResolver` and `session` are available automatically (for this case a serivce user mapping for `org.apache.felix.healthcheck.generalchecks:scripted` is required). The script does not need to return any value, but if it does and it is a `org.apache.felix.hc.api.Result`, that result and entries in `log` are combined.
 
 ### Constraints
 
@@ -215,6 +213,7 @@ selects all `HealthCheck` having the `osgi` tag but not the `security` tag, for 
 For advanced use cases it is also possible to use the API directly by using the interface `org.apache.felix.hc.api.execution.HealthCheckExecutor`.
 
 ### Configuring the Health Check Executor
+
 The health check executor can **optionally** be configured via service PID `org.apache.felix.hc.core.impl.executor.HealthCheckExecutorImpl`:
 
 Property    | Type     | Default | Description  
@@ -230,15 +229,17 @@ Property    | Type     | Default | Description
 Health checks that define the service property `hc.mbean.name` will automatically get the JMX bean with that name, the domain `org.apache.felix.healthcheck` and with the type `HealthCheck` registered. The bean provides access to the `Result` (status, logs, etc.)
 
 ### Health Check Servlet
+
 The health check servlet allows to query the checks via http. It provides
 similar features to the Web Console plugin described above, with output in HTML, JSON (plain or jsonp) and TXT (concise or verbose) formats (see HTML format rendering page for more documentation).
 
 The Health Checks Servlet is disabled by default, to enable it create an OSGi configuration like
 
-    PID = org.apache.felix.hc.core.impl.servlet.HealthCheckExecutorServlet
+    FACTORY_PID = package org.apache.felix.hc.core.impl.servlet.HealthCheckExecutorServlet
     servletPath = /system/health
+    servletContextName = org.osgi.service.http
 
-which specifies the servlet's base path. That URL then returns an HTML page, by default with the results of all active health checks and
+which specifies the servlet's base path and the servlet context to use. That URL then returns an HTML page, by default with the results of all active health checks and
 with instructions at the end of the page about URL parameters which can be used to select specific Health Checks and control their execution and output format.
 
 Note that by design **the Health Checks Servlet doesn't do any access control by itself** to ensure it can detect unhealthy states of the authentication itself. Make sure the configured path is only accessible to relevant infrastructure and operations people. Usually all `/system/*` paths are only accessible from a local network and not routed to the Internet.
@@ -276,7 +277,10 @@ Property    | Type     | Default | Description
 `registerHealthyMarkerService` | boolean | true | For the case a given tag/name is healthy, will register a service `org.apache.felix.hc.api.condition.Healthy` with property tag=<tagname> (or name=<hc.name>) that other services can depend on. For the special case of the tag `systemready`, the marker service `org.apache.felix.hc.api.condition.SystemReady` is registered
 `registerUnhealthyMarkerService` | boolean | false | For the case a given tag/name is **un**healthy, will register a service `org.apache.felix.hc.api.condition.Unhealthy` with property tag=<tagname> (or name=<hc.name>) that other services can depend on
 `treatWarnAsHealthy` | boolean | true | `WARN` usually means [the system is usable](#semantic-meaning-of-health-check-results), hence WARN is treated as healthy by default. When set to false `WARN` is treated as `Unhealthy`
-`sendEvents` | enum `NONE`, `STATUS_CHANGES` or `ALL` | `STATUS_CHANGES` | Whether to send events for health check status changes. See [below](#osgi-events-for-health-check-status-changes) for details.
+`sendEvents` | enum `NONE`, `STATUS_CHANGES`, `STATUS_CHANGES_OR_NOT_OK` or `ALL` | `STATUS_CHANGES` | Whether to send events for health check status changes. See [below](#osgi-events-for-health-check-status-changes) for details.
+`logResults` | enum `NONE`, `STATUS_CHANGES`, `STATUS_CHANGES_OR_NOT_OK` or `ALL` | `NONE ` | Whether to log the result of the monitor to the regular log file
+`logAllResultsAsInfo` | boolean | false | If `logResults` is enabled and this is enabled, all results will be logged with INFO log level. Otherwise WARN and INFO are used depending on the health state.
+`isDynamic` | boolean | false | In dynamic mode all checks for names/tags are monitored individually (this means events are sent/services registered for name only, never for given tags). This mode allows to use `*` in tags to query for all health checks in system. It is also possible to query for all except certain tags by using `-`, e.g. by configuring the values `*`, `-tag1` and `-tag2` for `tags`.
 
 ### Marker Service to depend on a health status in SCR Components
 

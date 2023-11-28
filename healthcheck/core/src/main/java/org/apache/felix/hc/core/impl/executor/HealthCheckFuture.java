@@ -46,6 +46,10 @@ public class HealthCheckFuture extends FutureTask<ExecutionResult> {
 
     private final static Logger LOG = LoggerFactory.getLogger(HealthCheckFuture.class);
 
+    private static Result createResult(final HealthCheckMetadata metadata, Exception e) {
+        return new Result(Result.Status.HEALTH_CHECK_ERROR, "Exception during execution of '" + metadata.getName() + "'", e);
+    }
+
     private final HealthCheckMetadata metadata;
     private final Date createdTime;
 
@@ -60,6 +64,7 @@ public class HealthCheckFuture extends FutureTask<ExecutionResult> {
                 Result resultFromHealthCheck = null;
                 ExecutionResult executionResult = null;
 
+                @SuppressWarnings("unchecked")
                 Object healthCheckObject = bundleContext.getService(metadata.getServiceReference());
                 try {
                     if (healthCheckObject != null) {
@@ -71,10 +76,11 @@ public class HealthCheckFuture extends FutureTask<ExecutionResult> {
                     } else {
                         throw new IllegalStateException("Service cannot be retrieved - probably activate() failed or there are unsatisfied references");
                     }
-
                 } catch (final Exception e) {
-                    resultFromHealthCheck = new Result(Result.Status.HEALTH_CHECK_ERROR,
-                            "Exception during execution of '" + metadata.getName() + "'", e);
+                    resultFromHealthCheck = createResult(metadata, e);
+                } catch (final Throwable t) {
+                	Exception e = new RuntimeException("System error during health check execution", t);
+                    resultFromHealthCheck = createResult(metadata, e);
                 } finally {
                     // unget service ref
                     bundleContext.ungetService(metadata.getServiceReference());

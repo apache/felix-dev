@@ -27,6 +27,7 @@ import java.util.Hashtable;
 import org.apache.felix.scr.integration.components.MutatingService;
 import org.apache.felix.scr.integration.components.MutatingServiceConsumer;
 import org.apache.felix.scr.integration.components.SimpleServiceImpl;
+import org.junit.Assert;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.ops4j.pax.exam.junit.PaxExam;
@@ -35,7 +36,6 @@ import org.osgi.framework.ServiceReference;
 import org.osgi.service.component.runtime.dto.ComponentConfigurationDTO;
 import org.osgi.service.component.runtime.dto.ComponentDescriptionDTO;
 
-import junit.framework.Assert;
 import junit.framework.TestCase;
 
 
@@ -58,9 +58,10 @@ public class MutablePropertiesTest extends ComponentTestBase
         String componentName = "components.mutable.properties";
         findComponentConfigurationByName(componentName, ComponentConfigurationDTO.SATISFIED);
 
-        ServiceReference[] serviceReferences = bundleContext.getServiceReferences( MutatingService.class.getName(), "(service.pid=" + componentName + ")" );
+        ServiceReference<?>[] serviceReferences = bundleContext.getServiceReferences(
+            MutatingService.class.getName(), "(service.pid=" + componentName + ")");
         TestCase.assertEquals( 1, serviceReferences.length );
-        ServiceReference serviceReference = serviceReferences[0];
+        ServiceReference<?> serviceReference = serviceReferences[0];
         Assert.assertEquals("otherValue", serviceReference.getProperty(PROP_NAME));
         Assert.assertEquals("p1", serviceReference.getProperty("p1"));
         Assert.assertEquals("p2", serviceReference.getProperty("p2"));
@@ -69,7 +70,8 @@ public class MutablePropertiesTest extends ComponentTestBase
         MutatingService s = ( MutatingService ) bundleContext.getService(serviceReference );
         Assert.assertNotNull(s);
         findComponentConfigurationByName(componentName, ComponentConfigurationDTO.ACTIVE);
-        Dictionary d = new Hashtable(Collections.singletonMap( PROP_NAME, "anotherValue" ));
+        Dictionary<String, String> d = new Hashtable<>(
+            Collections.singletonMap(PROP_NAME, "anotherValue"));
         s.updateProperties(d);
         Assert.assertEquals("anotherValue", serviceReference.getProperty(PROP_NAME));
         checkPropertiesNotPresent(serviceReference, "p1", "p2");
@@ -96,9 +98,10 @@ public class MutablePropertiesTest extends ComponentTestBase
         String componentName = "components.mutable.properties.return";
         findComponentConfigurationByName(componentName, ComponentConfigurationDTO.SATISFIED);
 
-        ServiceReference[] serviceReferences = bundleContext.getServiceReferences( MutatingService.class.getName(), "(service.pid=" + componentName + ")" );
+        ServiceReference<?>[] serviceReferences = bundleContext.getServiceReferences(
+            MutatingService.class.getName(), "(service.pid=" + componentName + ")");
         TestCase.assertEquals( 1, serviceReferences.length );
-        ServiceReference serviceReference = serviceReferences[0];
+        ServiceReference<?> serviceReference = serviceReferences[0];
         Assert.assertEquals("otherValue", serviceReference.getProperty(PROP_NAME));
         Assert.assertEquals("p1", serviceReference.getProperty("p1"));
         Assert.assertEquals("p2", serviceReference.getProperty("p2"));
@@ -110,7 +113,8 @@ public class MutablePropertiesTest extends ComponentTestBase
         Assert.assertEquals("p1", serviceReference.getProperty("p1"));
         Assert.assertEquals("p2", serviceReference.getProperty("p2"));
         findComponentConfigurationByName(componentName, ComponentConfigurationDTO.ACTIVE);
-        Dictionary d = new Hashtable(Collections.singletonMap( PROP_NAME, "anotherValue" ));
+        Dictionary<String, String> d = new Hashtable<>(
+            Collections.singletonMap(PROP_NAME, "anotherValue"));
         s.updateProperties(d);
         Assert.assertEquals("anotherValue", serviceReference.getProperty(PROP_NAME));
         checkPropertiesNotPresent(serviceReference, "p1", "p2");
@@ -139,9 +143,10 @@ public class MutablePropertiesTest extends ComponentTestBase
         String componentName = "components.mutable.properties.return.public";
         findComponentConfigurationByName(componentName, ComponentConfigurationDTO.SATISFIED);
 
-        ServiceReference[] serviceReferences = bundleContext.getServiceReferences( MutatingService.class.getName(), "(service.pid=" + componentName + ")" );
+        ServiceReference<?>[] serviceReferences = bundleContext.getServiceReferences(
+            MutatingService.class.getName(), "(service.pid=" + componentName + ")");
         TestCase.assertEquals( 1, serviceReferences.length );
-        ServiceReference serviceReference = serviceReferences[0];
+        ServiceReference<?> serviceReference = serviceReferences[0];
         Assert.assertEquals("otherValue", serviceReference.getProperty(PROP_NAME));
         Assert.assertEquals("p1", serviceReference.getProperty("p1"));
         Assert.assertEquals("p2", serviceReference.getProperty("p2"));
@@ -153,7 +158,8 @@ public class MutablePropertiesTest extends ComponentTestBase
         Assert.assertEquals("p1", serviceReference.getProperty("p1"));
         Assert.assertEquals("p2", serviceReference.getProperty("p2"));
         findComponentConfigurationByName(componentName, ComponentConfigurationDTO.ACTIVE);
-        Dictionary d = new Hashtable(Collections.singletonMap( PROP_NAME, "anotherValue" ));
+        Dictionary<String, String> d = new Hashtable<>(
+            Collections.singletonMap(PROP_NAME, "anotherValue"));
         s.updateProperties(d);
         Assert.assertEquals("anotherValue", serviceReference.getProperty(PROP_NAME));
         checkPropertiesNotPresent(serviceReference, "p1", "p2");
@@ -182,12 +188,14 @@ public class MutablePropertiesTest extends ComponentTestBase
         String componentName = "components.mutable.properties.bind";
         findComponentConfigurationByName(componentName, ComponentConfigurationDTO.SATISFIED);
 
-        ServiceReference[] serviceReferences = bundleContext.getServiceReferences( MutatingService.class.getName(), "(service.pid=" + componentName + ")" );
+        ServiceReference<?>[] serviceReferences = bundleContext.getServiceReferences(
+            MutatingService.class.getName(), "(service.pid=" + componentName + ")");
         TestCase.assertEquals( 1, serviceReferences.length );
-        ServiceReference serviceReference = serviceReferences[0];
+        ServiceReference<?> serviceReference = serviceReferences[0];
         Assert.assertEquals("otherValue", serviceReference.getProperty(PROP_NAME));
         Assert.assertEquals("p1", serviceReference.getProperty("p1"));
         Assert.assertEquals("p2", serviceReference.getProperty("p2"));
+        @SuppressWarnings("unused")
         MutatingService s = ( MutatingService ) bundleContext.getService( serviceReference );
 
         SimpleServiceImpl srv1 = SimpleServiceImpl.create( bundleContext, "srv1" );

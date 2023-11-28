@@ -44,14 +44,13 @@ import org.apache.felix.cm.integration.helper.ManagedServiceTestActivator;
 import org.apache.felix.cm.integration.helper.UpdateThreadSignalTask;
 import org.junit.After;
 import org.junit.Before;
+import org.ops4j.pax.exam.ExamFactory;
 import org.ops4j.pax.exam.Option;
 import org.ops4j.pax.exam.OptionUtils;
+import org.ops4j.pax.exam.ProbeBuilder;
 import org.ops4j.pax.exam.TestProbeBuilder;
 import org.ops4j.pax.exam.forked.ForkedTestContainer;
-import org.ops4j.pax.exam.junit.ExamFactory;
-import org.ops4j.pax.exam.junit.ProbeBuilder;
-import org.ops4j.pax.exam.nat.internal.NativeTestContainer;
-import org.ops4j.pax.exam.nat.internal.NativeTestContainerFactory;
+import org.ops4j.pax.exam.forked.ForkedTestContainerFactory;
 import org.ops4j.pax.tinybundles.core.TinyBundles;
 import org.osgi.framework.Bundle;
 import org.osgi.framework.BundleContext;
@@ -73,7 +72,7 @@ import junit.framework.TestCase;
  * The default is always to use the {@link NativeTestContainer} as it is much
  * faster. Tests that need more isolation should use the {@link ForkedTestContainer}. 
  */
-@ExamFactory(NativeTestContainerFactory.class)
+@ExamFactory(ForkedTestContainerFactory.class)
 public abstract class ConfigurationTestBase
 {
 
@@ -110,7 +109,7 @@ public abstract class ConfigurationTestBase
     }
 
 
-    @org.ops4j.pax.exam.junit.Configuration
+    @org.ops4j.pax.exam.Configuration
     public Option[] configuration()
     {
         final String bundleFileName = System.getProperty( BUNDLE_JAR_SYS_PROP, BUNDLE_JAR_DEFAULT );

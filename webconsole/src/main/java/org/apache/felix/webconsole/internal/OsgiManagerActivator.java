@@ -22,14 +22,15 @@ package org.apache.felix.webconsole.internal;
 import org.apache.felix.webconsole.internal.servlet.OsgiManager;
 import org.osgi.framework.BundleActivator;
 import org.osgi.framework.BundleContext;
+import org.osgi.service.servlet.whiteboard.annotations.RequireHttpWhiteboard;
 
 
 /**
  * This is the main, starting class of the Bundle. It initializes and disposes
  * the Apache Web Console upon bundle lifecycle requests.
  */
-public class OsgiManagerActivator implements BundleActivator
-{
+@RequireHttpWhiteboard
+public class OsgiManagerActivator implements BundleActivator {
 
     private OsgiManager osgiManager;
 
@@ -40,42 +41,31 @@ public class OsgiManagerActivator implements BundleActivator
     /**
      * @see org.osgi.framework.BundleActivator#start(org.osgi.framework.BundleContext)
      */
-    public void start( final BundleContext bundleContext ) throws Exception
-    {
+    public void start( final BundleContext bundleContext ) throws Exception {
         osgiManager = new OsgiManager( bundleContext );
-        try
-        {
-            final Class activatorClass = bundleContext.getBundle().loadClass(STATUS_ACTIVATOR);
-            this.statusActivator = (BundleActivator) activatorClass.newInstance();
-
-        }
-        catch (Throwable t)
-        {
+        try {
+            final Class<?> activatorClass = bundleContext.getBundle().loadClass(STATUS_ACTIVATOR);
+            this.statusActivator = (BundleActivator) activatorClass.getDeclaredConstructor().newInstance();
+        } catch (Throwable t) {
             // we ignore this as the status activator is only available if the web console
             // bundle contains the status bundle.
         }
-        if ( this.statusActivator != null)
-        {
+        if ( this.statusActivator != null) {
             this.statusActivator.start(bundleContext);
         }
     }
 
-
     /**
      * @see org.osgi.framework.BundleActivator#stop(org.osgi.framework.BundleContext)
      */
-    public void stop( final BundleContext bundleContext ) throws Exception
-    {
-        if ( this.statusActivator != null)
-        {
+    public void stop( final BundleContext bundleContext ) throws Exception {
+        if ( this.statusActivator != null) {
             this.statusActivator.stop(bundleContext);
             this.statusActivator = null;
         }
 
-        if ( osgiManager != null )
-        {
+        if ( osgiManager != null ) {
             osgiManager.dispose();
         }
     }
-
 }

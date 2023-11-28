@@ -28,13 +28,11 @@ import java.util.Enumeration;
 import java.util.Hashtable;
 import java.util.List;
 
-import javax.servlet.SessionCookieConfig;
-import javax.servlet.SessionTrackingMode;
-
 import org.apache.felix.http.base.internal.HttpServiceController;
 import org.apache.felix.http.base.internal.logger.SystemLogger;
-import org.apache.felix.http.jetty.internal.webapp.WebAppBundleTracker;
+import org.eclipse.jetty.alpn.server.ALPNServerConnectionFactory;
 import org.eclipse.jetty.http.HttpVersion;
+import org.eclipse.jetty.http2.server.HTTP2ServerConnectionFactory;
 import org.eclipse.jetty.io.ConnectionStatistics;
 import org.eclipse.jetty.security.HashLoginService;
 import org.eclipse.jetty.security.UserStore;
@@ -52,8 +50,6 @@ import org.eclipse.jetty.server.session.HouseKeeper;
 import org.eclipse.jetty.server.session.SessionHandler;
 import org.eclipse.jetty.servlet.ServletContextHandler;
 import org.eclipse.jetty.servlet.ServletHolder;
-import org.eclipse.jetty.util.component.AbstractLifeCycle;
-import org.eclipse.jetty.util.component.LifeCycle;
 import org.eclipse.jetty.util.ssl.SslContextFactory;
 import org.eclipse.jetty.util.thread.QueuedThreadPool;
 import org.eclipse.jetty.util.thread.ThreadPool;
@@ -65,7 +61,10 @@ import org.osgi.framework.ServiceFactory;
 import org.osgi.framework.ServiceRegistration;
 import org.osgi.service.http.runtime.HttpServiceRuntimeConstants;
 
-public final class JettyService extends AbstractLifeCycle.AbstractLifeCycleListener
+import jakarta.servlet.SessionCookieConfig;
+import jakarta.servlet.SessionTrackingMode;
+
+public final class JettyService
 {
     /** PID for configuration of the HTTP service. */
     public static final String PID = "org.apache.felix.http";
@@ -86,7 +85,6 @@ public final class JettyService extends AbstractLifeCycle.AbstractLifeCycleListe
     private volatile CustomizerWrapper customizerWrapper;
     private boolean registerManagedService = true;
     private final String jettyVersion;
-    volatile WebAppBundleTracker webAppTracker;
 
     public JettyService(final BundleContext context,
             final HttpServiceController controller)
@@ -134,15 +132,6 @@ public final class JettyService extends AbstractLifeCycle.AbstractLifeCycleListe
 	                    }
 	                }, props);
         }
-
-        try {
-            this.webAppTracker = new WebAppBundleTracker(context, config);
-        } catch (Throwable t) {
-            SystemLogger.error("WebApp Bundle support not available: " + t.getMessage(), null);
-        }
-        if (this.webAppTracker != null) {
-            this.webAppTracker.start(parent);
-        }
     }
 
     public void stop() throws Exception
@@ -151,11 +140,6 @@ public final class JettyService extends AbstractLifeCycle.AbstractLifeCycleListe
         {
             this.configServiceReg.unregister();
             this.configServiceReg = null;
-        }
-        if (this.webAppTracker != null)
-        {
-            this.webAppTracker.stop();
-            this.webAppTracker = null;
         }
 
         // FELIX-4422: stop Jetty synchronously...
@@ -191,7 +175,7 @@ public final class JettyService extends AbstractLifeCycle.AbstractLifeCycleListe
         }
         catch (Exception e)
         {
-            SystemLogger.error("Exception while initializing Jetty.", e);
+            SystemLogger.LOGGER.error("Exception while initializing Jetty", e);
         }
     }
 
@@ -234,11 +218,11 @@ public final class JettyService extends AbstractLifeCycle.AbstractLifeCycleListe
             {
                 this.server.stop();
                 this.server = null;
-                SystemLogger.info("Stopped Jetty.");
+                SystemLogger.LOGGER.info("Stopped Jetty");
             }
             catch (Exception e)
             {
-                SystemLogger.error("Exception while stopping Jetty.", e);
+                SystemLogger.LOGGER.error("Exception while stopping Jetty", e);
             }
 
             if (this.mbeanServerTracker != null)
@@ -260,7 +244,6 @@ public final class JettyService extends AbstractLifeCycle.AbstractLifeCycleListe
             } else {
                 this.server = new Server();
             }
-            this.server.addLifeCycleListener(this);
 
             // FELIX-5931 : PropertyUserStore used as default by HashLoginService has changed in 9.4.12.v20180830
             //              and fails without a config, therefore using plain UserStore
@@ -308,10 +291,8 @@ public final class JettyService extends AbstractLifeCycle.AbstractLifeCycleListe
             {
             	GzipHandler gzipHandler = new GzipHandler();
             	gzipHandler.setMinGzipSize(this.config.getGzipMinGzipSize());
-            	gzipHandler.setCompressionLevel(this.config.getGzipCompressionLevel());
             	gzipHandler.setInflateBufferSize(this.config.getGzipInflateBufferSize());
             	gzipHandler.setSyncFlush(this.config.isGzipSyncFlush());
-            	gzipHandler.addExcludedAgentPatterns(this.config.getGzipExcludedUserAgent());
             	gzipHandler.addIncludedMethods(this.config.getGzipIncludedMethods());
             	gzipHandler.addExcludedMethods(this.config.getGzipExcludedMethods());
             	gzipHandler.addIncludedPaths(this.config.getGzipIncludedPaths());
@@ -375,13 +356,13 @@ public final class JettyService extends AbstractLifeCycle.AbstractLifeCycleListe
                 }
                 message.append("]");
 
-                SystemLogger.info(message.toString());
+                SystemLogger.LOGGER.info(message.toString());
                 this.controller.register(context.getServletContext(), getServiceProperties());
             }
             else
             {
                 this.stopJetty();
-                SystemLogger.error("Jetty stopped (no connectors available)", null);
+                SystemLogger.LOGGER.error("Jetty stopped (no connectors available)");
             }
 
             try {
@@ -389,24 +370,24 @@ public final class JettyService extends AbstractLifeCycle.AbstractLifeCycleListe
                 this.requestLogTracker.open();
                 this.server.setRequestLog(requestLogTracker);
             } catch (InvalidSyntaxException e) {
-                SystemLogger.error("Invalid filter syntax in request log tracker", e);
+                SystemLogger.LOGGER.error("Invalid filter syntax in request log tracker", e);
             }
 
             if (this.config.isRequestLogOSGiEnabled()) {
                 this.osgiRequestLog = new LogServiceRequestLog(this.config);
                 this.osgiRequestLog.register(this.context);
-                SystemLogger.info("Directing Jetty request logs to the OSGi Log Service");
+                SystemLogger.LOGGER.info("Directing Jetty request logs to the OSGi Log Service");
             }
 
             if (this.config.getRequestLogFilePath() != null && !this.config.getRequestLogFilePath().isEmpty()) {
                 this.fileRequestLog = new FileRequestLog(config);
                 this.fileRequestLog.start(this.context);
-                SystemLogger.info("Directing Jetty request logs to " + this.config.getRequestLogFilePath());
+                SystemLogger.LOGGER.info("Directing Jetty request logs to {}", this.config.getRequestLogFilePath());
             }
         }
         else
         {
-            SystemLogger.warning("Jetty not started (HTTP and HTTPS disabled)", null);
+            SystemLogger.LOGGER.warn("Jetty not started (HTTP and HTTPS disabled)");
         }
     }
 
@@ -452,7 +433,7 @@ public final class JettyService extends AbstractLifeCycle.AbstractLifeCycleListe
         HttpConnectionFactory connFactory = new HttpConnectionFactory();
         configureHttpConnectionFactory(connFactory);
 
-        SslContextFactory sslContextFactory = new SslContextFactory.Server();
+        SslContextFactory.Server sslContextFactory = new SslContextFactory.Server();
         configureSslContextFactory(sslContextFactory);
 
         ServerConnector connector = new ServerConnector(
@@ -471,11 +452,32 @@ public final class JettyService extends AbstractLifeCycle.AbstractLifeCycleListe
             httpConfiguration.addCustomizer(customizerWrapper);
         }
 
+        if (this.config.isUseHttp2()) {
+            //add ALPN factory
+            SslConnectionFactory alpnConnFactory = new SslConnectionFactory(sslContextFactory, "alpn");
+            connector.addConnectionFactory(alpnConnFactory);
+
+            ALPNServerConnectionFactory alpn = new ALPNServerConnectionFactory(this.config.getAlpnProtocols());
+            alpn.setDefaultProtocol(this.config.getAlpnDefaultProtocol());
+            connector.addConnectionFactory(alpn);
+
+            //Configure a HTTP2 on the ssl connector
+            HTTP2ServerConnectionFactory http2factory = new HTTP2ServerConnectionFactory(httpConfiguration);
+            http2factory.setMaxConcurrentStreams(this.config.getHttp2MaxConcurrentStreams());
+            http2factory.setInitialStreamRecvWindow(this.config.getHttp2InitialStreamRecvWindow());
+            http2factory.setInitialSessionRecvWindow(this.config.getHttp2InitialSessionRecvWindow());
+            connector.addConnectionFactory(http2factory);
+
+            //use http/2 cipher comparator
+            sslContextFactory.setCipherComparator(org.eclipse.jetty.http2.HTTP2Cipher.COMPARATOR);
+            sslContextFactory.setUseCipherSuitesOrder(true);
+        }
+
         configureConnector(connector, this.config.getHttpsPort());
         return startConnector(connector);
     }
 
-    private void configureSslContextFactory(final SslContextFactory connector)
+    private void configureSslContextFactory(final SslContextFactory.Server connector)
     {
         if (this.config.getKeystoreType() != null)
         {
@@ -599,7 +601,7 @@ public final class JettyService extends AbstractLifeCycle.AbstractLifeCycleListe
         catch (Exception e)
         {
             this.server.removeConnector(connector);
-            SystemLogger.error("Failed to start Connector: " + connector, e);
+            SystemLogger.LOGGER.error("Failed to start Connector: {}", connector, e);
         }
 
         return false;
@@ -739,21 +741,5 @@ public final class JettyService extends AbstractLifeCycle.AbstractLifeCycleListe
         }
         props.put(HttpServiceRuntimeConstants.HTTP_SERVICE_ENDPOINT,
                 endpoints.toArray(new String[endpoints.size()]));
-    }
-
-    @Override
-    public void lifeCycleStarted(final LifeCycle event)
-    {
-        if (this.webAppTracker != null) {
-            this.webAppTracker.lifeCycleStarted(event);
-        }
-    }
-
-    @Override
-    public void lifeCycleStopping(final LifeCycle event)
-    {
-        if (this.webAppTracker != null) {
-            this.webAppTracker.lifeCycleStopping(event);
-        }
     }
 }

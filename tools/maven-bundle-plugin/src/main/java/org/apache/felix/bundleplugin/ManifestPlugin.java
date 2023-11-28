@@ -47,6 +47,7 @@ import java.util.zip.ZipFile;
 
 import aQute.bnd.osgi.Analyzer;
 import aQute.bnd.osgi.Builder;
+import aQute.bnd.osgi.Constants;
 import aQute.bnd.osgi.Instructions;
 import aQute.bnd.osgi.Jar;
 import aQute.bnd.osgi.Resource;
@@ -103,13 +104,17 @@ public class ManifestPlugin extends BundlePlugin
     protected void execute( Map<String, String> instructions, ClassPathItem[] classpath )
         throws MojoExecutionException
     {
+        File outputFile = new File( manifestLocation, "MANIFEST.MF" );
+        boolean metadataUpToDate = isMetadataUpToDate(outputFile, project);
 
-        if (supportIncrementalBuild && isUpToDate(project)) {
+        if (supportIncrementalBuild && metadataUpToDate && isUpToDate(project)) {
             return;
         }
         // in incremental build execute manifest generation only when explicitly activated
         // and when any java file was touched since last build
-        if (buildContext.isIncremental() && !(supportIncrementalBuild && anyJavaSourceFileTouchedSinceLastBuild())) {
+        if (buildContext.isIncremental() && (!supportIncrementalBuild //
+            || (metadataUpToDate && !anyJavaSourceFileTouchedSinceLastBuild())))
+        {
             getLog().debug("Skipping manifest generation because no java source file was added, updated or removed since last build.");
             return;
         }
@@ -118,10 +123,6 @@ public class ManifestPlugin extends BundlePlugin
         try
         {
             analyzer = getAnalyzer(project, instructions, classpath);
-
-            if (supportIncrementalBuild) {
-                writeIncrementalInfo(project);
-            }
         }
         catch ( FileNotFoundException e )
         {
@@ -130,6 +131,7 @@ public class ManifestPlugin extends BundlePlugin
         }
         catch ( IOException e )
         {
+            getLog().error( e.getLocalizedMessage() );
             throw new MojoExecutionException( "Error trying to generate Manifest", e );
         }
         catch ( MojoFailureException e )
@@ -143,11 +145,13 @@ public class ManifestPlugin extends BundlePlugin
             throw new MojoExecutionException( "Internal error in maven-bundle-plugin", e );
         }
 
-        File outputFile = new File( manifestLocation, "MANIFEST.MF" );
-
         try
         {
             writeManifest( analyzer, outputFile, niceManifest, exportScr, scrLocation, buildContext, getLog() );
+
+            if (supportIncrementalBuild) {
+                writeIncrementalInfo(project);
+            }
         }
         catch ( Exception e )
         {
@@ -318,6 +322,9 @@ public class ManifestPlugin extends BundlePlugin
         }
         else
         {
+            // FELIX-6495: workaround BND inconsistency: internal jar does not take "-reproducible" flag into account...
+            analyzer.getJar().setReproducible( "true".equals( analyzer.getProperties().getProperty( Constants.REPRODUCIBLE ) ) );
+
             analyzer.mergeManifest( analyzer.getJar().getManifest() );
             analyzer.getJar().setManifest( analyzer.calcManifest() );
         }
@@ -364,7 +371,7 @@ public class ManifestPlugin extends BundlePlugin
                 w.append(curdata);
             }
         } catch (IOException e) {
-            throw new MojoExecutionException("Error checking manifest uptodate status", e);
+            throw getManifestUptodateCheckException(e);
         }
     }
 
@@ -379,7 +386,7 @@ public class ManifestPlugin extends BundlePlugin
             }
             String curdata = getIncrementalData();
             if (curdata.equals(prvdata)) {
-                long lastmod = Files.getLastModifiedTime(cacheData).toMillis();
+                long lastmod = lastModified(cacheData);
                 Set<String> stale = Stream.concat(Stream.of(new File(project.getBuild().getOutputDirectory())),
                                                             project.getArtifacts().stream().map(Artifact::getFile))
                         .flatMap(f -> newer(lastmod, f))
@@ -404,9 +411,58 @@ public class ManifestPlugin extends BundlePlugin
                 }
             }
         } catch (IOException e) {
-            throw new MojoExecutionException("Error checking manifest uptodate status", e);
+            throw getManifestUptodateCheckException(e);
         }
         return false;
+    }
+
+    private boolean isMetadataUpToDate(File outputFile, MavenProject project)
+        throws MojoExecutionException
+    {
+        if (!outputFile.isFile()) // does MANIFEST.MF exist?
+        {
+            getLog().info("No MANIFEST.MF file found, generating manifest.");
+            return false;
+        }
+        try
+        { // has this project's or a parent's pom.xml been modified after the manifest was
+            // generated last?
+            Path cacheData = getIncrementalDataPath(project);
+            if(!Files.isRegularFile(cacheData)) {
+                getLog().debug("No cache data file found at '" + cacheData + "', generating manifest.");
+                return false;
+            }
+            long manifestLastModified = lastModified(cacheData);
+            while (project != null)
+            {
+                if (project.getFile() != null) {
+                    Path pom = project.getFile().toPath();
+                    if (manifestLastModified < lastModified(pom))
+                    {
+                        getLog().debug("POM file at '" + pom + "' newer than cache data file, generating manifest.");
+                        return false;
+                    }
+                } else {
+                    if (project.getVersion().endsWith("-SNAPSHOT")) { // is it mutable?
+                        getLog().debug("POM file not accessible for SNAPSHOT project '" + project + "', assume modification.");
+                        return false;
+                    } else {
+                        getLog().debug("POM file not accessible for non-SNAPSHOT project '" + project + "', assume no modification.");
+                    }
+                }
+                project = project.getParent();
+            }
+        }
+        catch (IOException e)
+        {
+            throw getManifestUptodateCheckException(e);
+        }
+        return true;
+    }
+
+    private static MojoExecutionException getManifestUptodateCheckException(IOException e)
+    {
+        return new MojoExecutionException("Error checking manifest uptodate status", e);
     }
 
     private String getIncrementalData() {
@@ -421,10 +477,15 @@ public class ManifestPlugin extends BundlePlugin
 
     private long lastmod(Path p) {
         try {
-            return Files.getLastModifiedTime(p).toMillis();
+            return lastModified(p);
         } catch (IOException e) {
             return 0;
         }
+    }
+
+    private static long lastModified(Path p) throws IOException
+    {
+        return Files.getLastModifiedTime(p).toMillis();
     }
 
     private Stream<String> newer(long lastmod, File file) {
@@ -494,7 +555,7 @@ public class ManifestPlugin extends BundlePlugin
     public static void writeManifest( Manifest manifest, File outputFile, boolean niceManifest,
             BuildContext buildContext, Log log ) throws IOException
     {
-        log.debug("Write manifest to " + outputFile.getPath());
+        log.info("Writing manifest: " + outputFile.getPath());
         outputFile.getParentFile().mkdirs();
 
         try ( ByteArrayOutputStream baos = new ByteArrayOutputStream() )

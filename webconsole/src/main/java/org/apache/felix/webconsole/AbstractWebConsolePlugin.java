@@ -17,22 +17,29 @@
 package org.apache.felix.webconsole;
 
 
-import java.io.*;
-import java.lang.reflect.*;
+import java.io.IOException;
+import java.io.InputStream;
+import java.io.OutputStream;
+import java.io.PrintWriter;
+import java.lang.reflect.InvocationTargetException;
+import java.lang.reflect.Method;
+import java.lang.reflect.Modifier;
 import java.net.URL;
 import java.net.URLConnection;
 import java.security.AccessController;
 import java.security.PrivilegedActionException;
 import java.security.PrivilegedExceptionAction;
-import java.util.*;
-
-import javax.servlet.ServletConfig;
-import javax.servlet.ServletContext;
+import java.util.Map;
 import javax.servlet.ServletException;
-import javax.servlet.http.*;
+import javax.servlet.ServletRequest;
+import javax.servlet.http.HttpServlet;
+import javax.servlet.http.HttpServletRequest;
+import javax.servlet.http.HttpServletResponse;
 
-import org.apache.commons.io.IOUtils;
-import org.apache.felix.webconsole.internal.servlet.OsgiManager;
+import org.apache.felix.webconsole.internal.NavigationRenderer;
+import org.apache.felix.webconsole.internal.Util;
+import org.apache.felix.webconsole.internal.servlet.AbstractOsgiManagerPlugin;
+import org.apache.felix.webconsole.servlet.RequestVariableResolver;
 import org.osgi.framework.Bundle;
 import org.osgi.framework.BundleContext;
 import org.osgi.service.log.LogService;
@@ -48,32 +55,28 @@ import org.osgi.service.log.LogService;
  * To help rendering the response the Apache Felix Web Console bundle provides two
  * options. One of the options is to extend the AbstractWebConsolePlugin overwriting
  * the {@link #renderContent(HttpServletRequest, HttpServletResponse)} method.
+ *
+ * @deprecated Either register a servlet using Servlet API 5 or use {@link org.apache.felix.webconsole.servlet.AbstractServlet}
  */
-public abstract class AbstractWebConsolePlugin extends HttpServlet
-{
+@Deprecated
+public abstract class AbstractWebConsolePlugin extends HttpServlet {
 
     /** Pseudo class version ID to keep the IDE quite. */
     private static final long serialVersionUID = 1L;
 
-    /** The name of the request attribute containing the map of FileItems from the POST request */
-    public static final String ATTR_FILEUPLOAD = "org.apache.felix.webconsole.fileupload"; //$NON-NLS-1$
-    
-    /** 
-     * The name of the request attribute containing a {@link java.io.File} - upload repository path used by
-     * {@link org.apache.commons.fileupload.disk.DiskFileItemFactory}.<p>
-     * 
-     * The Web Console plugin, that utilizes file upload capabilities of the web console SHOULD:
-     * <ol>
-     * <li>Obtain the file using {@link org.osgi.framework.BundleContext#getDataFile(String)}
-     * <li>Set the file as request attribute
-     * <li>Use {@link WebConsoleUtil#getParameter(HttpServletRequest, String)} to obtain the file(s)
-     * </ol>
-     * 
-     * Without setting this attribute, your plugin will not work if there is a security manager enabled.
-     * It is guaranteed, that your plugin has permissions to read/write/delete files to the location, 
-     * provided by the bundle context.
+    /**
+     * This attribute is not supported anymore
+     * @deprecated Use the Servlet API for uploads
      */
-    public static final String ATTR_FILEUPLOAD_REPO = "org.apache.felix.webconsole.fileupload.repo"; //$NON-NLS-1$
+    @Deprecated
+    public static final String ATTR_FILEUPLOAD = "org.apache.felix.webconsole.fileupload";
+    
+    /**
+     * This attribute is not supported anymore
+     * @deprecated Use the Servlet API for uploads
+     */
+    @Deprecated
+    public static final String ATTR_FILEUPLOAD_REPO = "org.apache.felix.webconsole.fileupload.repo";
 
     /**
      * Web Console Plugin typically consists of servlet and resources such as images,
@@ -85,17 +88,7 @@ public abstract class AbstractWebConsolePlugin extends HttpServlet
      *
      *  @see #getResourceProvider()
      */
-    public static final String GET_RESOURCE_METHOD_NAME = "getResource"; //$NON-NLS-1$
-
-    /**
-     * The header fragment read from the templates/main_header.html file
-     */
-    private static String HEADER;
-
-    /**
-     * The footer fragment read from the templates/main_footer.html file
-     */
-    private static String FOOTER;
+    public static final String GET_RESOURCE_METHOD_NAME = "getResource";
 
     /**
      * The reference to the getResource method provided by the
@@ -116,9 +109,7 @@ public abstract class AbstractWebConsolePlugin extends HttpServlet
 
     private BundleContext bundleContext;
 
-    private static BrandingPlugin brandingPlugin = DefaultBrandingPlugin.getInstance();
-
-    private static int logLevel;
+    private static volatile BrandingPlugin BRANDING_PLUGIN = DefaultBrandingPlugin.getInstance();
 
 
     //---------- HttpServlet Overwrites ----------------------------------------
@@ -175,14 +166,11 @@ public abstract class AbstractWebConsolePlugin extends HttpServlet
      * @see javax.servlet.http.HttpServlet#doGet(javax.servlet.http.HttpServletRequest,
      *      javax.servlet.http.HttpServletResponse)
      */
-    protected void doGet( HttpServletRequest request, HttpServletResponse response ) throws ServletException,
-        IOException
-    {
-        if ( !spoolResource( request, response ) )
-        {
+    protected void doGet( HttpServletRequest request, HttpServletResponse response )
+    throws ServletException, IOException {
+        if ( !spoolResource( request, response ) ) {
             // detect if this is an html request
-            if ( isHtmlRequest(request) )
-            {
+            if ( isHtmlRequest(request) ) {
                 // start the html response, write the header, open body and main div
                 PrintWriter pw = startResponse( request, response );
 
@@ -190,15 +178,13 @@ public abstract class AbstractWebConsolePlugin extends HttpServlet
                 renderTopNavigation( request, pw );
 
                 // wrap content in a separate div
-                pw.println( "<div id='content'>" ); //$NON-NLS-1$
+                pw.println( "<div id='content'>" );
                 renderContent( request, response );
-                pw.println( "</div>" ); //$NON-NLS-1$
+                pw.println( "</div>" );
 
                 // close the main div, body, and html
                 endResponse( pw );
-            }
-            else
-            {
+            } else {
                 renderContent( request, response );
             }
         }
@@ -214,8 +200,7 @@ public abstract class AbstractWebConsolePlugin extends HttpServlet
      * @param request the original request passed from the HTTP server
      * @return <code>true</code> if the page should have headers and footers rendered
      */
-    protected boolean isHtmlRequest( final HttpServletRequest request )
-    {
+    protected boolean isHtmlRequest( final HttpServletRequest request ) {
         return true;
     }
 
@@ -377,7 +362,7 @@ public abstract class AbstractWebConsolePlugin extends HttpServlet
         {
             try
             {
-                Class cl = resourceProvider.getClass();
+                Class<?> cl = resourceProvider.getClass();
                 while ( tmpGetResourceMethod == null && cl != Object.class )
                 {
                     Method[] methods = cl.getDeclaredMethods();
@@ -416,76 +401,35 @@ public abstract class AbstractWebConsolePlugin extends HttpServlet
         return getResourceMethod;
     }
 
-
     /**
-     * Calls the <code>ServletContext.log(String)</code> method if the
-     * configured log level is less than or equal to the given <code>level</code>.
-     * <p>
-     * Note, that the <code>level</code> paramter is only used to decide whether
-     * the <code>GenericServlet.log(String)</code> method is called or not. The
-     * actual implementation of the <code>GenericServlet.log</code> method is
-     * outside of the control of this method.
-     * <p>
-     * If the servlet has not been initialized yet or has already been destroyed
-     * the message is printed to stderr.
+     * Logs the message in the level
      *
      * @param level The log level at which to log the message
      * @param message The message to log
      */
-    public void log( int level, String message )
-    {
-        if ( logLevel >= level )
-        {
-            ServletConfig config = getServletConfig();
-            if ( config != null )
-            {
-                ServletContext context = config.getServletContext();
-                if ( context != null )
-                {
-                    context.log( message );
-                    return;
-                }
-            }
-
-            System.err.println( message );
-        }
+    public void log(final int level, final String message ) {
+        log(level, message, null);
     }
 
-
     /**
-     * Calls the <code>ServletContext.log(String, Throwable)</code> method if
-     * the configured log level is less than or equal to the given
-     * <code>level</code>.
-     * <p>
-     * Note, that the <code>level</code> paramter is only used to decide whether
-     * the <code>GenericServlet.log(String, Throwable)</code> method is called
-     * or not. The actual implementation of the <code>GenericServlet.log</code>
-     * method is outside of the control of this method.
+     * Logs the message in the level
      *
      * @param level The log level at which to log the message
      * @param message The message to log
      * @param t The <code>Throwable</code> to log with the message
      */
-    public void log( int level, String message, Throwable t )
-    {
-        if ( logLevel >= level )
-        {
-            ServletConfig config = getServletConfig();
-            if ( config != null )
-            {
-                ServletContext context = config.getServletContext();
-                if ( context != null )
-                {
-                    context.log( message, t );
-                    return;
-                }
-            }
-
-            System.err.println( message );
-            if ( t != null )
-            {
-                t.printStackTrace( System.err );
-            }
+    public void log(final int level, final String message, final Throwable t ) {
+        final String text = "[".concat(this.getTitle()).concat("] ").concat(message);
+        switch(level) {
+            case LogService.LOG_DEBUG: Util.LOGGER.debug(text, t);
+                                       break;
+            case LogService.LOG_INFO:  Util.LOGGER.info(text, t);
+                                       break;
+            case LogService.LOG_WARNING: Util.LOGGER.warn(text, t);
+                                         break;
+            case LogService.LOG_ERROR: Util.LOGGER.error(text, t);
+                                        break;
+            default: Util.LOGGER.debug(message, t);
         }
     }
     
@@ -518,10 +462,10 @@ public abstract class AbstractWebConsolePlugin extends HttpServlet
             // (java.lang.RuntimePermission "accessDeclaredMembers")
             // (java.lang.reflect.ReflectPermission "suppressAccessChecks")
             // See also https://issues.apache.org/jira/browse/FELIX-4652
-            final Boolean ret = (Boolean) AccessController.doPrivileged(new PrivilegedExceptionAction()
+            final Boolean ret = AccessController.doPrivileged(new PrivilegedExceptionAction<Boolean>()
             {
 
-                public Object run() throws Exception
+                public Boolean run() throws Exception
                 {
                     return spoolResource0(request, response) ? Boolean.TRUE : Boolean.FALSE;
                 }
@@ -546,15 +490,13 @@ public abstract class AbstractWebConsolePlugin extends HttpServlet
         }
 
         String pi = request.getPathInfo();
-        InputStream ins = null;
         try
         {
 
             // check for a resource, fail if none
             URL url = ( URL ) getResourceMethod.invoke( getResourceProvider(), new Object[]
                 { pi } );
-            if ( url == null )
-            {
+            if ( url == null ) {
                 return false;
             }
 
@@ -562,62 +504,52 @@ public abstract class AbstractWebConsolePlugin extends HttpServlet
             // to at least hint to close the connection because there is no
             // method to explicitly close the conneciton, unfortunately)
             URLConnection connection = url.openConnection();
-            ins = connection.getInputStream();
-
-            // FELIX-2017 Equinox may return an URL for a non-existing
-            // resource but then (instead of throwing) return null on
-            // getInputStream. We should account for this situation and
-            // just assume a non-existing resource in this case.
-            if (ins == null) {
-                return false;
-            }
-
-            // check whether we may return 304/UNMODIFIED
-            long lastModified = connection.getLastModified();
-            if ( lastModified > 0 )
-            {
-                long ifModifiedSince = request.getDateHeader( "If-Modified-Since" ); //$NON-NLS-1$
-                if ( ifModifiedSince >= ( lastModified / 1000 * 1000 ) )
-                {
-                    // Round down to the nearest second for a proper compare
-                    // A ifModifiedSince of -1 will always be less
-                    response.setStatus( HttpServletResponse.SC_NOT_MODIFIED );
-
-                    return true;
+            try ( InputStream ins = connection.getInputStream()) {
+                // FELIX-2017 Equinox may return an URL for a non-existing
+                // resource but then (instead of throwing) return null on
+                // getInputStream. We should account for this situation and
+                // just assume a non-existing resource in this case.
+                if (ins == null) {
+                    return false;
                 }
 
-                // have to send, so set the last modified header now
-                response.setDateHeader( "Last-Modified", lastModified ); //$NON-NLS-1$
+                // check whether we may return 304/UNMODIFIED
+                long lastModified = connection.getLastModified();
+                if ( lastModified > 0 )
+                {
+                    long ifModifiedSince = request.getDateHeader( "If-Modified-Since" );
+                    if ( ifModifiedSince >= ( lastModified / 1000 * 1000 ) )
+                    {
+                        // Round down to the nearest second for a proper compare
+                        // A ifModifiedSince of -1 will always be less
+                        response.setStatus( HttpServletResponse.SC_NOT_MODIFIED );
+
+                        return true;
+                    }
+
+                    // have to send, so set the last modified header now
+                    response.setDateHeader( "Last-Modified", lastModified );
+                }
+
+                // describe the contents
+                response.setContentType( getServletContext().getMimeType( pi ) );
+                response.setIntHeader( "Content-Length", connection.getContentLength() );
+
+                // spool the actual contents
+                OutputStream out = response.getOutputStream();
+                byte[] buf = new byte[2048];
+                int rd;
+                while ( ( rd = ins.read( buf ) ) >= 0 )
+                {
+                    out.write( buf, 0, rd );
+                }
+
+                // over and out ...
+                return true;
             }
 
-            // describe the contents
-            response.setContentType( getServletContext().getMimeType( pi ) );
-            response.setIntHeader( "Content-Length", connection.getContentLength() ); //$NON-NLS-1$
-
-            // spool the actual contents
-            OutputStream out = response.getOutputStream();
-            byte[] buf = new byte[2048];
-            int rd;
-            while ( ( rd = ins.read( buf ) ) >= 0 )
-            {
-                out.write( buf, 0, rd );
-            }
-
-            // over and out ...
-            return true;
-        }
-        catch ( IllegalAccessException iae )
-        {
+        } catch ( IllegalAccessException | InvocationTargetException ignore ) {
             // log or throw ???
-        }
-        catch ( InvocationTargetException ite )
-        {
-            // log or throw ???
-            // Throwable cause = ite.getTargetException();
-        }
-      finally
-        {
-            IOUtils.closeQuietly(ins);
         }
 
         return false;
@@ -633,10 +565,9 @@ public abstract class AbstractWebConsolePlugin extends HttpServlet
      * @throws IOException on I/O error
      * @see #endResponse(PrintWriter)
      */
-    protected PrintWriter startResponse( HttpServletRequest request, HttpServletResponse response ) throws IOException
-    {
-        response.setCharacterEncoding( "utf-8" ); //$NON-NLS-1$
-        response.setContentType( "text/html" ); //$NON-NLS-1$
+    protected PrintWriter startResponse( HttpServletRequest request, HttpServletResponse response ) throws IOException {
+        response.setCharacterEncoding( "utf-8" );
+        response.setContentType( "text/html" );
 
         final PrintWriter pw = response.getWriter();
 
@@ -644,25 +575,21 @@ public abstract class AbstractWebConsolePlugin extends HttpServlet
 
         // support localization of the plugin title
         String title = getTitle();
-        if ( title.startsWith( "%" ) ) //$NON-NLS-1$
-        {
-            title = "${" + title.substring( 1 ) + "}"; //$NON-NLS-1$ //$NON-NLS-2$
+        if ( title.startsWith( "%" ) ) {
+            title = "${" + title.substring( 1 ) + "}";
         }
 
-        VariableResolver resolver = WebConsoleUtil.getVariableResolver(request);
-        if (resolver instanceof DefaultVariableResolver) {
-            DefaultVariableResolver r = (DefaultVariableResolver) resolver;
-            r.put("head.title", title); //$NON-NLS-1$
-            r.put("head.label", getLabel()); //$NON-NLS-1$
-            r.put("head.cssLinks", getCssLinks(appRoot)); //$NON-NLS-1$
-            r.put("brand.name", brandingPlugin.getBrandName()); //$NON-NLS-1$
-            r.put("brand.product.url", brandingPlugin.getProductURL()); //$NON-NLS-1$
-            r.put("brand.product.name", brandingPlugin.getProductName()); //$NON-NLS-1$
-            r.put("brand.product.img", toUrl( brandingPlugin.getProductImage(), appRoot )); //$NON-NLS-1$
-            r.put("brand.favicon", toUrl( brandingPlugin.getFavIcon(), appRoot )); //$NON-NLS-1$
-            r.put("brand.css", toUrl( brandingPlugin.getMainStyleSheet(), appRoot )); //$NON-NLS-1$
-        }
-        pw.println( getHeader() );
+        final RequestVariableResolver r = this.getVariableResolver(request);
+        r.put("head.title", title);
+        r.put("head.label", getLabel());
+        r.put("head.cssLinks", getCssLinks(appRoot));
+        r.put("brand.name", BRANDING_PLUGIN.getBrandName());
+        r.put("brand.product.url", BRANDING_PLUGIN.getProductURL());
+        r.put("brand.product.name", BRANDING_PLUGIN.getProductName());
+        r.put("brand.product.img", toUrl( BRANDING_PLUGIN.getProductImage(), appRoot ));
+        r.put("brand.favicon", toUrl( BRANDING_PLUGIN.getFavIcon(), appRoot ));
+        r.put("brand.css", toUrl( BRANDING_PLUGIN.getMainStyleSheet(), appRoot ));
+        pw.println( NavigationRenderer.HEADER );
 
         return pw;
     }
@@ -674,115 +601,18 @@ public abstract class AbstractWebConsolePlugin extends HttpServlet
      * @param request the HTTP request coming from the user
      * @param pw the writer, where the HTML data is rendered
      */
-    protected void renderTopNavigation( HttpServletRequest request, PrintWriter pw )
-    {
-        // assume pathInfo to not be null, else this would not be called
-        String current = request.getPathInfo();
-        int slash = current.indexOf( "/", 1 ); //$NON-NLS-1$
-        if ( slash < 0 )
-        {
-            slash = current.length();
-        }
-        current = current.substring( 1, slash );
+    @SuppressWarnings({ "rawtypes" })
+    protected void renderTopNavigation(final HttpServletRequest request, final PrintWriter pw ) {
+        final String appRoot = ( String ) request.getAttribute( WebConsoleConstants.ATTR_APP_ROOT );
+        final Map menuMap = ( Map ) request.getAttribute( AbstractOsgiManagerPlugin.ATTR_LABEL_MAP_CATEGORIZED );
+        final Map langMap = (Map) request.getAttribute(WebConsoleConstants.ATTR_LANG_MAP);
 
-        String appRoot = ( String ) request.getAttribute( WebConsoleConstants.ATTR_APP_ROOT );
-
-        Map menuMap = ( Map ) request.getAttribute( OsgiManager.ATTR_LABEL_MAP_CATEGORIZED );
-        this.renderMenu( menuMap, appRoot, pw );
-
-        // render lang-box
-        Map langMap = (Map) request.getAttribute(WebConsoleConstants.ATTR_LANG_MAP);
-        if (null != langMap && !langMap.isEmpty())
-        {
-            // determine the currently selected locale from the request and fail-back
-            // to the default locale if not set
-            // if locale is missing in locale map, the default 'en' locale is used
-            Locale reqLocale = request.getLocale();
-            String locale = null != reqLocale ? reqLocale.getLanguage()
-                : Locale.getDefault().getLanguage();
-            if (!langMap.containsKey(locale))
-            {
-                locale = Locale.getDefault().getLanguage();
-            }
-            if (!langMap.containsKey(locale))
-            {
-                locale = "en"; //$NON-NLS-1$
-            }
-
-            pw.println("<div id='langSelect'>"); //$NON-NLS-1$
-            pw.println(" <span>"); //$NON-NLS-1$
-            printLocaleElement(pw, appRoot, locale, langMap.get(locale));
-            pw.println(" </span>"); //$NON-NLS-1$
-            pw.println(" <span class='flags ui-helper-hidden'>"); //$NON-NLS-1$
-            for (Iterator li = langMap.keySet().iterator(); li.hasNext();)
-            {
-                // <img src="us.gif" alt="en" title="English"/>
-                final Object l = li.next();
-                if (!l.equals(locale))
-                {
-                    printLocaleElement(pw, appRoot, l, langMap.get(l));
-                }
-            }
-
-            pw.println(" </span>"); //$NON-NLS-1$
-            pw.println("</div>"); //$NON-NLS-1$
-        }
+        NavigationRenderer.renderTopNavigation(pw, appRoot, menuMap, langMap, request.getLocale());
     }
 
-
-    protected void renderMenu( Map menuMap, String appRoot, PrintWriter pw )
-    {
-        if ( menuMap != null )
-        {
-            SortedMap categoryMap = sortMenuCategoryMap( menuMap, appRoot );
-            pw.println( "<ul id=\"navmenu\">" );
-            renderSubmenu( categoryMap, appRoot, pw, 0 );
-            pw.println("<li class=\"logoutButton navMenuItem-0\">");
-            pw.println("<a href=\"" + appRoot + "/logout\">${logout}</a>");
-            pw.println("</li>");
-            pw.println( "</ul>" );
-        }
-    }
-
-
-    private void renderMenu( Map menuMap, String appRoot, PrintWriter pw, int level )
-    {
-        pw.println( "<ul class=\"navMenuLevel-" + level + "\">" );
-        renderSubmenu( menuMap, appRoot, pw, level );
-        pw.println( "</ul>" );
-    }
-
-
-    private void renderSubmenu( Map menuMap, String appRoot, PrintWriter pw, int level )
-    {
-        String liStyleClass = " class=\"navMenuItem-" + level + "\"";
-        Iterator itr = menuMap.keySet().iterator();
-        while ( itr.hasNext() )
-        {
-            String key = ( String ) itr.next();
-            MenuItem menuItem = ( MenuItem ) menuMap.get( key );
-            pw.println( "<li" + liStyleClass + ">" + menuItem.getLink() );
-            Map subMenu = menuItem.getSubMenu();
-            if ( subMenu != null )
-            {
-                renderMenu( subMenu, appRoot, pw, level + 1 );
-            }
-            pw.println( "</li>" );
-        }
-    }
-
-
-    private static final void printLocaleElement( PrintWriter pw, String appRoot, Object langCode, Object langName )
-    {
-        pw.print("  <img src='"); //$NON-NLS-1$
-        pw.print(appRoot);
-        pw.print("/res/flags/"); //$NON-NLS-1$
-        pw.print(langCode);
-        pw.print(".gif' alt='"); //$NON-NLS-1$
-        pw.print(langCode);
-        pw.print("' title='"); //$NON-NLS-1$
-        pw.print(langName);
-        pw.println("'/>"); //$NON-NLS-1$
+    @SuppressWarnings({ "rawtypes" })
+    protected void renderMenu(final Map menuMap, final String appRoot, final PrintWriter pw ) {
+        throw new UnsupportedOperationException();
     }
 
     /**
@@ -791,31 +621,20 @@ public abstract class AbstractWebConsolePlugin extends HttpServlet
      * @param pw the writer, where the HTML data is rendered
      * @see #startResponse(HttpServletRequest, HttpServletResponse)
      */
-    protected void endResponse( PrintWriter pw )
-    {
-        pw.println(getFooter());
+    protected void endResponse( PrintWriter pw ) {
+        pw.println(NavigationRenderer.FOOTER);
     }
 
-
     /**
-     * An utility method, that is used to filter out simple parameter from file
-     * parameter when multipart transfer encoding is used.
-     *
-     * This method processes the request and sets a request attribute
-     * {@link #ATTR_FILEUPLOAD}. The attribute value is a {@link Map}
-     * where the key is a String specifying the field name and the value
-     * is a {@link org.apache.commons.fileupload.FileItem}.
-     *
-     * @param request the HTTP request coming from the user
-     * @param name the name of the parameter
-     * @return if not multipart transfer encoding is used - the value is the
-     *  parameter value or <code>null</code> if not set. If multipart is used,
-     *  and the specified parameter is field - then the value of the parameter
-     *  is returned.
-     * @deprecated use {@link WebConsoleUtil#getParameter(HttpServletRequest, String)}
+     * Do not use this method anymore. Use the Servlet API for request parameter
+     * handling.
+     * @param request The request object
+     * @param name The name of the parameter
+     * @return The parameter value or <code>null</code> if the parameter is not set
+     * @deprecated Use the Servlet API for uploads
      */
-    public static final String getParameter( HttpServletRequest request, String name )
-    {
+    @Deprecated
+    public static final String getParameter( HttpServletRequest request, String name ) {
         return WebConsoleUtil.getParameter(request, name);
     }
 
@@ -843,9 +662,11 @@ public abstract class AbstractWebConsolePlugin extends HttpServlet
      * branding.
      *
      * @return the brandingPlugin
+     * @deprecated
      */
+    @Deprecated
     public static BrandingPlugin getBrandingPlugin() {
-        return AbstractWebConsolePlugin.brandingPlugin;
+        return AbstractWebConsolePlugin.BRANDING_PLUGIN;
     }
 
     /**
@@ -856,15 +677,16 @@ public abstract class AbstractWebConsolePlugin extends HttpServlet
      * to update the branding plugin to use.
      *
      * @param brandingPlugin the brandingPlugin to set
+     * @deprecated
      */
-    public static final void setBrandingPlugin(BrandingPlugin brandingPlugin) {
-        if(brandingPlugin == null){
-            AbstractWebConsolePlugin.brandingPlugin = DefaultBrandingPlugin.getInstance();
+    @Deprecated
+    public static final void setBrandingPlugin(final BrandingPlugin brandingPlugin) {
+        if (brandingPlugin == null){
+            AbstractWebConsolePlugin.BRANDING_PLUGIN = DefaultBrandingPlugin.getInstance();
         } else {
-            AbstractWebConsolePlugin.brandingPlugin = brandingPlugin;
+            AbstractWebConsolePlugin.BRANDING_PLUGIN = brandingPlugin;
         }
     }
-
 
     /**
      * Sets the log level to be applied for calls to the {@link #log(int, String)}
@@ -876,41 +698,8 @@ public abstract class AbstractWebConsolePlugin extends HttpServlet
      * @param logLevel the maximum allowed log level. If message is logged with
      *        lower level it will not be forwarded to the logger.
      */
-    public static final void setLogLevel( int logLevel )
-    {
-        AbstractWebConsolePlugin.logLevel = logLevel;
-    }
-
-
-    private final String getHeader()
-    {
-        // MessageFormat pattern place holder
-        //  0 main title (brand name)
-        //  1 console plugin title
-        //  2 application root path (ATTR_APP_ROOT)
-        //  3 console plugin label (from the URI)
-        //  4 branding favourite icon (BrandingPlugin.getFavIcon())
-        //  5 branding main style sheet (BrandingPlugin.getMainStyleSheet())
-        //  6 branding product URL (BrandingPlugin.getProductURL())
-        //  7 branding product name (BrandingPlugin.getProductName())
-        //  8 branding product image (BrandingPlugin.getProductImage())
-        //  9 additional HTML code to be inserted into the <head> section
-        //    (for example plugin provided CSS links)
-        if ( HEADER == null )
-        {
-            HEADER = readTemplateFile( AbstractWebConsolePlugin.class, "/templates/main_header.html" ); //$NON-NLS-1$
-        }
-        return HEADER;
-    }
-
-
-    private final String getFooter()
-    {
-        if ( FOOTER == null )
-        {
-            FOOTER = readTemplateFile( AbstractWebConsolePlugin.class, "/templates/main_footer.html" ); //$NON-NLS-1$
-        }
-        return FOOTER;
+    public static final void setLogLevel( final int logLevel ) {
+        // nothing to do
     }
 
     /**
@@ -932,42 +721,13 @@ public abstract class AbstractWebConsolePlugin extends HttpServlet
      *      exception thrown as its cause.
      */
     protected final String readTemplateFile( final String templateFile ) {
-        return readTemplateFile( getClass(), templateFile );
-    }
-
-    private final String readTemplateFile( final Class clazz, final String templateFile)
-    {
-        InputStream templateStream = clazz.getResourceAsStream( templateFile );
-        if ( templateStream != null )
-        {
-            try
-            {
-                String str = IOUtils.toString( templateStream, "UTF-8" ); //$NON-NLS-1$
-                switch ( str.charAt(0) )
-                { // skip BOM
-                    case 0xFEFF: // UTF-16/UTF-32, big-endian
-                    case 0xFFFE: // UTF-16, little-endian
-                    case 0xEFBB: // UTF-8
-                        return str.substring(1);
-                }
-                return str;
-            }
-            catch ( IOException e )
-            {
-                // don't use new Exception(message, cause) because cause is 1.4+
-                throw new RuntimeException( "readTemplateFile: Error loading " + templateFile + ": " + e ); //$NON-NLS-1$ //$NON-NLS-2$
-            }
-            finally
-            {
-                IOUtils.closeQuietly( templateStream );
-            }
+        try {
+            return Util.readTemplateFile( getClass(), templateFile );
+        } catch (final IOException e) {
+            Util.LOGGER.error("readTemplateFile: File '{}' not found through class {}", templateFile, getClass() );
+            return "";
         }
-
-        // template file does not exist, return an empty string
-        log( LogService.LOG_ERROR, "readTemplateFile: File '" + templateFile + "' not found through class " + clazz ); //$NON-NLS-1$ //$NON-NLS-2$
-        return ""; //$NON-NLS-1$
     }
-
 
     private final String getCssLinks( final String appRoot )
     {
@@ -975,16 +735,16 @@ public abstract class AbstractWebConsolePlugin extends HttpServlet
         final String[] cssRefs = getCssReferences();
         if ( cssRefs == null )
         {
-            return ""; //$NON-NLS-1$
+            return "";
         }
 
         // build the CSS links from the references
-        final StringBuffer buf = new StringBuffer();
+        final StringBuilder buf = new StringBuilder();
         for ( int i = 0; i < cssRefs.length; i++ )
         {
-            buf.append( "<link href='" ); //$NON-NLS-1$
+            buf.append( "<link href='" );
             buf.append( toUrl( cssRefs[i], appRoot ) );
-            buf.append( "' rel='stylesheet' type='text/css' />" ); //$NON-NLS-1$
+            buf.append( "' rel='stylesheet' type='text/css' />" );
         }
 
         return buf.toString();
@@ -1005,96 +765,31 @@ public abstract class AbstractWebConsolePlugin extends HttpServlet
      */
     private static final String toUrl( final String url, final String appRoot )
     {
-        if ( url.startsWith( "/" ) ) //$NON-NLS-1$
+        if ( url.startsWith( "/" ) )
         {
             return appRoot + url;
         }
         return url;
     }
 
-
-    private SortedMap sortMenuCategoryMap( Map map, String appRoot )
-    {
-        SortedMap sortedMap = new TreeMap( String.CASE_INSENSITIVE_ORDER );
-        Iterator keys = map.keySet().iterator();
-        while ( keys.hasNext() )
-        {
-            String key = ( String ) keys.next();
-            if ( key.startsWith( "category." ) )
-            {
-                SortedMap categoryMap = sortMenuCategoryMap( ( Map ) map.get( key ), appRoot );
-                String title = key.substring( key.indexOf( '.' ) + 1 );
-                if ( sortedMap.containsKey( title ) )
-                {
-                    ( ( MenuItem ) sortedMap.get( title ) ).setSubMenu( categoryMap );
-                }
-                else
-                {
-                    String link = "<a href=\"#\">" + title + "</a>";
-                    MenuItem menuItem = new MenuItem( link, categoryMap );
-                    sortedMap.put( title, menuItem );
-                }
-            }
-            else
-            {
-                String title = ( String ) map.get( key );
-                String link = "<a href=\"" + appRoot + "/" + key + "\">" + title + "</a>";
-                if ( sortedMap.containsKey( title ) )
-                {
-                    ( ( MenuItem ) sortedMap.get( title ) ).setLink( link );
-                }
-                else
-                {
-                    MenuItem menuItem = new MenuItem( link );
-                    sortedMap.put( title, menuItem );
-                }
-            }
-
-        }
-        return sortedMap;
-    }
-
-    private static class MenuItem
-    {
-    private String link;
-        private Map subMenu;
-
-
-        public MenuItem( String link )
-        {
-            this.link = link;
-        }
-
-
-        public MenuItem( String link, Map subMenu )
-        {
-            super();
-            this.link = link;
-            this.subMenu = subMenu;
-        }
-
-
-        public String getLink()
-        {
-            return link;
-        }
-
-
-        public void setLink( String link )
-        {
-            this.link = link;
-        }
-
-
-        public Map getSubMenu()
-        {
-            return subMenu;
-        }
-
-
-        public void setSubMenu( Map subMenu )
-        {
-            this.subMenu = subMenu;
-        }
+    /**
+     * Returns the {@link RequestVariableResolver} for the given request.
+     * <p>
+     * The resolver is added to the request attributes via the web console main
+     * servlet before it invokes any plugins.
+     * The preset properties are
+     * <code>appRoot</code> set to the value of the
+     * {@link WebConsoleConstants#ATTR_APP_ROOT} request attribute and
+     * <code>pluginRoot</code> set to the value of the
+     * {@link WebConsoleConstants#ATTR_PLUGIN_ROOT} request attribute.
+     * <p>
+     *
+     * @param request The request whose attribute is returned 
+     *
+     * @return The {@link RequestVariableResolver} for the given request.
+     * @since 3.5.0
+     */
+    public RequestVariableResolver getVariableResolver( final ServletRequest request) {
+        return (RequestVariableResolver) request.getAttribute( RequestVariableResolver.REQUEST_ATTRIBUTE );
     }
 }

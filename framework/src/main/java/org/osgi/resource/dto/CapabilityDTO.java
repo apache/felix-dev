@@ -23,7 +23,7 @@ import org.osgi.resource.Capability;
 /**
  * Data Transfer Object for a Capability.
  * 
- * @author $Id$
+ * @author $Id: 1f7fad1bf5985e7a4e8e72866019a47300402531 $
  * @NotThreadSafe
  */
 public class CapabilityDTO extends DTO {

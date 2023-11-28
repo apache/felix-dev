@@ -18,9 +18,13 @@
  */
 package org.apache.felix.http.base.internal.runtime;
 
+import java.util.Arrays;
+import java.util.Objects;
+
 import org.apache.felix.http.base.internal.util.PatternUtil;
+import org.jetbrains.annotations.NotNull;
 import org.osgi.framework.ServiceReference;
-import org.osgi.service.http.whiteboard.HttpWhiteboardConstants;
+import org.osgi.service.servlet.whiteboard.HttpWhiteboardConstants;
 
 /**
  * Info object for a resource registration
@@ -44,7 +48,7 @@ public final class ResourceInfo extends WhiteboardServiceInfo<Object>
         public ResourceServletInfo(ResourceInfo resource) {
             super(resource);
         }
-    };
+    }
 
     public ResourceInfo(final ServiceReference<Object> ref)
     {
@@ -57,7 +61,6 @@ public final class ResourceInfo extends WhiteboardServiceInfo<Object>
     @Override
     public boolean isValid()
     {
-        // TODO - do we need to check the prefix?
         boolean valid = super.isValid() && !isEmpty(this.patterns) && !isEmpty(this.prefix);
         if ( valid ) {
             for(final String p : patterns)
@@ -85,5 +88,20 @@ public final class ResourceInfo extends WhiteboardServiceInfo<Object>
     public ServletInfo getServletInfo()
     {
         return this.servletInfo;
+    }
+
+    @Override
+    public @NotNull String getType() {
+        return "Resource";
+    }
+
+    @Override
+    public boolean isSame(AbstractInfo<Object> other) {
+        if (!super.isSame(other)) {
+            return false;
+        }
+        final ResourceInfo o = (ResourceInfo) other;
+        return Arrays.equals(this.patterns, o.patterns)
+            && Objects.equals(this.prefix, o.prefix);
     }
 }

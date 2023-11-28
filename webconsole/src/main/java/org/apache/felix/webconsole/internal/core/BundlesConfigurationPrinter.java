@@ -19,72 +19,30 @@ package org.apache.felix.webconsole.internal.core;
 
 import java.io.PrintWriter;
 import java.text.MessageFormat;
-import java.util.Iterator;
-import java.util.Map;
 import java.util.TreeMap;
 
+import org.apache.felix.inventory.Format;
 import org.apache.felix.webconsole.internal.AbstractConfigurationPrinter;
 import org.osgi.framework.Bundle;
-import org.osgi.framework.BundleContext;
 import org.osgi.framework.Constants;
-import org.osgi.service.packageadmin.PackageAdmin;
-import org.osgi.util.tracker.ServiceTracker;
+import org.osgi.framework.wiring.BundleRevision;
 
 
 /**
  * The <code>BundlesConfigurationPrinter</code> prints out the bundle list.
  */
-public class BundlesConfigurationPrinter
-    extends AbstractConfigurationPrinter
-{
+public class BundlesConfigurationPrinter extends AbstractConfigurationPrinter {
 
-    private ServiceTracker packageAdminTracker;
-
-    /**
-     * @see org.apache.felix.webconsole.internal.AbstractConfigurationPrinter#activate(org.osgi.framework.BundleContext)
-     */
-    public void activate(final BundleContext bundleContext)
-    {
-        super.activate(bundleContext);
-        this.packageAdminTracker = new ServiceTracker(bundleContext, PackageAdmin.class.getName(), null);
-        this.packageAdminTracker.open();
-    }
-
-    /**
-     * @see org.apache.felix.webconsole.internal.AbstractConfigurationPrinter#deactivate()
-     */
-    public void deactivate()
-    {
-        if ( this.packageAdminTracker != null )
-        {
-            this.packageAdminTracker.close();
-            this.packageAdminTracker = null;
-        }
-        super.deactivate();
-    }
-
-    /**
-     * @see org.apache.felix.webconsole.ConfigurationPrinter#getTitle()
-     */
-    public String getTitle()
-    {
-        return "Bundlelist";
-    }
-
-    private String getHeaderValue(final Bundle b, final String name)
-    {
+    private String getHeaderValue(final Bundle b, final String name) {
         String val = (String)b.getHeaders().get(name);
-        if ( val == null )
-        {
+        if ( val == null ) {
             val = "";
         }
         return val;
     }
 
-    private String getState(final int state)
-    {
-        switch (state)
-        {
+    private String getState(final int state) {
+        switch (state) {
             case Bundle.ACTIVE : return "active";
             case Bundle.INSTALLED : return "installed";
             case Bundle.RESOLVED : return "resolved";
@@ -95,29 +53,29 @@ public class BundlesConfigurationPrinter
         return String.valueOf(state);
     }
 
-    private final boolean isFragmentBundle( final Bundle bundle)
-    {
-        return ((PackageAdmin)this.packageAdminTracker.getService()).getBundleType( bundle ) == PackageAdmin.BUNDLE_TYPE_FRAGMENT;
+    private final boolean isFragmentBundle( final Bundle bundle) {
+        final BundleRevision rev = bundle.adapt(BundleRevision.class);
+        return rev != null && (rev.getTypes() & BundleRevision.TYPE_FRAGMENT) == BundleRevision.TYPE_FRAGMENT;
     }
 
-    /**
-     * @see org.apache.felix.webconsole.ConfigurationPrinter#printConfiguration(java.io.PrintWriter)
-     */
-    public void printConfiguration( final PrintWriter pw )
-    {
+    @Override
+    protected final String getTitle() {
+        return "Bundlelist";
+    }
+
+    @Override
+    public void print(final PrintWriter pw, final Format format, final boolean isZip) {
         final Bundle[] bundles = BundleContextUtil.getWorkingBundleContext(this.getBundleContext()).getBundles();
         // create a map for sorting first
-        final TreeMap bundlesMap = new TreeMap();
+        final TreeMap<String, String> bundlesMap = new TreeMap<>();
         int active = 0, installed = 0, resolved = 0, fragments = 0;
-        for( int i =0; i<bundles.length; i++)
-        {
+        for( int i =0; i<bundles.length; i++) {
             final Bundle bundle = bundles[i];
             final String symbolicName = bundle.getSymbolicName();
             final String version = (String)bundle.getHeaders().get(Constants.BUNDLE_VERSION);
 
             // count states and calculate prefix
-            switch ( bundle.getState() )
-            {
+            switch ( bundle.getState() ) {
                 case Bundle.ACTIVE:
                     active++;
                     break;
@@ -125,12 +83,9 @@ public class BundlesConfigurationPrinter
                     installed++;
                     break;
                 case Bundle.RESOLVED:
-                    if ( isFragmentBundle( bundle ) )
-                    {
+                    if ( isFragmentBundle( bundle ) ) {
                         fragments++;
-                    }
-                    else
-                    {
+                    } else {
                         resolved++;
                     }
                     break;
@@ -147,54 +102,43 @@ public class BundlesConfigurationPrinter
             bundlesMap.put(key, value);
 
         }
-        final StringBuffer buffer = new StringBuffer();
+        final StringBuilder buffer = new StringBuilder();
         buffer.append("Status: ");
         appendBundleInfoCount(buffer, "in total", bundles.length);
-        if ( active == bundles.length || active + fragments == bundles.length )
-        {
+        if ( active == bundles.length || active + fragments == bundles.length ) {
             buffer.append(" - all ");
             appendBundleInfoCount(buffer, "active.", bundles.length);
-        }
-        else
-        {
-            if ( active != 0 )
-            {
+        } else{
+            if ( active != 0 ) {
                 buffer.append(", ");
                 appendBundleInfoCount(buffer, "active", active);
             }
-            if ( fragments != 0 )
-            {
+            if ( fragments != 0 ) {
                 buffer.append(", ");
                 appendBundleInfoCount(buffer, "active fragments", fragments);
             }
-            if ( resolved != 0 )
-            {
+            if ( resolved != 0 ) {
                 buffer.append(", ");
                 appendBundleInfoCount(buffer, "resolved", resolved);
             }
-            if ( installed != 0 )
-            {
+            if ( installed != 0 ) {
                 buffer.append(", ");
                 appendBundleInfoCount(buffer, "installed", installed);
             }
         }
         pw.println(buffer.toString());
         pw.println();
-        final Iterator i = bundlesMap.entrySet().iterator();
-        while ( i.hasNext() )
-        {
-            final Map.Entry entry = (Map.Entry)i.next();
-            pw.println(entry.getValue());
-
+        for(final String value : bundlesMap.values()) {
+            pw.println(value);
         }
     }
 
-    private void appendBundleInfoCount( final StringBuffer buf, String msg, int count )
-    {
+    private void appendBundleInfoCount( final StringBuilder buf, String msg, int count ) {
         buf.append(count);
         buf.append(" bundle");
-        if ( count != 1 )
+        if ( count != 1 ) {
             buf.append( 's' );
+        }
         buf.append(' ');
         buf.append(msg);
     }

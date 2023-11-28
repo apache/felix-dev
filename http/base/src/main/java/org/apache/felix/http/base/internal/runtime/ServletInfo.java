@@ -18,17 +18,21 @@
  */
 package org.apache.felix.http.base.internal.runtime;
 
+import java.util.Arrays;
 import java.util.Collections;
 import java.util.Map;
-
-import javax.servlet.Servlet;
+import java.util.Objects;
 
 import org.apache.felix.http.base.internal.dispatch.MultipartConfig;
 import org.apache.felix.http.base.internal.util.PatternUtil;
+import org.apache.felix.http.jakartawrappers.ServletWrapper;
+import org.jetbrains.annotations.NotNull;
 import org.osgi.dto.DTO;
 import org.osgi.framework.ServiceReference;
-import org.osgi.service.http.runtime.dto.ServletDTO;
-import org.osgi.service.http.whiteboard.HttpWhiteboardConstants;
+import org.osgi.service.servlet.runtime.dto.ServletDTO;
+import org.osgi.service.servlet.whiteboard.HttpWhiteboardConstants;
+
+import jakarta.servlet.Servlet;
 
 /**
  * Provides registration information for a {@link Servlet}, and is used to programmatically register {@link Servlet}s.
@@ -95,7 +99,8 @@ public class ServletInfo extends WhiteboardServiceInfo<Servlet>
                 cfg = new MultipartConfig(getIntProperty(ref, HttpWhiteboardConstants.HTTP_WHITEBOARD_SERVLET_MULTIPART_FILESIZETHRESHOLD),
                         getStringProperty(ref, HttpWhiteboardConstants.HTTP_WHITEBOARD_SERVLET_MULTIPART_LOCATION),
                         getLongProperty(ref, HttpWhiteboardConstants.HTTP_WHITEBOARD_SERVLET_MULTIPART_MAXFILESIZE),
-                        getLongProperty(ref, HttpWhiteboardConstants.HTTP_WHITEBOARD_SERVLET_MULTIPART_MAXREQUESTSIZE));
+                        getLongProperty(ref, HttpWhiteboardConstants.HTTP_WHITEBOARD_SERVLET_MULTIPART_MAXREQUESTSIZE),
+                        getLongProperty(ref, "osgi.http.whiteboard.servlet.multipart.maxFileCount"));
             }
             catch (final IllegalArgumentException iae)
             {
@@ -251,5 +256,38 @@ public class ServletInfo extends WhiteboardServiceInfo<Servlet>
     public MultipartConfig getMultipartConfig()
     {
         return multipartConfig;
+    }
+
+    @Override
+    public @NotNull String getType() {
+        return "Servlet";
+    }
+
+    /**
+     * Get the class name of the servlet
+     * @param servlet The servlet
+     * @return The class name
+     */
+    public @NotNull String getClassName(@NotNull final Servlet servlet) {
+        if (servlet instanceof ServletWrapper ) {
+            return ((ServletWrapper)servlet).getServlet().getClass().getName();
+        }
+        return servlet.getClass().getName();
+    }
+
+    @Override
+    public boolean isSame(AbstractInfo<Servlet> other) {
+        if (!super.isSame(other)) {
+            return false;
+        }
+        final ServletInfo o = (ServletInfo) other;
+        return Objects.equals(this.name, o.name)
+            && Arrays.equals(this.patterns, o.patterns)
+            && Arrays.equals(this.errorPage, o.errorPage)
+            && this.asyncSupported == o.asyncSupported
+            && this.isResource == o.isResource
+            && Objects.equals(this.multipartConfig, o.multipartConfig)
+            && Objects.equals(this.prefix, o.prefix)
+            && Objects.equals(this.initParams, o.initParams);
     }
 }

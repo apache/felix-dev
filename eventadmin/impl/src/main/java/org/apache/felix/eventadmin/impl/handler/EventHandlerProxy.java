@@ -20,6 +20,7 @@ package org.apache.felix.eventadmin.impl.handler;
 
 import java.util.Collection;
 import java.util.Iterator;
+import java.util.concurrent.atomic.AtomicBoolean;
 
 import org.apache.felix.eventadmin.impl.security.PermissionsUtil;
 import org.apache.felix.eventadmin.impl.util.LogWrapper;
@@ -36,7 +37,7 @@ import org.osgi.service.event.EventHandler;
  * on demand and prepares some information for faster processing.
  *
  * It checks the timeout handling for the implementation as well as
- * blacklisting the handler.
+ * putting the handler on the deny list.
  *
  * @author <a href="mailto:dev@felix.apache.org">Felix Project Team</a>
  */
@@ -57,8 +58,8 @@ public class EventHandlerProxy {
     /** Lazy fetched event handler. */
     private volatile EventHandler handler;
 
-    /** Is this handler blacklisted? */
-    private volatile boolean blacklisted;
+    /** Is this handler denied? */
+    private final AtomicBoolean denied = new AtomicBoolean();
 
     /** Use timeout. */
     private boolean useTimeout;
@@ -85,7 +86,7 @@ public class EventHandlerProxy {
      */
     public boolean update()
     {
-        this.blacklisted = false;
+        this.denied.set(false);
         boolean valid = true;
         // First check, topic
         final Object topicObj = reference.getProperty(EventConstants.EVENT_TOPIC);
@@ -268,6 +269,14 @@ public class EventHandlerProxy {
     }
 
     /**
+     * Get some info about the event handler
+     * @return Handler info
+     */
+    public String getInfo() {
+        return this.reference.toString() + " [Bundle " + this.reference.getBundle() + "]";
+    }
+
+    /**
      * Dispose the proxy and release the handler
      */
     public void dispose()
@@ -277,6 +286,7 @@ public class EventHandlerProxy {
 
     /**
      * Get the event handler.
+     * @return The event handler or {@code null}
      */
     private synchronized EventHandler obtain() {
         if (this.handler == null)
@@ -318,7 +328,8 @@ public class EventHandlerProxy {
 
     /**
      * Get the topics of this handler.
-     * If this handler matches all topics <code>null</code> is returned
+     * If this handler matches all topics {@code null} is returned
+     * @return The topics of this handler or {@code null}
      */
     public String[] getTopics()
     {
@@ -327,13 +338,15 @@ public class EventHandlerProxy {
 
     /**
      * Check if this handler is allowed to receive the event
-     * - blacklisted
+     * - denied
      * - check filter
      * - check permission
+     * @param event The event
+     * @return {@code true} if the event can be delivered
      */
     public boolean canDeliver(final Event event)
     {
-        if ( this.blacklisted )
+        if ( this.denied.get() )
         {
             return false;
         }
@@ -363,6 +376,7 @@ public class EventHandlerProxy {
 
     /**
      * Should a timeout be used for this handler?
+     * @return {@code true} if a timeout should be used
      */
     public boolean useTimeout()
     {
@@ -371,6 +385,7 @@ public class EventHandlerProxy {
 
     /**
      * Should async events be delivered in order?
+     * @return {@code true} if async events should be delivered in order
      */
     public boolean isAsyncOrderedDelivery()
     {
@@ -379,6 +394,7 @@ public class EventHandlerProxy {
 
     /**
      * Check the timeout configuration for this handler.
+     * @param className Handler name
      */
     private void checkTimeout(final String className)
     {
@@ -401,6 +417,7 @@ public class EventHandlerProxy {
 
     /**
      * Send the event.
+     * @param event The event
      */
     public void sendEvent(final Event event)
     {
@@ -419,27 +436,32 @@ public class EventHandlerProxy {
             // The spec says that we must catch exceptions and log them:
             LogWrapper.getLogger().log(
                             this.reference,
-                            LogWrapper.LOG_WARNING,
-                            "Exception during event dispatch [" + event + " | "
-                                            + this.reference + " | Bundle("
-                                            + this.reference.getBundle() + ")]", e);
+                            LogWrapper.LOG_ERROR,
+                            String.format("Exception during event dispatch [%s | %s | Bundle(%s) | Handler(%s)]", 
+                                event, this.reference, this.reference.getBundle(), handlerService), e);
         }
     }
 
     /**
-     * Blacklist the handler.
+     * Deny the handler.
      */
-    public void blackListHandler()
+    public void denyEventHandler()
     {
-    	if(!this.blacklisted)
-    	{
-	        LogWrapper.getLogger().log(
-	                        LogWrapper.LOG_WARNING,
-	                        "Blacklisting ServiceReference [" + this.reference + " | Bundle("
-	                                        + this.reference.getBundle() + ")] due to timeout!");
-	        this.blacklisted = true;
-	        // we can free the handler now.
-	        this.release();
+        if ( this.denied.compareAndSet(false, true) ) {
+            final EventHandler handlerService = this.handler;
+            LogWrapper.getLogger().log(
+                    LogWrapper.LOG_ERROR,
+                    String.format("Denying event handler from ServiceReference [%s | Bundle(%s)%s] due to timeout!",
+                        this.reference,
+                        this.reference.getBundle(),
+                        handlerService == null ? "" : " | Handler(".concat(handlerService.getClass().getName()).concat(")")));
+
+            this.release();
     	}
+    }
+
+    public boolean isDenied()
+    {
+        return this.denied.get();
     }
 }

@@ -45,13 +45,13 @@ class ConfigurationSupport implements ManagedService
 
 
     //---------- ManagedService
-    public void updated( final Dictionary config ) throws ConfigurationException
+    public void updated( final Dictionary<String, ?> config ) throws ConfigurationException
     {
         if (null != System.getSecurityManager())
         {
             try
             {
-                AccessController.doPrivileged(new PrivilegedExceptionAction()
+                AccessController.doPrivileged(new PrivilegedExceptionAction<>()
                 {
                     public Object run() throws Exception
                     {
@@ -79,7 +79,7 @@ class ConfigurationSupport implements ManagedService
         }
     }
 
-    void updated0( Dictionary config ) throws ConfigurationException
+    void updated0( Dictionary<String, ?> config ) throws ConfigurationException
     {
         // validate hashed password
         if ( isPasswordHashed( config ) )
@@ -91,7 +91,7 @@ class ConfigurationSupport implements ManagedService
             // hash the password, update config and wait for the
             // updated configuration to be supplied later
             final BundleContext bc = this.osgiManager.getBundleContext();
-            final ServiceReference ref = bc.getServiceReference( ConfigurationAdmin.class.getName() );
+            final ServiceReference<?> ref = bc.getServiceReference( ConfigurationAdmin.class.getName() );
             if ( ref != null )
             {
                 final ConfigurationAdmin ca = ( ConfigurationAdmin ) bc.getService( ref );
@@ -100,7 +100,7 @@ class ConfigurationSupport implements ManagedService
                     try
                     {
                         Configuration cfg = ca.getConfiguration( this.osgiManager.getConfigurationPid() );
-                        Dictionary newConfig = cfg.getProperties();
+                        Dictionary<String, Object> newConfig = cfg.getProperties();
                         if ( newConfig != null )
                         {
                             String pwd = ( String ) config.get( OsgiManager.PROP_PASSWORD );
@@ -129,7 +129,7 @@ class ConfigurationSupport implements ManagedService
     }
 
 
-    private boolean isPasswordHashed( final Dictionary config )
+    private boolean isPasswordHashed( final Dictionary<String, ?> config )
     {
         // assume hashed (default) password if no config
         if ( config == null )

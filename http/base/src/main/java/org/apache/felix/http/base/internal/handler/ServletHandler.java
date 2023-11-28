@@ -19,17 +19,18 @@ package org.apache.felix.http.base.internal.handler;
 import java.io.File;
 import java.io.IOException;
 
-import javax.servlet.Servlet;
-import javax.servlet.ServletException;
-import javax.servlet.ServletRequest;
-import javax.servlet.ServletResponse;
-
 import org.apache.felix.http.base.internal.context.ExtServletContext;
 import org.apache.felix.http.base.internal.dispatch.MultipartConfig;
 import org.apache.felix.http.base.internal.logger.SystemLogger;
 import org.apache.felix.http.base.internal.runtime.ServletInfo;
+import org.apache.felix.http.jakartawrappers.ServletWrapper;
 import org.osgi.framework.Bundle;
-import org.osgi.service.http.runtime.dto.DTOConstants;
+import org.osgi.service.servlet.runtime.dto.DTOConstants;
+
+import jakarta.servlet.Servlet;
+import jakarta.servlet.ServletException;
+import jakarta.servlet.ServletRequest;
+import jakarta.servlet.ServletResponse;
 
 /**
  * The servlet handler handles the initialization and destruction of
@@ -39,7 +40,7 @@ public abstract class ServletHandler implements Comparable<ServletHandler>
 {
     private static final String TEMP_DIR = System.getProperty("java.io.tmpdir");
 
-    private static final String JAVA_SERVLET_TEMP_DIR_PROP = "javax.servlet.content.tempdir";
+    private static final String JAVA_SERVLET_TEMP_DIR_PROP = "jakarta.servlet.content.tempdir";
 
     private final long contextServiceId;
 
@@ -64,6 +65,9 @@ public abstract class ServletHandler implements Comparable<ServletHandler>
         if ( origConfig != null )
         {
             String location = origConfig.multipartLocation;
+            if ( location != null && location.trim().length() == 0 ) {
+                location = null;
+            }
             if ( location == null ) {
                 final Object obj = context == null ? null : context.getAttribute(JAVA_SERVLET_TEMP_DIR_PROP);
                 if ( obj != null ) {
@@ -80,7 +84,8 @@ public abstract class ServletHandler implements Comparable<ServletHandler>
             this.mpConfig = new MultipartConfig(origConfig.multipartThreshold,
                     location,
                     origConfig.multipartMaxFileSize,
-                    origConfig.multipartMaxRequestSize);
+                    origConfig.multipartMaxRequestSize,
+                    origConfig.multipartMaxFileCount);
         }
         else
         {
@@ -141,7 +146,11 @@ public abstract class ServletHandler implements Comparable<ServletHandler>
             final Servlet local = this.servlet;
             if ( local != null )
             {
-                name = local.getClass().getName();
+                if (local instanceof ServletWrapper ) {
+                    name = ((ServletWrapper)local).getServlet().getClass().getName();
+                } else {
+                    name = local.getClass().getName();
+                }
             }
         }
         return name;
@@ -170,8 +179,8 @@ public abstract class ServletHandler implements Comparable<ServletHandler>
         }
         catch (final Exception e)
         {
-            SystemLogger.error(this.getServletInfo().getServiceReference(),
-                    "Error during calling init() on servlet " + this.servlet,
+            SystemLogger.LOGGER.error(SystemLogger.formatMessage(this.getServletInfo().getServiceReference(),
+                    "Error during calling init() on servlet ".concat(this.servletInfo.getClassName(this.servlet))),
                     e);
             return DTOConstants.FAILURE_REASON_EXCEPTION_ON_INIT;
         }
@@ -197,9 +206,8 @@ public abstract class ServletHandler implements Comparable<ServletHandler>
             catch ( final Exception ignore )
             {
                 // we ignore this
-                SystemLogger.error(this.getServletInfo().getServiceReference(),
-                        "Error during calling destroy() on servlet " + this.servlet,
-                        ignore);
+                SystemLogger.LOGGER.error(SystemLogger.formatMessage(this.getServletInfo().getServiceReference(),
+                        "Error during calling destroy() on servlet ".concat(this.servletInfo.getClassName(this.servlet))), ignore);
             }
 
             servlet = null;

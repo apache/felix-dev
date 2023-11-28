@@ -23,21 +23,41 @@ import java.util.function.Consumer;
 
 import org.osgi.service.component.runtime.dto.ComponentConfigurationDTO;
 
+/**
+ * Root cause printer
+ *
+ */
 public class RootCausePrinter {
     private Consumer<String> printCallback;
-    
+
+    /**
+     * Create new printer for system out
+     */
     public RootCausePrinter() {
         this(System.out::println);
     }
-    
+
+    /**
+     * Create new printer for callback
+     * @param printCallback The callback
+     */
     public RootCausePrinter(Consumer<String> printCallback) {
         this.printCallback = printCallback;
     }
-    
-    public void print(DSComp desc) {
-        print(desc, 0);
+
+    /**
+     * Print the root cause
+     * @param comp The component
+     */
+    public void print(DSComp comp) {
+        print(comp, 0);
     }
-    
+
+    /**
+     * Print the root cause
+     * @param comp The component
+     * @param level Indent
+     */
     public void print(DSComp comp, int level) {
         if (comp.config == null && "require".equals(comp.desc.configurationPolicy)) {
             println(level, "Component %s missing config on pid %s", comp.desc.name, Arrays.asList(comp.desc.configurationPid));
@@ -57,7 +77,7 @@ public class RootCausePrinter {
             }
         }
     }
- 
+
     private Object getFilterSt(String filter) {
         return filter == null ? "" : ", filter " + filter;
     }
@@ -65,7 +85,7 @@ public class RootCausePrinter {
     private void println(int level, String format, Object... args) {
         printCallback.accept(spaces(level) + String.format(format, args));
     }
-    
+
     private String spaces(int length) {
         char[] bytes = new char[length];
         Arrays.fill(bytes, ' ');

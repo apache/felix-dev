@@ -18,15 +18,13 @@ package org.apache.felix.http.base.internal.handler;
 
 import java.io.FilePermission;
 
-import javax.servlet.Servlet;
-
 import org.apache.felix.http.base.internal.context.ExtServletContext;
 import org.apache.felix.http.base.internal.runtime.ServletInfo;
 import org.osgi.framework.Bundle;
 import org.osgi.framework.BundleContext;
-import org.osgi.framework.ServiceObjects;
-import org.osgi.framework.ServiceReference;
-import org.osgi.service.http.runtime.dto.DTOConstants;
+import org.osgi.service.servlet.runtime.dto.DTOConstants;
+
+import jakarta.servlet.Servlet;
 
 /**
  * Servlet handler for servlets registered through the http whiteboard.
@@ -105,18 +103,12 @@ public final class WhiteboardServletHandler extends ServletHandler
             return -1;
         }
 
-        final ServiceReference<Servlet> serviceReference = getServletInfo().getServiceReference();
-        final ServiceObjects<Servlet> so = this.bundleContext.getServiceObjects(serviceReference);
-
-        this.setServlet((so == null ? null : so.getService()));
+        this.setServlet(this.getServletInfo().getService(this.bundleContext));
 
         final int reason = super.init();
         if ( reason != -1 )
         {
-            if ( so != null )
-            {
-                so.ungetService(this.getServlet());
-            }
+            this.getServletInfo().ungetService(this.bundleContext, this.getServlet());
             this.setServlet(null);
         }
         return reason;
@@ -130,12 +122,8 @@ public final class WhiteboardServletHandler extends ServletHandler
         {
             if ( super.destroy() )
             {
+                this.getServletInfo().ungetService(this.bundleContext, this.getServlet());
 
-                final ServiceObjects<Servlet> so = this.bundleContext.getServiceObjects(getServletInfo().getServiceReference());
-                if (so != null)
-                {
-                    so.ungetService(s);
-                }
                 return true;
             }
         }

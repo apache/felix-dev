@@ -24,7 +24,7 @@ import org.osgi.framework.PrototypeServiceFactory;
 public class PrototypeServiceFactoryComponentManager<S> extends ServiceFactoryComponentManager<S> implements PrototypeServiceFactory<S>
 {
 
-    public PrototypeServiceFactoryComponentManager(ComponentContainer<S> container, ComponentMethods componentMethods)
+    public PrototypeServiceFactoryComponentManager(ComponentContainer<S> container, ComponentMethods<S> componentMethods)
     {
         super(container, componentMethods);
     }

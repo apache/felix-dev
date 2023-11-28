@@ -1,5 +1,5 @@
 /*
- * Copyright (c) OSGi Alliance (2008, 2018). All Rights Reserved.
+ * Copyright (c) OSGi Alliance (2008, 2020). All Rights Reserved.
  * 
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -19,6 +19,7 @@ package org.osgi.framework.launch;
 import java.io.InputStream;
 import java.net.URL;
 import java.util.Enumeration;
+
 import org.osgi.annotation.versioning.ProviderType;
 import org.osgi.framework.Bundle;
 import org.osgi.framework.BundleException;
@@ -35,7 +36,7 @@ import org.osgi.framework.FrameworkListener;
  * instance.
  * 
  * @ThreadSafe
- * @author $Id: 7fa67978e59a43dfedd6e755ddfa5b1aa6ea9141 $
+ * @author $Id: bf960bdc39d19a780694a8cab5a555b3e0dc0fde $
  */
 @ProviderType
 public interface Framework extends Bundle {
@@ -117,37 +118,33 @@ public interface Framework extends Bundle {
 	 * A Framework Event is returned to indicate why this Framework has stopped.
 	 * 
 	 * @param timeout Maximum number of milliseconds to wait until this
-	 *        Framework has completely stopped. A value of zero will wait
-	 *        indefinitely.
+	 *            Framework has completely stopped. A value of zero will wait
+	 *            indefinitely.
 	 * @return A Framework Event indicating the reason this method returned. The
 	 *         following {@code FrameworkEvent} types may be returned by this
 	 *         method.
 	 *         <ul>
 	 *         <li>{@link FrameworkEvent#STOPPED STOPPED} - This Framework has
-	 *         been stopped. </li>
-	 * 
+	 *         been stopped.</li>
 	 *         <li>{@link FrameworkEvent#STOPPED_UPDATE STOPPED_UPDATE} - This
 	 *         Framework has been updated which has shutdown and will now
 	 *         restart.</li>
-	 * 
-	 *         <li> {@link FrameworkEvent#STOPPED_BOOTCLASSPATH_MODIFIED
-	 *         STOPPED_BOOTCLASSPATH_MODIFIED} - This Framework has been stopped
-	 *         and a bootclasspath extension bundle has been installed or
-	 *         updated. The VM must be restarted in order for the changed boot
-	 *         class path to take effect. </li>
-	 * 
+	 *         <li>{@link FrameworkEvent#STOPPED_SYSTEM_REFRESHED
+	 *         STOPPED_SYSTEM_REFRESHED} - The Framework has been stopped
+	 *         because of a refresh operation on the system bundle. A new class
+	 *         loader must be used to restart the Framework.</li>
 	 *         <li>{@link FrameworkEvent#ERROR ERROR} - The Framework
 	 *         encountered an error while shutting down or an error has occurred
-	 *         which forced the framework to shutdown. </li>
-	 * 
-	 *         <li> {@link FrameworkEvent#WAIT_TIMEDOUT WAIT_TIMEDOUT} - This
+	 *         which forced the framework to shutdown.</li>
+	 *         <li>{@link FrameworkEvent#WAIT_TIMEDOUT WAIT_TIMEDOUT} - This
 	 *         method has timed out and returned before this Framework has
 	 *         stopped.</li>
 	 *         </ul>
 	 * @throws InterruptedException If another thread interrupted the current
-	 *         thread before or while the current thread was waiting for this
-	 *         Framework to completely stop. The <i>interrupted status</i> of
-	 *         the current thread is cleared when this exception is thrown.
+	 *             thread before or while the current thread was waiting for
+	 *             this Framework to completely stop. The <i>interrupted
+	 *             status</i> of the current thread is cleared when this
+	 *             exception is thrown.
 	 * @throws IllegalArgumentException If the value of timeout is negative.
 	 */
 	FrameworkEvent waitForStop(long timeout) throws InterruptedException;

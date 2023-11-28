@@ -18,6 +18,7 @@
  */
 package org.apache.felix.hc.generalchecks.scrutil;
 
+import java.util.Collection;
 import java.util.Optional;
 import java.util.function.Consumer;
 
@@ -39,28 +40,25 @@ public class DsRootCauseAdapter {
         this.analyzer = new DSRootCause(scr);
     }
 
-    public void logMissingService(FormattingResultLog log, String missingServiceName, Status status) {
-        Optional<DSComp> rootCauseOptional = analyzer.getRootCause(missingServiceName);
+    public void logMissingService(FormattingResultLog log, String missingServiceName, Collection<ComponentDescriptionDTO> componentDescriptionDTOs) {
+        Optional<DSComp> rootCauseOptional = analyzer.getRootCause(missingServiceName, componentDescriptionDTOs);
         if (rootCauseOptional.isPresent()) {
-            logRootCause(log, rootCauseOptional.get(), status);
+            logRootCause(log, rootCauseOptional.get());
         } else {
-            log.add(new Entry(status, "Missing service without matching DS component: " + missingServiceName));
+            log.info("Missing service without matching DS component: " + missingServiceName);
         }
     }
 
-    public void logNotEnabledComponent(FormattingResultLog log, ComponentDescriptionDTO desc, Status status) {
-        DSComp component = analyzer.getRootCause(desc);
-        logRootCause(log, component, status);
+    public void logNotEnabledComponent(FormattingResultLog log, ComponentDescriptionDTO desc, Collection<ComponentDescriptionDTO> componentDescriptionDTOs) {
+        DSComp component = analyzer.getRootCause(desc, componentDescriptionDTOs);
+        logRootCause(log, component);
     }
 
-    private void logRootCause(FormattingResultLog log, DSComp component, Status status) {
+    private void logRootCause(FormattingResultLog log, DSComp component) {
         new RootCausePrinter(new Consumer<String>() {
-            private boolean firstLineLogged = false;
-
             @Override
             public void accept(String str) {
-                log.add(new Entry(!firstLineLogged ? status : Status.OK, str.replaceFirst("    ", "-- ").replaceFirst("  ", "- ")));
-                firstLineLogged = true;
+                log.add(new Entry(Status.OK, str.replaceFirst("    ", "-- ").replaceFirst("  ", "- ")));
             }
         }).print(component);
     }

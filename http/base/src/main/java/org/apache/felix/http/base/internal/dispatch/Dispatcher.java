@@ -19,17 +19,6 @@ package org.apache.felix.http.base.internal.dispatch;
 import java.io.IOException;
 import java.util.Set;
 
-import javax.servlet.FilterChain;
-import javax.servlet.FilterConfig;
-import javax.servlet.RequestDispatcher;
-import javax.servlet.ServletException;
-import javax.servlet.ServletRequest;
-import javax.servlet.ServletRequestEvent;
-import javax.servlet.ServletResponse;
-import javax.servlet.http.HttpServletRequest;
-import javax.servlet.http.HttpServletResponse;
-import javax.servlet.http.HttpSession;
-
 import org.apache.felix.http.base.internal.context.ExtServletContext;
 import org.apache.felix.http.base.internal.handler.FilterHandler;
 import org.apache.felix.http.base.internal.handler.HttpSessionWrapper;
@@ -38,8 +27,20 @@ import org.apache.felix.http.base.internal.registry.HandlerRegistry;
 import org.apache.felix.http.base.internal.registry.PathResolution;
 import org.apache.felix.http.base.internal.registry.PerContextHandlerRegistry;
 import org.apache.felix.http.base.internal.whiteboard.WhiteboardManager;
+import org.apache.felix.http.jakartawrappers.ServletExceptionWrapper;
 import org.jetbrains.annotations.Nullable;
-import org.osgi.service.http.whiteboard.Preprocessor;
+import org.osgi.service.servlet.whiteboard.Preprocessor;
+
+import jakarta.servlet.FilterChain;
+import jakarta.servlet.FilterConfig;
+import jakarta.servlet.RequestDispatcher;
+import jakarta.servlet.ServletException;
+import jakarta.servlet.ServletRequest;
+import jakarta.servlet.ServletRequestEvent;
+import jakarta.servlet.ServletResponse;
+import jakarta.servlet.http.HttpServletRequest;
+import jakarta.servlet.http.HttpServletResponse;
+import jakarta.servlet.http.HttpSession;
 
 public final class Dispatcher
 {
@@ -75,7 +76,10 @@ public final class Dispatcher
         if ( mgr == null )
         {
             // not active, always return 404
-            res.sendError(404);
+            if ( !res.isCommitted() )
+            {
+                res.sendError(404);
+            }
             return;
         }
 
@@ -123,13 +127,16 @@ public final class Dispatcher
 		        final HttpServletResponse wrappedResponse = new ServletResponseWrapper(req, res, servletName, errorRegistry);
 		        if ( pr == null )
 		        {
-		            wrappedResponse.sendError(404);
+                    if ( !wrappedResponse.isCommitted() )
+                    {
+                        wrappedResponse.sendError(404);
+                    }
 		            return;
 		        }
 
 		        final ExtServletContext servletContext = pr.handler.getContext();
-		        final RequestInfo requestInfo = new RequestInfo(pr.servletPath, pr.pathInfo, null, req.getRequestURI());
-
+		        final RequestInfo requestInfo = new RequestInfo(pr.servletPath, pr.pathInfo, null, req.getRequestURI(),
+		                pr.handler.getName(), pr.matchedPattern, pr.matchValue, pr.match, false);
 		        final HttpServletRequest wrappedRequest = new ServletRequestWrapper(req, servletContext, requestInfo, null,
 		                pr.handler.getServletInfo().isAsyncSupported(),
 		                pr.handler.getMultipartConfig(),
@@ -146,13 +153,19 @@ public final class Dispatcher
 		            filterChain.doFilter(wrappedRequest, wrappedResponse);
 
 		        }
-		        catch ( final Exception e)
+		        catch ( Exception e)
 		        {
-		            SystemLogger.error("Exception while processing request to " + requestURI, e);
+                    if ( e instanceof ServletExceptionWrapper ) {
+                        e = ((ServletExceptionWrapper)e).getException();
+                    }
+		            SystemLogger.LOGGER.error("Exception while processing request to " + requestURI, e);
 		            req.setAttribute(RequestDispatcher.ERROR_EXCEPTION, e);
 		            req.setAttribute(RequestDispatcher.ERROR_EXCEPTION_TYPE, e.getClass().getName());
 
-		            wrappedResponse.sendError(500);
+                    if ( !wrappedResponse.isCommitted() )
+                    {
+                        wrappedResponse.sendError(500);
+                    }
 		        }
 		        finally
 		        {
@@ -160,7 +173,8 @@ public final class Dispatcher
 		            {
 		                servletContext.getServletRequestListener().requestDestroyed(new ServletRequestEvent(servletContext, wrappedRequest));
 		            }
-		        }			}
+		        }
+		    }
 
 			@Override
 			public void destroy()

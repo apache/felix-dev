@@ -71,7 +71,7 @@ class DirectoryRevision extends BundleArchiveRevision
         throws Exception
     {
         File manifest = new File(m_refDir, "META-INF/MANIFEST.MF");
-        return manifest.isFile() ? BundleCache.getMainAttributes(new StringMap(), BundleCache.getSecureAction().getFileInputStream(manifest), manifest.length()) : null;
+        return BundleCache.getSecureAction().isFile(manifest) ? BundleCache.getMainAttributes(new StringMap(), BundleCache.getSecureAction().getInputStream(manifest), manifest.length()) : null;
     }
 
     public Content getContent() throws Exception

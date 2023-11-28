@@ -20,6 +20,7 @@ package org.apache.felix.configurator.impl;
 
 import static org.mockito.Mockito.inOrder;
 import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
@@ -108,6 +109,39 @@ public class ConfiguratorTest {
         when(bContext.getServiceReferences(ConfigurationAdmin.class, null)).thenReturn(Collections.singleton(caRef));
         when(bundleContext.getBundle(id)).thenReturn(b);
         return b;
+    }
+    
+    @Test public void testUpdateForceWithoutBundleChanges() throws Exception {
+        final Bundle bV1 = setupBundle(3, "3");
+        final Bundle bV2 = setupBundle(3, "3");
+        when(bV2.getLastModified()).thenReturn(lastModified);
+        lastModified++;
+
+        Configuration a = mock(Configuration.class);
+        when(configurationAdmin.getConfiguration("a", "?")).thenReturn(a);
+
+        when(a.getChangeCount()).thenReturn(1L);
+        configurator.processAddBundle(bV1);
+        configurator.process();
+
+        when(configurationAdmin.listConfigurations("(" + Constants.SERVICE_PID + "=a)"))
+                .thenReturn(new Configuration[] { a });
+
+        final Dictionary<String, Object> aProps = new Hashtable<>();
+        aProps.put("foo", "foo");
+        verify(a).updateIfDifferent(aProps);
+
+        final Dictionary<String, Object> modifiedOutside = new Hashtable<>();
+        modifiedOutside.put("foo", "bar");
+        when(a.getProperties()).thenReturn(modifiedOutside);
+
+        when(a.getChangeCount()).thenReturn(2L);
+
+        verify(a, times(1)).updateIfDifferent(aProps);
+
+        configurator.processAddBundle(bV2);
+        configurator.process();
+        verify(a, times(2)).updateIfDifferent(aProps);
     }
 
     @Test public void testSimpleAddRemove() throws Exception {

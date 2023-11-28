@@ -219,10 +219,11 @@ function printForm( /* Element */ parent, /* Object */ properties, additionalPro
         }
         else if (attr.values.length == 0)
         {
-            tdEl.appendChild( createSpan( prop, "", attr.type ) );
+            tdEl.appendChild( createAddButton( prop) );
         }
         else
         {
+            tdEl.appendChild( createAddButton( prop) );
             for (var i=0;i<attr.values.length;i++)
             {
                 tdEl.appendChild( createSpan( prop, attr.values[i], attr.type ) );
@@ -348,6 +349,25 @@ function printConfigurationInfo( /* Element */ parent, obj )
 
 
 var spanCounter = 0;
+/* Element */ function createAddButton(prop) {
+    spanCounter++;
+    var newId = prop + spanCounter;
+
+    var addButton = createElement("input", null,
+        {   type: "button",
+            style: {width : "5%"},
+            value: "+"
+        }
+    );
+    $(addButton).click(function() {
+        addValue(prop, newId);
+    });
+
+    return createElement( "span", null, { id: newId }, [
+        createElement("span", null, { style: { display: "inline-block", width: '94%'} } ), addButton,
+        createElement("br")
+    ]);
+}
 /* Element */ function createSpan(prop, value, type) {
     spanCounter++;
     var newId = prop + spanCounter;
@@ -557,7 +577,8 @@ function addConfig(conf) {
         }
 		tr.attr('fpid', conf.name);
 	} else {
-		nms.addClass('ui-helper-hidden').parent().text(conf.name);
+		var name = escapeHtml(conf.name) + '<span class="pid">' + conf.id + '</span>';
+		nms.addClass('ui-helper-hidden').parent().html(name);
 	}
 
 	tr.find('td:eq(1)').click(function() { // name & edit
@@ -698,12 +719,19 @@ $(document).ready(function() {
 	jsonSupport = configData.jsonsupport;
 
 	// display the configuration data
-	$(".statline").html(configData.status ? i18n.stat_ok : i18n.stat_missing);
+	var line = configData.status ? i18n.stat_ok : i18n.stat_missing;
+	line = line + " " + (configData.metatype ? i18n.metatype_ok : i18n.metatype_missing);
+	if ( configData.noconfigs ) {
+	    line = line + " " + i18n.noconfigs;
+	}
+	$(".statline").html(line);
 	if (configData.status) {
+	    var hasData = false;
 		configBody.empty();
 		var factories = {};
 
 		for(var i in configData.pids) {
+		    hasData = true;
 			var c = configData.pids[i];
 			if (c.fpid) {
 				if (!factories[c.fpid]) factories[c.fpid] = new Array();
@@ -713,6 +741,7 @@ $(document).ready(function() {
 			}
 		}
 		for(var i in configData.fpids) {
+            hasData = true;
 			addFactoryConfig(configData.fpids[i]);
 
 			var fpid = configData.fpids[i].id;
@@ -733,17 +762,19 @@ $(document).ready(function() {
 		}
 		initStaticWidgets(configTable);
 
-		// init tablesorte
-		configTable.tablesorter({
-			headers: {
-				0: { sorter: false },
-				3: { sorter: false }
-			},
-			sortList: [[1,1]],
-			textExtraction: treetableExtraction
-		}).bind('sortStart', function() { // clear cache, otherwise extraction will not work
-			var table = $(this).trigger('update'); 
-		}).find('th:eq(1)').click();
+		// init tablesorter
+		if ( hasData ) {
+		    configTable.tablesorter({
+			    headers: {
+				    0: { sorter: false },
+				    3: { sorter: false }
+			    },
+			    sortList: [[1,1]],
+			    textExtraction: treetableExtraction
+		    }).bind('sortStart', function() { // clear cache, otherwise extraction will not work
+			    var table = $(this).trigger('update'); 
+		    }).find('th:eq(1)').click();
+	 }
 	} else {
 		configContent.addClass('ui-helper-hidden');
 	}

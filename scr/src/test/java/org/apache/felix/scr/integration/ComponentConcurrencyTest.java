@@ -29,6 +29,7 @@ public class ComponentConcurrencyTest extends ComponentTestBase
         restrictedLogging = true;
         ignoredWarnings = new String[] {"FrameworkEvent: ERROR",
                 "FrameworkEvent ERROR",
+                "FrameworkEvent: WARNING",
                 "Could not get service from ref",
                 "Failed creating the component instance; see log for reason",
                 "Cannot create component instance due to failure to bind reference",

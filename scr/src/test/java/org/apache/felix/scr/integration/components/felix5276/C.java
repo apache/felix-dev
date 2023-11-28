@@ -29,11 +29,13 @@ public class C
 
     }
 
+    @SuppressWarnings("unused")
     private void setB(B b)
     {
         this.b = b;
     }
 
+    @SuppressWarnings("unused")
     private void unsetB(B b)
     {
         if (this.b == b)

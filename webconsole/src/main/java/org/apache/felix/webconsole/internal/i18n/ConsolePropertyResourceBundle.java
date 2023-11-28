@@ -26,48 +26,36 @@ import java.util.Enumeration;
 import java.util.Properties;
 import java.util.ResourceBundle;
 
-import org.apache.commons.io.IOUtils;
 
-
-class ConsolePropertyResourceBundle extends ResourceBundle
-{
+class ConsolePropertyResourceBundle extends ResourceBundle {
 
     private final Properties props;
 
-
-    ConsolePropertyResourceBundle( final ResourceBundle parent, final URL source )
-    {
+    ConsolePropertyResourceBundle( final ResourceBundle parent, final URL source ) {
         setParent( parent );
 
         props = new Properties();
-        if ( source != null )
-        {
-            InputStream ins = null;
-            try
-            {
-                ins = source.openStream();
+        if ( source != null ) {
+            try(InputStream ins = source.openStream()) {
                 props.load( ins );
+            } catch ( IOException ignore ) { 
+                // ignore
             }
-            catch ( IOException ignore )
-            { /* ignore */
-            }
-            finally
-            {
-                IOUtils.closeQuietly( ins );
-            }
-
         }
     }
 
-
-    public Enumeration getKeys()
-    {
-        return new CombinedEnumeration( props.keys(), parent.getKeys() );
+    @Override
+    public Enumeration<String> getKeys() {
+        @SuppressWarnings({"unchecked", "rawtypes"})
+        Enumeration<String> keysEnum = (Enumeration) props.keys();
+        if (parent != null) {
+            keysEnum = new CombinedEnumeration( keysEnum, parent.getKeys() );
+        }
+        return keysEnum;
     }
 
-
-    protected Object handleGetObject( String key )
-    {
+    @Override
+    protected Object handleGetObject( String key ) {
         return props.get( key );
     }
 }

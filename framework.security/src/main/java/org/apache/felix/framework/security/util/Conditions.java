@@ -39,11 +39,10 @@ import org.osgi.service.condpermadmin.ConditionInfo;
  * This class caches conditions instances by their infos. Furthermore, it allows
  * to eval postponed condition permission tuples as per spec (see 9.45).
  */
-// TODO: maybe use bundle events instead of soft/weak references.
 public final class Conditions
 {
     private static final ThreadLocal m_conditionStack = new ThreadLocal();
-    private static final Map m_conditionCache = new WeakHashMap();
+    private static final Map m_conditionCache = new HashMap();
 
     private final Map m_cache = new WeakHashMap();
 
@@ -101,7 +100,7 @@ public final class Conditions
             index = (Map) m_cache.get(conditions);
             if (index == null)
             {
-                index = new WeakHashMap();
+                index = new HashMap();
                 m_cache.put(conditions, index);
             }
         }
@@ -111,18 +110,42 @@ public final class Conditions
             {
                 result = (Conditions) index.get(key);
             }
-        }
-
-        if (result == null)
-        {
-            result = new Conditions(key, conditions, m_action);
-            synchronized (index)
+            if (result == null)
             {
+                result = new Conditions(key, conditions, m_action);
                 index.put(key, result);
             }
         }
 
         return result;
+    }
+
+    public void remove(BundleRevisionImpl key) {
+        final Map conditionMap;
+        synchronized (m_conditionCache)
+        {
+            conditionMap = (Map) m_conditionCache.remove(key);
+        }
+
+        if (conditionMap != null)
+        {
+            final Iterator iter = conditionMap.keySet().iterator();
+            if (iter.hasNext())
+            {
+                synchronized (m_cache)
+                {
+                    do
+                    {
+                        final Map index = (Map) m_cache.get(iter.next());
+                        if (index != null)
+                        {
+                            index.remove(key);
+                        }
+                    }
+                    while (iter.hasNext());
+                }
+            }
+        }
     }
 
     // See whether the given list is satisfied or not

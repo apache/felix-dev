@@ -42,6 +42,7 @@ import org.osgi.framework.ServiceException;
 import org.osgi.framework.ServiceFactory;
 import org.osgi.framework.ServiceReference;
 import org.osgi.framework.ServiceRegistration;
+import org.osgi.framework.dto.ServiceReferenceDTO;
 import org.osgi.framework.wiring.BundleCapability;
 import org.osgi.framework.wiring.BundleRevision;
 import org.osgi.framework.wiring.BundleWire;
@@ -363,9 +364,12 @@ class ServiceRegistrationImpl implements ServiceRegistration
                 {
                     if (clazz == null)
                     {
-                        throw new ServiceException(
-                            "Service cannot be cast due to missing class: " + m_classes[i],
-                            ServiceException.FACTORY_ERROR);
+                        if (!Util.checkImplementsWithName(svcObj.getClass(), m_classes[i]))
+                        {
+                            throw new ServiceException(
+                                    "Service cannot be cast due to missing class: " + m_classes[i],
+                                    ServiceException.FACTORY_ERROR);
+                        }
                     }
                     else
                     {
@@ -696,8 +700,19 @@ class ServiceRegistrationImpl implements ServiceRegistration
         }
 
         @Override
-        public Dictionary<String, Object> getProperties() {
+        public Dictionary<String, Object> getProperties()
+        {
             return new Hashtable<String, Object>(ServiceRegistrationImpl.this.m_propMap);
+        }
+
+        @Override
+        public Object adapt(Class type)
+        {
+            if (type == ServiceReferenceDTO.class)
+            {
+                return DTOFactory.createDTO(this);
+            }
+            return null;
         }
     }
 

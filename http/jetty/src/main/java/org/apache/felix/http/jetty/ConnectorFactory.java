@@ -52,6 +52,7 @@ public interface ConnectorFactory
      * active in Jetty servers must be stopped and removed from these Jetty
      * servers.
      *
+     * @param server The Jetty server object
      * @return A configured Jetty {@code Connector} instance.
      */
     Connector createConnector(Server server);

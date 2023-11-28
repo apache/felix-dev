@@ -34,9 +34,9 @@ import java.util.Arrays;
 import java.util.List;
 import java.util.Map;
 
-import javax.servlet.ServletException;
-import javax.servlet.http.HttpServletRequest;
-import javax.servlet.http.HttpServletResponse;
+import jakarta.servlet.ServletException;
+import jakarta.servlet.http.HttpServletRequest;
+import jakarta.servlet.http.HttpServletResponse;
 
 import org.apache.felix.hc.api.Result;
 import org.apache.felix.hc.api.Result.Status;
@@ -51,6 +51,7 @@ import org.junit.Test;
 import org.mockito.ArgumentMatcher;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
+import org.osgi.framework.BundleContext;
 import org.osgi.framework.Constants;
 import org.osgi.framework.ServiceReference;
 
@@ -82,6 +83,9 @@ public class HealthCheckExecutorServletTest {
 
     @Mock
     private ServiceReference hcServiceRef;
+    
+    @Mock
+    private BundleContext bundleContext;
 
     @Mock
     private PrintWriter writer;
@@ -100,7 +104,13 @@ public class HealthCheckExecutorServletTest {
         doReturn("OK:200").when(healthCheckExecutorServletConfig).httpStatusMapping();
         doReturn(new String[0]).when(healthCheckExecutorServletConfig).tags();
         doReturn(HealthCheckExecutorServlet.FORMAT_HTML).when(healthCheckExecutorServletConfig).format();
-        healthCheckExecutorServlet.activate(healthCheckExecutorServletConfig);
+        doReturn(new String[] {HealthCheckExecutorServlet.FORMAT_HTML,
+            HealthCheckExecutorServlet.FORMAT_JSON,
+            HealthCheckExecutorServlet.FORMAT_JSONP,
+            HealthCheckExecutorServlet.FORMAT_TXT,
+            HealthCheckExecutorServlet.FORMAT_VERBOSE_TXT}).when(healthCheckExecutorServletConfig).allowed_formats();
+        doReturn("/hc").when(healthCheckExecutorServletConfig).servletPath();
+        healthCheckExecutorServlet.activate(healthCheckExecutorServletConfig, bundleContext);
     }
 
     @Test

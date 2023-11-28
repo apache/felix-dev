@@ -37,169 +37,198 @@ import org.osgi.framework.Version;
 public class MockBundle implements Bundle
 {
 
-    public Enumeration findEntries( String arg0, String arg1, boolean arg2 )
+    @Override
+    public Enumeration<URL> findEntries(String arg0, String arg1, boolean arg2)
     {
         return null;
     }
 
 
+    @Override
     public BundleContext getBundleContext()
     {
         return null;
     }
 
+    @Override
     public Map<X509Certificate, List<X509Certificate>> getSignerCertificates( int i )
     {
         return null;
     }
 
+    @Override
     public Version getVersion()
     {
         return null;
     }
 
+    @Override
     public <A> A adapt( Class<A> aClass )
     {
         return null;
     }
 
+    @Override
     public File getDataFile( String s )
     {
         return null;
     }
 
 
+    @Override
     public long getBundleId()
     {
         return 0;
     }
 
 
+    @Override
     public URL getEntry( String name )
     {
         return getClass().getClassLoader().getResource( name );
     }
 
 
-    public Enumeration getEntryPaths( String arg0 )
+    @Override
+    public Enumeration<String> getEntryPaths(String arg0)
     {
         return null;
     }
 
 
-    public Dictionary getHeaders()
+    @Override
+    public Dictionary<String, String> getHeaders()
     {
         return null;
     }
 
 
-    public Dictionary getHeaders( String arg0 )
+    @Override
+    public Dictionary<String, String> getHeaders(String arg0)
     {
         return null;
     }
 
 
+    @Override
     public long getLastModified()
     {
         return 0;
     }
 
 
+    @Override
     public String getLocation()
     {
         return "test:mockbundle";
     }
 
 
-    public ServiceReference[] getRegisteredServices()
+    @Override
+    public ServiceReference<?>[] getRegisteredServices()
     {
         return null;
     }
 
 
+    @Override
     public URL getResource( String arg0 )
     {
         return null;
     }
 
 
-    public Enumeration getResources( String arg0 )
+    @Override
+    public Enumeration<URL> getResources(String arg0)
     {
         return null;
     }
 
 
-    public ServiceReference[] getServicesInUse()
+    @Override
+    public ServiceReference<?>[] getServicesInUse()
     {
         return null;
     }
 
 
+    @Override
     public int getState()
     {
         return 0;
     }
 
 
+    @Override
     public String getSymbolicName()
     {
         return null;
     }
 
 
+    @Override
     public boolean hasPermission( Object arg0 )
     {
         return false;
     }
 
 
-    public Class loadClass( String arg0 )
+    @Override
+    public Class<?> loadClass(String arg0)
     {
         return null;
     }
 
 
+    @Override
     public void start()
     {
 
     }
 
 
+    @Override
     public void start( int options )
     {
 
     }
 
 
+    @Override
     public void stop()
     {
 
     }
 
 
+    @Override
     public void stop( int options )
     {
 
     }
 
 
+    @Override
     public void uninstall()
     {
 
     }
 
 
+    @Override
     public void update()
     {
 
     }
 
 
+    @Override
     public void update( InputStream arg0 )
     {
 
     }
 
+    @Override
     public int compareTo( Bundle bundle )
     {
         return 0;

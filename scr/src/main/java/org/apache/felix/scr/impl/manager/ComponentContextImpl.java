@@ -23,7 +23,7 @@ import java.util.Comparator;
 import java.util.Dictionary;
 import java.util.HashMap;
 import java.util.Map;
-import java.util.TreeMap;
+import java.util.concurrent.ConcurrentSkipListMap;
 import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.TimeUnit;
 
@@ -142,6 +142,12 @@ public class ComponentContextImpl<S> implements ScrComponentContext {
         return new ReadOnlyDictionary( m_componentManager.getProperties() );
     }
 
+    @SuppressWarnings("unchecked")
+    @Override
+    public Map<String, Object> getPropertiesMap()
+    {
+        return (Map<String, Object>) getProperties();
+    }
 
     @SuppressWarnings("unchecked")
     @Override
@@ -328,15 +334,9 @@ public class ComponentContextImpl<S> implements ScrComponentContext {
 
     private Map<RefPair<?, ?>, Object> createNewFieldHandlerMap()
     {
-        return new TreeMap<>(
-            new Comparator<RefPair<?, ?>>()
-            {
-
-                @Override
-                public int compare(final RefPair<?, ?> o1, final RefPair<?, ?> o2)
-                {
-                    return o1.getRef().compareTo(o2.getRef());
-                }
-            });
+        // it's not safe to use synchronized map to prevent concurrent modification exceptions
+        // hence, concurrent collection is used as it provides higher concurrency and scalability
+        // while preserving thread safety
+        return new ConcurrentSkipListMap<>(Comparator.comparing(RefPair::getRef));
     }
 }

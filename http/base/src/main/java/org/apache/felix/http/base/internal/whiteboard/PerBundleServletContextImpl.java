@@ -24,31 +24,30 @@ import java.util.EventListener;
 import java.util.Map;
 import java.util.Set;
 
-import javax.servlet.Filter;
-import javax.servlet.FilterRegistration;
-import javax.servlet.RequestDispatcher;
-import javax.servlet.Servlet;
-import javax.servlet.ServletContext;
-import javax.servlet.ServletException;
-import javax.servlet.ServletRegistration;
-import javax.servlet.ServletRegistration.Dynamic;
-import javax.servlet.ServletRequestAttributeListener;
-import javax.servlet.ServletRequestListener;
-import javax.servlet.SessionCookieConfig;
-import javax.servlet.SessionTrackingMode;
-import javax.servlet.descriptor.JspConfigDescriptor;
-import javax.servlet.http.HttpServletRequest;
-import javax.servlet.http.HttpServletResponse;
-import javax.servlet.http.HttpSessionAttributeListener;
-import javax.servlet.http.HttpSessionListener;
-
 import org.apache.felix.http.base.internal.HttpConfig;
 import org.apache.felix.http.base.internal.context.ExtServletContext;
 import org.apache.felix.http.base.internal.registry.PerContextHandlerRegistry;
-import org.apache.felix.http.base.internal.util.MimeTypes;
 import org.osgi.framework.Bundle;
 import org.osgi.framework.wiring.BundleWiring;
-import org.osgi.service.http.context.ServletContextHelper;
+import org.osgi.service.servlet.context.ServletContextHelper;
+
+import jakarta.servlet.Filter;
+import jakarta.servlet.FilterRegistration;
+import jakarta.servlet.RequestDispatcher;
+import jakarta.servlet.Servlet;
+import jakarta.servlet.ServletContext;
+import jakarta.servlet.ServletException;
+import jakarta.servlet.ServletRegistration;
+import jakarta.servlet.ServletRegistration.Dynamic;
+import jakarta.servlet.ServletRequestAttributeListener;
+import jakarta.servlet.ServletRequestListener;
+import jakarta.servlet.SessionCookieConfig;
+import jakarta.servlet.SessionTrackingMode;
+import jakarta.servlet.descriptor.JspConfigDescriptor;
+import jakarta.servlet.http.HttpServletRequest;
+import jakarta.servlet.http.HttpServletResponse;
+import jakarta.servlet.http.HttpSessionAttributeListener;
+import jakarta.servlet.http.HttpSessionListener;
 
 /**
  * This servlet context implementation represents the per
@@ -63,6 +62,13 @@ public class PerBundleServletContextImpl implements ExtServletContext {
     private final ServletContextHelper contextHelper;
     private final PerContextHandlerRegistry handlerRegistry;
 
+    /**
+     * Create a new context implementation
+     * @param bundle The bundle
+     * @param sharedContext The shared context
+     * @param delegatee The delegatee
+     * @param handlerRegistry The handler registry
+     */
     public PerBundleServletContextImpl(final Bundle bundle,
             final ServletContext sharedContext,
             final ServletContextHelper delegatee,
@@ -124,9 +130,6 @@ public class PerBundleServletContextImpl implements ExtServletContext {
         return this.bundle.adapt(BundleWiring.class).getClassLoader();
     }
 
-    /**
-     * @see javax.servlet.ServletContext#getResource(java.lang.String)
-     */
     @Override
     public URL getResource(final String path)
     {
@@ -136,12 +139,7 @@ public class PerBundleServletContextImpl implements ExtServletContext {
     @Override
     public String getMimeType(final String name)
     {
-        String type = this.contextHelper.getMimeType(name);
-        if (type != null) {
-            return type;
-        }
-
-        return MimeTypes.get().getByFile(name);
+        return this.contextHelper.getMimeType(name);
     }
 
     @Override
@@ -222,25 +220,19 @@ public class PerBundleServletContextImpl implements ExtServletContext {
         return delegatee.getNamedDispatcher(name);
     }
 
-    @SuppressWarnings("deprecation")
-    @Override
     public Servlet getServlet(String name) throws ServletException
     {
-        return delegatee.getServlet(name);
+		throw new UnsupportedOperationException("Deprecated method not supported");
     }
 
-    @SuppressWarnings("deprecation")
-    @Override
     public Enumeration<Servlet> getServlets()
     {
-        return delegatee.getServlets();
+		throw new UnsupportedOperationException("Deprecated method not supported");
     }
 
-    @SuppressWarnings("deprecation")
-    @Override
     public Enumeration<String> getServletNames()
     {
-        return delegatee.getServletNames();
+		throw new UnsupportedOperationException("Deprecated method not supported");
     }
 
     @Override
@@ -249,11 +241,9 @@ public class PerBundleServletContextImpl implements ExtServletContext {
         delegatee.log(msg);
     }
 
-    @SuppressWarnings("deprecation")
-    @Override
     public void log(Exception exception, String msg)
     {
-        delegatee.log(exception, msg);
+        delegatee.log(msg, exception);
     }
 
     @Override
@@ -355,21 +345,21 @@ public class PerBundleServletContextImpl implements ExtServletContext {
     }
 
     @Override
-    public javax.servlet.FilterRegistration.Dynamic addFilter(
+    public jakarta.servlet.FilterRegistration.Dynamic addFilter(
             String filterName, String className)
     {
         return delegatee.addFilter(filterName, className);
     }
 
     @Override
-    public javax.servlet.FilterRegistration.Dynamic addFilter(
+    public jakarta.servlet.FilterRegistration.Dynamic addFilter(
             String filterName, Filter filter)
     {
         return delegatee.addFilter(filterName, filter);
     }
 
     @Override
-    public javax.servlet.FilterRegistration.Dynamic addFilter(
+    public jakarta.servlet.FilterRegistration.Dynamic addFilter(
             String filterName, Class<? extends Filter> filterClass)
     {
         return delegatee.addFilter(filterName, filterClass);
@@ -460,5 +450,40 @@ public class PerBundleServletContextImpl implements ExtServletContext {
     public String getVirtualServerName()
     {
         return delegatee.getVirtualServerName();
+    }
+
+    @Override
+    public Dynamic addJspFile(final String servletName, final String jspFile) {
+        return this.delegatee.addJspFile(servletName, jspFile);
+    }
+
+    @Override
+    public int getSessionTimeout() {
+        return this.delegatee.getSessionTimeout();
+    }
+
+    @Override
+    public void setSessionTimeout(final int sessionTimeout) {
+        this.delegatee.setSessionTimeout(sessionTimeout);
+    }
+
+    @Override
+    public String getRequestCharacterEncoding() {
+        return this.delegatee.getRequestCharacterEncoding();
+    }
+
+    @Override
+    public void setRequestCharacterEncoding(final String encoding) {
+        this.delegatee.setRequestCharacterEncoding(encoding);
+    }
+
+    @Override
+    public String getResponseCharacterEncoding() {
+        return this.delegatee.getResponseCharacterEncoding();
+    }
+
+    @Override
+    public void setResponseCharacterEncoding(final String encoding) {
+        this.delegatee.setResponseCharacterEncoding(encoding);
     }
 }

@@ -16,14 +16,14 @@
  */
 package org.apache.felix.http.base.internal.whiteboard.tracker;
 
-import javax.servlet.Servlet;
-
 import org.apache.felix.http.base.internal.runtime.ServletInfo;
 import org.apache.felix.http.base.internal.runtime.WhiteboardServiceInfo;
 import org.apache.felix.http.base.internal.whiteboard.WhiteboardManager;
 import org.osgi.framework.BundleContext;
 import org.osgi.framework.ServiceReference;
-import org.osgi.service.http.whiteboard.HttpWhiteboardConstants;
+import org.osgi.service.servlet.whiteboard.HttpWhiteboardConstants;
+
+import jakarta.servlet.Servlet;
 
 public final class ServletTracker extends WhiteboardServiceTracker<Servlet>
 {

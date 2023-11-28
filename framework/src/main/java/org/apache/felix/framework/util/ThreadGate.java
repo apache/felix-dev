@@ -18,6 +18,8 @@
  */
 package org.apache.felix.framework.util;
 
+import java.util.concurrent.TimeUnit;
+
 /**
  * This class implements a simple one-shot gate for threads. The gate
  * starts closed and will block any threads that try to wait on it. Once
@@ -72,14 +74,14 @@ public class ThreadGate
     **/
     public synchronized boolean await(long timeout) throws InterruptedException
     {
-        long start = System.currentTimeMillis();
+        long start = TimeUnit.NANOSECONDS.toMillis(System.nanoTime());
         long remaining = timeout;
         while (!m_open)
         {
             wait(remaining);
             if (timeout > 0)
             {
-                remaining = timeout - (System.currentTimeMillis() - start);
+                remaining = timeout - (TimeUnit.NANOSECONDS.toMillis(System.nanoTime()) - start);
                 if (remaining <= 0)
                 {
                     break;

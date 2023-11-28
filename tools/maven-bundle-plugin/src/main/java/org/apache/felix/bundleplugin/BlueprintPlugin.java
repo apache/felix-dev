@@ -169,7 +169,7 @@ public class BlueprintPlugin implements AnalyzerPlugin
                 {
                     Set<Clause> clauses = hdrs.get(h);
                     if (clauses == null) {
-                        clauses = new HashSet<Clause>();
+                        clauses = new HashSet<>();
                         hdrs.put(h, clauses);
                     }
                     clauses.addAll(Arrays.asList(hc));
@@ -209,7 +209,7 @@ public class BlueprintPlugin implements AnalyzerPlugin
                 {
                     Set<Clause> clauses = hdrs.get(h);
                     if (clauses == null) {
-                        clauses = new HashSet<Clause>();
+                        clauses = new HashSet<>();
                         hdrs.put(h, clauses);
                     }
                     clauses.addAll(Arrays.asList(hc));
@@ -220,7 +220,7 @@ public class BlueprintPlugin implements AnalyzerPlugin
                 Set<Clause> clauses = hdrs.get(h);
                 if (clauses == null)
                 {
-                    clauses = new HashSet<Clause>();
+                    clauses = new HashSet<>();
                     hdrs.put(h, clauses);
                 }
                 clauses.addAll(Arrays.asList( hc ) );
@@ -356,7 +356,7 @@ public class BlueprintPlugin implements AnalyzerPlugin
 
     public Set<String> analyze( InputStream in ) throws Exception
     {
-        Set<String> refers = new HashSet<String>();
+        Set<String> refers = new HashSet<>();
         ByteArrayOutputStream bout = new ByteArrayOutputStream();
         javax.xml.transform.Result r = new StreamResult( bout );
         javax.xml.transform.Source s = new StreamSource( in );

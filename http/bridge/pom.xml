@@ -6,9 +6,9 @@
     to you under the Apache License, Version 2.0 (the
     "License"); you may not use this file except in compliance
     with the License.  You may obtain a copy of the License at
-    
+
     http://www.apache.org/licenses/LICENSE-2.0
-    
+
     Unless required by applicable law or agreed to in writing,
     software distributed under the License is distributed on an
     "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
@@ -22,14 +22,14 @@
     <parent>
         <groupId>org.apache.felix</groupId>
         <artifactId>org.apache.felix.http.parent</artifactId>
-        <version>12</version>
+        <version>13</version>
         <relativePath>../parent/pom.xml</relativePath>
     </parent>
 
     <name>Apache Felix Http Bridge</name>
-    <description>This is an implementation of the OSGi Http Service and the OSGi Http Whiteboard Specification used when run as a web application</description>
+    <description>This is an implementation of the OSGi Servlet Service, the OSGi Http Service and the OSGi Http Whiteboard Specification used when run as a web application</description>
     <artifactId>org.apache.felix.http.bridge</artifactId>
-    <version>4.0.13-SNAPSHOT</version>
+    <version>5.1.3-SNAPSHOT</version>
     <packaging>bundle</packaging>
 
     <scm>
@@ -39,11 +39,16 @@
       <tag>HEAD</tag>
   </scm>
 
+    <properties>
+	<felix.java.version>11</felix.java.version>
+    </properties>
+
     <build>
         <plugins>
             <plugin>
                 <groupId>org.apache.felix</groupId>
                 <artifactId>maven-bundle-plugin</artifactId>
+                <version>5.1.9</version>
                 <extensions>true</extensions>
                 <configuration>
                     <instructions>
@@ -51,11 +56,17 @@
                             org.apache.felix.http.bridge.internal.BridgeActivator
                         </Bundle-Activator>
                         <Export-Package>
+                            org.osgi.service.servlet.context,
+                            org.osgi.service.servlet.runtime,
+                            org.osgi.service.servlet.runtime.dto,
+                            org.osgi.service.servlet.whiteboard,
                             org.osgi.service.http,
                             org.osgi.service.http.context,
                             org.osgi.service.http.runtime,
                             org.osgi.service.http.runtime.dto,
-                            org.osgi.service.http.whiteboard
+			    org.osgi.service.http.whiteboard,
+			    org.apache.felix.http.jakartawrappers,
+			    org.apache.felix.http.javaxwrappers
                         </Export-Package>
                         <Private-Package>
                             org.apache.felix.http.base.*,
@@ -65,18 +76,23 @@
                             org.apache.commons.*
                         </Conditional-Package>
                         <Import-Package>
-                        	org.osgi.service.useradmin;resolution:=optional;version="[1.1,2)",
-                            org.osgi.service.log;resolution:=optional;version="[1.3,2)",
-                            *
+                       	    org.osgi.service.useradmin;resolution:=optional;version="[1.1,2)",
+                            sun.misc;resolution:=optional,
+			    sun.nio.ch;resolution:=optional,
+			    *
                         </Import-Package>
                         <Provide-Capability>
                             osgi.implementation;osgi.implementation="osgi.http";version:Version="1.1";
                             uses:="javax.servlet,javax.servlet.http,org.osgi.service.http.context,org.osgi.service.http.whiteboard",
+                            osgi.implementation;osgi.implementation="osgi.http";version:Version="2.0";
+                            uses:="jakarta.servlet,jakarta.servlet.http,org.osgi.service.servlet.context,org.osgi.service.servlet.whiteboard",
+                            osgi.service;objectClass:List&lt;String&gt;="org.osgi.service.servlet.runtime.HttpServiceRuntime";
+                            uses:="org.osgi.service.servlet.runtime,org.osgi.service.servlet.runtime.dto",
                             osgi.service;objectClass:List&lt;String&gt;="org.osgi.service.http.runtime.HttpServiceRuntime";
                             uses:="org.osgi.service.http.runtime,org.osgi.service.http.runtime.dto"
                         </Provide-Capability>
                         <_removeheaders>
-                            Private-Package,Conditional-Package 
+                            Private-Package,Conditional-Package
                         </_removeheaders>
                     </instructions>
                 </configuration>
@@ -105,12 +121,26 @@
 
     <dependencies>
         <dependency>
-            <groupId>javax.servlet</groupId>
-            <artifactId>javax.servlet-api</artifactId>
+            <groupId>org.slf4j</groupId>
+            <artifactId>slf4j-api</artifactId>
+            <version>1.7.36</version>
+            <scope>provided</scope>
+        </dependency>
+        <dependency>
+            <groupId>jakarta.servlet</groupId>
+            <artifactId>jakarta.servlet-api</artifactId>
+            <version>5.0.0</version>
         </dependency>
         <dependency>
             <groupId>org.osgi</groupId>
             <artifactId>osgi.core</artifactId>
+            <version>8.0.0</version>
+        </dependency>
+        <dependency>
+            <groupId>org.osgi</groupId>
+            <artifactId>org.osgi.service.servlet</artifactId>
+            <version>2.0.0</version>
+            <scope>provided</scope>
         </dependency>
         <dependency>
             <groupId>org.osgi</groupId>
@@ -127,18 +157,22 @@
         <dependency>
             <groupId>commons-fileupload</groupId>
             <artifactId>commons-fileupload</artifactId>
-            <version>1.3.3</version>
+            <version>1.5</version>
         </dependency>
         <dependency>
             <groupId>commons-io</groupId>
             <artifactId>commons-io</artifactId>
-            <version>2.6</version>
+            <version>2.15.0</version>
         </dependency>
         <dependency>
             <groupId>org.apache.felix</groupId>
             <artifactId>org.apache.felix.http.base</artifactId>
-            <version>4.0.10</version>
+            <version>5.1.3-SNAPSHOT</version>
         </dependency>
+	<dependency>
+            <groupId>org.apache.felix</groupId>
+	    <artifactId>org.apache.felix.http.wrappers</artifactId>
+	    <version>1.0.2</version>
+	</dependency>
     </dependencies>
-
 </project>

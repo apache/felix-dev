@@ -104,7 +104,7 @@ public class SystemReadyMonitorTest extends BaseTest {
         wait.until(this::getState, is(State.GREEN));
 
     }
-    
+
     private State getState() {
     	return monitor.getStatus(StateType.READY).getState();
     }

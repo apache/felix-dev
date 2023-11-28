@@ -28,7 +28,8 @@ import org.osgi.service.component.ComponentContext;
 public class Level2Object extends Level1Object
 {
 
-    private void activate_comp_map( ComponentContext ctx, Map map )
+    @SuppressWarnings("unused")
+    private void activate_comp_map(ComponentContext ctx, Map<?, ?> map)
     {
         setCalledMethod( "activate_comp_map" );
     }
@@ -42,23 +43,25 @@ public class Level2Object extends Level1Object
     }
 
 
-    public void activate_collision( Map map )
+    public void activate_collision(Map<?, ?> map)
     {
         setCalledMethod( "activate_collision" );
     }
 
 
-    private void activate_suitable( Map map )
+    @SuppressWarnings("unused")
+    private void activate_suitable(Map<?, ?> map)
     {
         setCalledMethod( "activate_suitable" );
     }
 
+    @SuppressWarnings("unused")
     private void activate_comp_unsuitable( ComponentContext ctx )
     {
         setCalledMethod( "activate_comp_unsuitable" );
     }
 
-    protected void activate_comp_unsuitable( Map map )
+    protected void activate_comp_unsuitable(Map<?, ?> map)
     {
         setCalledMethod( "activate_comp_unsuitable" );
     }

@@ -22,6 +22,8 @@ package org.apache.felix.webconsole;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 
+import org.osgi.annotation.versioning.ConsumerType;
+
 
 /**
  * The <code>WebConsoleSecurityProvider2</code> extends the
@@ -34,9 +36,11 @@ import javax.servlet.http.HttpServletResponse;
  * {@link WebConsoleSecurityProvider#authenticate(String, String)} method.
  *
  * @since 3.1.2; Web Console Bundle 3.1.4
+ * @deprecated Use the {@link org.apache.felix.webconsole.spi.SecurityProvider} instead.
  */
-public interface WebConsoleSecurityProvider2 extends WebConsoleSecurityProvider
-{
+@Deprecated
+@ConsumerType
+public interface WebConsoleSecurityProvider2 extends WebConsoleSecurityProvider {
 
     /**
      * The name of the request attribute providing the object representing the
@@ -44,14 +48,14 @@ public interface WebConsoleSecurityProvider2 extends WebConsoleSecurityProvider
      * {@link WebConsoleSecurityProvider#authorize(Object, String)} to
      * authorize access for certain roles.
      */
-    String USER_ATTRIBUTE = "org.apache.felix.webconsole.user"; //$NON-NLS-1$
+    String USER_ATTRIBUTE = "org.apache.felix.webconsole.user";
 
 
     /**
      * Authenticates the given request or asks the client for credentials.
      * <p>
      * Implementations of this method are expected to respect and implement
-     * the semantics of the <code>HttpContext.handleSecurity</code> method
+     * the semantics of the <code>ServletContextHelper.handleSecurity</code> method
      * as specified in the OSGi HTTP Service specification.
      * <p>
      * If this method returns <code>true</code> it is assumed the request

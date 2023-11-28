@@ -36,11 +36,11 @@ import org.osgi.framework.ServiceReference;
  * objects in an effort to improve performance; this level of
  * indirection could be removed if eager creation of objects is not
  * a concern. Since this application uses the service-based extension
- * appraoch, lazy shape creation will only come into effect if
+ * approach, lazy shape creation will only come into effect if
  * service providers register service factories instead of directly
  * registering <tt>SimpleShape</tt> or if they use a technology like
  * Declarative Services or iPOJO to register services. Since the
- * example providers register services instances directly there is
+ * example providers register service instances directly there is
  * no laziness in the example, but the proxy approach is still used
  * to demonstrate how to make laziness possible and to keep it
  * similar to the extender-based approach.

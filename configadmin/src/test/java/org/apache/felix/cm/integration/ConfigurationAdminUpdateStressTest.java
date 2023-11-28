@@ -29,14 +29,13 @@ import java.util.Set;
 import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.TimeUnit;
 
-import org.junit.Assert;
-
 import org.junit.After;
+import org.junit.Assert;
 import org.junit.Before;
 import org.junit.Ignore;
 import org.junit.Test;
 import org.junit.runner.RunWith;
-import org.ops4j.pax.exam.junit.JUnit4TestRunner;
+import org.ops4j.pax.exam.junit.PaxExam;
 import org.osgi.framework.BundleContext;
 import org.osgi.framework.ServiceReference;
 import org.osgi.service.cm.Configuration;
@@ -54,7 +53,7 @@ import org.osgi.util.tracker.ServiceTracker;
  *
  * @see <a href="https://issues.apache.org/jira/browse/FELIX-1545">FELIX-1545</a>
  */
-@RunWith(JUnit4TestRunner.class)
+@RunWith(PaxExam.class)
 public class ConfigurationAdminUpdateStressTest extends ConfigurationTestBase implements LogService
 {
     public static final int TEST_LOOP = 10;

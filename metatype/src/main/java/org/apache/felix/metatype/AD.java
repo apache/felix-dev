@@ -207,6 +207,12 @@ public class AD extends OptionalAttributes
      */
     public void setOptions(Map options)
     {
+        if (options.size() == 0) {
+            optionLabels = null;
+            optionValues = null;
+            return;
+        }
+
         optionLabels = new String[options.size()];
         optionValues = new String[options.size()];
         int i = 0;
@@ -224,7 +230,7 @@ public class AD extends OptionalAttributes
      * NOTE: this method is depending on the value of {@link #getCardinality()}! Make sure that the
      * cardinality is properly set <b>before</b> calling this method.
      * </p>
-     * 
+     *
      * @param defaultValue the default value to set, as encoded string-value (using comma's as separator), can be <code>null</code>.
      */
     public void setDefaultValue(String defaultValue)
@@ -314,8 +320,8 @@ public class AD extends OptionalAttributes
             return new String[] { "" };
         }
 
-        List strings = new ArrayList();
-        StringBuffer sb = new StringBuffer();
+        List<String> strings = new ArrayList<>();
+        StringBuilder sb = new StringBuilder();
 
         int length = listString.length();
         boolean escaped = false;
@@ -383,7 +389,7 @@ public class AD extends OptionalAttributes
         // Always add the last string, as it contains everything after the last comma...
         strings.add(sb.toString());
 
-        return (String[]) strings.toArray(new String[strings.size()]);
+        return strings.toArray(new String[strings.size()]);
     }
 
     protected Comparable convertToType(final String value)
@@ -477,6 +483,7 @@ public class AD extends OptionalAttributes
             value = Boolean.valueOf(boolValue).booleanValue();
         }
 
+        @Override
         public int compareTo(Object obj)
         {
             ComparableBoolean cb = (ComparableBoolean) obj;

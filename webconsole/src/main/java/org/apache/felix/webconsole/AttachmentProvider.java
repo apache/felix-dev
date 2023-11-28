@@ -18,9 +18,9 @@
  */
 package org.apache.felix.webconsole;
 
-
 import java.net.URL;
 
+import org.osgi.annotation.versioning.ConsumerType;
 
 /**
  * This is an optional extension of the {@link ConfigurationPrinter}.
@@ -32,12 +32,13 @@ import java.net.URL;
  * A service implementing this method must still register itself
  * as a {@link ConfigurationPrinter} but not as a
  * {@link AttachmentProvider} service.
+ *
  * @since 3.0
- * @deprecated This has been deprecated. Use the org.apache.felix.status
- *             API instead.
+ * @deprecated This has been deprecated. Use the org.apache.felix.inventory API instead.
  */
-public interface AttachmentProvider
-{
+@Deprecated
+@ConsumerType
+public interface AttachmentProvider {
 
     /**
      * Return an array of attachments for the given render mode.

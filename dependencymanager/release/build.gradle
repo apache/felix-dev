@@ -33,7 +33,7 @@ buildscript {
 }
 
 // Our release number, which has to be monotonically incremented each time we make a new release.
-ext.dmRelease = "r16"
+ext.dmRelease = "r17"
 
 // Our Apache svn Staging repo
 ext.svnStagingPath = "https://dist.apache.org/repos/dist/dev/felix"
@@ -214,10 +214,15 @@ task signStaging {
 task commitToStaging {
   doLast {
     description = 'Commits the local staging to the Apache svn staging repository.'
-    getProject().exec { 
+    ant.input(message: 'Enter SVN user:', addproperty: 'user')
+    ant.input(message: 'Enter SVN password:', addproperty: 'password')
+    def user = ant.properties.user
+    def password = ant.properties.password
+
+    getProject().exec {
     	commandLine 'svn', 
 		'import', 'staging', svnStagingPath + "/org.apache.felix.dependencymanager-" + dmRelease + "/", 
-		'-m', "Staging Apache Felix Dependency Manager release " + dmRelease + ".", "--force-interactive"
+		'-m', "Staging Apache Felix Dependency Manager release " + dmRelease + ".", "--username", user, "--password", password
     }
   }
 }
@@ -226,6 +231,10 @@ task commitToStaging {
 task promoteToRelease {
   doLast {
     description = 'Moves the staging repository to the Apache release repository.'
+    ant.input(message: 'Enter SVN user:', addproperty: 'user')
+    ant.input(message: 'Enter SVN password:', addproperty: 'password')
+    def user = ant.properties.user
+    def password = ant.properties.password
 
     // Move all artifacts from the staging repo to the release repo
     new ByteArrayOutputStream().withStream { os ->
@@ -241,7 +250,8 @@ task promoteToRelease {
 	    	getProject().exec { 
 				commandLine 'svn',
 				'move', svnStagingPath+"/org.apache.felix.dependencymanager-" + dmRelease + "/" + artifact , 
-				svnReleasePath, '-m', "Releasing Apache Felix Dependency Manager release " + dmRelease + ".", "--force-interactive"
+				svnReleasePath, '-m', "Releasing Apache Felix Dependency Manager release " + dmRelease + ".",
+				"--username", user, "--password", password
 	    	}
 		}
     }
@@ -251,7 +261,8 @@ task promoteToRelease {
     getProject().exec { 
     	commandLine 'svn',
 		'rm', svnStagingPath+"/org.apache.felix.dependencymanager-" + dmRelease, "-m", 
-		"Releasing Apache Felix Dependency Manager release " + dmRelease + "."
+		"Releasing Apache Felix Dependency Manager release " + dmRelease + ".",
+		"--username", user, "--password", password
     }
   }
 }
@@ -260,10 +271,16 @@ task promoteToRelease {
 task deleteFromStaging {
   doLast {
     description = 'Cancels the staged distribution from the Apache staging repository.'
+    ant.input(message: 'Enter SVN user:', addproperty: 'user')
+    ant.input(message: 'Enter SVN password:', addproperty: 'password')
+    def user = ant.properties.user
+    def password = ant.properties.password
+
     getProject().exec { 
     	commandLine 'svn',
 		'delete', svnStagingPath+"/org.apache.felix.dependencymanager-" + dmRelease + "/",
-		"-m", "Removing Apache Felix Dependency Manager release " + dmRelease + " from staging."
+		"-m", "Removing Apache Felix Dependency Manager release " + dmRelease + " from staging.",
+		"--username", user, "--password", password		
     }
   }
 }

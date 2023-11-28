@@ -25,10 +25,10 @@ import org.osgi.service.event.Event;
 import org.osgi.service.event.EventAdmin;
 
 /**
- * This class is a decorator for an <tt>EventAdmin</tt> service. It secures the
+ * This class is a decorator for an {@code EventAdmin} service. It secures the
  * service by checking any call from a given bundle (i.e., the caller) to the admins
  * post or send methods for the appropriate permissions based on a given permission
- * factory. This methods then in turn throw a <tt>SecurityException</tt> in case
+ * factory. This methods then in turn throw a {@code SecurityException} in case
  * the given bundle doesn't pass the check or delegate the call to decorated service
  * instance, respectively.
  *
@@ -45,8 +45,8 @@ public class EventAdminSecurityDecorator implements EventAdmin
     /**
      * The constructor of this decorator. The given bundle and permission factory
      * will be used to determine appropriate permissions for any call to
-     * <tt>postEvent()</tt> or <tt>sendEvent()</tt>, respectively. This method then
-     * in turn throw a <tt>SecurityException</tt> in case the given bundle doesn't
+     * {@code postEvent()} or {@code sendEvent()}, respectively. This method then
+     * in turn throw a {@code SecurityException} in case the given bundle doesn't
      * pass the check.
      *
      * @param bundle The calling bundle used to determine appropriate permissions
@@ -65,7 +65,7 @@ public class EventAdminSecurityDecorator implements EventAdmin
     /**
      * This method checks whether the given (i.e., calling) bundle has
      * appropriate permissions to post an event to the targeted topic. A
-     * <tt>SecurityException</tt> is thrown in case it has not. Otherwise, the
+     * {@code SecurityException} is thrown in case it has not. Otherwise, the
      * event is posted using this decorator's service instance.
      *
      * @param event The event that should be posted
@@ -82,7 +82,7 @@ public class EventAdminSecurityDecorator implements EventAdmin
     /**
      * This method checks whether the given (i.e., calling) bundle has
      * appropriate permissions to send an event to the targeted topic. A
-     * <tt>SecurityException</tt> is thrown in case it has not. Otherwise,
+     * {@code SecurityException} is thrown in case it has not. Otherwise,
      * the event is posted using this decorator's service instance.
      *
      * @param event The event that should be send
@@ -97,7 +97,7 @@ public class EventAdminSecurityDecorator implements EventAdmin
     }
 
     /**
-     * Overrides <tt>hashCode()</tt> and returns the hash code of the decorated
+     * Overrides {@code hashCode()} and returns the hash code of the decorated
      * service instance.
      *
      * @return The hash code of the decorated service instance
@@ -111,7 +111,7 @@ public class EventAdminSecurityDecorator implements EventAdmin
     }
 
     /**
-     * Overrides <tt>equals()</tt> and delegates the call to the decorated service
+     * Overrides {@code equals()} and delegates the call to the decorated service
      * instance. In case that o is an instance of this class it passes o's service
      * instance instead of o.
      *
@@ -131,7 +131,7 @@ public class EventAdminSecurityDecorator implements EventAdmin
     }
 
     /**
-     * This is a utility method that will throw a <tt>SecurityExcepiton</tt> in case
+     * This is a utility method that will throw a {@code SecurityExcepiton} in case
      * that the given bundle (i.e, the caller) has not appropriate permissions to
      * publish to this topic. This method uses Bundle.hasPermission() and the given
      * permission factory to determine this.
@@ -147,7 +147,7 @@ public class EventAdminSecurityDecorator implements EventAdmin
     }
 
     /*
-     * This is a utility method that will throw a <tt>NullPointerException</tt>
+     * This is a utility method that will throw a {@code NullPointerException}
      * in case that the given object is null. The message will be of the form name +
      * may not be null.
      */

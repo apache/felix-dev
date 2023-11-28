@@ -1,5 +1,5 @@
 /*
- * Copyright (c) OSGi Alliance (2010, 2016). All Rights Reserved.
+ * Copyright (c) OSGi Alliance (2010, 2020). All Rights Reserved.
  * 
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -30,10 +30,10 @@
  * <p>
  * {@code  Import-Package: org.osgi.service.resolver; version="[1.1,1.2)"}
  * 
- * @author $Id: 6ac829e72173e50ab58bedd13edd66a1b50e58bd $
+ * @author $Id: 260072a99b71d2c4e6cfd174fd6acc1d20768e25 $
  */
 
-@Version("1.1")
+@Version("1.1.1")
 package org.osgi.service.resolver;
 
 import org.osgi.annotation.versioning.Version;

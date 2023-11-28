@@ -35,7 +35,7 @@ import org.osgi.service.event.Event;
  * thread pool and this thread is used to deliver the event.
  * The calling thread is blocked until either the deliver is finished
  * or the timeout occurs.
- * <p><tt>
+ * <p>
  * Note that in case of a timeout while a task is disabled the thread
  * is released and we spin-off a new thread that resumes the disabled
  * task hence, this is the only place were we break the semantics of
@@ -44,7 +44,6 @@ import org.osgi.service.event.Event;
  * blocked the dispatch for to long) but since it will not receive
  * events anymore it will not notice this semantic difference except
  * that it might not see events it already sent before.
- * </tt></pre>
  *
  * If during an event delivery a new event should be delivered from
  * within the event handler, the timeout handler is stopped for the
@@ -63,6 +62,7 @@ public class SyncDeliverTasks
     /**
      * Construct a new sync deliver tasks.
      * @param pool The thread pool used to spin-off new threads.
+     * @param timeout The timeout configuration
      */
     public SyncDeliverTasks(final DefaultThreadPool pool, final long timeout)
     {
@@ -72,6 +72,7 @@ public class SyncDeliverTasks
 
     /**
      * Update the timeout configuration
+     * @param timeout The timeout configuration
      */
     public void update(final long timeout)
     {
@@ -83,6 +84,8 @@ public class SyncDeliverTasks
      * event is send (or a timeout occurs).
      *
      * @param tasks The event handler dispatch tasks to execute
+     * @param event The event
+     * @param filterAsyncUnordered async handling
      *
      */
     public void execute(final Collection<EventHandlerProxy> tasks, final Event event, final boolean filterAsyncUnordered)
@@ -91,7 +94,7 @@ public class SyncDeliverTasks
         final SyncThread syncThread = sleepingThread instanceof SyncThread ? (SyncThread)sleepingThread : null;
 
         final Iterator<EventHandlerProxy> i = tasks.iterator();
-        final BlacklistLatch handlerLatch = new BlacklistLatch(tasks.size(), this.timeout/2);
+        final DenylistLatch handlerLatch = new DenylistLatch(tasks.size(), this.timeout/2);
 
         while ( i.hasNext() )
         {
@@ -101,7 +104,7 @@ public class SyncDeliverTasks
 //            {
                 if( !handlerTask.useTimeout() )
                 {
-                	handlerTask.runWithoutBlacklistTiming();
+                	handlerTask.runWithoutDenylistTiming();
                 }
             	else if ( syncThread != null  )
                 {
@@ -112,7 +115,7 @@ public class SyncDeliverTasks
                 else
                 {
 
-                	handlerLatch.addToBlacklistCheck(handlerTask);
+                	handlerLatch.addToDenylistCheck(handlerTask);
                     if ( !this.pool.executeTask(handlerTask) )
                     {
                         // scheduling failed: last resort, call directly
@@ -122,7 +125,7 @@ public class SyncDeliverTasks
 
 //            }
         }
-        handlerLatch.awaitAndBlacklistCheck();
+        handlerLatch.awaitAndDenylistCheck();
 
     }
 }

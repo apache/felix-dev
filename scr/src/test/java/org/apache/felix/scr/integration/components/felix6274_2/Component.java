@@ -25,6 +25,7 @@ public class Component
 
 	LogService logger;
 	
+    @SuppressWarnings("deprecation")
     void activate()
     {
         logger.log(LogService.LOG_INFO, "Hello from felix6274_2");

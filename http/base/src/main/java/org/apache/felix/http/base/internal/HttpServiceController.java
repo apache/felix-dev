@@ -18,12 +18,6 @@ package org.apache.felix.http.base.internal;
 
 import java.util.Hashtable;
 
-import javax.servlet.Servlet;
-import javax.servlet.ServletContext;
-import javax.servlet.http.HttpSessionEvent;
-import javax.servlet.http.HttpSessionIdListener;
-import javax.servlet.http.HttpSessionListener;
-
 import org.apache.felix.http.base.internal.dispatch.Dispatcher;
 import org.apache.felix.http.base.internal.dispatch.DispatcherServlet;
 import org.apache.felix.http.base.internal.handler.HttpSessionWrapper;
@@ -33,6 +27,15 @@ import org.apache.felix.http.base.internal.whiteboard.WhiteboardManager;
 import org.jetbrains.annotations.NotNull;
 import org.osgi.framework.BundleContext;
 
+import jakarta.servlet.Servlet;
+import jakarta.servlet.ServletContext;
+import jakarta.servlet.http.HttpSessionEvent;
+import jakarta.servlet.http.HttpSessionIdListener;
+import jakarta.servlet.http.HttpSessionListener;
+
+/**
+ * Controller for the http service
+ */
 public final class HttpServiceController
 {
     private final BundleContext bundleContext;
@@ -46,6 +49,10 @@ public final class HttpServiceController
 
     private volatile HttpSessionListener httpSessionListener;
 
+    /**
+     * Create new controller
+     * @param bundleContext The bundle context
+     */
     public HttpServiceController(final BundleContext bundleContext)
     {
         this.bundleContext = bundleContext;
@@ -56,6 +63,9 @@ public final class HttpServiceController
         this.whiteboardManager = new WhiteboardManager(bundleContext, this.httpServiceFactory, this.registry);
     }
 
+    /**
+     * Stop the controller
+     */
     public void stop()
     {
         this.unregister();
@@ -70,12 +80,16 @@ public final class HttpServiceController
         return new DispatcherServlet(this.dispatcher);
     }
 
-    public EventDispatcher getEventDispatcher()
+    /**
+     * Get the event dispatcher
+     * @return The event dispatcher
+     */
+    public @NotNull EventDispatcher getEventDispatcher()
     {
         return this.eventDispatcher;
     }
 
-    HttpSessionListener getSessionListener()
+    @NotNull HttpSessionListener getSessionListener()
     {
         // we don't need to sync here, if the object gets created several times
         // its not a problem
@@ -97,7 +111,7 @@ public final class HttpServiceController
         return httpSessionListener;
     }
 
-    HttpSessionIdListener getSessionIdListener()
+    @NotNull HttpSessionIdListener getSessionIdListener()
     {
         return new HttpSessionIdListener() {
 

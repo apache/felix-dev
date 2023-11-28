@@ -38,20 +38,22 @@ public interface SimpleShape
     /**
      * A property for the name of the shape.
     **/
-    public static final String NAME_PROPERTY = "Extension-Name";
+    String NAME_PROPERTY = "Extension-Name";
+
     /**
      * A property for the icon of the shape.
     **/
-    public static final String ICON_PROPERTY = "Extension-Icon";
+    String ICON_PROPERTY = "Extension-Icon";
+
     /**
      * A property for the class of the shape.
     **/
-    public static final String CLASS_PROPERTY = "Extension-Class";
+    String CLASS_PROPERTY = "Extension-Class";
 
     /**
      * Method to draw the shape of the extension.
      * @param g2 The graphics object used for painting.
      * @param p The position to paint the triangle.
     **/
-    public void draw(Graphics2D g2, Point p);
+    void draw(Graphics2D g2, Point p);
 }

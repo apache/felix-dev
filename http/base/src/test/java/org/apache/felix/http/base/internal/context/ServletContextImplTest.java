@@ -30,21 +30,6 @@ import java.util.Hashtable;
 import java.util.Map;
 import java.util.Set;
 
-import javax.servlet.Filter;
-import javax.servlet.FilterRegistration;
-import javax.servlet.RequestDispatcher;
-import javax.servlet.Servlet;
-import javax.servlet.ServletContext;
-import javax.servlet.ServletContextAttributeEvent;
-import javax.servlet.ServletContextAttributeListener;
-import javax.servlet.ServletException;
-import javax.servlet.ServletRegistration;
-import javax.servlet.SessionCookieConfig;
-import javax.servlet.SessionTrackingMode;
-import javax.servlet.descriptor.JspConfigDescriptor;
-import javax.servlet.http.HttpServletRequest;
-import javax.servlet.http.HttpServletResponse;
-
 import org.apache.felix.http.base.internal.HttpConfig;
 import org.apache.felix.http.base.internal.handler.ListenerHandler;
 import org.apache.felix.http.base.internal.registry.EventListenerRegistry;
@@ -53,12 +38,30 @@ import org.apache.felix.http.base.internal.registry.PerContextHandlerRegistry;
 import org.apache.felix.http.base.internal.runtime.ListenerInfo;
 import org.apache.felix.http.base.internal.service.HttpServiceFactory;
 import org.apache.felix.http.base.internal.service.ServletContextImpl;
+import org.apache.felix.http.jakartawrappers.ServletRequestWrapper;
+import org.apache.felix.http.jakartawrappers.ServletResponseWrapper;
 import org.junit.Assert;
 import org.junit.Before;
 import org.junit.Test;
 import org.mockito.Mockito;
 import org.osgi.framework.Bundle;
 import org.osgi.service.http.HttpContext;
+
+import jakarta.servlet.Filter;
+import jakarta.servlet.FilterRegistration;
+import jakarta.servlet.RequestDispatcher;
+import jakarta.servlet.Servlet;
+import jakarta.servlet.ServletContext;
+import jakarta.servlet.ServletContextAttributeEvent;
+import jakarta.servlet.ServletContextAttributeListener;
+import jakarta.servlet.ServletException;
+import jakarta.servlet.ServletRegistration;
+import jakarta.servlet.ServletRegistration.Dynamic;
+import jakarta.servlet.SessionCookieConfig;
+import jakarta.servlet.SessionTrackingMode;
+import jakarta.servlet.descriptor.JspConfigDescriptor;
+import jakarta.servlet.http.HttpServletRequest;
+import jakarta.servlet.http.HttpServletResponse;
 
 public class ServletContextImplTest
 {
@@ -288,6 +291,7 @@ public class ServletContextImplTest
             return null;
         }
 
+        @SuppressWarnings({ "unchecked", "rawtypes" })
         @Override
         public Enumeration getInitParameterNames()
         {
@@ -360,8 +364,8 @@ public class ServletContextImplTest
             return null;
         }
 
+        @SuppressWarnings("unused")
         @Deprecated
-        @Override
         public Servlet getServlet(String name)
         {
             return null;
@@ -373,9 +377,8 @@ public class ServletContextImplTest
             return null;
         }
 
-        @SuppressWarnings("deprecation")
+        @SuppressWarnings({ "rawtypes", "unused"})
         @Deprecated
-        @Override
         public Enumeration getServletNames()
         {
             return Collections.enumeration(Collections.emptyList());
@@ -393,9 +396,8 @@ public class ServletContextImplTest
             return null;
         }
 
-        @SuppressWarnings("deprecation")
+        @SuppressWarnings({ "rawtypes", "unused" })
         @Deprecated
-        @Override
         public Enumeration getServlets()
         {
             return Collections.enumeration(Collections.emptyList());
@@ -407,9 +409,8 @@ public class ServletContextImplTest
             return null;
         }
 
-        @SuppressWarnings("deprecation")
+        @SuppressWarnings("unused")
         @Deprecated
-        @Override
         public void log(Exception exception, String msg)
         {
         }
@@ -453,6 +454,41 @@ public class ServletContextImplTest
         public void setSessionTrackingModes(Set<SessionTrackingMode> modes)
         {
         }
+
+        @Override
+        public Dynamic addJspFile(String servletName, String jspFile) {
+            return null;
+        }
+
+        @Override
+        public int getSessionTimeout() {
+            return 0;
+        }
+
+        @Override
+        public void setSessionTimeout(int sessionTimeout) {
+
+        }
+
+        @Override
+        public String getRequestCharacterEncoding() {
+            return null;
+        }
+
+        @Override
+        public void setRequestCharacterEncoding(String encoding) {
+
+        }
+
+        @Override
+        public String getResponseCharacterEncoding() {
+            return null;
+        }
+
+        @Override
+        public void setResponseCharacterEncoding(String encoding) {
+
+        }
     }
 
     private Bundle bundle;
@@ -473,7 +509,7 @@ public class ServletContextImplTest
         contextRegistry = reg.getRegistry(HttpServiceFactory.HTTP_SERVICE_CONTEXT_SERVICE_ID);
         final EventListenerRegistry eventReg = contextRegistry.getEventListenerRegistry();
         final ListenerInfo info = Mockito.mock(ListenerInfo.class);
-        when(info.getListenerTypes()).thenReturn(new String[] {ServletContextAttributeListener.class.getName()});
+        when(info.getDTOListenerTypes()).thenReturn(new String[] {ServletContextAttributeListener.class.getName()});
         when(info.isListenerType(ServletContextAttributeListener.class.getName())).thenReturn(true);
         final ListenerHandler handler = Mockito.mock(ListenerHandler.class);
         when(handler.getListenerInfo()).thenReturn(info);
@@ -587,28 +623,6 @@ public class ServletContextImplTest
         Assert.assertEquals(2, set.size());
         Assert.assertTrue(set.contains("/some/path/1"));
         Assert.assertTrue(set.contains("/some/path/2"));
-    }
-
-    @Test
-    public void testGetServlet() throws Exception
-    {
-        Assert.assertNull(this.context.getServlet("test"));
-    }
-
-    @Test
-    public void testGetServletNames()
-    {
-        Enumeration<String> e = this.context.getServletNames();
-        Assert.assertNotNull(e);
-        Assert.assertFalse(e.hasMoreElements());
-    }
-
-    @Test
-    public void testGetServlets()
-    {
-        Enumeration<Servlet> e = this.context.getServlets();
-        Assert.assertNotNull(e);
-        Assert.assertFalse(e.hasMoreElements());
     }
 
     @Test
@@ -845,13 +859,15 @@ public class ServletContextImplTest
     @Test
     public void testHandleSecurity() throws Exception
     {
-        HttpServletRequest req = Mockito.mock(HttpServletRequest.class);
-        HttpServletResponse res = Mockito.mock(HttpServletResponse.class);
+        javax.servlet.http.HttpServletRequest req = Mockito.mock(javax.servlet.http.HttpServletRequest.class);
+        javax.servlet.http.HttpServletResponse res = Mockito.mock(javax.servlet.http.HttpServletResponse.class);
 
         Mockito.when(this.httpContext.handleSecurity(req, res)).thenReturn(true);
-        Assert.assertTrue(this.context.handleSecurity(req, res));
+        Assert.assertTrue(this.context.handleSecurity((HttpServletRequest)ServletRequestWrapper.getWrapper(req),
+                (HttpServletResponse)ServletResponseWrapper.getWrapper(res)));
 
         Mockito.when(this.httpContext.handleSecurity(req, res)).thenReturn(false);
-        Assert.assertFalse(this.context.handleSecurity(req, res));
+        Assert.assertFalse(this.context.handleSecurity((HttpServletRequest)ServletRequestWrapper.getWrapper(req),
+                (HttpServletResponse)ServletResponseWrapper.getWrapper(res)));
     }
 }

@@ -50,8 +50,7 @@ public final class ObrInstallFile extends AbstractFileMojo
      * Project types which this plugin supports.
      */
     @Parameter
-    private List supportedProjectTypes = Arrays.asList( new String[]
-        { "jar", "bundle" } );
+    private List supportedProjectTypes = Arrays.asList("jar", "bundle");
 
     /**
      * Local Repository.

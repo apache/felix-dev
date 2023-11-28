@@ -18,6 +18,7 @@
  */
 package org.apache.felix.framework;
 
+import org.apache.felix.framework.cache.ConnectContentContent;
 import org.apache.felix.framework.cache.Content;
 import org.apache.felix.framework.capabilityset.SimpleFilter;
 import org.apache.felix.framework.resolver.ResourceNotFoundException;
@@ -54,7 +55,6 @@ import org.osgi.service.resolver.ResolutionException;
 
 import java.io.IOException;
 import java.lang.reflect.Constructor;
-import java.net.MalformedURLException;
 import java.net.URL;
 import java.security.AccessController;
 import java.security.PrivilegedAction;
@@ -113,7 +113,7 @@ public class BundleWiringImpl implements BundleWiring
 
     private volatile List<BundleRequirement> m_wovenReqs = null;
 
-    private volatile BundleClassLoader m_classLoader;
+    private volatile ClassLoader m_classLoader;
 
     // Bundle-specific class loader for boot delegation.
     private final ClassLoader m_bootClassLoader;
@@ -389,10 +389,15 @@ public class BundleWiringImpl implements BundleWiring
 
         if (System.getSecurityManager() != null)
         {
-            for (Iterator<BundleCapability> iter = capList.iterator();iter.hasNext();)
+            for (Iterator<BundleCapability> iter = capList.iterator(); iter.hasNext();)
             {
                 BundleCapability cap = iter.next();
-                if (cap.getNamespace().equals(BundleRevision.PACKAGE_NAMESPACE))
+                String bundleNamespace = cap.getNamespace();
+                if (bundleNamespace.isEmpty())
+                {
+                    iter.remove();
+                }
+                else if (bundleNamespace.equals(BundleRevision.PACKAGE_NAMESPACE))
                 {
                     if (!((BundleProtectionDomain) ((BundleRevisionImpl) cap.getRevision()).getProtectionDomain()).impliesDirect(
                             new PackagePermission((String) cap.getAttributes().get(BundleRevision.PACKAGE_NAMESPACE), PackagePermission.EXPORTONLY)))
@@ -400,11 +405,12 @@ public class BundleWiringImpl implements BundleWiring
                         iter.remove();
                     }
                 }
-                else if (!cap.getNamespace().equals(BundleRevision.HOST_NAMESPACE) && !cap.getNamespace().equals(BundleRevision.BUNDLE_NAMESPACE) &&
-                        !cap.getNamespace().equals("osgi.ee"))
+                else if (!bundleNamespace.equals(BundleRevision.HOST_NAMESPACE)
+                    && !bundleNamespace.equals(BundleRevision.BUNDLE_NAMESPACE)
+                    && !bundleNamespace.equals("osgi.ee"))
                 {
-                    if (!((BundleProtectionDomain) ((BundleRevisionImpl) cap.getRevision()).getProtectionDomain()).impliesDirect(
-                            new CapabilityPermission(cap.getNamespace(), CapabilityPermission.PROVIDE)))
+                    CapabilityPermission permission = new CapabilityPermission(bundleNamespace, CapabilityPermission.PROVIDE);
+                    if (!((BundleProtectionDomain) ((BundleRevisionImpl) cap.getRevision()).getProtectionDomain()).impliesDirect(permission))
                     {
                         iter.remove();
                     }
@@ -711,7 +717,7 @@ public class BundleWiringImpl implements BundleWiring
     private ClassLoader getClassLoaderInternal()
     {
         ClassLoader classLoader = m_classLoader;
-        if (m_classLoader != null)
+        if (classLoader != null)
         {
             return classLoader;
         }
@@ -727,16 +733,24 @@ public class BundleWiringImpl implements BundleWiring
         // is not disposed.
         if (!m_isDisposed && (m_classLoader == null))
         {
-            m_classLoader = BundleRevisionImpl.getSecureAction().run(
-                new PrivilegedAction<BundleClassLoader>()
-                {
-                    @Override
-                    public BundleClassLoader run()
+            if (m_revision.getContent() instanceof ConnectContentContent)
+            {
+                m_classLoader = ((ConnectContentContent) m_revision.getContent()).getClassLoader();
+            }
+
+            if (m_classLoader == null)
+            {
+                m_classLoader = BundleRevisionImpl.getSecureAction().run(
+                    new PrivilegedAction<BundleClassLoader>()
                     {
-                        return new BundleClassLoader(BundleWiringImpl.this, determineParentClassLoader(), m_logger);
+                        @Override
+                        public BundleClassLoader run()
+                        {
+                            return new BundleClassLoader(BundleWiringImpl.this, determineParentClassLoader(), m_logger);
+                        }
                     }
-                }
-            );
+                );
+            }
         }
         return m_classLoader;
     }
@@ -1079,37 +1093,6 @@ public class BundleWiringImpl implements BundleWiring
     public BundleImpl getBundle()
     {
         return m_revision.getBundle();
-    }
-
-    //
-    // Class loader implementation methods.
-    //
-
-    private URL createURL(int port, String path)
-    {
-        // Add a slash if there is one already, otherwise
-        // the is no slash separating the host from the file
-        // in the resulting URL.
-        if (!path.startsWith("/"))
-        {
-            path = "/" + path;
-        }
-
-        try
-        {
-            return BundleRevisionImpl.getSecureAction().createURL(null,
-                    FelixConstants.BUNDLE_URL_PROTOCOL + "://" +
-                    getBundle().getFramework()._getProperty(Constants.FRAMEWORK_UUID) + "_" + m_revision.getId() + ":" + port + path,
-                    getBundle().getFramework().getBundleStreamHandler());
-        }
-        catch (MalformedURLException ex)
-        {
-            m_logger.log(m_revision.getBundle(),
-                    Logger.LOG_ERROR,
-                    "Unable to create resource URL.",
-                    ex);
-        }
-        return null;
     }
 
     public Enumeration getResourcesByDelegation(String name)
@@ -1522,24 +1505,21 @@ public class BundleWiringImpl implements BundleWiring
 
                     try
                     {
-                        result = tryImplicitBootDelegation(name, isClass);
-                    }
-                    catch (Exception ex)
-                    {
-                        // Ignore, will throw using CNFE_CLASS_LOADER
-                    }
+                        // Get the appropriate class loader for delegation.
+                        ClassLoader bdcl = getBootDelegationClassLoader();
+                        result = (isClass) ? (Object) bdcl.loadClass(name) : (Object) bdcl.getResource(name);
 
-                    if (result != null)
-                    {
-                        m_accessorLookupCache.put(name, BundleRevisionImpl.getSecureAction()
-                                .getClassLoader(this.getClass()));
-                        return result;
+                        if (result != null)
+                        {
+                            m_accessorLookupCache.put(name, bdcl);
+                            return result;
+                        }
                     }
-                    else
+                    catch (ClassNotFoundException ex)
                     {
-                        m_accessorLookupCache.put(name, CNFE_CLASS_LOADER);
-                        CNFE_CLASS_LOADER.loadClass(name);
                     }
+                    m_accessorLookupCache.put(name, CNFE_CLASS_LOADER);
+                    CNFE_CLASS_LOADER.loadClass(name);
                 }
 
                 // Look in the revision's imports. Note that the search may
@@ -1550,24 +1530,38 @@ public class BundleWiringImpl implements BundleWiring
                 // If not found, try the revision's own class path.
                 if (result == null)
                 {
-                    if (isClass)
+                    ClassLoader cl = getClassLoaderInternal();
+                    if (cl == null)
                     {
-                        ClassLoader cl = getClassLoaderInternal();
-                        if (cl == null)
+                        if (isClass)
                         {
                             throw new ClassNotFoundException(
-                                    "Unable to load class '"
-                                            + name
-                                            + "' because the bundle wiring for "
-                                            + m_revision.getSymbolicName()
-                                            + " is no longer valid.");
+                                "Unable to load class '"
+                                    + name
+                                    + "' because the bundle wiring for "
+                                    + m_revision.getSymbolicName()
+                                    + " is no longer valid.");
                         }
-                        result = ((BundleClassLoader) cl).findClass(name);
+                        else
+                        {
+                            throw new ResourceNotFoundException("Unable to load resource '"
+                                + name
+                                + "' because the bundle wiring for "
+                                + m_revision.getSymbolicName()
+                                + " is no longer valid.");
+                        }
+                    }
+                    if (cl instanceof BundleClassLoader)
+                    {
+                        result = isClass ? ((BundleClassLoader) cl).findClass(name) :
+                            ((BundleClassLoader) cl).findResource(name);
                     }
                     else
                     {
-                        result = m_revision.getResourceLocal(name);
+                        result = isClass ? cl.loadClass(name) : !name.startsWith("/") ? cl.getResource(name) :
+                        cl.getResource(name.substring(1));
                     }
+
 
                     // If still not found, then try the revision's dynamic imports.
                     if (result == null)
@@ -2084,7 +2078,7 @@ public class BundleWiringImpl implements BundleWiring
                         catch (Error e)
                         {
                             // Mark the woven class as incomplete.
-                            wci.complete(null, null, null);
+                            wci.complete();
                             wci.setState(WovenClass.TRANSFORMING_FAILED);
                             callWovenClassListeners(felix, wovenClassListeners, wci);
                             throw e;

@@ -18,19 +18,22 @@
  */
 package org.apache.felix.http.base.internal.runtime;
 
-import java.util.Collections;
+import java.util.Arrays;
 import java.util.Map;
+import java.util.Objects;
 import java.util.regex.Pattern;
 import java.util.regex.PatternSyntaxException;
 
-import javax.servlet.DispatcherType;
-import javax.servlet.Filter;
-
 import org.apache.felix.http.base.internal.util.PatternUtil;
+import org.apache.felix.http.jakartawrappers.FilterWrapper;
+import org.jetbrains.annotations.NotNull;
 import org.osgi.dto.DTO;
 import org.osgi.framework.ServiceReference;
-import org.osgi.service.http.runtime.dto.FilterDTO;
-import org.osgi.service.http.whiteboard.HttpWhiteboardConstants;
+import org.osgi.service.servlet.runtime.dto.FilterDTO;
+import org.osgi.service.servlet.whiteboard.HttpWhiteboardConstants;
+
+import jakarta.servlet.DispatcherType;
+import jakarta.servlet.Filter;
 
 /**
  * Provides registration information for a {@link Filter}, and is used to programmatically register {@link Filter}s.
@@ -38,7 +41,7 @@ import org.osgi.service.http.whiteboard.HttpWhiteboardConstants;
  * This class only provides information used at registration time, and as such differs slightly from {@link DTO}s like, {@link FilterDTO}.
  * </p>
  */
-public final class FilterInfo extends WhiteboardServiceInfo<Filter>
+public class FilterInfo extends WhiteboardServiceInfo<Filter>
 {
     /**
      * The name of the filter.
@@ -90,6 +93,10 @@ public final class FilterInfo extends WhiteboardServiceInfo<Filter>
      */
     private final Map<String, String> initParams;
 
+    /**
+     * new filter info
+     * @param ref filter service reference
+     */
     public FilterInfo(final ServiceReference<Filter> ref)
     {
         super(ref);
@@ -121,24 +128,6 @@ public final class FilterInfo extends WhiteboardServiceInfo<Filter>
         {
             this.dispatcher = new DispatcherType[] {DispatcherType.REQUEST};
         }
-    }
-
-    /**
-     * Constructor for Http Service
-     */
-    public FilterInfo(final String name,
-            final String regex,
-            final int serviceRanking,
-            final Map<String, String> initParams)
-    {
-        super(serviceRanking);
-        this.name = name;
-        this.patterns = null;
-        this.servletNames = null;
-        this.regexs = new String[] {regex};
-        this.initParams = Collections.unmodifiableMap(initParams);
-        this.asyncSupported = false;
-        this.dispatcher = new DispatcherType[] {DispatcherType.REQUEST};
     }
 
     @Override
@@ -220,5 +209,37 @@ public final class FilterInfo extends WhiteboardServiceInfo<Filter>
     public Map<String, String> getInitParameters()
     {
         return initParams;
+    }
+
+    @Override
+    public @NotNull String getType() {
+        return "Filter";
+    }
+
+    /**
+     * Get the class name of the filter
+     * @param filter The filter
+     * @return The class name
+     */
+    public @NotNull String getClassName(@NotNull final Filter filter) {
+        if (filter instanceof FilterWrapper ) {
+            return ((FilterWrapper)filter).getFilter().getClass().getName();
+        }
+        return filter.getClass().getName();
+    }
+
+    @Override
+    public boolean isSame(AbstractInfo<Filter> other) {
+        if (!super.isSame(other)) {
+            return false;
+        }
+        final FilterInfo o = (FilterInfo) other;
+        return Objects.equals(this.name, o.name)
+            && Arrays.equals(this.patterns, o.patterns)
+            && Arrays.equals(this.servletNames, o.servletNames)
+            && Arrays.equals(this.regexs, o.regexs)
+            && this.asyncSupported == o.asyncSupported
+            && Arrays.equals(this.dispatcher, o.dispatcher)
+            && Objects.equals(this.initParams, o.initParams);
     }
 }

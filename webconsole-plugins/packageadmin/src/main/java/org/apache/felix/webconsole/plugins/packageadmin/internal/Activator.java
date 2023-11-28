@@ -23,106 +23,58 @@ import java.util.Hashtable;
 
 import org.apache.felix.inventory.Format;
 import org.apache.felix.inventory.InventoryPrinter;
-import org.apache.felix.webconsole.SimpleWebConsolePlugin;
 import org.osgi.framework.BundleActivator;
 import org.osgi.framework.BundleContext;
 import org.osgi.framework.ServiceReference;
 import org.osgi.framework.ServiceRegistration;
-import org.osgi.util.tracker.ServiceTracker;
-import org.osgi.util.tracker.ServiceTrackerCustomizer;
+import org.osgi.service.packageadmin.PackageAdmin;
+
+import jakarta.servlet.Servlet;
 
 /**
  * This is the main starting class of the bundle.
  */
-public class Activator implements BundleActivator, ServiceTrackerCustomizer
-{
+@SuppressWarnings("deprecation")
+public class Activator implements BundleActivator {
 
-    private ServiceTracker pkgAdminTracker;
-
-    private BundleContext context;
-    private SimpleWebConsolePlugin plugin;
+    private ServiceRegistration<Servlet> plugin;
     private ServiceRegistration<InventoryPrinter> printerReg;
 
     /**
      * @see org.osgi.framework.BundleActivator#start(org.osgi.framework.BundleContext)
      */
-    public void start(final BundleContext context) throws Exception
-    {
-        this.context = context;
-        this.pkgAdminTracker = new ServiceTracker(context,
-            "org.osgi.service.packageadmin.PackageAdmin", this); //$NON-NLS-1$
-        this.pkgAdminTracker.open();
+    public void start(final BundleContext context) throws Exception {
+        // package admin is always available
+        final ServiceReference<PackageAdmin> packageAdmin = context.getServiceReference(PackageAdmin.class);
+        if (packageAdmin != null ) {
+            final PackageAdmin pa = context.getService(packageAdmin);
+            if (pa != null) {
+                // register configuration printer
+                final Dictionary<String, Object> props = new Hashtable<String, Object>();
+                props.put(InventoryPrinter.NAME, "duplicate_exports"); //$NON-NLS-1$
+                props.put(InventoryPrinter.TITLE, "Duplicate Exports"); //$NON-NLS-1$
+                props.put(InventoryPrinter.FORMAT, new String[] { Format.TEXT.toString() });
 
-        // register configuration printer
-        final Dictionary<String, Object> props = new Hashtable<String, Object>();
-        props.put(InventoryPrinter.NAME, "duplicate_exports"); //$NON-NLS-1$
-        props.put(InventoryPrinter.TITLE, "Duplicate Exports"); //$NON-NLS-1$
-        props.put(InventoryPrinter.FORMAT, new String[] { Format.TEXT.toString() });
+                this.printerReg = context.registerService(
+                    InventoryPrinter.class,
+                    new WebConsolePrinter(context, pa), props);
+                this.plugin = new WebConsolePlugin(context, pa).register();
 
-        printerReg = context.registerService(
-            InventoryPrinter.class,
-            new WebConsolePrinter(context, pkgAdminTracker), props);
+            }
+        }
     }
 
     /**
      * @see org.osgi.framework.BundleActivator#stop(org.osgi.framework.BundleContext)
      */
-    public void stop(final BundleContext context) throws Exception
-    {
-        if (printerReg != null)
-        {
+    public void stop(final BundleContext context) throws Exception {
+        if (printerReg != null) {
             printerReg.unregister();
             printerReg = null;
         }
-
-        if (this.pkgAdminTracker != null)
-        {
-            this.pkgAdminTracker.close();
-            this.pkgAdminTracker = null;
-        }
-
-        this.context = null;
-    }
-
-    // - begin tracker
-    /**
-     * @see org.osgi.util.tracker.ServiceTrackerCustomizer#modifiedService(org.osgi.framework.ServiceReference,
-     *      java.lang.Object)
-     */
-    public final void modifiedService(ServiceReference reference, Object service)
-    {/* unused */
-    }
-
-    /**
-     * @see org.osgi.util.tracker.ServiceTrackerCustomizer#addingService(org.osgi.framework.ServiceReference)
-     */
-    public final Object addingService(ServiceReference reference)
-    {
-        SimpleWebConsolePlugin plugin = this.plugin;
-        Object ret = null;
-        if (plugin == null)
-        {
-            ret = context.getService(reference);
-            this.plugin = plugin = new WebConsolePlugin(context, ret).register(context);
-        }
-
-        return ret;
-    }
-
-    /**
-     * @see org.osgi.util.tracker.ServiceTrackerCustomizer#removedService(org.osgi.framework.ServiceReference,
-     *      java.lang.Object)
-     */
-    public final void removedService(ServiceReference reference, Object service)
-    {
-        SimpleWebConsolePlugin plugin = this.plugin;
-
-        if (pkgAdminTracker.size() <= 1 && plugin != null)
-        {
-            plugin.unregister();
+        if (this.plugin != null) {
+            this.plugin.unregister();
             this.plugin = null;
         }
-
     }
-
 }

@@ -35,21 +35,25 @@ class URLHandlersBundleURLConnection extends URLConnection
     private Felix m_framework;
     private BundleRevision m_targetRevision;
     private int m_classPathIdx = -1;
-    private int m_contentLength;
+    private long m_contentLength;
     private long m_contentTime;
     private String m_contentType;
     private InputStream m_is;
+    private final String m_path;
 
     public URLHandlersBundleURLConnection(URL url, Felix framework)
         throws IOException
     {
         super(url);
 
+        String urlString = url.toExternalForm();
+
+        String path = urlString.substring(urlString.indexOf(url.getPath()));
+
         // If this is an attempt to create a connection to the root of
         // the bundle, then throw an exception since this isn't possible.
         // We only allow "/" as a valid URL so it can be used as context
         // for creating other URLs.
-        String path = url.getPath();
         if ((path == null) || (path.length() == 0) || path.equals("/"))
         {
             throw new IOException("Resource does not exist: " + url);
@@ -83,7 +87,6 @@ class URLHandlersBundleURLConnection extends URLConnection
         {
             throw new IOException("No bundle associated with resource: " + url);
         }
-        m_contentTime = bundle.getLastModified();
 
         // Get the bundle's revisions to find the target revision.
         BundleRevisions revisions = bundle.adapt(BundleRevisions.class);
@@ -121,17 +124,40 @@ class URLHandlersBundleURLConnection extends URLConnection
             m_classPathIdx = 0;
         }
         if (!((BundleRevisionImpl) m_targetRevision)
-            .hasInputStream(m_classPathIdx, url.getPath()))
+            .hasInputStream(m_classPathIdx, path))
         {
             BundleWiring wiring = m_targetRevision.getWiring();
             ClassLoader cl = (wiring != null) ? wiring.getClassLoader() : null;
-            URL newurl = (cl != null) ? cl.getResource(url.getPath()) : null;
+            URL newurl = (cl != null) ? cl.getResource(path) : null;
             if (newurl == null)
             {
-                throw new IOException("Resource does not exist: " + url);
+                // FELIX-6416 - handle the special case of java adding a runtime ref
+                if (!"runtime".equals(url.getRef()))
+                {
+                    throw new IOException("Resource does not exist: " + url);
+                }
+                path = url.getPath();
+                if ((path == null) || (path.length() == 0) || path.equals("/"))
+                {
+                    throw new IOException("Resource does not exist: " + url);
+                }
+                if (!((BundleRevisionImpl) m_targetRevision)
+                        .hasInputStream(m_classPathIdx, path))
+                {
+                    newurl = (cl != null) ? cl.getResource(path) : null;
+                    if (newurl == null)
+                    {
+                        throw new IOException("Resource does not exist: " + url);
+                    }
+                    m_classPathIdx = newurl.getPort();
+                }
             }
-            m_classPathIdx = newurl.getPort();
+            else
+            {
+                m_classPathIdx = newurl.getPort();
+            }
         }
+        m_path = path;
     }
 
     public synchronized void connect() throws IOException
@@ -143,9 +169,10 @@ class URLHandlersBundleURLConnection extends URLConnection
                 throw new IOException("Resource does not exist: " + url);
             }
             m_is = ((BundleRevisionImpl)
-                m_targetRevision).getInputStream(m_classPathIdx, url.getPath());
+                m_targetRevision).getInputStream(m_classPathIdx, m_path);
             m_contentLength = (m_is == null) ? 0 : m_is.available();
-            m_contentType = URLConnection.guessContentTypeFromName(url.getFile());
+            m_contentTime = ((BundleRevisionImpl) m_targetRevision).getContentTime(m_classPathIdx, m_path);
+            m_contentType = URLConnection.guessContentTypeFromName(m_path);
             connected = true;
         }
     }
@@ -160,6 +187,11 @@ class URLHandlersBundleURLConnection extends URLConnection
 
     public int getContentLength()
     {
+        return (int) getContentLengthLong();
+    }
+
+    public long getContentLengthLong()
+    {
         try
         {
             connect();
@@ -170,11 +202,6 @@ class URLHandlersBundleURLConnection extends URLConnection
         }
 
         return m_contentLength;
-    }
-
-    public long getContentLengthLong()
-    {
-        return getContentLength();
     }
 
     public long getLastModified()
@@ -234,6 +261,6 @@ class URLHandlersBundleURLConnection extends URLConnection
             return url;
         }
         return ((BundleRevisionImpl)
-            m_targetRevision).getLocalURL(m_classPathIdx, url.getPath());
+            m_targetRevision).getLocalURL(m_classPathIdx, m_path);
     }
 }

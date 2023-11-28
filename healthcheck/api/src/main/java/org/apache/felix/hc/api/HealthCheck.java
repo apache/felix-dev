@@ -19,15 +19,19 @@ package org.apache.felix.hc.api;
 
 import org.osgi.annotation.versioning.ConsumerType;
 
-/** The Health Check SPI provides a means to check a certain system aspect programmatically. Health checks return a result {@link Result}, 
+/** <p>The Health Check SPI provides a means to check a certain system aspect programmatically. Health checks return a result {@link Result}, 
  * for most cases it is most convenient to use {@link FormattingResultLog} that automatically derives the correct {@link Result.Status} from
- * the log messages.
+ * the log messages.</p>
  *
- * Clients must not look up health checks directly but rather use the {@link org.apache.felix.hc.api.execution.HealthCheckExecutor}
- * service and execute checks based on tags (or name). 
+ * <p><strong>Clients must not look up health checks directly but rather use the {@link org.apache.felix.hc.api.execution.HealthCheckExecutor}
+ * service and execute checks based on tags (or name).</strong></p>
  *
- * If the {@link #MBEAN_NAME} service registration property is set, the health check is registered as an mbean and can be invoked by getting
- * the MBean from the JMX registry. */
+ * <p>If the {@link #MBEAN_NAME} service registration property is set, the health check is registered as an mbean and can be invoked by getting
+ * the MBean from the JMX registry. </p>
+ * 
+ * <p>Use the {@code hc.async.*} properties for the case a health check is known to be long-running (longer than the timeout as configured in the 
+ * executor). For regularly triggering one or more health checks, rather configure a {@code HealthCheckMonitor}.</p>
+ * */
 @ConsumerType
 public interface HealthCheck {
 
@@ -45,10 +49,13 @@ public interface HealthCheck {
     String MBEAN_NAME = "hc.mbean.name";
 
     /** Optional service property: If this property is set the health check will be executed asynchronously using the cron expression
-     * provided. */
+     * provided. Use this for long running health checks to avoid execution every time the tag/name is queried. Prefer configuring
+     * a HealthCheckMonitor if you only want to regularly execute a HC.  */
     String ASYNC_CRON_EXPRESSION = "hc.async.cronExpression";
 
-    /** Optional service property: If this property is set the health check will be executed asynchronously every n seconds */
+    /** Optional service property: If this property is set the health check will be executed asynchronously every n seconds. Use this 
+     * for long running health checks to avoid execution every time the tag/name is queried. Prefer configuring  a HealthCheckMonitor 
+     * if you only want to regularly execute a HC. */
     String ASYNC_INTERVAL_IN_SEC = "hc.async.intervalInSec";
 
     /** Optional service property: TTL for health check {@link Result}. The value of this property must be of type {@link Long} and is

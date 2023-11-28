@@ -32,7 +32,7 @@
  * <p>
  * {@code  Import-Package: org.osgi.framework.startlevel.dto; version="[1.0,1.1)"}
  * 
- * @author $Id$
+ * @author $Id: 62262c52e6446fbe4a7b29725881f01791396c29 $
  */
 
 @Version("1.0")

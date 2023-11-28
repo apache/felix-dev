@@ -559,7 +559,7 @@ class BundleContextImpl implements BundleContext
             checkValidity();
 
             // Unget the specified service.
-            if ( !m_felix.ungetService(m_bundle, m_ref, srvObj) )
+            if ( !m_felix.ungetService(m_bundle, m_ref, srvObj) && m_ref.getBundle() != null )
             {
             	throw new IllegalArgumentException();
             }

@@ -22,10 +22,14 @@ import java.util.Collection;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.Map;
+import java.util.Objects;
 
+import org.apache.felix.http.base.internal.util.ServiceUtils;
+import org.jetbrains.annotations.NotNull;
+import org.osgi.framework.BundleContext;
 import org.osgi.framework.Constants;
 import org.osgi.framework.ServiceReference;
-import org.osgi.service.http.whiteboard.HttpWhiteboardConstants;
+import org.osgi.service.servlet.whiteboard.HttpWhiteboardConstants;
 
 /**
  * Base class for all info objects.
@@ -88,11 +92,24 @@ public abstract class AbstractInfo<T> implements Comparable<AbstractInfo<T>>
             }
             // Service id's can be negative. Negative id's follow the reverse natural ordering of integers.
             int reverseOrder = ( this.serviceId >= 0 && other.serviceId >= 0 ) ? 1 : -1;
-            return reverseOrder * new Long(this.serviceId).compareTo(other.serviceId);
+            return reverseOrder * Long.valueOf(this.serviceId).compareTo(other.serviceId);
         }
 
-        int result = new Integer(other.ranking).compareTo(this.ranking);
+        int result = Integer.valueOf(other.ranking).compareTo(this.ranking);
         return result;
+    }
+
+    /**
+     * Compare two info objects 
+     */
+    public boolean isSame(final AbstractInfo<T> other) {
+        if (this.serviceId != other.serviceId) {
+            return false;
+        }
+        if (this.ranking != other.ranking) {
+            return false;
+        }
+        return Objects.equals(this.target, other.target);
     }
 
     protected boolean isEmpty(final String value)
@@ -226,4 +243,28 @@ public abstract class AbstractInfo<T> implements Comparable<AbstractInfo<T>>
         final AbstractInfo<?> other = (AbstractInfo<?>) obj;
         return serviceId == other.serviceId;
     }
+
+    /**
+     * Get a service object
+     * @param bundleContext context
+     * @return The object or {@code null}
+     */
+    public T getService(final BundleContext bundleContext) {
+        return ServiceUtils.safeGetServiceObjects(bundleContext, this.getServiceReference());
+    }
+
+    /**
+     * Unget the service object
+     * @param bundleContext The bundle context
+     * @param service The service object
+     */
+    public void ungetService(final BundleContext bundleContext, final T service) {
+        ServiceUtils.safeUngetServiceObjects(bundleContext, this.getServiceReference(), service);
+    }
+
+    /**
+     * Get the type represented by this info
+     * @return The type
+     */
+    public abstract @NotNull String getType();
 }

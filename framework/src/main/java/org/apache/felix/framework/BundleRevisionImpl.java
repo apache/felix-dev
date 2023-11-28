@@ -18,6 +18,16 @@
  */
 package org.apache.felix.framework;
 
+import java.io.IOException;
+import java.io.InputStream;
+import java.net.URL;
+import java.security.ProtectionDomain;
+import java.util.ArrayList;
+import java.util.Collections;
+import java.util.Enumeration;
+import java.util.List;
+import java.util.Map;
+
 import org.apache.felix.framework.cache.Content;
 import org.apache.felix.framework.util.FelixConstants;
 import org.apache.felix.framework.util.MultiReleaseContent;
@@ -35,17 +45,6 @@ import org.osgi.framework.wiring.BundleWiring;
 import org.osgi.resource.Capability;
 import org.osgi.resource.Requirement;
 import org.osgi.resource.Resource;
-
-import java.io.IOException;
-import java.io.InputStream;
-import java.net.MalformedURLException;
-import java.net.URL;
-import java.security.ProtectionDomain;
-import java.util.ArrayList;
-import java.util.Collections;
-import java.util.Enumeration;
-import java.util.List;
-import java.util.Map;
 
 public class BundleRevisionImpl implements BundleRevision, Resource
 {
@@ -320,6 +319,15 @@ public class BundleRevisionImpl implements BundleRevision, Resource
         }
     }
 
+    synchronized void disposeContentPath()
+    {
+        for (int i = 0; (m_contentPath != null) && (i < m_contentPath.size()); i++)
+        {
+            m_contentPath.get(i).close();
+        }
+        m_contentPath = null;
+    }
+
     public void setProtectionDomain(ProtectionDomain pd)
     {
         m_protectionDomain = pd;
@@ -339,18 +347,19 @@ public class BundleRevisionImpl implements BundleRevision, Resource
         return m_content;
     }
 
-    void resetContent(Content content)
+    synchronized void resetContent(Content content)
     {
         m_content = content;
     }
 
     List<Content> getContentPath()
     {
-        if (m_contentPath == null)
+        List<Content> contentPath = m_contentPath;
+        if (contentPath == null)
         {
             try
             {
-                m_contentPath = initializeContentPath();
+                contentPath = initializeContentPath();
             }
             catch (Exception ex)
             {
@@ -358,7 +367,7 @@ public class BundleRevisionImpl implements BundleRevision, Resource
                     m_bundle, Logger.LOG_ERROR, "Unable to get module class path.", ex);
             }
         }
-        return m_contentPath;
+        return contentPath;
     }
 
     private synchronized List<Content> initializeContentPath() throws Exception
@@ -389,7 +398,7 @@ public class BundleRevisionImpl implements BundleRevision, Resource
                     fragments.get(i), fragmentContents.get(i), contentList, false);
             }
         }
-        return contentList;
+        return m_contentPath = contentList;
     }
 
     private List calculateContentPath(
@@ -506,6 +515,10 @@ public class BundleRevisionImpl implements BundleRevision, Resource
         {
             if (contentPath.get(i).hasEntry(name))
             {
+                if (!name.endsWith("/") && contentPath.get(i).isDirectory(name))
+                {
+                    name += "/";
+                }
                 url = createURL(i + 1, name);
             }
         }
@@ -544,6 +557,10 @@ public class BundleRevisionImpl implements BundleRevision, Resource
             {
                 if (contentPath.get(i).hasEntry(name))
                 {
+                    if (!name.endsWith("/") && contentPath.get(i).isDirectory(name))
+                    {
+                        name += "/";
+                    }
                     // Use the class path index + 1 for creating the path so
                     // that we can differentiate between module content URLs
                     // (where the path will start with 0) and module class
@@ -580,6 +597,10 @@ public class BundleRevisionImpl implements BundleRevision, Resource
             // Check the module content.
             if (getContent().hasEntry(name))
             {
+                if (!name.endsWith("/") && getContent().isDirectory(name))
+                {
+                    name += "/";
+                }
                 // Module content URLs start with 0, whereas module
                 // class path URLs start with the index into the class
                 // path + 1.
@@ -617,6 +638,25 @@ public class BundleRevisionImpl implements BundleRevision, Resource
         return getContentPath().get(index - 1).getEntryAsStream(urlPath);
     }
 
+
+    public long getContentTime(int index, String urlPath)
+    {
+        if (urlPath.startsWith("/"))
+        {
+            urlPath = urlPath.substring(1);
+        }
+        Content content;
+        if (index == 0)
+        {
+            content = getContent();
+        }
+        else {
+            content = getContentPath().get(index - 1);
+        }
+        long result = content.getContentTime(urlPath);
+        return result > 0 ? result : m_bundle.getLastModified();
+    }
+
     public URL getLocalURL(int index, String urlPath)
     {
         if (urlPath.startsWith("/"))
@@ -647,7 +687,7 @@ public class BundleRevisionImpl implements BundleRevision, Resource
                 m_bundle.getFramework()._getProperty(Constants.FRAMEWORK_UUID) + "_" + m_id + ":" + port + path,
                 getBundle().getFramework().getBundleStreamHandler());
         }
-        catch (MalformedURLException ex)
+        catch (Exception ex)
         {
             m_bundle.getFramework().getLogger().log(
                 m_bundle,
@@ -671,11 +711,7 @@ public class BundleRevisionImpl implements BundleRevision, Resource
         }
         m_content.close();
         m_content = null;
-        for (int i = 0; (m_contentPath != null) && (i < m_contentPath.size()); i++)
-        {
-            m_contentPath.get(i).close();
-        }
-        m_contentPath = null;
+        disposeContentPath();
     }
 
     @Override

@@ -20,7 +20,7 @@ import java.util.Dictionary;
 import java.util.Hashtable;
 import java.util.StringTokenizer;
 
-import javax.servlet.http.HttpServletRequest;
+import jakarta.servlet.http.HttpServletRequest;
 
 /**
  * Java support for propeditor.js handling.
@@ -39,13 +39,13 @@ public class PropertiesEditorSupport
      * @param request the request to process
      * @return the converted properties
      */
-    public static final Dictionary convertProperties(HttpServletRequest request)
+    public static final Dictionary<String, ?> convertProperties(HttpServletRequest request)
     {
         String keys[] = request.getParameterValues("key"); //$NON-NLS-1$
         String vals[] = request.getParameterValues("val"); //$NON-NLS-1$
         String types[] = request.getParameterValues("type"); //$NON-NLS-1$
 
-        final Hashtable properties = new Hashtable();
+        final Dictionary<String, Object> properties = new Hashtable<>();
         synchronized (properties)
         {
             for (int i = 0; keys != null && i < keys.length; i++)
@@ -85,7 +85,7 @@ public class PropertiesEditorSupport
         }
         else if ("char".equals(type)) //$NON-NLS-1$
         {
-            return new Character(value.toString().charAt(0));
+            return value.toString().charAt(0);
         }
         else if ("byte array".equals(type)) //$NON-NLS-1$
         {

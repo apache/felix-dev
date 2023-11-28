@@ -26,7 +26,6 @@ import java.util.LinkedHashSet;
 import org.apache.maven.artifact.Artifact;
 import org.apache.maven.plugin.MojoExecutionException;
 import org.apache.maven.plugin.logging.Log;
-import org.apache.maven.shared.dependency.graph.DependencyNode;
 import org.codehaus.plexus.util.StringUtils;
 
 import aQute.bnd.osgi.Analyzer;
@@ -68,8 +67,8 @@ public final class DependencyEmbedder extends AbstractDependencyFilter
     {
         super( dependencyArtifacts );
 
-        m_inlinedPaths = new LinkedHashSet<String>();
-        m_embeddedArtifacts = new LinkedHashSet<Artifact>();
+        m_inlinedPaths = new LinkedHashSet<>();
+        m_embeddedArtifacts = new LinkedHashSet<>();
     }
 
     public void processHeaders( Analyzer analyzer ) throws MojoExecutionException
@@ -137,7 +136,7 @@ public final class DependencyEmbedder extends AbstractDependencyFilter
         File path = dependency.getFile();
         if ( null != path && path.exists() )
         {
-            if ( "true".equalsIgnoreCase( inline ) || inline.length() == 0 )
+            if ( "true".equalsIgnoreCase( inline ) || inline.isEmpty() )
             {
                 inlinedPaths.add( path.getPath() );
             }
@@ -268,7 +267,7 @@ public final class DependencyEmbedder extends AbstractDependencyFilter
             {
                 // if there are no embeddded dependencies, we do a special treatment and replace
                 // every occurance of MAVEN_DEPENDENCIES and a following comma with an empty string
-                if ( mavenDependencies.length() == 0 )
+                if ( mavenDependencies.isEmpty() )
                 {
                     String cleanInstruction = BundlePlugin.removeTagFromInstruction( instruction, MAVEN_DEPENDENCIES );
                     analyzer.setProperty( directiveName, cleanInstruction );

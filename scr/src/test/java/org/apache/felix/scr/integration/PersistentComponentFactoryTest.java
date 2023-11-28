@@ -58,7 +58,8 @@ public class PersistentComponentFactoryTest extends ComponentTestBase
 
         TestCase.assertNull( SimpleComponent.INSTANCE );
 
-        final ComponentInstance instance = createFactoryComponentInstance( componentfactory );
+        final ComponentInstance<?> instance = createFactoryComponentInstance(
+            componentfactory);
 
         // check registered components
         checkConfigurationCount( componentname, 1, ComponentConfigurationDTO.ACTIVE );
@@ -83,7 +84,8 @@ public class PersistentComponentFactoryTest extends ComponentTestBase
 
         TestCase.assertNull( SimpleComponent.INSTANCE );
 
-        final ComponentInstance instance = createFactoryComponentInstance( componentfactory );
+        final ComponentInstance<?> instance = createFactoryComponentInstance(
+            componentfactory);
 
         checkConfigurationCount( componentname, 1, ComponentConfigurationDTO.ACTIVE );
 
@@ -112,9 +114,9 @@ public class PersistentComponentFactoryTest extends ComponentTestBase
         Hashtable<String, String> props = new Hashtable<String, String>();
         props.put( PROP_NAME_FACTORY, PROP_NAME_FACTORY );
         props.put( SimpleComponent.PROP_ACTIVATE_FAILURE, "Requested Failure" );
-        final ComponentFactory factory = getComponentFactory( componentfactory );
+        final ComponentFactory<?> factory = getComponentFactory(componentfactory);
 
-        final ComponentInstance instance = factory.newInstance( props );
+        final ComponentInstance<?> instance = factory.newInstance(props);
         TestCase.assertNotNull( instance );
 
         checkConfigurationCount( componentname, 1, ComponentConfigurationDTO.FAILED_ACTIVATION );
@@ -159,7 +161,8 @@ public class PersistentComponentFactoryTest extends ComponentTestBase
 
     }
 
-    private ComponentInstance testConfiguredFactory(final String componentname, final String componentfactory,
+    private ComponentInstance<?> testConfiguredFactory(final String componentname,
+        final String componentfactory,
             boolean optional, boolean expectComponent)
                     throws InvocationTargetException, InterruptedException, InvalidSyntaxException
     {
@@ -183,7 +186,8 @@ public class PersistentComponentFactoryTest extends ComponentTestBase
         TestCase.assertNull( SimpleComponent.INSTANCE );
 
         // get the component factory service
-        final ComponentInstance instance = createFactoryComponentInstance( componentfactory );
+        final ComponentInstance<?> instance = createFactoryComponentInstance(
+            componentfactory);
 
         final Object instanceObject = instance.getInstance();
         TestCase.assertNotNull( instanceObject );
@@ -237,7 +241,8 @@ public class PersistentComponentFactoryTest extends ComponentTestBase
 
         TestCase.assertNull( SimpleComponent.INSTANCE );
 
-        final ComponentInstance instance = createFactoryComponentInstance( componentfactory );
+        final ComponentInstance<?> instance = createFactoryComponentInstance(
+            componentfactory);
         TestCase.assertEquals( 1, SimpleComponent.INSTANCE.m_multiRef.size() );
         TestCase.assertTrue( SimpleComponent.INSTANCE.m_multiRef.contains( match ) );
 
@@ -253,8 +258,8 @@ public class PersistentComponentFactoryTest extends ComponentTestBase
         Hashtable<String, String> propsNonMatch = new Hashtable<String, String>();
         propsNonMatch.put( PROP_NAME_FACTORY, PROP_NAME_FACTORY );
         propsNonMatch.put( "ref.target", "(filterprop=nomatch)" );
-        ComponentFactory factory = getComponentFactory( componentfactory );
-        final ComponentInstance instanceNonMatch = factory.newInstance( propsNonMatch );//works even without required reference
+        ComponentFactory<?> factory = getComponentFactory(componentfactory);
+        final ComponentInstance<?> instanceNonMatch = factory.newInstance(propsNonMatch);//works even without required reference
         checkConfigurationCount( componentname, 1, ComponentConfigurationDTO.UNSATISFIED_REFERENCE );
 
         final SimpleServiceImpl noMatch = SimpleServiceImpl.create( bundleContext, "nomatch" ).setFilterProperty(
@@ -310,9 +315,9 @@ public class PersistentComponentFactoryTest extends ComponentTestBase
 
         Hashtable<String, String> props = new Hashtable<String, String>();
         props.put( "service.pid", "myFactoryInstance" );
-        final ComponentFactory factory = getComponentFactory( componentfactory );
+        final ComponentFactory<?> factory = getComponentFactory(componentfactory);
 
-        final ComponentInstance instance = factory.newInstance( props );
+        final ComponentInstance<?> instance = factory.newInstance(props);
         TestCase.assertNotNull( instance );
 
         TestCase.assertNotNull( instance.getInstance() );
@@ -327,6 +332,7 @@ public class PersistentComponentFactoryTest extends ComponentTestBase
         checkConfigurationCount( referringComponentName, 1, ComponentConfigurationDTO.UNSATISFIED_REFERENCE );
     }
 
+    @SuppressWarnings("deprecation")
     @Test
     public void test_component_factory_with_target_filters() throws Exception
     {
@@ -345,7 +351,8 @@ public class PersistentComponentFactoryTest extends ComponentTestBase
         Hashtable<String, String> props = new Hashtable<String, String>();
         props.put( PROP_NAME_FACTORY, PROP_NAME_FACTORY );
         props.put( "ref.target", "(value=service2)" );
-        final ComponentInstance instance = createFactoryComponentInstance( componentfactory, props );
+        final ComponentInstance<?> instance = createFactoryComponentInstance(
+            componentfactory, props);
 
         log.log( LogService.LOG_WARNING, "Bound Services: " + SimpleComponent.INSTANCE.m_multiRef );
         TestCase.assertFalse( SimpleComponent.INSTANCE.m_multiRef.contains( s1 ) );

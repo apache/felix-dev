@@ -16,12 +16,12 @@
  */
 package org.apache.felix.http.base.internal.whiteboard;
 
-import static org.osgi.service.http.runtime.dto.DTOConstants.FAILURE_REASON_NO_SERVLET_CONTEXT_MATCHING;
-import static org.osgi.service.http.runtime.dto.DTOConstants.FAILURE_REASON_SERVICE_NOT_GETTABLE;
-import static org.osgi.service.http.runtime.dto.DTOConstants.FAILURE_REASON_SERVLET_CONTEXT_FAILURE;
-import static org.osgi.service.http.runtime.dto.DTOConstants.FAILURE_REASON_SHADOWED_BY_OTHER_SERVICE;
-import static org.osgi.service.http.runtime.dto.DTOConstants.FAILURE_REASON_UNKNOWN;
-import static org.osgi.service.http.runtime.dto.DTOConstants.FAILURE_REASON_VALIDATION_FAILED;
+import static org.osgi.service.servlet.runtime.dto.DTOConstants.FAILURE_REASON_NO_SERVLET_CONTEXT_MATCHING;
+import static org.osgi.service.servlet.runtime.dto.DTOConstants.FAILURE_REASON_SERVICE_NOT_GETTABLE;
+import static org.osgi.service.servlet.runtime.dto.DTOConstants.FAILURE_REASON_SERVLET_CONTEXT_FAILURE;
+import static org.osgi.service.servlet.runtime.dto.DTOConstants.FAILURE_REASON_SHADOWED_BY_OTHER_SERVICE;
+import static org.osgi.service.servlet.runtime.dto.DTOConstants.FAILURE_REASON_UNKNOWN;
+import static org.osgi.service.servlet.runtime.dto.DTOConstants.FAILURE_REASON_VALIDATION_FAILED;
 
 import java.util.HashSet;
 import java.util.Iterator;
@@ -68,7 +68,7 @@ public class FailureStateHandler {
 
     public void addFailure(final AbstractInfo<?> info, final long contextId, final int reason, final Exception ex)
     {
-        final String type = info.getClass().getSimpleName().substring(0, info.getClass().getSimpleName().length() - 4);
+        final String type = info.getType();
         final String serviceInfo;
         final ServiceReference<?> ref = info.getServiceReference();
         if ( ref == null ) {
@@ -78,31 +78,31 @@ public class FailureStateHandler {
         }
         if ( reason == FAILURE_REASON_NO_SERVLET_CONTEXT_MATCHING )
         {
-            SystemLogger.debug(ref, "Ignoring unmatching " + type + " service" + serviceInfo);
+            SystemLogger.LOGGER.debug(SystemLogger.formatMessage(ref, "Ignoring unmatching " + type + " service" + serviceInfo));
         }
         else if ( reason == FAILURE_REASON_SHADOWED_BY_OTHER_SERVICE )
         {
-            SystemLogger.debug(ref, "Ignoring shadowed " + type + " service" + serviceInfo);
+            SystemLogger.LOGGER.debug(SystemLogger.formatMessage(ref, "Ignoring shadowed " + type + " service" + serviceInfo));
         }
         else if ( reason == FAILURE_REASON_SERVICE_NOT_GETTABLE )
         {
-            SystemLogger.error(ref, "Ignoring ungettable " + type + " service" + serviceInfo, ex);
+            SystemLogger.LOGGER.error(SystemLogger.formatMessage(ref, "Ignoring ungettable " + type + " service" + serviceInfo), ex);
         }
         else if ( reason == FAILURE_REASON_VALIDATION_FAILED )
         {
-            SystemLogger.debug(ref, "Ignoring invalid " + type + " service" + serviceInfo);
+            SystemLogger.LOGGER.debug(SystemLogger.formatMessage(ref, "Ignoring invalid " + type + " service" + serviceInfo));
         }
         else if ( reason == FAILURE_REASON_NO_SERVLET_CONTEXT_MATCHING )
         {
-            SystemLogger.debug(ref, "Ignoring unmatched " + type + " service" + serviceInfo);
+            SystemLogger.LOGGER.debug(SystemLogger.formatMessage(ref, "Ignoring unmatched " + type + " service" + serviceInfo));
         }
         else if ( reason == FAILURE_REASON_SERVLET_CONTEXT_FAILURE )
         {
-            SystemLogger.debug(ref,  "Servlet context " + String.valueOf(contextId) + " failure: Ignoring " + type + " service" + serviceInfo);
+            SystemLogger.LOGGER.debug(SystemLogger.formatMessage(ref,  "Servlet context " + String.valueOf(contextId) + " failure: Ignoring " + type + " service" + serviceInfo));
         }
         else if ( reason == FAILURE_REASON_UNKNOWN)
         {
-            SystemLogger.error(ref, "Exception while registering " + type + " service" + serviceInfo, ex);
+            SystemLogger.LOGGER.error(SystemLogger.formatMessage(ref, "Exception while registering " + type + " service" + serviceInfo), ex);
         }
 
         FailureStatus status = serviceFailures.get(info);

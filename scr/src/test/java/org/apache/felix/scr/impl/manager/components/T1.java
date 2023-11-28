@@ -30,13 +30,14 @@ public class T1
     public String callPerformed = null;
 
 
+    @SuppressWarnings("unused")
     private void privateT1()
     {
         callPerformed = "privateT1";
     }
 
-
-    private void privateT1SR( ServiceReference sr )
+    @SuppressWarnings("unused")
+    private void privateT1SR(ServiceReference<?> sr)
     {
         if ( sr != null )
         {
@@ -48,7 +49,7 @@ public class T1
         }
     }
 
-
+    @SuppressWarnings("unused")
     private void privateT1SI( FakeService si )
     {
         if ( si != null )
@@ -62,7 +63,8 @@ public class T1
     }
 
 
-    private void privateT1SIMap( FakeService si, Map props )
+    @SuppressWarnings("unused")
+    private void privateT1SIMap(FakeService si, Map<?, ?> props)
     {
         if ( si != null && props != null && props.size() > 0 )
         {
@@ -83,6 +85,7 @@ public class T1
     }
 
 
+    @SuppressWarnings("unused")
     private void privateT1SSI( SuperFakeService si )
     {
         if ( si != null )
@@ -95,8 +98,8 @@ public class T1
         }
     }
 
-
-    private void privateT1SSIMap( SuperFakeService si, Map props )
+    @SuppressWarnings("unused")
+    private void privateT1SSIMap(SuperFakeService si, Map<?, ?> props)
     {
         if ( si != null && props != null && props.size() > 0 )
         {
@@ -123,7 +126,7 @@ public class T1
     }
 
 
-    void packageT1SR( ServiceReference sr )
+    void packageT1SR(ServiceReference<?> sr)
     {
         if ( sr != null )
         {
@@ -149,7 +152,7 @@ public class T1
     }
 
 
-    void packageT1SIMap( FakeService si, Map props )
+    void packageT1SIMap(FakeService si, Map<?, ?> props)
     {
         if ( si != null && props != null && props.size() > 0 )
         {
@@ -183,7 +186,7 @@ public class T1
     }
 
 
-    void packageT1SSIMap( SuperFakeService si, Map props )
+    void packageT1SSIMap(SuperFakeService si, Map<?, ?> props)
     {
         if ( si != null && props != null && props.size() > 0 )
         {
@@ -210,7 +213,7 @@ public class T1
     }
 
 
-    protected void protectedT1SR( ServiceReference sr )
+    protected void protectedT1SR(ServiceReference<?> sr)
     {
         if ( sr != null )
         {
@@ -236,7 +239,7 @@ public class T1
     }
 
 
-    protected void protectedT1SIMap( FakeService si, Map props )
+    protected void protectedT1SIMap(FakeService si, Map<?, ?> props)
     {
         if ( si != null && props != null && props.size() > 0 )
         {
@@ -270,7 +273,7 @@ public class T1
     }
 
 
-    protected void protectedT1SSIMap( SuperFakeService si, Map props )
+    protected void protectedT1SSIMap(SuperFakeService si, Map<?, ?> props)
     {
         if ( si != null && props != null && props.size() > 0 )
         {
@@ -297,7 +300,7 @@ public class T1
     }
 
 
-    public void publicT1SR( ServiceReference sr )
+    public void publicT1SR(ServiceReference<?> sr)
     {
         if ( sr != null )
         {
@@ -323,7 +326,7 @@ public class T1
     }
 
 
-    public void publicT1SIMap( FakeService si, Map props )
+    public void publicT1SIMap(FakeService si, Map<?, ?> props)
     {
         if ( si != null && props != null && props.size() > 0 )
         {
@@ -357,7 +360,7 @@ public class T1
     }
 
 
-    public void publicT1SSIMap( SuperFakeService si, Map props )
+    public void publicT1SSIMap(SuperFakeService si, Map<?, ?> props)
     {
         if ( si != null && props != null && props.size() > 0 )
         {
@@ -378,12 +381,12 @@ public class T1
     }
 
 
-    public void suitable( ServiceReference sr )
+    public void suitable(ServiceReference<?> sr)
     {
         callPerformed = "suitableT1";
     }
     
-    void packageT1Map(Map props)
+    void packageT1Map(Map<?, ?> props)
     {
         if ( props != null && !props.isEmpty())
         {

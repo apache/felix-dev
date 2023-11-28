@@ -37,9 +37,9 @@ public class ComponentServiceObjectsHelper
 {
     private final BundleContext bundleContext;
 
-    private final ConcurrentMap<ServiceReference<?>, ComponentServiceObjectsImpl> services = new ConcurrentHashMap<ServiceReference<?>, ComponentServiceObjectsImpl>();
+    private final ConcurrentMap<ServiceReference<?>, ComponentServiceObjectsImpl<?>> services = new ConcurrentHashMap<>();
 
-    private final List<ComponentServiceObjectsImpl> closedServices = new ArrayList<ComponentServiceObjectsImpl>();
+    private final List<ComponentServiceObjectsImpl<?>> closedServices = new ArrayList<>();
 
     private final ConcurrentMap<ServiceReference<?>, Object> prototypeInstances = new ConcurrentHashMap<ServiceReference<?>, Object>();
 
@@ -50,34 +50,39 @@ public class ComponentServiceObjectsHelper
 
     public void cleanup()
     {
-    	Collection<ComponentServiceObjectsImpl> csos = services.values();
+        Collection<ComponentServiceObjectsImpl<?>> csos = services.values();
         services.clear();
-        for(final ComponentServiceObjectsImpl cso : csos)
+        for (final ComponentServiceObjectsImpl<?> cso : csos)
         {
         	cso.deactivate();
         }
         synchronized ( this.closedServices )
         {
-        	csos = new ArrayList<ComponentServiceObjectsImpl>(this.closedServices);
+            csos = new ArrayList<ComponentServiceObjectsImpl<?>>(this.closedServices);
         	this.closedServices.clear();
         }
-        for(final ComponentServiceObjectsImpl cso : csos)
+        for (final ComponentServiceObjectsImpl<?> cso : csos)
         {
         	cso.deactivate();
         }
         prototypeInstances.clear();
     }
 
-    public ComponentServiceObjects getServiceObjects(final ServiceReference<?> ref)
+    public <T> ComponentServiceObjects<T> getServiceObjects(final ServiceReference<T> ref)
     {
-        ComponentServiceObjectsImpl cso = this.services.get(ref);
+        @SuppressWarnings("unchecked")
+        ComponentServiceObjectsImpl<T> cso = (ComponentServiceObjectsImpl<T>) this.services.get(
+            ref);
         if ( cso == null )
         {
-            final ServiceObjects serviceObjects = this.bundleContext.getServiceObjects(ref);
+            final ServiceObjects<T> serviceObjects = this.bundleContext.getServiceObjects(
+                ref);
             if ( serviceObjects != null )
             {
-                cso = new ComponentServiceObjectsImpl(serviceObjects);
-                final ComponentServiceObjectsImpl oldCSO = this.services.putIfAbsent(ref, cso);
+                cso = new ComponentServiceObjectsImpl<T>(serviceObjects);
+                @SuppressWarnings("unchecked")
+                final ComponentServiceObjectsImpl<T> oldCSO = (ComponentServiceObjectsImpl<T>) this.services.putIfAbsent(
+                    ref, cso);
                 if ( oldCSO != null )
                 {
                 	cso = oldCSO;
@@ -88,7 +93,7 @@ public class ComponentServiceObjectsHelper
     }
 
     public void closeServiceObjects(final ServiceReference<?> ref) {
-        ComponentServiceObjectsImpl cso = this.services.remove(ref);
+        ComponentServiceObjectsImpl<?> cso = this.services.remove(ref);
         if ( cso != null )
         {
         	synchronized ( closedServices )
@@ -101,30 +106,32 @@ public class ComponentServiceObjectsHelper
 
     public <T> T getPrototypeRefInstance(final ServiceReference<T> ref)
     {
-    	T service = (T) prototypeInstances.get(ref);
-    	if ( service == null )
-    	{
-    		service = (T) getServiceObjects(ref).getService();
-    		T oldService = (T)prototypeInstances.putIfAbsent(ref, service);
-    		if ( oldService != null )
-    		{
-    			// another thread created the instance already
-    			getServiceObjects(ref).ungetService(service);
-    			service = oldService;
-    		}
-    	}
-    	return service;
+        @SuppressWarnings("unchecked")
+        T service = (T) prototypeInstances.get(ref);
+        if (service == null)
+        {
+            service = (T) getServiceObjects(ref).getService();
+            @SuppressWarnings("unchecked")
+            T oldService = (T) prototypeInstances.putIfAbsent(ref, service);
+            if (oldService != null)
+            {
+                // another thread created the instance already
+                getServiceObjects(ref).ungetService(service);
+                service = oldService;
+            }
+        }
+        return service;
     }
 
-    private static final class ComponentServiceObjectsImpl implements ComponentServiceObjects
+    private static final class ComponentServiceObjectsImpl<T> implements ComponentServiceObjects<T>
     {
-        private final List<Object> instances = new ArrayList<Object>();
+        private final List<T> instances = new ArrayList<>();
 
-        private volatile ServiceObjects serviceObjects;
+        private volatile ServiceObjects<T> serviceObjects;
 
         private volatile boolean deactivated = false;
 
-        public ComponentServiceObjectsImpl(final ServiceObjects so)
+        public ComponentServiceObjectsImpl(final ServiceObjects<T> so)
         {
             this.serviceObjects = so;
         }
@@ -140,17 +147,17 @@ public class ComponentServiceObjectsHelper
          */
         public void close()
         {
-            final ServiceObjects so = this.serviceObjects;
+            final ServiceObjects<T> so = this.serviceObjects;
             this.serviceObjects = null;
             if ( so != null )
             {
-            	final List<Object> localInstances = new ArrayList<Object>();
+                final List<T> localInstances = new ArrayList<>();
                 synchronized ( this.instances )
                 {
                 	localInstances.addAll(this.instances);
                 	this.instances.clear();
                 }
-                for(final Object obj : localInstances)
+                for (final T obj : localInstances)
                 {
                     try
                     {
@@ -168,14 +175,14 @@ public class ComponentServiceObjectsHelper
             }
         }
 
-        public Object getService()
+        public T getService()
         {
         	if ( this.deactivated )
         	{
         		throw new IllegalStateException();
         	}
-            final ServiceObjects so = this.serviceObjects;
-            Object service = null;
+            final ServiceObjects<T> so = this.serviceObjects;
+            T service = null;
             if ( so != null )
             {
                 service = so.getService();
@@ -190,13 +197,13 @@ public class ComponentServiceObjectsHelper
             return service;
         }
 
-        public void ungetService(final Object service)
+        public void ungetService(final T service)
         {
         	if ( this.deactivated )
         	{
         		throw new IllegalStateException();
         	}
-            final ServiceObjects so = this.serviceObjects;
+            final ServiceObjects<T> so = this.serviceObjects;
             if ( so != null )
             {
                 boolean remove;
@@ -210,9 +217,9 @@ public class ComponentServiceObjectsHelper
             }
         }
 
-        public ServiceReference<?> getServiceReference()
+        public ServiceReference<T> getServiceReference()
         {
-            final ServiceObjects so = this.serviceObjects;
+            final ServiceObjects<T> so = this.serviceObjects;
             if ( so != null )
             {
                 return so.getServiceReference();

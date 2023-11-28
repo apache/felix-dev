@@ -143,9 +143,7 @@ class InfoProvider implements BundleInfoProvider
                 BundleInfoType.LINK, descr);
     }
 
-    ServiceRegistration<BundleInfoProvider> register(BundleContext context)
-    {
+    ServiceRegistration<BundleInfoProvider> register(final BundleContext context) {
         return context.registerService(BundleInfoProvider.class, this, null);
     }
-
 }

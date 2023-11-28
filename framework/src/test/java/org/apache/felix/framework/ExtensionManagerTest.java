@@ -160,6 +160,39 @@ public class ExtensionManagerTest {
     }
 
     @Test
+    public void testExtensionBundleEntries() throws Exception {
+        File cacheDir = new File(testDir, "cache");
+        cacheDir.mkdirs();
+        String cache = cacheDir.getAbsolutePath();
+
+        Map<String, Object> params = new HashMap<String, Object>();
+        params.put("felix.cache.profiledir", cache);
+        params.put("felix.cache.dir", cache);
+        params.put(Constants.FRAMEWORK_STORAGE, cache);
+
+        Framework framework = new Felix(params);
+        framework.init();
+        framework.start();
+
+        try {
+            File ebf = createExtensionBundle();
+
+            assertEquals("Precondition", null, framework.getBundleContext().getBundle(0).getEntry("/META-INF/MANIFEST.MF"));
+            assertEquals("Precondition", null, framework.getBundleContext().getBundle(0).findEntries("/", "MANIFEST.MF", true));
+
+            framework.getBundleContext().installBundle(
+                    ebf.toURI().toURL().toExternalForm());
+            assertEquals( null, framework.getBundleContext().getBundle(0).getEntry("/META-INF/MANIFEST.MF"));
+            assertEquals(null, framework.getBundleContext().getBundle(0).findEntries("/", "MANIFEST.MF", true));
+
+        } finally {
+            framework.stop();
+        }
+
+        framework.waitForStop(10000);
+    }
+
+    @Test
     public void testSystemBundleHeaders() throws Exception
     {
         File cacheDir = new File(testDir, "cache");

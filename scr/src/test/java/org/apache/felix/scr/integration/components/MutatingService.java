@@ -24,6 +24,6 @@ import java.util.Dictionary;
 public interface MutatingService
 {
 
-    void updateProperties(Dictionary changes);
+    void updateProperties(Dictionary<String, ?> changes);
 
 }

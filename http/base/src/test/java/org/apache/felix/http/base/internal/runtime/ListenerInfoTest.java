@@ -25,8 +25,6 @@ import static org.mockito.Mockito.when;
 
 import java.util.EventListener;
 
-import javax.servlet.ServletContextListener;
-
 import org.junit.Test;
 import org.mockito.ArgumentMatchers;
 import org.osgi.framework.Bundle;
@@ -35,7 +33,9 @@ import org.osgi.framework.Constants;
 import org.osgi.framework.Filter;
 import org.osgi.framework.InvalidSyntaxException;
 import org.osgi.framework.ServiceReference;
-import org.osgi.service.http.whiteboard.HttpWhiteboardConstants;
+import org.osgi.service.servlet.whiteboard.HttpWhiteboardConstants;
+
+import jakarta.servlet.ServletContextListener;
 
 public class ListenerInfoTest
 {
@@ -44,6 +44,7 @@ public class ListenerInfoTest
         Bundle b = mock(Bundle.class);
         BundleContext bc = mock(BundleContext.class);
 
+        @SuppressWarnings("unchecked")
         ServiceReference<EventListener> ref = mock(ServiceReference.class);
         when(ref.getProperty(Constants.SERVICE_ID)).thenReturn(1L);
         when(ref.getProperty(Constants.OBJECTCLASS))
@@ -71,5 +72,27 @@ public class ListenerInfoTest
         // string false
         when(ref.getProperty(HttpWhiteboardConstants.HTTP_WHITEBOARD_LISTENER)).thenReturn(Boolean.FALSE);
         assertFalse(new ListenerInfo(ref).isValid());
+    }
+
+    @Test
+    public void testIsSame() {
+        final ServiceReference<EventListener> refOld = mock(ServiceReference.class);
+        when(refOld.getProperty(Constants.SERVICE_ID)).thenReturn(1L);
+        when(refOld.getProperty(Constants.OBJECTCLASS))
+                .thenReturn(new String[] { ServletContextListener.class.getName() });
+
+        final ServiceReference<EventListener> refNew = mock(ServiceReference.class);
+        when(refNew.getProperty(Constants.SERVICE_ID)).thenReturn(1L);
+        when(refNew.getProperty(Constants.OBJECTCLASS))
+                .thenReturn(new String[] { ServletContextListener.class.getName() });
+        when(refNew.getProperty("foo")).thenReturn("bar");
+
+        assertTrue(new ListenerInfo(refNew).isSame(new ListenerInfo(refOld)));
+        assertTrue(new ListenerInfo(refOld).isSame(new ListenerInfo(refNew)));
+
+        when(refNew.getProperty(Constants.SERVICE_RANKING)).thenReturn(1);
+
+        assertFalse(new ListenerInfo(refNew).isSame(new ListenerInfo(refOld)));
+        assertFalse(new ListenerInfo(refOld).isSame(new ListenerInfo(refNew)));
     }
 }

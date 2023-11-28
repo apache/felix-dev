@@ -37,7 +37,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 @HealthCheckService(name = DiskSpaceCheck.HC_NAME)
-@Component(configurationPolicy = ConfigurationPolicy.REQUIRE)
+@Component(configurationPolicy = ConfigurationPolicy.REQUIRE, immediate = true)
 @Designate(ocd = DiskSpaceCheck.Config.class, factory = true)
 public class DiskSpaceCheck implements HealthCheck {
 

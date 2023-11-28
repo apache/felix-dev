@@ -36,16 +36,17 @@ public interface SimpleShape
     /**
      * A service property for the name of the shape.
     **/
-    public static final String NAME_PROPERTY = "simple.shape.name";
+    String NAME_PROPERTY = "simple.shape.name";
+
     /**
      * A service property for the icon of the shape.
     **/
-    public static final String ICON_PROPERTY = "simple.shape.icon";
+    String ICON_PROPERTY = "simple.shape.icon";
 
     /**
      * Method to draw the shape of the service.
      * @param g2 The graphics object used for painting.
-     * @param p The position to paint the triangle.
+     * @param p The position to paint the shape.
     **/
-    public void draw(Graphics2D g2, Point p);
+    void draw(Graphics2D g2, Point p);
 }

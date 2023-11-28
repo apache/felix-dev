@@ -16,13 +16,13 @@
  */
 package org.apache.felix.http.base.internal.runtime.dto;
 
-import javax.servlet.DispatcherType;
+import jakarta.servlet.DispatcherType;
 
 import org.apache.felix.http.base.internal.handler.FilterHandler;
 import org.apache.felix.http.base.internal.registry.HandlerRegistry;
 import org.apache.felix.http.base.internal.registry.PathResolution;
-import org.osgi.service.http.runtime.dto.FilterDTO;
-import org.osgi.service.http.runtime.dto.RequestInfoDTO;
+import org.osgi.service.servlet.runtime.dto.FilterDTO;
+import org.osgi.service.servlet.runtime.dto.RequestInfoDTO;
 
 public final class RequestInfoDTOBuilder
 {

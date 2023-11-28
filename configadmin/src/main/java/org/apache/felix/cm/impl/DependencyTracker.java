@@ -43,8 +43,6 @@ public class DependencyTracker
     /** The configuration plugin tracker (optional) */
     private final RequiredConfigurationPluginTracker configurationPluginTracker;
 
-    private final ActivatorWorkerQueue workerQueue;
-
     private final ConfigurationAdminStarter starter;
 
     public DependencyTracker(final BundleContext bundleContext,
@@ -54,20 +52,15 @@ public class DependencyTracker
     {
         this.starter = new ConfigurationAdminStarter(bundleContext);
 
-        final boolean useQueue = pmName != null || pluginNames != null;
-        if (useQueue) {
-            this.workerQueue = new ActivatorWorkerQueue();
-        } else {
-            this.workerQueue = null;
-        }
+        final boolean hasPlugins = pmName != null || pluginNames != null;
         if (pluginNames != null) {
             Log.logger.log(LogService.LOG_DEBUG, "Requiring configuration plugins {0}",
                     new Object[] { Arrays.toString(pluginNames) });
-            this.configurationPluginTracker = new RequiredConfigurationPluginTracker(bundleContext, workerQueue,
+            this.configurationPluginTracker = new RequiredConfigurationPluginTracker(bundleContext,
                     starter, pluginNames);
         } else {
             this.configurationPluginTracker = null;
-            if (useQueue) {
+            if (hasPlugins) {
                 starter.updatePluginsSet(true);
             }
         }
@@ -75,7 +68,7 @@ public class DependencyTracker
         if ( pmName != null )
         {
             Log.logger.log(LogService.LOG_DEBUG, "Using persistence manager {0}", new Object[] {pmName});
-            this.persistenceManagerTracker = new PersistenceManagerTracker(bundleContext, workerQueue, starter, pmName);
+            this.persistenceManagerTracker = new PersistenceManagerTracker(bundleContext, starter, pmName);
         }
         else
         {
@@ -93,7 +86,7 @@ public class DependencyTracker
             }
 
             final ExtPersistenceManager epm = PersistenceManagerTracker.createPersistenceManagerProxy(defaultPM);
-            if (useQueue) {
+            if (hasPlugins) {
                 starter.setPersistenceManager(epm);
             } else {
                 this.starter.activate(epm);
@@ -106,9 +99,6 @@ public class DependencyTracker
      */
     public void stop( )
     {
-        if (this.workerQueue != null) {
-            this.workerQueue.stop();
-        }
         this.starter.deactivate();
         if ( this.persistenceManagerTracker != null )
         {

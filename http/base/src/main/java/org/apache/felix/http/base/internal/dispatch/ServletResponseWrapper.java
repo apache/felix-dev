@@ -21,13 +21,13 @@ import java.util.concurrent.atomic.AtomicInteger;
 
 import org.jetbrains.annotations.Nullable;
 import org.jetbrains.annotations.NotNull;
-import javax.servlet.DispatcherType;
-import javax.servlet.FilterChain;
-import javax.servlet.RequestDispatcher;
-import javax.servlet.ServletException;
-import javax.servlet.http.HttpServletRequest;
-import javax.servlet.http.HttpServletResponse;
-import javax.servlet.http.HttpServletResponseWrapper;
+import jakarta.servlet.DispatcherType;
+import jakarta.servlet.FilterChain;
+import jakarta.servlet.RequestDispatcher;
+import jakarta.servlet.ServletException;
+import jakarta.servlet.http.HttpServletRequest;
+import jakarta.servlet.http.HttpServletResponse;
+import jakarta.servlet.http.HttpServletResponseWrapper;
 
 import org.apache.felix.http.base.internal.handler.FilterHandler;
 import org.apache.felix.http.base.internal.handler.ServletHandler;
@@ -86,7 +86,7 @@ final class ServletResponseWrapper extends HttpServletResponseWrapper
                 {
                     try
                     {
-                        request.setAttribute(RequestDispatcher.ERROR_STATUS_CODE, new Integer(code));
+                        request.setAttribute(RequestDispatcher.ERROR_STATUS_CODE, code);
                         if ( message != null )
                         {
                             request.setAttribute(RequestDispatcher.ERROR_MESSAGE, message);
@@ -99,16 +99,21 @@ final class ServletResponseWrapper extends HttpServletResponseWrapper
 
                         final String servletPath = null;
                         final String pathInfo = request.getRequestURI();
-                        final String queryString = null; // XXX
+                        final String queryString = null;
 
-                        final RequestInfo requestInfo = new RequestInfo(servletPath, pathInfo, queryString, pathInfo);
+                        final RequestInfo requestInfo = new RequestInfo(servletPath, pathInfo, queryString, pathInfo,
+                                request.getHttpServletMapping().getServletName(),
+                                request.getHttpServletMapping().getPattern(),
+                                request.getHttpServletMapping().getMatchValue(),
+                                request.getHttpServletMapping().getMappingMatch(),
+                                false);
 
                         final FilterHandler[] filterHandlers = errorRegistry.getFilterHandlers(errorResolution, DispatcherType.ERROR, request.getRequestURI());
 
                         final ServletRequestWrapper reqWrapper = new ServletRequestWrapper(request,
                                 errorResolution.getContext(),
                                 requestInfo,
-                                null,
+                                DispatcherType.ERROR,
                                 false,
                                 null,
                                 null);

@@ -62,29 +62,66 @@
                    parameter="0"/>
     </scr:component>
 
+    <!-- Use constructor - optional reference - greedy used to force new construction -->
+    <scr:component name="ConstructorComponent.refsingleoptional" enabled="false" activate="activator"
+                   init="1">
+        <implementation class="org.apache.felix.scr.integration.components.ConstructorComponent" />
+        <service factory="false">
+            <provide interface="org.apache.felix.scr.integration.components.ConstructorComponent"/>
+        </service>
+        <reference interface="org.apache.felix.scr.integration.components.ConstructorSingleReference"
+                   cardinality="0..1"
+                   parameter="0"
+                   policy-option="greedy"/>
+    </scr:component>
+
+    <!-- Use constructor - optional multi reference -->
+    <scr:component name="ConstructorComponent.refmultioptional" enabled="false" activate="activator"
+                   init="1">
+        <implementation class="org.apache.felix.scr.integration.components.ConstructorComponent" />
+        <service factory="false">
+            <provide interface="org.apache.felix.scr.integration.components.ConstructorComponent"/>
+        </service>
+        <reference interface="org.apache.felix.scr.integration.components.ConstructorMultiReference"
+                   cardinality="0..n"
+                   parameter="0"/>
+    </scr:component>
+
+    <scr:component name="ConstructorComponent.refmultioptionalgreedy" enabled="false" activate="activator"
+                   init="1">
+        <implementation class="org.apache.felix.scr.integration.components.ConstructorComponent" />
+        <service factory="false">
+            <provide interface="org.apache.felix.scr.integration.components.ConstructorComponent"/>
+        </service>
+        <reference interface="org.apache.felix.scr.integration.components.ConstructorMultiReference"
+                   cardinality="0..n"
+                   parameter="0"
+                   policy-option="greedy"/>
+    </scr:component>
+
     <!-- References -->
-    <scr:component name="SingleReference" activate="activator">
+    <scr:component name="SingleReference" enabled="false" activate="activator">
         <implementation class="org.apache.felix.scr.integration.components.ConstructorSingleReference" />
         <service factory="false">
             <provide interface="org.apache.felix.scr.integration.components.ConstructorSingleReference"/>
         </service>
         <property name="name" value="single"/>
     </scr:component>
-    <scr:component name="MultiReferenceA" activate="activator">
+    <scr:component name="MultiReferenceA" enabled="false" activate="activator">
         <implementation class="org.apache.felix.scr.integration.components.ConstructorMultiReference" />
         <service factory="false">
             <provide interface="org.apache.felix.scr.integration.components.ConstructorMultiReference"/>
         </service>
         <property name="name" value="a"/>
     </scr:component>
-    <scr:component name="MultiReferenceB" activate="activator">
+    <scr:component name="MultiReferenceB" enabled="false" activate="activator">
         <implementation class="org.apache.felix.scr.integration.components.ConstructorMultiReference" />
         <service factory="false">
             <provide interface="org.apache.felix.scr.integration.components.ConstructorMultiReference"/>
         </service>
         <property name="name" value="b"/>
     </scr:component>
-    <scr:component name="MultiReferenceC" activate="activator">
+    <scr:component name="MultiReferenceC" enabled="false" activate="activator">
         <implementation class="org.apache.felix.scr.integration.components.ConstructorMultiReference" />
         <service factory="false">
             <provide interface="org.apache.felix.scr.integration.components.ConstructorMultiReference"/>

@@ -84,8 +84,7 @@ public final class ObrDeploy extends AbstractMojo
      * Project types which this plugin supports.
      */
     @Parameter
-    private List supportedProjectTypes = Arrays.asList( new String[]
-        { "jar", "bundle" } );
+    private List supportedProjectTypes = Arrays.asList("jar", "bundle");
 
     @Parameter( defaultValue = "${project.distributionManagementArtifactRepository}", readonly = true )
     private ArtifactRepository deploymentRepository;

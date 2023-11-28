@@ -18,6 +18,10 @@
  */
 package org.apache.felix.framework;
 
+import static org.hamcrest.CoreMatchers.is;
+import static org.hamcrest.CoreMatchers.nullValue;
+import static org.hamcrest.MatcherAssert.assertThat;
+
 import java.lang.reflect.Field;
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -32,8 +36,6 @@ import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.atomic.AtomicInteger;
 
-import junit.framework.TestCase;
-
 import org.apache.felix.framework.ServiceRegistrationImpl.ServiceReferenceImpl;
 import org.apache.felix.framework.ServiceRegistry.ServiceHolder;
 import org.apache.felix.framework.ServiceRegistry.UsageCount;
@@ -45,6 +47,7 @@ import org.mockito.invocation.InvocationOnMock;
 import org.mockito.stubbing.Answer;
 import org.osgi.framework.Bundle;
 import org.osgi.framework.BundleContext;
+import org.osgi.framework.PrototypeServiceFactory;
 import org.osgi.framework.ServiceEvent;
 import org.osgi.framework.ServiceException;
 import org.osgi.framework.ServiceFactory;
@@ -54,9 +57,7 @@ import org.osgi.framework.hooks.service.EventHook;
 import org.osgi.framework.hooks.service.FindHook;
 import org.osgi.framework.hooks.service.ListenerHook;
 
-import static org.hamcrest.CoreMatchers.is;
-import static org.hamcrest.CoreMatchers.nullValue;
-import static org.hamcrest.MatcherAssert.assertThat;
+import junit.framework.TestCase;
 
 public class ServiceRegistryTest extends TestCase
 {
@@ -1070,7 +1071,7 @@ public class ServiceRegistryTest extends TestCase
                             }
                         }
 
-                    };
+                    }
 
                     @Override
                     public Observer getService(Bundle bundle, ServiceRegistration<Observer> registration)
@@ -1272,6 +1273,44 @@ public class ServiceRegistryTest extends TestCase
 
         sr.ungetService(clientBundle, refHi, null);
         assertThat(sr.getServicesInUse(clientBundle), nullValue());
+    }
+
+    public void testPrototypeService() throws Exception
+    {
+        ServiceRegistry sr = new ServiceRegistry(null, null);
+        Bundle regBundle = Mockito.mock(Bundle.class);
+
+        final PrototypeServiceFactory<String> psv = new PrototypeServiceFactory<String>()
+        {
+
+            @Override
+            public void ungetService(Bundle bundle, ServiceRegistration<String> registration, String service)
+            {
+            }
+
+            @Override
+            public String getService(Bundle bundle, ServiceRegistration<String> registration) {
+                return "foo";
+            }
+        };
+
+        ServiceRegistration reg = sr.registerService(
+                regBundle, new String [] {String.class.getName()}, psv, null);
+
+        @SuppressWarnings("unchecked")
+        ServiceReference<String> ref =  reg.getReference();
+
+        final String val = sr.getService(regBundle, ref, true);
+        assertEquals("foo", val);
+
+        // first unget is ok
+        assertTrue(sr.ungetService(regBundle, ref, val));
+        // second unget of the same object, should be ok to
+        // This sould return true, but current returns false, see FELIX-6429
+        assertFalse(sr.ungetService(regBundle, ref, val));
+        // ungetting an unknown object must return false
+        assertFalse(sr.ungetService(regBundle, ref, "bar"));
+
     }
 
     private ServiceReference<String> registerService(ServiceRegistry sr, Bundle regBundle, String svcObj) {

@@ -195,9 +195,9 @@ public class BundleAllPlugin extends ManifestPlugin
 
         getLog().debug( "Will bundle the following dependency tree" + LS + dependencyTree );
 
-        Deque<DependencyNode> stack = new ArrayDeque<DependencyNode>();
+        Deque<DependencyNode> stack = new ArrayDeque<>();
         stack.push(dependencyTree);
-        Set<DependencyNode> visited = new HashSet<DependencyNode>();
+        Set<DependencyNode> visited = new HashSet<>();
         while (!stack.isEmpty())
         {
             DependencyNode node = stack.pop();
@@ -464,17 +464,13 @@ public class BundleAllPlugin extends ManifestPlugin
             {
                 buildDirectory.mkdirs();
             }
-            File[] files = buildDirectory.listFiles( new FilenameFilter()
-            {
-                public boolean accept( File dir, String name )
-                {
-                    if ( dir.equals( buildDirectory ) && snapshotMatch( artifact, name ) )
-                    {
-                        return true;
-                    }
-                    return false;
-                }
-            } );
+            File[] files = buildDirectory.listFiles( (FilenameFilter) (dir, name) -> {
+			    if ( dir.equals( buildDirectory ) && snapshotMatch( artifact, name ) )
+			    {
+			        return true;
+			    }
+			    return false;
+			} );
             if ( files.length > 1 )
             {
                 throw new RuntimeException( "More than one previously built bundle matches for artifact " + artifact

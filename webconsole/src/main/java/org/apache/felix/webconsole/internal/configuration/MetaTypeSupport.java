@@ -28,41 +28,32 @@ import java.util.List;
 import java.util.Vector;
 
 import org.apache.felix.utils.json.JSONWriter;
+import org.apache.felix.webconsole.internal.servlet.OsgiManager;
 import org.osgi.framework.Bundle;
 import org.osgi.framework.BundleContext;
 import org.osgi.service.metatype.AttributeDefinition;
 
 
 /**
- * The <code>ConfigManagerBase</code> is the base class for the
- * ConfigurationAdmin support in the web console. It provides various helper
- * methods mostly with respect to using the MetaTypeService to access
+ * It provides various helper methods mostly with respect to using the MetaTypeService to access
  * configuration descriptions.
  */
 class MetaTypeSupport
 {
-
-
     /**
      * Marker value of password fields used as dummy values and
      * indicating unmodified values.
      */
-    static final String PASSWORD_PLACEHOLDER_VALUE = "unmodified"; //$NON-NLS-1$
+    static final String PASSWORD_PLACEHOLDER_VALUE = "unmodified";
 
-
-    static Bundle getBundle( final BundleContext bundleContext, final String bundleLocation )
-    {
-        if ( bundleLocation == null )
-        {
+    static Bundle getBundle( final BundleContext bundleContext, final String bundleLocation ) {
+        if ( bundleLocation == null ) {
             return null;
         }
 
-        Bundle[] bundles = bundleContext.getBundles();
-        for ( int i = 0; i < bundles.length; i++ )
-        {
-            if ( bundleLocation.equals( bundles[i].getLocation() ) )
-            {
-                return bundles[i];
+        for ( final Bundle bundle : bundleContext.getBundles() ) {
+            if ( bundleLocation.equals( bundle.getLocation() ) ) {
+                return bundle;
             }
         }
 
@@ -70,6 +61,7 @@ class MetaTypeSupport
     }
 
 
+    @SuppressWarnings("rawtypes")
     static void attributeToJson( final JSONWriter json, final PropertyDescriptor ad, final Object propValue )
             throws IOException
     {
@@ -86,18 +78,18 @@ class MetaTypeSupport
         }
         else if ( ad.getCardinality() == 0 )
         {
-            value = ""; //$NON-NLS-1$
+            value = "";
         }
         else
         {
             value = new String[0];
         }
 
-        json.key( "name" ); //$NON-NLS-1$
+        json.key( "name" );
         json.value( ad.getName() );
-        json.key( "optional" ); //$NON-NLS-1$
+        json.key( "optional" );
         json.value( ad.isOptional() );
-        json.key( "is_set" ); //$NON-NLS-1$
+        json.key( "is_set" );
         json.value( propValue != null );
 
         // attribute type - overwrite metatype provided type
@@ -105,13 +97,13 @@ class MetaTypeSupport
         // type is string
         int propertyType = getAttributeType( ad );
 
-        json.key( "type" ); //$NON-NLS-1$
+        json.key( "type" );
         if ( ad.getOptionLabels() != null && ad.getOptionLabels().length > 0 )
         {
             json.object();
-            json.key( "labels" ); //$NON-NLS-1$
+            json.key( "labels" );
             json.value( Arrays.asList( ad.getOptionLabels() ) );
-            json.key( "values" ); //$NON-NLS-1$
+            json.key( "values" );
             json.value( Arrays.asList( ad.getOptionValues() ) );
             json.endObject();
         }
@@ -137,12 +129,12 @@ class MetaTypeSupport
             {
                 value = Array.get( value, 0 );
             }
-            json.key( "value" ); //$NON-NLS-1$
+            json.key( "value" );
             json.value( value );
         }
         else
         {
-            json.key( "values" ); //$NON-NLS-1$
+            json.key( "values" );
             json.array();
             final List list = toList( value );
             final Iterator iter = list.iterator();
@@ -163,14 +155,15 @@ class MetaTypeSupport
 
         if ( ad.getDescription() != null )
         {
-            json.key( "description" ); //$NON-NLS-1$
-            json.value( ad.getDescription() + " (" + ad.getID() + ")" ); //$NON-NLS-1$ //$NON-NLS-2$
+            json.key( "description" );
+            json.value( ad.getDescription() + " (" + ad.getID() + ")" );
         }
 
         json.endObject();
     }
 
 
+    @SuppressWarnings("rawtypes")
     private static List toList( Object value )
     {
         if ( value instanceof Vector )
@@ -198,11 +191,12 @@ class MetaTypeSupport
     }
 
 
+    @SuppressWarnings("rawtypes")
     static PropertyDescriptor createAttributeDefinition( final String id, final Object value )
     {
         int attrType;
         int attrCardinality;
-        Class type;
+        Class<?> type;
 
         if ( value == null )
         {
@@ -274,8 +268,21 @@ class MetaTypeSupport
     }
 
 
+    public static boolean isPasswordProperty( final String name )
+    {
+        if ( name == null || !OsgiManager.ENABLE_SECRET_HEURISTICS )
+        {
+            return false;
+        }
+        return name.toLowerCase().indexOf( "password" ) != -1;
+    }
+
     static int getAttributeType( final PropertyDescriptor ad )
     {
+        if ( ad.getType() == AttributeDefinition.STRING && isPasswordProperty( ad.getID() ) )
+        {
+            return AttributeDefinition.PASSWORD;
+        }
         return ad.getType();
     }
 
@@ -294,7 +301,7 @@ class MetaTypeSupport
             return Byte.valueOf( value );
         case AttributeDefinition.CHARACTER:
             char c = ( value.length() > 0 ) ? value.charAt( 0 ) : 0;
-            return new Character( c );
+            return Character.valueOf( c );
         case AttributeDefinition.DOUBLE:
             return Double.valueOf( value );
         case AttributeDefinition.FLOAT:
@@ -313,6 +320,7 @@ class MetaTypeSupport
     }
 
 
+    @SuppressWarnings({"rawtypes", "unchecked"})
     static void setPasswordProps( final Vector vec, final String[] properties, Object props )
     {
         List propList = ( props == null ) ? new ArrayList() : toList( props );
@@ -333,7 +341,7 @@ class MetaTypeSupport
     }
 
 
-    static final Object toArray( int type, Vector values )
+    static final Object toArray( int type, Vector<Object> values )
     {
         int size = values.size();
 

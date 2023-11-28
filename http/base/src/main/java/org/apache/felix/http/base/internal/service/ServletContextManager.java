@@ -19,7 +19,7 @@ package org.apache.felix.http.base.internal.service;
 import java.util.Map;
 import java.util.WeakHashMap;
 
-import javax.servlet.ServletContext;
+import jakarta.servlet.ServletContext;
 
 import org.apache.felix.http.base.internal.context.ExtServletContext;
 import org.apache.felix.http.base.internal.registry.PerContextHandlerRegistry;

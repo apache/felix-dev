@@ -46,6 +46,11 @@
 -pom: groupid = org.apache.felix
 
 #
+# do not include pom dependencies
+#
+-maven-dependencies:
+
+#
 # Don't include sources in generated bundles
 #
 -sources: true
@@ -60,3 +65,11 @@ javac.target: 1.8
 # Removes some headers in order to reduce binary diff between same bundles that are not changed between subsequent releases.
 #
 -removeheaders: Bnd-LastModified,Tool,Created-By,Include-Resource
+
+#
+# Add pom scm section in generated poms
+#
+Bundle-SCM: \
+    url='https://gitbox.apache.org/repos/asf?p=felix-dev.git',\
+    connection='scm:git:https://github.com/apache/felix-dev.git',\
+    developerConnection='scm:git:https://github.com/apache/felix-dev.git'

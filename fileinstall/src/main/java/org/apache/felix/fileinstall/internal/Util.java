@@ -377,6 +377,14 @@ public class Util
         }
     }
 
+    public static long collectWriteableChecksum(File file) {
+        return canWrite(file) ? 1000l : -1000l;
+    }
+
+    public static boolean canWrite(File f) {
+        return f.canWrite();
+    }
+
     private static String getBundleKey(Bundle b)
     {
         return Long.toString(b.getBundleId());

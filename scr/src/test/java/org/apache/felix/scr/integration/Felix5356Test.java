@@ -74,9 +74,9 @@ public class Felix5356Test extends ComponentTestBase
 
         Hashtable<String, String> props = new Hashtable<String, String>();
         props.put( "service.pid", "myFactoryInstance" );
-        final ComponentFactory factory = getComponentFactory( componentfactory );
+        final ComponentFactory<?> factory = getComponentFactory(componentfactory);
 
-        final ComponentInstance instance = factory.newInstance( props );
+        final ComponentInstance<?> instance = factory.newInstance(props);
         TestCase.assertNotNull( instance );
 
         TestCase.assertNotNull( instance.getInstance() );

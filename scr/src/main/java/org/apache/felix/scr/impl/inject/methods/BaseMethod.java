@@ -241,10 +241,12 @@ public abstract class BaseMethod<P extends BaseParameter, T>
                         getMethodNamePrefix(),
                             getMethodName(), Arrays.asList(getParametersForLogging(params)));
                 }
-                final Object result = m_method.invoke(componentInstance, params);
+                @SuppressWarnings("unchecked")
+                final Map<String, Object> result = (Map<String, Object>) m_method.invoke(
+                    componentInstance, params);
                 logger.log(Level.DEBUG, "invoked {0}: {1}", null,
                         getMethodNamePrefix(), getMethodName() );
-                return new MethodResult((m_method.getReturnType() != Void.TYPE), (Map<String, Object>) result);
+                return new MethodResult((m_method.getReturnType() != Void.TYPE), result);
             }
             else
             {
@@ -333,7 +335,7 @@ public abstract class BaseMethod<P extends BaseParameter, T>
      */
     public /* static */ Method getMethod( Class<?> clazz,
             String name,
-            Class[] parameterTypes,
+            Class<?>[] parameterTypes,
             boolean acceptPrivate,
             boolean acceptPackage,
             ComponentLogger logger ) throws SuitableMethodNotAccessibleException,

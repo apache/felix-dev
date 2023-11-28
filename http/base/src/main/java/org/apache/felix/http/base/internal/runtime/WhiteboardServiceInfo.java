@@ -18,13 +18,15 @@
  */
 package org.apache.felix.http.base.internal.runtime;
 
+import java.util.Objects;
+
 import org.apache.felix.http.base.internal.util.InternalIdFactory;
 import org.osgi.framework.Bundle;
 import org.osgi.framework.BundleContext;
 import org.osgi.framework.Filter;
 import org.osgi.framework.InvalidSyntaxException;
 import org.osgi.framework.ServiceReference;
-import org.osgi.service.http.whiteboard.HttpWhiteboardConstants;
+import org.osgi.service.servlet.whiteboard.HttpWhiteboardConstants;
 
 /**
  * Base class for all info objects.
@@ -98,5 +100,15 @@ public abstract class WhiteboardServiceInfo<T> extends AbstractInfo<T>
     public Filter getContextSelectionFilter()
     {
         return this.filter;
+    }
+
+
+    @Override
+    public boolean isSame(AbstractInfo<T> other) {
+        if (!super.isSame(other)) {
+            return false;
+        }
+        final WhiteboardServiceInfo<T> o = (WhiteboardServiceInfo<T>) other;
+        return Objects.equals(this.contextSelection, o.contextSelection);
     }
 }

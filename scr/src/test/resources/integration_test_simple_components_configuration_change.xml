@@ -150,8 +150,12 @@
     <scr:component name="test_optional_multiple_dynamic"
         enabled="false"
         configuration-policy="require"
-        modified="modified">
+        modified="modified"
+        immediate="true">
         <implementation class="org.apache.felix.scr.integration.components.SimpleComponent" />
+        <service>
+            <provide interface='org.apache.felix.scr.integration.components.SimpleComponent' />
+        </service>
         <reference
             name="ref"
             interface="org.apache.felix.scr.integration.components.SimpleService"

@@ -253,7 +253,14 @@ public class ConfigurationManager implements BundleListener
         isActive = false;
 
         // stop listening for events
-        bundleContext.removeBundleListener( this );
+        try 
+        {
+            bundleContext.removeBundleListener( this );
+        }
+        catch ( final IllegalStateException ise ) 
+        {
+            // might happen on shutdown - we can ignore this
+        }
 
         if ( configurationListenerTracker != null )
         {
@@ -1050,9 +1057,9 @@ public class ConfigurationManager implements BundleListener
      * ManagedService is registered with multiple PIDs an instance of this
      * class is used for each registered PID.
      */
-    private class ManagedServiceUpdate implements Runnable
+    public class ManagedServiceUpdate implements Runnable
     {
-        private final String[] pids;
+        public final List<String> pids = new ArrayList<>();
 
         private final ServiceReference<ManagedService> sr;
 
@@ -1061,7 +1068,9 @@ public class ConfigurationManager implements BundleListener
 
         ManagedServiceUpdate( String[] pids, ServiceReference<ManagedService> sr, ConfigurationMap<?> configs )
         {
-            this.pids = pids;
+            for(final String pid : pids) {
+                this.pids.add(pid);
+            }
             this.sr = sr;
             this.configs = configs;
         }
@@ -1117,7 +1126,7 @@ public class ConfigurationManager implements BundleListener
             }
 
             Log.logger.log( LogService.LOG_DEBUG, "Updating service {0} with configuration {1}@{2}", new Object[]
-                    { servicePid, configPid, new Long( revision ) } );
+                    { servicePid, configPid, revision } );
 
             managedServiceTracker.provideConfiguration( sr, configPid, null, properties, revision, this.configs );
         }
@@ -1125,7 +1134,7 @@ public class ConfigurationManager implements BundleListener
         @Override
         public String toString()
         {
-            return "ManagedService Update: pid=" + Arrays.asList( pids );
+            return "ManagedService Update: pid=" + pids;
         }
     }
 
@@ -1136,7 +1145,7 @@ public class ConfigurationManager implements BundleListener
      * multiple PIDs an instance of this class is used for each registered
      * PID.
      */
-    private class ManagedServiceFactoryUpdate implements Runnable
+    public class ManagedServiceFactoryUpdate implements Runnable
     {
         private final String[] factoryPids;
 
@@ -1267,7 +1276,7 @@ public class ConfigurationManager implements BundleListener
         }
     }
 
-    private abstract class ConfigurationProvider<T> implements Runnable
+    public abstract class ConfigurationProvider<T> implements Runnable
     {
 
         protected final ConfigurationImpl config;
@@ -1361,7 +1370,7 @@ public class ConfigurationManager implements BundleListener
      * they are subscribed to. This may cause the configuration to be
      * supplied to multiple services.
      */
-    private class UpdateConfiguration extends ConfigurationProvider
+    public class UpdateConfiguration extends ConfigurationProvider
     {
 
         UpdateConfiguration( final ConfigurationImpl config )
@@ -1374,7 +1383,7 @@ public class ConfigurationManager implements BundleListener
         public void run()
         {
             Log.logger.log( LogService.LOG_DEBUG, "Updating configuration {0} to revision #{1}", new Object[]
-                    { config.getPid(), new Long( revision ) } );
+                    { config.getPid(), revision } );
 
             final List<ServiceReference<?>> srList = this.getHelper().getServices( getTargetedServicePid() );
             if ( !srList.isEmpty() )
@@ -1442,7 +1451,7 @@ public class ConfigurationManager implements BundleListener
      * <code>ManagedService[Factory]</code> services of a configuration
      * being deleted.
      */
-    private class DeleteConfiguration extends ConfigurationProvider
+    public class DeleteConfiguration extends ConfigurationProvider
     {
 
         private final String configLocation;
@@ -1504,7 +1513,7 @@ public class ConfigurationManager implements BundleListener
         }
     }
 
-    private class LocationChanged extends ConfigurationProvider
+    public class LocationChanged extends ConfigurationProvider
     {
         private final String oldLocation;
 
@@ -1676,7 +1685,8 @@ public class ConfigurationManager implements BundleListener
 
         private void sendEvent( final int serviceIndex )
         {
-            if ( (listenerProvider[serviceIndex].getState() & (Bundle.ACTIVE | Bundle.STARTING)) > 0
+            if ( (listenerProvider[serviceIndex] != null)
+                    && (listenerProvider[serviceIndex].getState() & (Bundle.ACTIVE | Bundle.STARTING)) > 0
                     && this.listeners[serviceIndex] != null )
             {
                 Log.logger.log( LogService.LOG_DEBUG, "Sending {0} event for {1} to {2}", new Object[]

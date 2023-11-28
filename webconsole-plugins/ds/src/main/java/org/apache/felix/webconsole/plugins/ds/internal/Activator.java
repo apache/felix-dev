@@ -16,17 +16,9 @@
  */
 package org.apache.felix.webconsole.plugins.ds.internal;
 
-import java.util.Dictionary;
-import java.util.Hashtable;
-
-import org.apache.felix.inventory.Format;
-import org.apache.felix.inventory.InventoryPrinter;
-import org.apache.felix.webconsole.SimpleWebConsolePlugin;
-import org.apache.felix.webconsole.bundleinfo.BundleInfoProvider;
 import org.osgi.framework.BundleActivator;
 import org.osgi.framework.BundleContext;
 import org.osgi.framework.ServiceReference;
-import org.osgi.framework.ServiceRegistration;
 import org.osgi.service.component.runtime.ServiceComponentRuntime;
 import org.osgi.util.tracker.ServiceTracker;
 import org.osgi.util.tracker.ServiceTrackerCustomizer;
@@ -34,107 +26,46 @@ import org.osgi.util.tracker.ServiceTrackerCustomizer;
 /**
  * Activator is the main starting class.
  */
-public class Activator implements BundleActivator, ServiceTrackerCustomizer<ServiceComponentRuntime, ServiceComponentRuntime>
-{
+public class Activator 
+    implements BundleActivator, ServiceTrackerCustomizer<ServiceComponentRuntime, ServiceRegistrations> {
 
-    private ServiceTracker<ServiceComponentRuntime, ServiceComponentRuntime> tracker;
-    private BundleContext context;
+    private volatile ServiceTracker<ServiceComponentRuntime, ServiceRegistrations> tracker;
 
-    private SimpleWebConsolePlugin plugin;
+    private volatile BundleContext bundleContext;
 
-    private ServiceRegistration<InventoryPrinter> printerRegistration;
-
-    private ServiceRegistration<BundleInfoProvider> infoRegistration;
-
-    /**
-     * @see org.osgi.framework.BundleActivator#start(org.osgi.framework.BundleContext)
-     */
-    @SuppressWarnings({ "unchecked", "rawtypes" })
-    public final void start(BundleContext context) throws Exception
-    {
-        this.context = context;
-        this.tracker = new ServiceTracker(context, ServiceComponentRuntime.class, this);
+    @Override
+    public final void start(final BundleContext context) throws Exception {
+        this.bundleContext = context;
+        this.tracker = new ServiceTracker<>(context, ServiceComponentRuntime.class, this);
         this.tracker.open();
     }
 
-    /**
-     * @see org.osgi.framework.BundleActivator#stop(org.osgi.framework.BundleContext)
-     */
-    public final void stop(BundleContext context) throws Exception
-    {
-        if (tracker != null)
-        {
+    @Override
+    public final void stop(final BundleContext context) throws Exception {
+        if (tracker != null) {
             tracker.close();
             tracker = null;
         }
+        this.bundleContext = null;
     }
 
     // - begin tracker
-    /**
-     * @see org.osgi.util.tracker.ServiceTrackerCustomizer#modifiedService(org.osgi.framework.ServiceReference,
-     *      java.lang.Object)
-     */
-    public final void modifiedService(final ServiceReference<ServiceComponentRuntime> reference, final ServiceComponentRuntime service)
-    {/* unused */
+    @Override
+    public final void modifiedService(final ServiceReference<ServiceComponentRuntime> reference, final ServiceRegistrations service) {
+        // nothing to do
     }
 
-    /**
-     * @see org.osgi.util.tracker.ServiceTrackerCustomizer#addingService(org.osgi.framework.ServiceReference)
-     */
-    public final ServiceComponentRuntime addingService(final ServiceReference<ServiceComponentRuntime> reference)
-    {
-        SimpleWebConsolePlugin plugin = this.plugin;
-        if (plugin == null)
-        {
-            final ServiceComponentRuntime service = context.getService(reference);
-            this.plugin = plugin = new WebConsolePlugin(service).register(context);
-
-            final Dictionary<String, Object> props = new Hashtable<String, Object>();
-            final String name = "Declarative Services Components";
-            props.put(InventoryPrinter.NAME, "scr"); //$NON-NLS-1$
-            props.put(InventoryPrinter.TITLE, name);
-            props.put(InventoryPrinter.FORMAT, new String[] {
-                    Format.TEXT.toString(),
-                    Format.JSON.toString()
-            });
-            printerRegistration = context.registerService(InventoryPrinter.class,
-                new ComponentConfigurationPrinter(service, (WebConsolePlugin) plugin),
-                props);
-
-            infoRegistration = new InfoProvider(context.getBundle(), service).register(context);
+    @Override
+    public final ServiceRegistrations addingService(final ServiceReference<ServiceComponentRuntime> reference) {
+        final ServiceComponentRuntime service = this.bundleContext.getService(reference);
+        if (service != null) {
+            return new ServiceRegistrations(this.bundleContext, service);
         }
-
-        return context.getService(reference);
+        return null;
     }
 
-    /**
-     * @see org.osgi.util.tracker.ServiceTrackerCustomizer#removedService(org.osgi.framework.ServiceReference,
-     *      java.lang.Object)
-     */
-    public final void removedService(final ServiceReference<ServiceComponentRuntime> reference, final ServiceComponentRuntime service)
-    {
-        SimpleWebConsolePlugin plugin = this.plugin;
-
-        if (tracker.getTrackingCount() == 0 && plugin != null)
-        {
-            // remove service
-            plugin.unregister();
-            this.plugin = null;
-            // unregister configuration printer too
-            ServiceRegistration<?> reg = printerRegistration;
-            if (reg != null)
-            {
-                reg.unregister();
-                printerRegistration = null;
-            }
-            // unregister info provider too
-            reg = infoRegistration;
-            if (reg != null)
-            {
-                reg.unregister();
-                infoRegistration = null;
-            }
-        }
-
+    @Override
+    public final void removedService(final ServiceReference<ServiceComponentRuntime> reference, final ServiceRegistrations service) {
+        service.destroy();
     }
 }

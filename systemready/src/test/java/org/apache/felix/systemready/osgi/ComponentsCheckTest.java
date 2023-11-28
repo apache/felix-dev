@@ -23,6 +23,7 @@ import static org.junit.Assert.assertThat;
 import static org.ops4j.pax.tinybundles.core.TinyBundles.bundle;
 
 import java.io.IOException;
+import java.util.concurrent.atomic.AtomicBoolean;
 
 import javax.inject.Inject;
 
@@ -40,7 +41,11 @@ import org.ops4j.pax.exam.Configuration;
 import org.ops4j.pax.exam.Option;
 import org.ops4j.pax.exam.junit.PaxExam;
 import org.ops4j.pax.exam.util.Filter;
+import org.osgi.framework.InvalidSyntaxException;
+import org.osgi.framework.ServiceEvent;
+import org.osgi.framework.ServiceListener;
 import org.osgi.service.cm.ConfigurationAdmin;
+import org.osgi.service.component.runtime.ServiceComponentRuntime;
 
 @RunWith(PaxExam.class)
 public class ComponentsCheckTest extends BaseTest {
@@ -48,7 +53,7 @@ public class ComponentsCheckTest extends BaseTest {
     @Inject
     @Filter("(component.name=" + ComponentsCheck.PID + ")")
     SystemReadyCheck check;
-    
+
     @Inject
     ConfigurationAdmin configAdmin;
 
@@ -65,12 +70,23 @@ public class ComponentsCheckTest extends BaseTest {
     }
 
     @Test
-    public void test() throws IOException {
+    public void test() throws IOException, InvalidSyntaxException, InterruptedException {
+        AtomicBoolean changed = new AtomicBoolean(false);
+        context.addServiceListener(new ServiceListener() {
+
+            @Override
+            public void serviceChanged(ServiceEvent event) {
+                changed.set(true);
+            }
+        }, "(objectClass=" + ServiceComponentRuntime.class.getName() + ")");
         CheckStatus status = check.getStatus();
         assertThat(status.getState(),  Matchers.is(CheckStatus.State.YELLOW));
         assertThat(status.getDetails(), containsString("unsatisfied references"));
         //configAdmin.getConfiguration("CompWithoutService").update();
         context.registerService(Runnable.class, () -> {}, null);
+        while ( changed.get() == false ) {
+            Thread.sleep(10);
+        }
         CheckStatus status2 = check.getStatus();
         System.out.println(status2);
         assertThat(status2.getState(),  Matchers.is(CheckStatus.State.GREEN));

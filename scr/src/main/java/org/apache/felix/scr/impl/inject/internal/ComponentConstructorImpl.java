@@ -24,6 +24,7 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Optional;
 import java.util.concurrent.atomic.AtomicInteger;
 
 import org.apache.felix.scr.impl.inject.ComponentConstructor;
@@ -265,7 +266,8 @@ public class ComponentConstructorImpl<S> implements ComponentConstructor<S>
                             constructorArgTypes[i],
                             constructor.getParameterTypes()[i],
                             componentContext,
-                            null);
+                            null,
+                            refMetadata);
                 }
                 else
                 {
@@ -279,7 +281,8 @@ public class ComponentConstructorImpl<S> implements ComponentConstructor<S>
                                     && (constructorArgTypes[i] == ValueType.ref_serviceType
                                     || constructorArgTypes[i] == ValueType.ref_tuple
                                     || constructorArgTypes[i] == ValueType.ref_logger
-                                    || constructorArgTypes[i] == ValueType.ref_formatterLogger) )
+                                    || constructorArgTypes[i] == ValueType.ref_formatterLogger
+                                    || constructorArgTypes[i] == ValueType.ref_optional))
                             {
                                 refPair.getServiceObject(componentContext, componentContext.getBundleContext());
                             }
@@ -287,16 +290,23 @@ public class ComponentConstructorImpl<S> implements ComponentConstructor<S>
                                     constructorArgTypes[i],
                                     constructor.getParameterTypes()[i],
                                     componentContext,
-                                    refPair);
+                                    refPair,
+                                    refMetadata);
                             if ( refMetadata.isMultiple() && ref != null )
                             {
                                 refs.add(ref);
                             }
                         }
                     }
+                    // check for optional ref type; if null then use empty Optional
+                    if (ref == null && constructorArgTypes[i] == ValueType.ref_optional)
+                    {
+                        ref = Optional.empty();
+                    }
+
                     if ( !refMetadata.isMultiple())
                     {
-                        if ( ref == null )
+                        if (ref == null && !refMetadata.isOptional())
                         {
                             throw new InstantiationException("Unable to get service for reference " + refMetadata.getName());
                         }
@@ -304,6 +314,10 @@ public class ComponentConstructorImpl<S> implements ComponentConstructor<S>
                     }
                     else
                     {
+                        if (refs.isEmpty() && !refMetadata.isOptional())
+                        {
+                            throw new InstantiationException("Unable to get service for reference " + refMetadata.getName());
+                        }
                         args[i] = refs;
                     }
                 }
@@ -320,7 +334,8 @@ public class ComponentConstructorImpl<S> implements ComponentConstructor<S>
                         activationFieldTypes[i],
                         activationFields[i].getType(),
                         componentContext,
-                        null); // null is ok as activation fields are not references
+                        null, // null is ok as activation fields are not references
+                        null);
                 FieldUtils.setField(activationFields[i], component, value, componentContext.getLogger());
             }
         }

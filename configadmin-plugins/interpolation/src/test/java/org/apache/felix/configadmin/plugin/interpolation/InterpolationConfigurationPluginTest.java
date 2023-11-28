@@ -31,6 +31,39 @@ import org.osgi.framework.Constants;
 
 public class InterpolationConfigurationPluginTest {
     @Test
+    public void testSelfReferenceConfiguration() throws Exception {
+        BundleContext bc = Mockito.mock(BundleContext.class);
+        Mockito.when(bc.getProperty("foo.bar")).thenReturn("hello there");
+
+        InterpolationConfigurationPlugin plugin = new InterpolationConfigurationPlugin(bc::getProperty, null, null);
+
+        Dictionary<String, Object> dict = new Hashtable<>();
+        dict.put("someprop", "$[prop:foo.bar]");
+        dict.put("nope", "$[blah:blah]");
+        dict.put("self.reference", "$[conf:someprop] foo");
+        dict.put("long.array", new long[] {3L, 250000L});
+        dict.put("self.long.array", "$[conf:long.array]");
+        dict.put("string.array", new String[] {"foo", "bar"});
+        dict.put("self.string.array", "$[conf:string.array]");
+        dict.put("char.array", new char[] {'c', '香'});
+        dict.put("self.char.array", "$[conf:char.array]");
+        dict.put("self.circular.reference", "$[conf:self.circular.reference]");
+        dict.put("self.circular.reference.a", "$[conf:self.circular.reference.b]");
+        dict.put("self.circular.reference.b", "$[conf:self.circular.reference.a]");
+
+        plugin.modifyConfiguration(null, dict);
+        assertEquals("hello there", dict.get("someprop"));
+        assertEquals("$[blah:blah]", dict.get("nope"));
+        assertEquals("hello there foo", dict.get("self.reference"));
+        assertEquals("[3, 250000]", dict.get("self.long.array"));
+        assertEquals("[foo, bar]", dict.get("self.string.array"));
+        assertEquals("[c, 香]", dict.get("self.char.array"));
+        assertEquals("self.circular.reference", dict.get("self.circular.reference"));
+        assertEquals("self.circular.reference.a", dict.get("self.circular.reference.a"));
+        assertEquals("self.circular.reference.a", dict.get("self.circular.reference.b"));
+    }
+
+    @Test
     public void testModifyConfiguration() throws Exception {
         String envUser = System.getenv("USER");
         String userVar;
@@ -69,7 +102,7 @@ public class InterpolationConfigurationPluginTest {
         BundleContext bc = Mockito.mock(BundleContext.class);
         Mockito.when(bc.getProperty("foo.bar")).thenReturn("hello there");
 
-        InterpolationConfigurationPlugin plugin = new InterpolationConfigurationPlugin(bc, null, null);
+        InterpolationConfigurationPlugin plugin = new InterpolationConfigurationPlugin(bc::getProperty, null, null);
 
         String envUser = System.getenv("USER");
         String userVar;
@@ -114,22 +147,24 @@ public class InterpolationConfigurationPluginTest {
 
     @Test
     public void testReplacement() throws Exception {
-        String rf = getClass().getResource("/testfile.txt").getFile();
+        String rf = getClass().getResource("/other/testfile.txt").getFile();
+        File file = new File(rf);
         InterpolationConfigurationPlugin plugin = new InterpolationConfigurationPlugin(null,
-                new File(rf).getParent(), null);
+                file.getParent() + "," + file.getParentFile().getParent(), null);
 
-        assertEquals("xxla la layy", plugin.replace("akey", "xx$[secret:testfile.txt]yy", "apid"));
+        assertEquals("xxla la layy", plugin.replace("akey", "xx$[secret:testfile.txt]yy", "apid", new Hashtable<>()));
         String doesNotReplace = "xx$[" + rf + "]yy";
-        assertEquals(doesNotReplace, plugin.replace("akey", doesNotReplace, "apid"));
+        assertEquals(doesNotReplace, plugin.replace("akey", doesNotReplace, "apid", new Hashtable<>()));
     }
 
     @Test
     public void testNoReplacement() throws IOException {
-        String rf = getClass().getResource("/testfile.txt").getFile();
+        String rf = getClass().getResource("/other/testfile.txt").getFile();
+        File file = new File(rf);
         InterpolationConfigurationPlugin plugin = new InterpolationConfigurationPlugin(null,
-                new File(rf).getParent(), null);
+                file.getParent() + "," + file.getParentFile().getParent(), null);
 
-        assertEquals("foo", plugin.replace("akey", "foo", "apid"));
+        assertEquals("foo", plugin.replace("akey", "foo", "apid", new Hashtable<>()));
     }
 
     @Test
@@ -138,10 +173,32 @@ public class InterpolationConfigurationPluginTest {
 
         Dictionary<String, Object> dict = new Hashtable<>();
         dict.put("defaulted", "$[env:notset;default=foo]");
+        dict.put("defaulted2", "$[env:notset;default=]");
+        dict.put("defaulted3", "$[env:notset;default=foo=bar]");
+        dict.put("defaulted4", "$[env:notset;default=foo;=bar]");
+        dict.put("defaulted5", "$[env:notset;default= ]");
+        dict.put("defaulted6", "$[env:notset;default");
+        dict.put("defaulted7", "$[env:notset;default=/()^$]");
+        dict.put("defaulted8", "$[env:notset;default=[8080]]");
+        dict.put("defaulted9", "$[env:notset;default=[aabb]cc]");
+        dict.put("defaulted10", "$[env:notset;default=\\[aabb]cc]");
+        dict.put("defaulted11", "$[env:notset;default=\\[aabb\\]cc]");
+        dict.put("defaulted12", "$[env:notset;default=\\[aabb\\]cc\\]]");
 
         plugin.modifyConfiguration(null, dict);
 
         assertEquals("foo", dict.get("defaulted"));
+        assertEquals("", dict.get("defaulted2"));
+        assertEquals("foo=bar", dict.get("defaulted3"));
+        assertEquals("foo", dict.get("defaulted4")); // semicolon is not supported in values
+        assertEquals(" ", dict.get("defaulted5"));
+        assertEquals("$[env:notset;default", dict.get("defaulted6"));
+        assertEquals("/()^$", dict.get("defaulted7"));
+        assertEquals("[8080]", dict.get("defaulted8"));
+        assertEquals("[aabb]cc", dict.get("defaulted9"));
+        assertEquals("[aabbcc]", dict.get("defaulted10"));
+        assertEquals("[aabb]cc", dict.get("defaulted11"));
+        assertEquals("[aabb]cc]", dict.get("defaulted12"));
     }
 
     @Test
@@ -160,7 +217,7 @@ public class InterpolationConfigurationPluginTest {
     public void testReplacementInStringArray() throws IOException {
         BundleContext bc = Mockito.mock(BundleContext.class);
         Mockito.when(bc.getProperty("foo.bar")).thenReturn("hello there");
-        InterpolationConfigurationPlugin plugin = new InterpolationConfigurationPlugin(bc, null, null);
+        InterpolationConfigurationPlugin plugin = new InterpolationConfigurationPlugin(bc::getProperty, null, null);
 
         Dictionary<String, Object> dict = new Hashtable<>();
         dict.put("array", new String[] { "1", "$[prop:foo.bar]", "3" });
@@ -178,15 +235,31 @@ public class InterpolationConfigurationPluginTest {
     public void testMultiplePlaceholders() throws Exception {
         BundleContext bc = Mockito.mock(BundleContext.class);
         Mockito.when(bc.getProperty("foo.bar")).thenReturn("hello there");
-        String rf = getClass().getResource("/testfile.txt").getFile();
-        InterpolationConfigurationPlugin plugin = new InterpolationConfigurationPlugin(bc, new File(rf).getParent(),
-                null);
+        String rf = getClass().getResource("/other/testfile.txt").getFile();
+        File file = new File(rf);
+        InterpolationConfigurationPlugin plugin = new InterpolationConfigurationPlugin(bc::getProperty,
+                file.getParent() + "," + file.getParentFile().getParent(), null);
 
         assertEquals("xxhello thereyyhello therezz",
-                plugin.replace("akey", "xx$[prop:foo.bar]yy$[prop:foo.bar]zz", "apid"));
+                plugin.replace("akey", "xx$[prop:foo.bar]yy$[prop:foo.bar]zz", "apid", new Hashtable<>()));
 
         assertEquals("xxla la layyhello therezz",
-                plugin.replace("akey", "xx$[secret:testfile.txt]yy$[prop:foo.bar]zz", "apid"));
+                plugin.replace("akey", "xx$[secret:testfile.txt]yy$[prop:foo.bar]zz", "apid", new Hashtable<>()));
+    }
+
+    @Test
+    public void testMultipleDirectories() throws Exception {
+        BundleContext bc = Mockito.mock(BundleContext.class);
+        String rf = getClass().getResource("/other/testfile.txt").getFile();
+        File file = new File(rf);
+        InterpolationConfigurationPlugin plugin = new InterpolationConfigurationPlugin(bc::getProperty,
+                file.getParent() + "," + file.getParentFile().getParent(), null);
+
+        assertEquals("xxhello thereyyhello therezz",
+                plugin.replace("akey", "xx$[secret:foo.bar]yy$[secret:foo.bar]zz", "apid", new Hashtable<>()));
+
+        assertEquals("xxla la layyhello therezz",
+                plugin.replace("akey", "xx$[secret:testfile.txt]yy$[secret:foo.bar]zz", "apid", new Hashtable<>()));
     }
 
     @Test
@@ -194,9 +267,9 @@ public class InterpolationConfigurationPluginTest {
         BundleContext bc = Mockito.mock(BundleContext.class);
         Mockito.when(bc.getProperty("foo.bar")).thenReturn("hello there");
         Mockito.when(bc.getProperty("key")).thenReturn("foo.bar");
-        InterpolationConfigurationPlugin plugin = new InterpolationConfigurationPlugin(bc, null, null);
+        InterpolationConfigurationPlugin plugin = new InterpolationConfigurationPlugin(bc::getProperty, null, null);
 
-        assertEquals("hello there", plugin.replace("akey", "$[prop:$[prop:key]]", "apid"));
+        assertEquals("hello there", plugin.replace("akey", "$[prop:$[prop:key]]", "apid", new Hashtable<>()));
     }
 
     @Test
@@ -213,11 +286,38 @@ public class InterpolationConfigurationPluginTest {
     public void testArrayTypeConversion() throws Exception {
         BundleContext bc = Mockito.mock(BundleContext.class);
         Mockito.when(bc.getProperty("foo")).thenReturn("2000,3000");
-        InterpolationConfigurationPlugin plugin = new InterpolationConfigurationPlugin(bc, null, null);
+        InterpolationConfigurationPlugin plugin = new InterpolationConfigurationPlugin(bc::getProperty, null, null);
 
         assertArrayEquals(new Integer[] { 2000, 3000 },
-                (Integer[]) plugin.replace("key", "$[prop:foo;type=Integer[];delimiter=,]", "somepid"));
+                (Integer[]) plugin.replace("key", "$[prop:foo;type=Integer[];delimiter=,]", "somepid", new Hashtable<>()));
         assertArrayEquals(new Integer[] { 1, 2 },
-                (Integer[]) plugin.replace("key", "$[prop:bar;type=Integer[];delimiter=,;default=1,2]", "somepid"));
+                (Integer[]) plugin.replace("key", "$[prop:bar;type=Integer[];delimiter=,;default=1,2]", "somepid", new Hashtable<>()));
+    }
+
+    @Test
+    public void testConvertTypeDelimiterWithoutType() throws Exception {
+        BundleContext bc = Mockito.mock(BundleContext.class);
+        Mockito.when(bc.getProperty("foo")).thenReturn("2000,3000");
+        InterpolationConfigurationPlugin plugin = new InterpolationConfigurationPlugin(bc::getProperty, null, null);
+
+        Object obj = plugin.convertType(null, "a,b", ",");
+        assertArrayEquals(new String[] {"a", "b"}, (Object[])obj);
+
+        obj = plugin.convertType("String", "a,b", ",");
+        assertEquals("a,b", obj);
+    }
+
+    @Test
+    public void testModifyConfigurationWithArrayInArray() throws Exception {
+        BundleContext bc = Mockito.mock(BundleContext.class);
+        Mockito.when(bc.getProperty("foo")).thenReturn("2000,3000");
+        InterpolationConfigurationPlugin plugin = new InterpolationConfigurationPlugin(bc::getProperty, null, null);
+
+        Dictionary<String, Object> dict = new Hashtable<>();
+        dict.put("array", new String[] {"1000", "$[prop:foo;type=String[];delimiter=,]", "4000"});
+        plugin.modifyConfiguration(null, dict);
+
+        assertEquals(1, dict.size());
+        assertArrayEquals(new String[] {"1000", "2000", "3000", "4000"}, (String[])dict.get("array"));
     }
 }

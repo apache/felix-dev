@@ -27,7 +27,6 @@ import java.util.StringTokenizer;
  */
 public class JSONConfigurationWriter extends ConfigurationWriter
 {
-
     private boolean wrapJSON;
 
     private boolean startLine;
@@ -71,6 +70,7 @@ public class JSONConfigurationWriter extends ConfigurationWriter
     // IE has an issue with white-space:pre in our case so, we write
     // <br/> instead of [CR]LF to get the line break. This also works
     // in other browsers.
+    @Override
     public void println()
     {
         if (wrapJSON)
@@ -93,6 +93,7 @@ public class JSONConfigurationWriter extends ConfigurationWriter
     // delegation to the write() method. So we need to override this, to
     // make
     // sure, that everything is escaped correctly
+    @Override
     public void print(final String str)
     {
         final char[] chars = str.toCharArray();
@@ -103,6 +104,7 @@ public class JSONConfigurationWriter extends ConfigurationWriter
 
     // always delegate to write(char[], int, int) otherwise in some VM
     // it cause endless cycle and StackOverflowError
+    @Override
     public void write(final int character)
     {
         synchronized (oneChar)
@@ -112,8 +114,8 @@ public class JSONConfigurationWriter extends ConfigurationWriter
         }
     }
 
-    // write the characters unmodified unless filtering is enabled in
-    // which case the writeFiltered(String) method is called for filtering
+    // write the characters unmodified unless filtering is enabled
+    @Override
     public void write(char[] chars, int off, int len)
     {
         if (this.wrapJSON)
@@ -125,14 +127,14 @@ public class JSONConfigurationWriter extends ConfigurationWriter
             }
 
             String v = new String(chars, off, len);
-            StringTokenizer st = new StringTokenizer(v, "\r\n\"", true);
+            StringTokenizer st = new StringTokenizer(v, "\r\n\"\\\t\b\f", true);
             while (st.hasMoreTokens())
             {
                 String t = st.nextToken();
                 if (t.length() == 1)
                 {
                     char c = t.charAt(0);
-                    if (c == '\r')
+                    if (c == '\r' || c == '\f' || c == '\t' || c == '\b')
                     {
                         // ignore
                     }
@@ -141,7 +143,7 @@ public class JSONConfigurationWriter extends ConfigurationWriter
                         this.println();
                         this.startLine();
                     }
-                    else if (c == '"')
+                    else if (c == '"' || c == '\\')
                     {
                         super.write('\\');
                         super.write(c);
@@ -165,6 +167,7 @@ public class JSONConfigurationWriter extends ConfigurationWriter
 
     // write the string unmodified unless filtering is enabled in
     // which case the writeFiltered(String) method is called for filtering
+    @Override
     public void write(final String string, final int off, final int len)
     {
         write(string.toCharArray(), off, len);

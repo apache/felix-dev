@@ -48,6 +48,7 @@ public class BaseObject
         m_calledMethod = calledMethod;
     }
 
+    @SuppressWarnings("unused")
     private void activate_no_arg()
     {
         setCalledMethod( "activate_no_arg" );
@@ -73,6 +74,7 @@ public class BaseObject
 
     //precedence rules
 
+    @SuppressWarnings("unused")
     private void activate_precedence_1( ComponentContext ctx )
     {
         setCalledMethod("activate_precedence_1_comp");
@@ -83,12 +85,13 @@ public class BaseObject
         setCalledMethod("activate_precedence_1_bundleContext");
     }
 
-    protected void activate_precedence_1( Map map)
+    protected void activate_precedence_1(Map<?, ?> map)
     {
         setCalledMethod("activate_precedence_1_map");
     }
 
-    private void activate_precedence_2( Map map )
+    @SuppressWarnings("unused")
+    private void activate_precedence_2(Map<?, ?> map)
     {
         setCalledMethod("activate_precedence_2_map");
     }

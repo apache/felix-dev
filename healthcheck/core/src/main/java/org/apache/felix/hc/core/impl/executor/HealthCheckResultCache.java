@@ -52,7 +52,10 @@ public class HealthCheckResultCache {
     /** Update the cache with the result */
     public void updateWith(HealthCheckExecutionResult result) {
         final ExecutionResult executionResult = (ExecutionResult) result;
-        cache.put(executionResult.getServiceId(), result);
+        final HealthCheckExecutionResult previous = cache.put(executionResult.getServiceId(), result);
+        if ( previous == null || previous.getHealthCheckResult().getStatus() != result.getHealthCheckResult().getStatus()) {
+            logger.debug("Updated HC result for {} : {}", result.getHealthCheckMetadata().getName(), result.getHealthCheckResult());
+        }
 
         // update cache for sticky handling
         Status status = executionResult.getHealthCheckResult().getStatus();
@@ -67,7 +70,12 @@ public class HealthCheckResultCache {
         }
     }
 
-    /** Get the valid cache results */
+    /**
+     * Get the valid cache results for given metadata list
+     * 
+     * @param metadatas list of metadata to get results for. For each found result the metadata will be deleted
+     * @param results matching cached results are added to this list
+     */
     public void useValidCacheResults(final List<HealthCheckMetadata> metadatas,
             final Collection<HealthCheckExecutionResult> results,
             final long resultCacheTtlInMs) {
@@ -139,7 +147,7 @@ public class HealthCheckResultCache {
     }
 
     /** Creates a new execution result
-     * 
+     *
      * @param origResult
      * @return */
     public HealthCheckExecutionResult createExecutionResultWithStickyResults(HealthCheckExecutionResult origResult) {

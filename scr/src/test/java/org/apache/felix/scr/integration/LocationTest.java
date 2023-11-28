@@ -170,6 +170,7 @@ public class LocationTest extends ComponentTestBase
         checkConfigurationCount( pid, 0, -1 );
         TestCase.assertNull( SimpleComponent.INSTANCE );
 
+        @SuppressWarnings("unused")
         Configuration config = configure( pid, REGION );
         delay();
 

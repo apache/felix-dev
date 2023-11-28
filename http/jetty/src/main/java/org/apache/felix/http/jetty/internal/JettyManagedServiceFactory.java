@@ -75,7 +75,7 @@ public class JettyManagedServiceFactory implements ManagedServiceFactory, Closea
 		}
 		catch (final Exception e)
 		{
-            SystemLogger.error("Failed to start Http Jetty pid=" + pid, e);
+            SystemLogger.LOGGER.error("Failed to start Http Jetty pid={}", pid, e);
 		}
 	}
 
@@ -92,7 +92,7 @@ public class JettyManagedServiceFactory implements ManagedServiceFactory, Closea
 			}
 			catch (Exception e)
 			{
-			    SystemLogger.error("Faiiled to stop Http Jetty pid=" + pid, e);
+			    SystemLogger.LOGGER.error("Faiiled to stop Http Jetty pid={}", pid, e);
 			}
 		}
 

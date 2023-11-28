@@ -20,10 +20,11 @@ package org.apache.felix.webconsole.plugins.obr.internal;
 
 
 import org.apache.felix.webconsole.AbstractWebConsolePlugin;
-import org.osgi.service.log.LogService;
 import org.osgi.service.obr.Requirement;
 import org.osgi.service.obr.Resolver;
 import org.osgi.service.obr.Resource;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 
 class OsgiDeployer implements Runnable
@@ -31,21 +32,20 @@ class OsgiDeployer implements Runnable
 
     private final Resolver obrResolver;
 
-    private final AbstractWebConsolePlugin logger;
+    private final static Logger logger = LoggerFactory.getLogger( OsgiDeployer.class );
 
     private final boolean startBundles;
 
 
-    OsgiDeployer( Resolver obrResolver, AbstractWebConsolePlugin logger, boolean startBundles )
+    OsgiDeployer( Resolver obrResolver, boolean startBundles )
     {
         this.obrResolver = obrResolver;
-        this.logger = logger;
         this.startBundles = startBundles;
     }
 
-    static void deploy( Resolver obrResolver, AbstractWebConsolePlugin logger, boolean startBundles )
+    static void deploy( Resolver obrResolver, boolean startBundles )
     {
-        final OsgiDeployer d = new OsgiDeployer( obrResolver, logger, startBundles );
+        final OsgiDeployer d = new OsgiDeployer( obrResolver, startBundles );
         final Thread t = new Thread( d, "OBR Bundle Deployer (OSGi API)" );
         t.start();
     }
@@ -60,42 +60,42 @@ class OsgiDeployer implements Runnable
             if ( obrResolver.resolve() )
             {
 
-                logResource( logger, "Installing Requested Resources", obrResolver.getAddedResources() );
-                logResource( logger, "Installing Required Resources", obrResolver.getRequiredResources() );
-                logResource( logger, "Installing Optional Resources", obrResolver.getOptionalResources() );
+                logResource( "Installing Requested Resources", obrResolver.getAddedResources() );
+                logResource( "Installing Required Resources", obrResolver.getRequiredResources() );
+                logResource( "Installing Optional Resources", obrResolver.getOptionalResources() );
 
                 obrResolver.deploy( startBundles );
             }
             else
             {
-                logRequirements( logger, "Cannot Install requested bundles due to unsatisfied requirements",
+                logRequirements( "Cannot Install requested bundles due to unsatisfied requirements",
                     obrResolver.getUnsatisfiedRequirements() );
             }
         }
         catch ( Exception ie )
         {
-            logger.log( LogService.LOG_ERROR, "Cannot install bundles", ie );
+            logger.error( "Cannot install bundles", ie );
         }
     }
 
 
-    public static void logResource( AbstractWebConsolePlugin logger, String message, Resource[] res )
+    public static void logResource( String message, Resource[] res )
     {
         if ( res != null && res.length > 0 )
         {
-            logger.log( LogService.LOG_INFO, message );
+            logger.info( message );
             for ( int i = 0; i < res.length; i++ )
             {
-                logger.log( LogService.LOG_INFO, "  " + i + ": " + res[i].getSymbolicName() + ", "
+                logger.info( "  " + i + ": " + res[i].getSymbolicName() + ", "
                     + res[i].getVersion() );
             }
         }
     }
 
 
-    public static void logRequirements( AbstractWebConsolePlugin logger, String message, Requirement[] reasons )
+    public static void logRequirements( String message, Requirement[] reasons )
     {
-        logger.log( LogService.LOG_ERROR, message );
+        logger.error(  message );
         for ( int i = 0; reasons != null && i < reasons.length; i++ )
         {
             String moreInfo = reasons[i].getComment();
@@ -103,7 +103,7 @@ class OsgiDeployer implements Runnable
             {
                 moreInfo = reasons[i].getFilter().toString();
             }
-            logger.log( LogService.LOG_ERROR, "  " + i + ": " + reasons[i].getName() + " (" + moreInfo + ")" );
+            logger.error( "  " + i + ": " + reasons[i].getName() + " (" + moreInfo + ")" );
         }
     }
 

@@ -1,4 +1,4 @@
-The [OSGi Service Compendium specification](https://osgi.org/specification/osgi.cmpn/7.0.0/) defines a general purpose [Log Service](https://osgi.org/specification/osgi.cmpn/7.0.0/service.log.html) for the OSGi Platform. It is a very simple specification that doesn't provide all the functionality commonly available in enterprise-level logging tools, but its extensible service model can be used to build fairly sophisticated logging solutions.
+The [OSGi Service Core specification](https://osgi.org/specification/osgi.core/8.0.0/) defines a general purpose [Log Service](https://docs.osgi.org/specification/osgi.core/8.0.0/service.log.html) for the OSGi Platform. It is a very simple specification that doesn't provide all the functionality commonly available in enterprise-level logging tools, but its extensible service model can be used to build fairly sophisticated logging solutions.
 
 The Log Service specification defines the following entities:
 

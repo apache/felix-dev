@@ -16,7 +16,6 @@
  */
 package org.apache.felix.webconsole.plugins.obr.internal;
 
-import org.apache.felix.webconsole.SimpleWebConsolePlugin;
 import org.osgi.framework.BundleActivator;
 import org.osgi.framework.BundleContext;
 import org.osgi.framework.Constants;
@@ -28,13 +27,13 @@ import org.osgi.util.tracker.ServiceTrackerCustomizer;
 /**
  * Activator is the main starting class.
  */
-public class Activator implements BundleActivator, ServiceTrackerCustomizer, Constants
+public class Activator implements BundleActivator, ServiceTrackerCustomizer
 {
 
     private ServiceTracker tracker;
     private BundleContext context;
 
-    private SimpleWebConsolePlugin plugin;
+    private WebConsolePlugin plugin;
 
     /**
      * @see org.osgi.framework.BundleActivator#start(org.osgi.framework.BundleContext)
@@ -42,9 +41,9 @@ public class Activator implements BundleActivator, ServiceTrackerCustomizer, Con
     public final void start(BundleContext context) throws Exception
     {
         this.context = context;
-        Filter filter = context.createFilter("(|" //$NON-NLS-1$
-            + '(' + OBJECTCLASS + "=org.osgi.service.obr.RepositoryAdmin)" //$NON-NLS-1$
-            + '(' + OBJECTCLASS + "=org.apache.felix.bundlerepository.RepositoryAdmin)" //$NON-NLS-1$
+        Filter filter = context.createFilter("(|"
+            + '(' + Constants.OBJECTCLASS + "=org.osgi.service.obr.RepositoryAdmin)"
+            + '(' + Constants.OBJECTCLASS + "=org.apache.felix.bundlerepository.RepositoryAdmin)"
             + ')');
         this.tracker = new ServiceTracker(context, filter, this);
         this.tracker.open();
@@ -76,10 +75,10 @@ public class Activator implements BundleActivator, ServiceTrackerCustomizer, Con
      */
     public final Object addingService(ServiceReference reference)
     {
-        SimpleWebConsolePlugin plugin = this.plugin;
+        WebConsolePlugin plugin = this.plugin;
         if (plugin == null)
         {
-            this.plugin = plugin = new WebConsolePlugin().register(context);
+            this.plugin = new WebConsolePlugin().register(context);
         }
 
         return context.getService(reference);
@@ -91,11 +90,11 @@ public class Activator implements BundleActivator, ServiceTrackerCustomizer, Con
      */
     public final void removedService(ServiceReference reference, Object service)
     {
-        SimpleWebConsolePlugin plugin = this.plugin;
+        WebConsolePlugin plugin = this.plugin;
 
         if (tracker.getTrackingCount() == 0 && plugin != null)
         {
-            plugin.unregister();
+            plugin.deactivate();
             this.plugin = null;
         }
 

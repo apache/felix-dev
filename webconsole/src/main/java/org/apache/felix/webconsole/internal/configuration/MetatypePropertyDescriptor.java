@@ -86,4 +86,10 @@ public class MetatypePropertyDescriptor extends PropertyDescriptor
     {
         return optional;
     }
+
+    
+    public boolean hasMetatype()
+    {
+        return true;
+    }
 }

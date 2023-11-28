@@ -19,14 +19,16 @@ package org.apache.felix.http.samples.whiteboard;
 import java.util.Dictionary;
 import java.util.Hashtable;
 
-import javax.servlet.Filter;
-import javax.servlet.Servlet;
+import jakarta.servlet.Filter;
+import jakarta.servlet.Servlet;
 
 import org.osgi.framework.BundleActivator;
 import org.osgi.framework.BundleContext;
-import org.osgi.service.http.context.ServletContextHelper;
-import org.osgi.service.http.whiteboard.HttpWhiteboardConstants;
+import org.osgi.service.servlet.context.ServletContextHelper;
+import org.osgi.service.servlet.whiteboard.HttpWhiteboardConstants;
+import org.osgi.service.servlet.whiteboard.annotations.RequireHttpWhiteboard;
 
+@RequireHttpWhiteboard
 public final class Activator
     implements BundleActivator
 {
@@ -39,21 +41,21 @@ public final class Activator
         final TestServletContext servletContext = new TestServletContext(context.getBundle());
 
         // register the servlet context with name "filtersample" at "/filtersample"
-        final Dictionary<String, Object> servletContextProps = new Hashtable<String, Object>();
+        final Dictionary<String, Object> servletContextProps = new Hashtable<>();
         servletContextProps.put(HttpWhiteboardConstants.HTTP_WHITEBOARD_CONTEXT_NAME, "filtersample");
         servletContextProps.put(HttpWhiteboardConstants.HTTP_WHITEBOARD_CONTEXT_PATH, "/filtersample");
         context.registerService(ServletContextHelper.class, servletContext, servletContextProps);
 
         // create and register servlets
         final TestServlet servlet1 = new TestServlet("servlet1");
-        final Dictionary<String, Object> servlet1Props = new Hashtable<String, Object>();
+        final Dictionary<String, Object> servlet1Props = new Hashtable<>();
         servlet1Props.put(HttpWhiteboardConstants.HTTP_WHITEBOARD_SERVLET_PATTERN, "/");
         servlet1Props.put(HttpWhiteboardConstants.HTTP_WHITEBOARD_CONTEXT_SELECT,
                 "(" + HttpWhiteboardConstants.HTTP_WHITEBOARD_CONTEXT_NAME + "=filtersample)");
         context.registerService(Servlet.class, servlet1, servlet1Props);
 
         final TestServlet servlet2 = new TestServlet("servlet2");
-        final Dictionary<String, Object> servlet2Props = new Hashtable<String, Object>();
+        final Dictionary<String, Object> servlet2Props = new Hashtable<>();
         servlet2Props.put(HttpWhiteboardConstants.HTTP_WHITEBOARD_SERVLET_PATTERN, "/other/*");
         servlet2Props.put(HttpWhiteboardConstants.HTTP_WHITEBOARD_CONTEXT_SELECT,
                 "(" + HttpWhiteboardConstants.HTTP_WHITEBOARD_CONTEXT_NAME + "=filtersample)");
@@ -61,14 +63,14 @@ public final class Activator
 
         // create and register filters
         final TestFilter filter1 = new TestFilter("filter1");
-        final Dictionary<String, Object> filter1Props = new Hashtable<String, Object>();
+        final Dictionary<String, Object> filter1Props = new Hashtable<>();
         filter1Props.put(HttpWhiteboardConstants.HTTP_WHITEBOARD_FILTER_PATTERN, "/*");
         filter1Props.put(HttpWhiteboardConstants.HTTP_WHITEBOARD_CONTEXT_SELECT,
                 "(" + HttpWhiteboardConstants.HTTP_WHITEBOARD_CONTEXT_NAME + "=filtersample)");
         context.registerService(Filter.class, filter1, filter1Props);
 
         final TestFilter filter2 = new TestFilter("filter2");
-        final Dictionary<String, Object> filter2Props = new Hashtable<String, Object>();
+        final Dictionary<String, Object> filter2Props = new Hashtable<>();
         filter2Props.put(HttpWhiteboardConstants.HTTP_WHITEBOARD_FILTER_PATTERN, "/other/*");
         filter2Props.put(HttpWhiteboardConstants.HTTP_WHITEBOARD_CONTEXT_SELECT,
                 "(" + HttpWhiteboardConstants.HTTP_WHITEBOARD_CONTEXT_NAME + "=filtersample)");

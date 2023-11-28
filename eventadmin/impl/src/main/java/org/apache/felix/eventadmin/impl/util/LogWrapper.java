@@ -31,17 +31,17 @@ import org.osgi.framework.ServiceListener;
 import org.osgi.framework.ServiceReference;
 
 /**
- * This class mimics the standard OSGi <tt>LogService</tt> interface. An
+ * This class mimics the standard OSGi {@code LogService} interface. An
  * instance of this class will be used by the EventAdmin for all logging. The
  * implementation of this class sends log messages to standard output, if no
- * <tt>LogService</tt> is present; it uses a log service if one is
+ * {@code LogService} is present; it uses a log service if one is
  * installed in the framework. To do that without creating a hard dependency on the
  * package it uses fully qualified class names and registers a listener with the
- * framework hence, it does not need access to the <tt>LogService</tt> class but will
+ * framework hence, it does not need access to the {@code LogService} class but will
  * use it if the listener is informed about an available service. By using a
  * DynamicImport-Package dependency we don't need the package but
  * use it if present. Additionally, all log methods prefix the log message with
- * <tt>EventAdmin: </tt>.
+ * {@code EventAdmin: }.
  *
  * There is one difference in behavior from the standard OSGi LogService.
  * This logger has a {@link #m_logLevel} property which decides what messages
@@ -85,7 +85,7 @@ public class LogWrapper
     public static final int LOG_DEBUG = 4;
 
     // A set containing the currently available LogServices. Furthermore used as lock
-    private final Set<ServiceReference> m_loggerRefs = new HashSet<ServiceReference>();
+    private final Set<ServiceReference<?>> m_loggerRefs = new HashSet<>();
 
     // Only null while not set and m_loggerRefs is empty hence, only needs to be
     // checked in case m_loggerRefs is empty otherwise it will not be null.
@@ -122,7 +122,7 @@ public class LogWrapper
     }
 
     /**
-     * Set the <tt>BundleContext</tt> of the bundle. This method registers a service
+     * Set the {@code BundleContext} of the bundle. This method registers a service
      * listener for LogServices with the framework that are subsequently used to
      * log messages.
      * <p>
@@ -173,7 +173,7 @@ public class LogWrapper
                 logWrapper.m_logServiceListener = listener;
 
                 // Add all available LogService references to the singleton.
-                final ServiceReference[] refs = context.getServiceReferences( "org.osgi.service.log.LogService", null );
+                final ServiceReference<?>[] refs = context.getServiceReferences( "org.osgi.service.log.LogService", null );
 
                 if ( null != refs )
                 {
@@ -213,7 +213,7 @@ public class LogWrapper
     /*
      * Add a reference to a newly available LogService
      */
-    void addLoggerRef( final ServiceReference ref )
+    void addLoggerRef( final ServiceReference<?> ref )
     {
         synchronized (m_loggerRefs)
         {
@@ -234,7 +234,7 @@ public class LogWrapper
 
     /**
      * Log a message with the given log level. Note that this will prefix the message
-     * with <tt>EventAdmin: </tt>.
+     * with {@code EventAdmin: }.
      *
      * @param level The log level with which to log the msg.
      * @param msg The message to log.
@@ -255,9 +255,9 @@ public class LogWrapper
             {
                 // There is at least one LogService available hence, we can use the
                 // class as well.
-                for (Iterator<ServiceReference> iter = m_loggerRefs.iterator(); iter.hasNext();)
+                for (Iterator<ServiceReference<?>> iter = m_loggerRefs.iterator(); iter.hasNext();)
                 {
-                    final ServiceReference next = iter.next();
+                    final ServiceReference<?> next = iter.next();
 
                     org.osgi.service.log.LogService logger =
                         (org.osgi.service.log.LogService) m_context.getService(next);
@@ -285,7 +285,7 @@ public class LogWrapper
 
     /**
      * Log a message with the given log level and the associated exception. Note that
-     * this will prefix the message with <tt>EventAdmin: </tt>.
+     * this will prefix the message with {@code EventAdmin: }.
      *
      * @param level The log level with which to log the msg.
      * @param msg The message to log.
@@ -307,9 +307,9 @@ public class LogWrapper
             {
                 // There is at least one LogService available hence, we can use the
                 // class as well.
-                for (Iterator<ServiceReference> iter = m_loggerRefs.iterator(); iter.hasNext();)
+                for (Iterator<ServiceReference<?>> iter = m_loggerRefs.iterator(); iter.hasNext();)
                 {
-                    final ServiceReference next = iter.next();
+                    final ServiceReference<?> next = iter.next();
 
                     org.osgi.service.log.LogService logger =
                         (org.osgi.service.log.LogService) m_context.getService(next);
@@ -337,13 +337,13 @@ public class LogWrapper
 
     /**
      * Log a message with the given log level together with the associated service
-     * reference. Note that this will prefix the message with <tt>EventAdmin: </tt>.
+     * reference. Note that this will prefix the message with {@code EventAdmin: }.
      *
      * @param sr The reference of the service associated with this message.
      * @param level The log level with which to log the msg.
      * @param msg The message to log.
      */
-    public void log(final ServiceReference sr, final int level, final String msg)
+    public void log(final ServiceReference<?> sr, final int level, final String msg)
     {
         // The method will remove any unregistered service reference as well.
         synchronized(m_loggerRefs)
@@ -359,9 +359,9 @@ public class LogWrapper
             {
                 // There is at least one LogService available hence, we can use the
                 // class as well.
-                for (Iterator<ServiceReference> iter = m_loggerRefs.iterator(); iter.hasNext();)
+                for (Iterator<ServiceReference<?>> iter = m_loggerRefs.iterator(); iter.hasNext();)
                 {
-                    final ServiceReference next = iter.next();
+                    final ServiceReference<?> next = iter.next();
 
                     org.osgi.service.log.LogService logger =
                         (org.osgi.service.log.LogService) m_context.getService(next);
@@ -389,14 +389,14 @@ public class LogWrapper
 
     /**
      * Log a message with the given log level, the associated service reference and
-     * exception. Note that this will prefix the message with <tt>EventAdmin: </tt>.
+     * exception. Note that this will prefix the message with {@code EventAdmin: }.
      *
      * @param sr The reference of the service associated with this message.
      * @param level The log level with which to log the msg.
      * @param msg The message to log.
      * @param ex The exception associated with the message.
      */
-    public void log(final ServiceReference sr, final int level, final String msg,
+    public void log(final ServiceReference<?> sr, final int level, final String msg,
         final Throwable ex)
     {
         // The method will remove any unregistered service reference as well.
@@ -413,9 +413,9 @@ public class LogWrapper
             {
                 // There is at least one LogService available hence, we can use the
                 // class as well.
-                for (Iterator<ServiceReference> iter = m_loggerRefs.iterator(); iter.hasNext();)
+                for (Iterator<ServiceReference<?>> iter = m_loggerRefs.iterator(); iter.hasNext();)
                 {
-                       final ServiceReference next = iter.next();
+                       final ServiceReference<?> next = iter.next();
 
                     org.osgi.service.log.LogService logger =
                         (org.osgi.service.log.LogService) m_context.getService(next);
@@ -445,7 +445,7 @@ public class LogWrapper
      * Log the message to standard output. This appends the level to the message.
      * null values are handled appropriate.
      */
-    private void _log(final ServiceReference sr, final int level, final String msg,
+    private void _log(final ServiceReference<?> sr, final int level, final String msg,
         Throwable ex)
     {
         String s = (sr == null) ? null : "SvcRef " + sr;

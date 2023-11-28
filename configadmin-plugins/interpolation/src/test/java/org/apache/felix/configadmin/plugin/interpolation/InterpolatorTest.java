@@ -19,6 +19,7 @@ package org.apache.felix.configadmin.plugin.interpolation;
 import static org.junit.Assert.assertEquals;
 
 import java.util.Map;
+import java.util.concurrent.atomic.AtomicInteger;
 
 import org.apache.felix.configadmin.plugin.interpolation.Interpolator.Provider;
 import org.junit.Test;
@@ -64,6 +65,17 @@ public class InterpolatorTest {
     }
 
     @Test
+    public void testRecursionViaPlaceholder() {
+        assertEquals("$[foo:bar]",
+                Interpolator.replace("$[foo:bar]", (type, name, dir) -> {
+                    if ("foo".equals(type) && "bar".equals(name)) {
+                        return "$[foo:bar]";
+                    }
+                    return null;
+                }));
+    }
+
+    @Test
     public void testEscaping() {
         final Provider p = new Provider() {
 
@@ -73,5 +85,50 @@ public class InterpolatorTest {
             }
         };
         assertEquals("$[no:replacement]", Interpolator.replace("\\$[no:replacement]", p));
+    }
+
+    @Test
+    public void testParseDirectives() {
+        final Map<String, String> directives = Interpolator.parseDirectives("a=1;b=2");
+        assertEquals(2, directives.size());
+        assertEquals("1", directives.get("a"));
+        assertEquals("2", directives.get("b"));
+    }
+
+    @Test
+    public void testParseDirectivesWithEscaping() {
+        final Map<String, String> directives = Interpolator.parseDirectives("a=1\\;b=2");
+        assertEquals(1, directives.size());
+        assertEquals("1;b=2", directives.get("a"));
+    }
+
+
+    @Test
+    public void testNestedDefaults() {
+        final AtomicInteger usecase = new AtomicInteger();
+        final Provider p = new Provider() {
+
+            @Override
+            public Object provide(String type, String name, Map<String, String> directives) {
+                if ( usecase.get() == 1 && "env".equals(type) ) {
+                    return "env.host";
+                }
+                if ( usecase.get() == 2 && "prop".equals(type) ) {
+                    return "prop.host";
+                }
+                return directives.getOrDefault("default", null);
+            }
+        };
+
+        final String test = "$[env:MQTT_WRITE_HOST;default=$[prop:MQTT_WRITE_HOST;default=some.host]]";
+        // usecase 1 : env provides the value
+        usecase.set(1);
+        assertEquals("env.host", Interpolator.replace(test, p));
+        // usecase 2 : prop provides the value
+        usecase.set(2);
+        assertEquals("prop.host", Interpolator.replace(test, p));
+        // usecase 3 : default is used
+        usecase.set(3);
+        assertEquals("some.host", Interpolator.replace(test, p));
     }
 }

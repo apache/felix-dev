@@ -21,7 +21,11 @@ package org.apache.felix.systemready;
 /**
  * Checks that all registered ready and builds an aggregated state of the system.
  * The aggregated state is the worst state of all checks.
+ *
+ * This framework is deprecated.
+ * @deprecated Use the Apache Felix Healthchecks instead.
  */
+@Deprecated
 public interface SystemReadyMonitor  {
 
     String PID = "org.apache.felix.systemready.SystemReadyMonitor";

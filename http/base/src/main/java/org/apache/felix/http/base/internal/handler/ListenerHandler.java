@@ -20,13 +20,14 @@ import java.util.EventListener;
 
 import org.apache.felix.http.base.internal.context.ExtServletContext;
 import org.apache.felix.http.base.internal.runtime.ListenerInfo;
-import org.osgi.service.http.runtime.dto.DTOConstants;
+import org.osgi.framework.BundleContext;
+import org.osgi.service.servlet.runtime.dto.DTOConstants;
 
 /**
  * The listener handler handles the initialization and destruction of listener
  * objects.
  */
-public abstract class ListenerHandler implements Comparable<ListenerHandler>
+public class ListenerHandler implements Comparable<ListenerHandler>
 {
     private final long contextServiceId;
 
@@ -34,17 +35,21 @@ public abstract class ListenerHandler implements Comparable<ListenerHandler>
 
     private final ExtServletContext context;
 
-    private EventListener listener;
+    private final BundleContext bundleContext;
+
+    private volatile EventListener listener;
 
     protected volatile int useCount;
 
     public ListenerHandler(final long contextServiceId,
             final ExtServletContext context,
-            final ListenerInfo listenerInfo)
+            final ListenerInfo listenerInfo,
+            final BundleContext bundleContext)
     {
         this.contextServiceId = contextServiceId;
         this.context = context;
         this.listenerInfo = listenerInfo;
+        this.bundleContext = bundleContext;
     }
 
     @Override
@@ -68,14 +73,34 @@ public abstract class ListenerHandler implements Comparable<ListenerHandler>
         return listener;
     }
 
-    protected void setListener(final EventListener f)
-    {
-        this.listener = f;
-    }
-
     public ListenerInfo getListenerInfo()
     {
         return this.listenerInfo;
+    }
+
+    public boolean destroy()
+    {
+        final EventListener l = this.listener;
+        if ( l != null )
+        {
+            this.useCount--;
+            if ( this.useCount == 0 )
+            {
+                this.listener = null;
+
+                this.getListenerInfo().ungetService(this.bundleContext, l);
+
+                return true;
+            }
+        }
+        return false;
+    }
+
+    public boolean dispose()
+    {
+        // fully destroy the listener
+        this.useCount = 1;
+        return this.destroy();
     }
 
     /**
@@ -90,37 +115,20 @@ public abstract class ListenerHandler implements Comparable<ListenerHandler>
             return -1;
         }
 
+        this.listener = getListenerInfo().getService(this.bundleContext);
+
+        final int reason;
         if (this.listener == null)
         {
-            return DTOConstants.FAILURE_REASON_SERVICE_NOT_GETTABLE;
+            reason = DTOConstants.FAILURE_REASON_SERVICE_NOT_GETTABLE;
         }
-
-        this.useCount++;
-        return -1;
-    }
-
-    public boolean destroy()
-    {
-        if (this.listener == null)
+        else
         {
-            return false;
+            this.useCount++;
+            reason = -1;
         }
 
-        this.useCount--;
-        if ( this.useCount == 0 )
-        {
-
-            listener = null;
-            return true;
-        }
-        return false;
-    }
-
-    public boolean dispose()
-    {
-        // fully destroy the listener
-        this.useCount = 1;
-        return this.destroy();
+        return reason;
     }
 
     @Override

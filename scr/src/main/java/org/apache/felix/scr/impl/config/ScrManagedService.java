@@ -48,6 +48,6 @@ public class ScrManagedService implements ManagedService
     @Override
     public void updated(final Dictionary<String, ?> properties) throws ConfigurationException
     {
-        this.scrConfiguration.configure(properties, true);
+        this.scrConfiguration.configure(properties, false);
     }
 }

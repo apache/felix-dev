@@ -82,7 +82,8 @@ public class BundleComponentActivatorTest extends TestCase
     {
         final URL[] descriptors = new URL[]
             { new URL( "file:foo.xml" ) };
-        final Enumeration de = new Vector( Arrays.asList( descriptors ) ).elements();
+            final Enumeration<URL> de = new Vector<>(
+                Arrays.asList(descriptors)).elements();
         final Bundle bundle = Mockito.mock( Bundle.class );
         Mockito.when( bundle.findEntries( "/some/location", "foo.xml", false ) ).thenReturn( de );
 
@@ -105,7 +106,7 @@ public class BundleComponentActivatorTest extends TestCase
                 new URL( "file:foo1.xml" ),
                 new URL( "file:foo2.xml" )
             };
-        final Enumeration de = new Vector( Arrays.asList( urls ) ).elements();
+            final Enumeration<URL> de = new Vector<>(Arrays.asList(urls)).elements();
         final Bundle bundle = Mockito.mock( Bundle.class );
         Mockito.when( bundle.findEntries( path, filePattern, false ) ).thenReturn( de );
 
@@ -169,7 +170,8 @@ public class BundleComponentActivatorTest extends TestCase
         throws MalformedURLException
     {
         final Bundle bundle = Mockito.mock( Bundle.class );
-        Mockito.when( bundle.findEntries( "/", "*.xml", false ) ).thenReturn( new Vector().elements() );
+        Mockito.when(bundle.findEntries("/", "*.xml", false)).thenReturn(
+            new Vector<URL>().elements());
 
         final URL[] actualUrls = BundleComponentActivator.findDescriptors( bundle, "*.xml" );
         Mockito.verify( bundle ).findEntries( "/", "*.xml", false );

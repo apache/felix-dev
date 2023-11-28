@@ -44,6 +44,7 @@ public class Coercions
     private static final long long0 = 0;
     private static final short short0 = 0;
 
+    @SuppressWarnings("unchecked")
     public static Object coerce(Class<?> type, Object raw, Bundle bundle)
     {
         if ( type == Byte.class || type == byte.class )
@@ -68,6 +69,7 @@ public class Coercions
         }
         if ( type.isEnum() )
         {
+            @SuppressWarnings("rawtypes")
             final Class clazz = type;
             return coerceToEnum( raw, clazz );
         }

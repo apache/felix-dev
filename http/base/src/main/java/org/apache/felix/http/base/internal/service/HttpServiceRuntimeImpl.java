@@ -28,14 +28,14 @@ import org.apache.felix.http.base.internal.registry.HandlerRegistry;
 import org.apache.felix.http.base.internal.runtime.dto.RequestInfoDTOBuilder;
 import org.apache.felix.http.base.internal.runtime.dto.RuntimeDTOBuilder;
 import org.apache.felix.http.base.internal.whiteboard.WhiteboardManager;
+import org.apache.felix.http.base.internal.wrappers.RuntimeServiceWrapper;
 import org.osgi.framework.BundleContext;
-import org.osgi.framework.Constants;
 import org.osgi.framework.ServiceReference;
 import org.osgi.framework.ServiceRegistration;
 import org.osgi.framework.dto.ServiceReferenceDTO;
-import org.osgi.service.http.runtime.HttpServiceRuntime;
-import org.osgi.service.http.runtime.dto.RequestInfoDTO;
-import org.osgi.service.http.runtime.dto.RuntimeDTO;
+import org.osgi.service.servlet.runtime.HttpServiceRuntime;
+import org.osgi.service.servlet.runtime.dto.RequestInfoDTO;
+import org.osgi.service.servlet.runtime.dto.RuntimeDTO;
 
 public final class HttpServiceRuntimeImpl implements HttpServiceRuntime
 {
@@ -55,7 +55,7 @@ public final class HttpServiceRuntimeImpl implements HttpServiceRuntime
 
     private volatile ServiceRegistration<HttpServiceRuntime> serviceReg;
 
-    private volatile ServiceReferenceDTO serviceRefDTO;
+    private volatile ServiceRegistration<org.osgi.service.http.runtime.HttpServiceRuntime> javaxServiceReg;
 
     private final AtomicLong changeCount = new AtomicLong();
 
@@ -94,31 +94,11 @@ public final class HttpServiceRuntimeImpl implements HttpServiceRuntime
     @Override
     public RuntimeDTO getRuntimeDTO()
     {
-    	if ( this.serviceRefDTO == null )
-    	{
-    		// it might happen that this code is executed in several threads
-    		// but that's very unlikely and even if, fetching the service
-    		// reference several times is not a big deal
-    		final ServiceRegistration<HttpServiceRuntime> reg = this.serviceReg;
-    		if ( reg != null )
-    		{
-                final long id = (long) reg.getReference().getProperty(Constants.SERVICE_ID);
-                final ServiceReferenceDTO[] dtos = reg.getReference().getBundle().adapt(ServiceReferenceDTO[].class);
-                for(final ServiceReferenceDTO dto : dtos)
-                {
-                	if ( dto.id == id)
-                	{
-                		this.serviceRefDTO = dto;
-                		break;
-                	}
-                }
-
-    		}
-    	}
-        if ( this.serviceRefDTO != null )
+        final ServiceRegistration<HttpServiceRuntime> reg = this.serviceReg;
+        if ( reg != null )
         {
             final RuntimeDTOBuilder runtimeDTOBuilder = new RuntimeDTOBuilder(contextManager.getRuntimeInfo(),
-                    this.serviceRefDTO);
+                    reg.getReference().adapt(ServiceReferenceDTO.class));
             return runtimeDTOBuilder.build();
         }
         throw new IllegalStateException("Service is already unregistered");
@@ -153,6 +133,10 @@ public final class HttpServiceRuntimeImpl implements HttpServiceRuntime
         this.serviceReg = bundleContext.registerService(HttpServiceRuntime.class,
                 this,
                 attributes);
+        final RuntimeServiceWrapper wrapper = new RuntimeServiceWrapper(this);
+        this.javaxServiceReg = bundleContext.registerService(org.osgi.service.http.runtime.HttpServiceRuntime.class,
+                wrapper, attributes);
+        wrapper.setServiceReference(this.javaxServiceReg.getReference());
     }
 
     public void unregister()
@@ -167,9 +151,28 @@ public final class HttpServiceRuntimeImpl implements HttpServiceRuntime
         	{
         		// we just ignore it
         	}
-        	this.serviceReg = null;
+            synchronized ( changeCountTimerLock )
+            {
+                if ( this.changeCountTimer != null )
+                {
+                    this.changeCountTimer.cancel();
+                    this.changeCountTimer = null;
+                }
+            }
+            this.serviceReg = null;
     	}
-    	this.serviceRefDTO = null;
+        if ( this.javaxServiceReg != null )
+        {
+            try
+            {
+                this.javaxServiceReg.unregister();
+            }
+            catch ( final IllegalStateException ise)
+            {
+                // we just ignore it
+            }
+            this.javaxServiceReg = null;
+        }
     }
 
     public ServiceReference<HttpServiceRuntime> getServiceReference()
@@ -185,7 +188,8 @@ public final class HttpServiceRuntimeImpl implements HttpServiceRuntime
     public void updateChangeCount()
     {
         final ServiceRegistration<HttpServiceRuntime> reg = this.serviceReg;
-        if ( reg != null )
+        final ServiceRegistration<org.osgi.service.http.runtime.HttpServiceRuntime> javaxReg = this.javaxServiceReg;
+        if ( reg != null && javaxReg != null)
         {
             final long count = this.changeCount.incrementAndGet();
 
@@ -200,13 +204,21 @@ public final class HttpServiceRuntimeImpl implements HttpServiceRuntime
                 {
                     // we ignore this as this might happen on shutdown
                 }
+                try
+                {
+                    javaxReg.setProperties(attributes);
+                }
+                catch ( final IllegalStateException ise)
+                {
+                    // we ignore this as this might happen on shutdown
+                }
             }
             else
             {
                 final Timer timer;
                 synchronized ( this.changeCountTimerLock ) {
                     if ( this.changeCountTimer == null ) {
-                        this.changeCountTimer = new Timer();
+                        this.changeCountTimer = new Timer("Apache Felix Http Runtime Timer", true);
                     }
                     timer = this.changeCountTimer;
                 }
@@ -228,15 +240,25 @@ public final class HttpServiceRuntimeImpl implements HttpServiceRuntime
                                 {
                                     // we ignore this as this might happen on shutdown
                                 }
+                                try
+                                {
+                                    javaxReg.setProperties(attributes);
+                                }
+                                catch ( final IllegalStateException ise)
+                                {
+                                    // we ignore this as this might happen on shutdown
+                                }
                                 synchronized ( changeCountTimerLock )
                                 {
                                     if ( changeCount.get() == count )
                                     {
-                                        changeCountTimer.cancel();
-                                        changeCountTimer = null;
+                                        if ( changeCountTimer != null )
+                                        {
+                                            changeCountTimer.cancel();
+                                            changeCountTimer = null;    
+                                        }
                                     }
                                 }
-
                             }
                         }
                     }, this.updateChangeCountDelay);

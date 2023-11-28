@@ -225,7 +225,7 @@ public class SingleComponentManager<S> extends AbstractComponentManager<S> imple
     }
 
 
-    @SuppressWarnings("unchecked")
+    @SuppressWarnings({ "unchecked", "rawtypes" })
     protected S createImplementationObject( Bundle usingBundle, SetImplementationObject<S> setter, ComponentContextImpl<S> componentContext )
     {
         S implementationObject = null;
@@ -434,12 +434,6 @@ public class SingleComponentManager<S> extends AbstractComponentManager<S> imple
     }
 
     @Override
-    boolean hasInstance()
-    {
-        return m_componentContext != null;
-    }
-
-    @Override
     <T> void invokeBindMethod( DependencyManager<S, T> dependencyManager, RefPair<S, T> refPair, int trackingCount )
     {
         ComponentContextImpl<S> componentContext = m_componentContext;
@@ -524,7 +518,9 @@ public class SingleComponentManager<S> extends AbstractComponentManager<S> imple
                     final Object configPropServicePids = m_configurationProperties.get(Constants.SERVICE_PID);
                     if ( configPropServicePids instanceof List )
                     {
-                        servicePids.addAll((List)configPropServicePids);
+                        @SuppressWarnings("unchecked")
+                        List<String> l = (List<String>) configPropServicePids;
+                        servicePids.addAll(l);
                     }
                     else
                     {
@@ -1040,7 +1036,8 @@ public class SingleComponentManager<S> extends AbstractComponentManager<S> imple
             // unget the service instance if no bundle is using it
             // any longer unless delayed component instances have to
             // be kept (FELIX-3039)
-            if (  m_useCount.decrementAndGet() == 0 && !isImmediate() && !keepInstances() )
+            if ( m_useCount.decrementAndGet() == 0 && !isImmediate()
+                    && !getComponentMetadata().isFactory() && !keepInstances() )
             {
                 final State previousState = getState();
                 deleteComponent( ComponentConstants.DEACTIVATION_REASON_UNSPECIFIED );

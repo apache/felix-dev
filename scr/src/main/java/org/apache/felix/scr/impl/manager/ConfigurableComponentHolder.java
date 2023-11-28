@@ -152,7 +152,9 @@ public abstract class ConfigurableComponentHolder<S> implements ComponentHolder<
         this.m_componentMetadata = metadata;
         final int pidCount = metadata.getConfigurationPid().size();
         this.m_targetedPids = new TargetedPID[pidCount];
-        this.m_configurations = new Dictionary[pidCount];
+        @SuppressWarnings("unchecked")
+        Dictionary<String, Object>[] c = new Dictionary[pidCount];
+        this.m_configurations = c;
         this.m_changeCount = new Long[pidCount];
         this.m_components = new HashMap<>();
         this.m_componentMethods = createComponentMethods();
@@ -202,9 +204,10 @@ public abstract class ConfigurableComponentHolder<S> implements ComponentHolder<
 
     private static class PSFLoader
     {
-        static <S> AbstractComponentManager<S> newPSFComponentManager(ConfigurableComponentHolder<S> holder, ComponentMethods methods)
+        static <S> AbstractComponentManager<S> newPSFComponentManager(
+            ConfigurableComponentHolder<S> holder, ComponentMethods<S> methods)
         {
-            return new PrototypeServiceFactoryComponentManager<>( holder, methods );
+            return new PrototypeServiceFactoryComponentManager<S>(holder, methods);
         }
     }
 
@@ -530,7 +533,8 @@ public abstract class ConfigurableComponentHolder<S> implements ComponentHolder<
             throw new IllegalArgumentException(
                 "Unrecognized factory pid " + factoryPid);
         }
-        if (m_configurations[index] != null) {
+        if (m_configurations[index] != null)
+        {
             logger.log(Level.ERROR,
                 "factory pid {0}, but this pid is already supplied as a singleton: {1} at index {2}", null,
                 factoryPid, Arrays.asList(m_targetedPids), index);

@@ -68,7 +68,8 @@ public class EventHandlerTracker extends ServiceTracker<EventHandler, EventHandl
 
     /**
      * Update the timeout configuration.
-     * @param ignoreTimeout
+     * @param ignoreTimeout The configuration for ignoring timeout
+     * @param requireTopic Is a topic required
      */
     public void update(final String[] ignoreTimeout, final boolean requireTopic) {
         final Matchers.Matcher[] ignoreTimeoutMatcher = Matchers.createPackageMatchers(ignoreTimeout);
@@ -223,6 +224,38 @@ public class EventHandlerTracker extends ServiceTracker<EventHandler, EventHandl
 
 		return handlers;
 	}
+
+	   /**
+     * Get all handlers for this event
+     *
+     * @return All handlers for the event
+     */
+    public Collection<EventHandlerProxy> getDeniedHandlers() {
+        final Set<EventHandlerProxy> handlers = new HashSet<>();
+
+        for(final EventHandlerProxy p : this.matchingAllEvents) {
+            if ( p.isDenied() ) {
+                handlers.add(p);
+            }
+        }
+
+        for(final List<EventHandlerProxy> l : this.matchingPrefixTopic.values()) {
+            for(final EventHandlerProxy p :l) {
+                if ( p.isDenied() ) {
+                    handlers.add(p);
+                }
+            }
+        }
+        for(final List<EventHandlerProxy> l : this.matchingTopic.values()) {
+            for(final EventHandlerProxy p :l) {
+                if ( p.isDenied() ) {
+                    handlers.add(p);
+                }
+            }
+        }
+
+        return handlers;
+    }
 
 	/**
 	 * Checks each handler from the proxy list if it can deliver the event

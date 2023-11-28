@@ -18,8 +18,14 @@
  */
 package org.apache.felix.scr.integration.components;
 
+import java.util.concurrent.atomic.AtomicLong;
+
 public class ConstructorSingleReference
 {
+    private static final AtomicLong instances = new AtomicLong();
+
+    private final long instanceID = instances.incrementAndGet();
+
     public @interface Config
     {
         String name();
@@ -36,5 +42,11 @@ public class ConstructorSingleReference
     public String getName()
     {
         return this.name;
+    }
+
+    @Override
+    public String toString()
+    {
+        return getClass().getSimpleName() + '-' + instanceID;
     }
 }

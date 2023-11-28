@@ -49,6 +49,18 @@ public interface Content
 
     /**
      * <p>
+     * This method determines if the specified named entry is contained in
+     * the associated content and is a directory. The entry name is a relative path with '/'
+     * separators.
+     * </p>
+     * @param name The name of the entry to find.
+     * @return <tt>true</tt> if a corresponding entry was found and is a directory, <tt>false</tt>
+     *         otherwise.
+     **/
+    boolean isDirectory(String name);
+
+    /**
+     * <p>
      * Returns an enumeration of entry names as <tt>String</tt> objects.
      * An entry name is a path constructed with '/' as path element
      * separators and is relative to the root of the content. Entry names
@@ -121,4 +133,6 @@ public interface Content
      *           or null if not possible.
      */
     URL getEntryAsURL(String name);
+
+    long getContentTime(String urlPath);
 }

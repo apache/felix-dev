@@ -25,12 +25,29 @@ Getting Started
 ===============
 
 To start using Apache Felix Dependency Manager, please go to our website and read the
-getting started guide for users:
+various guides for users:
+
+- For a quick jump start (using either maven, gradle, the DM api, the DM annotations, or the new DM lambda-api), 
+then please go to:
+
+  http://felix.apache.org/documentation/subprojects/apache-felix-dependency-manager/tutorials/sample-code.html
+
+There are three ways to use Dependency Manager: you can use the original java API, the new lambda API, or the 
+DM annotations.
+
+- For the Dependency Manager java API documentation, please go to the general Getting-Started documentation here:
 
   http://felix.apache.org/documentation/subprojects/apache-felix-dependency-manager.html
 
-You can also find examples from ./org.apache.felix.dependencymanager.samples/README
+- For new Dependency Manager Lambda API, you can go to:
+
+http://felix.apache.org/documentation/subprojects/apache-felix-dependency-manager/guides/dm-lambda.html
+
+- And for Dependency Manager Annotations API, you can refer directly to:
+
+  http://felix.apache.org/documentation/subprojects/apache-felix-dependency-manager/reference/dm-annotations.html
 
 Many thanks for using Apache Felix Dependency Manager.
 
 The Felix Team
+

@@ -1,5 +1,5 @@
 /*
- * Copyright (c) OSGi Alliance (2000, 2017). All Rights Reserved.
+ * Copyright (c) OSGi Alliance (2000, 2019). All Rights Reserved.
  * 
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -47,7 +47,7 @@ import java.util.Set;
  * </ul>
  * 
  * @ThreadSafe
- * @author $Id: 8a38df04e56e9dcab7ea413ba69d4c4f05487c25 $
+ * @author $Id: c7bae50cab3a92ba810fcf983081c008f22a6bbd $
  * @since 1.6
  */
 
@@ -714,7 +714,7 @@ final class CapabilityPermissionCollection extends PermissionCollection {
 			/* work our way up the tree... */
 			int last;
 			int offset = requestedName.length() - 1;
-			while ((last = requestedName.lastIndexOf(".", offset)) != -1) {
+			while ((last = requestedName.lastIndexOf('.', offset)) != -1) {
 				requestedName = requestedName.substring(0, last + 1) + "*";
 				cp = pc.get(requestedName);
 				if (cp != null) {

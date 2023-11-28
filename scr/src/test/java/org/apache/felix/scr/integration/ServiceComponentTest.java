@@ -55,7 +55,8 @@ public class ServiceComponentTest extends ComponentTestBase
         TestCase.assertEquals( "private", instance.getProperty( ".prop.private" ) );
 
         // get the service
-        ServiceReference reference = bundleContext.getServiceReference( "java.lang.Object" );
+        ServiceReference<Object> reference = bundleContext.getServiceReference(
+            Object.class);
         TestCase.assertNotNull( reference );
         try
         {
@@ -90,7 +91,8 @@ public class ServiceComponentTest extends ComponentTestBase
         TestCase.assertNull( SimpleComponent.INSTANCE );
 
         // get the service
-        ServiceReference reference = bundleContext.getServiceReference( "java.lang.Object" );
+        ServiceReference<Object> reference = bundleContext.getServiceReference(
+            Object.class);
         TestCase.assertNotNull( reference );
         try
         {
@@ -124,7 +126,8 @@ public class ServiceComponentTest extends ComponentTestBase
         TestCase.assertNull( SimpleComponent.INSTANCE );
 
         // get the service once
-        final ServiceReference reference1 = bundleContext.getServiceReference( "java.lang.Object" );
+        final ServiceReference<Object> reference1 = bundleContext.getServiceReference(
+            Object.class);
         TestCase.assertNotNull( reference1 );
         bundleContext.getService( reference1 );
         findComponentConfigurationByName(pid, ComponentConfigurationDTO.ACTIVE);
@@ -132,7 +135,8 @@ public class ServiceComponentTest extends ComponentTestBase
 
         // get the service a second time
         final BundleContext bundleContext2 = bundle.getBundleContext();
-        final ServiceReference reference2 = bundleContext2.getServiceReference( "java.lang.Object" );
+        final ServiceReference<Object> reference2 = bundleContext2.getServiceReference(
+            Object.class);
         TestCase.assertNotNull( reference2 );
         bundleContext2.getService( reference2 );
         findComponentConfigurationByName(pid, ComponentConfigurationDTO.ACTIVE);
@@ -162,7 +166,8 @@ public class ServiceComponentTest extends ComponentTestBase
         TestCase.assertNull( SimpleComponent.INSTANCE );
 
         // get the service
-        ServiceReference reference = bundleContext.getServiceReference( "java.lang.Object" );
+        ServiceReference<Object> reference = bundleContext.getServiceReference(
+            Object.class);
         TestCase.assertNotNull( reference );
         try
         {

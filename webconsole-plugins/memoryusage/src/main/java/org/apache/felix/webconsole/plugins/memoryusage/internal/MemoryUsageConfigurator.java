@@ -41,13 +41,12 @@ class MemoryUsageConfigurator implements ManagedService, MetaTypeProvider
         this.support = support;
     }
 
-    @SuppressWarnings("unchecked")
-    public void updated(Dictionary properties) throws ConfigurationException
+    public void updated(Dictionary<String, ?> properties) throws ConfigurationException
     {
         // ensure default values if there is no config or config is deleted
         if (properties == null)
         {
-            properties = new Hashtable();
+            properties = new Hashtable<>();
         }
 
         final Object thresholdValue = properties.get(MemoryUsageConstants.PROP_DUMP_THRESHOLD);

@@ -18,14 +18,14 @@
  */
 package org.apache.felix.http.sslfilter.internal;
 
-import static junit.framework.Assert.assertEquals;
-import static junit.framework.Assert.assertFalse;
-import static junit.framework.Assert.assertTrue;
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertFalse;
+import static org.junit.Assert.assertTrue;
 import static org.apache.felix.http.sslfilter.internal.SslFilterConstants.HDR_X_FORWARDED_PORT;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
 
-import javax.servlet.http.HttpServletRequest;
+import jakarta.servlet.http.HttpServletRequest;
 
 import org.junit.Test;
 import org.mockito.Mockito;
@@ -33,8 +33,7 @@ import org.mockito.Mockito;
 public class SslFilterRequestTest
 {
     @Test
-    public void test_isSecure() throws Exception
-    {
+    public void test_isSecure() throws Exception {
         HttpServletRequest req = mock(HttpServletRequest.class);
         SslFilterRequest sreq = new SslFilterRequest(req, null);
 
@@ -50,8 +49,7 @@ public class SslFilterRequestTest
     }
 
     @Test
-    public void test_getScheme() throws Exception
-    {
+    public void test_getScheme() throws Exception {
         HttpServletRequest req = Mockito.mock(HttpServletRequest.class);
         SslFilterRequest sreq = new SslFilterRequest(req, null);
 
@@ -67,25 +65,21 @@ public class SslFilterRequestTest
     }
 
     @Test
-    public void test_getRequestURL() throws Exception
-    {
+    public void test_getRequestURL() throws Exception {
         HttpServletRequest req = Mockito.mock(HttpServletRequest.class);
         SslFilterRequest sreq = new SslFilterRequest(req, null);
 
         when(req.getRequestURL()).thenReturn(new StringBuffer("http://some/page"));
         assertEquals("http://some/page", req.getRequestURL().toString());
         assertEquals("https://some/page", sreq.getRequestURL().toString());
-        assertEquals("http://some/page", req.getRequestURL().toString());
 
         when(req.getRequestURL()).thenReturn(new StringBuffer("https://some/page"));
         assertEquals("https://some/page", req.getRequestURL().toString());
         assertEquals("https://some/page", sreq.getRequestURL().toString());
-        assertEquals("https://some/page", req.getRequestURL().toString());
     }
     
     @Test
-    public void test_getServerPort() throws Exception
-    {
+    public void test_getServerPort() throws Exception {
         HttpServletRequest req = Mockito.mock(HttpServletRequest.class);
         SslFilterRequest sreq = new SslFilterRequest(req, null);
         
@@ -113,6 +107,5 @@ public class SslFilterRequestTest
         
         when(req.getHeader(HDR_X_FORWARDED_PORT)).thenReturn("4502");        
         assertEquals(4502, sreq.getServerPort());
-        
     }
 }

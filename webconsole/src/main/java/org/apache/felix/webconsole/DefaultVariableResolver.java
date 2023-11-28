@@ -18,10 +18,10 @@
  */
 package org.apache.felix.webconsole;
 
-
 import java.util.HashMap;
 import java.util.Map;
 
+import org.apache.felix.webconsole.servlet.RequestVariableResolver;
 
 /**
  * The <code>DefaultVariableResolver</code> is a <code>HashMap</code> based
@@ -30,21 +30,20 @@ import java.util.Map;
  * used by the
  * {@link WebConsoleUtil#getVariableResolver(javax.servlet.ServletRequest)}
  * as the variable resolver if none has yet been assigned to the request.
+ * @deprecated Use {@link RequestVariableResolver} instead.
  */
-public class DefaultVariableResolver extends HashMap implements VariableResolver
-{
+@SuppressWarnings({ "rawtypes" })
+@Deprecated
+public class DefaultVariableResolver extends RequestVariableResolver implements VariableResolver {
 
     private static final long serialVersionUID = 4148807223433047780L;
-
 
     /**
      * Creates a new variable resolver with default capacity.
      */
-    public DefaultVariableResolver()
-    {
+    public DefaultVariableResolver() {
         super();
     }
-
 
     /**
      * Creates a new variable resolver and initializes both - capacity &amp; load factor
@@ -53,11 +52,9 @@ public class DefaultVariableResolver extends HashMap implements VariableResolver
      * @param loadFactor the load factor of the variable container
      * @see HashMap#HashMap(int, float)
      */
-    public DefaultVariableResolver( final int initialCapacity, final float loadFactor )
-    {
-        super( initialCapacity, loadFactor );
+    public DefaultVariableResolver( final int initialCapacity, final float loadFactor ) {
+        this();
     }
-
 
     /**
      * Creates a new variable resolver with specified initial capacity
@@ -65,11 +62,9 @@ public class DefaultVariableResolver extends HashMap implements VariableResolver
      * @param initialCapacity  the initial capacity of the variable container
      * @see HashMap#HashMap(int)
      */
-    public DefaultVariableResolver( final int initialCapacity )
-    {
-        super( initialCapacity );
+    public DefaultVariableResolver( final int initialCapacity ) {
+        this();
     }
-
 
     /**
      * Creates a new variable resolver copying the variables from the given map.
@@ -77,29 +72,8 @@ public class DefaultVariableResolver extends HashMap implements VariableResolver
      * @param source  the map whose variables are to be placed in this resolver.
      * @see HashMap#HashMap(Map)
      */
-    public DefaultVariableResolver( final Map source )
-    {
-        super( source );
+    @SuppressWarnings({"unchecked"})
+    public DefaultVariableResolver( final Map source ) {
+        this.putAll(source);
     }
-
-
-    /**
-     * Returns the string representation of the value stored under the variable
-     * name in this map. If no value is stored under the variable name,
-     * <code>null</code> is returned.
-     *
-     * @param variable The name of the variable whose value is to be returned.
-     * @return The variable value or <code>null</code> if there is no entry
-     *      with the given name in this map.
-     */
-    public String resolve( final String variable )
-    {
-        Object value = get( variable );
-        if ( value != null )
-        {
-            return value.toString();
-        }
-        return null;
-    }
-
 }

@@ -33,8 +33,7 @@ import org.osgi.framework.Constants;
 /**
  * The <code>ResourceBundleCache</code> caches resource bundles per OSGi bundle.
  */
-public class ResourceBundleCache
-{
+public class ResourceBundleCache {
 
     /**
      * The default locale corresponding to the default language in the
@@ -46,9 +45,9 @@ public class ResourceBundleCache
 
     private final Bundle bundle;
 
-    private final Map resourceBundles;
+    private final Map<Locale, ResourceBundle> resourceBundles;
 
-    private Map resourceBundleEntries;
+    private volatile Map<String, URL> resourceBundleEntries;
 
 
     /**
@@ -56,10 +55,9 @@ public class ResourceBundleCache
      * 
      * @param bundle the bundle which resources should be loaded.
      */
-    public ResourceBundleCache( final Bundle bundle )
-    {
+    public ResourceBundleCache( final Bundle bundle ) {
         this.bundle = bundle;
-        this.resourceBundles = new HashMap();
+        this.resourceBundles = new HashMap<>();
     }
 
 
@@ -69,10 +67,8 @@ public class ResourceBundleCache
      * @param locale the requested locale
      * @return the resource bundle for the requested locale
      */
-    public ResourceBundle getResourceBundle( final Locale locale )
-    {
-        if ( locale == null )
-        {
+    public ResourceBundle getResourceBundle( final Locale locale ) {
+        if ( locale == null ) {
             return getResourceBundleInternal( DEFAULT_LOCALE );
         }
 
@@ -80,26 +76,21 @@ public class ResourceBundleCache
     }
 
 
-    ResourceBundle getResourceBundleInternal( final Locale locale )
-    {
-        if ( locale == null )
-        {
+    ResourceBundle getResourceBundleInternal( final Locale locale ) {
+        if ( locale == null ) {
             return null;
         }
 
-        synchronized ( resourceBundles )
-        {
-            ResourceBundle bundle = ( ResourceBundle ) resourceBundles.get( locale );
-            if ( bundle != null )
-            {
+        synchronized ( resourceBundles ) {
+            ResourceBundle bundle = resourceBundles.get( locale );
+            if ( bundle != null ) {
                 return bundle;
             }
         }
 
         ResourceBundle parent = getResourceBundleInternal( getParentLocale( locale ) );
         ResourceBundle bundle = loadResourceBundle( parent, locale );
-        synchronized ( resourceBundles )
-        {
+        synchronized ( resourceBundles ) {
             resourceBundles.put( locale, bundle );
         }
 
@@ -107,43 +98,36 @@ public class ResourceBundleCache
     }
 
 
-    private ResourceBundle loadResourceBundle( final ResourceBundle parent, final Locale locale )
-    {
-        final String path = "_" + locale.toString(); //$NON-NLS-1$
-        final URL source = ( URL ) getResourceBundleEntries().get( path );
+    private ResourceBundle loadResourceBundle( final ResourceBundle parent, final Locale locale ) {
+        final String path = "_" + locale.toString();
+        final URL source = getResourceBundleEntries().get( path );
         return new ConsolePropertyResourceBundle( parent, source );
     }
 
 
-    private synchronized Map getResourceBundleEntries()
-    {
-        if ( this.resourceBundleEntries == null )
-        {
+    private synchronized Map<String, URL> getResourceBundleEntries() {
+        if ( this.resourceBundleEntries == null ) {
             String file = ( String ) bundle.getHeaders().get( Constants.BUNDLE_LOCALIZATION );
-            if ( file == null )
-            {
+            if ( file == null ) {
                 file = Constants.BUNDLE_LOCALIZATION_DEFAULT_BASENAME;
             }
 
             // remove leading slash
-            if ( file.startsWith( "/" ) ) //$NON-NLS-1$
-            {
+            if ( file.startsWith( "/" ) ) {
                 file = file.substring( 1 );
             }
 
             // split path and base name
             int slash = file.lastIndexOf( '/' );
             String fileName = file.substring( slash + 1 );
-            String path = ( slash <= 0 ) ? "/" : file.substring( 0, slash ); //$NON-NLS-1$
+            String path = ( slash <= 0 ) ? "/" : file.substring( 0, slash );
 
-            HashMap resourceBundleEntries = new HashMap();
+            HashMap<String, URL> resourceBundleEntries = new HashMap<>();
 
-            Enumeration locales = bundle.findEntries( path, fileName + "*.properties", false ); //$NON-NLS-1$
-            if ( locales != null )
-            {
-                while ( locales.hasMoreElements() )
-                {
-                    URL entry = ( URL ) locales.nextElement();
+            Enumeration<URL> locales = bundle.findEntries( path, fileName + "*.properties", false );
+            if ( locales != null ) {
+                while ( locales.hasMoreElements() ) {
+                    URL entry = locales.nextElement();
 
                     // calculate the key
                     String entryPath = entry.getPath();
@@ -154,7 +138,7 @@ public class ResourceBundleCache
                     // the default language is "name.properties" thus the entry
                     // path is empty and must default to "_"+DEFAULT_LOCALE
                     if (entryPath.length() == 0) {
-                        entryPath = "_" + DEFAULT_LOCALE; //$NON-NLS-1$
+                        entryPath = "_" + DEFAULT_LOCALE;
                     }
 
                     // only add this entry, if the "language" is not provided
@@ -172,23 +156,16 @@ public class ResourceBundleCache
     }
 
 
-    private static final Locale getParentLocale( Locale locale )
-    {
-        if ( locale.getVariant().length() != 0 )
-        {
+    private static final Locale getParentLocale( Locale locale ) {
+        if ( locale.getVariant().length() != 0 ) {
             return new Locale( locale.getLanguage(), locale.getCountry() );
-        }
-        else if ( locale.getCountry().length() != 0 )
-        {
-            return new Locale( locale.getLanguage(), "" ); //$NON-NLS-1$
-        }
-        else if ( !locale.getLanguage().equals( DEFAULT_LOCALE.getLanguage() ) )
-        {
+        } else if ( locale.getCountry().length() != 0 ) {
+            return new Locale( locale.getLanguage(), "" );
+        } else if ( !locale.getLanguage().equals( DEFAULT_LOCALE.getLanguage() ) ) {
             return DEFAULT_LOCALE;
         }
 
         // no more parents
         return null;
     }
-
 }

@@ -1,0 +1,4 @@
+This directory contains a the base code for the Apache Felix Http Service.
+
+It is based on Servlet API 5, but also supports Servlet API 3.
+

@@ -25,7 +25,6 @@ import java.util.Iterator;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
-import java.util.Map.Entry;
 import java.util.Set;
 import java.util.TreeSet;
 
@@ -46,23 +45,22 @@ import org.osgi.util.tracker.ServiceTrackerCustomizer;
  * based on their name. If more than one printer with the same name
  * is registered, the one with highest service ranking is used.
  */
-public class InventoryPrinterManagerImpl implements ServiceTrackerCustomizer
+public class InventoryPrinterManagerImpl implements ServiceTrackerCustomizer<InventoryPrinter, InventoryPrinter>
 {
 
     /** Bundle Context . */
     private final BundleContext bundleContext;
 
     /** Service tracker for Inventory printers. */
-    private final ServiceTracker cfgPrinterTracker;
+    private final ServiceTracker<InventoryPrinter, InventoryPrinter> cfgPrinterTracker;
 
     /**
-     * All adapters mapped by their name. Type of the map: String,
-     * List<InventoryPrinterAdapter>
+     * All adapters mapped by their name.
      */
-    private final Map allAdapters = new HashMap();
+    private final Map<String, List<InventoryPrinterAdapter>> allAdapters = new HashMap<>();
 
-    /** Used adapters. Type of the set: InventoryPrinterAdapter */
-    private final Set usedAdapters = new TreeSet();
+    /** Used adapters. */
+    private final Set<InventoryPrinterAdapter> usedAdapters = new TreeSet<>();
 
     /** Registration for the web console. */
     private final ServiceRegistration pluginRegistration;
@@ -77,20 +75,22 @@ public class InventoryPrinterManagerImpl implements ServiceTrackerCustomizer
     public InventoryPrinterManagerImpl(final BundleContext btx) throws InvalidSyntaxException
     {
         this.bundleContext = btx;
-        this.cfgPrinterTracker = new ServiceTracker(this.bundleContext, InventoryPrinter.SERVICE, this);
+        this.cfgPrinterTracker = new ServiceTracker<>(this.bundleContext, InventoryPrinter.class, this);
         this.cfgPrinterTracker.open();
 
-        final Dictionary props = new Hashtable();
+        final Dictionary<String, Object> props = new Hashtable<>();
         props.put(ConsoleConstants.PLUGIN_LABEL, ConsoleConstants.NAME);
         props.put(ConsoleConstants.PLUGIN_TITLE, ConsoleConstants.TITLE);
         props.put(ConsoleConstants.PLUGIN_CATEGORY, ConsoleConstants.WEB_CONSOLE_CATEGORY);
         this.pluginRegistration = btx.registerService(ConsoleConstants.INTERFACE_SERVLET, new ServiceFactory()
         {
+            @Override
             public void ungetService(final Bundle bundle, final ServiceRegistration registration, final Object service)
             {
                 // nothing to do
             }
 
+            @Override
             public Object getService(final Bundle bundle, final ServiceRegistration registration)
             {
                 return new DefaultWebConsolePlugin(InventoryPrinterManagerImpl.this);
@@ -121,12 +121,13 @@ public class InventoryPrinterManagerImpl implements ServiceTrackerCustomizer
     /**
      * @see org.osgi.util.tracker.ServiceTrackerCustomizer#addingService(org.osgi.framework.ServiceReference)
      */
-    public Object addingService(final ServiceReference reference)
+    @Override
+    public InventoryPrinter addingService(final ServiceReference<InventoryPrinter> reference)
     {
-        final Object obj = this.bundleContext.getService(reference);
+        final InventoryPrinter obj = this.bundleContext.getService(reference);
         if (obj != null)
         {
-            this.addService(reference, (InventoryPrinter) obj);
+            this.addService(reference, obj);
         }
 
         return obj;
@@ -136,23 +137,25 @@ public class InventoryPrinterManagerImpl implements ServiceTrackerCustomizer
      * @see org.osgi.util.tracker.ServiceTrackerCustomizer#modifiedService(org.osgi.framework.ServiceReference,
      *      java.lang.Object)
      */
-    public void modifiedService(final ServiceReference reference, final Object service)
+    @Override
+    public void modifiedService(final ServiceReference<InventoryPrinter> reference, final InventoryPrinter service)
     {
         this.removeService(reference);
-        this.addService(reference, (InventoryPrinter) service);
+        this.addService(reference, service);
     }
 
     /**
      * @see org.osgi.util.tracker.ServiceTrackerCustomizer#removedService(org.osgi.framework.ServiceReference,
      *      java.lang.Object)
      */
-    public void removedService(final ServiceReference reference, final Object service)
+    @Override
+    public void removedService(final ServiceReference<InventoryPrinter> reference, final InventoryPrinter service)
     {
         this.removeService(reference);
         this.bundleContext.ungetService(reference);
     }
 
-    private void addService(final ServiceReference reference, final InventoryPrinter obj)
+    private void addService(final ServiceReference<InventoryPrinter> reference, final InventoryPrinter obj)
     {
         final InventoryPrinterDescription desc = new InventoryPrinterDescription(reference);
         final InventoryPrinterAdapter adapter = new InventoryPrinterAdapter(desc, obj);
@@ -163,17 +166,17 @@ public class InventoryPrinterManagerImpl implements ServiceTrackerCustomizer
         final String key = adapter.getName();
         synchronized (this.allAdapters)
         {
-            List list = (List) this.allAdapters.get(key);
+            List<InventoryPrinterAdapter> list = this.allAdapters.get(key);
             final InventoryPrinterAdapter first;
             if (list == null)
             {
-                list = new LinkedList();
+                list = new LinkedList<>();
                 this.allAdapters.put(key, list);
                 first = null;
             }
             else
             {
-                first = (InventoryPrinterAdapter) list.get(0);
+                first = list.get(0);
             }
             list.add(adapter);
             Collections.sort(list, InventoryPrinterAdapter.RANKING_COMPARATOR);
@@ -210,19 +213,19 @@ public class InventoryPrinterManagerImpl implements ServiceTrackerCustomizer
         }
     }
 
-    private void removeService(final ServiceReference reference)
+    private void removeService(final ServiceReference<InventoryPrinter> reference)
     {
         synchronized (this.allAdapters)
         {
-            final Iterator i = this.allAdapters.entrySet().iterator();
+            final Iterator<Map.Entry<String, List<InventoryPrinterAdapter>>> i = this.allAdapters.entrySet().iterator();
             while (i.hasNext())
             {
-                final Map.Entry entry = (Entry) i.next();
-                final Iterator iter = ((List) entry.getValue()).iterator();
+                final Map.Entry<String, List<InventoryPrinterAdapter>> entry = i.next();
+                final Iterator<InventoryPrinterAdapter> iter = entry.getValue().iterator();
                 boolean removed = false;
                 while (iter.hasNext())
                 {
-                    final InventoryPrinterAdapter adapter = (InventoryPrinterAdapter) iter.next();
+                    final InventoryPrinterAdapter adapter = iter.next();
                     if (adapter.getDescription().getServiceReference().equals(reference))
                     {
                         iter.remove();
@@ -232,7 +235,7 @@ public class InventoryPrinterManagerImpl implements ServiceTrackerCustomizer
                 }
                 if (removed)
                 {
-                    if (((List) entry.getValue()).size() == 0)
+                    if (entry.getValue().size() == 0)
                     {
                         i.remove();
                     }
@@ -244,10 +247,10 @@ public class InventoryPrinterManagerImpl implements ServiceTrackerCustomizer
         InventoryPrinterAdapter adapterToUnregister = null;
         synchronized (this.usedAdapters)
         {
-            final Iterator iter = this.usedAdapters.iterator();
+            final Iterator<InventoryPrinterAdapter> iter = this.usedAdapters.iterator();
             while (iter.hasNext())
             {
-                final InventoryPrinterAdapter adapter = (InventoryPrinterAdapter) iter.next();
+                final InventoryPrinterAdapter adapter = iter.next();
                 if (adapter.getDescription().getServiceReference().equals(reference))
                 {
                     iter.remove();
@@ -275,20 +278,20 @@ public class InventoryPrinterManagerImpl implements ServiceTrackerCustomizer
      */
     public InventoryPrinterHandler[] getHandlers(final Format format)
     {
-        final List result = new ArrayList();
+        final List<InventoryPrinterAdapter> result = new ArrayList<>();
         synchronized (this.usedAdapters)
         {
-            final Iterator i = this.usedAdapters.iterator();
+            final Iterator<InventoryPrinterAdapter> i = this.usedAdapters.iterator();
             while (i.hasNext())
             {
-                final InventoryPrinterAdapter printer = (InventoryPrinterAdapter) i.next();
+                final InventoryPrinterAdapter printer = i.next();
                 if (format == null || printer.supports(format))
                 {
                     result.add(printer);
                 }
             }
         }
-        return (InventoryPrinterHandler[]) result.toArray(new InventoryPrinterHandler[result.size()]);
+        return result.toArray(new InventoryPrinterHandler[result.size()]);
     }
 
     /**
@@ -300,10 +303,10 @@ public class InventoryPrinterManagerImpl implements ServiceTrackerCustomizer
     {
         synchronized (this.usedAdapters)
         {
-            final Iterator i = this.usedAdapters.iterator();
+            final Iterator<InventoryPrinterAdapter> i = this.usedAdapters.iterator();
             while (i.hasNext())
             {
-                final InventoryPrinterAdapter printer = (InventoryPrinterAdapter) i.next();
+                final InventoryPrinterAdapter printer = i.next();
                 if (name.equals(printer.getName()))
                 {
                     return printer;

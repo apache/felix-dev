@@ -61,13 +61,9 @@ public class RequiredConfigurationPluginTracker
 
     private final Set<String> registeredPluginNames = new TreeSet<>();
 
-    private final ActivatorWorkerQueue workerQueue;
-
     public RequiredConfigurationPluginTracker(final BundleContext bundleContext,
-            final ActivatorWorkerQueue workerQueue,
             final ConfigurationAdminStarter starter,
             final String[] pluginNames) throws BundleException, InvalidSyntaxException {
-        this.workerQueue = workerQueue;
         this.starter = starter;
         for (final String name : pluginNames) {
             requiredNames.add(name);
@@ -114,17 +110,11 @@ public class RequiredConfigurationPluginTracker
                 }
             }
             final boolean activateCA = activate;
-            this.workerQueue.enqueue(new Runnable() {
-
-                @Override
-                public void run() {
-                    if (activateCA) {
-                        starter.updatePluginsSet(true);
-                    }
-                    registeredPluginNames.add(name);
-                    updateRegisteredConfigurationPlugins();
-                }
-            });
+            if (activateCA) {
+                starter.updatePluginsSet(true);
+            }
+            registeredPluginNames.add(name);
+            updateRegisteredConfigurationPlugins();
         }
         return plugin;
     }
@@ -147,17 +137,11 @@ public class RequiredConfigurationPluginTracker
                 bundleContext.ungetService(reference);
             }
             if (deactivate) {
-                this.workerQueue.enqueue(new Runnable() {
-
-                    @Override
-                    public void run() {
-                        if (!hasRequiredPlugins()) {
-                            starter.updatePluginsSet(false);
-                        }
-                        registeredPluginNames.remove(name);
-                        updateRegisteredConfigurationPlugins();
-                    }
-                });
+                if (!hasRequiredPlugins()) {
+                    starter.updatePluginsSet(false);
+                }
+                registeredPluginNames.remove(name);
+                updateRegisteredConfigurationPlugins();
             }
         }
     }

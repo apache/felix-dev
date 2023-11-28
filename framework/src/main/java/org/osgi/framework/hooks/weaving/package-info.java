@@ -28,7 +28,7 @@
  * <p>
  * {@code  Import-Package: org.osgi.framework.hooks.weaving; version="[1.1,2.0)"}
  * </p>
- * @author $Id$
+ * @author $Id: 5b48f041a1764e8b2979cdbbb528082054ab3e7f $
  */
 
 @Version("1.1")

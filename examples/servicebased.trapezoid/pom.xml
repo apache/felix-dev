@@ -19,9 +19,10 @@
 <project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/maven-v4_0_0.xsd">
 
   <parent>
-    <groupId>org.apache</groupId>
-    <artifactId>apache</artifactId>
-    <version>4</version>
+    <groupId>org.apache.felix</groupId>
+    <artifactId>felix-parent</artifactId>
+    <version>7</version>
+    <relativePath>../../pom/pom.xml</relativePath>
   </parent>
 
   <modelVersion>4.0.0</modelVersion>
@@ -43,21 +44,13 @@
       <plugin>
         <groupId>org.apache.felix</groupId>
         <artifactId>maven-bundle-plugin</artifactId>
-        <version>1.0.0</version>
+        <version>5.1.1</version>
         <extensions>true</extensions>
         <configuration>
           <instructions>
             <Private-Package>org.apache.felix.example.servicebased.trapezoid.*</Private-Package>
             <Bundle-Activator>org.apache.felix.example.servicebased.trapezoid.Activator</Bundle-Activator>
           </instructions>
-        </configuration>
-      </plugin>
-      <plugin>
-        <groupId>org.apache.maven.plugins</groupId>
-        <artifactId>maven-compiler-plugin</artifactId>
-        <configuration>
-          <source>1.5</source>
-          <target>1.5</target>
         </configuration>
       </plugin>
     </plugins>

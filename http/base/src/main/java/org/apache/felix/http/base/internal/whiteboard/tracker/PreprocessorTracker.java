@@ -21,7 +21,7 @@ import org.apache.felix.http.base.internal.runtime.WhiteboardServiceInfo;
 import org.apache.felix.http.base.internal.whiteboard.WhiteboardManager;
 import org.osgi.framework.BundleContext;
 import org.osgi.framework.ServiceReference;
-import org.osgi.service.http.whiteboard.Preprocessor;
+import org.osgi.service.servlet.whiteboard.Preprocessor;
 
 public final class PreprocessorTracker extends WhiteboardServiceTracker<Preprocessor>
 {
@@ -33,12 +33,12 @@ public final class PreprocessorTracker extends WhiteboardServiceTracker<Preproce
      */
     public PreprocessorTracker(final BundleContext bundleContext, final WhiteboardManager contextManager)
     {
-        super(contextManager, bundleContext, 
+        super(contextManager, bundleContext,
         		String.format("(objectClass=%s)", Preprocessor.class.getName()));
     }
 
     @Override
-    protected WhiteboardServiceInfo<Preprocessor> getServiceInfo(final ServiceReference<Preprocessor> ref) 
+    protected WhiteboardServiceInfo<Preprocessor> getServiceInfo(final ServiceReference<Preprocessor> ref)
     {
         return new PreprocessorInfo(ref);
     }

@@ -36,7 +36,6 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
 import java.util.Collections;
-import java.util.Comparator;
 import java.util.Enumeration;
 import java.util.HashMap;
 import java.util.HashSet;
@@ -297,7 +296,7 @@ public class BundlePlugin extends AbstractMojo
      * {@code <_consumer-policy>$${range;[===,+)}<code>}<code>{@code </_consumer-policy> }
      */
     @Parameter
-    private Map<String, String> instructions = new LinkedHashMap<String, String>();
+    private Map<String, String> instructions = new LinkedHashMap<>();
 
     /**
      * Use locally patched version for now.
@@ -313,8 +312,21 @@ public class BundlePlugin extends AbstractMojo
     @Parameter( defaultValue = "${session}", readonly = true, required = true )
     private MavenSession m_mavenSession;
 
+    /**
+     * Timestamp for reproducible output archive entries, either formatted as ISO 8601
+     * <code>yyyy-MM-dd'T'HH:mm:ssXXX</code> or as an int representing seconds since the epoch (like
+     * <a href="https://reproducible-builds.org/docs/source-date-epoch/">SOURCE_DATE_EPOCH</a>).
+     *
+     * @since 5.1.3
+     */
+    @Parameter( defaultValue = "${project.build.outputTimestamp}" )
+    private String outputTimestamp;
+
     @Component
     protected BuildContext buildContext;
+
+    @Parameter(defaultValue = "false", property = "bundle.skip")
+    private boolean skip = false;
     
     private static final String MAVEN_SYMBOLICNAME = "maven-symbolicname";
     private static final String MAVEN_RESOURCES = "{maven-resources}";
@@ -353,6 +365,10 @@ public class BundlePlugin extends AbstractMojo
      */
     public void execute() throws MojoExecutionException
     {
+        if (skip) {
+            getLog().info("Skipping Bundle plugin");
+            return;
+        }
         String projectType = getProject().getArtifact().getType();
 
         // ignore unsupported project types, useful when bundleplugin is configured in parent pom
@@ -368,7 +384,7 @@ public class BundlePlugin extends AbstractMojo
 
         try
         {
-            execute( instructions, getClasspath( project) );
+            execute( instructions, getClasspath( project ) );
         }
         catch ( IOException e )
         {
@@ -380,7 +396,7 @@ public class BundlePlugin extends AbstractMojo
     /* transform directives from their XML form to the expected BND syntax (eg. _include becomes -include) */
     protected static Map<String, String> transformDirectives( Map<String, String> originalInstructions )
     {
-        Map<String, String> transformedInstructions = new LinkedHashMap<String, String>();
+        Map<String, String> transformedInstructions = new LinkedHashMap<>();
         for ( Map.Entry<String, String> e : originalInstructions.entrySet() )
         {
             String key = e.getKey();
@@ -399,7 +415,7 @@ public class BundlePlugin extends AbstractMojo
                 value = value.replaceAll( "\\p{Blank}*[\r\n]\\p{Blank}*", "" );
             }
 
-            if ( Analyzer.WAB.equals( key ) && value.length() == 0 )
+            if ( Analyzer.WAB.equals( key ) && value.isEmpty() )
             {
                 // provide useful default
                 value = "src/main/webapp/";
@@ -461,6 +477,7 @@ public class BundlePlugin extends AbstractMojo
             }
 
             // attach bundle to maven project
+            getLog().info("Building bundle: " + jarFile.getPath());
             jarFile.getParentFile().mkdirs();
             builder.getJar().write( jarFile );
 
@@ -533,6 +550,11 @@ public class BundlePlugin extends AbstractMojo
         Properties properties = new Properties();
         properties.putAll( getDefaultProperties( currentProject ) );
         properties.putAll( transformDirectives( originalInstructions ) );
+
+        if ( new MavenArchiver().parseOutputTimestamp( outputTimestamp ) != null )
+        {
+          properties.put( Constants.REPRODUCIBLE, "true" );
+        }
 
         // process overrides from project
         final Map<String, String> addProps = new HashMap<>();
@@ -704,7 +726,7 @@ public class BundlePlugin extends AbstractMojo
         Collection<Artifact> embeddedArtifacts = dependencyEmbedder.getEmbeddedArtifacts();
         if ( !embeddedArtifacts.isEmpty() && createDependencyReducedPom )
         {
-            Set<String> embeddedIds = new HashSet<String>();
+            Set<String> embeddedIds = new HashSet<>();
             for ( Artifact artifact : embeddedArtifacts )
             {
                 embeddedIds.add( getId( artifact ) );
@@ -746,11 +768,11 @@ public class BundlePlugin extends AbstractMojo
     private void createDependencyReducedPom( Set<String> artifactsToRemove )
             throws IOException, ProjectBuildingException, DependencyGraphBuilderException {
         Model model = project.getOriginalModel();
-        List<Dependency> dependencies = new ArrayList<Dependency>();
+        List<Dependency> dependencies = new ArrayList<>();
 
         boolean modified = false;
 
-        List<Dependency> transitiveDeps = new ArrayList<Dependency>();
+        List<Dependency> transitiveDeps = new ArrayList<>();
 
         for ( Artifact artifact : project.getArtifacts() )
         {
@@ -1075,7 +1097,7 @@ public class BundlePlugin extends AbstractMojo
              * Grab customized manifest entries from the maven-jar-plugin configuration
              */
             MavenArchiveConfiguration archiveConfig = JarPluginConfiguration.getArchiveConfiguration( currentProject );
-            String mavenManifestText = new MavenArchiver().getManifest( currentProject, archiveConfig.getManifest() ).toString();
+            String mavenManifestText = new MavenArchiver().getManifest( session, currentProject, archiveConfig ).toString();
             addMavenDescriptor = addMavenDescriptor && archiveConfig.isAddMavenDescriptor();
 
             Manifest mavenManifest = new Manifest();
@@ -1125,7 +1147,8 @@ public class BundlePlugin extends AbstractMojo
             }
 
             Attributes mainMavenAttributes = mavenManifest.getMainAttributes();
-            mainMavenAttributes.putValue( "Created-By", "Apache Maven Bundle Plugin" );
+            mainMavenAttributes.putValue( "Created-By", createdBy( "Apache Maven Bundle Plugin", "org.apache.felix",
+                                                                   "maven-bundle-plugin" ) );
 
             String[] removeHeaders = builder.getProperty( Constants.REMOVEHEADERS, "" ).split( "," );
 
@@ -1181,14 +1204,6 @@ public class BundlePlugin extends AbstractMojo
                 bundleManifest.getMainAttributes().putValue( "Import-Package", result );
             }
 
-            for ( String header : Arrays.asList( Constants.IMPORT_PACKAGE, Constants.DYNAMICIMPORT_PACKAGE,
-                                                 Constants.EXPORT_PACKAGE, Constants.PRIVATE_PACKAGE,
-                                                 Constants.PROVIDE_CAPABILITY, Constants.REQUIRE_CAPABILITY,
-                                                 "Bundle-Blueprint", "Service-Component" ) )
-            {
-                reformatClauses( bundleManifest.getMainAttributes(), header );
-            }
-
             jar.setManifest( bundleManifest );
         }
         catch ( Exception e )
@@ -1209,25 +1224,30 @@ public class BundlePlugin extends AbstractMojo
         builder.setJar( jar );
     }
 
-    protected static void reformatClauses( Attributes attributes, String name )
+    private static String getCreatedByVersion( String groupId, String artifactId )
     {
-        String header = attributes.getValue( name );
-        if ( header != null )
+        try
         {
-            Map<String, Map<String, String>> params = OSGiHeader.parseHeader( header, null ).toBasic();
-            Map<String, Map<String, String>> sorted = new TreeMap<>();
-            for ( Map.Entry<String, Map<String, String>> entry : params.entrySet() )
-            {
-                String key = entry.getKey();
-                Map<String, String> attrs = entry.getValue();
-                Map<String, String> newAttrs = new TreeMap<>(
-                            Comparator.<String, Boolean>comparing( s -> !s.endsWith( ":" ) ).thenComparing( s -> s ) );
-                newAttrs.putAll( attrs );
-                sorted.put( key, newAttrs );
-            }
-            String nh = new Parameters( sorted ).toString();
-            attributes.putValue( name, nh );
+            final Properties properties = PropertyUtils.loadProperties( MavenArchiver.class.getResourceAsStream(
+                "/META-INF/maven/" + groupId + "/" + artifactId + "/pom.properties" ) );
+    
+            return properties.getProperty( "version" );
         }
+        catch ( IOException ioe )
+        {
+            return null;
+        }
+    }
+
+    private String createdBy( String description, String groupId, String artifactId )
+    {
+        String createdBy = description;
+        String version = getCreatedByVersion( groupId, artifactId );
+        if ( version != null )
+        {
+            createdBy += " " + version;
+        }
+        return createdBy;
     }
 
     protected static void mergeManifest( Instructions instructions, Manifest... manifests ) throws IOException
@@ -1272,13 +1292,13 @@ public class BundlePlugin extends AbstractMojo
      */
     private static Attributes filterAttributes(Instructions instructions, Attributes source, Set<Instruction> nomatch) {
         Attributes result = new Attributes();
-        Map<String, Object> keys = new TreeMap<String, Object>();
+        Map<String, Object> keys = new TreeMap<>();
         for ( Object key : source.keySet() )
         {
             keys.put( key.toString(), key );
         }
 
-        List<Instruction> filters = new ArrayList<Instruction>( instructions.keySet() );
+        List<Instruction> filters = new ArrayList<>( instructions.keySet() );
         if (nomatch == null)
         {
             nomatch = Create.set();
@@ -1413,7 +1433,7 @@ public class BundlePlugin extends AbstractMojo
 
     protected Set<String> getOptionalPackages(MavenProject currentProject) throws IOException, MojoExecutionException
     {
-        ArrayList<Artifact> inscope = new ArrayList<Artifact>();
+        ArrayList<Artifact> inscope = new ArrayList<>();
         final Collection<Artifact> artifacts = getSelectedDependencies(currentProject.getArtifacts() );
         for ( Iterator<Artifact> it = artifacts.iterator(); it.hasNext(); )
         {
@@ -1424,7 +1444,7 @@ public class BundlePlugin extends AbstractMojo
             }
         }
 
-        HashSet<String> optionalArtifactIds = new HashSet<String>();
+        HashSet<String> optionalArtifactIds = new HashSet<>();
         for ( Iterator<Artifact> it = inscope.iterator(); it.hasNext(); )
         {
             Artifact artifact = it.next();
@@ -1441,8 +1461,8 @@ public class BundlePlugin extends AbstractMojo
 
         }
 
-        HashSet<String> required = new HashSet<String>();
-        HashSet<String> optional = new HashSet<String>();
+        HashSet<String> required = new HashSet<>();
+        HashSet<String> optional = new HashSet<>();
         for ( Iterator<Artifact> it = inscope.iterator(); it.hasNext(); )
         {
             Artifact artifact = it.next();
@@ -1545,7 +1565,7 @@ public class BundlePlugin extends AbstractMojo
 
     private static Map<String, String> getProperties( Model projectModel, String prefix )
     {
-        Map<String, String> properties = new LinkedHashMap<String, String>();
+        Map<String, String> properties = new LinkedHashMap<>();
         Method methods[] = Model.class.getDeclaredMethods();
         for ( int i = 0; i < methods.length; i++ )
         {
@@ -1659,12 +1679,11 @@ public class BundlePlugin extends AbstractMojo
 
     protected ClassPathItem[] getClasspath(MavenProject currentProject) throws IOException, MojoExecutionException
     {
-        List<ClassPathItem> list = new ArrayList<ClassPathItem>( currentProject.getArtifacts().size() + 1 );
+        List<ClassPathItem> list = new ArrayList<>( currentProject.getArtifacts().size() + 1 );
 
-        String d = currentProject.getBuild() != null ? currentProject.getBuild().getOutputDirectory() : null;
-        if ( d != null )
+        if ( getOutputDirectory() != null && getOutputDirectory().exists() )
         {
-            list.add( new ClassPathItem( ".", new File( d ) ) );
+            list.add( new ClassPathItem( ".", getOutputDirectory() ) );
         }
 
         final Collection<Artifact> artifacts = getSelectedDependencies(currentProject.getArtifacts() );
@@ -1693,7 +1712,7 @@ public class BundlePlugin extends AbstractMojo
 
     private Collection<Artifact> getSelectedDependencies(Collection<Artifact> artifacts) throws MojoExecutionException
     {
-        if ( null == excludeDependencies || excludeDependencies.length() == 0 )
+        if ( null == excludeDependencies || excludeDependencies.isEmpty() )
         {
             return artifacts;
         }
@@ -1702,7 +1721,7 @@ public class BundlePlugin extends AbstractMojo
             return Collections.emptyList();
         }
 
-        Collection<Artifact> selectedDependencies = new LinkedHashSet<Artifact>( artifacts );
+        Collection<Artifact> selectedDependencies = new LinkedHashSet<>( artifacts );
         DependencyExcluder excluder = new DependencyExcluder(artifacts );
         excluder.processHeaders( excludeDependencies );
         selectedDependencies.removeAll( excluder.getExcludedArtifacts() );
@@ -1926,6 +1945,7 @@ public class BundlePlugin extends AbstractMojo
             scanner.scan();
 
             String[] paths = scanner.getIncludedFiles();
+            Arrays.sort( paths );
             for ( int i = 0; i < paths.length; i++ )
             {
                 packages.put( analyzer.getPackageRef( getPackageName( paths[i] ) ) );
@@ -2009,7 +2029,7 @@ public class BundlePlugin extends AbstractMojo
 
     private static List<Resource> getMavenResources( MavenProject currentProject, boolean test )
     {
-        List<Resource> resources = new ArrayList<Resource>( test ? currentProject.getTestResources() : currentProject.getResources() );
+        List<Resource> resources = new ArrayList<>( test ? currentProject.getTestResources() : currentProject.getResources() );
 
         if ( currentProject.getCompileSourceRoots() != null )
         {
@@ -2033,7 +2053,7 @@ public class BundlePlugin extends AbstractMojo
     {
         final String basePath = currentProject.getBasedir().getAbsolutePath();
 
-        Set<String> pathSet = new LinkedHashSet<String>();
+        Set<String> pathSet = new LinkedHashSet<>();
         for ( Iterator<Resource> i = getMavenResources( currentProject, test ).iterator(); i.hasNext(); )
         {
             Resource resource = i.next();
@@ -2064,7 +2084,9 @@ public class BundlePlugin extends AbstractMojo
                 scanner.addDefaultExcludes();
                 scanner.scan();
 
-                List<String> includedFiles = Arrays.asList( scanner.getIncludedFiles() );
+                String[] f = scanner.getIncludedFiles();
+                Arrays.sort( f );
+                List<String> includedFiles = Arrays.asList( f );
 
                 for ( Iterator<String> j = includedFiles.iterator(); j.hasNext(); )
                 {
@@ -2150,7 +2172,7 @@ public class BundlePlugin extends AbstractMojo
         // pass maven source paths onto BND analyzer
         StringBuilder mavenSourcePaths = new StringBuilder();
         StringBuilder mavenTestSourcePaths = new StringBuilder();
-        Map<StringBuilder, List<String>> map = new HashMap<StringBuilder, List<String>>(2);
+        Map<StringBuilder, List<String>> map = new HashMap<>(2);
         map.put(mavenSourcePaths, currentProject.getCompileSourceRoots() );
         map.put(mavenTestSourcePaths, currentProject.getTestCompileSourceRoots() );
         for ( Map.Entry<StringBuilder, List<String>> entry : map.entrySet() )
@@ -2172,7 +2194,7 @@ public class BundlePlugin extends AbstractMojo
         final String sourcePath = analyzer.getProperty( Analyzer.SOURCEPATH );
         if ( sourcePath != null )
         {
-            if ( sourcePath.contains(MAVEN_SOURCES) || sourcePath.contains(MAVEN_TEST_RESOURCES) )
+            if ( sourcePath.contains(MAVEN_SOURCES) || sourcePath.contains(MAVEN_TEST_SOURCES) )
             {
                 String combinedSource = StringUtils.replace( sourcePath, MAVEN_SOURCES, mavenSourcePaths.toString() );
                 combinedSource = StringUtils.replace( combinedSource, MAVEN_TEST_SOURCES, mavenTestSourcePaths.toString() );

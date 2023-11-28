@@ -97,7 +97,6 @@ public abstract class AbstractPrototypeRefPair<S, T> extends RefPair<S, T>
         return true;
     }
 
-	@SuppressWarnings("unchecked")
     private void doUngetService(ScrComponentContext key, final T service) {
 		try
 		{

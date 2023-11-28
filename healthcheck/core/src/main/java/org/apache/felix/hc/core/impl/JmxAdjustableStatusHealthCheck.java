@@ -57,8 +57,8 @@ public class JmxAdjustableStatusHealthCheck {
 
     private BundleContext bundleContext;
 
-    private ServiceRegistration mbeanRegistration = null;
-    private ServiceRegistration healthCheckRegistration = null;
+    private ServiceRegistration<DynamicMBean> mbeanRegistration;
+    private ServiceRegistration<HealthCheck> healthCheckRegistration;
 
     @Activate
     protected final void activate(final ComponentContext context) {
@@ -76,7 +76,7 @@ public class JmxAdjustableStatusHealthCheck {
         final Dictionary<String, String> mbeanProps = new Hashtable<String, String>();
         mbeanProps.put("jmx.objectname", OBJECT_NAME);
         AdjustableHealthCheckStatusMBean adjustableHealthCheckStatusMBean = new AdjustableHealthCheckStatusMBean();
-        this.mbeanRegistration = bundleContext.registerService(DynamicMBean.class.getName(), adjustableHealthCheckStatusMBean, mbeanProps);
+        this.mbeanRegistration = bundleContext.registerService(DynamicMBean.class, adjustableHealthCheckStatusMBean, mbeanProps);
         LOG.debug("Registered mbean {} as {}", adjustableHealthCheckStatusMBean, OBJECT_NAME);
     }
 
@@ -96,7 +96,7 @@ public class JmxAdjustableStatusHealthCheck {
         props.put(HealthCheck.NAME, "JMX Adhoc Result");
         props.put(HealthCheck.TAGS, tags);
 
-        healthCheckRegistration = bundleContext.registerService(HealthCheck.class.getName(), healthCheck, props);
+        healthCheckRegistration = bundleContext.registerService(HealthCheck.class, healthCheck, props);
     }
 
     /* synchronized as potentially multiple users can run JMX operations */

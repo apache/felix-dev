@@ -18,6 +18,8 @@
  */
 package org.apache.felix.webconsole;
 
+import org.apache.felix.webconsole.servlet.RequestVariableResolver;
+import org.osgi.annotation.versioning.ConsumerType;
 
 /**
  * The <code>VariableResolver</code> interface defines the API for an object
@@ -39,9 +41,11 @@ package org.apache.felix.webconsole;
  *
  * @see WebConsoleUtil#getVariableResolver(javax.servlet.ServletRequest)
  * @see WebConsoleUtil#setVariableResolver(javax.servlet.ServletRequest, VariableResolver)
+ * @deprecated Use {@link RequestVariableResolver} instead.
  */
-public interface VariableResolver
-{
+@ConsumerType
+@Deprecated
+public interface VariableResolver {
 
     /**
      * Returns a replacement value for the named variable or <code>null</code>
@@ -53,5 +57,4 @@ public interface VariableResolver
      *      available.
      */
     String resolve( String variable );
-
 }

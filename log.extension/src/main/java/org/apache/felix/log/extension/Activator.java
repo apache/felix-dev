@@ -31,7 +31,7 @@ public class Activator implements BundleActivator {
         try {
             Class<? extends BundleActivator> activatorClass = context.getBundle().loadClass("org.apache.felix.log.Activator").asSubclass(BundleActivator.class);
 
-            m_felixLogService = activatorClass.newInstance();
+            m_felixLogService = activatorClass.getDeclaredConstructor().newInstance();
 
             m_felixLogService.start(context);
         }
@@ -42,7 +42,7 @@ public class Activator implements BundleActivator {
         try {
             Class<? extends BundleActivator> activatorClass = context.getBundle().loadClass("org.apache.felix.logback.internal.Activator").asSubclass(BundleActivator.class);
 
-            m_felixLogback = activatorClass.newInstance();
+            m_felixLogback = activatorClass.getDeclaredConstructor().newInstance();
 
             m_felixLogback.start(context);
         }

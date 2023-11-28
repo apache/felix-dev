@@ -23,7 +23,9 @@ import java.util.Dictionary;
 import java.util.Hashtable;
 
 import org.apache.felix.webconsole.plugins.event.internal.converter.ConfigurationEventConverter;
-import org.osgi.framework.*;
+import org.osgi.framework.BundleContext;
+import org.osgi.framework.Constants;
+import org.osgi.framework.ServiceRegistration;
 import org.osgi.service.cm.ConfigurationEvent;
 import org.osgi.service.cm.ManagedService;
 
@@ -34,11 +36,11 @@ public class ConfigurationListener implements ManagedService, org.osgi.service.c
 
     private final String pid;
 
-    static ServiceRegistration create( final BundleContext context, final PluginServlet plugin )
+    static ServiceRegistration<?> create( final BundleContext context, final PluginServlet plugin )
     {
         ConfigurationListener cl = new ConfigurationListener( plugin );
 
-        Dictionary props = new Hashtable();
+        Dictionary<String, Object> props = new Hashtable<>();
         props.put( Constants.SERVICE_VENDOR, "The Apache Software Foundation" );
         props.put( Constants.SERVICE_DESCRIPTION, "Event plugin for the Felix Web Console Configuration Receiver" );
         props.put( Constants.SERVICE_PID, cl.pid );
@@ -57,6 +59,7 @@ public class ConfigurationListener implements ManagedService, org.osgi.service.c
     /**
      * @see org.osgi.service.cm.ConfigurationListener#configurationEvent(org.osgi.service.cm.ConfigurationEvent)
      */
+    @Override
     public void configurationEvent(ConfigurationEvent event)
     {
         this.plugin.getCollector().add(ConfigurationEventConverter.getInfo(event));
@@ -68,7 +71,8 @@ public class ConfigurationListener implements ManagedService, org.osgi.service.c
     /**
      * @see org.osgi.service.cm.ManagedService#updated(java.util.Dictionary)
      */
-    public void updated( Dictionary config )
+    @Override
+    public void updated( Dictionary<String, ?> config )
     {
         plugin.updateConfiguration( config );
     }

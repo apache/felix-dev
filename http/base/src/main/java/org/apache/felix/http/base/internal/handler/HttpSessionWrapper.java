@@ -27,12 +27,11 @@ import java.util.List;
 import java.util.NoSuchElementException;
 import java.util.Set;
 
-import javax.servlet.ServletContext;
-import javax.servlet.http.HttpSession;
-import javax.servlet.http.HttpSessionBindingEvent;
-import javax.servlet.http.HttpSessionBindingListener;
-import javax.servlet.http.HttpSessionContext;
-import javax.servlet.http.HttpSessionEvent;
+import jakarta.servlet.ServletContext;
+import jakarta.servlet.http.HttpSession;
+import jakarta.servlet.http.HttpSessionBindingEvent;
+import jakarta.servlet.http.HttpSessionBindingListener;
+import jakarta.servlet.http.HttpSessionEvent;
 
 import org.apache.felix.http.base.internal.HttpConfig;
 import org.apache.felix.http.base.internal.context.ExtServletContext;
@@ -41,7 +40,6 @@ import org.apache.felix.http.base.internal.context.ExtServletContext;
  * The session wrapper keeps track of the internal session, manages their attributes
  * separately and also handles session timeout.
  */
-@SuppressWarnings("deprecation")
 public class HttpSessionWrapper implements HttpSession
 {
     /** All special attributes are prefixed with this prefix. */
@@ -272,7 +270,7 @@ public class HttpSessionWrapper implements HttpSession
     @Override
     public String getId()
     {
-        this.checkInvalid();
+        // no validity check conforming to the javadocs
         if ( this.config.isUniqueSessionId() )
         {
             return this.delegate.getId().concat("-").concat(this.sessionId);
@@ -301,15 +299,15 @@ public class HttpSessionWrapper implements HttpSession
         return this.context;
     }
 
-    @Override
     public Object getValue(String name)
     {
+        this.checkInvalid();
         return this.getAttribute(name);
     }
 
-    @Override
     public String[] getValueNames()
     {
+        this.checkInvalid();
         final List<String> names = new ArrayList<>();
         final Enumeration<String> e = this.getAttributeNames();
         while ( e.hasMoreElements() )
@@ -346,13 +344,29 @@ public class HttpSessionWrapper implements HttpSession
         {
             // if the session is empty we can invalidate
             final Enumeration<String> remainingNames = this.delegate.getAttributeNames();
-            if ( !remainingNames.hasMoreElements() )
+            if ( (!remainingNames.hasMoreElements()) || (isRemainingAttributeAddedByContainer(remainingNames)))
             {
                 this.delegate.invalidate();
             }
         }
-
         this.isInvalid = true;
+    }
+
+    private boolean isRemainingAttributeAddedByContainer(Enumeration<String> names){
+        final Set<String> attributeAddedByContainerSet = this.config.getContainerAddedAttribueSet() ;
+
+        if(attributeAddedByContainerSet != null && !attributeAddedByContainerSet.isEmpty()) {
+
+            while (names.hasMoreElements()) {
+
+                final String name = names.nextElement();
+                if (name == null || !attributeAddedByContainerSet.contains(name)) {
+                    return false;
+                }
+            }
+            return true ;
+        }
+        return false ;
     }
 
     @Override
@@ -362,9 +376,9 @@ public class HttpSessionWrapper implements HttpSession
         return this.isNew;
     }
 
-    @Override
     public void putValue(final String name, final Object value)
     {
+        this.checkInvalid();
         this.setAttribute(name, value);
     }
 
@@ -387,9 +401,9 @@ public class HttpSessionWrapper implements HttpSession
         }
     }
 
-    @Override
     public void removeValue(final String name)
     {
+        this.checkInvalid();
         this.removeAttribute(name);
     }
 
@@ -435,19 +449,17 @@ public class HttpSessionWrapper implements HttpSession
     @Override
     public void setMaxInactiveInterval(final int interval)
     {
+        // no validity check conforming to the javadocs
         if ( this.delegate.getMaxInactiveInterval() < interval )
         {
             this.delegate.setMaxInactiveInterval(interval);
         }
         this.maxTimeout = interval;
-        this.delegate.setAttribute(ATTR_MAX_INACTIVE + this.sessionId, interval);
-    }
-
-    @Override
-    public HttpSessionContext getSessionContext()
-    {
-        // no need to check validity conforming to the javadoc
-        return this.delegate.getSessionContext();
+        try {
+            this.delegate.setAttribute(ATTR_MAX_INACTIVE + this.sessionId, interval);
+        } catch ( final IllegalStateException iae) {
+            // this might throw if delegate is invalid
+        }
     }
 
     private static final class SessionBindingValueListenerWrapper implements Serializable

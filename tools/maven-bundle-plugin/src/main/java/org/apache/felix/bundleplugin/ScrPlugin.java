@@ -132,7 +132,7 @@ public class ScrPlugin implements AnalyzerPlugin
 
     public Set<String> analyze( InputStream in ) throws Exception
     {
-        Set<String> refers = new HashSet<String>();
+        Set<String> refers = new HashSet<>();
         ByteArrayOutputStream bout = new ByteArrayOutputStream();
         javax.xml.transform.Result r = new StreamResult( bout );
         javax.xml.transform.Source s = new StreamSource( in );

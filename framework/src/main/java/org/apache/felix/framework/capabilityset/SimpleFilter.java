@@ -18,13 +18,13 @@
  */
 package org.apache.felix.framework.capabilityset;
 
-import org.osgi.framework.Version;
 import org.osgi.framework.VersionRange;
 
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
+import java.util.Objects;
 
 public class SimpleFilter
 {
@@ -48,6 +48,23 @@ public class SimpleFilter
         m_name = attr;
         m_value = value;
         m_op = op;
+    }
+
+    public boolean equals(Object o)
+    {
+        if (o instanceof SimpleFilter)
+        {
+            SimpleFilter other = (SimpleFilter) o;
+            return m_op == other.m_op &&
+                    Objects.equals(m_name,other.m_name) &&
+                    Objects.equals(m_value, other.m_value);
+        }
+        return false;
+    }
+
+    public int hashCode()
+    {
+        return m_op + Objects.hashCode(m_name) + Objects.hashCode(m_value);
     }
 
     public String getName()

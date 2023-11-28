@@ -18,9 +18,14 @@
  */
 package org.apache.felix.framework.util.manifestparser;
 
-import junit.framework.TestCase;
+import org.junit.Test;
 
-public class NativeLibraryClauseTest extends TestCase {
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertTrue;
+
+public class NativeLibraryClauseTest {
+
+    @Test
     public void testNormalizeOSName() {
         assertEquals("win32", NativeLibraryClause.normalizeOSName("win 32"));
         assertEquals("win32", NativeLibraryClause.normalizeOSName("Win*"));
@@ -86,6 +91,7 @@ public class NativeLibraryClauseTest extends TestCase {
         assertEquals("win32", NativeLibraryClause.normalizeOSName("win32"));
     }
 
+    @Test
     public void testgetOsNameWithAliases() {
         assertTrue(NativeLibraryClause.getOsNameWithAliases("win 32").contains("win32"));
         assertTrue(NativeLibraryClause.getOsNameWithAliases("Win*").contains("win32"));
@@ -108,7 +114,7 @@ public class NativeLibraryClauseTest extends TestCase {
         assertTrue(NativeLibraryClause.getOsNameWithAliases("digitalunix_blah").contains("digitalunix"));
         assertTrue(NativeLibraryClause.getOsNameWithAliases("HPUX-999").contains("hpux"));
         assertTrue(NativeLibraryClause.getOsNameWithAliases("Irixxxx").contains("irix"));
-        assertTrue(NativeLibraryClause.getOsNameWithAliases("mac OS X").contains("mac os x"));
+        assertTrue(NativeLibraryClause.getOsNameWithAliases("mac OS X").contains("macosx"));
         assertTrue(NativeLibraryClause.getOsNameWithAliases("Netware").contains("netware"));
         assertTrue(NativeLibraryClause.getOsNameWithAliases("OpenBSD-0000").contains("openbsd"));
         assertTrue(NativeLibraryClause.getOsNameWithAliases("netbsd ").contains("netbsd"));
@@ -124,7 +130,7 @@ public class NativeLibraryClauseTest extends TestCase {
         assertTrue(NativeLibraryClause.getOsNameWithAliases("hpux").contains("hpux"));
         assertTrue(NativeLibraryClause.getOsNameWithAliases("irix").contains("irix"));
         assertTrue(NativeLibraryClause.getOsNameWithAliases("linux").contains("linux"));
-        assertTrue(NativeLibraryClause.getOsNameWithAliases("mac os").contains("mac os"));
+        assertTrue(NativeLibraryClause.getOsNameWithAliases("mac os").contains("macos"));
         assertTrue(NativeLibraryClause.getOsNameWithAliases("netbsd").contains("netbsd"));
         assertTrue(NativeLibraryClause.getOsNameWithAliases("netware").contains("netware"));
         assertTrue(NativeLibraryClause.getOsNameWithAliases("openbsd").contains("openbsd"));
@@ -150,6 +156,7 @@ public class NativeLibraryClauseTest extends TestCase {
         assertTrue(NativeLibraryClause.getOsNameWithAliases("win32").contains("win32"));
     }
 
+    @Test
     public void testNormalizeOSVersion() {
         // valid
         assertEquals("1.0.0", NativeLibraryClause.normalizeOSVersion("1"));

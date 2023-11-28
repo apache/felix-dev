@@ -19,18 +19,21 @@
 package org.apache.felix.http.base.internal.runtime;
 
 import java.util.Collections;
+import java.util.HashMap;
 import java.util.Map;
+import java.util.Objects;
 
 import org.apache.felix.http.base.internal.service.HttpServiceFactory;
 import org.apache.felix.http.base.internal.util.PatternUtil;
+import org.jetbrains.annotations.NotNull;
 import org.osgi.framework.ServiceReference;
-import org.osgi.service.http.context.ServletContextHelper;
-import org.osgi.service.http.whiteboard.HttpWhiteboardConstants;
+import org.osgi.service.servlet.whiteboard.HttpWhiteboardConstants;
+import org.osgi.service.servlet.context.ServletContextHelper;
 
 /**
  * Provides registration information for a {@link ServletContextHelper}
  */
-public final class ServletContextHelperInfo extends AbstractInfo<ServletContextHelper>
+public class ServletContextHelperInfo extends AbstractInfo<ServletContextHelper>
 {
 
     private final String name;
@@ -70,7 +73,6 @@ public final class ServletContextHelperInfo extends AbstractInfo<ServletContextH
             {
                 return true;
             }
-            // TODO we need more validation
             if (path.startsWith("/") && !path.endsWith("/"))
             {
                 return true;
@@ -105,5 +107,42 @@ public final class ServletContextHelperInfo extends AbstractInfo<ServletContextH
     public Map<String, String> getInitParameters()
     {
         return initParams;
+    }
+
+    @Override
+    public @NotNull String getType() {
+        return "ServletContextHelper";
+    }
+
+    /**
+     * Get the registered service type
+     * @return The type
+     */
+    public @NotNull String getServiceType() {
+        return ServletContextHelper.class.getName();
+    }
+
+    public boolean match(final WhiteboardServiceInfo<?> info) {
+        if ( this.getServiceReference() != null ) {
+            return info.getContextSelectionFilter().match(this.getServiceReference());
+        }
+        final Map<String, String> props = new HashMap<>();
+        props.put(HttpWhiteboardConstants.HTTP_WHITEBOARD_CONTEXT_NAME, this.getName());
+        props.put(HttpWhiteboardConstants.HTTP_WHITEBOARD_CONTEXT_PATH, this.getPath());
+        if ( HttpServiceFactory.HTTP_SERVICE_CONTEXT_NAME.equals(this.getName()) ) {
+            props.put(org.osgi.service.http.whiteboard.HttpWhiteboardConstants.HTTP_SERVICE_CONTEXT_PROPERTY, this.getName());
+        }
+        return info.getContextSelectionFilter().matches(props);
+    }
+
+    @Override
+    public boolean isSame(AbstractInfo<ServletContextHelper> other) {
+        if (!super.isSame(other)) {
+            return false;
+        }
+        final ServletContextHelperInfo o = (ServletContextHelperInfo) other;
+        return Objects.equals(this.name, o.name)
+            && Objects.equals(this.path, o.path)
+            && Objects.equals(this.initParams, o.initParams);
     }
 }

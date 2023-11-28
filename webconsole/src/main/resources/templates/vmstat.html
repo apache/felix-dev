@@ -68,7 +68,7 @@ var statData = ${startData};
 				<input type="hidden" name="shutdown_type" id="shutdown_type" value="" />
 				<input class="ui-state-error" type="button" value="${abort}" onclick="abort('${pluginRoot}')" />
 				${vmstat.shutdown.in} <span id='countdowncell'>&nbsp;</span>
-				<script type="text/javascript">if(statData.shutdownTimer) shutdown(3, 'shutdownform2', 'countdowncell');</script>
+				<script type="text/javascript">if(statData.shutdownTimer) shutdown(statData.shutdownTimeout, 'shutdownform2', 'countdowncell');</script>
 				</div>
 			</form>
 		</td>

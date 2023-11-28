@@ -18,6 +18,7 @@
 package org.apache.felix.hc.core.impl.scheduling.cron.embedded;
 
 import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertTrue;
 
 import java.util.ArrayList;
 import java.util.Calendar;
@@ -772,7 +773,7 @@ public class EmbeddedCronParserTest {
     }
 
     @Test
-    public void test7FieldsWithYearSetToStar() {
+    public void testYearFieldSetToStar() {
 
         final EmbeddedCronParser trigger = new EmbeddedCronParser("30 30 7 * * * *", timeZone);
 
@@ -791,6 +792,139 @@ public class EmbeddedCronParserTest {
         
     }
     
+
+    @Test
+    public void testYearInThePast() {
+
+        final EmbeddedCronParser trigger = new EmbeddedCronParser("* * * * * * 1977", timeZone);
+
+        calendar.set(Calendar.YEAR, 2020);
+        calendar.set(Calendar.MONTH, 0);
+        calendar.set(Calendar.DAY_OF_MONTH, 1);
+        calendar.set(Calendar.HOUR_OF_DAY, 0);
+        calendar.set(Calendar.MINUTE, 0);
+        calendar.set(Calendar.SECOND, 0);
+        
+        Date intialTime = calendar.getTime();
+        calendar.set(Calendar.YEAR, calendar.getMaximum(Calendar.YEAR));
+        long next = trigger.next(intialTime.getTime());
+        assertEquals(calendar.getTime().getTime(), next);
+
+    }
+
+    @Test
+    public void testJumpToCronYear() {
+
+        final EmbeddedCronParser trigger = new EmbeddedCronParser("* * * * * * 2022", timeZone);
+
+        calendar.set(Calendar.YEAR, 2020);
+        calendar.set(Calendar.MONTH, 5);
+        calendar.set(Calendar.DAY_OF_MONTH, 1);
+        calendar.set(Calendar.HOUR_OF_DAY, 3);
+        calendar.set(Calendar.MINUTE, 4);
+        calendar.set(Calendar.SECOND, 33);
+        
+        Date intialTime = calendar.getTime();
+        calendar.set(Calendar.YEAR, 2022);
+        calendar.set(Calendar.MONTH, Calendar.JANUARY);
+        calendar.set(Calendar.DAY_OF_MONTH, 1);
+        calendar.set(Calendar.HOUR_OF_DAY, 0);
+        calendar.set(Calendar.MINUTE, 0);
+        calendar.set(Calendar.SECOND, 0);
+        long next = trigger.next(intialTime.getTime());
+        assertEquals(calendar.getTime().getTime(), next);
+        
+        final EmbeddedCronParser triggerWithRange = new EmbeddedCronParser("* * * * * * 2024-2030", timeZone);
+        
+        calendar.set(Calendar.YEAR, 2024);
+        calendar.set(Calendar.MONTH, 0);
+        calendar.set(Calendar.DAY_OF_MONTH, 1);
+        calendar.set(Calendar.HOUR_OF_DAY, 0);
+        calendar.set(Calendar.MINUTE, 0);
+        calendar.set(Calendar.SECOND, 0);
+        long nextForRange = triggerWithRange.next(intialTime.getTime());
+        assertEquals(calendar.getTime().getTime(), nextForRange);
+    }
+
+    @Test
+    public void testCronYearStayOnSameYear() {
+
+        final EmbeddedCronParser trigger = new EmbeddedCronParser("* * * * * * 2022", timeZone);
+
+        calendar.set(Calendar.YEAR, 2022);
+        calendar.set(Calendar.MONTH, Calendar.MAY);
+        calendar.set(Calendar.DAY_OF_MONTH, 1);
+        calendar.set(Calendar.HOUR_OF_DAY, 3);
+        calendar.set(Calendar.MINUTE, 4);
+        calendar.set(Calendar.SECOND, 33);
+        
+        Date intialTime = calendar.getTime();
+        calendar.set(Calendar.SECOND, 34);
+        long next = trigger.next(intialTime.getTime());
+        assertEquals(calendar.getTime().getTime(), next);
+        
+        final EmbeddedCronParser triggerWithRange = new EmbeddedCronParser("* * * * * * 2022-2030", timeZone);
+        calendar.set(Calendar.SECOND, 34);
+        long nextForRange = triggerWithRange.next(intialTime.getTime());
+        assertEquals(calendar.getTime().getTime(), nextForRange);
+
+        final EmbeddedCronParser triggerWithDayAndTime = new EmbeddedCronParser("0 0 7 15 * * 2022-2030", timeZone);
+        calendar.set(Calendar.DAY_OF_MONTH, 15);
+        calendar.set(Calendar.HOUR_OF_DAY, 7);
+        calendar.set(Calendar.MINUTE, 0);
+        calendar.set(Calendar.SECOND, 0);
+        long nextForTriggerWithDayAndTime = triggerWithDayAndTime.next(intialTime.getTime());
+        assertEquals(calendar.getTime().getTime(), nextForTriggerWithDayAndTime);
+
+    }
+
+    @Test
+    public void testJumpToNextYearWithinRange() {
+
+        final EmbeddedCronParser trigger = new EmbeddedCronParser("0 0 7 15 * * 2020-2025", timeZone);
+
+        calendar.set(Calendar.YEAR, 2023);
+        calendar.set(Calendar.MONTH, Calendar.DECEMBER);
+        calendar.set(Calendar.DAY_OF_MONTH, 24);
+        calendar.set(Calendar.HOUR_OF_DAY, 18);
+        calendar.set(Calendar.MINUTE, 4);
+        calendar.set(Calendar.SECOND, 33);
+        
+        Date intialTime = calendar.getTime();
+        calendar.set(Calendar.YEAR, 2024);
+        calendar.set(Calendar.MONTH, Calendar.JANUARY);
+        calendar.set(Calendar.DAY_OF_MONTH, 15);
+        calendar.set(Calendar.HOUR_OF_DAY, 7);
+        calendar.set(Calendar.MINUTE, 0);
+        calendar.set(Calendar.SECOND, 0);
+        long next = trigger.next(intialTime.getTime());
+        assertEquals(calendar.getTime().getTime(), next);
+    }
+
+    @Test
+    public void testJumpToNextYearLeavingRange() {
+
+        final EmbeddedCronParser trigger = new EmbeddedCronParser("0 0 7 15 * * 2020-2023", timeZone);
+
+        calendar.set(Calendar.YEAR, 2023);
+        calendar.set(Calendar.MONTH, Calendar.DECEMBER);
+        calendar.set(Calendar.DAY_OF_MONTH, 24);
+        calendar.set(Calendar.HOUR_OF_DAY, 18);
+        calendar.set(Calendar.MINUTE, 4);
+        calendar.set(Calendar.SECOND, 33);
+        
+        Date intialTime = calendar.getTime();
+        
+        calendar.set(Calendar.YEAR, calendar.getMaximum(Calendar.YEAR));
+        calendar.set(Calendar.MONTH, Calendar.JANUARY);
+        calendar.set(Calendar.DAY_OF_MONTH, 0);
+        calendar.set(Calendar.HOUR_OF_DAY, 0);
+        calendar.set(Calendar.MINUTE, 0);
+        calendar.set(Calendar.SECOND, 0);
+        long next = trigger.next(intialTime.getTime());
+        assertTrue(next > calendar.getTime().getTime());
+    }
+
     @Test
     public void testPreDeclared() {
         assertEquals("0 0 0 1 1 *", new EmbeddedCronParser("@annually", timeZone).getExpression());

@@ -35,14 +35,12 @@ import org.osgi.service.metatype.ObjectClassDefinition;
 class ConfigurationMetatypeSupport extends ConfigurationSupport implements MetaTypeProvider
 {
     private static final String[] CONF_PROPS = new String[]
-        { OsgiManager.PROP_MANAGER_ROOT, OsgiManager.DEFAULT_MANAGER_ROOT, //
-            OsgiManager.PROP_HTTP_SERVICE_SELECTOR, OsgiManager.DEFAULT_HTTP_SERVICE_SELECTOR, //
-            OsgiManager.PROP_DEFAULT_RENDER, OsgiManager.DEFAULT_PAGE, //
-            OsgiManager.PROP_REALM, OsgiManager.DEFAULT_REALM, //
-            OsgiManager.PROP_USER_NAME, OsgiManager.DEFAULT_USER_NAME, //
-            OsgiManager.PROP_PASSWORD, OsgiManager.DEFAULT_PASSWORD, //
-            OsgiManager.PROP_CATEGORY, OsgiManager.DEFAULT_CATEGORY, //
-            OsgiManager.PROP_LOCALE, "", //$NON-NLS-1$
+        { OsgiManager.PROP_MANAGER_ROOT, OsgiManager.DEFAULT_MANAGER_ROOT,
+            OsgiManager.PROP_DEFAULT_RENDER, OsgiManager.DEFAULT_PAGE,
+            OsgiManager.PROP_REALM, OsgiManager.DEFAULT_REALM,
+            OsgiManager.PROP_USER_NAME, OsgiManager.DEFAULT_USER_NAME,
+            OsgiManager.PROP_CATEGORY, OsgiManager.DEFAULT_CATEGORY,
+            OsgiManager.PROP_LOCALE, "",
         };
 
     private final Object ocdLock = new Object();
@@ -58,6 +56,7 @@ class ConfigurationMetatypeSupport extends ConfigurationSupport implements MetaT
 
     //---------- MetaTypeProvider
 
+    @Override
     public String[] getLocales()
     {
         // there is no locale support here
@@ -65,6 +64,7 @@ class ConfigurationMetatypeSupport extends ConfigurationSupport implements MetaT
     }
 
 
+    @Override
     public ObjectClassDefinition getObjectClassDefinition( String id, String locale )
     {
         if ( !osgiManager.getConfigurationPid().equals( id ) )
@@ -88,53 +88,45 @@ class ConfigurationMetatypeSupport extends ConfigurationSupport implements MetaT
         final Locale localeObj = Util.parseLocaleString( locale );
         final ResourceBundle rb = osgiManager.resourceBundleManager.getResourceBundle( osgiManager.getBundleContext()
             .getBundle(), localeObj );
-        final Map defaultConfig = osgiManager.getDefaultConfiguration();
+        final Map<String, Object> defaultConfig = osgiManager.getDefaultConfiguration();
 
         // simple configuration properties
-        final ArrayList adList = new ArrayList();
+        final ArrayList<AttributeDefinition> adList = new ArrayList<>();
         for ( int i = 0; i < CONF_PROPS.length; i++ )
         {
             final String key = CONF_PROPS[i++];
             final String defaultValue = ConfigurationUtil.getProperty( defaultConfig, key, CONF_PROPS[i] );
-            final String name = getString( rb, "metadata." + key + ".name", key ); //$NON-NLS-1$ //$NON-NLS-2$
-            final String descr = getString( rb, "metadata." + key + ".description", key ); //$NON-NLS-1$ //$NON-NLS-2$
+            final String name = getString( rb, "metadata." + key + ".name", key );
+            final String descr = getString( rb, "metadata." + key + ".description", key );
             adList.add( new AttributeDefinitionImpl( key, name, descr, defaultValue ) );
         }
 
-        // log level is select - so no simple default value; requires localized option labels
-        adList.add( new AttributeDefinitionImpl( OsgiManager.PROP_LOG_LEVEL, getString( rb,
-            "metadata.loglevel.name", OsgiManager.PROP_LOG_LEVEL ), //$NON-NLS-1$
-            getString( rb, "metadata.loglevel.description", OsgiManager.PROP_LOG_LEVEL ), //$NON-NLS-1$
-            AttributeDefinition.INTEGER, // type
-            new String[]
-                { String.valueOf( ConfigurationUtil.getProperty( defaultConfig, OsgiManager.PROP_LOG_LEVEL,
-                    OsgiManager.DEFAULT_LOG_LEVEL ) ) }, // default values
-            0, // cardinality
-            new String[]
-                { // option labels
-            getString( rb, "log.level.debug", "Debug" ), //$NON-NLS-1$ //$NON-NLS-2$
-                getString( rb, "log.level.info", "Information" ), //$NON-NLS-1$ //$NON-NLS-2$
-                getString( rb, "log.level.warn", "Warn" ), //$NON-NLS-1$ //$NON-NLS-2$
-                getString( rb, "log.level.error", "Error" ), //$NON-NLS-1$ //$NON-NLS-2$
-            }, new String[]
-            { "4", "3", "2", "1" } ) ); //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$ //$NON-NLS-4$
+        // password is special
+        final String pwKey = OsgiManager.PROP_PASSWORD;
+        adList.add( new AttributeDefinitionImpl( pwKey, getString( rb, "metadata." + pwKey + ".name", pwKey ),
+                getString( rb, "metadata." + pwKey + ".description", pwKey ) ) );
+
+        // boolean props
+        final String propKey = OsgiManager.PROP_ENABLE_SECRET_HEURISTIC;
+        adList.add( new AttributeDefinitionImpl( propKey, getString( rb, "metadata." + propKey + ".name", propKey ),
+                getString( rb, "metadata." + propKey + ".description", propKey ), OsgiManager.DEFAULT_ENABLE_SECRET_HEURISTIC ) );
 
         // list plugins - requires localized plugin titles
-        final TreeMap namesByClassName = new TreeMap();
-        final String[] defaultPluginsClasses = OsgiManager.PLUGIN_MAP;
+        final TreeMap<String, String> namesByClassName = new TreeMap<>();
+        final String[] defaultPluginsClasses = PluginHolder.PLUGIN_MAP;
         for ( int i = 0; i < defaultPluginsClasses.length; i++ )
         {
             final String clazz = defaultPluginsClasses[i++];
             final String label = defaultPluginsClasses[i];
-            final String name = getString( rb, label + ".pluginTitle", label ); //$NON-NLS-1$
+            final String name = getString( rb, label + ".pluginTitle", label );
             namesByClassName.put( clazz, name );
         }
         final String[] classes = ( String[] ) namesByClassName.keySet().toArray( new String[namesByClassName.size()] );
         final String[] names = ( String[] ) namesByClassName.values().toArray( new String[namesByClassName.size()] );
 
         adList.add( new AttributeDefinitionImpl( OsgiManager.PROP_ENABLED_PLUGINS, getString( rb,
-            "metadata.plugins.name", OsgiManager.PROP_ENABLED_PLUGINS ), //$NON-NLS-1$
-            getString( rb, "metadata.plugins.description", OsgiManager.PROP_ENABLED_PLUGINS ), //$NON-NLS-1$
+            "metadata.plugins.name", OsgiManager.PROP_ENABLED_PLUGINS ),
+            getString( rb, "metadata.plugins.description", OsgiManager.PROP_ENABLED_PLUGINS ),
             AttributeDefinition.STRING, classes, Integer.MIN_VALUE, names, classes ) );
 
         xocd = new ObjectClassDefinition()
@@ -144,31 +136,36 @@ class ConfigurationMetatypeSupport extends ConfigurationSupport implements MetaT
                 .toArray( new AttributeDefinition[adList.size()] );
 
 
+            @Override
             public String getName()
             {
-                return getString( rb, "metadata.name", "Apache Felix OSGi Management Console" ); //$NON-NLS-1$ //$NON-NLS-2$
+                return getString( rb, "metadata.name", "Apache Felix OSGi Management Console" );
             }
 
 
+            @Override
             public InputStream getIcon( int arg0 )
             {
                 return null;
             }
 
 
+            @Override
             public String getID()
             {
                 return osgiManager.getConfigurationPid();
             }
 
 
+            @Override
             public String getDescription()
             {
                 return getString( rb,
-                    "metadata.description", "Configuration of the Apache Felix OSGi Management Console." ); //$NON-NLS-1$ //$NON-NLS-2$
+                    "metadata.description", "Configuration of the Apache Felix OSGi Management Console." );
             }
 
 
+            @Override
             public AttributeDefinition[] getAttributeDefinitions( int filter )
             {
                 return ( filter == OPTIONAL ) ? null : attrs;
@@ -210,6 +207,17 @@ class ConfigurationMetatypeSupport extends ConfigurationSupport implements MetaT
         private final String[] optionValues;
 
 
+        AttributeDefinitionImpl( final String id, final String name, final String description )
+        {
+            this( id, name, description, PASSWORD, null, 0, null, null );
+        }
+
+        AttributeDefinitionImpl( final String id, final String name, final String description, final boolean defaultValue )
+        {
+            this( id, name, description, BOOLEAN, new String[]
+                { String.valueOf(defaultValue) }, 0, null, null );
+        }
+
         AttributeDefinitionImpl( final String id, final String name, final String description, final String defaultValue )
         {
             this( id, name, description, STRING, new String[]
@@ -232,54 +240,63 @@ class ConfigurationMetatypeSupport extends ConfigurationSupport implements MetaT
         }
 
 
+        @Override
         public int getCardinality()
         {
             return cardinality;
         }
 
 
+        @Override
         public String[] getDefaultValue()
         {
             return defaultValues;
         }
 
 
+        @Override
         public String getDescription()
         {
             return description;
         }
 
 
+        @Override
         public String getID()
         {
             return id;
         }
 
 
+        @Override
         public String getName()
         {
             return name;
         }
 
 
+        @Override
         public String[] getOptionLabels()
         {
             return optionLabels;
         }
 
 
+        @Override
         public String[] getOptionValues()
         {
             return optionValues;
         }
 
 
+        @Override
         public int getType()
         {
             return type;
         }
 
 
+        @Override
         public String validate( String arg0 )
         {
             return null;

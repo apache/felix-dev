@@ -71,7 +71,7 @@ public class FilePersistenceManagerConstructorTest
 
         // with null
         fpm = new FilePersistenceManager(null);
-        assertFpm(fpm, new File(FilePersistenceManager.DEFAULT_CONFIG_DIR) );
+        assertFpm(fpm, new File(new File(TEST_WORKING_DIRECTORY), FilePersistenceManager.DEFAULT_CONFIG_DIR));
 
         // with a relative path
         relPath = LOCATION_TEST;
@@ -102,7 +102,7 @@ public class FilePersistenceManagerConstructorTest
 
         // with null
         fpm = new FilePersistenceManager(null);
-        assertFpm(fpm, new File(FilePersistenceManager.DEFAULT_CONFIG_DIR) );
+        assertFpm(fpm, new File(new File(TEST_WORKING_DIRECTORY), FilePersistenceManager.DEFAULT_CONFIG_DIR));
 
         // with a relative path
         relPath = LOCATION_TEST;
@@ -120,7 +120,7 @@ public class FilePersistenceManagerConstructorTest
 
         // with null
         fpm = new FilePersistenceManager(bundleContext, null);
-        assertFpm(fpm, new File(FilePersistenceManager.DEFAULT_CONFIG_DIR) );
+        assertFpm(fpm, new File(new File(TEST_WORKING_DIRECTORY), FilePersistenceManager.DEFAULT_CONFIG_DIR));
 
         // with a relative path
         relPath = LOCATION_TEST;

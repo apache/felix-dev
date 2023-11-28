@@ -31,7 +31,6 @@ import org.apache.maven.artifact.handler.DefaultArtifactHandler;
 import org.apache.maven.artifact.versioning.VersionRange;
 import org.apache.maven.plugin.testing.stubs.ArtifactStub;
 import org.apache.maven.project.MavenProject;
-import org.apache.maven.shared.dependency.graph.DependencyGraphBuilder;
 
 
 /**

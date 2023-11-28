@@ -1,0 +1,9 @@
+{
+  "resources":[
+    {"pattern":"META-INF/services/org.osgi.framework.connect.ConnectFrameworkFactory"},
+    {"pattern":"META-INF/services/org.osgi.framework.launch.FrameworkFactory"},
+    {"pattern":"default.properties"},
+    {"pattern":"org/apache/felix/framework/Felix.properties"},
+    {"pattern":"org/apache/felix/framework/util/accessor.bytes"}
+  ]
+}

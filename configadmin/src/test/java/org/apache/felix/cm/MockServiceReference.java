@@ -66,5 +66,4 @@ public class MockServiceReference<S> implements ServiceReference<S>
     {
         return 0;
     }
-
 }

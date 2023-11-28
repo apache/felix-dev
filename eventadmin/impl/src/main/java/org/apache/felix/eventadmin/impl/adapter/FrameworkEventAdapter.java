@@ -39,11 +39,11 @@ public class FrameworkEventAdapter extends AbstractAdapter implements FrameworkL
 {
     /**
      * The constructor of the adapter. This will register the adapter with the
-     * given context as a <tt>FrameworkListener</tt> and subsequently, will
+     * given context as a {@code FrameworkListener} and subsequently, will
      * post received events via the given EventAdmin.
      *
      * @param context The bundle context with which to register as a listener.
-     * @param admin The <tt>EventAdmin</tt> to use for posting events.
+     * @param admin The {@code EventAdmin} to use for posting events.
      */
     public FrameworkEventAdapter(final BundleContext context, final EventAdmin admin)
     {
@@ -59,14 +59,14 @@ public class FrameworkEventAdapter extends AbstractAdapter implements FrameworkL
 
     /**
      * Once a framework event is received this method assembles and posts an event
-     * via the <tt>EventAdmin</tt> as specified in 113.6.3 OSGi R4 compendium.
+     * via the {@code EventAdmin} as specified in 113.6.3 OSGi R4 compendium.
      *
      * @param event The event to adapt.
      */
     @Override
     public void frameworkEvent(final FrameworkEvent event)
     {
-        final Dictionary<String, Object> properties = new Hashtable<String, Object>();
+        final Dictionary<String, Object> properties = new Hashtable<>();
 
         properties.put(EventConstants.EVENT, event);
 
@@ -74,7 +74,7 @@ public class FrameworkEventAdapter extends AbstractAdapter implements FrameworkL
 
         if (null != bundle)
         {
-            properties.put("bundle.id", new Long(bundle.getBundleId()));
+            properties.put("bundle.id", bundle.getBundleId());
 
             final String symbolicName = bundle.getSymbolicName();
 
@@ -105,7 +105,7 @@ public class FrameworkEventAdapter extends AbstractAdapter implements FrameworkL
             properties.put(EventConstants.EXCEPTION, thrown);
         }
 
-        final StringBuffer topic = new StringBuffer(
+        final StringBuilder topic = new StringBuilder(
             FrameworkEvent.class.getName().replace('.', '/'))
             .append('/');
 

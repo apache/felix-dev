@@ -29,19 +29,6 @@ import java.util.Map;
 import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
 
-import javax.servlet.Filter;
-import javax.servlet.FilterRegistration;
-import javax.servlet.RequestDispatcher;
-import javax.servlet.Servlet;
-import javax.servlet.ServletContext;
-import javax.servlet.ServletContextAttributeEvent;
-import javax.servlet.ServletContextAttributeListener;
-import javax.servlet.ServletException;
-import javax.servlet.ServletRegistration;
-import javax.servlet.SessionCookieConfig;
-import javax.servlet.SessionTrackingMode;
-import javax.servlet.descriptor.JspConfigDescriptor;
-
 import org.apache.felix.http.base.internal.dispatch.RequestDispatcherImpl;
 import org.apache.felix.http.base.internal.dispatch.RequestInfo;
 import org.apache.felix.http.base.internal.handler.ServletHandler;
@@ -50,6 +37,21 @@ import org.apache.felix.http.base.internal.registry.PathResolution;
 import org.apache.felix.http.base.internal.registry.PerContextHandlerRegistry;
 import org.apache.felix.http.base.internal.registry.ServletResolution;
 import org.apache.felix.http.base.internal.util.UriUtils;
+
+import jakarta.servlet.Filter;
+import jakarta.servlet.FilterRegistration;
+import jakarta.servlet.RequestDispatcher;
+import jakarta.servlet.Servlet;
+import jakarta.servlet.ServletContext;
+import jakarta.servlet.ServletContextAttributeEvent;
+import jakarta.servlet.ServletContextAttributeListener;
+import jakarta.servlet.ServletException;
+import jakarta.servlet.ServletRegistration;
+import jakarta.servlet.ServletRegistration.Dynamic;
+import jakarta.servlet.SessionCookieConfig;
+import jakarta.servlet.SessionTrackingMode;
+import jakarta.servlet.descriptor.JspConfigDescriptor;
+import jakarta.servlet.http.MappingMatch;
 
 /**
  * This servlet context implementation represents the shared
@@ -100,7 +102,7 @@ public class SharedServletContextImpl implements ServletContext
     }
 
     /**
-     * @see javax.servlet.ServletContext#getResource(java.lang.String)
+     * @see jakarta.servlet.ServletContext#getResource(java.lang.String)
      */
     @Override
     public URL getResource(String path)
@@ -318,8 +320,7 @@ public class SharedServletContextImpl implements ServletContext
         	final ServletResolution resolution = new ServletResolution();
         	resolution.handler = servletHandler;
             resolution.handlerRegistry = this.registry;
-            // TODO - what is the path of a named servlet?
-            final RequestInfo requestInfo = new RequestInfo("", null, null, null);
+            final RequestInfo requestInfo = new RequestInfo("", null, null, null, name, "", "", MappingMatch.EXACT, true);
             dispatcher = new RequestDispatcherImpl(resolution, requestInfo);
         }
         else
@@ -345,7 +346,6 @@ public class SharedServletContextImpl implements ServletContext
             query = path.substring(q + 1);
             path = path.substring(0, q);
         }
-        // TODO remove path parameters...
         final String encodedRequestURI = path == null ? "" : removeDotSegments(path);
         final String requestURI = decodePath(encodedRequestURI);
 
@@ -353,12 +353,13 @@ public class SharedServletContextImpl implements ServletContext
         final PathResolution pathResolution = this.registry.resolve(requestURI);
         if ( pathResolution != null )
         {
-        	final ServletResolution resolution = new ServletResolution();
-        	resolution.handler = pathResolution.handler;
-            resolution.handlerRegistry = this.registry;
+            pathResolution.handlerRegistry = this.registry;
             final RequestInfo requestInfo = new RequestInfo(pathResolution.servletPath, pathResolution.pathInfo, query,
-                    UriUtils.concat(this.contextPath, encodedRequestURI));
-            dispatcher = new RequestDispatcherImpl(resolution, requestInfo);
+                    UriUtils.concat(this.contextPath, encodedRequestURI),
+                    pathResolution.handler.getName(), pathResolution.matchedPattern,
+                    pathResolution.matchValue, pathResolution.match,
+                    false);
+            dispatcher = new RequestDispatcherImpl(pathResolution, requestInfo);
         }
         else
         {
@@ -380,11 +381,9 @@ public class SharedServletContextImpl implements ServletContext
         return this.context.getServerInfo();
     }
 
-    @SuppressWarnings("deprecation")
-    @Override
     public Servlet getServlet(final String name) throws ServletException
     {
-        return this.context.getServlet(name);
+		throw new UnsupportedOperationException("Deprecated method not supported");
     }
 
     @Override
@@ -393,11 +392,9 @@ public class SharedServletContextImpl implements ServletContext
         return this.name;
     }
 
-    @SuppressWarnings("deprecation")
-    @Override
     public Enumeration<String> getServletNames()
     {
-        return this.context.getServletNames();
+		throw new UnsupportedOperationException("Deprecated method not supported");
     }
 
     @Override
@@ -412,11 +409,9 @@ public class SharedServletContextImpl implements ServletContext
         return this.context.getServletRegistrations();
     }
 
-    @SuppressWarnings("deprecation")
-    @Override
     public Enumeration<Servlet> getServlets()
     {
-        return this.context.getServlets();
+		throw new UnsupportedOperationException("Deprecated method not supported");
     }
 
     @Override
@@ -425,23 +420,21 @@ public class SharedServletContextImpl implements ServletContext
         return this.context.getSessionCookieConfig();
     }
 
-    @SuppressWarnings("deprecation")
-    @Override
     public void log(final Exception cause, final String message)
     {
-        SystemLogger.error(message, cause);
+        SystemLogger.LOGGER.error(message, cause);
     }
 
     @Override
     public void log(final String message)
     {
-        SystemLogger.info(message);
+        SystemLogger.LOGGER.info(message);
     }
 
     @Override
     public void log(final String message, final Throwable cause)
     {
-        SystemLogger.error(message, cause);
+        SystemLogger.LOGGER.error(message, cause);
     }
 
     @Override
@@ -486,6 +479,41 @@ public class SharedServletContextImpl implements ServletContext
     @Override
     public void setSessionTrackingModes(final Set<SessionTrackingMode> modes)
     {
+        throw new IllegalStateException();
+    }
+
+    @Override
+    public Dynamic addJspFile(final String servletName, final String jspFile) {
+        throw new UnsupportedOperationException();
+    }
+
+    @Override
+    public int getSessionTimeout() {
+        return context.getSessionTimeout();
+    }
+
+    @Override
+    public void setSessionTimeout(final int sessionTimeout) {
+        throw new IllegalStateException();
+    }
+
+    @Override
+    public String getRequestCharacterEncoding() {
+        return context.getRequestCharacterEncoding();
+    }
+
+    @Override
+    public void setRequestCharacterEncoding(final String encoding) {
+        throw new IllegalStateException();
+    }
+
+    @Override
+    public String getResponseCharacterEncoding() {
+        return context.getResponseCharacterEncoding();
+    }
+
+    @Override
+    public void setResponseCharacterEncoding(final String encoding) {
         throw new IllegalStateException();
     }
 }

@@ -21,6 +21,8 @@ package org.apache.felix.webconsole.plugins.memoryusage.internal;
 import java.util.Dictionary;
 import java.util.Hashtable;
 
+import org.apache.felix.inventory.InventoryPrinter;
+import org.apache.felix.webconsole.servlet.ServletConstants;
 import org.osgi.framework.Bundle;
 import org.osgi.framework.BundleActivator;
 import org.osgi.framework.BundleContext;
@@ -49,10 +51,13 @@ public class Activator implements BundleActivator
 
         // install Web Console plugin
         Dictionary<String, Object> pluginProps = new Hashtable<String, Object>();
-        pluginProps.put("felix.webconsole.label", MemoryUsageConstants.LABEL);
-        pluginProps.put("felix.webconsole.category", MemoryUsageConstants.CATEGORY);
-        new AbstractServiceFactory(bundleContext, pluginProps, "javax.servlet.Servlet",
-            "org.apache.felix.webconsole.ConfigurationPrinter")
+        pluginProps.put(ServletConstants.PLUGIN_LABEL, MemoryUsageConstants.LABEL);
+        pluginProps.put(ServletConstants.PLUGIN_TITLE, "%dump.title");
+        pluginProps.put(ServletConstants.PLUGIN_CATEGORY, MemoryUsageConstants.CATEGORY);
+        pluginProps.put(InventoryPrinter.NAME, MemoryUsageConstants.LABEL);
+        pluginProps.put(InventoryPrinter.TITLE, "Memory Usage");
+        new AbstractServiceFactory(bundleContext, pluginProps, "jakarta.servlet.Servlet",
+            "org.apache.felix.inventory.InventoryPrinter")
         {
             @Override
             public Object createObject()

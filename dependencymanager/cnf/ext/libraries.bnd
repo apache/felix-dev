@@ -53,7 +53,7 @@ webconsole=\
 		
 ##
 # bndlib 
-bndlib=biz.aQute.bndlib;version=5.0.1
+bndlib=biz.aQute.bndlib;version=5.2.0
 
 ##
 # mockito

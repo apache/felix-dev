@@ -25,7 +25,7 @@ import org.osgi.framework.Bundle;
  * <p>
  * A Bundle can be adapted to provide a {@code BundleDTO} for the Bundle.
  * 
- * @author $Id$
+ * @author $Id: aa30709351d8fe70b19c9ea99456ebd15ecab7c3 $
  * @NotThreadSafe
  */
 public class BundleDTO extends DTO {

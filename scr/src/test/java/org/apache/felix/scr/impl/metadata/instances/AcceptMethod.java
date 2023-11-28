@@ -48,11 +48,13 @@ public class AcceptMethod
     }
 
 
+    @SuppressWarnings("unused")
     private void private_void()
     {
     }
 
 
+    @SuppressWarnings("unused")
     private String private_string()
     {
         return "";

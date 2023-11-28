@@ -24,7 +24,6 @@ import java.util.HashSet;
 
 import org.apache.maven.artifact.Artifact;
 import org.apache.maven.plugin.MojoExecutionException;
-import org.apache.maven.shared.dependency.graph.DependencyNode;
 
 
 /**
@@ -44,7 +43,7 @@ public final class DependencyExcluder extends AbstractDependencyFilter
     {
         super( dependencyArtifacts );
 
-        m_excludedArtifacts = new HashSet<Artifact>();
+        m_excludedArtifacts = new HashSet<>();
     }
 
 

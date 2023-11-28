@@ -44,6 +44,8 @@ public class DefaultThreadPool
 
     /**
      * Create a new pool.
+     * @param poolSize The size of the pool
+     * @param syncThreads Sync or async pool
      */
     public DefaultThreadPool(final int poolSize, final boolean syncThreads)
     {
@@ -86,6 +88,7 @@ public class DefaultThreadPool
 
     /**
      * Configure a new pool size.
+     * @param poolSize The pool size
      */
     public synchronized void configure(final int poolSize)
     {
@@ -103,6 +106,7 @@ public class DefaultThreadPool
 
     /**
      * Returns current pool size.
+     * @return The pool size
      */
     public int getPoolSize()
     {

@@ -40,12 +40,12 @@ import org.apache.felix.cm.integration.helper.ManagedServiceFactoryTestActivator
 import org.apache.felix.cm.integration.helper.NestedURLStreamHandler;
 import org.junit.Test;
 import org.junit.runner.RunWith;
+import org.ops4j.pax.exam.ExamFactory;
 import org.ops4j.pax.exam.Option;
 import org.ops4j.pax.exam.forked.ForkedTestContainerFactory;
-import org.ops4j.pax.exam.junit.ExamFactory;
-import org.ops4j.pax.exam.junit.ExamReactorStrategy;
-import org.ops4j.pax.exam.junit.JUnit4TestRunner;
-import org.ops4j.pax.exam.spi.reactors.AllConfinedStagedReactorFactory;
+import org.ops4j.pax.exam.junit.PaxExam;
+import org.ops4j.pax.exam.spi.reactors.ExamReactorStrategy;
+import org.ops4j.pax.exam.spi.reactors.PerMethod;
 import org.osgi.framework.BundleException;
 import org.osgi.framework.Constants;
 import org.osgi.framework.ServiceRegistration;
@@ -63,9 +63,9 @@ import junit.framework.TestCase;
  * Note that it must run as a {@link ForkedTestContainerFactory} because otherwise
  * we can't enable Java Security in the Framework
  */
-@RunWith( JUnit4TestRunner.class )
+@RunWith( PaxExam.class )
 @ExamFactory( ForkedTestContainerFactory.class )
-@ExamReactorStrategy( AllConfinedStagedReactorFactory.class )
+@ExamReactorStrategy( PerMethod.class )
 public class ConfigAdminSecurityTest extends ConfigurationBaseTest
 {
     

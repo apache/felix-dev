@@ -27,13 +27,14 @@ import org.osgi.framework.BundleContext;
 public class Level1Object extends BaseObject
 {
 
+    @SuppressWarnings("unused")
     private void activate_level1_bundle( BundleContext ctx )
     {
         setCalledMethod("activate_level1_bundle");
     }
 
 
-    protected void activate_level1_map( Map props )
+    protected void activate_level1_map(Map<?, ?> props)
     {
         setCalledMethod("activate_level1_map");
     }
