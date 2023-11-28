@@ -21,7 +21,6 @@
         <groupId>org.apache.felix</groupId>
         <artifactId>felix-parent</artifactId>
         <version>8</version>
-        <relativePath>../../../pom/pom.xml</relativePath>
     </parent>
     <modelVersion>4.0.0</modelVersion>
     <packaging>bundle</packaging>
@@ -171,7 +170,6 @@
             <plugin>
                 <groupId>org.apache.maven.plugins</groupId>
                 <artifactId>maven-checkstyle-plugin</artifactId>
-                <version>2.10</version>
                 <configuration>
                     <enableRulesSummary>false</enableRulesSummary>
                     <violationSeverity>warning</violationSeverity>
