@@ -21,9 +21,9 @@
     <modelVersion>4.0.0</modelVersion>
     <parent>
         <groupId>org.apache.felix</groupId>
-        <artifactId>org.apache.felix.http.parent</artifactId>
-        <version>13</version>
-        <relativePath>../parent/pom.xml</relativePath>
+        <artifactId>felix-parent</artifactId>
+        <version>8</version>
+        <relativePath>../../pom/pom.xml</relativePath>
     </parent>
 
     <name>Apache Felix Http Jetty</name>
@@ -38,7 +38,7 @@
         <developerConnection>scm:git:https://github.com/apache/felix-dev.git</developerConnection>
         <url>https://gitbox.apache.org/repos/asf?p=felix-dev.git</url>
       <tag>HEAD</tag>
-  </scm>
+    </scm>
 
     <properties>
         <felix.java.version>11</felix.java.version>
@@ -147,6 +147,8 @@
                 <extensions>true</extensions>
                 <configuration>
                     <instructions>
+                        <Bundle-SymbolicName>${project.artifactId}</Bundle-SymbolicName>
+                        <Bundle-Version>${project.version}</Bundle-Version>
                         <X-Jetty-Version>
                             ${jetty.version}
                         </X-Jetty-Version>
@@ -166,9 +168,9 @@
                             !org.eclipse.jetty,
                             !org.eclipse.jetty.version,
                             org.eclipse.jetty.*,
-			    org.apache.felix.http.jetty,
+                            org.apache.felix.http.jetty,
                             org.apache.felix.http.jakartawrappers,
-			    org.apache.felix.http.javaxwrappers
+                            org.apache.felix.http.javaxwrappers
                         </Export-Package>
                         <Private-Package>
                             org.apache.felix.http.base.*,
@@ -234,6 +236,19 @@
                 </configuration>
                 <executions>
                     <execution>
+                        <id>bundle</id>
+                        <phase>package</phase>
+                        <goals>
+                            <goal>bundle</goal>
+                        </goals>
+                    </execution>
+                    <execution>
+                        <id>baseline</id>
+                        <goals>
+                          <goal>baseline</goal>
+                        </goals>
+                    </execution>
+                    <execution>
                         <id>light-bundle</id>
                         <goals>
                             <goal>bundle</goal>
@@ -254,9 +269,9 @@
                                     org.osgi.service.http.runtime.dto,
                                     org.osgi.service.http.whiteboard,
                                     !org.osgi.service.servlet.*,
-				    org.apache.felix.http.jetty,
-				    org.apache.felix.http.javaxwrappers,
-				    org.apache.felix.http.jakartawrappers
+                                    org.apache.felix.http.jetty,
+                                    org.apache.felix.http.javaxwrappers,
+                                    org.apache.felix.http.jakartawrappers
                                 </Export-Package>
                                 <Private-Package>
                                     org.apache.felix.http.base.*,
@@ -312,10 +327,14 @@
         <dependency>
             <groupId>javax.servlet</groupId>
             <artifactId>javax.servlet-api</artifactId>
+            <version>3.1.0</version>
+            <scope>provided</scope>
         </dependency>
         <dependency>
             <groupId>org.osgi</groupId>
             <artifactId>osgi.core</artifactId>
+            <version>6.0.0</version>
+            <scope>provided</scope>
         </dependency>
         <dependency>
             <groupId>org.osgi</groupId>
@@ -414,11 +433,11 @@
             <artifactId>org.apache.felix.http.base</artifactId>
             <version>5.1.3-SNAPSHOT</version>
         </dependency>
-	<dependency>
+        <dependency>
             <groupId>org.apache.felix</groupId>
-	    <artifactId>org.apache.felix.http.wrappers</artifactId>
-	    <version>1.0.2</version>
-	</dependency>
+            <artifactId>org.apache.felix.http.wrappers</artifactId>
+            <version>1.0.2</version>
+        </dependency>
         <dependency>
             <groupId>commons-fileupload</groupId>
             <artifactId>commons-fileupload</artifactId>
@@ -429,7 +448,19 @@
             <artifactId>commons-io</artifactId>
             <version>2.11.0</version>
         </dependency>
-  <!-- Testing -->
+    <!-- Testing -->
+        <dependency>
+            <groupId>junit</groupId>
+            <artifactId>junit</artifactId>
+            <version>4.13.2</version>
+            <scope>test</scope>
+        </dependency>
+        <dependency>
+            <groupId>org.mockito</groupId>
+            <artifactId>mockito-core</artifactId>
+            <version>5.7.0</version>
+            <scope>test</scope>
+        </dependency>
         <dependency>
             <groupId>org.osgi</groupId>
             <artifactId>org.osgi.service.log</artifactId>
