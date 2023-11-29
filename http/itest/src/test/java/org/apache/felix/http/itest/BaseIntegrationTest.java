@@ -164,18 +164,15 @@ public abstract class BaseIntegrationTest {
                 mavenBundle("org.apache.sling", "org.apache.sling.commons.log", "5.3.0"),
                 mavenBundle("org.apache.sling", "org.apache.sling.commons.logservice", "1.1.0"),
 
-                mavenBundle("org.apache.geronimo.specs", "geronimo-json_1.0_spec", "1.0-alpha-1").startLevel(START_LEVEL_SYSTEM_BUNDLES),
-                mavenBundle("org.apache.johnzon", "johnzon-core", "1.0.0").startLevel(START_LEVEL_SYSTEM_BUNDLES),
+                mavenBundle("org.apache.sling", "org.apache.sling.commons.johnzon", "1.2.16").startLevel(START_LEVEL_SYSTEM_BUNDLES),
 
                 mavenBundle("org.apache.felix", "org.apache.felix.configadmin").version("1.9.22").startLevel(START_LEVEL_SYSTEM_BUNDLES),
                 mavenBundle("org.apache.felix", "org.apache.felix.http.servlet-api", System.getProperty("http.servlet.api.version")).startLevel(START_LEVEL_SYSTEM_BUNDLES),
-                mavenBundle("org.apache.felix", ORG_APACHE_FELIX_HTTP_JETTY, System.getProperty("http.jetty.version")).startLevel(START_LEVEL_SYSTEM_BUNDLES),
+                mavenBundle("org.apache.felix", System.getProperty("http.jetty.id"), System.getProperty("http.jetty.version")).startLevel(START_LEVEL_SYSTEM_BUNDLES),
                 mavenBundle("org.apache.felix", "org.apache.felix.http.whiteboard", "4.0.0").startLevel(START_LEVEL_SYSTEM_BUNDLES),
 
                 mavenBundle("org.apache.httpcomponents", "httpcore-osgi", "4.4.6").startLevel(START_LEVEL_SYSTEM_BUNDLES),
                 mavenBundle("org.apache.httpcomponents", "httpclient-osgi", "4.5.3").startLevel(START_LEVEL_SYSTEM_BUNDLES),
-                mavenBundle("org.mockito", "mockito-all", "1.10.19").startLevel(START_LEVEL_SYSTEM_BUNDLES),
-                mavenBundle("org.objenesis", "objenesis", "2.6").startLevel(START_LEVEL_SYSTEM_BUNDLES),
 
                 junitBundles(),
                 frameworkStartLevel(START_LEVEL_TEST_BUNDLE));
@@ -265,7 +262,7 @@ public abstract class BaseIntegrationTest {
      */
     protected Bundle findBundle(String bsn) {
         for (Bundle bundle : m_context.getBundles()) {
-            if (bsn.equals(bundle.getSymbolicName())) {
+            if (bsn.equals(bundle.getSymbolicName()) || (bundle.getSymbolicName() != null && bundle.getSymbolicName().startsWith(bsn))) {
                 return bundle;
             }
         }
@@ -274,7 +271,7 @@ public abstract class BaseIntegrationTest {
 
     protected Bundle getHttpJettyBundle() {
         Bundle b = findBundle(ORG_APACHE_FELIX_HTTP_JETTY);
-        assertNotNull("Apache Felix Jetty bundle not found?!", b);
+        assertNotNull("Apache Felix Jetty bundle not found. Looking for symbolic name equal to/starting with " + ORG_APACHE_FELIX_HTTP_JETTY, b);
         return b;
     }
 

@@ -32,12 +32,24 @@
 
     <properties>
         <felix.java.version>11</felix.java.version>
-        <pax.exam.version>4.13.1</pax.exam.version>
-        <pax.url.aether.version>2.6.2</pax.url.aether.version>
         <http.servlet.api.version>2.1.0</http.servlet.api.version>
         <http.jetty.version>5.1.5-SNAPSHOT</http.jetty.version>
+        <http.jetty.id>org.apache.felix.http.jetty</http.jetty.id>
+        <pax.exam.version>4.13.1</pax.exam.version>
+        <pax.url.aether.version>2.6.14</pax.url.aether.version>
     </properties>
 
+    <profiles>
+        <profile>
+            <id>jetty12</id>
+            <properties>
+                <felix.java.version>17</felix.java.version>
+                <http.servlet.api.version>3.0.0</http.servlet.api.version>
+                <http.jetty.version>1.0.0-SNAPSHOT</http.jetty.version>
+                <http.jetty.id>org.apache.felix.http.jetty12</http.jetty.id>
+            </properties>
+        </profile>
+    </profiles>
     <build>
         <plugins>
             <plugin>
@@ -47,6 +59,7 @@
                     <systemPropertyVariables>                    
                         <http.servlet.api.version>${http.servlet.api.version}</http.servlet.api.version>
                         <http.jetty.version>${http.jetty.version}</http.jetty.version>
+                        <http.jetty.id>${http.jetty.id}</http.jetty.id>
                     </systemPropertyVariables>
                 </configuration>
             </plugin>  
@@ -79,14 +92,14 @@
         </dependency>
         <dependency>
             <groupId>org.apache.geronimo.specs</groupId>
-            <artifactId>geronimo-json_1.0_spec</artifactId>
-            <version>1.0-alpha-1</version>
+            <artifactId>geronimo-json_1.1_spec</artifactId>
+            <version>1.3</version>
             <scope>provided</scope> 
         </dependency>
         <dependency>
             <groupId>org.apache.johnzon</groupId>
             <artifactId>johnzon-core</artifactId>
-            <version>1.0.0</version>
+            <version>1.2.21</version>
             <scope>provided</scope>
         </dependency>
         <dependency>
@@ -108,7 +121,7 @@
         </dependency>
         <dependency>
             <groupId>org.apache.felix</groupId>
-            <artifactId>org.apache.felix.http.jetty</artifactId>
+            <artifactId>${http.jetty.id}</artifactId>
             <version>${http.jetty.version}</version>
         </dependency>
         <dependency>
@@ -130,13 +143,6 @@
             <scope>test</scope>
         </dependency>
         <dependency>
-            <groupId>org.objenesis</groupId>
-            <artifactId>objenesis</artifactId>
-            <version>2.6</version>
-            <scope>test</scope>
-        </dependency>
-
-        <dependency>
             <groupId>org.ops4j.pax.url</groupId>
             <artifactId>pax-url-aether</artifactId>
             <version>${pax.url.aether.version}</version>
@@ -149,12 +155,6 @@
             <scope>test</scope>
         </dependency>
         <dependency>
-            <groupId>org.mockito</groupId>
-            <artifactId>mockito-core</artifactId>
-            <version>5.7.0</version>
-            <scope>test</scope>
-        </dependency>
-        <dependency>
             <groupId>javax.inject</groupId>
             <artifactId>javax.inject</artifactId>
             <version>1</version>
@@ -163,7 +163,7 @@
         <dependency>
             <groupId>org.apache.felix</groupId>
             <artifactId>org.apache.felix.framework</artifactId>
-            <version>7.0.3</version>
+            <version>7.0.5</version>
             <scope>test</scope>
         </dependency>
     </dependencies>

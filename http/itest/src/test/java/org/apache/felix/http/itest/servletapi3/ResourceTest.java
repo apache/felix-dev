@@ -27,6 +27,7 @@ import java.io.File;
 import java.io.IOException;
 import java.net.MalformedURLException;
 import java.net.URL;
+import java.nio.file.Files;
 import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.TimeUnit;
 
@@ -58,7 +59,7 @@ public class ResourceTest extends Servlet3BaseIntegrationTest {
             @Override
             public URL getResource(String name) {
                 try {
-                    File f = new File("src/test/resources/" + name);
+                    File f = new File("src/test/resources" + name);
                     if (f.exists()) {
                         return f.toURI().toURL();
                     }
@@ -76,25 +77,25 @@ public class ResourceTest extends Servlet3BaseIntegrationTest {
 
         TestServlet servlet = new TestServlet(initLatch, destroyLatch);
 
-        register("/", "/resource", context);
-        register("/test", servlet, context);
+        register("/files", "/resource", context);
+        register("/files/test", servlet, context);
 
-        URL testHtmlURL = createURL("/test.html");
-        URL testURL = createURL("/test");
+        URL testHtmlURL = createURL("/files/test.html");
+        URL testURL = createURL("/files/test");
 
         assertTrue(initLatch.await(5, TimeUnit.SECONDS));
 
-        assertResponseCode(SC_OK, testHtmlURL);
-        assertResponseCode(SC_OK, testURL);
+        assertContent(SC_OK, Files.readString(new File("src/test/resources/resource/test.html").toPath()), testHtmlURL);
+        assertContent(SC_OK, null, testURL);
 
-        unregister("/test");
+        unregister("/files/test");
 
         assertTrue(destroyLatch.await(5, TimeUnit.SECONDS));
 
-        assertResponseCode(SC_OK, testHtmlURL);
-        assertResponseCode(SC_OK, testURL);
+        assertContent(SC_OK, Files.readString(new File("src/test/resources/resource/test.html").toPath()), testHtmlURL);
+        assertResponseCode(SC_NOT_FOUND, testURL);
 
-        unregister("/");
+        unregister("/files");
 
         assertResponseCode(SC_NOT_FOUND, testHtmlURL);
         assertResponseCode(SC_NOT_FOUND, testURL);

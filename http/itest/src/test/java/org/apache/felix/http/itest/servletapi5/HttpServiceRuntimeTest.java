@@ -25,7 +25,6 @@ import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertNotSame;
 import static org.junit.Assert.assertTrue;
 import static org.junit.Assert.fail;
-import static org.mockito.Mockito.mock;
 import static org.osgi.framework.Constants.SERVICE_RANKING;
 import static org.osgi.service.servlet.runtime.HttpServiceRuntimeConstants.HTTP_SERVICE_ENDPOINT;
 import static org.osgi.service.servlet.runtime.dto.DTOConstants.FAILURE_REASON_EXCEPTION_ON_INIT;
@@ -167,7 +166,23 @@ public class HttpServiceRuntimeTest extends Servlet5BaseIntegrationTest {
         Dictionary<String, ?> properties = createDictionary(context == null ?
                 propertyEntries.subList(0, 2).toArray() : propertyEntries.toArray());
 
-        registrations.add(m_context.registerService(listenerClass.getName(), mock(listenerClass), properties));
+        final Object service;
+        if ( ServletContextListener.class.getName().equals(listenerClass.getName())) {
+            service = new ServletContextListener() {};
+        } else if ( ServletContextAttributeListener.class.getName().equals(listenerClass.getName())) {
+            service = new ServletContextAttributeListener() {};
+        } else if ( ServletRequestListener.class.getName().equals(listenerClass.getName())) {
+            service = new ServletRequestListener() {};
+        } else if ( ServletRequestAttributeListener.class.getName().equals(listenerClass.getName())) {
+            service = new ServletRequestAttributeListener() {};
+        } else if ( HttpSessionListener.class.getName().equals(listenerClass.getName())) {
+            service = new HttpSessionListener() {};
+        } else if ( HttpSessionAttributeListener.class.getName().equals(listenerClass.getName())) {
+            service = new HttpSessionAttributeListener() {};
+        } else {
+            throw new RuntimeException("Unknown listener class " + listenerClass.getName());
+        }
+        registrations.add(m_context.registerService(listenerClass.getName(), service, properties));
     }
 
     private ServiceRegistration<?> registerContext(String name, String path) throws InterruptedException {
@@ -175,7 +190,7 @@ public class HttpServiceRuntimeTest extends Servlet5BaseIntegrationTest {
                 HTTP_WHITEBOARD_CONTEXT_NAME, name,
                 HTTP_WHITEBOARD_CONTEXT_PATH, path);
 
-        ServiceRegistration<?> contextRegistration = m_context.registerService(ServletContextHelper.class.getName(), mock(ServletContextHelper.class), properties);
+        ServiceRegistration<?> contextRegistration = m_context.registerService(ServletContextHelper.class.getName(), new ServletContextHelper() {}, properties);
         registrations.add(contextRegistration);
         return contextRegistration;
     }
@@ -785,7 +800,7 @@ public class HttpServiceRuntimeTest extends Servlet5BaseIntegrationTest {
         Dictionary<String, ?> properties = createDictionary(HTTP_WHITEBOARD_CONTEXT_PATH, "");
 
         long counter = this.getRuntimeCounter();
-        registrations.add(m_context.registerService(ServletContextHelper.class.getName(), mock(ServletContextHelper.class), properties));
+        registrations.add(m_context.registerService(ServletContextHelper.class.getName(), new ServletContextHelper() {}, properties));
         counter = this.waitForRuntime(counter);
 
         final HttpServiceRuntime serviceRuntime = this.getHttpServiceRuntime();
@@ -1036,7 +1051,7 @@ public class HttpServiceRuntimeTest extends Servlet5BaseIntegrationTest {
     public void invalidListenerPopertyValueAppearsAsFailure() throws Exception {
         Dictionary<String, ?> properties = createDictionary(HTTP_WHITEBOARD_LISTENER, "invalid");
 
-        registrations.add(m_context.registerService(ServletRequestListener.class.getName(), mock(ServletRequestListener.class), properties));
+        registrations.add(m_context.registerService(ServletRequestListener.class.getName(), new ServletRequestListener() {}, properties));
 
         final HttpServiceRuntime serviceRuntime = this.getHttpServiceRuntime();
 
@@ -1077,7 +1092,7 @@ public class HttpServiceRuntimeTest extends Servlet5BaseIntegrationTest {
                 HTTP_WHITEBOARD_CONTEXT_PATH, "/second",
                 SERVICE_RANKING, Integer.MAX_VALUE);
 
-        ServiceRegistration<?> secondContext = m_context.registerService(ServletContextHelper.class.getName(), mock(ServletContextHelper.class), properties);
+        ServiceRegistration<?> secondContext = m_context.registerService(ServletContextHelper.class.getName(), new ServletContextHelper() {}, properties);
         registrations.add(secondContext);
         Long secondContextId = (Long) secondContext.getReference().getProperty(Constants.SERVICE_ID);
         counter = this.waitForRuntime(counter);
