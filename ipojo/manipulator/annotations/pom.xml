@@ -24,7 +24,7 @@
     </parent>
     <modelVersion>4.0.0</modelVersion>
     <artifactId>org.apache.felix.ipojo.annotations</artifactId>
-    <version>1.13.0</version>
+    <version>1.13.1-SNAPSHOT</version>
     <name>Apache Felix iPOJO Annotations</name>
 
     <description>
@@ -54,8 +54,4 @@
             </plugin>
         </plugins>
     </build>
-
-  <scm>
-    <tag>org.apache.felix.ipojo.manipulator-project-1.13.0</tag>
-  </scm>
 </project>

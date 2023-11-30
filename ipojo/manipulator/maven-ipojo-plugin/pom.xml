@@ -24,7 +24,7 @@
     </parent>
     <modelVersion>4.0.0</modelVersion>
     <artifactId>maven-ipojo-plugin</artifactId>
-    <version>1.13.0</version>
+    <version>1.13.1-SNAPSHOT</version>
     <name>Apache Felix iPOJO Maven Plugin</name>
     <packaging>maven-plugin</packaging>
 
@@ -192,8 +192,4 @@
             </build>
         </profile>
     </profiles>
-
-  <scm>
-    <tag>org.apache.felix.ipojo.manipulator-project-1.13.0</tag>
-  </scm>
 </project>
