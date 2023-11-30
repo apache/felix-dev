@@ -62,7 +62,6 @@ public class ResourceTest extends Servlet5BaseIntegrationTest {
             public URL getResource(String name) {
                 try {
                     File f = new File("src/test/resources" + name);
-                    System.out.println("********************** " + f.getAbsolutePath());
                     if (f.exists()) {
                         return f.toURI().toURL();
                     }
