@@ -18,22 +18,21 @@
   specific language governing permissions and limitations
   under the License.
   -->
-<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
+<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 https://maven.apache.org/xsd/maven-4.0.0.xsd">
   <modelVersion>4.0.0</modelVersion>
   <parent>
     <groupId>org.apache.felix</groupId>
     <artifactId>felix-parent</artifactId>
-    <version>2.1</version>
-    <relativePath>../../../pom/pom.xml</relativePath>
+    <version>8</version>
   </parent>
 
   <artifactId>ipojo-manipulator-bom</artifactId>
-    <version>1.12.2-SNAPSHOT</version>
+  <version>1.12.2-SNAPSHOT</version>
   <name>Apache Felix iPOJO Manipulator BOM</name>
   <packaging>pom</packaging>
 
   <properties>
-    <asm.version>5.0.2</asm.version>
+    <asm.version>9.6</asm.version>
     <metadata.version>1.6.0</metadata.version>
   </properties>
 
@@ -51,14 +50,18 @@
       </dependency>
       <dependency>
         <groupId>org.ow2.asm</groupId>
-        <artifactId>asm-all</artifactId>
+        <artifactId>asm</artifactId>
         <version>${asm.version}</version>
-        <exclusions>
-          <exclusion>
-            <groupId>org.ow2.asm</groupId>
-            <artifactId>asm-tree</artifactId>
-          </exclusion>
-        </exclusions>
+      </dependency>
+      <dependency>
+        <groupId>org.ow2.asm</groupId>
+        <artifactId>asm-commons</artifactId>
+        <version>${asm.version}</version>
+      </dependency>
+      <dependency>
+        <groupId>org.ow2.asm</groupId>
+        <artifactId>asm-util</artifactId>
+        <version>${asm.version}</version>
       </dependency>
       <dependency>
         <groupId>org.apache.felix</groupId>

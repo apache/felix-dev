@@ -16,12 +16,11 @@
   specific language governing permissions and limitations
   under the License.
 -->
-<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
+<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 https://maven.apache.org/xsd/maven-4.0.0.xsd">
     <parent>
         <groupId>org.apache.felix</groupId>
         <artifactId>felix-parent</artifactId>
-        <version>2.1</version>
-        <relativePath>../../../pom/pom.xml</relativePath>
+        <version>8</version>
     </parent>
     <modelVersion>4.0.0</modelVersion>
     <artifactId>org.apache.felix.ipojo.ant</artifactId>
@@ -49,7 +48,7 @@
         <dependency>
             <groupId>xerces</groupId>
             <artifactId>xercesImpl</artifactId>
-            <version>2.12.0</version>
+            <version>2.12.2</version>
         </dependency>
         <dependency>
             <groupId>ant</groupId>
@@ -86,7 +85,7 @@
             <plugin>
                 <groupId>org.apache.felix</groupId>
                 <artifactId>maven-bundle-plugin</artifactId>
-                <version>2.3.7</version>
+                <version>5.1.9</version>
                 <extensions>true</extensions>
                 <configuration>
                     <instructions>
@@ -122,7 +121,6 @@
             <plugin>
                 <groupId>org.apache.maven.plugins</groupId>
                 <artifactId>maven-checkstyle-plugin</artifactId>
-                <version>2.10</version>
                 <configuration>
                     <enableRulesSummary>false</enableRulesSummary>
                     <violationSeverity>warning</violationSeverity>
@@ -159,6 +157,13 @@
                         <exclude>src/main/resources/META-INF/services/org.apache.felix.ipojo.manipulator.spi.Module
                         </exclude>
                     </excludes>
+                </configuration>
+            </plugin>
+            <plugin>
+                <groupId>org.apache.maven.plugins</groupId>
+                <artifactId>maven-javadoc-plugin</artifactId>
+                <configuration>
+                    <additionalJOption>-Xdoclint:none</additionalJOption>
                 </configuration>
             </plugin>
         </plugins>

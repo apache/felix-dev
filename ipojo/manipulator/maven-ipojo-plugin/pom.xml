@@ -20,8 +20,7 @@
     <parent>
         <groupId>org.apache.felix</groupId>
         <artifactId>felix-parent</artifactId>
-        <version>2.1</version>
-        <relativePath>../../../pom/pom.xml</relativePath>
+        <version>8</version>
     </parent>
     <modelVersion>4.0.0</modelVersion>
     <artifactId>maven-ipojo-plugin</artifactId>
@@ -46,12 +45,12 @@
         <dependency>
             <groupId>org.apache.maven</groupId>
             <artifactId>maven-archiver</artifactId>
-            <version>2.4.1</version>
+            <version>3.6.0</version>
         </dependency>
         <dependency>
             <groupId>org.codehaus.plexus</groupId>
             <artifactId>plexus-utils</artifactId>
-            <version>3.0.16</version>
+            <version>3.0.24</version>
         </dependency>
         <dependency>
             <groupId>org.apache.maven</groupId>
@@ -90,8 +89,14 @@
         <plugins>
             <plugin>
                 <groupId>org.apache.maven.plugins</groupId>
+                <artifactId>maven-javadoc-plugin</artifactId>
+                <configuration>
+                    <additionalJOption>-Xdoclint:none</additionalJOption>
+                </configuration>
+            </plugin>
+            <plugin>
+                <groupId>org.apache.maven.plugins</groupId>
                 <artifactId>maven-checkstyle-plugin</artifactId>
-                <version>2.10</version>
                 <configuration>
                     <enableRulesSummary>false</enableRulesSummary>
                     <violationSeverity>warning</violationSeverity>
@@ -102,8 +107,8 @@
                 <groupId>org.apache.maven.plugins</groupId>
                 <artifactId>maven-compiler-plugin</artifactId>
                 <configuration>
-                    <source>1.5</source>
-                    <target>1.5</target>
+                    <source>8</source>
+                    <target>8</target>
                 </configuration>
             </plugin>
 
@@ -130,6 +135,10 @@
                     </excludes>
                 </configuration>
             </plugin>
+            <plugin>
+                <groupId>org.apache.maven.plugins</groupId>
+                <artifactId>maven-dependency-plugin</artifactId>
+            </plugin>
         </plugins>
     </build>
 
@@ -141,6 +150,35 @@
                     <plugin>
                         <groupId>org.apache.maven.plugins</groupId>
                         <artifactId>maven-javadoc-plugin</artifactId>
+                        <configuration>
+                            <tags>
+                                <tag>
+                                    <name>goal</name>
+                                    <placement>a</placement>
+                                    <head>Goal:</head>
+                                </tag>
+                                <tag>
+                                    <name>phase</name>
+                                    <placement>a</placement>
+                                    <head>Phase:</head>
+                                </tag>
+                                <tag>
+                                    <name>threadSafe</name>
+                                    <placement>a</placement>
+                                    <head>Thread Safe:</head>
+                                </tag>
+                                <tag>
+                                    <name>requiresDependencyResolution</name>
+                                    <placement>a</placement>
+                                    <head>Requires Dependency Resolution:</head>
+                                </tag>
+                                <tag>
+                                    <name>description</name>
+                                    <placement>a</placement>
+                                    <head>Description:</head>
+                                </tag>
+                            </tags>
+                        </configuration>
                         <executions>
                             <execution>
                                 <id>attach-javadocs</id>
