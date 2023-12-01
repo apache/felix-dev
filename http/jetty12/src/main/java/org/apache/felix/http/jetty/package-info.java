@@ -16,7 +16,7 @@
  * specific language governing permissions and limitations
  * under the License.
  */
-@Version("3.0")
+@Version("4.0")
 package org.apache.felix.http.jetty;
 
 import org.osgi.annotation.versioning.Version;
