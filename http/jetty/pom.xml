@@ -149,7 +149,6 @@
                     <instructions>
                         <Bundle-SymbolicName>${project.artifactId}</Bundle-SymbolicName>
                         <Bundle-Version>${project.version}</Bundle-Version>
-                        <_noimportjava>true</_noimportjava>
                         <X-Jetty-Version>
                             ${jetty.version}
                         </X-Jetty-Version>
