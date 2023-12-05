@@ -1427,7 +1427,9 @@ public abstract class AbstractComponentManager<S> implements ComponentManager<S>
     State getState()
     {
         State s = state.get();
-        m_container.getLogger().log(Level.DEBUG, "Querying state {0}", null, s);
+        // Trace as this is a getter and is called VERY often and 
+        // has no benefit for client's own debugging
+        m_container.getLogger().log(Level.TRACE, "Querying state {0}", null, s);
         return s;
     }
 
