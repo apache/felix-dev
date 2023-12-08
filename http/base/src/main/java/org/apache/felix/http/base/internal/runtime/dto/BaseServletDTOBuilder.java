@@ -25,9 +25,9 @@ import org.osgi.service.servlet.runtime.dto.BaseServletDTO;
 abstract class BaseServletDTOBuilder
 {
     /**
-     * Build a servlet DTO from a servlet info
-     * @param info The servlet info
-     * @return A servlet DTO
+     * Fill a servlet DTO from a servlet handler
+     * @param dto The base servlet DTO
+     * @param handler The servlet handler
      */
     public static void fill(final BaseServletDTO dto, final ServletHandler handler)
     {
@@ -40,9 +40,9 @@ abstract class BaseServletDTOBuilder
     }
 
     /**
-     * Build a servlet DTO from a servlet info
+     * Fill a servlet DTO from a servlet info
+     * @param dto The base servlet DTO
      * @param info The servlet info
-     * @return A servlet DTO
      */
     public static void fill(final BaseServletDTO dto, final ServletInfo info)
     {

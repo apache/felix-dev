@@ -88,7 +88,7 @@ public final class EventListenerRegistry implements
     /**
      * Add  listeners
      *
-     * @param listener handler
+     * @param handler The listener handler
      */
     public void addListeners(@NotNull final ListenerHandler handler)
     {

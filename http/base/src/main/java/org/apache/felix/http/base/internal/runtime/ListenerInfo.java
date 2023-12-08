@@ -74,8 +74,8 @@ public class ListenerInfo extends WhiteboardServiceInfo<EventListener>
     /**
      * Constructor
      * @param ref The service reference
-     * @param dtoTypes Optional dto types
      * @param types The listener types
+     * @param dtos Optional dto types
      */
     public ListenerInfo(final ServiceReference<EventListener> ref, final Set<String> types, final String[] dtos)
     {
