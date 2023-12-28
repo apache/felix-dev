@@ -25,6 +25,7 @@ import java.io.StringWriter;
 import java.io.Writer;
 import java.lang.reflect.Array;
 import java.nio.file.Files;
+import java.nio.file.StandardCopyOption;
 import java.text.MessageFormat;
 import java.util.AbstractMap;
 import java.util.ArrayList;
@@ -1497,7 +1498,7 @@ public class BundlesServlet extends AbstractOsgiManagerPlugin implements Invento
                 // copy the data to a file for better processing
                 tmpFile = File.createTempFile( "install", ".tmp" );
                 try (final InputStream bundleStream = part.getInputStream()) {
-                    Files.copy(bundleStream, tmpFile.toPath());
+                    Files.copy(bundleStream, tmpFile.toPath(), StandardCopyOption.REPLACE_EXISTING);
                 }
             } catch ( final Exception e ) {
                 Util.LOGGER.error("Problem accessing uploaded bundle file: {}", part.getSubmittedFileName(), e );
