@@ -86,12 +86,14 @@ import org.apache.felix.webconsole.internal.servlet.BrandingPluginImpl;
  * @deprecated Plugins should never use the branding plugin directly
  */
 @Deprecated
-public class DefaultBrandingPlugin extends BrandingPluginImpl implements BrandingPlugin {
+public class DefaultBrandingPlugin implements BrandingPlugin {
 
     private static volatile DefaultBrandingPlugin instance;
 
+    private final BrandingPluginImpl delegate;
+
     private DefaultBrandingPlugin() {
-        super();
+        this.delegate = new BrandingPluginImpl();
     }
 
     /**
@@ -104,5 +106,50 @@ public class DefaultBrandingPlugin extends BrandingPluginImpl implements Brandin
             instance = new DefaultBrandingPlugin();
         }
         return instance;
+    }
+
+    @Override
+    public String getBrandName() {
+        return delegate.getBrandName();
+    }
+
+    @Override
+    public String getFavIcon() {
+        return delegate.getFavIcon();
+    }
+
+    @Override
+    public String getMainStyleSheet() {
+        return delegate.getMainStyleSheet();
+    }
+
+    @Override
+    public String getProductImage() {
+        return delegate.getProductImage();
+    }
+
+    @Override
+    public String getProductName() {
+        return delegate.getProductName();
+    }
+
+    @Override
+    public String getProductURL() {
+        return delegate.getProductURL();
+    }
+
+    @Override
+    public String getVendorImage() {
+        return delegate.getVendorImage();
+    }
+
+    @Override
+    public String getVendorName() {
+        return delegate.getVendorName();
+    }
+
+    @Override
+    public String getVendorURL() {
+        return delegate.getVendorURL();
     }
 }
