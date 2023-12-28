@@ -50,7 +50,7 @@ Such framework properties will also be considered actual default values for miss
 | `felix.webconsole.password` | `password` |
 | `felix.webconsole.locale` | `locale` |
 
-Please note that setting any of these properties as framework property makes them visible to all bundles deployed. This is particularly to be considered in case of the `felix.webconsole.password` property (as for authentication, the use of a [Web Console Security Provider](https://felix.apache.org/subprojects/apache-felix-web-console/web-console-security-provider) is suggested anyway).
+Please note that setting any of these properties as framework property makes them visible to all bundles deployed. This is particularly to be considered in case of the `felix.webconsole.password` property (as for authentication, the use of a [Web Console Security Provider](EXTENSIONS.md) is suggested anyway).
 
 ## Security
 
@@ -58,20 +58,19 @@ The Web Console only has very basic security at the moment supporting only HTTP 
 
 To enhance the security of the Web Console you are strongly encouraged to change at least the `password` for the admin user.
 
-As of Web Console 3.1.0 this simple user setup can be extended by providing link:[Web Console Security Provider](https://felix.apache.org/subprojects/apache-felix-web-console/web-console-security-provider).
-See that page for more information.
+This simple user setup can and should be extended by providing a [Web Console Security Provider](EXTENSIONS.md). See that page for more information.
 
 ## Extending the Web Console
 
-The Web Console can be extended by registering an OSGi service for the interface `jakarta.servlet.Servlet` with the service property `felix.webconsole.label` set to the label (last segment in the URL) of the page and `felix.webconsole.title` set to the display title of the plugin. The respective service is called a Web Console Plugin or a plugin for short.
+The Web Console can be extended by registering an OSGi service for the interface `jakarta.servlet.Servlet`.
 
-Please refer to [Extending the Apache Felix Web Console](https://felix.apache.org/subprojects/apache-felix-web-console/extending-the-apache-felix-web-console) for full documentation on extending the Web Console.
+Please refer to [Extending the Apache Felix Web Console](EXTENSIONS.md) for full documentation on extending the Web Console.
 
 ## RESTful API
 
 While the Web Console does not have a full featured and documented REST-ful API, most plugins try to follow REST approaches. For example the bundles plugin is able to send information on all bundles or a single bundle.
 
-An attempt is made to document the current state of REST-like APIs at link [Web Console RESTful API](https://felix.apache.org/subprojects/apache-felix-web-console/web-console-restful-api).
+An attempt is made to document the current state of REST-like APIs at link [Web Console RESTful API](RESTAPI.md).
 
 ## Issues
 
@@ -91,7 +90,7 @@ Additional plugins can be found in the [plugins directory](https://github.com/ap
 
 If an OSGi Configuration Admin Service is available at runtime, the Configuration Manager plugin can be used to manage OSGi configurations. For human readbable configuration descriptions it is advisable to also install an OSGi Metatype service.
 
-The Configuration Manager is available via `+http://localhost:8888/system/console/configMgr+`. It display all configurable OSGi services.
+The Configuration Manager is available via `http://localhost:8888/system/console/configMgr`. It display all configurable OSGi services.
 
 #### Configuration Factories
 
