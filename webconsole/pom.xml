@@ -22,7 +22,7 @@
     <parent>
         <groupId>org.apache.felix</groupId>
         <artifactId>felix-parent</artifactId>
-        <version>7</version>
+        <version>8</version>
         <relativePath>../pom/pom.xml</relativePath>
     </parent>
 
@@ -33,8 +33,8 @@
     <name>Apache Felix Web Management Console</name>
     <description>
         Web Based Management Console for OSGi Frameworks. See
-        http://felix.apache.org/site/apache-felix-web-console.html for more
-        information on this bundle.
+        https://github.com/apache/felix-dev/tree/master/webconsole
+        for more information on this bundle.
     </description>
     
     <properties>
@@ -101,7 +101,7 @@
                             The Apache Software Foundation
                         </Bundle-Vendor>
                         <Bundle-DocURL>
-                            https://felix.apache.org/site/apache-felix-web-console.html
+                            https://github.com/apache/felix-dev/tree/master/webconsole
                         </Bundle-DocURL>
                         <Bundle-Activator>
                             org.apache.felix.webconsole.internal.OsgiManagerActivator
