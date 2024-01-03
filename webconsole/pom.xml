@@ -159,6 +159,7 @@
             <plugin>
                 <artifactId>maven-javadoc-plugin</artifactId>
                 <configuration>
+                    <release>${felix.java.version}</release>
                     <excludePackageNames>
                         *.internal.*:*.internal
                     </excludePackageNames>
