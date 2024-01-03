@@ -112,18 +112,6 @@
                     <artifactId>tools-maven-plugin</artifactId>
                     <version>1.4</version>
                 </plugin>
-                <plugin>
-                    <groupId>org.codehaus.mojo</groupId>
-                    <artifactId>animal-sniffer-maven-plugin</artifactId>
-                    <version>1.23</version>
-                    <configuration>
-                        <signature>
-                            <groupId>org.codehaus.mojo.signature</groupId>
-                            <artifactId>java1${felix.java.version}</artifactId>
-                            <version>1.0</version>
-                        </signature>
-                    </configuration>
-                </plugin>
             </plugins>
         </pluginManagement>
         <plugins>
@@ -233,6 +221,22 @@
                 <jdk>(,9)</jdk>
             </activation>
             <build>
+                <pluginManagement>
+                    <plugins>
+                        <plugin>
+                            <groupId>org.codehaus.mojo</groupId>
+                            <artifactId>animal-sniffer-maven-plugin</artifactId>
+                            <version>1.23</version>
+                            <configuration>
+                                <signature>
+                                    <groupId>org.codehaus.mojo.signature</groupId>
+                                    <artifactId>java1${felix.java.version}</artifactId>
+                                    <version>1.0</version>
+                                </signature>
+                            </configuration>
+                        </plugin>
+                    </plugins>
+                </pluginManagement>
                 <plugins>
                     <plugin>
                         <groupId>org.apache.maven.plugins</groupId>
@@ -240,6 +244,13 @@
                         <configuration>
                             <source>1.${felix.java.version}</source>
                             <target>1.${felix.java.version}</target>
+                        </configuration>
+                    </plugin>
+                    <plugin>
+                        <groupId>org.apache.maven.plugins</groupId>
+                        <artifactId>maven-javadoc-plugin</artifactId>
+                        <configuration>
+                            <source>1.${felix.java.version}</source>
                         </configuration>
                     </plugin>
                     <plugin>
@@ -272,6 +283,13 @@
                             release sets API classpath, source and target, see 
                             https://docs.oracle.com/javase/9/tools/javac.htm#GUID-AEEC9F07-CB49-4E96-8BC7-BCC2C7F725C9__GUID-D343F6B4-3FDD-43A8-AD24-43DD70214471 
                             and http://openjdk.java.net/jeps/247 -->
+                            <release>${felix.java.version}</release>
+                        </configuration>
+                    </plugin>
+                    <plugin>
+                        <groupId>org.apache.maven.plugins</groupId>
+                        <artifactId>maven-javadoc-plugin</artifactId>
+                        <configuration>
                             <release>${felix.java.version}</release>
                         </configuration>
                     </plugin>
