@@ -18,32 +18,33 @@ package org.apache.felix.maven.osgicheck.impl.mddocgen;
 
 import java.text.MessageFormat;
 
-import org.apache.felix.scr.impl.helper.Logger;
-import org.apache.felix.scr.impl.metadata.ComponentMetadata;
+import org.apache.felix.scr.impl.logger.BundleLogger;
+import org.apache.felix.scr.impl.logger.ComponentLogger;
 import org.apache.maven.plugin.logging.Log;
-import org.osgi.service.log.LogService;
+import org.osgi.framework.Bundle;
 
-final class MavenScrLogger implements Logger {
+final class MavenScrLogger implements BundleLogger, ComponentLogger {
 
     private final Log log;
+    private String prefix;
 
     public MavenScrLogger(final Log log) {
         this.log = log;
     }
 
     @Override
-    public boolean isLogEnabled(int level) {
+    public boolean isLogEnabled(Level level) {
         switch (level) {
-            case LogService.LOG_DEBUG:
+            case DEBUG:
                 return log.isDebugEnabled();
 
-            case LogService.LOG_ERROR:
+            case ERROR:
                 return log.isErrorEnabled();
 
-            case LogService.LOG_INFO:
+            case INFO:
                 return log.isInfoEnabled();
 
-            case LogService.LOG_WARNING:
+            case WARN:
                 return log.isWarnEnabled();
 
             default:
@@ -52,18 +53,20 @@ final class MavenScrLogger implements Logger {
     }
 
     @Override
-    public void log(int level, String pattern, Object[] arguments,
-            ComponentMetadata metadata, Long componentId, Throwable ex) {
-        String message = MessageFormat.format(pattern, arguments);
+    public void log(Level level, String message, Throwable ex, Object... args) {
+        String msg = MessageFormat.format(message, args);
 
-        log(level, message, metadata, componentId, ex);
+        log(level, msg, ex);
     }
 
     @Override
-    public void log(int level, String message, ComponentMetadata metadata,
-            Long componentId, Throwable ex) {
+    public void log(Level level, String message, Throwable ex) {
+        if (prefix != null && prefix.length() > 0)
+        {
+            message = prefix.concat(" ").concat(message);
+        }
         switch (level) {
-            case LogService.LOG_DEBUG:
+            case DEBUG:
                 if (ex != null) {
                     log.debug(message, ex);
                 } else {
@@ -71,7 +74,7 @@ final class MavenScrLogger implements Logger {
                 }
                 break;
 
-            case LogService.LOG_ERROR:
+            case ERROR:
                 if (ex != null) {
                     log.error(message, ex);
                 } else {
@@ -79,7 +82,7 @@ final class MavenScrLogger implements Logger {
                 }
                 break;
 
-            case LogService.LOG_INFO:
+            case INFO:
                 if (ex != null) {
                     log.info(message, ex);
                 } else {
@@ -87,7 +90,7 @@ final class MavenScrLogger implements Logger {
                 }
                 break;
 
-            case LogService.LOG_WARNING:
+            case WARN:
                 if (ex != null) {
                     log.warn(message, ex);
                 } else {
@@ -98,6 +101,16 @@ final class MavenScrLogger implements Logger {
             default:
                 break;
         }
+    }
+
+    @Override
+    public ComponentLogger component(Bundle m_bundle, String implementationClassName, String name) {
+        return this;
+    }
+
+    @Override
+    public void setComponentId(long m_componentId) {
+        this.prefix = "(" + m_componentId + ") ";
     }
 
 }

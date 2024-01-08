@@ -17,7 +17,6 @@
 package org.apache.felix.maven.osgicheck.impl.mddocgen;
 
 import java.io.File;
-import java.io.FileReader;
 import java.io.IOException;
 import java.io.PrintWriter;
 import java.util.Arrays;
@@ -25,16 +24,17 @@ import java.util.Collection;
 import java.util.Collections;
 import java.util.List;
 
+import javax.xml.parsers.SAXParser;
+import javax.xml.parsers.SAXParserFactory;
+
 import org.apache.felix.scr.impl.metadata.ComponentMetadata;
 import org.apache.felix.scr.impl.metadata.Faker;
 import org.apache.felix.scr.impl.metadata.PropertyMetadata;
 import org.apache.felix.scr.impl.metadata.ServiceMetadata;
-import org.apache.felix.scr.impl.parser.KXml2SAXParser;
 import org.apache.felix.scr.impl.xml.XmlHandler;
 import org.apache.maven.plugins.annotations.LifecyclePhase;
 import org.apache.maven.plugins.annotations.Mojo;
 import org.apache.maven.plugins.annotations.Parameter;
-import org.codehaus.plexus.util.IOUtil;
 
 @Mojo(
     name = "generate-services-doc",
@@ -107,9 +107,7 @@ public final class ServicesMarkdownGeneratorMojo extends AbstractMarkdownMojo {
                         }
                         File targetFile = new File(targetDir, className.getSimpleName() + ".md");
 
-                        PrintWriter writer = null;
-                        try {
-                            writer = newPrintWriter(targetFile);
+                        try(PrintWriter writer = newPrintWriter(targetFile)) {
 
                             // generic properties
 
@@ -132,8 +130,6 @@ public final class ServicesMarkdownGeneratorMojo extends AbstractMarkdownMojo {
                             }
                         } catch (IOException e) {
                             getLog().error("An error occurred while rendering documentation in " + targetFile, e);
-                        } finally {
-                            IOUtil.close(writer);
                         }
                     }
                 }
@@ -145,15 +141,14 @@ public final class ServicesMarkdownGeneratorMojo extends AbstractMarkdownMojo {
         getLog().debug("Analyzing '" + serviceFile + "' SCR file...");
 
         // read the original XML file
-        FileReader reader = null;
         List<ComponentMetadata> metadata = null;
 
         try {
-            reader = new FileReader(serviceFile);
-
-            XmlHandler xmlHandler = new XmlHandler(new SyntheticBundle(servicesDirectory, serviceFile), mavenScrLogger, false, true);
-            KXml2SAXParser parser = new KXml2SAXParser(reader);
-            parser.parseXML(xmlHandler);
+            XmlHandler xmlHandler = new XmlHandler(new SyntheticBundle(servicesDirectory, serviceFile), mavenScrLogger, false, true, null);
+            final SAXParserFactory factory = SAXParserFactory.newInstance();
+            factory.setNamespaceAware(true);
+            final SAXParser parser = factory.newSAXParser();
+            parser.parse(serviceFile, xmlHandler);
 
             getLog().debug("SCR file '" + serviceFile + "' successfully load");
 
@@ -163,8 +158,6 @@ public final class ServicesMarkdownGeneratorMojo extends AbstractMarkdownMojo {
                            + serviceFile
                            + "' could not be read", e);
             metadata = Collections.emptyList();
-        } finally {
-            IOUtil.close(reader);
         }
 
         return metadata;

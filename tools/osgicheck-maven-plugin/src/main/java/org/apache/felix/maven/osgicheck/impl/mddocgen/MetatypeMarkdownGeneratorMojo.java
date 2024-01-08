@@ -19,6 +19,7 @@ package org.apache.felix.maven.osgicheck.impl.mddocgen;
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.IOException;
+import java.io.InputStream;
 import java.io.PrintWriter;
 import java.util.Arrays;
 import java.util.Collection;
@@ -33,7 +34,6 @@ import org.apache.maven.plugins.annotations.LifecyclePhase;
 import org.apache.maven.plugins.annotations.Mojo;
 import org.apache.maven.plugins.annotations.Parameter;
 import org.codehaus.plexus.util.FileUtils;
-import org.codehaus.plexus.util.IOUtil;
 
 @Mojo(
     name = "generate-metatype-doc",
@@ -131,9 +131,7 @@ public final class MetatypeMarkdownGeneratorMojo extends AbstractMarkdownMojo {
                     }
                     File targetFile = new File(targetDir, className.getSimpleName() + ".md");
 
-                    PrintWriter writer = null;
-                    try {
-                        writer = newPrintWriter(targetFile);
+                    try (PrintWriter writer = newPrintWriter(targetFile)) {
 
                         // generic properties
 
@@ -157,8 +155,6 @@ public final class MetatypeMarkdownGeneratorMojo extends AbstractMarkdownMojo {
                         printAttributes(optionalAttributes, localizationProperties, writer);
                     } catch (IOException e) {
                         getLog().error("An error occurred while rendering documentation in " + targetFile, e);
-                    } finally {
-                        IOUtil.close(writer);
                     }
                 }
             }
@@ -169,10 +165,8 @@ public final class MetatypeMarkdownGeneratorMojo extends AbstractMarkdownMojo {
         getLog().debug("Analyzing '" + metatypeFile + "' meta type file...");
 
         // read the original XML file
-        FileInputStream inputStream = null;
         MetaData metadata = null;
-        try {
-            inputStream = new FileInputStream(metatypeFile);
+        try (FileInputStream inputStream = new FileInputStream(metatypeFile)) {
             metadata = reader.parse(inputStream);
 
             getLog().debug("Metaype file '" + metatypeFile + "' successfully load");
@@ -180,8 +174,6 @@ public final class MetatypeMarkdownGeneratorMojo extends AbstractMarkdownMojo {
             getLog().error("Metatype file '"
                            + metatypeFile
                            + "' could not be read", e);
-        } finally {
-            IOUtil.close(inputStream);
         }
 
         return metadata;
@@ -200,12 +192,10 @@ public final class MetatypeMarkdownGeneratorMojo extends AbstractMarkdownMojo {
         File propertiesFile = FileUtils.resolveFile(mainDir, propertiesFileName.toString());
 
         Properties properties = new Properties();
-        FileInputStream inputStream = null;
         if (propertiesFile.exists()) {
             getLog().debug("Loading properties file '" + propertiesFile + "'...");
 
-            try {
-                inputStream = new FileInputStream(propertiesFile);
+            try (InputStream inputStream = new FileInputStream(propertiesFile)) {
                 properties.load(inputStream);
 
                 getLog().debug("Properties file '" + propertiesFile + "' successfully load");
@@ -213,8 +203,6 @@ public final class MetatypeMarkdownGeneratorMojo extends AbstractMarkdownMojo {
                 getLog().error("Properties file '"
                                + metatypeFile
                                + "' can not be read, labels could not be human-readable", e);
-            } finally {
-                IOUtil.close(inputStream);
             }
         } else {
             getLog().warn("File '"

@@ -35,7 +35,6 @@ import org.apache.maven.plugin.MojoExecutionException;
 import org.apache.maven.plugin.MojoFailureException;
 import org.apache.maven.plugins.annotations.Parameter;
 import org.codehaus.plexus.util.FileUtils;
-import org.codehaus.plexus.util.IOUtil;
 
 abstract class AbstractMarkdownMojo extends AbstractMojo {
 
@@ -115,9 +114,7 @@ abstract class AbstractMarkdownMojo extends AbstractMojo {
     }
 
     private void writeIndex() throws MojoExecutionException {
-        PrintWriter writer = null;
-        try {
-            writer = newPrintWriter(new File(getTargetDir(), "README.md"));
+        try (PrintWriter writer = newPrintWriter(new File(getTargetDir(), "README.md"))) {
 
             writer.println(getReadmeTitle());
             writer.println("=======================");
@@ -153,8 +150,6 @@ abstract class AbstractMarkdownMojo extends AbstractMojo {
             }
         } catch (IOException e) {
             throw new MojoExecutionException("An error occurred while rendering index in README.md", e);
-        } finally {
-            IOUtil.close(writer);
         }
     }
 
