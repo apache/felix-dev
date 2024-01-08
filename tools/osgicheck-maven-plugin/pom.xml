@@ -76,8 +76,8 @@
     <dependencies>
         <dependency>
             <groupId>org.ow2.asm</groupId>
-            <artifactId>asm-all</artifactId>
-            <version>5.2</version>
+            <artifactId>asm-tree</artifactId>
+            <version>9.6</version>
         </dependency>
         <dependency>
             <groupId>org.apache.maven</groupId>

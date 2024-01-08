@@ -17,10 +17,13 @@
 package org.apache.felix.maven.osgicheck.impl;
 
 import java.io.File;
+import java.io.PrintWriter;
+import java.io.StringWriter;
 import java.util.Map;
 import java.util.jar.Manifest;
 
 import org.apache.maven.plugin.logging.Log;
+import org.codehaus.plexus.util.StringUtils;
 
 public interface CheckContext {
 
@@ -45,4 +48,20 @@ public interface CheckContext {
      * @param message The message.
      */
     void reportError(String message);
+
+    /**
+     * This method is invoked by a {@link Check} to report
+     * an exception.
+     * @param message The message.
+     */
+    default void reportError(String message, Throwable cause) {
+        StringWriter sw = new StringWriter();
+        PrintWriter pw = new PrintWriter(sw);
+        if (StringUtils.isNotBlank(message)) {
+            pw.print(message);
+            pw.println(":");
+        }
+        cause.printStackTrace(pw);
+        reportError(sw.toString());
+    }
 }
