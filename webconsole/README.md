@@ -111,7 +111,7 @@ In this case the Configuration Manager displays the name "myRealm, myClass" as d
 
 ## Releases
 
-### Changes in 5.0.0 (NOT RELEASED)
+### Changes in 5.0.0 (8/Jan/24)
 
 #### New Feature
 
