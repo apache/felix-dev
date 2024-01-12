@@ -1,4 +1,4 @@
-This directory contains a proof of concept for a new version of the Apache Felix Http Service.
+This directory contains an implementation of the Apache Felix Http Service.
 
-It is based on Servlet API 6, Eclipse Jetty 12 and Java 17.
+It is based on Servlet API 6, Eclipse Jetty 12 and requires Java 17.
 
