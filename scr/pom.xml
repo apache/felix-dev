@@ -325,7 +325,7 @@
                 <artifactId>maven-javadoc-plugin</artifactId>
                 <configuration>
                     <encoding>${project.build.sourceEncoding}</encoding>
-                    <excludePackageNames>*.impl</excludePackageNames>
+                    <excludePackageNames>org.apache.felix.scr.impl:org.apache.felix.scr.impl.*</excludePackageNames>
                     <source>${java.version}</source>
                 </configuration>
             </plugin>
