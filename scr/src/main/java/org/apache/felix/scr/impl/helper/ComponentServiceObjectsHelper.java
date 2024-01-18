@@ -211,9 +211,7 @@ public class ComponentServiceObjectsHelper
                 {
                     remove = instances.remove(service);
                 }
-                if ( remove ) {
-                    so.ungetService(service);
-                }
+                so.ungetService(service);
             }
         }
 
