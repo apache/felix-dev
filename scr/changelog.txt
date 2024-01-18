@@ -1,3 +1,12 @@
+Changes in 2.2.8
+** Improvement
+    * [FELIX-6463] Changing log levels for DS component getState and registration
+
+** Bug
+    * [FELIX-6616] Dynamic greedy 1..1 references may activate with no reference service bound
+    * [FELIX-6633] Dynamic references may miss events while causing deactivation
+    * [FELIX-6682] Felix SCR - 3 TestCases fail in OSGi TCK 
+
 Changes in 2.2.6
 -----------------
 ** Bug
