@@ -511,51 +511,43 @@ public final class WhiteboardManager
     /**
      * Find the list of matching contexts for the whiteboard service
      */
-    private List<WhiteboardContextHandler> getMatchingContexts(final WhiteboardServiceInfo<?> info)
-    {
+    private List<WhiteboardContextHandler> getMatchingContexts(final WhiteboardServiceInfo<?> info) {
         final List<WhiteboardContextHandler> result = new ArrayList<>();
-        for(final List<WhiteboardContextHandler> handlerList : this.contextMap.values())
-        {
+        for(final List<WhiteboardContextHandler> handlerList : this.contextMap.values()) {
             final WhiteboardContextHandler h = handlerList.get(0);
-            // check whether the servlet context helper is visible to the whiteboard bundle
-            // see chapter 140.2
-            boolean visible = h.getContextInfo().getServiceId() < 0; // internal ones are always visible
-            if ( !visible )
-            {
-                final String filterString = "(" + Constants.SERVICE_ID + "=" + String.valueOf(h.getContextInfo().getServiceId()) + ")";
-                try
-                {
-                    final Collection<ServiceReference<ServletContextHelper>> col = info.getServiceReference().getBundle().getBundleContext().getServiceReferences(ServletContextHelper.class, filterString);
-                    if ( !col.isEmpty() )
-                    {
-                        visible = true;
-                    }
-                }
-                catch ( final InvalidSyntaxException ise )
-                {
-                    // we ignore this and treat it as an invisible service
-                }
-            }
-            if ( visible )
-            {
-                if ( h.getContextInfo().getServiceReference() != null )
-                {
-                    if ( info.getContextSelectionFilter().match(h.getContextInfo().getServiceReference()) )
-                    {
-                        result.add(h);
-                    }
-                }
-                else
-                {
-                    final Map<String, String> props = new HashMap<>();
-                    props.put(HttpWhiteboardConstants.HTTP_WHITEBOARD_CONTEXT_NAME, h.getContextInfo().getName());
-                    props.put(HttpWhiteboardConstants.HTTP_WHITEBOARD_CONTEXT_PATH, h.getContextInfo().getPath());
-                    props.put(HttpWhiteboardConstants.HTTP_SERVICE_CONTEXT_PROPERTY, h.getContextInfo().getName());
 
-                    if ( info.getContextSelectionFilter().matches(props) )
-                    {
-                        result.add(h);
+            // check if the context matches
+            boolean matches = false;
+
+            if ( h.getContextInfo().getServiceReference() != null ) {
+                matches = info.getContextSelectionFilter().match(h.getContextInfo().getServiceReference());
+            } else {
+                final Map<String, String> props = new HashMap<>();
+                props.put(HttpWhiteboardConstants.HTTP_WHITEBOARD_CONTEXT_NAME, h.getContextInfo().getName());
+                props.put(HttpWhiteboardConstants.HTTP_WHITEBOARD_CONTEXT_PATH, h.getContextInfo().getPath());
+                props.put(HttpWhiteboardConstants.HTTP_SERVICE_CONTEXT_PROPERTY, h.getContextInfo().getName());
+
+                matches = info.getContextSelectionFilter().matches(props);
+            }
+
+            if (matches) {
+                // check whether the servlet context helper is visible to the whiteboard bundle
+                // see chapter 140.2
+                boolean visible = h.getContextInfo().getServiceId() < 0; // internal ones are always visible
+                if ( !visible ) {
+                    final String filterString = "(" + Constants.SERVICE_ID + "=" + String.valueOf(h.getContextInfo().getServiceId()) + ")";
+                    try {
+                        final Collection<ServiceReference<ServletContextHelper>> col = info.getServiceReference().getBundle().getBundleContext().getServiceReferences(ServletContextHelper.class, filterString);
+                        if ( !col.isEmpty() ) {
+                            visible = true;
+                        }
                     }
+                    catch ( final InvalidSyntaxException ise ) {
+                        // we ignore this and treat it as an invisible service
+                    }
+                }
+                if ( visible ) {
+                    result.add(h);
                 }
             }
         }
