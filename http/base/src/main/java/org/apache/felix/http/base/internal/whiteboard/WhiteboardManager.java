@@ -470,34 +470,31 @@ public final class WhiteboardManager
     /**
      * Find the list of matching contexts for the whiteboard service
      */
-    private List<WhiteboardContextHandler> getMatchingContexts(final WhiteboardServiceInfo<?> info)
-    {
+    private List<WhiteboardContextHandler> getMatchingContexts(final WhiteboardServiceInfo<?> info) {
         final List<WhiteboardContextHandler> result = new ArrayList<>();
-        for(final List<WhiteboardContextHandler> handlerList : this.contextMap.values())
-        {
+        for(final List<WhiteboardContextHandler> handlerList : this.contextMap.values()) {
             final WhiteboardContextHandler h = handlerList.get(0);
-            // check whether the servlet context helper is visible to the whiteboard bundle
-            // see chapter 140.2
-            boolean visible = h.getContextInfo().getServiceId() < 0; // internal ones are always visible
-            if ( !visible )
-            {
-                final String filterString = "(" + Constants.SERVICE_ID + "=" + String.valueOf(h.getContextInfo().getServiceId()) + ")";
-                try
-                {
-                    final ServiceReference<?>[] col = info.getServiceReference().getBundle().getBundleContext().getServiceReferences(h.getContextInfo().getServiceType(), filterString);
-                    if ( col !=null && col.length > 0 )
-                    {
-                        visible = true;
+
+            // check if the context matches
+            final boolean matches = h.getContextInfo().match(info);
+            if (matches) {
+                // check whether the servlet context helper is visible to the whiteboard bundle
+                // see chapter 140.2
+                boolean visible = h.getContextInfo().getServiceId() < 0; // internal ones are always visible
+                if ( !visible ) {
+                    final String filterString = "(" + Constants.SERVICE_ID + "=" + String.valueOf(h.getContextInfo().getServiceId()) + ")";
+                    try {
+                        final ServiceReference<?>[] col = info.getServiceReference().getBundle().getBundleContext().getServiceReferences(h.getContextInfo().getServiceType(), filterString);
+                        if ( col !=null && col.length > 0 ) {
+                            visible = true;
+                        }
+                    } catch ( final InvalidSyntaxException ise ) {
+                        // we ignore this and treat it as an invisible service
                     }
                 }
-                catch ( final InvalidSyntaxException ise )
-                {
-                    // we ignore this and treat it as an invisible service
+                if ( visible ) {
+                    result.add(h);
                 }
-            }
-            if ( visible && h.getContextInfo().match(info) )
-            {
-                result.add(h);
             }
         }
         return result;
