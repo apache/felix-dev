@@ -32,7 +32,7 @@
     </description>
 
     <properties>
-        <maven.version>3.5.0</maven.version>
+        <maven.version>3.8.1</maven.version>
         <felix.java.version>8</felix.java.version>
     </properties>
 
