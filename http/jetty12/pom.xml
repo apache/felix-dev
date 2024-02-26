@@ -30,19 +30,19 @@
     <description>This is an implementation of the R8.1 OSGi Servlet Service, the R7 OSGi Http Service and the R7 OSGi Http Whiteboard Specification</description>
 
     <artifactId>org.apache.felix.http.jetty12</artifactId>
-    <version>1.0.3-SNAPSHOT</version>
+    <version>1.0.3_BC</version>
     <packaging>bundle</packaging>
 
     <scm>
         <connection>scm:git:https://github.com/apache/felix-dev.git</connection>
         <developerConnection>scm:git:https://github.com/apache/felix-dev.git</developerConnection>
         <url>https://gitbox.apache.org/repos/asf?p=felix-dev.git</url>
-        <tag>org.apache.felix.http.jetty12-1.0.2</tag>
+        <tag>org.apache.felix.http.jetty12-1.0.3</tag>
     </scm>
 
     <properties>
         <felix.java.version>17</felix.java.version>
-        <jetty.version>12.0.5</jetty.version>
+        <jetty.version>12.0.6</jetty.version>
         <baseline.skip>true</baseline.skip>
     </properties>
 
@@ -181,6 +181,9 @@
                             org.apache.commons.*
                         </Conditional-Package>
                         <Import-Package>
+                            jakarta.annotation.*;resolution:=optional,
+                            jakarta.transaction.*;resolution:=optional,
+                            org.objectweb.asm.*;resolution:=optional,
                             sun.misc;resolution:=optional,
                             sun.nio.ch;resolution:=optional,
                             javax.imageio;resolution:=optional,
@@ -365,6 +368,11 @@
             <version>${jetty.version}</version>
         </dependency>
         <dependency>
+            <groupId>org.eclipse.jetty.ee10.websocket</groupId>
+            <artifactId>jetty-ee10-websocket-jetty-server</artifactId>
+            <version>${jetty.version}</version>
+        </dependency>
+        <dependency>
             <groupId>org.eclipse.jetty</groupId>
             <artifactId>jetty-server</artifactId>
             <version>${jetty.version}</version>
@@ -413,6 +421,21 @@
             <groupId>org.eclipse.jetty</groupId>
             <artifactId>jetty-session</artifactId>
             <version>${jetty.version}</version>
+        </dependency>
+        <dependency>
+           <groupId>org.eclipse.jetty.websocket</groupId>
+           <artifactId>jetty-websocket-jetty-api</artifactId>
+           <version>${jetty.version}</version>
+        </dependency>
+        <dependency>
+           <groupId>org.eclipse.jetty.websocket</groupId>
+           <artifactId>jetty-websocket-jetty-server</artifactId>
+           <version>${jetty.version}</version>
+        </dependency>
+        <dependency>
+          <groupId>org.eclipse.jetty.websocket</groupId>
+          <artifactId>jetty-websocket-jetty-client</artifactId>
+          <version>${jetty.version}</version>
         </dependency>
         <dependency>
             <groupId>org.osgi</groupId>
