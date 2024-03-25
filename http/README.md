@@ -14,14 +14,14 @@ This is an implementation of the [R8.1 Whiteboard Specification for Jakarta Serv
 
 The Apache Felix HTTP Service project includes several bundles.
 
-  * `org.apache.felix.http.servlet-api` - Provides the Servlet API (versions 2.6, 3.0, 3.1, 4.0, 5.0 and 6.0 of the Servlet specification)
-  * `org.apache.felix.http.api` - Provides the OSGi APIs for the Http Whiteboard and Http Service.
-  * `org.apache.felix.http.jetty12` - Implementation that is embedding Jetty server (currently Jetty 12.x, requiring Java 17). This bundle includes the http.api bundle. It's the the preferred Felix Jetty bundle to use, as Jetty 11 will be EoL in 2025.
-  * `org.apache.felix.http.jetty` - Predecessor implementation that is embedding Jetty server (currently Jetty 11.x, requiring Java 11). This bundle includes the http.api bundle. 
-  * `org.apache.felix.http.sslfilter` - Servlet filter for handling SSL termination.
-  * `org.apache.felix.http.bridge` - Implementation that uses the host application server (bridged mode). Must be used with the proxy (see below)
-  * `org.apache.felix.http.proxy` - Proxy that is needed inside WAR when deployed inside an application server.
-  * `org.apache.felix.http.wrappers` offers wrapper classes that can be used when transitioning to the `jakarta` namespace, while having libraries that don't offer a jakartified version yet. 
+  * [`org.apache.felix.http.servlet-api`](https://mvnrepository.com/artifact/org.apache.felix/org.apache.felix.http.servlet-api) - Provides the Servlet API (versions 2.6, 3.0, 3.1, 4.0, 5.0 and 6.0 of the Servlet specification)
+  * [`org.apache.felix.http.api`](https://mvnrepository.com/artifact/org.apache.felix/org.apache.felix.http.api) - Provides the OSGi APIs for the Http Whiteboard and Http Service.
+  * [`org.apache.felix.http.jetty12`](https://mvnrepository.com/artifact/org.apache.felix/org.apache.felix.http.jetty12) - Implementation that is embedding Jetty server (currently Jetty 12.x, requiring Java 17). This bundle includes the http.api bundle. It's the the preferred Felix Jetty bundle to use, as Jetty 11 will be EoL in 2025.
+  * [`org.apache.felix.http.jetty`](https://mvnrepository.com/artifact/org.apache.felix/org.apache.felix.http.jetty) - Predecessor implementation that is embedding Jetty server (currently Jetty 11.x, requiring Java 11). This bundle includes the http.api bundle. 
+  * [`org.apache.felix.http.sslfilter`](https://mvnrepository.com/artifact/org.apache.felix/org.apache.felix.http.sslfilter) - Servlet filter for handling SSL termination.
+  * [`org.apache.felix.http.bridge`](https://mvnrepository.com/artifact/org.apache.felix/org.apache.felix.http.bridge) - Implementation that uses the host application server (bridged mode). Must be used with the proxy (see below)
+  * [`org.apache.felix.http.proxy`](https://mvnrepository.com/artifact/org.apache.felix/org.apache.felix.http.proxy) - Proxy that is needed inside WAR when deployed inside an application server.
+  * [`org.apache.felix.http.wrappers`](https://mvnrepository.com/artifact/org.apache.felix/org.apache.felix.http.wrappers) offers wrapper classes that can be used when transitioning to the `jakarta` namespace, while having libraries that don't offer a jakartified version yet. 
 
 Note that as of version **3.x**, the Servlet APIs are **no longer** packaged with the implementation bundles! If you are migrating from lower versions, be sure to add the
 `org.apache.felix.http.servlet-api` (or any other compatible Serlvet API bundle) to your
