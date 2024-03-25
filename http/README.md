@@ -11,13 +11,15 @@ This is an implementation of the [HTTP Whiteboard Service as described in chapte
 
 The Apache Felix HTTP Service project includes several bundles.
 
-  * `org.apache.felix.http.servlet-api` - Provides the Servlet API (versions 2.6, 3.0, and 3.1 of the Servlet specification)
+  * `org.apache.felix.http.servlet-api` - Provides the Servlet API (versions 2.6, 3.0, 3.1, 4.0, 5.0 and 6.0 of the Servlet specification)
   * `org.apache.felix.http.api` - Provides the OSGi APIs for the Http Whiteboard and Http Service.
-  * `org.apache.felix.http.jetty` - Implementation that is embedding Jetty server (currently Jetty 9, requiring Java 8). This bundle includes the http.api bundle.
+  * `org.apache.felix.http.jetty` - Implementation that is embedding Jetty server (currently Jetty 11, requiring Java 11). This bundle includes the http.api bundle. Older versions of this bundle offered Jetty 9 and 10 (JavaEE8, JakartaEE 8, `javax` namespace), while the latest versions offer Jetty 11 (JakartaEE 9/10, `jakarta` namespace)
+  * `org.apache.felix.http.jetty12` - Implementation that is embedding Jetty server (currently Jetty 12, requiring Java 17). This bundle includes the http.api bundle. It supports the JakartaEE 9/10/onwards with the `jakarta` namespace and is the preferred Felix Jetty bundle to use. 
   * `org.apache.felix.http.sslfilter` - Servlet filter for handling SSL termination.
   * `org.apache.felix.http.bridge` - Implementation that uses the host application server (bridged mode). Must be used with the proxy (see below)
   * `org.apache.felix.http.cometd` - Adds Comet/Ajax Push functionality to the HTTP Service implementation.
   * `org.apache.felix.http.proxy` - Proxy that is needed inside WAR when deployed inside an application server.
+  * `org.apache.felix.http.wrappers` offers wrapper classes that can be used when transitioning to the `jakarta` namespace, while having libraries that don't offer a jakartified version yet. 
 
 Note that as of version **3.x**, the Servlet APIs are **no longer** packaged with the implementation bundles! If you are migrating from lower versions, be sure to add the
 `org.apache.felix.http.servlet-api` (or any other compatible Serlvet API bundle) to your
