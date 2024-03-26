@@ -115,6 +115,7 @@ See full reference in the [OSGi specification](https://docs.osgi.org/specificati
 The most important properties are:
 
   * `osgi.http.whiteboard.filter.regex` - The regular expression pattern to register filter with.
+  * `osgi.http.whiteboard.context.select` - Filter expression to select the servlet context (optional).
   * `osgi.http.whiteboard.filter.pattern` - Apply this servlet filter to the specified URL path patterns. The format of the patterns is specified in the servlet specification.
   * `osgi.http.whiteboard.filter.asyncSupported` - Declares whether the servlet filter supports asynchronous operation mode. Allowed values are true and false independent of case. Defaults to false. (optional)
   * `filter.init.*` - these properties (sans the `filter.init.` prefix) are made available throught the `FilterConfig` object of your filter. This allows you to supply your filter initialization parameters as you would normally do in the web descriptor (web.xml).
