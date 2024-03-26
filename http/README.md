@@ -120,6 +120,9 @@ The most important properties are:
   * `osgi.http.whiteboard.filter.asyncSupported` - Declares whether the servlet filter supports asynchronous operation mode. Allowed values are true and false independent of case. Defaults to false. (optional)
   * `filter.init.*` - these properties (sans the `filter.init.` prefix) are made available throught the `FilterConfig` object of your filter. This allows you to supply your filter initialization parameters as you would normally do in the web descriptor (web.xml).
 
+The order of filters is no longer managed by the `service.ranking` property, but by implementing the `compareTo` method. 
+Multiple servlet filters can process the same servlet request/response. If more than one Filter matches, they are processed in ranking order, as specified in `ServiceReference.compareTo`. The servlet filter with the highest ranking is processed first in the filter chain, while the servlet filter with the lowest ranking is processed last, before the Servlet.service method is called. After the servlet completes its service method the filter chain is unwound in reverse order.
+
 ### ServletContextHelper service properties
 
 See full reference in the [OSGi specification](https://docs.osgi.org/specification/osgi.cmpn/7.0.0/service.http.whiteboard.html#service.http.whiteboard.servletcontext).
