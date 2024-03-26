@@ -63,7 +63,7 @@ of additional bundles to deploy [as described in the jetty documentation](https:
 The OSGi whiteboard implementation simplifies the task of registering servlets, filters, resources, listeners, and servlet contexts. For a complete introduction, please refer to the OSGi R7 Compendium or Enterprise specification.
 
 For a short introduction: Such a whiteboard service can be registered by exporting it as a service, making it no longer necessary to track and use the `HttpService` directly (or the `ExtHttpService` in legacy implementations, for registering filters). The
-whiteboard implementation detects all `javax.servlet.Servlet` and `javax.servlet.Filter` services with the right service properties. Let us illustrate the usage by registering a servlet and a filter:
+whiteboard implementation detects all `jakarta.servlet.Servlet` and `jakarta.servlet.Filter` services with the right service properties. Let us illustrate the usage by registering a servlet and a filter:
 
 ```java
 public class Activator implements BundleActivator {
