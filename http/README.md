@@ -33,19 +33,19 @@ The jetty implementation uses the OSGi ServiceLoader mediator technique to find 
 
 Deploying the following set of bundles would be one way to enable the ServiceLoader mediator support:
 
-  * `[org.apache.aries.spifly:org.apache.aries.spifly.dynamic.bundle:1.3.7](https://mvnrepository.com/artifact/org.apache.aries.spifly/org.apache.aries.spifly.dynamic.bundle)`
-  * `[org.ow2.asm:asm:9.7](https://mvnrepository.com/artifact/org.ow2.asm/asm)`
-  * `[org.ow2.asm:asm-analysis:9.7](https://mvnrepository.com/artifact/org.ow2.asm/asm-analysis)`
-  * `[org.ow2.asm:asm-commons:9.7](https://mvnrepository.com/artifact/org.ow2.asm/asm-commons)`
-  * `[org.ow2.asm:asm-tree:9.7](https://mvnrepository.com/artifact/org.ow2.asm/asm-tree)`
-  * `[org.ow2.asm:asm-util:9.7](https://mvnrepository.com/artifact/org.ow2.asm/asm-util)`
+  * [`org.apache.aries.spifly:org.apache.aries.spifly.dynamic.bundle:1.3.7`](https://mvnrepository.com/artifact/org.apache.aries.spifly/org.apache.aries.spifly.dynamic.bundle)
+  * [`org.ow2.asm:asm:9.7`](https://mvnrepository.com/artifact/org.ow2.asm/asm)
+  * [`org.ow2.asm:asm-analysis:9.7`](https://mvnrepository.com/artifact/org.ow2.asm/asm-analysis)
+  * [`org.ow2.asm:asm-commons:9.7`](https://mvnrepository.com/artifact/org.ow2.asm/asm-commons)
+  * [`org.ow2.asm:asm-tree:9.7`](https://mvnrepository.com/artifact/org.ow2.asm/asm-tree)
+  * [`org.ow2.asm:asm-util:9.7`](https://mvnrepository.com/artifact/org.ow2.asm/asm-util)
 
 ### Jetty 12 bundle
 For the Jetty 12 bundle, start the following set of bundles _before_ the Jetty 12 bundle, but after the beforementioned ServiceLoader bundles (the order is important and can be configured in `felix.auto.start.1`). 
 The Jetty version should correspond with the version used in the [Jetty 12 bundle](https://github.com/apache/felix-dev/blob/master/http/jetty12/pom.xml#L44).
 
-* `[jetty-alpn-server-${jetty.version}](https://mvnrepository.com/artifact/org.eclipse.jetty/jetty-alpn-server)`
-* `[jetty-alpn-java-server-${jetty.version}](https://mvnrepository.com/artifact/org.eclipse.jetty/jetty-alpn-java-server)`
+* [`jetty-alpn-server-${jetty.version}`](https://mvnrepository.com/artifact/org.eclipse.jetty/jetty-alpn-server)
+* [`jetty-alpn-java-server-${jetty.version}`](https://mvnrepository.com/artifact/org.eclipse.jetty/jetty-alpn-java-server)
 
 ### Jetty 11 bundle
 
