@@ -34,15 +34,23 @@ The jetty implementation uses the OSGi ServiceLoader mediator technique to find 
 Deploying the following set of bundles would be one way to enable the ServiceLoader mediator support:
 
   * `org.apache.aries.spifly:org.apache.aries.spifly.dynamic.bundle:1.3.7`
-  * `org.apache.aries:org.apache.aries.util:1.1.3`
-  * `org.ow2.asm:asm:8.0.1`
-  * `org.ow2.asm:asm-analysis:8.0.1`
-  * `org.ow2.asm:asm-commons:8.0.1`
-  * `org.ow2.asm:asm-tree:8.0.1`
-  * `org.ow2.asm:asm-util:8.0.1`
+  * `org.ow2.asm:asm:9.7`
+  * `org.ow2.asm:asm-analysis:9.7`
+  * `org.ow2.asm:asm-commons:9.7`
+  * `org.ow2.asm:asm-tree:9.7`
+  * `org.ow2.asm:asm-util:9.7`
 
-Next, depending on your server environment you must choose only one of the following sets
-of additional bundles to deploy [as described in the jetty documentation](https://www.eclipse.org/jetty/documentation/current/alpn-chapter.html)
+### Jetty 12 bundle
+For the Jetty 12 bundle, start the following set of bundles _before_ the Jetty 12 bundle, but after the beforementioned ServiceLoader bundles (the order is important and can be configured in `felix.auto.start.1`). 
+The Jetty version should correspond with the version used in the [Jetty 12 bundle](https://github.com/blueconic/felix-dev/blob/maintenance/FELIX-6694-update-docs/http/jetty12/pom.xml#L44).
+
+* `jetty-alpn-server-${jetty.version}`
+* `jetty-alpn-java-server-${jetty.version}`
+
+### Jetty 11 bundle
+
+For the predecessor Jetty 11 bundle, depending on your server environment, you must choose only one of the following sets
+of additional bundles to deploy [as described in the jetty documentation](https://eclipse.dev/jetty/documentation/jetty-9/index.html#alpn)
 
 1. For java 9 or later:
     * `org.eclipse.jetty.alpn:alpn-api:1.1.3.v20160715`
