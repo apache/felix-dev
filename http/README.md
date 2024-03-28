@@ -31,7 +31,7 @@ classpath and deployment!
 
 Configure `org.apache.felix.http2.enable=true` to enable HTTP/2 in Jetty.
 
-The Jjetty implementation uses the OSGi ServiceLoader mediator technique to find certain pluggable components that are required for HTTP/2 support. Your OSGi runtime must first have the bundles needed for OSGi ServiceLoader support deployed. Background information about the OSGi ServiceLoader integration is discussed [here](https://blog.osgi.org/2013/02/javautilserviceloader-in-osgi.html)
+The Jetty implementation uses the OSGi ServiceLoader mediator technique to find certain pluggable components that are required for HTTP/2 support. Your OSGi runtime must first have the bundles needed for OSGi ServiceLoader support deployed. Background information about the OSGi ServiceLoader integration is discussed [here](https://blog.osgi.org/2013/02/javautilserviceloader-in-osgi.html)
 
 Deploying the following set of bundles would be one way to enable the ServiceLoader mediator support:
 
