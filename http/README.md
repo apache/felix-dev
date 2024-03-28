@@ -42,7 +42,7 @@ Deploying the following set of bundles would be one way to enable the ServiceLoa
 
 ### Jetty 12 bundle
 For the Jetty 12 bundle, start the following set of bundles _before_ the Jetty 12 bundle, but after the beforementioned ServiceLoader bundles (the order is important and can be configured in `felix.auto.start.1`). 
-The Jetty version should correspond with the version used in the [Jetty 12 bundle](https://github.com/blueconic/felix-dev/blob/maintenance/FELIX-6694-update-docs/http/jetty12/pom.xml#L44).
+The Jetty version should correspond with the version used in the [Jetty 12 bundle](https://github.com/apache/felix-dev/blob/master/http/jetty12/pom.xml#L44).
 
 * `jetty-alpn-server-${jetty.version}`
 * `jetty-alpn-java-server-${jetty.version}`
