@@ -478,6 +478,12 @@ public final class JettyService
 
     private void configureSslContextFactory(final SslContextFactory.Server connector)
     {
+        if (this.config.getTrustAllCertificates()) {
+            connector.setTrustAll(true);
+
+            // All SSL certificates are trusted, ignore all other configuration options
+            return;
+        }
         if (this.config.getKeystoreType() != null)
         {
             connector.setKeyStoreType(this.config.getKeystoreType());
