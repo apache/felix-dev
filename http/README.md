@@ -27,6 +27,11 @@ Note that as of version **3.x**, the Servlet APIs are **no longer** packaged wit
 `org.apache.felix.http.servlet-api` (or any other compatible Serlvet API bundle) to your
 classpath and deployment!
 
+### Light bundle
+If you would like to use your own Jetty jar instead of the one packaged with the Felix Jetty bundles, you can use the `light` variant.
+When building the Felix Jetty bundle with Maven (`mvn clean install`), the `light` bundle will be created in the `target` directory, postfixed with `-light.jar`.
+This jar can be deployed to your Felix OSGi environment, along with a compatible Jetty jar.
+
 ## Installing additional bundles for the optional HTTP/2 support with jetty
 
 Configure `org.apache.felix.http2.enable=true` to enable HTTP/2 in Jetty.
