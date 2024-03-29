@@ -48,9 +48,6 @@ public final class JettyConfig
     /** Felix specific property to set http reaching timeout limit */
     public static final String HTTP_TIMEOUT = "org.apache.felix.http.timeout";
 
-    /** Felix specific property to let Jetty trust all certificates */
-    public static final String FELIX_SSL_TRUST_ALL = "org.apache.felix.https.trustAllCertificates";
-
     /** Felix specific property to override the keystore file location. */
     public static final String FELIX_KEYSTORE = "org.apache.felix.https.keystore";
     private static final String OSCAR_KEYSTORE = "org.ungoverned.osgi.bundle.https.keystore";
@@ -409,15 +406,6 @@ public final class JettyConfig
     public long getLongProperty(String name, long defValue)
     {
         return parseLong(getProperty(name, null), defValue);
-    }
-
-    /**
-     * If set to true, all SSL certificates will be trusted regards of thats in the keystore.
-     * The keystore configuration options will be ignored when set to true.
-     * @return
-     */
-    public boolean getTrustAllCertificates(){
-        return getBooleanProperty(FELIX_SSL_TRUST_ALL, false);
     }
 
     public String getKeyPassword()
