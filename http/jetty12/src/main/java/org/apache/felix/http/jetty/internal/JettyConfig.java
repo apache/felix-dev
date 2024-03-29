@@ -412,7 +412,7 @@ public final class JettyConfig
     }
 
     /**
-     * If set to true, all SSL certificates will be trusted regardless of what's in the keystore.
+     * If set to true, all SSL certificates will be trusted regards of thats in the keystore.
      * The keystore configuration options will be ignored when set to true.
      * @return
      */
