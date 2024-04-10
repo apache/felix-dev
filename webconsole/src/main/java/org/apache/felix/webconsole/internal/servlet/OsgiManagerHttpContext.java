@@ -81,7 +81,7 @@ final class OsgiManagerHttpContext extends ServletContextHelper {
 
             @Override
             public String getServletPath() {
-                int managerRootIndex = r.getContextPath().indexOf(webManagerRoot);
+                int managerRootIndex = r.getContextPath().lastIndexOf(webManagerRoot);
                 return r.getContextPath().substring(managerRootIndex);
             }
 
