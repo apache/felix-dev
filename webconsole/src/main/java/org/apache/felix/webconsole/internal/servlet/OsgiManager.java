@@ -791,7 +791,7 @@ public class OsgiManager extends HttpServlet {
             }
 
             if (this.servletContextRegistration == null) {
-                final ServletContextHelper httpContext = new OsgiManagerHttpContext(this.bundleContext.getBundle(), securityProviderTracker);
+                final ServletContextHelper httpContext = new OsgiManagerHttpContext(this.bundleContext.getBundle(), securityProviderTracker, this.webManagerRoot);
                 final Dictionary<String, Object> props = new Hashtable<>();
                 if (httpServiceSelector != null) {
                     props.put(HttpWhiteboardConstants.HTTP_WHITEBOARD_TARGET, httpServiceSelector);
