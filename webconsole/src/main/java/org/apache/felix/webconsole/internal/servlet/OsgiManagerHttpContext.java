@@ -44,13 +44,16 @@ final class OsgiManagerHttpContext extends ServletContextHelper {
 
     private final Bundle bundle;
 
+    private final String webManagerRoot;
+
     OsgiManagerHttpContext(final Bundle webConsoleBundle,
             final ServiceTracker<WebConsoleSecurityProvider, WebConsoleSecurityProvider> tracker,
-            final String realm) {
+            final String realm, final String webManagerRoot) {
         super(webConsoleBundle);
         this.tracker = tracker;
         this.realm = realm;
         this.bundle = webConsoleBundle;
+        this.webManagerRoot = webManagerRoot;
     }
 
     public URL getResource(final String name) {
@@ -63,19 +66,23 @@ final class OsgiManagerHttpContext extends ServletContextHelper {
 
     @Override
     public boolean handleSecurity( final HttpServletRequest r, final HttpServletResponse response ) {
+
         final WebConsoleSecurityProvider provider = tracker.getService();
+        final String webManagerRoot = this.webManagerRoot;
 
         // for compatibility we have to adjust a few methods on the request
         final HttpServletRequest request = new HttpServletRequestWrapper(r) {
 
             @Override
             public String getContextPath() {
-                return "";
+                int managerRootIndex = r.getContextPath().lastIndexOf(webManagerRoot);
+                return r.getContextPath().substring(0, managerRootIndex);
             }
 
             @Override
             public String getServletPath() {
-                return r.getContextPath();
+                int managerRootIndex = r.getContextPath().indexOf(webManagerRoot);
+                return r.getContextPath().substring(managerRootIndex);
             }
 
             @Override

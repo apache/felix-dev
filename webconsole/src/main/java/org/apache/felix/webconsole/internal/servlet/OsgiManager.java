@@ -979,7 +979,7 @@ public class OsgiManager extends GenericServlet {
 
             if (this.servletContextRegistration == null) {
                 final ServletContextHelper httpContext = new OsgiManagerHttpContext(this.bundleContext.getBundle(),
-                    securityProviderTracker, realm);
+                    securityProviderTracker, realm, this.webManagerRoot);
                 final Dictionary<String, Object> props = new Hashtable<>();
                 if (httpServiceSelector != null) {
                     props.put(HttpWhiteboardConstants.HTTP_WHITEBOARD_TARGET, httpServiceSelector);

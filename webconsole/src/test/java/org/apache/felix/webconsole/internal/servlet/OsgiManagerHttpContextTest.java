@@ -19,11 +19,16 @@
 package org.apache.felix.webconsole.internal.servlet;
 
 import org.apache.felix.webconsole.WebConsoleSecurityProvider;
+import org.apache.felix.webconsole.WebConsoleSecurityProvider2;
 import org.junit.Test;
+import org.mockito.ArgumentCaptor;
 import org.mockito.Mockito;
 import org.osgi.framework.Bundle;
 import org.osgi.framework.BundleContext;
+import org.osgi.util.tracker.ServiceTracker;
 
+import javax.servlet.http.HttpServletRequest;
+import javax.servlet.http.HttpServletResponse;
 import java.lang.reflect.Method;
 
 import static org.junit.Assert.assertEquals;
@@ -33,7 +38,7 @@ public class OsgiManagerHttpContextTest {
     public void testAuthenticate() throws Exception {
         BundleContext bc = Mockito.mock(BundleContext.class);
         Bundle bundle = Mockito.mock(Bundle.class);
-        OsgiManagerHttpContext ctx = new OsgiManagerHttpContext(bundle, null, "blah");
+        OsgiManagerHttpContext ctx = new OsgiManagerHttpContext(bundle, null, "blah", "");
 
         Method authenticateMethod = OsgiManagerHttpContext.class.getDeclaredMethod(
                 "authenticate", new Class [] {WebConsoleSecurityProvider.class, String.class, byte[].class});
@@ -55,7 +60,7 @@ public class OsgiManagerHttpContextTest {
         Mockito.when(bc.getProperty(OsgiManager.FRAMEWORK_PROP_SECURITY_PROVIDERS)).thenReturn("a");
 
         Bundle bundle = Mockito.mock(Bundle.class);
-        OsgiManagerHttpContext ctx = new OsgiManagerHttpContext(bundle, null, "blah");
+        OsgiManagerHttpContext ctx = new OsgiManagerHttpContext(bundle, null, "blah", "");
 
         Method authenticateMethod = OsgiManagerHttpContext.class.getDeclaredMethod(
                 "authenticate", new Class [] {WebConsoleSecurityProvider.class, String.class, byte[].class});
@@ -70,6 +75,34 @@ public class OsgiManagerHttpContextTest {
         WebConsoleSecurityProvider sp = new TestSecurityProvider();
         assertEquals(true, authenticateMethod.invoke(ctx, sp, "xxx", "yyy".getBytes()));
         assertEquals(false, authenticateMethod.invoke(ctx, sp, "foo", "bar".getBytes()));
+    }
+
+    @Test
+    public void testPathsInHandleSecurity() throws Exception {
+
+        Bundle bundle = Mockito.mock(Bundle.class);
+        WebConsoleSecurityProvider2 provider = Mockito.mock(WebConsoleSecurityProvider2.class);
+        ServiceTracker<WebConsoleSecurityProvider, WebConsoleSecurityProvider> tracker = Mockito.mock(ServiceTracker.class);
+        Mockito.when(tracker.getService()).thenReturn(provider);
+
+        OsgiManagerHttpContext ctx = new OsgiManagerHttpContext(bundle, tracker, "blah", "/system/console");
+
+        HttpServletRequest request = Mockito.mock(HttpServletRequest.class);
+        HttpServletResponse response = Mockito.mock(HttpServletResponse.class);
+        Mockito.when(request.getContextPath()).thenReturn("/ctx/path/system/console");
+        Mockito.when(request.getServletPath()).thenReturn("/bin/servlet");
+
+
+        ctx.handleSecurity(request, response);
+
+        ArgumentCaptor<HttpServletRequest> authenticationRequest = ArgumentCaptor.forClass(HttpServletRequest.class);
+        ArgumentCaptor<HttpServletResponse> authenticationResponse = ArgumentCaptor.forClass(HttpServletResponse.class);
+        Mockito.verify(provider, Mockito.times(1)).authenticate(authenticationRequest.capture(), authenticationResponse.capture());
+
+        assertEquals("/ctx/path", authenticationRequest.getValue().getContextPath());
+        assertEquals("/system/console", authenticationRequest.getValue().getServletPath());
+        assertEquals("/bin/servlet", authenticationRequest.getValue().getPathInfo());
+        assertEquals(response, authenticationResponse.getValue());
     }
 
     private static class TestSecurityProvider implements WebConsoleSecurityProvider {
