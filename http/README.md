@@ -32,6 +32,17 @@ If you would like to use your own Jetty jar instead of the one packaged with the
 When building the Felix Jetty bundle with Maven (`mvn clean install`), the `light` bundle will be created in the `target` directory, postfixed with `-light.jar`.
 This jar can be deployed to your Felix OSGi environment, along with a compatible Jetty jar.
 
+Or just use maven to include the dependency with the `light` classifier. 
+```
+<dependency>
+   <groupId>org.apache.felix</groupId>
+   <artifactId>org.apache.felix.http.jetty12</artifactId>
+   <version>1.0.2</version>
+   <classifier>light</classifier>
+   <scope>runtime</scope>
+</dependency>
+```
+
 ## Installing additional bundles for the optional HTTP/2 support with jetty
 
 Configure `org.apache.felix.http2.enable=true` to enable HTTP/2 in Jetty.
