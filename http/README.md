@@ -126,7 +126,7 @@ registration *must* provide several service properties.
 
 ### Servlet service properties
 
-See full reference in the [OSGi specification](https://docs.osgi.org/specification/osgi.cmpn/7.0.0/service.http.whiteboard.html#service.http.whiteboard-i21223311).
+See full reference in the [OSGi specification](https://docs.osgi.org/specification/osgi.cmpn/8.1.0/service.servlet.html#service.servlet-i21223311).
 The most important properties are:
 
   * `osgi.http.whiteboard.servlet.pattern` - defines the servlet pattern to register the servlet under, should be a path as defined in the Servlet specification.
@@ -137,7 +137,7 @@ The most important properties are:
 
 ### Filter service properties
 
-See full reference in the [OSGi specification](https://docs.osgi.org/specification/osgi.cmpn/7.0.0/service.http.whiteboard.html#d0e121055).
+See full reference in the [OSGi specification](https://docs.osgi.org/specification/osgi.cmpn/8.1.0/service.servlet.html#d0e87922) .
 The most important properties are:
 
   * `osgi.http.whiteboard.filter.regex` - The regular expression pattern to register filter with.
@@ -151,7 +151,7 @@ Multiple servlet filters can process the same servlet request/response. If more 
 
 ### ServletContextHelper service properties
 
-See full reference in the [OSGi specification](https://docs.osgi.org/specification/osgi.cmpn/7.0.0/service.http.whiteboard.html#service.http.whiteboard.servletcontext).
+See full reference in the [OSGi specification](https://docs.osgi.org/specification/osgi.cmpn/8.1.0/service.servlet.html#service.http.whiteboard.servletcontext). 
 The most important properties are:
 
   * `osgi.http.whiteboard.context.name` - the identifier of the registered HTTP context to be referenced by a servlet or filter service
