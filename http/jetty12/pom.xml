@@ -228,7 +228,7 @@
                             {maven-resources},${project.build.directory}/serviceloader-resources
                         </Include-Resource>
                         <_removeheaders>
-                            Private-Package,Conditional-Package
+                            Private-Package,Conditional-Package,Include-Resource
                         </_removeheaders>
                     </instructions>
                 </configuration>
@@ -311,7 +311,7 @@
                                     {maven-resources}
                                 </Include-Resource>
                                 <_removeheaders>
-                                    X-Jetty-Version,Private-Package,Conditional-Package
+                                    X-Jetty-Version,Private-Package,Conditional-Package,Include-Resource
                                 </_removeheaders>
                             </instructions>
                         </configuration>
