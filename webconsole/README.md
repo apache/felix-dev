@@ -111,6 +111,13 @@ In this case the Configuration Manager displays the name "myRealm, myClass" as d
 
 ## Releases
 
+### Changes in 5.0.2 (14/Apr/24)
+
+#### Bug
+
+- [FELIX-6688](https://issues.apache.org/jira/browse/FELIX-6688) : Context path of outer servlet container is not respected for authentication
+
+
 ### Changes in 5.0.0 (8/Jan/24)
 
 #### New Feature
@@ -125,6 +132,8 @@ In this case the Configuration Manager displays the name "myRealm, myClass" as d
 - [FELIX-6653](https://issues.apache.org/jira/browse/FELIX-6653) : Remove all and debug bundling
 - [FELIX-6654](https://issues.apache.org/jira/browse/FELIX-6654) : Remove support for commons fileupload
 
+
+### Changes in 4.9.8 (14/Apr/24)                                                                                                                                                                                                                                          #### Bug                                                                                                                                                                                                                                                                  - [FELIX-6688](https://issues.apache.org/jira/browse/FELIX-6688) : Context path of outer servlet container is not respected for authentication
 
 ### Changes in 4.9.6 (7/Oct/23)
 
