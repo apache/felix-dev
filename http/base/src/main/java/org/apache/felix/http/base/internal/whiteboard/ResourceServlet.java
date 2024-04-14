@@ -24,6 +24,8 @@ import java.net.URISyntaxException;
 import java.net.URL;
 import java.net.URLConnection;
 
+import org.apache.felix.http.base.internal.util.MimeTypes;
+
 import jakarta.servlet.ServletException;
 import jakarta.servlet.http.HttpServlet;
 import jakarta.servlet.http.HttpServletRequest;
@@ -64,7 +66,10 @@ public class ResourceServlet extends HttpServlet {
 
     private void handle(final HttpServletRequest req, final HttpServletResponse res, final URL url, final String resName)
     throws IOException {
-        final String contentType = getServletContext().getMimeType(resName);
+        String contentType = getServletContext().getMimeType(resName);
+        if (contentType == null) {
+            contentType = MimeTypes.get().getByFile(resName);
+        }
         if (contentType != null) {
             res.setContentType(contentType);
         }
