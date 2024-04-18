@@ -32,6 +32,7 @@ import org.eclipse.jetty.ee10.websocket.server.JettyWebSocketServlet;
 import org.eclipse.jetty.ee10.websocket.server.JettyWebSocketServletFactory;
 import org.eclipse.jetty.ee10.websocket.server.internal.JettyServerFrameHandlerFactory;
 import org.eclipse.jetty.ee10.websocket.servlet.WebSocketUpgradeFilter;
+import org.eclipse.jetty.websocket.api.Callback;
 import org.eclipse.jetty.websocket.api.Session;
 import org.eclipse.jetty.websocket.api.annotations.OnWebSocketClose;
 import org.eclipse.jetty.websocket.api.annotations.OnWebSocketError;
@@ -193,6 +194,9 @@ public class TestWebSocketServlet extends JettyWebSocketServlet {
         @OnWebSocketOpen
         public void onOpen(final Session session) {
             doLog("Opened session: " + session);
+
+            // send a message to the client
+            session.sendText("Hello from server", Callback.NOOP);
         }
 
         @OnWebSocketError
