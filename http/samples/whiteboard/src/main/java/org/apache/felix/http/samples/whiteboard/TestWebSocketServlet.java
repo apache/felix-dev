@@ -123,27 +123,10 @@ public class TestWebSocketServlet extends JettyWebSocketServlet {
             }
         }
 
-        if (isWebsocketUpgradeRequest(req)) {
-            try {
-                doLog("Upgrading to websocket request...");
-                // Call WebSocketServlet service method first to handle upgrade requests
-                super.service(req, resp);
-            } catch (final Exception e) {
-                System.err.println("Error while upgrading to websocket request: " + e.getMessage());
-            } finally {
-                doLog("Done, upgrading to websocket request.");
-            }
-        }
-    }
+        doLog("Upgrading to websocket request...");
 
-    /**
-     * Returns true if the request is an upgrade request for WebSockets.
-     *
-     * @param request
-     * @return
-     */
-    private static boolean isWebsocketUpgradeRequest(final HttpServletRequest request) {
-        return "GET".equals(request.getMethod()) && !request.getHeader("Upgrade").isEmpty();
+        // Call JettyWebSocketServlet service method to handle upgrade requests
+        super.service(req, resp);
     }
 
     private void delayedInit() throws ServletException {
