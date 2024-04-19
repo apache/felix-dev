@@ -253,9 +253,9 @@ public final class JettyService
             loginService.setUserStore(new UserStore());
             this.server.addBean(loginService);
 
-            ServletContextHandler context = new ServletContextHandler(this.config.getContextPath(),                    
+            ServletContextHandler context = new ServletContextHandler(this.config.getContextPath(),
                     ServletContextHandler.SESSIONS);
-            
+
             this.parent = new ContextHandlerCollection(context);
 
             configureSessionManager(context);
@@ -570,7 +570,8 @@ public final class JettyService
         if (uriComplianceMode != null) {
             config.setUriCompliance(UriCompliance.valueOf(uriComplianceMode));
 
-            if ("LEGACY".equals(uriComplianceMode) || "UNSAFE".equals(uriComplianceMode)) {
+            if ("LEGACY".equals(uriComplianceMode) || "UNSAFE".equals(uriComplianceMode)
+                    || "UNAMBIGUOUS".equals(uriComplianceMode)) {
                 // See https://github.com/jetty/jetty.project/issues/11448#issuecomment-1969206031
                 this.server.getContainedBeans(ServletHandler.class)
                         .forEach(handler -> handler.setDecodeAmbiguousURIs(true));
