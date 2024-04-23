@@ -70,7 +70,8 @@
                                 // scan each of the artifacts to preserve the information found in any META-INF/services/* files
                                 project.artifacts.each() { artifact ->
 
-                                    if (artifact.getArtifactHandler().isAddedToClasspath() && !org.apache.maven.artifact.Artifact.SCOPE_TEST.equals( artifact.getScope() )) {
+                                    if (artifact.getArtifactHandler().isAddedToClasspath() && !org.apache.maven.artifact.Artifact.SCOPE_TEST.equals( artifact.getScope() )
+                                            && !artifact.isOptional()) { // assume optional artifacts are not embedded so should be skipped
                                         def jar;
                                         try {
                                             jar = new java.util.jar.JarFile(artifact.file)
@@ -165,9 +166,15 @@
                             org.osgi.service.servlet.runtime,
                             org.osgi.service.servlet.runtime.dto,
                             org.osgi.service.servlet.whiteboard,
-                            !org.eclipse.jetty,
-                            !org.eclipse.jetty.version,
-                            org.eclipse.jetty.*,
+                            org.eclipse.jetty.alpn.server,
+                            org.eclipse.jetty.http.*,
+                            org.eclipse.jetty.http2.*,
+                            org.eclipse.jetty.io.*,
+                            org.eclipse.jetty.jmx.*,
+                            org.eclipse.jetty.security.*,
+                            org.eclipse.jetty.server.*,
+                            org.eclipse.jetty.servlet.*,
+                            org.eclipse.jetty.util.*,
                             org.apache.felix.http.jetty,
                             org.apache.felix.http.jakartawrappers,
                             org.apache.felix.http.javaxwrappers
@@ -410,7 +417,19 @@
             <artifactId>jetty-alpn-server</artifactId>
             <version>${jetty.version}</version>
         </dependency>
-       <dependency>
+        <dependency>
+            <groupId>org.eclipse.jetty.websocket</groupId>
+            <artifactId>websocket-jakarta-server</artifactId>
+            <version>${jetty.version}</version>
+            <optional>true</optional>
+        </dependency>
+        <dependency>
+            <groupId>org.eclipse.jetty.websocket</groupId>
+            <artifactId>websocket-jetty-server</artifactId>
+            <version>${jetty.version}</version>
+            <optional>true</optional>
+        </dependency>
+        <dependency>
             <groupId>org.osgi</groupId>
             <artifactId>org.osgi.service.servlet</artifactId>
             <version>2.0.0</version>

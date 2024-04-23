@@ -483,6 +483,18 @@ class ConfigMetaTypeProvider implements MetaTypeProvider
                 "The format of the request log entries. Only relevant if 'Enable SLF4J Request Logging' is checked. Valid placeholders are described in https://www.eclipse.org/jetty/documentation/jetty-11/operations-guide/index.html#og-module-requestlog",
                 CustomRequestLog.NCSA_FORMAT,
                 bundle.getBundleContext().getProperty(JettyConfig.FELIX_HTTP_REQUEST_LOG_FORMAT)));
+
+        adList.add(new AttributeDefinitionImpl(JettyConfig.FELIX_JAKARTA_WEBSOCKET_ENABLE,
+                "Enable Jakarta standard WebSocket support",
+                "Whether to enable jakarta standard WebSocket support. Default is false.",
+                false,
+                bundle.getBundleContext().getProperty(JettyConfig.FELIX_JAKARTA_WEBSOCKET_ENABLE)));
+        adList.add(new AttributeDefinitionImpl(JettyConfig.FELIX_JETTY_WEBSOCKET_ENABLE,
+                "Enable Jetty specific WebSocket support",
+                "Whether to enable jetty specific WebSocket support. Default is false.",
+                false,
+                bundle.getBundleContext().getProperty(JettyConfig.FELIX_JAKARTA_WEBSOCKET_ENABLE)));
+
         return new ObjectClassDefinition()
         {
 
