@@ -268,8 +268,8 @@ public final class JettyConfig
     /** Felix specific property to specify the default protocol when negotiation fails  */
     public static final String FELIX_JETTY_ALPN_DEFAULT_PROTOCOL = "org.apache.felix.jetty.alpn.defaultProtocol";
 
-    /** Felix specific property to control whether to enable the standard jakarta.websocket APIs provided by Jakarta WebSocket 2.0 */
-    public static final String FELIX_JAKARTA_WEBSOCKET_ENABLE = "org.apache.felix.jakarta.websocket.enable";
+    /** Felix specific property to control whether to enable the standard jakarta.websocket EE9 APIs provided by Jakarta WebSocket 2.0 */
+    public static final String FELIX_JAKARTA_EE9_WEBSOCKET_ENABLE = "org.apache.felix.jakarta.ee9.websocket.enable";
 
     /** Felix specific property to control whether to enable they Jetty-specific WebSocket APIs */
     public static final String FELIX_JETTY_WEBSOCKET_ENABLE = "org.apache.felix.jetty.websocket.enable";
@@ -682,11 +682,11 @@ public final class JettyConfig
     }
 
     /**
-     * Returns <code>true</code> if jakarta websocket is configured to be used (
-     * {@link #FELIX_JAKARTA_WEBSOCKET_ENABLE})
+     * Returns <code>true</code> if jakarta EE9 websocket is configured to be used (
+     * {@link #FELIX_JAKARTA_EE9_WEBSOCKET_ENABLE})
      */
-    public boolean isUseJakartaWebsocket() {
-        return getBooleanProperty(FELIX_JAKARTA_WEBSOCKET_ENABLE, false);
+    public boolean isUseJakartaEE9Websocket() {
+        return getBooleanProperty(FELIX_JAKARTA_EE9_WEBSOCKET_ENABLE, false);
     }
 
     /**

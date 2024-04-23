@@ -312,8 +312,8 @@ public final class JettyService
                 maybeInitializeJettyWebsocket(context);
             }
 
-            if (this.config.isUseJakartaWebsocket()) {
-                maybeInitializeJakartaWebsocket(context);
+            if (this.config.isUseJakartaEE9Websocket()) {
+                maybeInitializeJakartaEE9Websocket(context);
             }
 
             this.server.start();
@@ -486,18 +486,18 @@ public final class JettyService
     }
 
     /**
-     * Initialize the jakarta websocket support for the servlet context handler.
+     * Initialize the jakarta EE9 websocket support for the servlet context handler.
      * If the optional initializer class is not present then a warning will be logged.
      *
      * @param handler the sevlet context handler to initialize
      */
-    private void maybeInitializeJakartaWebsocket(ServletContextHandler handler) {
+    private void maybeInitializeJakartaEE9Websocket(ServletContextHandler handler) {
         if (isClassNameVisible("org.eclipse.jetty.websocket.jakarta.server.config.JakartaWebSocketServletContainerInitializer")) {
             // Ensure that JavaxWebSocketServletContainerInitializer is initialized,
             // to setup the ServerContainer for this web application context.
             org.eclipse.jetty.websocket.jakarta.server.config.JakartaWebSocketServletContainerInitializer.configure(handler, null);
         } else {
-            SystemLogger.LOGGER.warn("Failed to initialize jakarta standard websocket support since the initializer class was not found. "
+            SystemLogger.LOGGER.warn("Failed to initialize jakarta EE9 standard websocket support since the initializer class was not found. "
                     + "Check if the websocket-jakarta-server bundle is deployed.");
         }
     }
