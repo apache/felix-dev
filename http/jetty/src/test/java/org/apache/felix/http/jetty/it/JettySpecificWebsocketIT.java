@@ -159,7 +159,7 @@ public class JettySpecificWebsocketIT extends AbstractJettyTestSupport {
      * WebSocket handler for the client side
      */
     @WebSocket(maxTextMessageSize = 64 * 1024)
-    public class MyClientWebSocket {
+    public static class MyClientWebSocket {
         private Session session;
         private String lastMessage;
 

@@ -159,7 +159,7 @@ public class JakartaEE9SpecificWebsocketIT extends AbstractJettyTestSupport {
      * WebSocket handler for the client side
      */
     @ClientEndpoint
-    public class MyClientWebSocket {
+    public static class MyClientWebSocket {
         private Session session;
         private String lastMessage;
 
