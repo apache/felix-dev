@@ -286,7 +286,7 @@ class ConfigMetaTypeProvider implements MetaTypeProvider
 
         adList.add(new AttributeDefinitionImpl(JettyConfig.FELIX_JETTY_URI_COMPLIANCE_MODE,
                 "Jetty URI compliance mode",
-                "Jetty URI compliance mode (if not set, Jetty wil configure a default)",
+                "Jetty URI compliance mode (if not set, Jetty will configure a default)",
                 null,
                 bundle.getBundleContext().getProperty(JettyConfig.FELIX_JETTY_URI_COMPLIANCE_MODE)));
 
