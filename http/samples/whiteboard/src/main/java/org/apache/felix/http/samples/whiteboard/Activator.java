@@ -75,6 +75,22 @@ public final class Activator
         filter2Props.put(HttpWhiteboardConstants.HTTP_WHITEBOARD_CONTEXT_SELECT,
                 "(" + HttpWhiteboardConstants.HTTP_WHITEBOARD_CONTEXT_NAME + "=filtersample)");
         context.registerService(Filter.class, filter2, filter2Props);
+
+        /**
+         * Register a WebSocket servlet on /filtersample/websocket/*.
+         * In the Chrome Console, this snippet can be used to send a message to the WebSocket:
+         *
+         * const websocket = new WebSocket("ws://localhost:8080/filtersample/websocket/example");
+         * websocket.send("test");
+         *
+         * This will log "test" to the stdout.
+         */
+        final TestWebSocketServlet webSocketServlet = new TestWebSocketServlet("websocket1");
+        final Dictionary<String, Object> webSocketServletProps = new Hashtable<>();
+        webSocketServletProps.put(HttpWhiteboardConstants.HTTP_WHITEBOARD_SERVLET_PATTERN, "/websocket/*");
+        webSocketServletProps.put(HttpWhiteboardConstants.HTTP_WHITEBOARD_CONTEXT_SELECT,
+                "(" + HttpWhiteboardConstants.HTTP_WHITEBOARD_CONTEXT_NAME + "=filtersample)");
+        context.registerService(Servlet.class, webSocketServlet, webSocketServletProps);
     }
 
     @Override

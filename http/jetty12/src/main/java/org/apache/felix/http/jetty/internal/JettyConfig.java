@@ -681,7 +681,7 @@ public final class JettyConfig
     }
 
     /**
-     * Returns <code>true</code> if jakarta EE9 websocket is configured to be used (
+     * Returns <code>true</code> if jakarta EE10 websocket is configured to be used (
      * {@link #FELIX_JAKARTA_EE10_WEBSOCKET_ENABLE})
      */
     public boolean isUseJakartaEE10Websocket() {
