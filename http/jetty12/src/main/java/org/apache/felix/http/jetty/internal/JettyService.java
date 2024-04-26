@@ -568,13 +568,18 @@ public final class JettyService
 
         String uriComplianceMode = this.config.getProperty(JettyConfig.FELIX_JETTY_URI_COMPLIANCE_MODE, null);
         if (uriComplianceMode != null) {
-            config.setUriCompliance(UriCompliance.valueOf(uriComplianceMode));
+            try {
+                config.setUriCompliance(UriCompliance.valueOf(uriComplianceMode));
 
-            if ("LEGACY".equals(uriComplianceMode) || "UNSAFE".equals(uriComplianceMode)
-                    || "UNAMBIGUOUS".equals(uriComplianceMode)) {
-                // See https://github.com/jetty/jetty.project/issues/11448#issuecomment-1969206031
-                this.server.getContainedBeans(ServletHandler.class)
-                        .forEach(handler -> handler.setDecodeAmbiguousURIs(true));
+                if (UriCompliance.LEGACY.equals(uriComplianceMode)
+                        || UriCompliance.UNSAFE.equals(uriComplianceMode)
+                        || UriCompliance.UNAMBIGUOUS.equals(uriComplianceMode)) {
+                    // See https://github.com/jetty/jetty.project/issues/11448#issuecomment-1969206031
+                    this.server.getContainedBeans(ServletHandler.class)
+                            .forEach(handler -> handler.setDecodeAmbiguousURIs(true));
+                }
+            } catch (IllegalArgumentException e) {
+                SystemLogger.LOGGER.warn("Invalid URI compliance mode: {}", uriComplianceMode);
             }
         }
 
