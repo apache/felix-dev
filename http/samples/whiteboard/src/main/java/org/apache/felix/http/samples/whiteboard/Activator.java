@@ -85,7 +85,7 @@ public final class Activator
          *
          * This will log "test from websocket 1" to the stdout.
          */
-        final TestWebsocketServletBundleContext webSocketServlet1 = new TestWebsocketServletBundleContext("websocket1");
+        final TestWebSocketServletBundleContext webSocketServlet1 = new TestWebSocketServletBundleContext("websocket1");
         final Dictionary<String, Object> webSocketServletProps1 = new Hashtable<>();
         webSocketServletProps1.put(HttpWhiteboardConstants.HTTP_WHITEBOARD_SERVLET_PATTERN, "/websocket1/*");
         webSocketServletProps1.put(HttpWhiteboardConstants.HTTP_WHITEBOARD_CONTEXT_SELECT,

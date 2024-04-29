@@ -33,10 +33,10 @@ import org.eclipse.jetty.websocket.api.annotations.WebSocket;
  * It respects the path this servlet is registered to, but requires some workarounds.
  * See FelixJettyWebSocketServlet for more details.
  */
-public class TestWebsocketServletBundleContext extends FelixJettyWebSocketServlet {
+public class TestWebSocketServletBundleContext extends FelixJettyWebSocketServlet {
     private final String name;
 
-    public TestWebsocketServletBundleContext(String name) {
+    public TestWebSocketServletBundleContext(String name) {
         this.name = name;
     }
 
