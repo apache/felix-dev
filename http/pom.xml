@@ -44,6 +44,7 @@
         <module>inventoryprinter</module>
         <module>itest</module>
         <module>jetty</module>
+        <module>jetty12</module>
         <module>proxy</module>
         <module>samples/whiteboard</module>
         <module>servlet-api</module>
