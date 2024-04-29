@@ -253,7 +253,10 @@ public final class JettyService
 
             ServletContextHandler context = new ServletContextHandler(this.config.getContextPath(),                    
                     ServletContextHandler.SESSIONS);
-            
+
+            // To support WebSockets via https://github.com/apache/felix-dev/pull/310
+            context.setCrossContextDispatchSupported(true);
+
             this.parent = new ContextHandlerCollection(context);
 
             configureSessionManager(context);

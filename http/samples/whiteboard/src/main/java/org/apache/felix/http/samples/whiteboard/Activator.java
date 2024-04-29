@@ -77,20 +77,38 @@ public final class Activator
         context.registerService(Filter.class, filter2, filter2Props);
 
         /**
-         * Register a WebSocket servlet on /filtersample/websocket/*.
+         * Register a WebSocket servlet on /filtersample/websocket1/*.
          * In the Chrome Console, this snippet can be used to send a message to the WebSocket:
          *
-         * const websocket = new WebSocket("ws://localhost:8080/filtersample/websocket/example");
-         * websocket.send("test");
+         * const websocket = new WebSocket("ws://localhost:8080/filtersample/websocket1/example");
+         * websocket.send("test from websocket 1");
          *
-         * This will log "test" to the stdout.
+         * This will log "test from websocket 1" to the stdout.
          */
-        final TestWebSocketServlet webSocketServlet = new TestWebSocketServlet("websocket1");
-        final Dictionary<String, Object> webSocketServletProps = new Hashtable<>();
-        webSocketServletProps.put(HttpWhiteboardConstants.HTTP_WHITEBOARD_SERVLET_PATTERN, "/websocket/*");
-        webSocketServletProps.put(HttpWhiteboardConstants.HTTP_WHITEBOARD_CONTEXT_SELECT,
+        final TestWebsocketServletBundleContext webSocketServlet1 = new TestWebsocketServletBundleContext("websocket1");
+        final Dictionary<String, Object> webSocketServletProps1 = new Hashtable<>();
+        webSocketServletProps1.put(HttpWhiteboardConstants.HTTP_WHITEBOARD_SERVLET_PATTERN, "/websocket1/*");
+        webSocketServletProps1.put(HttpWhiteboardConstants.HTTP_WHITEBOARD_CONTEXT_SELECT,
                 "(" + HttpWhiteboardConstants.HTTP_WHITEBOARD_CONTEXT_NAME + "=filtersample)");
-        context.registerService(Servlet.class, webSocketServlet, webSocketServletProps);
+        context.registerService(Servlet.class, webSocketServlet1, webSocketServletProps1);
+
+        /**
+         * Register another WebSocket servlet on /websocket2/*.
+         * Do note that the path the servlet is registered to is not reflected in the WebSocket URL.
+         * This is due to the way of registering the WebSocket code.
+         * In the Chrome Console, this snippet can be used to send a message to the WebSocket:
+         *
+         * const websocket = new WebSocket("ws://localhost:8080/websocket/example");
+         * websocket.send("test from websocket 2");
+         *
+         * This will log "test from websocket 2" to the stdout.
+         */
+        final TestWebSocketServletMainContext webSocketServlet2 = new TestWebSocketServletMainContext("websocket2");
+        final Dictionary<String, Object> webSocketServletProps2 = new Hashtable<>();
+        webSocketServletProps2.put(HttpWhiteboardConstants.HTTP_WHITEBOARD_SERVLET_PATTERN, "/websocket2/*");
+        webSocketServletProps2.put(HttpWhiteboardConstants.HTTP_WHITEBOARD_CONTEXT_SELECT,
+                "(" + HttpWhiteboardConstants.HTTP_WHITEBOARD_CONTEXT_NAME + "=filtersample)");
+        context.registerService(Servlet.class, webSocketServlet2, webSocketServletProps2);
     }
 
     @Override

@@ -28,10 +28,15 @@ import org.eclipse.jetty.websocket.api.annotations.OnWebSocketMessage;
 import org.eclipse.jetty.websocket.api.annotations.OnWebSocketOpen;
 import org.eclipse.jetty.websocket.api.annotations.WebSocket;
 
-public class TestWebSocketServlet extends FelixJettyWebSocketServlet {
+/**
+ * Example of a WebSocket servlet that uses the Jetty WebSocket API, and is registered on the bundle context.
+ * It respects the path this servlet is registered to, but requires some workarounds.
+ * See FelixJettyWebSocketServlet for more details.
+ */
+public class TestWebsocketServletBundleContext extends FelixJettyWebSocketServlet {
     private final String name;
 
-    public TestWebSocketServlet(String name) {
+    public TestWebsocketServletBundleContext(String name) {
         this.name = name;
     }
 
