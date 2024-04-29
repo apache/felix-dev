@@ -384,6 +384,7 @@
                                     org.apache.commons.*
                                 </Conditional-Package>
                                 <Import-Package>
+                                    org.eclipse.jetty.client;resolution:=optional,
                                     sun.misc;resolution:=optional,
                                     sun.nio.ch;resolution:=optional,
                                     javax.imageio;resolution:=optional,
@@ -490,6 +491,7 @@
                                     org.apache.commons.*
                                 </Conditional-Package>
                                 <Import-Package>
+                                    org.eclipse.jetty.client;resolution:=optional,
                                     sun.misc;resolution:=optional,
                                     sun.nio.ch;resolution:=optional,
                                     javax.imageio;resolution:=optional,
