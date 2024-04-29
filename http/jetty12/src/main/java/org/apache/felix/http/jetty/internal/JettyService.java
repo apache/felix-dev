@@ -34,7 +34,9 @@ import org.eclipse.jetty.alpn.server.ALPNServerConnectionFactory;
 import org.eclipse.jetty.ee10.servlet.ServletContextHandler;
 import org.eclipse.jetty.ee10.servlet.ServletHolder;
 import org.eclipse.jetty.ee10.servlet.SessionHandler;
+import org.eclipse.jetty.ee10.servlet.ServletHandler;
 import org.eclipse.jetty.http.HttpVersion;
+import org.eclipse.jetty.http.UriCompliance;
 import org.eclipse.jetty.http2.server.HTTP2ServerConnectionFactory;
 import org.eclipse.jetty.io.ConnectionStatistics;
 import org.eclipse.jetty.security.HashLoginService;
@@ -628,6 +630,23 @@ public final class JettyService
         config.setRequestHeaderSize(this.config.getHeaderSize());
         config.setResponseHeaderSize(this.config.getHeaderSize());
         config.setOutputBufferSize(this.config.getResponseBufferSize());
+
+        String uriComplianceMode = this.config.getProperty(JettyConfig.FELIX_JETTY_URI_COMPLIANCE_MODE, null);
+        if (uriComplianceMode != null) {
+            try {
+                config.setUriCompliance(UriCompliance.valueOf(uriComplianceMode));
+
+                if (UriCompliance.LEGACY.equals(uriComplianceMode)
+                        || UriCompliance.UNSAFE.equals(uriComplianceMode)
+                        || UriCompliance.UNAMBIGUOUS.equals(uriComplianceMode)) {
+                    // See https://github.com/jetty/jetty.project/issues/11448#issuecomment-1969206031
+                    this.server.getContainedBeans(ServletHandler.class)
+                            .forEach(handler -> handler.setDecodeAmbiguousURIs(true));
+                }
+            } catch (IllegalArgumentException e) {
+                SystemLogger.LOGGER.warn("Invalid URI compliance mode: {}", uriComplianceMode);
+            }
+        }
 
         // HTTP/1.1 requires Date header if possible (it is)
         config.setSendDateHeader(true);
