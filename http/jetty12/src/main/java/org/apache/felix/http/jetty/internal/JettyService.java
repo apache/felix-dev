@@ -503,7 +503,7 @@ public final class JettyService
             SystemLogger.LOGGER.info("Jakarta WebSocket EE10 servlet container initialized");
         } else {
             SystemLogger.LOGGER.warn("Failed to initialize jakarta EE10 standard websocket support since the initializer class was not found. "
-                    + "Check if the jetty-websocket-jakarta-server bundle is deployed.");
+                    + "Check if the jetty-ee10-websocket-jakarta-server bundle is deployed.");
         }
     }
 
