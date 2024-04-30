@@ -42,7 +42,7 @@ public abstract class FelixJettyWebSocketServlet extends JettyWebSocketServlet {
     public void service(final ServletRequest req, final ServletResponse res) throws ServletException, IOException {
         if (myFirstInitCall.compareAndSet(true, false)) {
             try {
-                delayedInit();
+                super.init();
             } finally {
                 myInitBarrier.countDown();
             }
@@ -55,20 +55,6 @@ public abstract class FelixJettyWebSocketServlet extends JettyWebSocketServlet {
         }
 
         super.service(req, res);
-    }
-
-    private void delayedInit() throws ServletException {
-        // Override the TCCL so that the internal factory can be found
-        // Jetty tries to use ServiceLoader, and their fallback is to
-        // use TCCL, it would be better if we could provide a loader...
-        final Thread currentThread = Thread.currentThread();
-        final ClassLoader tccl = currentThread.getContextClassLoader();
-        currentThread.setContextClassLoader(JettyWebSocketServlet.class.getClassLoader());
-        try {
-            super.init();
-        } finally {
-            currentThread.setContextClassLoader(tccl);
-        }
     }
 
     /**
