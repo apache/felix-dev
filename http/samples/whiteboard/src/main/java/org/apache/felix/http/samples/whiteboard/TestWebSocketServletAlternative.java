@@ -30,10 +30,10 @@ import org.eclipse.jetty.websocket.api.annotations.WebSocket;
 
 /**
  * Example of a WebSocket servlet that uses the Jetty WebSocket API, and is registered by extending JettyWebSocketServlet.
- * It does respect the path this servlet is registered to, but requires a further workaround. See FelixHttpWebSocketServlet.
+ * It does respect the path this servlet is registered to, but requires a further workaround. See FelixJettyWebSocketServlet.
  * Requires setting `org.apache.felix.jetty.ee10.websocket.enable=true`.
  */
-public class TestWebSocketServletAlternative extends FelixHttpWebSocketServlet {
+public class TestWebSocketServletAlternative extends FelixJettyWebSocketServlet {
     private final String name;
 
     public TestWebSocketServletAlternative(String name) {

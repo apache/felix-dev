@@ -29,7 +29,7 @@ import org.eclipse.jetty.ee10.websocket.server.JettyWebSocketServlet;
 /**
  * Base class to setup a WebSocket servlet by extending JettyWebSocketServlet.
  */
-public abstract class FelixHttpWebSocketServlet extends JettyWebSocketServlet {
+public abstract class FelixJettyWebSocketServlet extends JettyWebSocketServlet {
     private final AtomicBoolean myFirstInitCall = new AtomicBoolean(true);
     private final CountDownLatch myInitBarrier = new CountDownLatch(1);
 
