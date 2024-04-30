@@ -135,13 +135,11 @@ public class JakartaEE10SpecificWebsocketIT extends AbstractJettyTestSupport {
         public void init(ServletConfig config) throws ServletException {
             super.init(config);
 
-            // The websocket container is attached to the main servlet context, not the per-bundle one.
             //  Lookup the ServletContext for the context path where the websocket server is attached.
             ServletContext servletContext = config.getServletContext();
-            ServletContext rootContext = servletContext.getContext("/");
 
             // Retrieve the ServerContainer from the ServletContext attributes.
-            ServerContainer container = (ServerContainer) rootContext.getAttribute(ServerContainer.class.getName());
+            ServerContainer container = (ServerContainer) servletContext.getAttribute(ServerContainer.class.getName());
 
             // Configure the ServerContainer.
             container.setDefaultMaxTextMessageBufferSize(128 * 1024);

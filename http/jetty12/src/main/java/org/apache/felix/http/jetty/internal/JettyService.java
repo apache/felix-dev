@@ -256,9 +256,6 @@ public final class JettyService
             ServletContextHandler context = new ServletContextHandler(this.config.getContextPath(),                    
                     ServletContextHandler.SESSIONS);
 
-            // To support WebSockets via https://github.com/apache/felix-dev/pull/310
-            context.setCrossContextDispatchSupported(true);
-
             this.parent = new ContextHandlerCollection(context);
 
             configureSessionManager(context);
@@ -321,6 +318,8 @@ public final class JettyService
             }
 
             this.server.start();
+
+            maybeStoreWebSocketContainerAttributes(context);
 
             // session id manager is only available after server is started
             context.getSessionHandler().getSessionIdManager().getSessionHouseKeeper().setIntervalSec(
@@ -522,6 +521,26 @@ public final class JettyService
         } else {
             SystemLogger.LOGGER.warn("Failed to initialize jetty EE10 specific websocket support since the initializer class was not found. "
                     + "Check if the jetty-ee10-websocket-jetty-server bundle is deployed.");
+        }
+    }
+
+    /**
+     * Based on the configuration, store the WebSocket container attributes for the shared servlet context.
+     *
+     * @param context the context
+     */
+    private void maybeStoreWebSocketContainerAttributes(ServletContextHandler context) {
+        // when the server is started, retrieve the container attribute and store it to
+        // set on the shared servlet context once available
+        if (this.config.isUseJettyEE10Websocket() &&
+                isClassNameVisible("org.eclipse.jetty.ee10.websocket.server.config.JettyWebSocketServletContainerInitializer")) {
+            String attribute = org.eclipse.jetty.ee10.websocket.server.JettyWebSocketServerContainer.JETTY_WEBSOCKET_CONTAINER_ATTRIBUTE;
+            this.controller.setAttributeSharedServletContext(attribute, context.getServletContext().getAttribute(attribute));
+        }
+        if (this.config.isUseJakartaEE10Websocket() &&
+                isClassNameVisible("org.eclipse.jetty.ee10.websocket.jakarta.server.config.JakartaWebSocketServletContainerInitializer")) {
+            String attribute = org.eclipse.jetty.ee10.websocket.jakarta.server.config.JakartaWebSocketServletContainerInitializer.ATTR_JAKARTA_SERVER_CONTAINER;
+            this.controller.setAttributeSharedServletContext(attribute, context.getServletContext().getAttribute(attribute));
         }
     }
 

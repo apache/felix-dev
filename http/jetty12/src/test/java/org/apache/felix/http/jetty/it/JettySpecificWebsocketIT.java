@@ -143,13 +143,11 @@ public class JettySpecificWebsocketIT extends AbstractJettyTestSupport {
         public void init(ServletConfig config) throws ServletException {
             super.init(config);
 
-            // The websocket container is attached to the main servlet context, not the per-bundle one.
             //  Lookup the ServletContext for the context path where the websocket server is attached.
             ServletContext servletContext = config.getServletContext();
-            ServletContext rootContext = servletContext.getContext("/");
 
             // Retrieve the JettyWebSocketServerContainer.
-            JettyWebSocketServerContainer container = JettyWebSocketServerContainer.getContainer(rootContext);
+            JettyWebSocketServerContainer container = JettyWebSocketServerContainer.getContainer(servletContext);
             assertNotNull(container);
             container.addMapping("/mywebsocket1", (upgradeRequest, upgradeResponse) -> new MyServerWebSocket());
         }
