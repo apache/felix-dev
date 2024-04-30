@@ -25,6 +25,7 @@ import java.util.ArrayList;
 import java.util.Collections;
 import java.util.Enumeration;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.StringTokenizer;
@@ -189,7 +190,7 @@ public class BundleComponentActivator implements ComponentActivator
      *      register components with to ensure uniqueness of component names
      *      and to ensure configuration updates.
      * @param   context  The bundle context owning the components
-     * @param serviceReference 
+     * @param serviceReference
      *
      * @throws ComponentException if any error occurrs initializing this class
      */
@@ -198,7 +199,7 @@ public class BundleComponentActivator implements ComponentActivator
             final ComponentActorThread componentActor,
             final BundleContext context,
             final ScrConfiguration configuration,
-            final List<ComponentMetadata> cachedComponentMetadata, 
+            final List<ComponentMetadata> cachedComponentMetadata,
             final ServiceReference<?> trueConditiion)
     throws ComponentException
     {
@@ -260,11 +261,12 @@ public class BundleComponentActivator implements ComponentActivator
 
             // 112.4.1: The value of the the header is a comma separated list of XML entries within the Bundle
             StringTokenizer st = new StringTokenizer(descriptorLocations, ", ");
-
+            // Tolerate wildcard overlap with explicit entries in list by remembering the URLs that have been loaded so
+            // that duplicates can be skipped before attempting to re-parse the descriptors they resolve to.
+            HashSet<String> haveBeenLoaded = new HashSet<>();
             while (st.hasMoreTokens())
             {
                 String descriptorLocation = st.nextToken();
-
                 URL[] descriptorURLs = findDescriptors(m_bundle, descriptorLocation);
                 if (descriptorURLs.length == 0)
                 {
@@ -280,7 +282,18 @@ public class BundleComponentActivator implements ComponentActivator
                 // load from the descriptors
                 for (URL descriptorURL : descriptorURLs)
                 {
-                    loadDescriptor(descriptorURL);
+                    String externalForm = descriptorURL.toExternalForm();
+                    if (!haveBeenLoaded.contains(externalForm))
+                    {
+                        loadDescriptor(descriptorURL);
+                        haveBeenLoaded.add(externalForm);
+                    }
+                    else
+                    {
+                        logger.log(Level.DEBUG,
+                                "Component descriptor entry ''{0}'' (matched by ''{1}'') has already been loaded",
+                                null, descriptorURL.getPath(), descriptorLocation);
+                    }
                 }
             }
         }
