@@ -27,7 +27,7 @@ import jakarta.servlet.ServletResponse;
 import org.eclipse.jetty.ee10.websocket.server.JettyWebSocketServlet;
 
 /**
- * Base class to setup a WebSocket servlet by extending JettyWebSocketServlet.
+ * Abstract class that hides all Jetty Websocket specifics and provides a way for the developer to focus on the actual WebSocket implementation.
  */
 public abstract class FelixJettyWebSocketServlet extends JettyWebSocketServlet {
     private final AtomicBoolean myFirstInitCall = new AtomicBoolean(true);
