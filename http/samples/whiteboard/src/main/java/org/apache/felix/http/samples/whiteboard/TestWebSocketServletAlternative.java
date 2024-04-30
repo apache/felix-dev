@@ -17,11 +17,9 @@
 package org.apache.felix.http.samples.whiteboard;
 
 import jakarta.servlet.ServletConfig;
-import jakarta.servlet.ServletContext;
 import jakarta.servlet.ServletException;
-import jakarta.servlet.http.HttpServlet;
 
-import org.eclipse.jetty.ee10.websocket.server.JettyWebSocketServerContainer;
+import org.eclipse.jetty.ee10.websocket.server.JettyWebSocketServletFactory;
 import org.eclipse.jetty.websocket.api.Callback;
 import org.eclipse.jetty.websocket.api.Session;
 import org.eclipse.jetty.websocket.api.annotations.OnWebSocketClose;
@@ -31,14 +29,14 @@ import org.eclipse.jetty.websocket.api.annotations.OnWebSocketOpen;
 import org.eclipse.jetty.websocket.api.annotations.WebSocket;
 
 /**
- * Example of a WebSocket servlet that uses the Jetty WebSocket API.
- * It does not respect the path this servlet is registered to, but requires no further workarounds.
- * Setting `org.apache.felix.jetty.ee10.websocket.enable=true` is enough.
+ * Example of a WebSocket servlet that uses the Jetty WebSocket API, and is registered by extending JettyWebSocketServlet.
+ * It does respect the path this servlet is registered to, but requires a further workaround. See FelixHttpWebSocketServlet.
+ * Requires setting `org.apache.felix.jetty.ee10.websocket.enable=true`.
  */
-public class TestWebSocketServlet extends HttpServlet {
+public class TestWebSocketServletAlternative extends FelixHttpWebSocketServlet {
     private final String name;
 
-    public TestWebSocketServlet(String name) {
+    public TestWebSocketServletAlternative(String name) {
         this.name = name;
     }
 
@@ -46,20 +44,16 @@ public class TestWebSocketServlet extends HttpServlet {
         System.out.println("## [" + this.name + "] " + message);
     }
 
-
     @Override
     public void init(ServletConfig config) throws ServletException {
         doLog("Init with config [" + config + "]");
         super.init(config);
-
-        // Lookup the ServletContext for the context path where the websocket server is attached.
-        ServletContext servletContext = config.getServletContext();
-
-        // Retrieve the JettyWebSocketServerContainer.
-        JettyWebSocketServerContainer container = JettyWebSocketServerContainer.getContainer(servletContext);
-        container.addMapping("/websocket/*", (upgradeRequest, upgradeResponse) -> new TestWebSocket());
     }
 
+    @Override
+    protected void configure(JettyWebSocketServletFactory factory) {
+        factory.register(TestWebSocket.class);
+    }
 
     @WebSocket
     public static class TestWebSocket {
