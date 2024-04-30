@@ -77,38 +77,22 @@ public final class Activator
         context.registerService(Filter.class, filter2, filter2Props);
 
         /**
-         * Register a WebSocket servlet on /filtersample/websocket1/*.
-         * In the Chrome Console, this snippet can be used to send a message to the WebSocket:
-         *
-         * const websocket = new WebSocket("ws://localhost:8080/filtersample/websocket1/example");
-         * websocket.send("test from websocket 1");
-         *
-         * This will log "test from websocket 1" to the stdout.
-         */
-        final TestWebSocketServletBundleContext webSocketServlet1 = new TestWebSocketServletBundleContext("websocket1");
-        final Dictionary<String, Object> webSocketServletProps1 = new Hashtable<>();
-        webSocketServletProps1.put(HttpWhiteboardConstants.HTTP_WHITEBOARD_SERVLET_PATTERN, "/websocket1/*");
-        webSocketServletProps1.put(HttpWhiteboardConstants.HTTP_WHITEBOARD_CONTEXT_SELECT,
-                "(" + HttpWhiteboardConstants.HTTP_WHITEBOARD_CONTEXT_NAME + "=filtersample)");
-        context.registerService(Servlet.class, webSocketServlet1, webSocketServletProps1);
-
-        /**
-         * Register another WebSocket servlet on /websocket2/*.
+         * Register another WebSocket servlet on /websocketservlet/*.
          * Do note that the path the servlet is registered to is not reflected in the WebSocket URL.
          * This is due to the way of registering the WebSocket code.
          * In the Chrome Console, this snippet can be used to send a message to the WebSocket:
          *
          * const websocket = new WebSocket("ws://localhost:8080/websocket/example");
-         * websocket.send("test from websocket 2");
+         * websocket.send("test from websocket");
          *
-         * This will log "test from websocket 2" to the stdout.
+         * This will log "test from websocket" to the stdout.
          */
-        final TestWebSocketServletMainContext webSocketServlet2 = new TestWebSocketServletMainContext("websocket2");
-        final Dictionary<String, Object> webSocketServletProps2 = new Hashtable<>();
-        webSocketServletProps2.put(HttpWhiteboardConstants.HTTP_WHITEBOARD_SERVLET_PATTERN, "/websocket2/*");
-        webSocketServletProps2.put(HttpWhiteboardConstants.HTTP_WHITEBOARD_CONTEXT_SELECT,
+        final TestWebSocketServlet webSocketServlet = new TestWebSocketServlet("websocket1");
+        final Dictionary<String, Object> webSocketServletProps = new Hashtable<>();
+        webSocketServletProps.put(HttpWhiteboardConstants.HTTP_WHITEBOARD_SERVLET_PATTERN, "/websocketservlet/*");
+        webSocketServletProps.put(HttpWhiteboardConstants.HTTP_WHITEBOARD_CONTEXT_SELECT,
                 "(" + HttpWhiteboardConstants.HTTP_WHITEBOARD_CONTEXT_NAME + "=filtersample)");
-        context.registerService(Servlet.class, webSocketServlet2, webSocketServletProps2);
+        context.registerService(Servlet.class, webSocketServlet, webSocketServletProps);
     }
 
     @Override

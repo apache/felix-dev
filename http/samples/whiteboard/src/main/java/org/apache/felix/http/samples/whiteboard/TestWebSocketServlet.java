@@ -17,9 +17,11 @@
 package org.apache.felix.http.samples.whiteboard;
 
 import jakarta.servlet.ServletConfig;
+import jakarta.servlet.ServletContext;
 import jakarta.servlet.ServletException;
+import jakarta.servlet.http.HttpServlet;
 
-import org.eclipse.jetty.ee10.websocket.server.JettyWebSocketServletFactory;
+import org.eclipse.jetty.ee10.websocket.server.JettyWebSocketServerContainer;
 import org.eclipse.jetty.websocket.api.Callback;
 import org.eclipse.jetty.websocket.api.Session;
 import org.eclipse.jetty.websocket.api.annotations.OnWebSocketClose;
@@ -29,32 +31,35 @@ import org.eclipse.jetty.websocket.api.annotations.OnWebSocketOpen;
 import org.eclipse.jetty.websocket.api.annotations.WebSocket;
 
 /**
- * Example of a WebSocket servlet that uses the Jetty WebSocket API, and is registered on the bundle context.
- * It respects the path this servlet is registered to, but requires some workarounds.
- * See FelixJettyWebSocketServlet for more details.
+ * Example of a WebSocket servlet that uses the Jetty WebSocket API, and is registered on the main servlet context.
+ * It does not respect the path this servlet is registered to, but requires no further workarounds.
+ * Setting `org.apache.felix.jetty.ee10.websocket.enable=true` is enough.
  */
-public class TestWebSocketServletBundleContext extends FelixJettyWebSocketServlet {
+public class TestWebSocketServlet extends HttpServlet {
     private final String name;
 
-    public TestWebSocketServletBundleContext(String name) {
+    public TestWebSocketServlet(String name) {
         this.name = name;
-    }
-
-    @Override
-    public void init(ServletConfig config) throws ServletException {
-        doLog("Init with config [" + config + "]");
-        super.init(config);
     }
 
     private void doLog(String message) {
         System.out.println("## [" + this.name + "] " + message);
     }
 
+
     @Override
-    protected void configure(JettyWebSocketServletFactory jettyWebSocketServletFactory) {
-        doLog("Configuring WebSocket factory");
-        jettyWebSocketServletFactory.register(TestWebSocket.class);
+    public void init(ServletConfig config) throws ServletException {
+        doLog("Init with config [" + config + "]");
+        super.init(config);
+
+        // Lookup the ServletContext for the context path where the websocket server is attached.
+        ServletContext servletContext = config.getServletContext();
+
+        // Retrieve the JettyWebSocketServerContainer.
+        JettyWebSocketServerContainer container = JettyWebSocketServerContainer.getContainer(servletContext);
+        container.addMapping("/websocket/*", (upgradeRequest, upgradeResponse) -> new TestWebSocket());
     }
+
 
     @WebSocket
     public static class TestWebSocket {
