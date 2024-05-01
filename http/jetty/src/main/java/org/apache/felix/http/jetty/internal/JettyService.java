@@ -53,6 +53,7 @@ import org.eclipse.jetty.servlet.ServletHolder;
 import org.eclipse.jetty.util.ssl.SslContextFactory;
 import org.eclipse.jetty.util.thread.QueuedThreadPool;
 import org.eclipse.jetty.util.thread.ThreadPool;
+import org.eclipse.jetty.websocket.server.JettyWebSocketServerContainer;
 import org.osgi.framework.Bundle;
 import org.osgi.framework.BundleContext;
 import org.osgi.framework.Constants;
@@ -308,8 +309,8 @@ public final class JettyService
                 this.server.setStopTimeout(this.config.getStopTimeout());
             }
 
-            if (this.config.isUseJettyWebsocket()) {
-                maybeInitializeJettyWebsocket(context);
+            if (this.config.isUseJettyEE9Websocket()) {
+                maybeInitializeJettyEE9Websocket(context);
             }
 
             if (this.config.isUseJakartaEE9Websocket()) {
@@ -317,6 +318,8 @@ public final class JettyService
             }
 
             this.server.start();
+
+            maybeStoreWebSocketContainerAttributes(context);
 
             // session id manager is only available after server is started
             context.getSessionHandler().getSessionIdManager().getSessionHouseKeeper().setIntervalSec(
@@ -503,12 +506,12 @@ public final class JettyService
     }
 
     /**
-     * Initialize the jetty websocket support for the servlet context handler.
+     * Initialize the jetty EE9 websocket support for the servlet context handler.
      * If the optional initializer class is not present then a warning will be logged.
      *
      * @param handler the sevlet context handler to initialize
      */
-    private void maybeInitializeJettyWebsocket(ServletContextHandler handler) {
+    private void maybeInitializeJettyEE9Websocket(ServletContextHandler handler) {
         if (isClassNameVisible("org.eclipse.jetty.websocket.server.config.JettyWebSocketServletContainerInitializer")) {
             // Ensure that JettyWebSocketServletContainerInitializer is initialized,
             // to setup the JettyWebSocketServerContainer for this web application context.
@@ -516,6 +519,26 @@ public final class JettyService
         } else {
             SystemLogger.LOGGER.warn("Failed to initialize jetty specific websocket support since the initializer class was not found. "
                     + "Check if the websocket-jetty-server bundle is deployed.");
+        }
+    }
+
+    /**
+     * Based on the configuration, store the WebSocket container attributes for the shared servlet context.
+     *
+     * @param context the context
+     */
+    private void maybeStoreWebSocketContainerAttributes(ServletContextHandler context) {
+        // when the server is started, retrieve the container attribute and
+        // set it on the shared servlet context once available
+        if (this.config.isUseJettyEE9Websocket() &&
+                isClassNameVisible("org.eclipse.jetty.websocket.server.config.JettyWebSocketServletContainerInitializer")) {
+            String attribute = JettyWebSocketServerContainer.JETTY_WEBSOCKET_CONTAINER_ATTRIBUTE;
+            this.controller.setAttributeSharedServletContext(attribute, context.getServletContext().getAttribute(attribute));
+        }
+        if (this.config.isUseJakartaEE9Websocket() &&
+                isClassNameVisible("org.eclipse.jetty.websocket.jakarta.server.config.JakartaWebSocketServletContainerInitializer")) {
+            String attribute = org.eclipse.jetty.websocket.jakarta.server.config.JakartaWebSocketServletContainerInitializer.ATTR_JAKARTA_SERVER_CONTAINER;
+            this.controller.setAttributeSharedServletContext(attribute, context.getServletContext().getAttribute(attribute));
         }
     }
 

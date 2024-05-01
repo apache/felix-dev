@@ -272,7 +272,7 @@ public final class JettyConfig
     public static final String FELIX_JAKARTA_EE9_WEBSOCKET_ENABLE = "org.apache.felix.jakarta.ee9.websocket.enable";
 
     /** Felix specific property to control whether to enable they Jetty-specific WebSocket APIs */
-    public static final String FELIX_JETTY_WEBSOCKET_ENABLE = "org.apache.felix.jetty.websocket.enable";
+    public static final String FELIX_JETTY_EE9_WEBSOCKET_ENABLE = "org.apache.felix.jetty.ee9.websocket.enable";
 
 
     private static String validateContextPath(String ctxPath)
@@ -693,8 +693,8 @@ public final class JettyConfig
      * Returns <code>true</code> if jetty websocket is configured to be used (
      * {@link #FELIX_JETTY_WEBSOCKET_ENABLE})
      */
-    public boolean isUseJettyWebsocket() {
-        return getBooleanProperty(FELIX_JETTY_WEBSOCKET_ENABLE, false);
+    public boolean isUseJettyEE9Websocket() {
+        return getBooleanProperty(FELIX_JETTY_EE9_WEBSOCKET_ENABLE, false);
     }
 
     public void reset()

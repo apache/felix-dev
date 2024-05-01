@@ -489,11 +489,11 @@ class ConfigMetaTypeProvider implements MetaTypeProvider
                 "Whether to enable jakarta EE9 standard WebSocket support. Default is false.",
                 false,
                 bundle.getBundleContext().getProperty(JettyConfig.FELIX_JAKARTA_EE9_WEBSOCKET_ENABLE)));
-        adList.add(new AttributeDefinitionImpl(JettyConfig.FELIX_JETTY_WEBSOCKET_ENABLE,
-                "Enable Jetty specific WebSocket support",
+        adList.add(new AttributeDefinitionImpl(JettyConfig.FELIX_JETTY_EE9_WEBSOCKET_ENABLE,
+                "Enable Jetty specific EE9 WebSocket support",
                 "Whether to enable jetty specific WebSocket support. Default is false.",
                 false,
-                bundle.getBundleContext().getProperty(JettyConfig.FELIX_JETTY_WEBSOCKET_ENABLE)));
+                bundle.getBundleContext().getProperty(JettyConfig.FELIX_JETTY_EE9_WEBSOCKET_ENABLE)));
 
         return new ObjectClassDefinition()
         {

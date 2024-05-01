@@ -70,6 +70,7 @@ import org.apache.felix.http.base.internal.whiteboard.tracker.ResourceTracker;
 import org.apache.felix.http.base.internal.whiteboard.tracker.ServletContextHelperTracker;
 import org.apache.felix.http.base.internal.whiteboard.tracker.ServletTracker;
 import org.jetbrains.annotations.NotNull;
+import org.jetbrains.annotations.Nullable;
 import org.osgi.framework.BundleContext;
 import org.osgi.framework.Constants;
 import org.osgi.framework.Filter;
@@ -118,6 +119,7 @@ public final class WhiteboardManager
     private final FailureStateHandler failureStateHandler = new FailureStateHandler();
 
     private volatile ServletContext webContext;
+    private volatile Map<String, Object> attributesForSharedContext = new HashMap<>();
 
     /**
      * Create a new whiteboard http manager
@@ -203,6 +205,7 @@ public final class WhiteboardManager
         this.contextMap.clear();
         this.servicesMap.clear();
         this.failureStateHandler.clear();
+        this.attributesForSharedContext.clear();
         this.registry.reset();
     }
 
@@ -366,6 +369,8 @@ public final class WhiteboardManager
                         {
                             handlerList.add(handler);
                             Collections.sort(handlerList);
+                            setAttributes(handler.getSharedContext());
+
                             this.contextMap.put(info.getName(), handlerList);
 
                             // check for deactivate
@@ -400,6 +405,21 @@ public final class WhiteboardManager
             return true;
         }
         return false;
+    }
+
+    /**
+     * Set the stored attributes on the shared servlet context.
+     * @param context the shared servlet context
+     */
+    private void setAttributes(@Nullable ServletContext context) {
+        if (context != null) {
+            attributesForSharedContext.forEach((key, value) -> {
+                if (key != null && value != null) {
+                    SystemLogger.LOGGER.info("Shared context found, setting stored attribute key: '{}', value: '{}'", key, value);
+                    context.setAttribute(key, value);
+                }
+            });
+        }
     }
 
     /**
@@ -952,5 +972,15 @@ public final class WhiteboardManager
     private void updateRuntimeChangeCount()
     {
         this.serviceRuntime.updateChangeCount();
+    }
+
+    /**
+     * Stores an attribute in the to be created shared servlet context.
+     * @param key attribute key
+     * @param value attribute value
+     */
+    public void setAttributeSharedServletContext(String key, Object value) {
+        SystemLogger.LOGGER.info("Storing attribute for shared servlet context. Key '{}', value: '{}'", key, value);
+        this.attributesForSharedContext.put(key, value);
     }
 }
