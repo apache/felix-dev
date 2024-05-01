@@ -53,7 +53,6 @@ import org.eclipse.jetty.servlet.ServletHolder;
 import org.eclipse.jetty.util.ssl.SslContextFactory;
 import org.eclipse.jetty.util.thread.QueuedThreadPool;
 import org.eclipse.jetty.util.thread.ThreadPool;
-import org.eclipse.jetty.websocket.server.JettyWebSocketServerContainer;
 import org.osgi.framework.Bundle;
 import org.osgi.framework.BundleContext;
 import org.osgi.framework.Constants;
@@ -532,7 +531,7 @@ public final class JettyService
         // set it on the shared servlet context once available
         if (this.config.isUseJettyEE9Websocket() &&
                 isClassNameVisible("org.eclipse.jetty.websocket.server.config.JettyWebSocketServletContainerInitializer")) {
-            String attribute = JettyWebSocketServerContainer.JETTY_WEBSOCKET_CONTAINER_ATTRIBUTE;
+            String attribute = org.eclipse.jetty.websocket.server.JettyWebSocketServerContainer.JETTY_WEBSOCKET_CONTAINER_ATTRIBUTE;
             this.controller.setAttributeSharedServletContext(attribute, context.getServletContext().getAttribute(attribute));
         }
         if (this.config.isUseJakartaEE9Websocket() &&
