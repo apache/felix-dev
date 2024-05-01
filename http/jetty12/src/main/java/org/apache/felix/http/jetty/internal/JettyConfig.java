@@ -271,6 +271,12 @@ public final class JettyConfig
     /** Felix specific property to specify the default protocol when negotiation fails  */
     public static final String FELIX_JETTY_ALPN_DEFAULT_PROTOCOL = "org.apache.felix.jetty.alpn.defaultProtocol";
 
+    /** Felix specific property to control whether to enable the standard jakarta.websocket EE10 APIs provided by Jakarta WebSocket 2.1 */
+    public static final String FELIX_JAKARTA_EE10_WEBSOCKET_ENABLE = "org.apache.felix.jakarta.ee10.websocket.enable";
+
+    /** Felix specific property to control whether to enable they Jetty-specific EE10 WebSocket APIs */
+    public static final String FELIX_JETTY_EE10_WEBSOCKET_ENABLE = "org.apache.felix.jetty.ee10.websocket.enable";
+
     private static String validateContextPath(String ctxPath)
     {
         // undefined, empty, or root context path
@@ -675,6 +681,22 @@ public final class JettyConfig
 
     public long getStopTimeout() {
         return getLongProperty(FELIX_JETTY_STOP_TIMEOUT, -1l);
+    }
+
+    /**
+     * Returns <code>true</code> if jakarta EE10 websocket is configured to be used (
+     * {@link #FELIX_JAKARTA_EE10_WEBSOCKET_ENABLE})
+     */
+    public boolean isUseJakartaEE10Websocket() {
+        return getBooleanProperty(FELIX_JAKARTA_EE10_WEBSOCKET_ENABLE, false);
+    }
+
+    /**
+     * Returns <code>true</code> if jetty websocket is configured to be used (
+     * {@link #FELIX_JETTY_EE10_WEBSOCKET_ENABLE})
+     */
+    public boolean isUseJettyEE10Websocket() {
+        return getBooleanProperty(FELIX_JETTY_EE10_WEBSOCKET_ENABLE, false);
     }
 
     public void reset()
