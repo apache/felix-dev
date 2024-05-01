@@ -29,9 +29,9 @@ classpath and deployment!
 
 ### Using classifiers: `light`, `with-jetty-ee10-websockets` and `with-jakarta-ee10-websockets` bundle
 If you would like to use your own Jetty jars instead of the one packaged with the Felix Jetty bundles, you can use the variants with the following classifiers:
-* `light` - A light version of the bundle that does not include the Jetty classes. This is useful when you want to use your own Jetty jars. 
-* `with-jetty-ee10-websockets` - A version of the Jetty 12 bundle that includes the classes required for Jetty WebSocket support for JakartaEE10.
-* `with-jakarta-ee10-websockets` - A version of the Jetty 12 bundle that includes the classes required for Jakarta WebSocket support for JakartaEE 10.
+* `light` - A light version of the bundle that does not include the Jetty classes. This is useful when you want to use your own Jetty jars. Available for both Jetty bundles.
+* `with-jetty-ee10-websockets` - A bundle that includes the classes required for Jetty WebSocket support for Jakarta EE10. Jetty12 bundle only.
+* `with-jakarta-ee10-websockets` - A bundle that includes the classes required for Jakarta WebSocket support for Jakarta EE10. Jetty12 bundle only.
 
 When building the Felix Jetty bundle with Maven (`mvn clean install`), the additional bundles will be created in the `target` directory, postfixed with classifier.
 This jar can be deployed to your Felix OSGi environment, along with a compatible Jetty jars.
