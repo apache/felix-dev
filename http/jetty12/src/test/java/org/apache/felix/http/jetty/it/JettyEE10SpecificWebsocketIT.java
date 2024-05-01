@@ -61,7 +61,7 @@ import org.osgi.service.servlet.whiteboard.HttpWhiteboardConstants;
  */
 @RunWith(PaxExam.class)
 @ExamReactorStrategy(PerClass.class)
-public class JettySpecificWebsocketIT extends AbstractJettyTestSupport {
+public class JettyEE10SpecificWebsocketIT extends AbstractJettyTestSupport {
 
     @Inject
     protected BundleContext bundleContext;
