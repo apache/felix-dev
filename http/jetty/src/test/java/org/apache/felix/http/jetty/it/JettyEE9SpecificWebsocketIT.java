@@ -62,7 +62,7 @@ import jakarta.servlet.http.HttpServlet;
  */
 @RunWith(PaxExam.class)
 @ExamReactorStrategy(PerClass.class)
-public class JettySpecificEE9WebsocketIT extends AbstractJettyTestSupport {
+public class JettyEE9SpecificWebsocketIT extends AbstractJettyTestSupport {
 
     @Inject
     protected BundleContext bundleContext;
