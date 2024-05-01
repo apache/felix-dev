@@ -139,6 +139,15 @@ public final class HttpServiceController
     }
 
     /**
+     * Stores an attribute in the to be created shared servlet context.
+     * @param key attribute key
+     * @param value attribute value
+     */
+    public void setAttributeSharedServletContext(String key, Object value) {
+        this.whiteboardManager.setAttributeSharedServletContext(key, value);
+    }
+
+    /**
      * Stops the http and http whiteboard service.
      */
     public void unregister()

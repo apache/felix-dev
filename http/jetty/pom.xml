@@ -44,6 +44,9 @@
         <felix.java.version>11</felix.java.version>
         <jetty.version>11.0.20</jetty.version>
         <baseline.skip>true</baseline.skip>
+        <org.ops4j.pax.exam.version>4.13.3</org.ops4j.pax.exam.version>
+        <!-- To debug the pax process, override this with -D -->
+        <pax.vm.options>-Xmx512M</pax.vm.options>
     </properties>
 
     <build>
@@ -70,7 +73,11 @@
                                 // scan each of the artifacts to preserve the information found in any META-INF/services/* files
                                 project.artifacts.each() { artifact ->
 
-                                    if (artifact.getArtifactHandler().isAddedToClasspath() && !org.apache.maven.artifact.Artifact.SCOPE_TEST.equals( artifact.getScope() )) {
+                                    if (artifact.getArtifactHandler().isAddedToClasspath() && !org.apache.maven.artifact.Artifact.SCOPE_TEST.equals( artifact.getScope() )
+                                            && !"org.eclipse.jetty.websocket".equals(artifact.getGroupId()) // skip the optional websocket artifacts
+                                            && !"jetty-annotations".equals(artifact.getArtifactId()) // skip the transitive artifacts from the optional websocket artifacts
+                                            && !"jetty-plus".equals(artifact.getArtifactId())
+                                            && !"jetty-webapp".equals(artifact.getArtifactId())) { 
                                         def jar;
                                         try {
                                             jar = new java.util.jar.JarFile(artifact.file)
@@ -165,9 +172,15 @@
                             org.osgi.service.servlet.runtime,
                             org.osgi.service.servlet.runtime.dto,
                             org.osgi.service.servlet.whiteboard,
-                            !org.eclipse.jetty,
-                            !org.eclipse.jetty.version,
-                            org.eclipse.jetty.*,
+                            org.eclipse.jetty.alpn.server,
+                            org.eclipse.jetty.http.*,
+                            org.eclipse.jetty.http2.*,
+                            org.eclipse.jetty.io.*,
+                            org.eclipse.jetty.jmx.*,
+                            org.eclipse.jetty.security.*,
+                            org.eclipse.jetty.server.*,
+                            org.eclipse.jetty.servlet.*,
+                            org.eclipse.jetty.util.*,
                             org.apache.felix.http.jetty,
                             org.apache.felix.http.jakartawrappers,
                             org.apache.felix.http.javaxwrappers
@@ -320,6 +333,42 @@
                     </execution>
                 </executions>
             </plugin>
+
+            <plugin>
+                <artifactId>maven-surefire-plugin</artifactId>
+                <configuration>
+                    <redirectTestOutputToFile>true</redirectTestOutputToFile>
+                </configuration>
+            </plugin>
+            <!-- plugins for paxexam integration tests -->
+            <plugin>
+                <groupId>org.apache.maven.plugins</groupId>
+                <artifactId>maven-failsafe-plugin</artifactId>
+                <executions>
+                    <execution>
+                        <id>integration-test</id>
+                        <phase>integration-test</phase>
+                        <goals>
+                            <goal>integration-test</goal>
+                        </goals>
+                    </execution>
+                    <execution>
+                        <id>verify</id>
+                        <phase>integration-test</phase>
+                        <goals>
+                            <goal>verify</goal>
+                        </goals>
+                    </execution>
+                </executions>
+                <configuration>
+                    <redirectTestOutputToFile>true</redirectTestOutputToFile>
+                    <systemPropertyVariables>
+                        <jetty.version>${jetty.version}</jetty.version>
+                        <bundle.filename>${basedir}/target/${project.build.finalName}.jar</bundle.filename>
+                        <pax.vm.options>${pax.vm.options}</pax.vm.options>
+                    </systemPropertyVariables>
+                </configuration>
+            </plugin>
         </plugins>
     </build>
 
@@ -410,7 +459,19 @@
             <artifactId>jetty-alpn-server</artifactId>
             <version>${jetty.version}</version>
         </dependency>
-       <dependency>
+        <dependency>
+            <groupId>org.eclipse.jetty.websocket</groupId>
+            <artifactId>websocket-jakarta-server</artifactId>
+            <version>${jetty.version}</version>
+            <optional>true</optional>
+        </dependency>
+        <dependency>
+            <groupId>org.eclipse.jetty.websocket</groupId>
+            <artifactId>websocket-jetty-server</artifactId>
+            <version>${jetty.version}</version>
+            <optional>true</optional>
+        </dependency>
+        <dependency>
             <groupId>org.osgi</groupId>
             <artifactId>org.osgi.service.servlet</artifactId>
             <version>2.0.0</version>
@@ -467,5 +528,77 @@
             <version>1.3.0</version>
             <scope>test</scope>
         </dependency>
+
+        <!-- an OSGi framework -->
+        <dependency>
+            <groupId>org.apache.felix</groupId>
+            <artifactId>org.apache.felix.framework</artifactId>
+            <version>7.0.5</version>
+            <scope>test</scope>
+        </dependency>
+        <dependency>
+            <groupId>javax.inject</groupId>
+            <artifactId>javax.inject</artifactId>
+            <version>1</version>
+            <scope>test</scope>
+        </dependency>
+
+        <!-- Pax Exam -->
+        <dependency>
+            <groupId>org.ops4j.pax.exam</groupId>
+            <artifactId>pax-exam</artifactId>
+            <version>${org.ops4j.pax.exam.version}</version>
+            <scope>test</scope>
+        </dependency>
+        <dependency>
+            <groupId>org.ops4j.pax.exam</groupId>
+            <artifactId>pax-exam-cm</artifactId>
+            <version>${org.ops4j.pax.exam.version}</version>
+            <scope>test</scope>
+        </dependency>
+        <dependency>
+            <groupId>org.ops4j.pax.exam</groupId>
+            <artifactId>pax-exam-container-forked</artifactId>
+            <version>${org.ops4j.pax.exam.version}</version>
+            <scope>test</scope>
+        </dependency>
+        <dependency>
+            <groupId>org.ops4j.pax.exam</groupId>
+            <artifactId>pax-exam-junit4</artifactId>
+            <version>${org.ops4j.pax.exam.version}</version>
+            <scope>test</scope>
+        </dependency>
+        <dependency>
+            <groupId>org.ops4j.pax.exam</groupId>
+            <artifactId>pax-exam-link-mvn</artifactId>
+            <version>${org.ops4j.pax.exam.version}</version>
+            <scope>test</scope>
+        </dependency>
+
+        <dependency>
+            <groupId>org.eclipse.jetty</groupId>
+            <artifactId>jetty-client</artifactId>
+            <version>${jetty.version}</version>
+            <scope>test</scope>
+        </dependency>
+        <dependency>
+            <groupId>org.eclipse.jetty.websocket</groupId>
+            <artifactId>websocket-jetty-client</artifactId>
+            <version>${jetty.version}</version>
+            <scope>test</scope>
+        </dependency>
+        <dependency>
+            <groupId>org.awaitility</groupId>
+            <artifactId>awaitility</artifactId>
+            <version>4.2.1</version>
+            <scope>test</scope>
+        </dependency>
+        <dependency>
+            <groupId>org.slf4j</groupId>
+            <artifactId>slf4j-simple</artifactId>
+            <version>2.0.13</version>
+            <scope>test</scope>
+        </dependency>
+
     </dependencies>
 </project>
