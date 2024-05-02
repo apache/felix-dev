@@ -175,6 +175,9 @@ public class ServletInfo extends WhiteboardServiceInfo<Servlet>
 
     /**
      * Constructor for Http Service
+     * @param name The servlet name
+     * @param pattern The pattern
+     * @param initParams The init parameters
      */
     public ServletInfo(final String name,
             final String pattern,
@@ -236,7 +239,7 @@ public class ServletInfo extends WhiteboardServiceInfo<Servlet>
 
     /**
      * Returns an unmodifiable map of the init parameters.
-     * @return
+     * @return The init parameters
      */
     public Map<String, String> getInitParameters()
     {

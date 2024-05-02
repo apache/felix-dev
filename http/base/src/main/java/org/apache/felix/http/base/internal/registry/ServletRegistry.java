@@ -251,6 +251,7 @@ public final class ServletRegistry
     /**
      * Remove a servlet
      * @param info The servlet info
+     * @param destroy Unused
      */
     public synchronized void removeServlet(@NotNull final ServletInfo info, final boolean destroy)
     {

@@ -126,8 +126,7 @@ public final class EventListenerRegistry implements
 
     /**
      * Remove listeners
-     *
-     * @param info
+     * @param info The listener info
      */
     public void removeListeners(@NotNull final ListenerInfo info)
     {

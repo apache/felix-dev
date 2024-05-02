@@ -108,6 +108,7 @@ public class WhiteboardContextHandler implements Comparable<WhiteboardContextHan
 
     /**
      * Deactivate this context.
+     * @param registry The handler registry
      */
     public void deactivate(@NotNull final HandlerRegistry registry)
     {

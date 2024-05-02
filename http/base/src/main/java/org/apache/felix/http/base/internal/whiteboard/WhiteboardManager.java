@@ -141,6 +141,7 @@ public final class WhiteboardManager
     /**
      * Start the whiteboard manager
      * @param containerContext The servlet context
+     * @param httpServiceProps Service registration properties
      */
     public void start(final ServletContext containerContext, @NotNull final Dictionary<String, Object> httpServiceProps)
     {
@@ -929,8 +930,8 @@ public final class WhiteboardManager
      * @param req The request
      * @param res The response
      * @param dispatcher The dispatcher
-     * @throws IOException
-     * @throws ServletException
+     * @throws IOException If the invocation throws an IOException
+     * @throws ServletException If the invocation throws a ServletException
      */
     public void invokePreprocessors(final HttpServletRequest req,
     		final HttpServletResponse res,

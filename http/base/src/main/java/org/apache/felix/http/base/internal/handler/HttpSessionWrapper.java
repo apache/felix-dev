@@ -147,6 +147,10 @@ public class HttpSessionWrapper implements HttpSession
 
     /**
      * Creates a new {@link HttpSessionWrapper} instance.
+     * @param session The internal session
+     * @param context The servlet context
+     * @param config The configuration
+     * @param terminate Whether to terminate the session
      */
     public HttpSessionWrapper(final HttpSession session,
             final ExtServletContext context,

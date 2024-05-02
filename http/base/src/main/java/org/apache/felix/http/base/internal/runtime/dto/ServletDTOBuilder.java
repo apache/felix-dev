@@ -44,6 +44,7 @@ public final class ServletDTOBuilder extends BaseServletDTOBuilder
     /**
      * Build a servlet DTO from a servlet info
      * @param info The servlet info
+     * @param reason The reason for the failure or -1 if the servlet was registered successfully
      * @return A servlet DTO
      */
     public static ServletDTO build(final ServletInfo info, final int reason)

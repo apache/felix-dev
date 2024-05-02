@@ -31,6 +31,9 @@ public abstract class ServiceUtils {
 
     /**
      * Get the service
+     * @param ctx The bundle context
+     * @param ref The service reference
+     * @param <T> The service type
      * @return The service or {@code null}
      */
     public static <T> T safeGetService(final BundleContext ctx, final ServiceReference<T> ref) {
@@ -44,6 +47,9 @@ public abstract class ServiceUtils {
 
     /**
      * Unget the service
+     * @param ctx The bundle context
+     * @param ref The service reference
+     * @param <T> The service type
      */
     public static <T> void safeUngetService(final BundleContext ctx, final ServiceReference<T> ref) {
         try {
@@ -55,6 +61,9 @@ public abstract class ServiceUtils {
 
     /**
      * Get the service using {@code ServiceObjects}
+     * @param ctx The bundle context
+     * @param ref The service reference
+     * @param <T> The service type
      * @return The service or {@code null}
      */
     public static <T> T safeGetServiceObjects(final BundleContext ctx, final ServiceReference<T> ref) {
@@ -72,6 +81,10 @@ public abstract class ServiceUtils {
 
     /**
      * Unget the service using {@code ServiceObjects}
+     * @param ctx The bundle context
+     * @param ref The service reference
+     * @param service The service
+     * @param <T> The service type
      */
     public static <T> void safeUngetServiceObjects(final BundleContext ctx, final ServiceReference<T> ref, final T service) {
         if ( ctx != null && service != null ) {

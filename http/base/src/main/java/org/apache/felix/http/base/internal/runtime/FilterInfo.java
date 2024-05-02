@@ -205,6 +205,7 @@ public class FilterInfo extends WhiteboardServiceInfo<Filter>
 
     /**
      * Returns an immutable map of the init parameters.
+     * @return The init parameters
      */
     public Map<String, String> getInitParameters()
     {

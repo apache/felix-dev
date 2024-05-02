@@ -16,6 +16,9 @@
  * specific language governing permissions and limitations
  * under the License.
  */
+/**
+ * This package provides the Jetty-based implementation of the HTTP service.
+ */
 @Version("4.0")
 package org.apache.felix.http.jetty;
 
