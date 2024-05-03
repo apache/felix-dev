@@ -281,7 +281,10 @@
                                     org.osgi.service.http.runtime,
                                     org.osgi.service.http.runtime.dto,
                                     org.osgi.service.http.whiteboard,
-                                    !org.osgi.service.servlet.*,
+                                    org.osgi.service.servlet.context,
+                                    org.osgi.service.servlet.runtime,
+                                    org.osgi.service.servlet.runtime.dto,
+                                    org.osgi.service.servlet.whiteboard,
                                     org.apache.felix.http.jetty,
                                     org.apache.felix.http.javaxwrappers,
                                     org.apache.felix.http.jakartawrappers
@@ -289,7 +292,6 @@
                                 <Private-Package>
                                     org.apache.felix.http.base.*,
                                     org.apache.felix.http.jetty.*,
-                                    org.osgi.service.servlet.*
                                 </Private-Package>
                                 <Import-Package>
                                     org.osgi.service.cm;resolution:=optional;version="[1.3,2)",
