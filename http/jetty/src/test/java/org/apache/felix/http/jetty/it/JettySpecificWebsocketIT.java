@@ -62,7 +62,7 @@ import jakarta.servlet.http.HttpServlet;
  */
 @RunWith(PaxExam.class)
 @ExamReactorStrategy(PerClass.class)
-public class JettyEE9SpecificWebsocketIT extends AbstractJettyTestSupport {
+public class JettySpecificWebsocketIT extends AbstractJettyTestSupport {
 
     @Inject
     protected BundleContext bundleContext;
@@ -95,7 +95,7 @@ public class JettyEE9SpecificWebsocketIT extends AbstractJettyTestSupport {
     protected Option felixHttpConfig(int httpPort) {
         return newConfiguration("org.apache.felix.http")
                 .put("org.osgi.service.http.port", httpPort)
-                .put("org.apache.felix.jetty.ee9.websocket.enable", true)
+                .put("org.apache.felix.jetty.websocket.enable", true)
                 .asOption();
     }
 

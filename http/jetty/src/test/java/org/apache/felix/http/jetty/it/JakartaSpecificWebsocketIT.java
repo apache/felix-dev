@@ -26,26 +26,11 @@ import java.net.URI;
 import java.time.Duration;
 import java.util.Hashtable;
 import java.util.Map;
-import java.util.concurrent.CompletableFuture;
 
 import javax.inject.Inject;
-import jakarta.servlet.Servlet;
-import jakarta.servlet.ServletConfig;
-import jakarta.servlet.ServletContext;
-import jakarta.servlet.ServletException;
-import jakarta.servlet.http.HttpServlet;
 
 import org.awaitility.Awaitility;
-import org.eclipse.jetty.client.HttpClient;
-import org.eclipse.jetty.client.transport.HttpClientTransportOverHTTP;
-import org.eclipse.jetty.ee10.websocket.server.JettyWebSocketServerContainer;
-import org.eclipse.jetty.websocket.api.Callback;
-import org.eclipse.jetty.websocket.api.Session;
-import org.eclipse.jetty.websocket.api.annotations.OnWebSocketMessage;
-import org.eclipse.jetty.websocket.api.annotations.OnWebSocketOpen;
-import org.eclipse.jetty.websocket.api.annotations.WebSocket;
-import org.eclipse.jetty.websocket.client.ClientUpgradeRequest;
-import org.eclipse.jetty.websocket.client.WebSocketClient;
+import org.eclipse.jetty.websocket.jakarta.client.JakartaWebSocketClientContainerProvider;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.ops4j.pax.exam.Option;
@@ -56,38 +41,49 @@ import org.osgi.framework.BundleContext;
 import org.osgi.service.http.HttpService;
 import org.osgi.service.servlet.whiteboard.HttpWhiteboardConstants;
 
+import jakarta.servlet.Servlet;
+import jakarta.servlet.ServletConfig;
+import jakarta.servlet.ServletContext;
+import jakarta.servlet.ServletException;
+import jakarta.servlet.http.HttpServlet;
+import jakarta.websocket.ClientEndpoint;
+import jakarta.websocket.DeploymentException;
+import jakarta.websocket.OnMessage;
+import jakarta.websocket.OnOpen;
+import jakarta.websocket.Session;
+import jakarta.websocket.WebSocketContainer;
+import jakarta.websocket.server.ServerContainer;
+import jakarta.websocket.server.ServerEndpoint;
+
 /**
  *
  */
 @RunWith(PaxExam.class)
 @ExamReactorStrategy(PerClass.class)
-public class JettyEE10SpecificWebsocketIT extends AbstractJettyTestSupport {
+public class JakartaSpecificWebsocketIT extends AbstractJettyTestSupport {
 
     @Inject
     protected BundleContext bundleContext;
 
     @Override
     protected Option[] additionalOptions() throws IOException {
-        String jettyVersion = System.getProperty("jetty.version", "12.0.8");
+        String jettyVersion = System.getProperty("jetty.version", "11.0.20");
         return new Option[] {
                 spifly(),
 
                 // bundles for the server side
-                mavenBundle().groupId("org.eclipse.jetty.ee10").artifactId("jetty-ee10-webapp").version(jettyVersion),
-                mavenBundle().groupId("org.eclipse.jetty.websocket").artifactId("jetty-websocket-core-common").version(jettyVersion),
-                mavenBundle().groupId("org.eclipse.jetty.websocket").artifactId("jetty-websocket-core-server").version(jettyVersion),
-                mavenBundle().groupId("org.eclipse.jetty.websocket").artifactId("jetty-websocket-jetty-api").version(jettyVersion),
-                mavenBundle().groupId("org.eclipse.jetty.websocket").artifactId("jetty-websocket-jetty-common").version(jettyVersion),
-                mavenBundle().groupId("org.eclipse.jetty.websocket").artifactId("jetty-websocket-jetty-server").version(jettyVersion),
-                mavenBundle().groupId("org.eclipse.jetty.ee10.websocket").artifactId("jetty-ee10-websocket-servlet").version(jettyVersion),
-                mavenBundle().groupId("org.eclipse.jetty.ee10.websocket").artifactId("jetty-ee10-websocket-jetty-server").version(jettyVersion),
-                mavenBundle().groupId("org.eclipse.jetty").artifactId("jetty-xml").version(jettyVersion),
-
-                // additional bundles for the client side
+                mavenBundle().groupId("jakarta.websocket").artifactId("jakarta.websocket-api").version("2.0.0"),
                 mavenBundle().groupId("org.eclipse.jetty").artifactId("jetty-alpn-client").version(jettyVersion),
                 mavenBundle().groupId("org.eclipse.jetty").artifactId("jetty-client").version(jettyVersion),
-                mavenBundle().groupId("org.eclipse.jetty.websocket").artifactId("jetty-websocket-core-client").version(jettyVersion),
-                mavenBundle().groupId("org.eclipse.jetty.websocket").artifactId("jetty-websocket-jetty-client").version(jettyVersion)
+                mavenBundle().groupId("org.eclipse.jetty").artifactId("jetty-webapp").version(jettyVersion),
+                mavenBundle().groupId("org.eclipse.jetty.websocket").artifactId("websocket-core-client").version(jettyVersion),
+                mavenBundle().groupId("org.eclipse.jetty.websocket").artifactId("websocket-core-common").version(jettyVersion),
+                mavenBundle().groupId("org.eclipse.jetty.websocket").artifactId("websocket-core-server").version(jettyVersion),
+                mavenBundle().groupId("org.eclipse.jetty.websocket").artifactId("websocket-jakarta-client").version(jettyVersion),
+                mavenBundle().groupId("org.eclipse.jetty.websocket").artifactId("websocket-jakarta-common").version(jettyVersion),
+                mavenBundle().groupId("org.eclipse.jetty.websocket").artifactId("websocket-jakarta-server").version(jettyVersion),
+                mavenBundle().groupId("org.eclipse.jetty.websocket").artifactId("websocket-servlet").version(jettyVersion),
+                mavenBundle().groupId("org.eclipse.jetty").artifactId("jetty-xml").version(jettyVersion)
         };
     }
 
@@ -95,42 +91,38 @@ public class JettyEE10SpecificWebsocketIT extends AbstractJettyTestSupport {
     protected Option felixHttpConfig(int httpPort) {
         return newConfiguration("org.apache.felix.http")
                 .put("org.osgi.service.http.port", httpPort)
-                .put("org.apache.felix.jetty.ee10.websocket.enable", true)
+                .put("org.apache.felix.jakarta.websocket.enable", true)
                 .asOption();
     }
-
 
     @Test
     public void testWebSocketConversation() throws Exception {
         assertNotNull(bundleContext);
         bundleContext.registerService(Servlet.class, new MyWebSocketInitServlet(), new Hashtable<>(Map.of(
                 HttpWhiteboardConstants.HTTP_WHITEBOARD_SERVLET_PATTERN, "/mywebsocket1"
-        )));
+                )));
 
-        HttpClientTransportOverHTTP transport = new HttpClientTransportOverHTTP();
-        HttpClient httpClient = new org.eclipse.jetty.client.HttpClient(transport);
-        WebSocketClient webSocketClient = new WebSocketClient(httpClient);
-        webSocketClient.start();
+        WebSocketContainer container = JakartaWebSocketClientContainerProvider.getContainer(null);
 
+        // Create client side endpoint
+        MyClientWebSocket clientEndpoint = new MyClientWebSocket();
+
+        // Attempt Connect
         Object value = bundleContext.getServiceReference(HttpService.class).getProperty("org.osgi.service.http.port");
         int httpPort = Integer.parseInt((String)value);
         URI destUri = new URI(String.format("ws://localhost:%d/mywebsocket1", httpPort));
+        try (Session session = container.connectToServer(clientEndpoint, destUri)) {
 
-        MyClientWebSocket clientWebSocket = new MyClientWebSocket();
-        ClientUpgradeRequest request = new ClientUpgradeRequest();
-        CompletableFuture<Session> future = webSocketClient.connect(clientWebSocket, destUri, request);
-        Session session = future.get();
-        assertNotNull(session);
+            // send a message from the client to the server
+            clientEndpoint.sendMessage("Hello WebSocket");
 
-        // send a message from the client to the server
-        clientWebSocket.sendMessage("Hello WebSocket");
-
-        // wait for the async response from the server
-        Awaitility.await("waitForResponse")
+            // wait for the async response from the server
+            Awaitility.await("waitForResponse")
                 .atMost(Duration.ofSeconds(30))
                 .pollDelay(Duration.ofMillis(200))
-                .until(() -> clientWebSocket.getLastMessage() != null);
-        assertEquals("Hello WebSocket", clientWebSocket.getLastMessage());
+                .until(() -> clientEndpoint.getLastMessage() != null);
+            assertEquals("Hello WebSocket", clientEndpoint.getLastMessage());
+        }
     }
 
     /**
@@ -143,20 +135,26 @@ public class JettyEE10SpecificWebsocketIT extends AbstractJettyTestSupport {
         public void init(ServletConfig config) throws ServletException {
             super.init(config);
 
-            //  Lookup the ServletContext for the context path where the websocket server is attached.
+            // Retrieve the ServerContainer from the ServletContext attributes.
             ServletContext servletContext = config.getServletContext();
+            ServerContainer container = (ServerContainer)servletContext.getAttribute(ServerContainer.class.getName());
 
-            // Retrieve the JettyWebSocketServerContainer.
-            JettyWebSocketServerContainer container = JettyWebSocketServerContainer.getContainer(servletContext);
-            assertNotNull(container);
-            container.addMapping("/mywebsocket1", (upgradeRequest, upgradeResponse) -> new MyServerWebSocket());
+            // Configure the ServerContainer.
+            container.setDefaultMaxTextMessageBufferSize(128 * 1024);
+
+            // Simple registration of your WebSocket endpoints.
+            try {
+                container.addEndpoint(MyServerWebSocket.class);
+            } catch (DeploymentException e) {
+                throw new ServletException(e);
+            }
         }
     }
 
     /**
      * WebSocket handler for the client side
      */
-    @WebSocket()
+    @ClientEndpoint
     public static class MyClientWebSocket {
         private Session session;
         private String lastMessage;
@@ -165,7 +163,7 @@ public class JettyEE10SpecificWebsocketIT extends AbstractJettyTestSupport {
             return lastMessage;
         }
 
-        @OnWebSocketOpen
+        @OnOpen
         public void onConnect(Session session) {
             this.session = session;
         }
@@ -174,15 +172,15 @@ public class JettyEE10SpecificWebsocketIT extends AbstractJettyTestSupport {
          * Send a message to the server side
          * @param msg the message to send
          */
-        public void sendMessage(String msg) {
-            this.session.sendText(msg, Callback.NOOP);
+        public void sendMessage(String msg) throws IOException {
+            this.session.getBasicRemote().sendText(msg);
         }
 
         /**
          * Receive a message from the server side
          * @param msg the message
          */
-        @OnWebSocketMessage
+        @OnMessage
         public void onMessage(String msg) {
             lastMessage = msg;
         }
@@ -191,18 +189,18 @@ public class JettyEE10SpecificWebsocketIT extends AbstractJettyTestSupport {
     /**
      * WebSocket handler for the server side
      */
-    @WebSocket()
+    @ServerEndpoint(value = "/mywebsocket1")
     public static class MyServerWebSocket {
         /**
          * Receive message sent from the client
-         *
+         * 
          * @param session the session
          * @param message the message
          */
-        @OnWebSocketMessage
-        public void onText(Session session, String message) {
+        @OnMessage
+        public void onText(Session session, String message) throws IOException {
             // echo a response back to the client 
-            session.sendText(message, Callback.NOOP);
+            session.getBasicRemote().sendText(message);
         }
     }
 
