@@ -16,6 +16,10 @@
  */
 package org.apache.felix.http.jetty.internal;
 
+import static org.eclipse.jetty.http.UriCompliance.LEGACY;
+import static org.eclipse.jetty.http.UriCompliance.UNAMBIGUOUS;
+import static org.eclipse.jetty.http.UriCompliance.UNSAFE;
+
 import java.net.Inet4Address;
 import java.net.Inet6Address;
 import java.net.InetAddress;
@@ -85,32 +89,56 @@ public final class JettyService
     private volatile FileRequestLog fileRequestLog;
     private volatile LoadBalancerCustomizerFactoryTracker loadBalancerCustomizerTracker;
     private volatile CustomizerWrapper customizerWrapper;
-    private boolean registerManagedService = true;
+    private final boolean registerManagedService;
     private final String jettyVersion;
+    private final boolean immediatelyStartJetty;
 
-    public JettyService(final BundleContext context,
-            final HttpServiceController controller)
-    {
+    /**
+     * Shared constructor for JettyService instances.
+     * @param context The bundle context
+     * @param controller The HTTP service controller
+     * @param registerManagedService Whether to register the managed service
+     */
+    private JettyService(final BundleContext context,
+            final HttpServiceController controller,
+            final boolean registerManagedService) {
         this.jettyVersion = fixJettyVersion(context);
 
         this.context = context;
         this.config = new JettyConfig(this.context);
         this.controller = controller;
+        this.registerManagedService = registerManagedService;
+        this.immediatelyStartJetty = !registerManagedService || !this.config.isRequireConfiguration();
     }
 
+    /**
+     * Constructor for the managed service jetty service.
+     * @param context The bundle context
+     * @param controller The HTTP service controller
+     */
+    public JettyService(final BundleContext context,
+            final HttpServiceController controller) {
+        this(context, controller, true);
+    }
+
+    /**
+     * Constructor for the managed service factory jetty service.
+     * @param context The bundle context
+     * @param controller The HTTP service controller
+     * @param props The configuration properties
+     */
     public JettyService(final BundleContext context,
             final HttpServiceController controller,
-            final Dictionary<String,?> props)
-    {
-        this(context, controller);
+            final Dictionary<String,?> props) {
+        this(context, controller, false);
    	    this.config.update(props);
-   	    this.registerManagedService = false;
     }
 
-    public void start() throws Exception
-    {
-        // FELIX-4422: start Jetty synchronously...
-        startJetty();
+    public void start() throws Exception {
+        if ( this.immediatelyStartJetty) {
+            // FELIX-4422: start Jetty synchronously...
+            startJetty();
+        }
 
         if (this.registerManagedService) {
 			final Dictionary<String, Object> props = new Hashtable<>();
@@ -136,11 +164,14 @@ public final class JettyService
         }
     }
 
-    public void stop() throws Exception
-    {
-        if (this.configServiceReg != null)
-        {
-            this.configServiceReg.unregister();
+    public void stop() throws Exception {
+        if (this.configServiceReg != null) {
+            try {
+                // ignore potential exception on shutdown
+                this.configServiceReg.unregister();
+            } catch (final IllegalStateException e) {
+                // ignore
+            }
             this.configServiceReg = null;
         }
 
@@ -159,10 +190,11 @@ public final class JettyService
         return props;
     }
 
-    public void updated(final Dictionary<String, ?> props)
-    {
-        if (this.config.update(props))
-        {
+    public void updated(final Dictionary<String, ?> props) {
+        final boolean changed = this.config.update(props);
+        if (props == null && !this.immediatelyStartJetty) { // null is only passed for the managed service
+            stopJetty();
+        } else if (changed) {
             // Something changed in our configuration, restart Jetty...
             stopJetty();
             startJetty();
@@ -649,15 +681,14 @@ public final class JettyService
         config.setRequestHeaderSize(this.config.getHeaderSize());
         config.setResponseHeaderSize(this.config.getHeaderSize());
         config.setOutputBufferSize(this.config.getResponseBufferSize());
-
+ 
         String uriComplianceMode = this.config.getProperty(JettyConfig.FELIX_JETTY_URI_COMPLIANCE_MODE, null);
         if (uriComplianceMode != null) {
             try {
-                config.setUriCompliance(UriCompliance.valueOf(uriComplianceMode));
+                UriCompliance compliance = UriCompliance.valueOf(uriComplianceMode);
+                config.setUriCompliance(compliance);
 
-                if (UriCompliance.LEGACY.equals(uriComplianceMode)
-                        || UriCompliance.UNSAFE.equals(uriComplianceMode)
-                        || UriCompliance.UNAMBIGUOUS.equals(uriComplianceMode)) {
+                if (LEGACY.equals(compliance) || UNSAFE.equals(compliance) || UNAMBIGUOUS.equals(compliance)) {
                     // See https://github.com/jetty/jetty.project/issues/11448#issuecomment-1969206031
                     this.server.getContainedBeans(ServletHandler.class)
                             .forEach(handler -> handler.setDecodeAmbiguousURIs(true));

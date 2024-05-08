@@ -83,32 +83,57 @@ public final class JettyService
     private volatile FileRequestLog fileRequestLog;
     private volatile LoadBalancerCustomizerFactoryTracker loadBalancerCustomizerTracker;
     private volatile CustomizerWrapper customizerWrapper;
-    private boolean registerManagedService = true;
-    private final String jettyVersion;
 
-    public JettyService(final BundleContext context,
-            final HttpServiceController controller)
-    {
+    private final boolean registerManagedService;
+    private final String jettyVersion;
+    private final boolean immediatelyStartJetty;
+
+    /**
+     * Shared constructor for JettyService instances.
+     * @param context The bundle context
+     * @param controller The HTTP service controller
+     * @param registerManagedService Whether to register the managed service
+     */
+    private JettyService(final BundleContext context,
+            final HttpServiceController controller,
+            final boolean registerManagedService) {
         this.jettyVersion = fixJettyVersion(context);
 
         this.context = context;
         this.config = new JettyConfig(this.context);
         this.controller = controller;
+        this.registerManagedService = registerManagedService;
+        this.immediatelyStartJetty = !registerManagedService || !this.config.isRequireConfiguration();
     }
 
+    /**
+     * Constructor for the managed service jetty service.
+     * @param context The bundle context
+     * @param controller The HTTP service controller
+     */
+    public JettyService(final BundleContext context,
+            final HttpServiceController controller) {
+        this(context, controller, true);
+    }
+
+    /**
+     * Constructor for the managed service factory jetty service.
+     * @param context The bundle context
+     * @param controller The HTTP service controller
+     * @param props The configuration properties
+     */
     public JettyService(final BundleContext context,
             final HttpServiceController controller,
-            final Dictionary<String,?> props)
-    {
-        this(context, controller);
+            final Dictionary<String,?> props) {
+        this(context, controller, false);
    	    this.config.update(props);
-   	    this.registerManagedService = false;
     }
 
-    public void start() throws Exception
-    {
-        // FELIX-4422: start Jetty synchronously...
-        startJetty();
+    public void start() throws Exception {
+        if ( this.immediatelyStartJetty) {
+            // FELIX-4422: start Jetty synchronously...
+            startJetty();
+        }
 
         if (this.registerManagedService) {
 			final Dictionary<String, Object> props = new Hashtable<>();
@@ -134,11 +159,14 @@ public final class JettyService
         }
     }
 
-    public void stop() throws Exception
-    {
-        if (this.configServiceReg != null)
-        {
-            this.configServiceReg.unregister();
+    public void stop() throws Exception {
+        if (this.configServiceReg != null) {
+            try {
+                // ignore potential exception on shutdown
+                this.configServiceReg.unregister();
+            } catch (final IllegalStateException e) {
+                // ignore
+            }
             this.configServiceReg = null;
         }
 
@@ -157,10 +185,11 @@ public final class JettyService
         return props;
     }
 
-    public void updated(final Dictionary<String, ?> props)
-    {
-        if (this.config.update(props))
-        {
+    public void updated(final Dictionary<String, ?> props) {
+        final boolean changed = this.config.update(props);
+        if (props == null && !this.immediatelyStartJetty) { // null is only passed for the managed service
+            stopJetty();
+        } else if (changed) {
             // Something changed in our configuration, restart Jetty...
             stopJetty();
             startJetty();
