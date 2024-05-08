@@ -16,6 +16,10 @@
  */
 package org.apache.felix.http.jetty.internal;
 
+import static org.eclipse.jetty.http.UriCompliance.LEGACY;
+import static org.eclipse.jetty.http.UriCompliance.UNAMBIGUOUS;
+import static org.eclipse.jetty.http.UriCompliance.UNSAFE;
+
 import java.net.Inet4Address;
 import java.net.Inet6Address;
 import java.net.InetAddress;
@@ -677,15 +681,14 @@ public final class JettyService
         config.setRequestHeaderSize(this.config.getHeaderSize());
         config.setResponseHeaderSize(this.config.getHeaderSize());
         config.setOutputBufferSize(this.config.getResponseBufferSize());
-
+ 
         String uriComplianceMode = this.config.getProperty(JettyConfig.FELIX_JETTY_URI_COMPLIANCE_MODE, null);
         if (uriComplianceMode != null) {
             try {
-                config.setUriCompliance(UriCompliance.valueOf(uriComplianceMode));
+                UriCompliance compliance = UriCompliance.valueOf(uriComplianceMode);
+                config.setUriCompliance(compliance);
 
-                if (UriCompliance.LEGACY.equals(uriComplianceMode)
-                        || UriCompliance.UNSAFE.equals(uriComplianceMode)
-                        || UriCompliance.UNAMBIGUOUS.equals(uriComplianceMode)) {
+                if (LEGACY.equals(compliance) || UNSAFE.equals(compliance) || UNAMBIGUOUS.equals(compliance)) {
                     // See https://github.com/jetty/jetty.project/issues/11448#issuecomment-1969206031
                     this.server.getContainedBeans(ServletHandler.class)
                             .forEach(handler -> handler.setDecodeAmbiguousURIs(true));
