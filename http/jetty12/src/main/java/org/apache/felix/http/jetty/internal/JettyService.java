@@ -653,11 +653,12 @@ public final class JettyService
         String uriComplianceMode = this.config.getProperty(JettyConfig.FELIX_JETTY_URI_COMPLIANCE_MODE, null);
         if (uriComplianceMode != null) {
             try {
-                config.setUriCompliance(UriCompliance.valueOf(uriComplianceMode));
+		UriCompliance compliance = UriCompliance.valueOf(uriComplianceMode);
+                config.setUriCompliance(compliance);
 
-                if (UriCompliance.LEGACY.equals(uriComplianceMode)
-                        || UriCompliance.UNSAFE.equals(uriComplianceMode)
-                        || UriCompliance.UNAMBIGUOUS.equals(uriComplianceMode)) {
+                if (UriCompliance.LEGACY.equals(compliance) 
+                        || UriCompliance.UNSAFE.equals(compliance)
+                        || UriCompliance.UNAMBIGUOUS.equals(compliance)) {
                     // See https://github.com/jetty/jetty.project/issues/11448#issuecomment-1969206031
                     this.server.getContainedBeans(ServletHandler.class)
                             .forEach(handler -> handler.setDecodeAmbiguousURIs(true));
