@@ -71,9 +71,13 @@ public class JettyUriComplianceModeLegacyIT extends JettyUriComplianceModeDefaul
         URI destUriWorking = new URI(String.format("http://localhost:%d/endpoint/working", httpPort));
         URI destUriAmbigousPath = new URI("http://localhost:" + httpPort + "/endpoint/ambigousPathitem_0_http%3A%2F%2Fwww.test.com%2F0.html/abc");
 
-        assertEquals(200, httpClient.GET(destUriWorking).getStatus());
+        ContentResponse response = httpClient.GET(destUriWorking);
+        assertEquals(200, response.getStatus());
+        assertEquals("OK", response.getContentAsString());
 
         // no longer blocked due to LEGACY compliance mode
-        assertEquals(200, httpClient.GET(destUriAmbigousPath).getStatus());
+        ContentResponse response2 = httpClient.GET(destUriAmbigousPath);
+        assertEquals(200, response2.getStatus());
+        assertEquals("OK", response2.getContentAsString());
     }
 }

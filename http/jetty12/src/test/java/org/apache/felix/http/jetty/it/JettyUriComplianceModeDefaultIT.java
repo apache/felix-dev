@@ -96,7 +96,9 @@ public class JettyUriComplianceModeDefaultIT extends AbstractJettyTestSupport {
         URI destUriWorking = new URI(String.format("http://localhost:%d/endpoint/working", httpPort));
         URI destUriAmbigousPath = new URI("http://localhost:" + httpPort + "/endpoint/ambigousPathitem_0_http%3A%2F%2Fwww.test.com%2F0.html/abc");
 
-        assertEquals(200, httpClient.GET(destUriWorking).getStatus());
+        ContentResponse response = httpClient.GET(destUriWorking);
+        assertEquals(200, response.getStatus());
+        assertEquals("OK", response.getContentAsString());
 
         // blocked with HTTP 400 by default
         assertEquals(400, httpClient.GET(destUriAmbigousPath).getStatus());
