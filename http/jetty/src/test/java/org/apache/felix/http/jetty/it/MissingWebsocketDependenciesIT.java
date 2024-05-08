@@ -50,8 +50,8 @@ public class MissingWebsocketDependenciesIT extends AbstractJettyTestSupport {
     protected Option felixHttpConfig(int httpPort) {
         return newConfiguration("org.apache.felix.http")
                 .put("org.osgi.service.http.port", httpPort)
-                .put("org.apache.felix.jetty.ee9.websocket.enable", true)
-                .put("org.apache.felix.jakarta.ee9.websocket.enable", true)
+                .put("org.apache.felix.jetty.websocket.enable", true)
+                .put("org.apache.felix.jakarta.websocket.enable", true)
                 .asOption();
     }
 
@@ -69,7 +69,7 @@ public class MissingWebsocketDependenciesIT extends AbstractJettyTestSupport {
 
         assertTrue(containsString(logFile, "org.apache.felix.http.jetty[org.apache.felix.http] : Failed to initialize jetty specific websocket "
                 + "support since the initializer class was not found. Check if the websocket-jetty-server bundle is deployed."));
-        assertTrue(containsString(logFile, "org.apache.felix.http.jetty[org.apache.felix.http] : Failed to initialize jakarta EE9 standard websocket"
+        assertTrue(containsString(logFile, "org.apache.felix.http.jetty[org.apache.felix.http] : Failed to initialize jakarta standard websocket"
                 + " support since the initializer class was not found. Check if the websocket-jakarta-server bundle is deployed."));
     }
 

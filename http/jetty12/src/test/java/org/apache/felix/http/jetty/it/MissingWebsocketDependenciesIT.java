@@ -50,8 +50,8 @@ public class MissingWebsocketDependenciesIT extends AbstractJettyTestSupport {
     protected Option felixHttpConfig(int httpPort) {
         return newConfiguration("org.apache.felix.http")
                 .put("org.osgi.service.http.port", httpPort)
-                .put("org.apache.felix.jetty.ee10.websocket.enable", true)
-                .put("org.apache.felix.jakarta.ee10.websocket.enable", true)
+                .put("org.apache.felix.jetty.websocket.enable", true)
+                .put("org.apache.felix.jakarta.websocket.enable", true)
                 .asOption();
     }
 

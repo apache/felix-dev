@@ -33,7 +33,7 @@ import org.eclipse.jetty.websocket.api.annotations.WebSocket;
 /**
  * Example of a WebSocket servlet that uses the Jetty WebSocket API.
  * It does not respect the path this servlet is registered to, but requires no further workarounds.
- * Setting `org.apache.felix.jetty.ee10.websocket.enable=true` is enough.
+ * Setting `org.apache.felix.jetty.websocket.enable=true` is enough.
  */
 public class TestWebSocketServlet extends HttpServlet {
     private final String name;

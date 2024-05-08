@@ -336,12 +336,12 @@
                         </configuration>
                     </execution>
                     <execution>
-                        <id>with-jetty-ee10-websockets</id>
+                        <id>with-jetty-websockets</id>
                         <goals>
                             <goal>bundle</goal>
                         </goals>
                         <configuration>
-                            <classifier>with-jetty-ee10-websockets</classifier>
+                            <classifier>with-jetty-websockets</classifier>
                             <instructions>
                                 <Bundle-SymbolicName>${project.artifactId}</Bundle-SymbolicName>
                                 <Bundle-Version>${project.version}</Bundle-Version>
@@ -442,12 +442,12 @@
                         </configuration>
                     </execution>
                     <execution>
-                        <id>with-jakarta-ee10-websockets</id>
+                        <id>with-jakarta-websockets</id>
                         <goals>
                             <goal>bundle</goal>
                         </goals>
                         <configuration>
-                            <classifier>with-jakarta-ee10-websockets</classifier>
+                            <classifier>with-jakarta-websockets</classifier>
                             <instructions>
                                 <Bundle-SymbolicName>${project.artifactId}</Bundle-SymbolicName>
                                 <Bundle-Version>${project.version}</Bundle-Version>

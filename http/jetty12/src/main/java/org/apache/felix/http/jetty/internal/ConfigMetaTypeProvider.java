@@ -490,16 +490,16 @@ class ConfigMetaTypeProvider implements MetaTypeProvider
                 CustomRequestLog.NCSA_FORMAT,
                 bundle.getBundleContext().getProperty(JettyConfig.FELIX_HTTP_REQUEST_LOG_FORMAT)));
 
-        adList.add(new AttributeDefinitionImpl(JettyConfig.FELIX_JAKARTA_EE10_WEBSOCKET_ENABLE,
-                "Enable Jakarta EE10 standard WebSocket support",
-                "Whether to enable jakarta EE10 standard WebSocket support. Default is false.",
+        adList.add(new AttributeDefinitionImpl(JettyConfig.FELIX_JAKARTA_WEBSOCKET_ENABLE,
+                "Enable Jakarta standard WebSocket support",
+                "Whether to enable jakarta standard WebSocket support. Default is false.",
                 false,
-                bundle.getBundleContext().getProperty(JettyConfig.FELIX_JAKARTA_EE10_WEBSOCKET_ENABLE)));
-        adList.add(new AttributeDefinitionImpl(JettyConfig.FELIX_JETTY_EE10_WEBSOCKET_ENABLE,
-                "Enable Jetty EE10 specific WebSocket support",
-                "Whether to enable jetty EE10 specific WebSocket support. Default is false.",
+                bundle.getBundleContext().getProperty(JettyConfig.FELIX_JAKARTA_WEBSOCKET_ENABLE)));
+        adList.add(new AttributeDefinitionImpl(JettyConfig.FELIX_JETTY_WEBSOCKET_ENABLE,
+                "Enable Jetty specific WebSocket support",
+                "Whether to enable jetty specific WebSocket support. Default is false.",
                 false,
-                bundle.getBundleContext().getProperty(JettyConfig.FELIX_JETTY_EE10_WEBSOCKET_ENABLE)));
+                bundle.getBundleContext().getProperty(JettyConfig.FELIX_JETTY_WEBSOCKET_ENABLE)));
         return new ObjectClassDefinition()
         {
 
