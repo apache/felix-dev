@@ -308,12 +308,12 @@ public final class JettyService
                 this.server.setStopTimeout(this.config.getStopTimeout());
             }
 
-            if (this.config.isUseJettyEE9Websocket()) {
-                maybeInitializeJettyEE9Websocket(context);
+            if (this.config.isUseJettyWebsocket()) {
+                maybeInitializeJettyWebsocket(context);
             }
 
-            if (this.config.isUseJakartaEE9Websocket()) {
-                maybeInitializeJakartaEE9Websocket(context);
+            if (this.config.isUseJakartaWebsocket()) {
+                maybeInitializeJakartaWebsocket(context);
             }
 
             this.server.start();
@@ -488,29 +488,29 @@ public final class JettyService
     }
 
     /**
-     * Initialize the jakarta EE9 websocket support for the servlet context handler.
+     * Initialize the jakarta websocket support for the servlet context handler.
      * If the optional initializer class is not present then a warning will be logged.
      *
      * @param handler the sevlet context handler to initialize
      */
-    private void maybeInitializeJakartaEE9Websocket(ServletContextHandler handler) {
+    private void maybeInitializeJakartaWebsocket(ServletContextHandler handler) {
         if (isClassNameVisible("org.eclipse.jetty.websocket.jakarta.server.config.JakartaWebSocketServletContainerInitializer")) {
             // Ensure that JavaxWebSocketServletContainerInitializer is initialized,
             // to setup the ServerContainer for this web application context.
             org.eclipse.jetty.websocket.jakarta.server.config.JakartaWebSocketServletContainerInitializer.configure(handler, null);
         } else {
-            SystemLogger.LOGGER.warn("Failed to initialize jakarta EE9 standard websocket support since the initializer class was not found. "
+            SystemLogger.LOGGER.warn("Failed to initialize jakarta standard websocket support since the initializer class was not found. "
                     + "Check if the websocket-jakarta-server bundle is deployed.");
         }
     }
 
     /**
-     * Initialize the jetty EE9 websocket support for the servlet context handler.
+     * Initialize the jetty websocket support for the servlet context handler.
      * If the optional initializer class is not present then a warning will be logged.
      *
      * @param handler the sevlet context handler to initialize
      */
-    private void maybeInitializeJettyEE9Websocket(ServletContextHandler handler) {
+    private void maybeInitializeJettyWebsocket(ServletContextHandler handler) {
         if (isClassNameVisible("org.eclipse.jetty.websocket.server.config.JettyWebSocketServletContainerInitializer")) {
             // Ensure that JettyWebSocketServletContainerInitializer is initialized,
             // to setup the JettyWebSocketServerContainer for this web application context.
@@ -529,12 +529,12 @@ public final class JettyService
     private void maybeStoreWebSocketContainerAttributes(ServletContextHandler context) {
         // when the server is started, retrieve the container attribute and
         // set it on the shared servlet context once available
-        if (this.config.isUseJettyEE9Websocket() &&
+        if (this.config.isUseJettyWebsocket() &&
                 isClassNameVisible("org.eclipse.jetty.websocket.server.config.JettyWebSocketServletContainerInitializer")) {
             String attribute = org.eclipse.jetty.websocket.server.JettyWebSocketServerContainer.JETTY_WEBSOCKET_CONTAINER_ATTRIBUTE;
             this.controller.setAttributeSharedServletContext(attribute, context.getServletContext().getAttribute(attribute));
         }
-        if (this.config.isUseJakartaEE9Websocket() &&
+        if (this.config.isUseJakartaWebsocket() &&
                 isClassNameVisible("org.eclipse.jetty.websocket.jakarta.server.config.JakartaWebSocketServletContainerInitializer")) {
             String attribute = org.eclipse.jetty.websocket.jakarta.server.config.JakartaWebSocketServletContainerInitializer.ATTR_JAKARTA_SERVER_CONTAINER;
             this.controller.setAttributeSharedServletContext(attribute, context.getServletContext().getAttribute(attribute));

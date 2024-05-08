@@ -59,7 +59,7 @@ import org.osgi.service.servlet.whiteboard.HttpWhiteboardConstants;
  */
 @RunWith(PaxExam.class)
 @ExamReactorStrategy(PerClass.class)
-public class JakartaEE10SpecificWebsocketIT extends AbstractJettyTestSupport {
+public class JakartaSpecificWebsocketIT extends AbstractJettyTestSupport {
 
     @Inject
     protected BundleContext bundleContext;
@@ -91,7 +91,7 @@ public class JakartaEE10SpecificWebsocketIT extends AbstractJettyTestSupport {
     protected Option felixHttpConfig(int httpPort) {
         return newConfiguration("org.apache.felix.http")
                 .put("org.osgi.service.http.port", httpPort)
-                .put("org.apache.felix.jakarta.ee10.websocket.enable", true)
+                .put("org.apache.felix.jakarta.websocket.enable", true)
                 .asOption();
     }
 
