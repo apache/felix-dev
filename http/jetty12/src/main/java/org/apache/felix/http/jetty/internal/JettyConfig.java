@@ -277,6 +277,9 @@ public final class JettyConfig
     /** Felix specific property to control whether to enable they Jetty-specific WebSocket APIs */
     public static final String FELIX_JETTY_WEBSOCKET_ENABLE = "org.apache.felix.jetty.websocket.enable";
 
+    /** Felix specific property to control whether an OSGi configuration is required */
+    private static final String FELIX_REQUIRE_OSGI_CONFIG = "org.apache.felix.http.require.config";
+
     private static String validateContextPath(String ctxPath)
     {
         // undefined, empty, or root context path
@@ -965,5 +968,9 @@ public final class JettyConfig
         {
             return dflt;
         }
+    }
+
+    public boolean isRequireConfiguration() {
+        return this.getBooleanProperty(FELIX_REQUIRE_OSGI_CONFIG, false);
     }
 }
