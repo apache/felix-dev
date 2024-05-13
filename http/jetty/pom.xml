@@ -353,6 +353,7 @@
                         <phase>integration-test</phase>
                         <goals>
                             <goal>integration-test</goal>
+                            <goal>verify</goal>
                         </goals>
                     </execution>
                     <execution>
@@ -365,7 +366,7 @@
                 </executions>
                 <configuration>
                     <redirectTestOutputToFile>true</redirectTestOutputToFile>
-                    <systemPropertyVariables>
+                    <systemPropertyVariables combine.children="append">
                         <jetty.version>${jetty.version}</jetty.version>
                         <bundle.filename>${basedir}/target/${project.build.finalName}.jar</bundle.filename>
                         <pax.vm.options>${pax.vm.options}</pax.vm.options>
