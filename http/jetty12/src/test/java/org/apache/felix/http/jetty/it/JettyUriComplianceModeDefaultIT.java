@@ -54,7 +54,7 @@ public class JettyUriComplianceModeDefaultIT extends AbstractJettyTestSupport {
 
     @Override
     protected Option[] additionalOptions() throws IOException {
-        String jettyVersion = System.getProperty("jetty.version", "12.0.9");
+        String jettyVersion = System.getProperty("jetty.version", JETTY_VERSION);
         return new Option[] {
                 spifly(),
 
