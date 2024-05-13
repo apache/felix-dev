@@ -78,7 +78,8 @@
                                             && !"org.eclipse.jetty.ee10.websocket".equals(artifact.getGroupId()) // skip the optional websocket artifacts
                                             && !"jetty-annotations".equals(artifact.getArtifactId()) // skip the transitive artifacts from the optional websocket artifacts
                                             && !"jetty-plus".equals(artifact.getArtifactId())
-                                            && !"jetty-webapp".equals(artifact.getArtifactId())) {
+                                            && !"jetty-webapp".equals(artifact.getArtifactId())
+                                            && !"jetty-ee".equals(artifact.getArtifactId())) {
                                         def jar;
                                         try {
                                             jar = new java.util.jar.JarFile(artifact.file)
@@ -182,6 +183,7 @@
                             org.eclipse.jetty.session.*,
                             org.eclipse.jetty.server.*,
                             org.eclipse.jetty.util.*,
+                            org.eclipse.jetty.ee.*,
                             !org.eclipse.jetty.ee10.websocket.*,
                             org.eclipse.jetty.ee10.servlet.*,
                             org.apache.felix.http.jetty,
@@ -370,6 +372,7 @@
                                     org.eclipse.jetty.session.*,
                                     org.eclipse.jetty.server.*,
                                     org.eclipse.jetty.util.*,
+                                    org.eclipse.jetty.ee.*,
                                     org.eclipse.jetty.ee10.servlet.*,
                                     !org.eclipse.jetty.ee10.websocket.jakarta.*,
                                     org.eclipse.jetty.ee10.websocket.*,
@@ -476,6 +479,7 @@
                                     org.eclipse.jetty.session.*,
                                     org.eclipse.jetty.server.*,
                                     org.eclipse.jetty.util.*,
+                                    org.eclipse.jetty.ee.*,
                                     !org.eclipse.jetty.ee10.websocket.server.*,
                                     !org.eclipse.jetty.ee10.websocket.servlet.*,
                                     org.eclipse.jetty.ee10.websocket.jakarta.*,
