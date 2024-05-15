@@ -29,4 +29,4 @@ jobs:
        java-distribution: temurin
        maven-version: 3.9.6
     - name: Build with Maven
-      run: mvn --debug -Dsurefire.failIfNoSpecifiedTests=false -Dtest=\!MissingWebsocketDependenciesIT* -B clean install
+      run: mvn --debug -Dsurefire.failIfNoSpecifiedTests=false -Dtest=\!MissingWebsocketDependenciesIT* -f http -B clean install
