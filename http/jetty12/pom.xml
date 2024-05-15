@@ -561,32 +561,22 @@
             <plugin>
                 <groupId>org.apache.maven.plugins</groupId>
                 <artifactId>maven-failsafe-plugin</artifactId>
-                <version>3.2.5</version>
                 <executions>
                     <execution>
-                        <id>integration-test</id>
-                        <phase>integration-test</phase>
                         <goals>
                             <goal>integration-test</goal>
                             <goal>verify</goal>
                         </goals>
-                    </execution>
-                    <execution>
-                        <id>verify</id>
-                        <phase>integration-test</phase>
-                        <goals>
-                            <goal>verify</goal>
-                        </goals>
+                        <configuration>
+                            <redirectTestOutputToFile>true</redirectTestOutputToFile>
+                            <systemPropertyVariables>
+                                <jetty.version>${jetty.version}</jetty.version>
+                                <bundle.filename>${basedir}/target/${project.build.finalName}.jar</bundle.filename>
+                                <pax.vm.options>${pax.vm.options}</pax.vm.options>
+                            </systemPropertyVariables>
+                        </configuration>
                     </execution>
                 </executions>
-                <configuration>
-                    <redirectTestOutputToFile>true</redirectTestOutputToFile>
-                    <systemPropertyVariables combine.children="append">
-                        <jetty.version>${jetty.version}</jetty.version>
-                        <bundle.filename>${basedir}/target/${project.build.finalName}.jar</bundle.filename>
-                        <pax.vm.options>${pax.vm.options}</pax.vm.options>
-                    </systemPropertyVariables>
-                </configuration>
             </plugin>
         </plugins>
     </build>
