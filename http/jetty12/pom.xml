@@ -573,7 +573,9 @@
                                 <jetty.version>${jetty.version}</jetty.version>
                                 <pax.vm.options>${pax.vm.options}</pax.vm.options>
                             </systemPropertyVariables>
-                            <argLine>"-Dbundle.filename=${basedir}/target/${project.build.finalName}.jar"</argLine>
+                            <environmentVariables>
+                                <bundle.filename>${basedir}/target/${project.build.finalName}.jar</bundle.filename>
+                            </environmentVariables>
                         </configuration>
                     </execution>
                 </executions>
