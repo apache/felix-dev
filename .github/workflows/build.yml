@@ -28,4 +28,4 @@ jobs:
         distribution: 'temurin'
         cache: maven
     - name: Felix HTTP
-      run: mvn --file http clean install 
+      run: mvn -B --file http clean install 
