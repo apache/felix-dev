@@ -571,9 +571,9 @@
                             <redirectTestOutputToFile>true</redirectTestOutputToFile>
                             <systemPropertyVariables>
                                 <jetty.version>${jetty.version}</jetty.version>
-                                <bundle.filename>${basedir}/target/${project.build.finalName}.jar</bundle.filename>
                                 <pax.vm.options>${pax.vm.options}</pax.vm.options>
                             </systemPropertyVariables>
+                            <argLine>"-Dbundle.filename=${basedir}/target/${project.build.finalName}.jar"</argLine>
                         </configuration>
                     </execution>
                 </executions>
