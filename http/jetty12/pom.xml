@@ -576,6 +576,7 @@
                             <environmentVariables>
                                 <bundle.filename>${basedir}/target/${project.build.finalName}.jar</bundle.filename>
                             </environmentVariables>
+                            <useSystemClassLoader>false</useSystemClassLoader>
                         </configuration>
                     </execution>
                 </executions>

@@ -27,7 +27,5 @@ jobs:
         java-version: '17'
         distribution: 'temurin'
         cache: maven
-    - name: Felix Main Framework
-      run: mvn --file framework -B clean install
     - name: Felix HTTP
-      run: mvn --file http -B clean install
+      run: mvn --file http -B clean install 
