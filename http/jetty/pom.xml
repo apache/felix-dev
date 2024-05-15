@@ -44,7 +44,7 @@
         <felix.java.version>11</felix.java.version>
         <jetty.version>11.0.20</jetty.version>
         <baseline.skip>true</baseline.skip>
-        <org.ops4j.pax.exam.version>4.13.3</org.ops4j.pax.exam.version>
+        <org.ops4j.pax.exam.version>4.13.5</org.ops4j.pax.exam.version>
         <!-- To debug the pax process, override this with -D -->
         <pax.vm.options>-Xmx512M</pax.vm.options>
     </properties>
