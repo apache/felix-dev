@@ -29,3 +29,6 @@ jobs:
         cache: maven
     - name: Felix HTTP
       run: mvn -B -DskipITs --file http clean install 
+    - name: Felix Framework
+      run: mvn -B -DskipITs --file framework clean install 
+      
