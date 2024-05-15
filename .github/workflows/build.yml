@@ -28,4 +28,4 @@ jobs:
         distribution: 'temurin'
         cache: maven
     - name: Felix HTTP
-      run: mvn -Dsurefire.failIfNoSpecifiedTests=false -Dtest=!MissingWebsocketDependenciesIT* -B --file http clean install verify
+      run: mvn "-Dsurefire.failIfNoSpecifiedTests=false" "-Dtest=!MissingWebsocketDependenciesIT*" -B --file http clean install verify
