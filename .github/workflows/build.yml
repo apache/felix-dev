@@ -21,12 +21,13 @@ jobs:
 
     steps:
     - uses: actions/checkout@v4
-    - name: Setup Maven Action
-      uses: s4u/setup-maven-action@v1.7.0
+    - name: Set up JDK 17
+      uses: actions/setup-java@v3
       with:
-       checkout-fetch-depth: 0
-       java-version: 17
-       java-distribution: temurin
-       maven-version: 3.9.6
-    - name: Build with Maven
-      run: mvn -Dsurefire.failIfNoSpecifiedTests=false -Dtest=\!MissingWebsocketDependenciesIT* -f http -B clean install
+        java-version: '17'
+        distribution: 'temurin'
+        cache: maven
+    - name: Felix Main Framework
+      run: mvn --file framework -B clean install
+    - name: Felix HTTP
+      run: mvn --file http -B clean install
