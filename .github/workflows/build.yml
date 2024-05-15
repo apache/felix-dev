@@ -28,4 +28,4 @@ jobs:
         distribution: 'corretto'
         cache: maven
     - name: Build with Maven
-      run: mvn -Dsurefire.failIfNoSpecifiedTests=false -Dtest=\!MissingWebsocketDependenciesIT* -B clean install
+      run: mvn --debug -Dsurefire.failIfNoSpecifiedTests=false -Dtest=\!MissingWebsocketDependenciesIT* -B clean install
