@@ -154,7 +154,7 @@ public abstract class AbstractJettyTestSupport {
      * @return the provisioning option
      */
     protected UrlProvisionOption testBundle(final String systemProperty) {
-        final String pathname = System.getenv(systemProperty);
+        final String pathname = System.getProperty(systemProperty);
         final File file = new File(pathname);
         return bundle(file.toURI().toString());
     }

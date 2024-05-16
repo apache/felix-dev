@@ -86,7 +86,7 @@ public class LightClassifierIT extends AbstractJettyTestSupport {
      */
     @Override
     protected UrlProvisionOption testBundle(String systemProperty) {
-        String pathname = System.getenv(systemProperty);
+        String pathname = System.getProperty(systemProperty);
         pathname = pathname.replace(".jar", "-light.jar");
         final File file = new File(pathname);
         return bundle(file.toURI().toString());
