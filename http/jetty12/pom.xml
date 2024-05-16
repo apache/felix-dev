@@ -26,7 +26,7 @@
         <relativePath>../../pom/pom.xml</relativePath>
     </parent>
 
-    <name>Apache Felix Http Jetty</name>
+    <name>Apache Felix Http Jetty 12</name>
     <description>This is an implementation of the R8.1 OSGi Servlet Service, the R7 OSGi Http Service and the R7 OSGi Http Whiteboard Specification</description>
 
     <artifactId>org.apache.felix.http.jetty12</artifactId>
