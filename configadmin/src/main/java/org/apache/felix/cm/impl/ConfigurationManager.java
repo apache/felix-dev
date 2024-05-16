@@ -929,8 +929,10 @@ public class ConfigurationManager implements BundleListener
                 }
                 catch ( Throwable t )
                 {
-                    Log.logger.log( LogService.LOG_ERROR, "Unexpected problem calling configuration plugin {0}", new Object[]
-                            { pluginRef , t } );
+                    String effectivePid = (factoryPid == null) ? configPid : factoryPid;
+                    String effectivePidLabel = (factoryPid == null) ? "Configuration PID" : "Factory PID";
+                    Log.logger.log( LogService.LOG_ERROR, "Unexpected problem calling configuration plugin {0} for {1}: {2} ", new Object[]
+                            { pluginRef, effectivePidLabel, effectivePid, t } );
                 }
                 finally
                 {
