@@ -1,0 +1,36 @@
+name: Github CI Build
+
+on:
+  push:
+    branches: [ "master" ]
+  pull_request:
+    branches: [ "master" ]
+    
+permissions: {}
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+    - uses: actions/checkout@v3
+    - name: Set up JDK 17
+      uses: actions/setup-java@v3
+      with:
+        java-version: '17'
+        distribution: 'temurin'
+        cache: maven
+    - name: Set up Maven
+      uses: stCarolas/setup-maven@d6af6abeda15e98926a57b5aa970a96bb37f97d1 # v5
+      with:
+        maven-version: 3.9.7
+    - name: Felix SCR
+      run: mvn -B -V -Dstyle.color=always --file scr/pom.xml clean verify
+    - name: Upload Test Results
+      if: always()
+      uses: actions/upload-artifact@65462800fd760344b1a7b4382951275a0abb4808 # v4.3.3
+      with:
+        name: test-results
+        if-no-files-found: warn
+        path: |
+          ${{ github.workspace }}/**/target/surefire-reports/*.xml
+          ${{ github.workspace }}/**/target/failsafe-reports/*.xml
