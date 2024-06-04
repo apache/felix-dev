@@ -36,6 +36,8 @@ The Web Console can be configurated through a configuration using the service PI
 | `plugins` | all plugins enabled | The labels of the plugins enabled and displayed. |
 | `locale` | -- | If set, this locale forces the localization to use this locale instead of the one requested by the web browser. |
 | `http.service.filter` | -- | OSGi filter used to select the Http Service to which the Web Console binds. The value of this property (if not empty) is combined with the object class selection term to get the actual service selection filter like `(&(objectClass=org.osgi.service.http.HttpService)(filter))`. This property must not have leading or ending parentheses. For example, to bind to the service with service ID 15 set the property to `service.id=15`. By default (if this property is not set or set to an empty string) the Web Console binds with any Http Service available. |
+| `shutdown.timeout` | 5 | The timeout for felix shutdown |
+| `reload.timeout` | 40 | The timeout for webconsole page reload, after shutdown |
 
 ### Framework Properties
 
