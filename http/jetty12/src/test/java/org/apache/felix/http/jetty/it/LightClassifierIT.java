@@ -51,7 +51,7 @@ public class LightClassifierIT extends AbstractJettyTestSupport {
 
     @Override
     protected Option[] additionalOptions() throws IOException {
-        String jettyVersion = System.getProperty("jetty.version", "12.0.8");
+        String jettyVersion = System.getProperty("jetty.version", JETTY_VERSION);
         return new Option[] {
                 spifly(),
 
@@ -73,6 +73,7 @@ public class LightClassifierIT extends AbstractJettyTestSupport {
                 mavenBundle().groupId("org.eclipse.jetty").artifactId("jetty-session").version(jettyVersion),
                 mavenBundle().groupId("org.eclipse.jetty.ee10").artifactId("jetty-ee10-servlet").version(jettyVersion),
                 mavenBundle().groupId("org.eclipse.jetty").artifactId("jetty-util").version(jettyVersion),
+                mavenBundle().groupId("org.eclipse.jetty").artifactId("jetty-ee").version(jettyVersion),
 
                 // additional dependencies to verify FELIX-6700
                 mavenBundle().groupId("org.owasp.encoder").artifactId("encoder").version("1.2.3"),

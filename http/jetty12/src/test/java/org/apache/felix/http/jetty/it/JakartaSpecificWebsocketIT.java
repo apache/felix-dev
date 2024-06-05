@@ -66,7 +66,7 @@ public class JakartaSpecificWebsocketIT extends AbstractJettyTestSupport {
 
     @Override
     protected Option[] additionalOptions() throws IOException {
-        String jettyVersion = System.getProperty("jetty.version", "12.0.8");
+        String jettyVersion = System.getProperty("jetty.version", JETTY_VERSION);
         return new Option[]{
                 spifly(),
 
@@ -76,6 +76,7 @@ public class JakartaSpecificWebsocketIT extends AbstractJettyTestSupport {
                 mavenBundle().groupId("org.eclipse.jetty").artifactId("jetty-alpn-client").version(jettyVersion),
                 mavenBundle().groupId("org.eclipse.jetty").artifactId("jetty-client").version(jettyVersion),
                 mavenBundle().groupId("org.eclipse.jetty.ee10").artifactId("jetty-ee10-webapp").version(jettyVersion),
+                mavenBundle().groupId("org.eclipse.jetty").artifactId("jetty-ee").version(jettyVersion),
                 mavenBundle().groupId("org.eclipse.jetty.websocket").artifactId("jetty-websocket-core-client").version(jettyVersion),
                 mavenBundle().groupId("org.eclipse.jetty.websocket").artifactId("jetty-websocket-core-common").version(jettyVersion),
                 mavenBundle().groupId("org.eclipse.jetty.websocket").artifactId("jetty-websocket-core-server").version(jettyVersion),
