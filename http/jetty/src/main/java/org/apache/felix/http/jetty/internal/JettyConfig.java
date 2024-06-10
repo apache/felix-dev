@@ -166,6 +166,9 @@ public final class JettyConfig
     /**  Felix specific property to configure session max age */
     public static final String FELIX_JETTY_SERVLET_SESSION_MAX_AGE = "org.eclipse.jetty.servlet.MaxAge";
 
+    /**  Felix specific property to configure the uri compliance mode (https://jetty.org/docs/jetty/11/programming-guide/server/compliance.html#uri) */
+    public static final String FELIX_JETTY_URI_COMPLIANCE_MODE = "org.eclipse.jetty.UriComplianceMode";
+
     /** Felix specific property to configure session scavenging interval in Seconds */
     public static final String FELIX_JETTY_SESSION_SCAVENGING_INTERVAL = "org.eclipse.jetty.servlet.SessionScavengingInterval";
 
