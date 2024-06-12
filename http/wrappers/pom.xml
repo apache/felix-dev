@@ -27,7 +27,7 @@
     </parent>
 
     <name>Apache Felix Http Wrappers</name>
-    <artifactId>org.apache.felix.http.wrappers</artifactId>
+    <artifactId>org.apache.felix.http.wrappers6</artifactId>
     <version>1.1.5-SNAPSHOT</version>
     <packaging>bundle</packaging>
 
