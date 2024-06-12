@@ -30,7 +30,7 @@
     <description>This is an implementation of the R8.1 OSGi Servlet Service, the R7 OSGi Http Service and the R7 OSGi Http Whiteboard Specification</description>
 
     <artifactId>org.apache.felix.http.jetty12</artifactId>
-    <version>1.0.10</version>
+    <version>1.0.11-SNAPSHOT</version>
     <packaging>bundle</packaging>
 
     <scm>
