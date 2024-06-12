@@ -728,7 +728,7 @@
         </dependency>
         <dependency>
             <groupId>org.apache.felix</groupId>
-            <artifactId>org.apache.felix.http.wrappers</artifactId>
+            <artifactId>org.apache.felix.http.wrappers6</artifactId>
             <version>1.1.4</version>
         </dependency>
         <dependency>
