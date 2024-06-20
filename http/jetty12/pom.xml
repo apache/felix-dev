@@ -718,7 +718,7 @@
         <dependency>
             <groupId>org.osgi</groupId>
             <artifactId>org.osgi.service.http.whiteboard</artifactId>
-            <version>1.1.0</version>
+            <version>1.1.1</version>
             <scope>provided</scope>
         </dependency>
         <dependency>
@@ -728,8 +728,8 @@
         </dependency>
         <dependency>
             <groupId>org.apache.felix</groupId>
-            <artifactId>org.apache.felix.http.wrappers6</artifactId>
-            <version>1.1.4</version>
+            <artifactId>org.apache.felix.http.wrappers</artifactId>
+            <version>1.1.6</version>
         </dependency>
         <dependency>
             <groupId>commons-fileupload</groupId>
