@@ -308,8 +308,8 @@ public class ServletRequestWrapper implements ServletRequest {
     public void setAttribute(final String name, final Object o) {
         final String translatedName = getTranslatedAttributeName(name);
         if (translatedName != null) {
-            this.request.setAttribute(translatedName, o);
             this.request.removeAttribute(name);
+            this.request.setAttribute(translatedName, o);
         } else {
             this.request.setAttribute(name, o);
         }

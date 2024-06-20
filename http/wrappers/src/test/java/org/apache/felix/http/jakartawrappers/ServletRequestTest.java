@@ -257,8 +257,8 @@ public class ServletRequestTest {
 
     @Test public void testAttributeGetterSetterMultipleLayers() {
         final ServletRequest sr = createRequest();
-        final jakarta.servlet.ServletRequest layer1 = ServletRequestWrapper.getWrapper(sr);
-        final ServletRequest layer2 = org.apache.felix.http.javaxwrappers.ServletRequestWrapper.getWrapper(layer1);
+        final jakarta.servlet.ServletRequest layer1 = new jakarta.servlet.ServletRequestWrapper(ServletRequestWrapper.getWrapper(sr));
+        final ServletRequest layer2 = new javax.servlet.ServletRequestWrapper(org.apache.felix.http.javaxwrappers.ServletRequestWrapper.getWrapper(layer1));
         final jakarta.servlet.ServletRequest req = ServletRequestWrapper.getWrapper(layer2);
         req.setAttribute("foo", "bar");
         assertEquals("bar", req.getAttribute("foo"));
