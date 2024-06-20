@@ -231,7 +231,11 @@ public class HttpServletRequestWrapper extends ServletRequestWrapper
     @Override
     public Part getPart(final String name) throws IOException, ServletException {
         try {
-            return new PartWrapper(this.request.getPart(name));
+            final javax.servlet.http.Part p = this.request.getPart(name);
+            if (p != null) {
+                return new PartWrapper(p);
+            }
+            return null;
         } catch ( final javax.servlet.ServletException e ) {
             throw ServletExceptionUtil.getServletException(e);
         }

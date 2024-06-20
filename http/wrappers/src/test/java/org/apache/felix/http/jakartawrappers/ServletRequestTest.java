@@ -16,8 +16,6 @@
  */
 package org.apache.felix.http.jakartawrappers;
 
-import jakarta.servlet.ServletRequest;
-
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertNull;
@@ -38,14 +36,15 @@ import javax.servlet.DispatcherType;
 import javax.servlet.RequestDispatcher;
 import javax.servlet.ServletContext;
 import javax.servlet.ServletInputStream;
+import javax.servlet.ServletRequest;
 import javax.servlet.ServletResponse;
 
 import org.junit.Test;
 
 public class ServletRequestTest {
 
-    private javax.servlet.ServletRequest createRequest() {
-        return new javax.servlet.ServletRequest() {
+    private ServletRequest createRequest() {
+        return new ServletRequest() {
 
             final private Map<String, Object> attributes = new HashMap<>();
 
@@ -229,7 +228,7 @@ public class ServletRequestTest {
             }
 
             @Override
-            public AsyncContext startAsync(javax.servlet.ServletRequest servletRequest, ServletResponse servletResponse)
+            public AsyncContext startAsync(ServletRequest servletRequest, ServletResponse servletResponse)
                     throws IllegalStateException {
                 return null;
             }            
@@ -237,8 +236,8 @@ public class ServletRequestTest {
     }
 
     @Test public void testAttributeGetterSetter() {
-        final javax.servlet.ServletRequest sr = createRequest();
-        final ServletRequest req = ServletRequestWrapper.getWrapper(sr);
+        final ServletRequest sr = createRequest();
+        final jakarta.servlet.ServletRequest req = ServletRequestWrapper.getWrapper(sr);
         req.setAttribute("foo", "bar");
         assertEquals("bar", req.getAttribute("foo"));
         req.setAttribute(jakarta.servlet.RequestDispatcher.ERROR_STATUS_CODE, "500");
@@ -256,12 +255,37 @@ public class ServletRequestTest {
         assertFalse(req.getAttributeNames().hasMoreElements());
     }
 
+    @Test public void testAttributeGetterSetterMultipleLayers() {
+        final ServletRequest sr = createRequest();
+        final jakarta.servlet.ServletRequest layer1 = new jakarta.servlet.ServletRequestWrapper(ServletRequestWrapper.getWrapper(sr));
+        final ServletRequest layer2 = new javax.servlet.ServletRequestWrapper(org.apache.felix.http.javaxwrappers.ServletRequestWrapper.getWrapper(layer1));
+        final jakarta.servlet.ServletRequest req = ServletRequestWrapper.getWrapper(layer2);
+        req.setAttribute("foo", "bar");
+        assertEquals("bar", req.getAttribute("foo"));
+        req.setAttribute(jakarta.servlet.RequestDispatcher.ERROR_STATUS_CODE, "500");
+        assertEquals("500", req.getAttribute(jakarta.servlet.RequestDispatcher.ERROR_STATUS_CODE));
+        assertEquals("500", req.getAttribute(RequestDispatcher.ERROR_STATUS_CODE));
+        assertEquals("500", sr.getAttribute(RequestDispatcher.ERROR_STATUS_CODE));
+
+        final List<String> names = Collections.list(req.getAttributeNames());
+        assertEquals(2, names.size());
+        assertTrue(names.contains("foo"));
+        assertTrue(names.contains(jakarta.servlet.RequestDispatcher.ERROR_STATUS_CODE));
+
+        req.removeAttribute("foo");
+        assertNull(req.getAttribute("foo"));
+        req.removeAttribute(jakarta.servlet.RequestDispatcher.ERROR_STATUS_CODE);
+        assertNull(req.getAttribute(jakarta.servlet.RequestDispatcher.ERROR_STATUS_CODE));
+        assertNull(req.getAttribute(RequestDispatcher.ERROR_STATUS_CODE));
+        assertFalse(req.getAttributeNames().hasMoreElements());
+    }
+
     @Test public void testProvidedAttributes() {
-        final javax.servlet.ServletRequest sr = createRequest();
-        sr.setAttribute(javax.servlet.RequestDispatcher.ERROR_STATUS_CODE, "500");
+        final ServletRequest sr = createRequest();
+        sr.setAttribute(RequestDispatcher.ERROR_STATUS_CODE, "500");
         sr.setAttribute("foo", "bar");
 
-        final ServletRequest req = ServletRequestWrapper.getWrapper(sr);
+        final jakarta.servlet.ServletRequest req = ServletRequestWrapper.getWrapper(sr);
         assertEquals("bar", req.getAttribute("foo"));
         assertEquals("500", req.getAttribute(jakarta.servlet.RequestDispatcher.ERROR_STATUS_CODE));
 
