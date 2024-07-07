@@ -20,8 +20,8 @@ package org.apache.felix.http.webconsoleplugin.impl;
 
 import java.io.IOException;
 import java.io.PrintWriter;
-import java.io.UnsupportedEncodingException;
 import java.net.URLEncoder;
+import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
@@ -62,9 +62,12 @@ import org.owasp.encoder.Encode;
  * This is a web console plugin.
  */
 public class HttpServicePlugin extends HttpServlet {
+
     private static final String ATTR_TEST = "test";
-    private static final String ATTR_MSG = "msg";
     private static final String ATTR_SUBMIT = "resolve";
+
+    private static final String LINK_MARKER_START = "${#link:";
+    private static final String LINK_MARKER_END = "${link#}";
 
     private final BundleContext context;
 
@@ -75,77 +78,23 @@ public class HttpServicePlugin extends HttpServlet {
         this.runtime = runtime;
     }
 
-    @Override
-    protected void doPost(HttpServletRequest request,
-            HttpServletResponse response) throws ServletException, IOException {
-
-        final String test = request.getParameter(ATTR_TEST);
-        String msg = null;
-        if (test != null && test.length() > 0) {
-
-            final RequestInfoDTO dto = this.runtime.calculateRequestInfoDTO(test);
-
-            final StringBuilder sb = new StringBuilder();
-            if ( dto.servletDTO != null ) {
-                sb.append("Servlet: ");
-                sb.append(getValueAsString(dto.servletDTO.patterns));
-                sb.append(" (");
-                sb.append("service.id=");
-                sb.append(String.valueOf(dto.servletDTO.serviceId));
-                sb.append("), Filters: [");
-                boolean first = true;
-                for(final FilterDTO f : dto.filterDTOs) {
-                    if ( first ) {
-                        first = false;
-                    } else {
-                        sb.append(", ");
-                    }
-                    sb.append(String.valueOf(f.serviceId));
-                }
-                sb.append("]");
-            } else if ( dto.resourceDTO != null ) {
-                sb.append("Resource: ");
-                sb.append(getValueAsString(dto.resourceDTO.patterns));
-                sb.append(" (");
-                sb.append("service.id=");
-                sb.append(String.valueOf(dto.resourceDTO.serviceId));
-                sb.append("), Filters: [");
-                boolean first = true;
-                for(final FilterDTO f : dto.filterDTOs) {
-                    if ( first ) {
-                        first = false;
-                    } else {
-                        sb.append(", ");
-                    }
-                    sb.append(String.valueOf(f.serviceId));
-                }
-                sb.append("]");
-            } else {
-                sb.append("<404>");
-            }
-            msg = sb.toString();
-        }
-
-        // finally redirect
-        final String path = request.getContextPath() + request.getServletPath()
-                + request.getPathInfo();
-        final String redirectTo;
-        if (msg == null) {
-            redirectTo = path;
+    private String getTestPath(final HttpServletRequest request) {
+        String test = request.getParameter(ATTR_TEST);
+        if (test != null && !test.isEmpty()) {
+            test = test.trim();
         } else {
-            redirectTo = path + '?' + ATTR_MSG + '=' + encodeParam(msg) + '&'
-                    + ATTR_TEST + '=' + encodeParam(test);
+            test = null;
         }
-        response.sendRedirect(redirectTo);
+        return test;
     }
 
-    private String encodeParam(final String value) {
-        try {
-            return URLEncoder.encode(value, "UTF-8");
-        } catch (UnsupportedEncodingException e) {
-            // should never happen
-            return value;
-        }
+    @Override
+    protected void doPost(final HttpServletRequest request, final HttpServletResponse response) throws ServletException, IOException {
+        final String test = this.getTestPath(request);
+        final String path = request.getContextPath().concat(request.getServletPath()).concat(request.getPathInfo());
+        final String redirectTo = test == null ? path : path.concat("?").concat(ATTR_TEST).concat("=").concat(URLEncoder.encode(test, StandardCharsets.UTF_8));
+
+        response.sendRedirect(redirectTo);
     }
 
     @Override
@@ -158,7 +107,7 @@ public class HttpServicePlugin extends HttpServlet {
         if ( req.getPathInfo() != null ) {
             path = path + req.getPathInfo();
         }
-        printForm(pw, req.getParameter(ATTR_TEST), req.getParameter(ATTR_MSG), path);
+        printForm(pw, this.getTestPath(req), path);
 
         printRuntimeDetails(pw, dto.serviceDTO);
 
@@ -180,7 +129,7 @@ public class HttpServicePlugin extends HttpServlet {
         pw.println("<br/>");
     }
 
-    private void printForm(final PrintWriter pw, final String value, final String msg, final String path) {
+    private void printForm(final PrintWriter pw, final String value, final String path) {
         pw.println("<table class='content' cellpadding='0' cellspacing='0' width='100%'>");
 
         separatorHtml(pw);
@@ -208,13 +157,78 @@ public class HttpServicePlugin extends HttpServlet {
         pw.print("</td>");
         pw.println("</tr>");
 
-        if (msg != null) {
-            pw.println("<tr class='content'>");
-            pw.println("<td class='content'>&nbsp;</td>");
-            pw.print("<td class='content' colspan='2'>");
-            pw.print(Encode.forHtmlContent(msg));
-            pw.println("</td>");
-            pw.println("</tr>");
+        if (value != null) {
+            final RequestInfoDTO dto = this.runtime.calculateRequestInfoDTO(value);
+            if (dto.resourceDTO == null && dto.servletDTO == null) {
+                pw.println("<tr class='content'>");
+                pw.println("<td class='content'>Result</td>");
+                pw.print("<td class='content' colspan='2'>");
+                pw.print("<404>");
+                pw.println("</td>");
+                pw.println("</tr>");
+            } else {
+                boolean odd = false;
+                odd = this.printRow(pw, odd, "", "", "");
+
+                final StringBuilder sbc = new StringBuilder();
+                final ServiceReference<?> refc = this.getServiceReference(dto.servletContextId);
+                sbc.append("${service.id} : ");
+                appendServiceLink(sbc, dto.servletContextId);
+                sbc.append("\n");
+                appendServiceRanking(sbc, refc);
+                if ( refc != null ) {
+                    sbc.append("${bundle} : ");
+                    appendBundleLink(sbc, refc.getBundle().getBundleId(), refc.getBundle().getSymbolicName());
+                    sbc.append("\n");
+                }
+
+                odd = this.printRow(pw, odd, "${Servlet Context}", sbc.toString(), "");
+
+                for(final FilterDTO f : dto.filterDTOs) {
+                    final StringBuilder sb = new StringBuilder();
+                    final ServiceReference<?> ref = this.getServiceReference(f.serviceId);
+                    sb.append("${service.id} : ");
+                    appendServiceLink(sb, f.serviceId);
+                    sb.append("\n");
+                    appendServiceRanking(sb, ref);
+                    if ( ref != null ) {
+                        sb.append("${bundle} : ");
+                        appendBundleLink(sb, ref.getBundle().getBundleId(), ref.getBundle().getSymbolicName());
+                        sb.append("\n");
+                    }
+
+                    odd = this.printRow(pw, odd, "${Filter}", sb.toString(), "");
+                }
+                if ( dto.servletDTO != null ) {
+                    final StringBuilder sb = new StringBuilder();
+                    final ServiceReference<?> ref = this.getServiceReference(dto.servletDTO.serviceId);
+                    sb.append("${service.id} : ");
+                    appendServiceLink(sb, dto.servletDTO.serviceId);
+                    sb.append("\n");
+                    appendServiceRanking(sb, ref);
+                    if ( ref != null ) {
+                        sb.append("${bundle} : ");
+                        appendBundleLink(sb, ref.getBundle().getBundleId(), ref.getBundle().getSymbolicName());
+                        sb.append("\n");
+                    }
+ 
+                    odd = this.printRow(pw, odd, "${Servlet}", sb.toString(), "");
+                } else {
+                    final StringBuilder sb = new StringBuilder();
+                    final ServiceReference<?> ref = this.getServiceReference(dto.resourceDTO.serviceId);
+                    sb.append("${service.id} : ");
+                    appendServiceLink(sb, dto.resourceDTO.serviceId);
+                    sb.append("\n");
+                    appendServiceRanking(sb, ref);
+                    if ( ref != null ) {
+                        sb.append("${bundle} : ");
+                        appendBundleLink(sb, ref.getBundle().getBundleId(), ref.getBundle().getSymbolicName());
+                        sb.append("\n");
+                    }
+ 
+                    odd = this.printRow(pw, odd, "${Resource}", sb.toString(), "");
+                }
+            }
         }
         pw.println("</table>");
     }
@@ -279,11 +293,34 @@ public class HttpServicePlugin extends HttpServlet {
         pw.println("<br/>");
     }
 
-    private String getServiceLink(final long serviceId) {
+    private void appendServiceLink(final StringBuilder sb, final long serviceId) {
+        final String val = String.valueOf(serviceId);
         if (serviceId < 0) {
-            return String.valueOf(serviceId);
+            sb.append(val);
+            return;
         }
-        return "${#slink:" + serviceId + "}" + serviceId + "${slink#}";
+        sb.append(LINK_MARKER_START);
+        sb.append('S');
+        sb.append(val);
+        sb.append('}');
+        sb.append(val);
+        sb.append(LINK_MARKER_END);
+    }
+
+    private String getServiceLink(final long serviceId) {
+        final StringBuilder sb = new StringBuilder();
+        appendServiceLink(sb, serviceId);
+        return sb.toString();
+    }
+
+    private void appendBundleLink(final StringBuilder sb, final long bundleId, final String text) {
+        final String val = String.valueOf(bundleId);
+        sb.append(LINK_MARKER_START);
+        sb.append('B');
+        sb.append(val);
+        sb.append('}');
+        sb.append(text);
+        sb.append(LINK_MARKER_END);
     }
 
     private void printPreprocessorDetails(final PrintWriter pw, final PreprocessorDTO[] dtos) {
@@ -299,15 +336,14 @@ public class HttpServicePlugin extends HttpServlet {
         for(final PreprocessorDTO pp : dtos) {
             final StringBuilder sb = new StringBuilder();
             final ServiceReference<?> ref = this.getServiceReference(pp.serviceId);
-            sb.append("${service.id} : ").append(getServiceLink(pp.serviceId)).append("\n");
+            sb.append("${service.id} : ");
+            appendServiceLink(sb, pp.serviceId);
+            sb.append("\n");
             appendServiceRanking(sb, ref);
             if ( ref != null ) {
                 sb.append("${bundle} : ");
-                sb.append("${#link:");
-                sb.append(ref.getBundle().getBundleId());
-                sb.append("}");
-                sb.append(ref.getBundle().getSymbolicName());
-                sb.append("${link#}\n");
+                appendBundleLink(sb, ref.getBundle().getBundleId(), ref.getBundle().getSymbolicName());
+                sb.append("\n");
             }
             odd = printRow(pw, odd, sb.toString());
         }
@@ -325,21 +361,20 @@ public class HttpServicePlugin extends HttpServlet {
             if ( val != null ) {
                 String text = Encode.forHtmlContent(val).replace("\n", "<br/>");
                 int pos;
-                while ( (pos = text.indexOf("${#link:")) != -1) {
+                while ( (pos = text.indexOf(LINK_MARKER_START)) != -1) {
                     final int endPos = text.indexOf("}", pos);
-                    final int bundleId = Integer.valueOf(text.substring(pos + 8, endPos));
-                    final int tokenEndPos = text.indexOf("${link#}", pos);
-
-                    text = text.substring(0, pos) + "<a href=\"${appRoot}/bundles/" + String.valueOf(bundleId) + "\">" +
-                           text.substring(endPos + 1, tokenEndPos) + "</a>" + text.substring(tokenEndPos + 8);
-                }
-                while ( (pos = text.indexOf("${#slink:")) != -1) {
-                    final int endPos = text.indexOf("}", pos);
-                    final int serviceId = Integer.valueOf(text.substring(pos + 9, endPos));
-                    final int tokenEndPos = text.indexOf("${slink#}", pos);
-
-                    text = text.substring(0, pos) + "<a href=\"${appRoot}/services/" + String.valueOf(serviceId) + "\">" +
-                           text.substring(endPos + 1, tokenEndPos) + "</a>" + text.substring(tokenEndPos + 9);
+                    final char type = text.charAt(pos + LINK_MARKER_START.length());
+                    final int id = Integer.valueOf(text.substring(pos + LINK_MARKER_START.length() + 1, endPos));
+                    final int tokenEndPos = text.indexOf(LINK_MARKER_END, pos);
+                    final String linkTest = text.substring(endPos + 1, tokenEndPos); 
+                    text = text.substring(0, pos)
+                               .concat("<a href=\"${appRoot}/")
+                               .concat(type == 'S' ? "services/" : "bundles/")
+                               .concat(String.valueOf(id))
+                               .concat("\">")
+                               .concat(linkTest)
+                               .concat("</a>")
+                               .concat(text.substring(tokenEndPos + LINK_MARKER_END.length()));
                 }
                 pw.print(text);
             }
@@ -445,17 +480,16 @@ public class HttpServicePlugin extends HttpServlet {
         for (final FilterDTO filter : dto.filterDTOs) {
             final ServiceReference<?> ref = this.getServiceReference(filter.serviceId);
             final StringBuilder sb = new StringBuilder();
-            sb.append("${service.id} : ").append(getServiceLink(filter.serviceId)).append("\n");
+            sb.append("${service.id} : ");
+            appendServiceLink(sb, filter.serviceId);
+            sb.append("\n");
             appendServiceRanking(sb, ref);
             sb.append("${async} : ").append(String.valueOf(filter.asyncSupported)).append("\n");
             sb.append("${dispatcher} : ").append(getValueAsString(filter.dispatcher)).append("\n");
             if ( ref != null ) {
                 sb.append("${bundle} : ");
-                sb.append("${#link:");
-                sb.append(ref.getBundle().getBundleId());
-                sb.append("}");
-                sb.append(ref.getBundle().getSymbolicName());
-                sb.append("${link#}\n");
+                appendBundleLink(sb, ref.getBundle().getBundleId(), ref.getBundle().getSymbolicName());
+                sb.append("\n");
             }
 
             final List<String> patterns = new ArrayList<>();
@@ -504,15 +538,14 @@ public class HttpServicePlugin extends HttpServlet {
             final String reason = getErrorText(pp.failureReason);
             final StringBuilder sb = new StringBuilder();
             final ServiceReference<?> ref = this.getServiceReference(pp.serviceId);
-            sb.append("${service.id} : ").append(getServiceLink(pp.serviceId)).append("\n");
+            sb.append("${service.id} : ");
+            appendServiceLink(sb, pp.serviceId);
+            sb.append("\n");
             appendServiceRanking(sb, ref);
             if ( ref != null ) {
                 sb.append("${bundle} : ");
-                sb.append("${#link:");
-                sb.append(ref.getBundle().getBundleId());
-                sb.append("}");
-                sb.append(ref.getBundle().getSymbolicName());
-                sb.append("${link#}\n");
+                appendBundleLink(sb, ref.getBundle().getBundleId(), ref.getBundle().getSymbolicName());
+                sb.append("\n");
             }
             odd = printRow(pw, odd, sb.toString(), reason);
         }
@@ -537,17 +570,16 @@ public class HttpServicePlugin extends HttpServlet {
             final StringBuilder sb = new StringBuilder();
             sb.append("${reason} : ").append(getErrorText(filter.failureReason)).append("\n");
             final ServiceReference<?> ref = this.getServiceReference(filter.serviceId);
-            sb.append("${service.id} : ").append(getServiceLink(filter.serviceId)).append("\n");
+            sb.append("${service.id} : ");
+            appendServiceLink(sb, filter.serviceId);
+            sb.append("\n");
             appendServiceRanking(sb, ref);
             sb.append("${async} : ").append(String.valueOf(filter.asyncSupported)).append("\n");
             sb.append("${dispatcher} : ").append(getValueAsString(filter.dispatcher)).append("\n");
             if ( ref != null ) {
                 sb.append("${bundle} : ");
-                sb.append("${#link:");
-                sb.append(ref.getBundle().getBundleId());
-                sb.append("}");
-                sb.append(ref.getBundle().getSymbolicName());
-                sb.append("${link#}\n");
+                appendBundleLink(sb, ref.getBundle().getBundleId(), ref.getBundle().getSymbolicName());
+                sb.append("\n");
             }
 
             final List<String> patterns = new ArrayList<>();
@@ -599,16 +631,15 @@ public class HttpServicePlugin extends HttpServlet {
         for (final ServletDTO servlet : dto.servletDTOs) {
             final StringBuilder sb = new StringBuilder();
             final ServiceReference<?> ref = this.getServiceReference(servlet.serviceId);
-            sb.append("${service.id} : ").append(getServiceLink(servlet.serviceId)).append("\n");
+            sb.append("${service.id} : ");
+            appendServiceLink(sb, servlet.serviceId);
+            sb.append("\n");
             appendServiceRanking(sb, ref);
             sb.append("${async} : ").append(String.valueOf(servlet.asyncSupported)).append("\n");
             if ( ref != null ) {
                 sb.append("${bundle} : ");
-                sb.append("${#link:");
-                sb.append(ref.getBundle().getBundleId());
-                sb.append("}");
-                sb.append(ref.getBundle().getSymbolicName());
-                sb.append("${link#}\n");
+                appendBundleLink(sb, ref.getBundle().getBundleId(), ref.getBundle().getSymbolicName());
+                sb.append("\n");
             }
 
             final StringBuilder psb = new StringBuilder();
@@ -638,16 +669,15 @@ public class HttpServicePlugin extends HttpServlet {
             final StringBuilder sb = new StringBuilder();
             sb.append("${reason} : ").append(getErrorText(servlet.failureReason)).append("\n");
             final ServiceReference<?> ref = this.getServiceReference(servlet.serviceId);
-            sb.append("${service.id} : ").append(getServiceLink(servlet.serviceId)).append("\n");
+            sb.append("${service.id} : ");
+            appendServiceLink(sb, servlet.serviceId);
+            sb.append("\n");
             appendServiceRanking(sb, ref);
             sb.append("${async} : ").append(String.valueOf(servlet.asyncSupported)).append("\n");
             if ( ref != null ) {
                 sb.append("${bundle} : ");
-                sb.append("${#link:");
-                sb.append(ref.getBundle().getBundleId());
-                sb.append("}");
-                sb.append(ref.getBundle().getSymbolicName());
-                sb.append("${link#}\n");
+                appendBundleLink(sb, ref.getBundle().getBundleId(), ref.getBundle().getSymbolicName());
+                sb.append("\n");
             }
 
             final StringBuilder psb = new StringBuilder();
@@ -678,15 +708,14 @@ public class HttpServicePlugin extends HttpServlet {
         for (final ResourceDTO rsrc : dto.resourceDTOs) {
             final StringBuilder sb = new StringBuilder();
             final ServiceReference<?> ref = this.getServiceReference(rsrc.serviceId);
-            sb.append("${service.id} : ").append(getServiceLink(rsrc.serviceId)).append("\n");
+            sb.append("${service.id} : ");
+            appendServiceLink(sb, rsrc.serviceId);
+            sb.append("\n");
             appendServiceRanking(sb, ref);
             if ( ref != null ) {
                 sb.append("${bundle} : ");
-                sb.append("${#link:");
-                sb.append(ref.getBundle().getBundleId());
-                sb.append("}");
-                sb.append(ref.getBundle().getSymbolicName());
-                sb.append("${link#}\n");
+                appendBundleLink(sb, ref.getBundle().getBundleId(), ref.getBundle().getSymbolicName());
+                sb.append("\n");
             }
 
             final StringBuilder psb = new StringBuilder();
@@ -716,15 +745,14 @@ public class HttpServicePlugin extends HttpServlet {
             final StringBuilder sb = new StringBuilder();
             sb.append("${reason} : ").append(getErrorText(rsrc.failureReason)).append("\n");
             final ServiceReference<?> ref = this.getServiceReference(rsrc.serviceId);
-            sb.append("${service.id} : ").append(getServiceLink(rsrc.serviceId)).append("\n");
+            sb.append("${service.id} : ");
+            appendServiceLink(sb, rsrc.serviceId);
+            sb.append("\n");
             appendServiceRanking(sb, ref);
             if ( ref != null ) {
                 sb.append("${bundle} : ");
-                sb.append("${#link:");
-                sb.append(ref.getBundle().getBundleId());
-                sb.append("}");
-                sb.append(ref.getBundle().getSymbolicName());
-                sb.append("${link#}\n");
+                appendBundleLink(sb, ref.getBundle().getBundleId(), ref.getBundle().getSymbolicName());
+                sb.append("\n");
             }
 
             final StringBuilder psb = new StringBuilder();
@@ -755,16 +783,15 @@ public class HttpServicePlugin extends HttpServlet {
         for (final ErrorPageDTO ep : dto.errorPageDTOs) {
             final StringBuilder sb = new StringBuilder();
             final ServiceReference<?> ref = this.getServiceReference(ep.serviceId);
-            sb.append("${service.id} : ").append(getServiceLink(ep.serviceId)).append("\n");
+            sb.append("${service.id} : ");
+            appendServiceLink(sb, ep.serviceId);
+            sb.append("\n");
             appendServiceRanking(sb, ref);
             sb.append("${async} : ").append(String.valueOf(ep.asyncSupported)).append("\n");
             if ( ref != null ) {
                 sb.append("${bundle} : ");
-                sb.append("${#link:");
-                sb.append(ref.getBundle().getBundleId());
-                sb.append("}");
-                sb.append(ref.getBundle().getSymbolicName());
-                sb.append("${link#}\n");
+                appendBundleLink(sb, ref.getBundle().getBundleId(), ref.getBundle().getSymbolicName());
+                sb.append("\n");
             }
 
             final StringBuilder psb = new StringBuilder();
@@ -797,16 +824,15 @@ public class HttpServicePlugin extends HttpServlet {
             final StringBuilder sb = new StringBuilder();
             sb.append("${reason} : ").append(getErrorText(ep.failureReason)).append("\n");
             final ServiceReference<?> ref = this.getServiceReference(ep.serviceId);
-            sb.append("${service.id} : ").append(getServiceLink(ep.serviceId)).append("\n");
+            sb.append("${service.id} : ");
+            appendServiceLink(sb, ep.serviceId);
+            sb.append("\n");
             appendServiceRanking(sb, ref);
             sb.append("${async} : ").append(String.valueOf(ep.asyncSupported)).append("\n");
             if ( ref != null ) {
                 sb.append("${bundle} : ");
-                sb.append("${#link:");
-                sb.append(ref.getBundle().getBundleId());
-                sb.append("}");
-                sb.append(ref.getBundle().getSymbolicName());
-                sb.append("${link#}\n");
+                appendBundleLink(sb, ref.getBundle().getBundleId(), ref.getBundle().getSymbolicName());
+                sb.append("\n");
             }
 
             final StringBuilder psb = new StringBuilder();
@@ -839,15 +865,14 @@ public class HttpServicePlugin extends HttpServlet {
         for (final ListenerDTO ep : dto.listenerDTOs) {
             final StringBuilder sb = new StringBuilder();
             final ServiceReference<?> ref = this.getServiceReference(ep.serviceId);
-            sb.append("${service.id} : ").append(getServiceLink(ep.serviceId)).append("\n");
+            sb.append("${service.id} : ");
+            appendServiceLink(sb, ep.serviceId);
+            sb.append("\n");
             appendServiceRanking(sb, ref);
             if ( ref != null ) {
                 sb.append("${bundle} : ");
-                sb.append("${#link:");
-                sb.append(ref.getBundle().getBundleId());
-                sb.append("}");
-                sb.append(ref.getBundle().getSymbolicName());
-                sb.append("${link#}\n");
+                appendBundleLink(sb, ref.getBundle().getBundleId(), ref.getBundle().getSymbolicName());
+                sb.append("\n");
             }
             final StringBuilder tsb = new StringBuilder();
             for(final String t : ep.types) {
@@ -875,15 +900,14 @@ public class HttpServicePlugin extends HttpServlet {
             final StringBuilder sb = new StringBuilder();
             sb.append("${reason} : ").append(getErrorText(ep.failureReason)).append("\n");
             final ServiceReference<?> ref = this.getServiceReference(ep.serviceId);
-            sb.append("${service.id} : ").append(getServiceLink(ep.serviceId)).append("\n");
+            sb.append("${service.id} : ");
+            appendServiceLink(sb, ep.serviceId);
+            sb.append("\n");
             appendServiceRanking(sb, ref);
             if ( ref != null ) {
                 sb.append("${bundle} : ");
-                sb.append("${#link:");
-                sb.append(ref.getBundle().getBundleId());
-                sb.append("}");
-                sb.append(ref.getBundle().getSymbolicName());
-                sb.append("${link#}\n");
+                appendBundleLink(sb, ref.getBundle().getBundleId(), ref.getBundle().getSymbolicName());
+                sb.append("\n");
             }
             final StringBuilder tsb = new StringBuilder();
             for(final String t : ep.types) {
