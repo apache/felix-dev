@@ -20,6 +20,7 @@ import static org.eclipse.jetty.http.UriCompliance.LEGACY;
 import static org.eclipse.jetty.http.UriCompliance.UNAMBIGUOUS;
 import static org.eclipse.jetty.http.UriCompliance.UNSAFE;
 
+import java.lang.reflect.Method;
 import java.net.Inet4Address;
 import java.net.Inet6Address;
 import java.net.InetAddress;
@@ -31,6 +32,8 @@ import java.util.Dictionary;
 import java.util.Enumeration;
 import java.util.Hashtable;
 import java.util.List;
+import java.util.concurrent.Executor;
+import java.util.concurrent.Executors;
 
 import org.apache.felix.http.base.internal.HttpServiceController;
 import org.apache.felix.http.base.internal.logger.SystemLogger;
@@ -274,7 +277,17 @@ public final class JettyService
 
             final int threadPoolMax = this.config.getThreadPoolMax();
             if (threadPoolMax >= 0) {
-                this.server = new Server( new QueuedThreadPool(threadPoolMax) );
+                this.server = new Server(new QueuedThreadPool(threadPoolMax));
+            } else if (this.config.isUseVirtualThreads()){
+                QueuedThreadPool threadPool = new QueuedThreadPool();
+                Method newVirtualThreadPerTaskExecutorMethod = null;
+                try {
+                    newVirtualThreadPerTaskExecutorMethod = Executors.class.getMethod("newVirtualThreadPerTaskExecutor");
+                } catch (NoSuchMethodException e){
+                    throw new IllegalArgumentException("Virtual threads are only available in Java 21 or later, or via preview flags in Java 17-20");
+                }
+                threadPool.setVirtualThreadsExecutor((Executor) newVirtualThreadPerTaskExecutorMethod.invoke(null));
+                this.server = new Server(threadPool);
             } else {
                 this.server = new Server();
             }
@@ -397,6 +410,7 @@ public final class JettyService
                     message.append("acceptors=").append(serverConnector.getAcceptors()).append(",");
                     message.append("selectors=").append(serverConnector.getSelectorManager().getSelectorCount());
                 }
+                message.append(",").append("virtualThreadsEnabled=").append(this.config.isUseVirtualThreads());
                 message.append("]");
 
                 SystemLogger.LOGGER.info(message.toString());
