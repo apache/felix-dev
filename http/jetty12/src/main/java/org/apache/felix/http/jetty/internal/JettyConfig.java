@@ -88,6 +88,9 @@ public final class JettyConfig
     /** Felix specific property to control the maximum size of the jetty thread pool */
     public static final String FELIX_JETTY_THREADPOOL_MAX = "org.apache.felix.http.jetty.threadpool.max";
 
+    /** Felix specific property to enable the use of virtual threads in Jetty */
+    public static final String FELIX_JETTY_USE_VIRTUAL_THREADS = "org.apache.felix.http.jetty.virtualthreads.enable";
+
     /** Felix specific property to control the number of jetty acceptor threads */
     public static final String FELIX_JETTY_ACCEPTORS = "org.apache.felix.http.jetty.acceptors";
 
@@ -469,6 +472,10 @@ public final class JettyConfig
     public int getSelectors()
     {
         return getIntProperty(FELIX_JETTY_SELECTORS, -1);
+    }
+
+    public boolean isUseVirtualThreads() {
+        return this.getBooleanProperty(FELIX_JETTY_USE_VIRTUAL_THREADS, false);
     }
 
     public int getRequestBufferSize()
