@@ -1959,10 +1959,9 @@ public class DependencyManager<S, T> implements ReferenceManager<S, T>
             if (doUnbind && !boundRef.isFailed())
             {
                 invokeUnbindMethod(componentContext, boundRef, trackingCount.get(), edgeInfo);
+            } else {
+            	boundRef.ungetServiceObject(componentContext);
             }
-
-            boundRef.ungetServiceObject(componentContext);
-
         }
         latch.countDown();
     }
