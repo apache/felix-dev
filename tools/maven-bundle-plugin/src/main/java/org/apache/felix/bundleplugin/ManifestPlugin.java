@@ -323,7 +323,7 @@ public class ManifestPlugin extends BundlePlugin
         else
         {
             // FELIX-6495: workaround BND inconsistency: internal jar does not take "-reproducible" flag into account...
-            analyzer.getJar().setReproducible( "true".equals( analyzer.getProperties().getProperty( Constants.REPRODUCIBLE ) ) );
+            analyzer.getJar().setReproducible(analyzer.getProperties().getProperty( Constants.REPRODUCIBLE ) );
 
             analyzer.mergeManifest( analyzer.getJar().getManifest() );
             analyzer.getJar().setManifest( analyzer.calcManifest() );
