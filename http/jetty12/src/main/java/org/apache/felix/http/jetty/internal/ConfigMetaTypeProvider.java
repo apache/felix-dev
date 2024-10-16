@@ -166,6 +166,12 @@ class ConfigMetaTypeProvider implements MetaTypeProvider
                 -1,
                 bundle.getBundleContext().getProperty(JettyConfig.FELIX_JETTY_THREADPOOL_MAX)));
 
+        adList.add(new AttributeDefinitionImpl(JettyConfig.FELIX_JETTY_USE_VIRTUAL_THREADS,
+                "Use Virtual Threads",
+                "Use virtual threads in Jetty (JDK 21 or higher). Defaults to false.",
+                -1,
+                bundle.getBundleContext().getProperty(JettyConfig.FELIX_JETTY_USE_VIRTUAL_THREADS)));
+
         adList.add(new AttributeDefinitionImpl(JettyConfig.FELIX_JETTY_ACCEPTORS,
                 "Acceptors",
                 "Number of acceptor threads to use, or -1 for a default value. Acceptors accept new TCP/IP connections. If 0, then the selector threads are used to accept connections.",
