@@ -28,7 +28,7 @@
 
     <name>Apache Felix Http Inventory Printer</name>
     <artifactId>org.apache.felix.http.inventoryprinter</artifactId>
-    <version>1.0.1-SNAPSHOT</version>
+    <version>1.0.3-SNAPSHOT</version>
     <packaging>bundle</packaging>
 
     <scm>

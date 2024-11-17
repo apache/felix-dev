@@ -284,6 +284,12 @@ class ConfigMetaTypeProvider implements MetaTypeProvider
                 false,
                 bundle.getBundleContext().getProperty(JettyConfig.FELIX_JETTY_SESSION_COOKIE_SECURE)));
 
+        adList.add(new AttributeDefinitionImpl(JettyConfig.FELIX_JETTY_URI_COMPLIANCE_MODE,
+                "Jetty URI compliance mode",
+                "Jetty URI compliance mode (if not set, Jetty will configure a default)",
+                null,
+                bundle.getBundleContext().getProperty(JettyConfig.FELIX_JETTY_URI_COMPLIANCE_MODE)));
+
         adList.add(new AttributeDefinitionImpl(JettyConfig.FELIX_JETTY_SERVLET_SESSION_ID_PATH_PARAMETER_NAME,
                 "Session Id path parameter",
                 "Defaults to jsessionid. If set to null or \"none\" no URL rewriting will be done.",

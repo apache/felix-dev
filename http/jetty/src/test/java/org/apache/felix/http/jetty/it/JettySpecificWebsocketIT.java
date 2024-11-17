@@ -69,7 +69,7 @@ public class JettySpecificWebsocketIT extends AbstractJettyTestSupport {
 
     @Override
     protected Option[] additionalOptions() throws IOException {
-        String jettyVersion = System.getProperty("jetty.version", "11.0.20");
+        String jettyVersion = System.getProperty("jetty.version", JETTY_VERSION);
         return new Option[] {
                 spifly(),
 

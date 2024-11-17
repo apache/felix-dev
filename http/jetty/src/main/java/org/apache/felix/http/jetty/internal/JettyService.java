@@ -32,6 +32,7 @@ import org.apache.felix.http.base.internal.HttpServiceController;
 import org.apache.felix.http.base.internal.logger.SystemLogger;
 import org.eclipse.jetty.alpn.server.ALPNServerConnectionFactory;
 import org.eclipse.jetty.http.HttpVersion;
+import org.eclipse.jetty.http.UriCompliance;
 import org.eclipse.jetty.http2.server.HTTP2ServerConnectionFactory;
 import org.eclipse.jetty.io.ConnectionStatistics;
 import org.eclipse.jetty.security.HashLoginService;
@@ -49,6 +50,7 @@ import org.eclipse.jetty.server.handler.gzip.GzipHandler;
 import org.eclipse.jetty.server.session.HouseKeeper;
 import org.eclipse.jetty.server.session.SessionHandler;
 import org.eclipse.jetty.servlet.ServletContextHandler;
+import org.eclipse.jetty.servlet.ServletHandler;
 import org.eclipse.jetty.servlet.ServletHolder;
 import org.eclipse.jetty.util.ssl.SslContextFactory;
 import org.eclipse.jetty.util.thread.QueuedThreadPool;
@@ -671,10 +673,19 @@ public final class JettyService
 
     private void configureHttpConnectionFactory(HttpConnectionFactory connFactory)
     {
-        HttpConfiguration config = connFactory.getHttpConfiguration();
+        final HttpConfiguration config = connFactory.getHttpConfiguration();
         config.setRequestHeaderSize(this.config.getHeaderSize());
         config.setResponseHeaderSize(this.config.getHeaderSize());
         config.setOutputBufferSize(this.config.getResponseBufferSize());
+
+        final String uriComplianceMode = this.config.getProperty(JettyConfig.FELIX_JETTY_URI_COMPLIANCE_MODE, null);
+        if (uriComplianceMode != null) {
+            try {
+                config.setUriCompliance(UriCompliance.valueOf(uriComplianceMode));
+            } catch (IllegalArgumentException e) {
+                SystemLogger.LOGGER.warn("Invalid URI compliance mode: {}", uriComplianceMode);
+            }
+        }
 
         // HTTP/1.1 requires Date header if possible (it is)
         config.setSendDateHeader(true);

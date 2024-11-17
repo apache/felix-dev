@@ -30,19 +30,19 @@
     <description>This is an implementation of the R8.1 OSGi Servlet Service, the R7 OSGi Http Service and the R7 OSGi Http Whiteboard Specification</description>
 
     <artifactId>org.apache.felix.http.jetty12</artifactId>
-    <version>1.0.7-SNAPSHOT</version>
+    <version>1.0.19-SNAPSHOT</version>
     <packaging>bundle</packaging>
 
     <scm>
         <connection>scm:git:https://github.com/apache/felix-dev.git</connection>
         <developerConnection>scm:git:https://github.com/apache/felix-dev.git</developerConnection>
         <url>https://gitbox.apache.org/repos/asf?p=felix-dev.git</url>
-      <tag>HEAD</tag>
+      <tag>org.apache.felix.http.jetty12-1.0.10</tag>
   </scm>
 
     <properties>
         <felix.java.version>17</felix.java.version>
-        <jetty.version>12.0.8</jetty.version>
+        <jetty.version>12.0.15</jetty.version>
         <baseline.skip>true</baseline.skip>
         <org.ops4j.pax.exam.version>4.13.3</org.ops4j.pax.exam.version>
         <!-- To debug the pax process, override this with -D -->
@@ -78,7 +78,8 @@
                                             && !"org.eclipse.jetty.ee10.websocket".equals(artifact.getGroupId()) // skip the optional websocket artifacts
                                             && !"jetty-annotations".equals(artifact.getArtifactId()) // skip the transitive artifacts from the optional websocket artifacts
                                             && !"jetty-plus".equals(artifact.getArtifactId())
-                                            && !"jetty-webapp".equals(artifact.getArtifactId())) {
+                                            && !"jetty-webapp".equals(artifact.getArtifactId())
+                                            && !"jetty-ee".equals(artifact.getArtifactId())) {
                                         def jar;
                                         try {
                                             jar = new java.util.jar.JarFile(artifact.file)
@@ -182,6 +183,7 @@
                             org.eclipse.jetty.session.*,
                             org.eclipse.jetty.server.*,
                             org.eclipse.jetty.util.*,
+                            org.eclipse.jetty.ee.*,
                             !org.eclipse.jetty.ee10.websocket.*,
                             org.eclipse.jetty.ee10.servlet.*,
                             org.apache.felix.http.jetty,
@@ -370,6 +372,7 @@
                                     org.eclipse.jetty.session.*,
                                     org.eclipse.jetty.server.*,
                                     org.eclipse.jetty.util.*,
+                                    org.eclipse.jetty.ee.*,
                                     org.eclipse.jetty.ee10.servlet.*,
                                     !org.eclipse.jetty.ee10.websocket.jakarta.*,
                                     org.eclipse.jetty.ee10.websocket.*,
@@ -476,6 +479,7 @@
                                     org.eclipse.jetty.session.*,
                                     org.eclipse.jetty.server.*,
                                     org.eclipse.jetty.util.*,
+                                    org.eclipse.jetty.ee.*,
                                     !org.eclipse.jetty.ee10.websocket.server.*,
                                     !org.eclipse.jetty.ee10.websocket.servlet.*,
                                     org.eclipse.jetty.ee10.websocket.jakarta.*,
@@ -714,7 +718,7 @@
         <dependency>
             <groupId>org.osgi</groupId>
             <artifactId>org.osgi.service.http.whiteboard</artifactId>
-            <version>1.1.0</version>
+            <version>1.1.1</version>
             <scope>provided</scope>
         </dependency>
         <dependency>
@@ -725,7 +729,7 @@
         <dependency>
             <groupId>org.apache.felix</groupId>
             <artifactId>org.apache.felix.http.wrappers</artifactId>
-            <version>1.1.2</version>
+            <version>1.1.6</version>
         </dependency>
         <dependency>
             <groupId>commons-fileupload</groupId>

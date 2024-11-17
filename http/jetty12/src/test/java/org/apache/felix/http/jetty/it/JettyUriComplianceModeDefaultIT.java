@@ -54,12 +54,13 @@ public class JettyUriComplianceModeDefaultIT extends AbstractJettyTestSupport {
 
     @Override
     protected Option[] additionalOptions() throws IOException {
-        String jettyVersion = System.getProperty("jetty.version", "12.0.8");
+        String jettyVersion = System.getProperty("jetty.version", JETTY_VERSION);
         return new Option[] {
                 spifly(),
 
                 // bundles for the server side
                 mavenBundle().groupId("org.eclipse.jetty.ee10").artifactId("jetty-ee10-webapp").version(jettyVersion),
+                mavenBundle().groupId("org.eclipse.jetty").artifactId("jetty-ee").version(jettyVersion),
                 mavenBundle().groupId("org.eclipse.jetty.ee10").artifactId("jetty-ee10-servlet").version(jettyVersion),
                 mavenBundle().groupId("org.eclipse.jetty").artifactId("jetty-xml").version(jettyVersion),
 
