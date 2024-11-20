@@ -3,8 +3,12 @@ name: Github CI Build
 on:
   push:
     branches: [ "master" ]
+    paths:
+      - 'scr/**'
   pull_request:
     branches: [ "master" ]
+    paths:
+      - 'scr/**'
     
 permissions: {}
 
