@@ -26,6 +26,8 @@ import java.util.Dictionary;
 import java.util.Enumeration;
 import java.util.Hashtable;
 import java.util.Map;
+import java.util.SortedSet;
+import java.util.TreeSet;
 
 import org.apache.felix.cm.json.io.ConfigurationResource;
 import org.apache.felix.cm.json.io.ConfigurationWriter;
@@ -85,9 +87,23 @@ public class ConfigurationWriterImpl
         }
     }
 
+    /**
+     * Returns an alphabetically sorted enumeration of the given enumeration.
+     *
+     * @param enumeration the enumeration to sort
+     * @return the sorted enumeration
+     */
+    private static Enumeration<String> sortedEnumeration(Enumeration<String> enumeration) {
+        SortedSet<String> sortedSet = new TreeSet<>();
+        while (enumeration.hasMoreElements()) {
+            sortedSet.add(enumeration.nextElement());
+        }
+        return Collections.enumeration(sortedSet);
+    }
+
     private void writeConfigurationInternal(final Dictionary<String, Object> properties) throws IOException {
         generator.writeStartObject();
-        final Enumeration<String> e = properties.keys();
+        final Enumeration<String> e = sortedEnumeration(properties.keys());
         while (e.hasMoreElements()) {
             final String name = e.nextElement();
             final Object value = properties.get(name);
