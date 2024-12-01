@@ -550,8 +550,7 @@ public class BundlePlugin extends AbstractMojo
         Properties properties = new Properties();
         properties.putAll( getDefaultProperties( currentProject ) );
         properties.putAll( transformDirectives( originalInstructions ) );
-
-        if ( new MavenArchiver().parseOutputTimestamp( outputTimestamp ) != null )
+        if (MavenArchiver.parseBuildOutputTimestamp(outputTimestamp).isPresent())
         {
           properties.put( Constants.REPRODUCIBLE, "true" );
         }
