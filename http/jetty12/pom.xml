@@ -42,7 +42,7 @@
 
     <properties>
         <felix.java.version>17</felix.java.version>
-        <jetty.version>12.0.15</jetty.version>
+        <jetty.version>12.0.16</jetty.version>
         <baseline.skip>true</baseline.skip>
         <org.ops4j.pax.exam.version>4.13.3</org.ops4j.pax.exam.version>
         <!-- To debug the pax process, override this with -D -->
@@ -729,7 +729,7 @@
         <dependency>
             <groupId>org.apache.felix</groupId>
             <artifactId>org.apache.felix.http.wrappers</artifactId>
-            <version>1.1.6</version>
+            <version>1.1.8</version>
         </dependency>
         <dependency>
             <groupId>commons-fileupload</groupId>
