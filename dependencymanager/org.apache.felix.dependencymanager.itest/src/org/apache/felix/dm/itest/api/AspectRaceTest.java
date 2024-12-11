@@ -92,7 +92,7 @@ public class AspectRaceTest extends TestBase {
                 }
 
                 if (super.errorsLogged()) {
-                    throw new IllegalStateException("Race test interrupted (some error occured, see previous logs)");
+                    throw new IllegalStateException("Race test interrupted (some error occurred, see previous logs)");
                 }
             }
         }

@@ -206,7 +206,7 @@ public class ServiceRaceWithOrderedUnbindTest extends TestBase {
         }
 
         if (super.errorsLogged()) {
-            throw new IllegalStateException("Race test interrupted (some error occured, see previous logs)");
+            throw new IllegalStateException("Race test interrupted (some error occurred, see previous logs)");
         }
 
         debug("finished one test loop");

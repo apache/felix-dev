@@ -64,7 +64,7 @@ package org.apache.felix.gogo.jline.telnet;
 public interface ConnectionListener {
 
     /**
-     * Called when a CONNECTION_IDLE event occured.
+     * Called when a CONNECTION_IDLE event occurred.
      *
      * @param ce ConnectionEvent instance.
      * @see ConnectionEvent.Type#CONNECTION_IDLE
@@ -72,7 +72,7 @@ public interface ConnectionListener {
     void connectionIdle(ConnectionEvent ce);
 
     /**
-     * Called when a CONNECTION_TIMEDOUT event occured.
+     * Called when a CONNECTION_TIMEDOUT event occurred.
      *
      * @param ce ConnectionEvent instance.
      * @see ConnectionEvent.Type#CONNECTION_TIMEDOUT
@@ -80,7 +80,7 @@ public interface ConnectionListener {
     void connectionTimedOut(ConnectionEvent ce);
 
     /**
-     * Called when a CONNECTION_LOGOUTREQUEST occured.
+     * Called when a CONNECTION_LOGOUTREQUEST occurred.
      *
      * @param ce ConnectionEvent instance.
      * @see ConnectionEvent.Type#CONNECTION_LOGOUTREQUEST
@@ -88,7 +88,7 @@ public interface ConnectionListener {
     void connectionLogoutRequest(ConnectionEvent ce);
 
     /**
-     * Called when a CONNECTION_BREAK event occured.
+     * Called when a CONNECTION_BREAK event occurred.
      *
      * @param ce ConnectionEvent instance.
      * @see ConnectionEvent.Type#CONNECTION_BREAK
@@ -96,7 +96,7 @@ public interface ConnectionListener {
     void connectionSentBreak(ConnectionEvent ce);
 
     /**
-     * Called when a CONNECTION_TERMINAL_GEOMETRY_CHANGED event occured.
+     * Called when a CONNECTION_TERMINAL_GEOMETRY_CHANGED event occurred.
      *
      * @param ce ConnectionEvent instance.
      * @see ConnectionEvent.Type#CONNECTION_TERMINAL_GEOMETRY_CHANGED
