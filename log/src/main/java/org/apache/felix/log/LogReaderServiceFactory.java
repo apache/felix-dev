@@ -47,6 +47,7 @@ final class LogReaderServiceFactory implements ServiceFactory<LogReaderService>
      * @param registration the service registration
      * @return the log reader service implementation for the specified bundle
      */
+    @Override
     public LogReaderService getService(final Bundle bundle,
         final ServiceRegistration<LogReaderService> registration)
     {
@@ -60,6 +61,7 @@ final class LogReaderServiceFactory implements ServiceFactory<LogReaderService>
      * @param registration the service registration
      * @param service the service to release
      */
+    @Override
     public void ungetService(final Bundle bundle,
         final ServiceRegistration<LogReaderService> registration,
         final LogReaderService service)
