@@ -24,12 +24,19 @@ import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ConcurrentMap;
 
+import org.osgi.annotation.bundle.Capability;
 import org.osgi.framework.Bundle;
+import org.osgi.namespace.service.ServiceNamespace;
 import org.osgi.service.log.FormatterLogger;
 import org.osgi.service.log.Logger;
 import org.osgi.service.log.admin.LoggerAdmin;
 import org.osgi.service.log.admin.LoggerContext;
 
+@Capability(
+        namespace = ServiceNamespace.SERVICE_NAMESPACE,
+        attribute = { "objectClass:List<String>=\"org.osgi.service.log.admin.LoggerAdmin\"" },
+        uses = { LoggerAdminImpl.class, LoggerAdmin.class }
+)
 public class LoggerAdminImpl implements LoggerAdmin {
 
     private final Log m_log;
