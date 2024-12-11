@@ -213,7 +213,7 @@ final class Log implements BundleListener, FrameworkListener, ServiceListener
 
     /**
      * Called when a framework event occurs.
-     * @param event the event that occured
+     * @param event the event that occurred
      */
     @Override
     public void frameworkEvent(final FrameworkEvent event)
@@ -255,7 +255,7 @@ final class Log implements BundleListener, FrameworkListener, ServiceListener
 
     /**
      * Called when a bundle event occurs.
-     * @param event the event that occured
+     * @param event the event that occurred
      */
     @Override
     public void bundleChanged(final BundleEvent event)
@@ -306,7 +306,7 @@ final class Log implements BundleListener, FrameworkListener, ServiceListener
 
     /**
      * Called when a service event occurs.
-     * @param event the event that occured
+     * @param event the event that occurred
      */
     @Override
     public void serviceChanged(final ServiceEvent event)
