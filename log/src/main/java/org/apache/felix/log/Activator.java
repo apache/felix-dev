@@ -116,7 +116,7 @@ public final class Activator implements BundleActivator
         String storeDebugPropValue = context.getProperty(STORE_DEBUG_PROPERTY);
         if (storeDebugPropValue != null)
         {
-            storeDebug = Boolean.valueOf(storeDebugPropValue).booleanValue();
+            storeDebug = Boolean.parseBoolean(storeDebugPropValue);
         }
 
         return storeDebug;
