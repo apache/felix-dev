@@ -26,12 +26,13 @@ import org.osgi.service.log.FormatterLogger;
 
 public class FormatterLoggerImpl extends LoggerImpl implements FormatterLogger {
 
-    public FormatterLoggerImpl(
+    FormatterLoggerImpl(
         final String name, final Bundle bundle, final Log log, final LoggerAdminImpl loggerAdmin) {
 
         super(name, bundle, log, loggerAdmin);
     }
 
+    @Override
     String format(String format, LogParameters logParameters) {
         StringBuilder sb = new StringBuilder();
 
