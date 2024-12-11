@@ -21,10 +21,12 @@ package org.apache.felix.log;
 import java.util.Dictionary;
 import java.util.Hashtable;
 
+import org.osgi.annotation.bundle.Header;
 import org.osgi.framework.BundleActivator;
 import org.osgi.framework.BundleContext;
 import org.osgi.framework.Constants;
 import org.osgi.framework.ServiceRegistration;
+import org.osgi.service.cm.annotations.RequireConfigurationAdmin;
 import org.osgi.service.log.LogLevel;
 import org.osgi.service.log.LogReaderService;
 import org.osgi.service.log.LogService;
@@ -54,6 +56,8 @@ import org.osgi.service.log.admin.LoggerContext;
  *       the historic log information. The default value is false.</dd>
  * </dl>
  */
+@Header(name = Constants.BUNDLE_ACTIVATOR, value = "${@class}")
+@RequireConfigurationAdmin
 public final class Activator implements BundleActivator
 {
     /** The name of the property that defines the maximum size of the log. */

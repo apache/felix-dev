@@ -18,14 +18,22 @@
  */
 package org.apache.felix.log;
 
+import org.osgi.annotation.bundle.Capability;
 import org.osgi.framework.Bundle;
 import org.osgi.framework.ServiceReference;
+import org.osgi.namespace.service.ServiceNamespace;
 import org.osgi.service.log.LogService;
 import org.osgi.service.log.Logger;
+import org.osgi.service.log.LoggerFactory;
 
 /**
  * Implementation of the OSGi {@link LogService}.
  */
+@Capability(
+        namespace = ServiceNamespace.SERVICE_NAMESPACE,
+        attribute = { "objectClass:List<String>=\"org.osgi.service.log.LogService,org.osgi.service.log.LoggerFactory\"" },
+        uses = {LogService.class, LoggerFactory.class}
+)
 final class LogServiceImpl implements LogService
 {
     /** The bundle associated with this implementation. */
