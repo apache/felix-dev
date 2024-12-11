@@ -44,9 +44,8 @@ final class LogServiceImpl implements LogService
 
     /**
      * Create a new instance.
-     * @param log the log implementation
      * @param bundle the bundle associated with this implementation
-     * @param serviceReference
+     * @param loggerAdminImpl
      */
     LogServiceImpl(final Bundle bundle, final LoggerAdminImpl loggerAdminImpl)
     {

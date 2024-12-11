@@ -44,7 +44,7 @@ public class LoggerAdminImpl implements LoggerAdmin {
     private final ConcurrentMap<String, LoggerContext> m_contexts = new ConcurrentHashMap<>();
     private final ConcurrentMap<LoggerKey, Logger> _loggers = new ConcurrentHashMap<>();
 
-    public LoggerAdminImpl(final String defaultLogLevelString, final Log log) {
+    LoggerAdminImpl(final String defaultLogLevelString, final Log log) {
         m_rootContext = new RootLoggerContextImpl(defaultLogLevelString, this);
         m_log = log;
     }
