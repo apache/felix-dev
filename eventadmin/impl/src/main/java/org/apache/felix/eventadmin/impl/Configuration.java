@@ -25,11 +25,6 @@ import java.util.Dictionary;
 import java.util.Hashtable;
 import java.util.StringTokenizer;
 
-import org.apache.felix.eventadmin.impl.adapter.AbstractAdapter;
-import org.apache.felix.eventadmin.impl.adapter.BundleEventAdapter;
-import org.apache.felix.eventadmin.impl.adapter.FrameworkEventAdapter;
-import org.apache.felix.eventadmin.impl.adapter.LogEventAdapter;
-import org.apache.felix.eventadmin.impl.adapter.ServiceEventAdapter;
 import org.apache.felix.eventadmin.impl.handler.EventAdminImpl;
 import org.apache.felix.eventadmin.impl.security.SecureEventAdminFactory;
 import org.apache.felix.eventadmin.impl.tasks.DefaultThreadPool;
@@ -171,9 +166,6 @@ public class Configuration
 
     // The registration of the mbean
     private volatile ServiceRegistration<Object> m_mbeanreg;
-
-    // all adapters
-    private AbstractAdapter[] m_adapters;
 
     private ServiceRegistration<?> m_managedServiceReg;
 
@@ -431,9 +423,6 @@ public class Configuration
                     m_requireTopic,
                     m_ignoreTopics);
 
-            // Finally, adapt the outside events to our kind of events as per spec
-            adaptEvents(m_admin);
-
             // register the admin wrapped in a service factory (SecureEventAdminFactory)
             // that hands-out the m_admin object wrapped in a decorator that checks
             // appropriated permissions of each calling bundle
@@ -463,14 +452,6 @@ public class Configuration
     {
         synchronized ( this )
         {
-            if ( m_adapters != null )
-            {
-                for(int i=0;i<m_adapters.length;i++)
-                {
-                    m_adapters[i].destroy(m_bundleContext);
-                }
-                m_adapters = null;
-            }
             if ( m_managedServiceReg != null )
             {
                 m_managedServiceReg.unregister();
@@ -502,18 +483,6 @@ public class Configuration
                 m_sync_pool = null;
             }
         }
-    }
-
-    /**
-     * Init the adapters in org.apache.felix.eventadmin.impl.adapter
-     */
-    private void adaptEvents(final EventAdmin admin)
-    {
-        m_adapters = new AbstractAdapter[4];
-        m_adapters[0] = new FrameworkEventAdapter(m_bundleContext, admin);
-        m_adapters[1] = new BundleEventAdapter(m_bundleContext, admin);
-        m_adapters[2] = new ServiceEventAdapter(m_bundleContext, admin);
-        m_adapters[3] = new LogEventAdapter(m_bundleContext, admin);
     }
 
     private Object tryToCreateMetaTypeProvider(final Object managedService)
@@ -565,7 +534,7 @@ public class Configuration
             final int result;
             if ( value instanceof Integer )
             {
-                result = ((Integer)value).intValue();
+                result = (Integer) value;
             }
             else
             {
@@ -606,7 +575,7 @@ public class Configuration
             final double result;
             if ( value instanceof Double )
             {
-                result = ((Double)value).doubleValue();
+                result = (Double) value;
             }
             else
             {
@@ -645,17 +614,17 @@ public class Configuration
         {
             if ( obj instanceof Boolean )
             {
-                return ((Boolean)obj).booleanValue();
+                return (Boolean) obj;
             }
             String value = obj.toString().trim().toLowerCase();
 
-            if(0 < value.length() && ("0".equals(value) || "false".equals(value)
+            if(!value.isEmpty() && ("0".equals(value) || "false".equals(value)
                 || "no".equals(value)))
             {
                 return false;
             }
 
-            if(0 < value.length() && ("1".equals(value) || "true".equals(value)
+            if(!value.isEmpty() && ("1".equals(value) || "true".equals(value)
                 || "yes".equals(value)))
             {
                 return true;
