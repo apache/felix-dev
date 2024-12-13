@@ -141,7 +141,7 @@ public final class Activator implements BundleActivator
     public void start(final BundleContext context) throws Exception
     {
         // create the log instance
-        m_log = new Log(getMaxSize(context), getStoreDebug(context));
+        m_log = new Log(context, getMaxSize(context), getStoreDebug(context));
         // create the LoggerAdmin instance
         m_loggerAdmin = new LoggerAdminImpl(getDefaultLogLevel(context), m_log);
 

@@ -18,19 +18,32 @@
  */
 package org.apache.felix.log;
 
+import java.lang.reflect.Constructor;
+import java.lang.reflect.InvocationTargetException;
+import java.lang.reflect.Method;
 import java.util.Enumeration;
+import java.util.HashMap;
+import java.util.Map;
+import java.util.concurrent.atomic.AtomicReference;
 
+import org.osgi.annotation.bundle.Requirement;
 import org.osgi.framework.Bundle;
+import org.osgi.framework.BundleContext;
 import org.osgi.framework.BundleEvent;
 import org.osgi.framework.BundleListener;
+import org.osgi.framework.Constants;
 import org.osgi.framework.FrameworkEvent;
 import org.osgi.framework.FrameworkListener;
 import org.osgi.framework.ServiceEvent;
 import org.osgi.framework.ServiceListener;
 import org.osgi.framework.ServiceReference;
+import org.osgi.namespace.implementation.ImplementationNamespace;
+import org.osgi.service.event.EventConstants;
 import org.osgi.service.log.LogEntry;
 import org.osgi.service.log.LogLevel;
 import org.osgi.service.log.LogListener;
+import org.osgi.util.tracker.ServiceTracker;
+import org.osgi.util.tracker.ServiceTrackerCustomizer;
 
 /**
  * Class used to represent the log.  This class is used by the implementations
@@ -39,8 +52,16 @@ import org.osgi.service.log.LogListener;
  * @see org.osgi.service.log.LogService
  * @see org.osgi.service.log.LogReaderService
  */
+@Requirement(namespace = ImplementationNamespace.IMPLEMENTATION_NAMESPACE,
+             name = EventConstants.EVENT_ADMIN_IMPLEMENTATION,
+             version = EventConstants.EVENT_ADMIN_SPECIFICATION_VERSION,
+             resolution = Requirement.Resolution.OPTIONAL)
 final class Log implements BundleListener, FrameworkListener, ServiceListener
 {
+    private static final String EVENT_ADMIN_CLASS = "org.osgi.service.event.EventAdmin";
+    private static final String EVENT_CLASS = "org.osgi.service.event.Event";
+    private static final String POST_EVENT_METHOD = "postEvent";
+
     /** The first log entry. */
     private volatile LogNode m_head;
     /** The last log entry. */
@@ -55,16 +76,111 @@ final class Log implements BundleListener, FrameworkListener, ServiceListener
     private final boolean m_storeDebug;
     /** Active flag */
     private volatile boolean active = true;
+    /** Bundle context */
+    private final BundleContext m_context;
+    /** Service tracker for EventAdmin */
+    private final ServiceTracker<?, EAProxy> m_eventAdminTracker;
+
+    static class EventAdminServiceInfo {
+        final Constructor<?> m_eventClassCtor;
+        final Method m_postEventMethod;
+        final Object m_service;
+
+        EventAdminServiceInfo(Constructor<?> eventClassCtor, Method postEventMethod, Object service) {
+            this.m_eventClassCtor = eventClassCtor;
+            this.m_postEventMethod = postEventMethod;
+            this.m_service = service;
+        }
+    }
+
+    static class EAProxy {
+        final AtomicReference<EventAdminServiceInfo> m_info = new AtomicReference<>();
+
+        public EAProxy(ServiceReference<?> reference, Object service) {
+            setServiceInfo(reference, service);
+        }
+
+        final void setServiceInfo(ServiceReference<?> reference, Object service) {
+            final Bundle bundle = reference.getBundle();
+            try {
+                Class<?> eventClass = bundle.loadClass(EVENT_CLASS);
+                final Constructor<?> eventConstructor = eventClass.getConstructor(String.class, Map.class);
+                Class<?> eventAdminClass = bundle.loadClass(EVENT_ADMIN_CLASS);
+                final Method postMethod = eventAdminClass.getMethod(POST_EVENT_METHOD, eventClass);
+                this.m_info.set(new EventAdminServiceInfo(eventConstructor, postMethod, service));
+            } catch (ClassNotFoundException | NoSuchMethodException | SecurityException e) {
+                throw new IllegalStateException(
+                        "Failure reflecting over API from Event Admin service bundle", e);
+            }
+        }
+
+        void resetServiceInfo() {
+            this.m_info.set(null);
+        }
+
+        void postEvent(LogEntry entry) {
+            final EventAdminServiceInfo eventAdminServiceInfo = this.m_info.get();
+            if (eventAdminServiceInfo == null) {
+                return;
+            }
+
+            try {
+                final LogLevel logLevel = entry.getLogLevel();
+                final String topic;
+                if (logLevel == LogLevel.TRACE) {
+                    topic = "org/osgi/service/log/LogEntry/LOG_OTHER";
+                } else {
+                    topic = "org/osgi/service/log/LogEntry/LOG_" + logLevel.name();
+                }
+                final Map<String, Object> props = new HashMap<>(10);
+                final Bundle bundle = entry.getBundle();
+                props.put(EventConstants.BUNDLE_ID, bundle.getBundleId());
+                props.put(EventConstants.BUNDLE_SYMBOLICNAME, bundle.getSymbolicName());
+                props.put(EventConstants.BUNDLE, bundle);
+                props.put("log.level", entry.getLogLevel());
+                props.put("log.loggername", entry.getLoggerName());
+                props.put("log.threadinfo", entry.getThreadInfo());
+                props.put("log.loglevel", logLevel);
+                props.put(EventConstants.MESSAGE, entry.getMessage());
+                props.put(EventConstants.TIMESTAMP, entry.getTime());
+                props.put("log.entry", entry);
+                final Throwable exception = entry.getException();
+                if (exception != null) {
+                    props.put(EventConstants.EXCEPTION_CLASS, exception.getClass().getName());
+                    props.put(EventConstants.EXCEPTION_MESSAGE, exception.getMessage());
+                    props.put(EventConstants.EXCEPTION, exception);
+                }
+                final ServiceReference<?> serviceReference = entry.getServiceReference();
+                if (serviceReference != null) {
+                    props.put(EventConstants.SERVICE, serviceReference);
+                    props.put(EventConstants.SERVICE_ID, serviceReference.getProperty(Constants.SERVICE_ID));
+                    final Object servicePid = serviceReference.getProperty(Constants.SERVICE_PID);
+                    if (servicePid != null) {
+                        props.put(EventConstants.SERVICE_PID, servicePid);
+                    }
+                    props.put(EventConstants.SERVICE_OBJECTCLASS, serviceReference.getProperty(Constants.OBJECTCLASS));
+                }
+                final Object event = eventAdminServiceInfo.m_eventClassCtor.newInstance(topic, props);
+                eventAdminServiceInfo.m_postEventMethod.invoke(eventAdminServiceInfo.m_service, event);
+            } catch (IllegalAccessException | InvocationTargetException | InstantiationException e) {
+                throw new RuntimeException(e);
+            }
+        }
+    }
 
     /**
      * Create a new instance.
      * @param maxSize the maximum size for the log
      * @param storeDebug whether or not to store debug messages
      */
-    Log(final int maxSize, final boolean storeDebug)
+    Log(final BundleContext context, final int maxSize, final boolean storeDebug)
     {
+        this.m_context = context;
         this.m_maxSize = maxSize;
         this.m_storeDebug = storeDebug;
+        this.m_eventAdminTracker = new ServiceTracker<>(context, EVENT_ADMIN_CLASS,
+                new EAProxyServiceTrackerCustomizer());
+        this.m_eventAdminTracker.open();
     }
 
     /**
@@ -78,6 +194,7 @@ final class Log implements BundleListener, FrameworkListener, ServiceListener
             listenerThread.shutdown();
             listenerThread = null;
         }
+        m_eventAdminTracker.close();
 
         m_head = null;
         m_tail = null;
@@ -150,6 +267,12 @@ final class Log implements BundleListener, FrameworkListener, ServiceListener
         if (listenerThread != null)
         {
             listenerThread.addEntry(entry);
+        }
+
+        final EAProxy eaProxy = this.m_eventAdminTracker.getService();
+        if (eaProxy != null)
+        {
+            eaProxy.postEvent(entry);
         }
     }
 
@@ -329,5 +452,22 @@ final class Log implements BundleListener, FrameworkListener, ServiceListener
             (eventType == ServiceEvent.MODIFIED) ? LogLevel.DEBUG : LogLevel.INFO,
             message,
             null);
+    }
+
+    private class EAProxyServiceTrackerCustomizer implements ServiceTrackerCustomizer<Object, EAProxy> {
+        @Override
+        public EAProxy addingService(ServiceReference<Object> reference) {
+            return new EAProxy(reference, m_context.getService(reference));
+        }
+
+        @Override
+        public void modifiedService(ServiceReference<Object> reference, EAProxy proxy) {
+            proxy.setServiceInfo(reference, m_context.getService(reference));
+        }
+
+        @Override
+        public void removedService(ServiceReference<Object> reference, EAProxy proxy) {
+            proxy.resetServiceInfo();
+        }
     }
 }
