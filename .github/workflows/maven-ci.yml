@@ -8,6 +8,7 @@ on:
       - 'http/**'
       - 'tools/maven-bundle-plugin/**'
       - 'tools/osgicheck-maven-plugin/**'
+      - 'log/**'
       - 'webconsole/**'
   pull_request:
     branches: [ "master" ]
@@ -17,7 +18,8 @@ on:
       - 'tools/maven-bundle-plugin/**'
       - 'tools/osgicheck-maven-plugin/**'
       - 'webconsole/**'
-    
+      - 'log/**'
+
 permissions: {}
 
 jobs:
@@ -50,10 +52,16 @@ jobs:
             - 'tools/osgicheck-maven-plugin/**'
           webconsole:
             - 'webconsole/**'
+          log:
+            - 'log/**'
+
     - name: Felix SCR
       if: steps.changes.outputs.scr == 'true'
       run: mvn -B -V -Dstyle.color=always --file scr/pom.xml clean verify
-    - name: Felix HTTP 
+    - name: Felix Log
+      if: steps.changes.outputs.log == 'true'
+      run: mvn -B -V -Dstyle.color=always --file log/pom.xml clean verify
+    - name: Felix HTTP
       if: steps.changes.outputs.http == 'true'
       run: mvn -B -V -Dstyle.color=always "-Dit.test=!MissingWebsocketDependenciesIT" --file http/pom.xml clean install verify
     - name: Felix Maven bundle plugin 
