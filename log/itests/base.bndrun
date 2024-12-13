@@ -1,0 +1,8 @@
+-resolve.effective: resolve, active
+
+-runstartlevel: \
+    order=leastdependenciesfirst,\
+    begin=-1
+
+-noimportjava: true
+-reproducible: true
