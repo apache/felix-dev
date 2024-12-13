@@ -175,6 +175,9 @@
             <plugin>
                 <groupId>org.apache.maven.plugins</groupId>
                 <artifactId>maven-release-plugin</artifactId>
+                <configuration>
+                    <projectVersionPolicyId>OddEvenVersionPolicy</projectVersionPolicyId>
+                </configuration>
             </plugin>
             <plugin>
                 <groupId>org.apache.geronimo.genesis.plugins</groupId>
