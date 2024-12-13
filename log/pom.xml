@@ -48,7 +48,7 @@
     <dependency>
       <groupId>org.osgi</groupId>
       <artifactId>osgi.core</artifactId>
-      <version>6.0.0</version>
+      <version>7.0.0</version>
       <scope>provided</scope>
     </dependency>
     <dependency>
@@ -101,6 +101,7 @@
             <Bundle-Vendor>The Apache Software Foundation</Bundle-Vendor>
             <Include-Resource>META-INF/LICENSE=LICENSE,META-INF/NOTICE=NOTICE,META-INF/DEPENDENCIES=DEPENDENCIES</Include-Resource>
             <_reproducible>true</_reproducible>
+            <_noimportjava>true</_noimportjava>
             <niceManifest>true</niceManifest>
           </instructions>
         </configuration>
