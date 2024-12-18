@@ -206,7 +206,7 @@ final class Log implements BundleListener, FrameworkListener, ServiceListener
         "FrameworkEvent STARTED",
         "FrameworkEvent ERROR",
         "FrameworkEvent PACKAGES REFRESHED",
-                    "FrameworkEvent STARTLEVEL CHANGED",
+        "FrameworkEvent STARTLEVEL CHANGED",
         "FrameworkEvent WARNING",
         "FrameworkEvent INFO"
     };
