@@ -36,10 +36,10 @@ public class LoggerImpl implements Logger {
 
     protected final String m_name;
     protected final Bundle m_bundle;
-    protected final Log m_log;
+    final Log m_log;
     protected final LoggerAdminImpl m_loggerAdmin;
 
-    public LoggerImpl(final String name, final Bundle bundle, final Log log, final LoggerAdminImpl loggerAdmin) {
+    LoggerImpl(final String name, final Bundle bundle, final Log log, final LoggerAdminImpl loggerAdmin) {
         m_name = name;
         m_bundle = bundle;
         m_log = log;
