@@ -40,6 +40,7 @@ import javax.servlet.ServletResponse;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 
+import org.apache.felix.http.javaxwrappers.ServletWrapper;
 import org.junit.After;
 import org.junit.Test;
 import org.junit.runner.RunWith;
@@ -53,6 +54,8 @@ import org.osgi.framework.wiring.BundleCapability;
 import org.osgi.framework.wiring.BundleWiring;
 import org.osgi.service.http.HttpService;
 import org.osgi.service.http.runtime.HttpServiceRuntime;
+
+import jakarta.servlet.http.HttpServlet;
 
 @RunWith(PaxExam.class)
 @ExamReactorStrategy(PerMethod.class)
@@ -139,35 +142,90 @@ public class HttpServiceTest extends Servlet3BaseIntegrationTest {
     @Test
     public void testHttpServiceCapabiltiy() throws Exception {
     	setupLatches(0);
-    	
+
         Bundle httpJettyBundle = getHttpJettyBundle();
-        
+
         BundleWiring wiring = httpJettyBundle.adapt(BundleWiring.class);
-        
+
 		List<BundleCapability> capabilities = wiring.getCapabilities("osgi.service");
-		
+
 		assertFalse(capabilities.isEmpty());
-		
+
 		boolean found = false;
-		
+
 		for (BundleCapability capability : capabilities) {
 			@SuppressWarnings("unchecked")
 			List<String> objectClass = (List<String>) capability.getAttributes().get(Constants.OBJECTCLASS);
-			
+
 			assertNotNull(objectClass);
-			
+
 			if(objectClass.contains(HttpService.class.getName())) {
 				String uses = capability.getDirectives().get("uses");
-				
+
 				assertNotNull(uses);
-				
+
 				assertTrue(uses.contains(HttpService.class.getPackage().getName()));
-				
+
 				found = true;
 				break;
 			}
 		}
-		
+
 		assertTrue("Missing HttpService capability", found);
+    }
+
+    private class JakartaServlet extends HttpServlet {
+        private static final long serialVersionUID = 1L;
+
+        @Override
+        public void init() throws jakarta.servlet.ServletException {
+            super.init();
+            initLatch.countDown();
+        }
+
+        @Override
+        protected void doGet(jakarta.servlet.http.HttpServletRequest req, jakarta.servlet.http.HttpServletResponse resp)
+            throws IOException {
+            resp.getWriter().print("helloworld");
+            resp.flushBuffer();
+        }
+
+        @Override
+        public void destroy() {
+            destroyLatch.countDown();
+        }
+    }
+
+    @Test
+    public void testRegisteringWrapperAsServlet() throws Exception  {
+        this.setupLatches(1);
+        final HttpService service = this.getHttpService();
+        service.registerServlet("/testjakarta", new ServletWrapper(new JakartaServlet()), null, null);
+
+        assertTrue(initLatch.await(5, TimeUnit.SECONDS));
+
+        assertContent("helloworld", createURL("/testjakarta"));
+
+        service.unregister("/testjakarta");
+    }
+
+    @Test
+    public void testRegisteringCustomWrapperAsServlet() throws Exception  {
+        this.setupLatches(1);
+        final HttpService service = this.getHttpService();
+        service.registerServlet("/testjakarta", new ServletWrapper(new JakartaServlet()) {
+            @Override
+            public void service(ServletRequest req, ServletResponse resp)
+                throws IOException {
+                resp.getWriter().print("helloworldwrapped");
+                resp.flushBuffer();
+            }
+        }, null, null);
+
+        assertTrue(initLatch.await(5, TimeUnit.SECONDS));
+
+        assertContent("helloworldwrapped", createURL("/testjakarta"));
+
+        service.unregister("/testjakarta");
     }
 }

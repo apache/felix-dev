@@ -21,7 +21,7 @@ package org.apache.felix.http.itest.servletapi3;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertTrue;
 import static org.osgi.service.http.whiteboard.HttpWhiteboardConstants.HTTP_WHITEBOARD_SERVLET_PATTERN;
- 
+
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.PrintWriter;
@@ -32,11 +32,14 @@ import java.util.Hashtable;
 import java.util.List;
 import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.TimeUnit;
- 
+
 import javax.servlet.Servlet;
+import javax.servlet.ServletRequest;
+import javax.servlet.ServletResponse;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 
+import org.apache.felix.http.javaxwrappers.ServletWrapper;
 import org.junit.After;
 import org.junit.Test;
 import org.junit.runner.RunWith;
@@ -44,7 +47,9 @@ import org.ops4j.pax.exam.junit.PaxExam;
 import org.ops4j.pax.exam.spi.reactors.ExamReactorStrategy;
 import org.ops4j.pax.exam.spi.reactors.PerMethod;
 import org.osgi.framework.ServiceRegistration;
- 
+
+import jakarta.servlet.http.HttpServlet;
+
 @RunWith(PaxExam.class)
 @ExamReactorStrategy(PerMethod.class)
 public class ServletContentTest extends Servlet3BaseIntegrationTest {
@@ -81,7 +86,7 @@ public class ServletContentTest extends Servlet3BaseIntegrationTest {
 
         registrations.add(m_context.registerService(Servlet.class.getName(), servletWithErrorCode, servletProps));
     }
- 
+
     @After
     public void unregisterServices() throws InterruptedException {
         for (ServiceRegistration<?> serviceRegistration : registrations) {
@@ -117,5 +122,67 @@ public class ServletContentTest extends Servlet3BaseIntegrationTest {
 
         assertContent("/myservlet");
     }
+
+    private class JakartaServlet extends HttpServlet {
+        private static final long serialVersionUID = 1L;
+
+        @Override
+        public void init() throws jakarta.servlet.ServletException {
+            super.init();
+            initLatch.countDown();
+        }
+
+        @Override
+        protected void doGet(jakarta.servlet.http.HttpServletRequest req, jakarta.servlet.http.HttpServletResponse resp)
+            throws IOException {
+            resp.getWriter().print("helloworld");
+            resp.flushBuffer();
+        }
+
+        @Override
+        public void destroy() {
+            destroyLatch.countDown();
+        }
+    }
+
+    @Test
+    public void testRegisteringWrapperAsServlet() throws Exception  {
+        this.setupLatches(1);
+
+        final Dictionary<String, Object> servletProps = new Hashtable<>();
+        servletProps.put(HTTP_WHITEBOARD_SERVLET_PATTERN, "/testjakarta");
+
+        final ServiceRegistration<Servlet> reg = m_context.registerService(Servlet.class, new ServletWrapper(new JakartaServlet()), servletProps);
+
+        assertTrue(initLatch.await(DEFAULT_TIMEOUT, TimeUnit.MILLISECONDS));
+
+        assertContent("helloworld", createURL("/testjakarta"));
+
+        reg.unregister();
+        assertTrue(destroyLatch.await(DEFAULT_TIMEOUT, TimeUnit.MILLISECONDS));
+    }
+
+    @Test
+    public void testRegisteringCustomWrapperAsServlet() throws Exception  {
+        this.setupLatches(1);
+
+        final Dictionary<String, Object> servletProps = new Hashtable<>();
+        servletProps.put(HTTP_WHITEBOARD_SERVLET_PATTERN, "/testjakarta");
+
+        final ServiceRegistration<Servlet> reg = m_context.registerService(Servlet.class, new ServletWrapper(new JakartaServlet()) {
+            @Override
+            public void service(ServletRequest req, ServletResponse resp)
+                throws IOException {
+                resp.getWriter().print("helloworldwrapped");
+                resp.flushBuffer();
+            }
+        }, servletProps);
+
+        assertTrue(initLatch.await(DEFAULT_TIMEOUT, TimeUnit.MILLISECONDS));
+
+        assertContent("helloworldwrapped", createURL("/testjakarta"));
+
+        reg.unregister();
+        assertTrue(destroyLatch.await(DEFAULT_TIMEOUT, TimeUnit.MILLISECONDS));
+    }
 }
- 
