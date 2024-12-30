@@ -170,7 +170,7 @@ public final class SharedHttpServiceImpl
      * @param context the servlet context
      */
     private void setAttributes(ExtServletContext context) {
-        if (context != null) {
+        if (context != null && attributesForSharedContext != null) {
             attributesForSharedContext.forEach((key, value) -> {
                 if (key != null && value != null) {
                     SystemLogger.LOGGER.info("SharedHttpServiceImpl: Shared context found, setting stored attribute key: '{}', value: '{}'", key, value);
