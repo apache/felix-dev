@@ -138,15 +138,15 @@ public class JettySpecificWebsocketIT extends AbstractJettyTestSupport {
 
     @Test
     public void testWebSocketServletWhiteboard() throws Exception {
-        final JettyWebSocketServlet webSocketServlet2 = new JettyWebSocketServlet() {
+        final JettyWebSocketServlet webSocketServlet = new JettyWebSocketServlet() {
             @Override
             protected void configure(JettyWebSocketServletFactory jettyWebSocketServletFactory) {
                 jettyWebSocketServletFactory.register(MyServerWebSocket.class);
             }
         };
-        final Dictionary<String, Object> webSocketServletProps2 = new Hashtable<>();
-        webSocketServletProps2.put(HTTP_WHITEBOARD_SERVLET_PATTERN, "/websocketservlet/*");
-        bundleContext.registerService(Servlet.class, webSocketServlet2, webSocketServletProps2);
+        final Dictionary<String, Object> props = new Hashtable<>();
+        props.put(HTTP_WHITEBOARD_SERVLET_PATTERN, "/websocketservlet");
+        bundleContext.registerService(Servlet.class, webSocketServlet, props);
 
         HttpClientTransportOverHTTP transport = new HttpClientTransportOverHTTP();
         HttpClient httpClient = new org.eclipse.jetty.client.HttpClient(transport);
@@ -155,7 +155,7 @@ public class JettySpecificWebsocketIT extends AbstractJettyTestSupport {
 
         Object value = bundleContext.getServiceReference(HttpService.class).getProperty("org.osgi.service.http.port");
         int httpPort = Integer.parseInt((String)value);
-        URI destUri = new URI(String.format("ws://localhost:%d/websocketservlet/test", httpPort));
+        URI destUri = new URI(String.format("ws://localhost:%d/websocketservlet", httpPort));
 
         MyClientWebSocket clientWebSocket = new MyClientWebSocket();
         ClientUpgradeRequest request = new ClientUpgradeRequest();
