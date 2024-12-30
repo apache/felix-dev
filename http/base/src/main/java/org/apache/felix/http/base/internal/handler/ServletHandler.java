@@ -18,6 +18,8 @@ package org.apache.felix.http.base.internal.handler;
 
 import java.io.File;
 import java.io.IOException;
+import java.util.concurrent.CountDownLatch;
+import java.util.concurrent.atomic.AtomicBoolean;
 
 import org.apache.felix.http.base.internal.context.ExtServletContext;
 import org.apache.felix.http.base.internal.dispatch.MultipartConfig;
@@ -55,7 +57,8 @@ public abstract class ServletHandler implements Comparable<ServletHandler>
 
     protected volatile int useCount;
 
-    private boolean isInitialized = false;
+    private final AtomicBoolean lazyFirstInitCall = new AtomicBoolean(true);
+    private final CountDownLatch initBarrier = new CountDownLatch(1);
 
     private final MultipartConfig mpConfig;
 
@@ -130,16 +133,9 @@ public abstract class ServletHandler implements Comparable<ServletHandler>
         final Servlet local = this.servlet;
         if ( local != null )
         {
-            if (!isInitialized){
-                // Lazy init if needed
-                try {
-                    servlet.init(new ServletConfigImpl(getName(), getContext(), getServletInfo().getInitParameters()));
-                    isInitialized = true;
-                } catch (final Exception e) {
-                    SystemLogger.LOGGER.error(SystemLogger.formatMessage(this.getServletInfo().getServiceReference(),
-                                    "Error calling init() lazy on servlet ".concat(this.servletInfo.getClassName(this.servlet))),
-                            e);}
-            }
+            // Lazy init if needed, thread-safe
+            lazyInit();
+
             local.service(req, res);
         }
         else
@@ -191,31 +187,18 @@ public abstract class ServletHandler implements Comparable<ServletHandler>
         if (!isJettyWebSocketServlet()) {
             try {
                 servlet.init(new ServletConfigImpl(getName(), getContext(), getServletInfo().getInitParameters()));
-                isInitialized = true;
             } catch (final Exception e) {
                 SystemLogger.LOGGER.error(SystemLogger.formatMessage(this.getServletInfo().getServiceReference(),
                                 "Error during calling init() on servlet ".concat(this.servletInfo.getClassName(this.servlet))),
                         e);
                 return DTOConstants.FAILURE_REASON_EXCEPTION_ON_INIT;
+            } finally {
+                initBarrier.countDown();
             }
         }
         this.useCount++;
         return -1;
     }
-
-    /**
-     * Check if the servlet is a JettyWebSocketServlet.
-     * JettyWebSocket classes are handled differently due to FELIX-6746
-     * @return true if the servlet is a JettyWebSocketServlet, false otherwise
-     */
-    private boolean isJettyWebSocketServlet() {
-        final Class<?> superClass = servlet.getClass().getSuperclass();
-        SystemLogger.LOGGER.debug("Checking if the servlet is a JettyWebSocketServlet: '" + superClass.getSimpleName() + "'");
-
-        // Now check if the servlet class extends 'JettyWebSocketServlet'
-        return superClass.getSimpleName().endsWith(JETTY_WEB_SOCKET_SERVLET_CLASS);
-    }
-
 
     public boolean destroy()
     {
@@ -229,7 +212,9 @@ public abstract class ServletHandler implements Comparable<ServletHandler>
         {
             try
             {
-                servlet.destroy();
+                if (!isJettyWebSocketServlet() || !lazyFirstInitCall.get()) {
+                    servlet.destroy();
+                }
             }
             catch ( final Exception ignore )
             {
@@ -280,5 +265,41 @@ public abstract class ServletHandler implements Comparable<ServletHandler>
     public Bundle getMultipartSecurityContext()
     {
         return null;
+    }
+
+    /**
+     * Check if the servlet is a JettyWebSocketServlet.
+     * JettyWebSocket classes are handled differently due to FELIX-6746
+     * @return true if the servlet is a JettyWebSocketServlet, false otherwise
+     */
+    private boolean isJettyWebSocketServlet() {
+        final Class<?> superClass = servlet.getClass().getSuperclass();
+        SystemLogger.LOGGER.debug("Checking if the servlet is a JettyWebSocketServlet: '" + superClass.getSimpleName() + "'");
+
+        // Now check if the servlet class extends 'JettyWebSocketServlet'
+        return superClass.getSimpleName().endsWith(JETTY_WEB_SOCKET_SERVLET_CLASS);
+    }
+
+    /*
+     * Lazy initialization of the servlet.
+     * Will only be called once for each servlet instance and is thread-safe.
+     */
+    private void lazyInit() {
+        if (lazyFirstInitCall.compareAndSet(true, false)) {
+            try {
+                servlet.init(new ServletConfigImpl(getName(), getContext(), getServletInfo().getInitParameters()));
+            } catch (final Exception e) {
+                SystemLogger.LOGGER.error(SystemLogger.formatMessage(this.getServletInfo().getServiceReference(),
+                                "Error calling init() lazy on servlet ".concat(this.servletInfo.getClassName(this.servlet))), e);
+            } finally {
+                initBarrier.countDown();
+            }
+        } else {
+            try {
+                initBarrier.await();
+            } catch (final InterruptedException e) {
+                Thread.currentThread().interrupt();
+            }
+        }
     }
 }

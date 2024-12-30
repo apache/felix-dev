@@ -136,7 +136,7 @@ public class JettySpecificWebsocketIT extends AbstractJettyTestSupport {
 
         Object value = bundleContext.getServiceReference(HttpService.class).getProperty("org.osgi.service.http.port");
         int httpPort = Integer.parseInt((String)value);
-        URI destUri = new URI(String.format("ws://localhost:%d/" + servletPath, httpPort));
+        URI destUri = new URI(String.format("ws://localhost:%d/%s", httpPort, servletPath));
 
         MyClientWebSocket clientWebSocket = new MyClientWebSocket();
         ClientUpgradeRequest request = new ClientUpgradeRequest();
