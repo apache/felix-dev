@@ -37,6 +37,7 @@ import jakarta.servlet.ServletContext;
 import jakarta.servlet.ServletException;
 import jakarta.servlet.http.HttpServlet;
 
+import org.apache.felix.http.javaxwrappers.ServletWrapper;
 import org.awaitility.Awaitility;
 import org.eclipse.jetty.client.HttpClient;
 import org.eclipse.jetty.client.transport.HttpClientTransportOverHTTP;
@@ -68,6 +69,9 @@ public class JettySpecificWebsocketIT extends AbstractJettyTestSupport {
 
     @Inject
     protected BundleContext bundleContext;
+
+    @Inject
+    protected HttpService httpService;
 
     @Override
     protected Option[] additionalOptions() throws IOException {
@@ -124,6 +128,20 @@ public class JettySpecificWebsocketIT extends AbstractJettyTestSupport {
         final Dictionary<String, Object> props = new Hashtable<>();
         props.put(HTTP_WHITEBOARD_SERVLET_PATTERN, "/websocketservletwhiteboard");
         bundleContext.registerService(Servlet.class, webSocketServlet, props);
+
+        assertWebSocketResponse("websocketservletwhiteboard");
+    }
+
+    @Test
+    public void testWebSocketServletHttpService() throws Exception {
+        final JettyWebSocketServlet webSocketServlet = new JettyWebSocketServlet() {
+            @Override
+            protected void configure(JettyWebSocketServletFactory jettyWebSocketServletFactory) {
+                jettyWebSocketServletFactory.register(MyServerWebSocket.class);
+            }
+        };
+
+        httpService.registerServlet("/websocketservlethttpservice", new ServletWrapper(webSocketServlet), null, null);
 
         assertWebSocketResponse("websocketservletwhiteboard");
     }

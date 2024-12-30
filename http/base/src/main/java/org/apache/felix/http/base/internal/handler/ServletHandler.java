@@ -184,7 +184,7 @@ public abstract class ServletHandler implements Comparable<ServletHandler>
             return DTOConstants.FAILURE_REASON_SERVICE_NOT_GETTABLE;
         }
 
-        if (!isJettyWebSocketServlet()) {
+        if (!isJettyWebSocketServlet(servlet)) {
             try {
                 servlet.init(new ServletConfigImpl(getName(), getContext(), getServletInfo().getInitParameters()));
             } catch (final Exception e) {
@@ -212,7 +212,7 @@ public abstract class ServletHandler implements Comparable<ServletHandler>
         {
             try
             {
-                if (!isJettyWebSocketServlet() || !lazyFirstInitCall.get()) {
+                if (!isJettyWebSocketServlet(servlet) || !lazyFirstInitCall.get()) {
                     servlet.destroy();
                 }
             }
@@ -269,15 +269,27 @@ public abstract class ServletHandler implements Comparable<ServletHandler>
 
     /**
      * Check if the servlet is a JettyWebSocketServlet.
-     * JettyWebSocket classes are handled differently due to FELIX-6746
+     * JettyWebSocket classes are handled differently due to FELIX-6746.
+     * @param servlet the servlet to check
      * @return true if the servlet is a JettyWebSocketServlet, false otherwise
      */
-    private boolean isJettyWebSocketServlet() {
+    private static boolean isJettyWebSocketServlet(Object servlet) {
         final Class<?> superClass = servlet.getClass().getSuperclass();
         SystemLogger.LOGGER.debug("Checking if the servlet is a JettyWebSocketServlet: '" + superClass.getSimpleName() + "'");
 
         // Now check if the servlet class extends 'JettyWebSocketServlet'
-        return superClass.getSimpleName().endsWith(JETTY_WEB_SOCKET_SERVLET_CLASS);
+        boolean isJettyWebSocketServlet = superClass.getSimpleName().endsWith(JETTY_WEB_SOCKET_SERVLET_CLASS);
+        if (!isJettyWebSocketServlet) {
+            // Recurse through the wrapped servlets, in case of double-wrapping
+            if (servlet instanceof org.apache.felix.http.jakartawrappers.ServletWrapper) {
+                final javax.servlet.Servlet wrappedServlet = ((org.apache.felix.http.jakartawrappers.ServletWrapper) servlet).getServlet();
+                return isJettyWebSocketServlet(wrappedServlet);
+            } else if (servlet instanceof org.apache.felix.http.javaxwrappers.ServletWrapper) {
+                final jakarta.servlet.Servlet wrappedServlet = ((org.apache.felix.http.javaxwrappers.ServletWrapper) servlet).getServlet();
+                return isJettyWebSocketServlet(wrappedServlet);
+            }
+        }
+        return isJettyWebSocketServlet;
     }
 
     /*
