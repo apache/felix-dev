@@ -213,13 +213,7 @@ public abstract class ServletHandler implements Comparable<ServletHandler>
         SystemLogger.LOGGER.debug("Checking if the servlet is a JettyWebSocketServlet: '" + superClass.getSimpleName() + "'");
 
         // Now check if the servlet class extends 'JettyWebSocketServlet'
-        boolean isJettyWebSocketServlet = superClass.getSimpleName().endsWith(JETTY_WEB_SOCKET_SERVLET_CLASS);
-        if (!isJettyWebSocketServlet && servlet instanceof org.apache.felix.http.javaxwrappers.ServletWrapper) {
-            // In case the servlet is wrapped, we need to check the wrapped servlet
-            isJettyWebSocketServlet = ((org.apache.felix.http.javaxwrappers.ServletWrapper) servlet)
-                    .getServlet().getClass().getSuperclass().getSimpleName().endsWith(JETTY_WEB_SOCKET_SERVLET_CLASS);
-        }
-        return isJettyWebSocketServlet;
+        return superClass.getSimpleName().endsWith(JETTY_WEB_SOCKET_SERVLET_CLASS);
     }
 
 

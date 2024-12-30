@@ -110,30 +110,7 @@ public class JettySpecificWebsocketIT extends AbstractJettyTestSupport {
                 HTTP_WHITEBOARD_SERVLET_PATTERN, "/mywebsocket1"
         )));
 
-        HttpClientTransportOverHTTP transport = new HttpClientTransportOverHTTP();
-        HttpClient httpClient = new org.eclipse.jetty.client.HttpClient(transport);
-        WebSocketClient webSocketClient = new WebSocketClient(httpClient);
-        webSocketClient.start();
-
-        Object value = bundleContext.getServiceReference(HttpService.class).getProperty("org.osgi.service.http.port");
-        int httpPort = Integer.parseInt((String)value);
-        URI destUri = new URI(String.format("ws://localhost:%d/mywebsocket1", httpPort));
-
-        MyClientWebSocket clientWebSocket = new MyClientWebSocket();
-        ClientUpgradeRequest request = new ClientUpgradeRequest();
-        CompletableFuture<Session> future = webSocketClient.connect(clientWebSocket, destUri, request);
-        Session session = future.get();
-        assertNotNull(session);
-
-        // send a message from the client to the server
-        clientWebSocket.sendMessage("Hello WebSocket");
-
-        // wait for the async response from the server
-        Awaitility.await("waitForResponse")
-                .atMost(Duration.ofSeconds(30))
-                .pollDelay(Duration.ofMillis(200))
-                .until(() -> clientWebSocket.getLastMessage() != null);
-        assertEquals("Hello WebSocket", clientWebSocket.getLastMessage());
+        assertWebSocketResponse("mywebsocket1");
     }
 
     @Test
@@ -145,9 +122,13 @@ public class JettySpecificWebsocketIT extends AbstractJettyTestSupport {
             }
         };
         final Dictionary<String, Object> props = new Hashtable<>();
-        props.put(HTTP_WHITEBOARD_SERVLET_PATTERN, "/websocketservlet");
+        props.put(HTTP_WHITEBOARD_SERVLET_PATTERN, "/websocketservletwhiteboard");
         bundleContext.registerService(Servlet.class, webSocketServlet, props);
 
+        assertWebSocketResponse("websocketservletwhiteboard");
+    }
+
+    private void assertWebSocketResponse(String servletPath) throws Exception {
         HttpClientTransportOverHTTP transport = new HttpClientTransportOverHTTP();
         HttpClient httpClient = new org.eclipse.jetty.client.HttpClient(transport);
         WebSocketClient webSocketClient = new WebSocketClient(httpClient);
@@ -155,7 +136,7 @@ public class JettySpecificWebsocketIT extends AbstractJettyTestSupport {
 
         Object value = bundleContext.getServiceReference(HttpService.class).getProperty("org.osgi.service.http.port");
         int httpPort = Integer.parseInt((String)value);
-        URI destUri = new URI(String.format("ws://localhost:%d/websocketservlet", httpPort));
+        URI destUri = new URI(String.format("ws://localhost:%d/" + servletPath, httpPort));
 
         MyClientWebSocket clientWebSocket = new MyClientWebSocket();
         ClientUpgradeRequest request = new ClientUpgradeRequest();
