@@ -132,9 +132,7 @@ public class JettySpecificWebsocketIT extends AbstractJettyTestSupport {
         assertWebSocketResponse("websocketservletwhiteboard");
     }
 
-    // @Test
-    // This test is disabled because it fails with a NPE in the JettyWebSocketServletFactory
-    // java.lang.IllegalStateException: JettyServerFrameHandlerFactory not found
+    @Test
     public void testWebSocketServletHttpService() throws Exception {
         final JettyWebSocketServlet webSocketServlet = new JettyWebSocketServlet() {
             @Override

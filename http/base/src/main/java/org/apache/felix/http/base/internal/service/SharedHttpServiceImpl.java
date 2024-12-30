@@ -23,6 +23,7 @@ import java.util.Map;
 import org.apache.felix.http.base.internal.context.ExtServletContext;
 import org.apache.felix.http.base.internal.handler.HttpServiceServletHandler;
 import org.apache.felix.http.base.internal.handler.ServletHandler;
+import org.apache.felix.http.base.internal.logger.SystemLogger;
 import org.apache.felix.http.base.internal.registry.HandlerRegistry;
 import org.apache.felix.http.base.internal.runtime.ServletInfo;
 import org.apache.felix.http.jakartawrappers.ServletWrapper;
@@ -38,6 +39,7 @@ public final class SharedHttpServiceImpl
     private final HandlerRegistry handlerRegistry;
 
     private final Map<String, ServletHandler> aliasMap = new HashMap<>();
+    private Map<String, Object> attributesForSharedContext;
 
     /**
      * Create a new implementation
@@ -68,6 +70,9 @@ public final class SharedHttpServiceImpl
             @NotNull final ServletInfo servletInfo) throws javax.servlet.ServletException, NamespaceException
     {
         final ServletHandler handler = new HttpServiceServletHandler(httpContext, servletInfo, servlet);
+
+        // Track properties from shared context
+        setAttributes(httpContext);
 
         synchronized (this.aliasMap)
         {
@@ -155,4 +160,23 @@ public final class SharedHttpServiceImpl
 	{
 		return this.handlerRegistry;
 	}
+
+    public void setSharedContextAttributes(Map<String, Object> attributesForSharedContext) {
+        this.attributesForSharedContext = attributesForSharedContext;
+    }
+
+    /**
+     * Set the stored attributes on the servlet context.
+     * @param context the servlet context
+     */
+    private void setAttributes(ExtServletContext context) {
+        if (context != null) {
+            attributesForSharedContext.forEach((key, value) -> {
+                if (key != null && value != null) {
+                    SystemLogger.LOGGER.info("SharedHttpServiceImpl: Shared context found, setting stored attribute key: '{}', value: '{}'", key, value);
+                    context.setAttribute(key, value);
+                }
+            });
+        }
+    }
 }

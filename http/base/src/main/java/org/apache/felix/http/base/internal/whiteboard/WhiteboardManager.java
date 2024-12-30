@@ -416,7 +416,7 @@ public final class WhiteboardManager
         if (context != null) {
             attributesForSharedContext.forEach((key, value) -> {
                 if (key != null && value != null) {
-                    SystemLogger.LOGGER.info("Shared context found, setting stored attribute key: '{}', value: '{}'", key, value);
+                    SystemLogger.LOGGER.info("WhiteboardManager: Shared context found, setting stored attribute key: '{}', value: '{}'", key, value);
                     context.setAttribute(key, value);
                 }
             });
@@ -981,7 +981,7 @@ public final class WhiteboardManager
      * @param value attribute value
      */
     public void setAttributeSharedServletContext(String key, Object value) {
-        SystemLogger.LOGGER.info("Storing attribute for shared servlet context. Key '{}', value: '{}'", key, value);
+        SystemLogger.LOGGER.info("WhiteboardManager: Storing attribute for shared servlet context. Key '{}', value: '{}'", key, value);
         this.attributesForSharedContext.put(key, value);
     }
 }
