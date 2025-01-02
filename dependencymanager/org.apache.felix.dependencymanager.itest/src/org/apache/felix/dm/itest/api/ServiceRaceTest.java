@@ -227,7 +227,7 @@ public class ServiceRaceTest extends TestBase {
         m_threadPool.awaitQuiescence(5000, TimeUnit.MILLISECONDS);
 
         if (super.errorsLogged()) {
-            throw new IllegalStateException("Race test interrupted (some error occured, see previous logs)");
+            throw new IllegalStateException("Race test interrupted (some error occurred, see previous logs)");
         }
 
         debug("finished one test loop");

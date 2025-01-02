@@ -465,7 +465,6 @@ public class OsgiManager extends HttpServlet {
                 path = path.concat("/");
             }
             path = path.concat(holder.getDefaultPluginLabel());
-            response.setContentLength(0);
             response.sendRedirect(path);
             return;
         }

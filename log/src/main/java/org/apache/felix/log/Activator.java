@@ -159,7 +159,7 @@ public final class Activator implements BundleActivator
         try {
             m_configurationListener = new ConfigurationListenerImpl(context, m_log, m_loggerAdmin);
         } catch (Exception e) {
-            m_log.log(getClass().getName(), context.getBundle(), null, LogLevel.ERROR, "An error occured while setting up the configuration listener.", e);
+            m_log.log(getClass().getName(), context.getBundle(), null, LogLevel.ERROR, "An error occurred while setting up the configuration listener.", e);
         }
     }
 

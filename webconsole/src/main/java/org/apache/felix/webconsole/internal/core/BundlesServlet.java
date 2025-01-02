@@ -372,6 +372,7 @@ public class BundlesServlet extends AbstractOsgiManagerPlugin implements Invento
             if (req.getRequestURI().endsWith( "/install" )) {
                 // just send 200/OK, no content
                 resp.setContentLength( 0 );
+                resp.setStatus(200);
             } else {
                 // redirect to URL
                 resp.sendRedirect( req.getRequestURI() );

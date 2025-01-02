@@ -16,6 +16,6 @@
  * specific language governing permissions and limitations
  * under the License.
  */
-@org.osgi.annotation.versioning.Version("1.2.0")
-package org.apache.felix.http.javaxwrappers;
-
+package org.apache.felix.test;
+public class Dummy {
+}

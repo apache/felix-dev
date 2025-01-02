@@ -45,7 +45,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 public abstract class AbstractJettyTestSupport {
-    protected static final String JETTY_VERSION = "11.0.22";
+    protected static final String JETTY_VERSION = "11.0.24";
 
     protected final Logger logger = LoggerFactory.getLogger(getClass());
 

@@ -1,3 +1,8 @@
+Changes from 5.1.9 to 6.0.0
+---------------------------
+* Improvement
+    * [FELIX-6708] upgrade bnd to 7.0.0 (Java 17 or higher required, see https://github.com/bndtools/bnd/wiki/Changes-in-7.0.0)
+
 Changes from 5.1.7 to 5.1.8
 ---------------------------
 
