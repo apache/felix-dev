@@ -5,10 +5,12 @@ on:
     branches: [ "master" ]
     paths:
       - 'scr/**'
+      - 'http/**'
   pull_request:
     branches: [ "master" ]
     paths:
       - 'scr/**'
+      - 'http/**'
     
 permissions: {}
 
@@ -29,6 +31,8 @@ jobs:
         maven-version: 3.9.7
     - name: Felix SCR
       run: mvn -B -V -Dstyle.color=always --file scr/pom.xml clean verify
+    - name: Felix HTTP
+      run: mvn -B -V -Dstyle.color=always "-Dit.test=!MissingWebsocketDependenciesIT" --file http/pom.xml clean install verify
     - name: Upload Test Results
       if: always()
       uses: actions/upload-artifact@65462800fd760344b1a7b4382951275a0abb4808 # v4.3.3
