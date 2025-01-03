@@ -462,16 +462,14 @@ public class ComponentCommands implements ServiceTrackerCustomizer<Object, Servi
                         valueStr = Arrays.toString((byte[]) value);
                     else if (value instanceof short[])
                         valueStr = Arrays.toString((short[]) value);
-                    else if (value instanceof byte[])
-                        valueStr = Arrays.toString((byte[]) value);
                     else if (value instanceof char[])
                         valueStr = Arrays.toString((char[]) value);
                     else if (value instanceof boolean[])
                         valueStr = Arrays.toString((boolean[]) value);
                     else if (value instanceof float[])
-                        valueStr = Arrays.toString((boolean[]) value);
+                        valueStr = Arrays.toString((float[]) value);
                     else if (value instanceof double[])
-                        valueStr = Arrays.toString((boolean[]) value);
+                        valueStr = Arrays.toString((double[]) value);
                     else if (value instanceof Object[])
                         valueStr = Arrays.deepToString((Object[]) value);
                     else
