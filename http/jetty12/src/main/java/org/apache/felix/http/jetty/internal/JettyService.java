@@ -62,6 +62,7 @@ import org.eclipse.jetty.session.HouseKeeper;
 import org.eclipse.jetty.util.ssl.SslContextFactory;
 import org.eclipse.jetty.util.thread.QueuedThreadPool;
 import org.eclipse.jetty.util.thread.ThreadPool;
+import org.eclipse.jetty.util.thread.VirtualThreadPool;
 import org.osgi.framework.Bundle;
 import org.osgi.framework.BundleContext;
 import org.osgi.framework.Constants;
@@ -276,18 +277,28 @@ public final class JettyService
         {
 
             final int threadPoolMax = this.config.getThreadPoolMax();
-            if (threadPoolMax >= 0) {
+            if (!this.config.isUseVirtualThreads() && threadPoolMax >= 0) {
                 this.server = new Server(new QueuedThreadPool(threadPoolMax));
             } else if (this.config.isUseVirtualThreads()){
-                QueuedThreadPool threadPool = new QueuedThreadPool();
+                // See https://jetty.org/docs/jetty/12/programming-guide/arch/threads.html#thread-pool-virtual-threads
                 Method newVirtualThreadPerTaskExecutorMethod = null;
                 try {
                     newVirtualThreadPerTaskExecutorMethod = Executors.class.getMethod("newVirtualThreadPerTaskExecutor");
                 } catch (NoSuchMethodException e){
-                    throw new IllegalArgumentException("Virtual threads are only available in Java 21 or later, or via preview flags in Java 17-20");
+                    throw new IllegalArgumentException("Virtual threads are only available in Java 21 or later, or via preview flags in Java 19-20");
                 }
-                threadPool.setVirtualThreadsExecutor((Executor) newVirtualThreadPerTaskExecutorMethod.invoke(null));
-                this.server = new Server(threadPool);
+                if (threadPoolMax >= 0) {
+                    // Configurable, bounded, virtual thread executor
+                    VirtualThreadPool threadPool = new VirtualThreadPool();
+                    threadPool.setMaxThreads(threadPoolMax);
+                    this.server = new Server(threadPool);
+                } else {
+                    // Simple, unlimited, virtual thread Executor
+                    QueuedThreadPool threadPool = new QueuedThreadPool();
+                    final Executor virtualExecutor = (Executor) newVirtualThreadPerTaskExecutorMethod.invoke(null);
+                    threadPool.setVirtualThreadsExecutor(virtualExecutor);
+                    this.server = new Server(threadPool);
+                }
             } else {
                 this.server = new Server();
             }
@@ -402,6 +413,9 @@ public final class JettyService
                     ThreadPool.SizedThreadPool sizedThreadPool = (ThreadPool.SizedThreadPool) threadPool;
                     message.append("minThreads=").append(sizedThreadPool.getMinThreads()).append(",");
                     message.append("maxThreads=").append(sizedThreadPool.getMaxThreads()).append(",");
+                } else if (threadPool instanceof VirtualThreadPool) {
+                    VirtualThreadPool sizedThreadPool = (VirtualThreadPool) threadPool;
+                    message.append("maxVirtualThreads=").append(sizedThreadPool.getMaxThreads()).append(",");
                 }
                 Connector connector = this.server.getConnectors()[0];
                 if (connector instanceof ServerConnector) {
