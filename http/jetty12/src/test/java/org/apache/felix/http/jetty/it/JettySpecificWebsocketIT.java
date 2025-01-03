@@ -20,10 +20,12 @@ import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotNull;
 import static org.ops4j.pax.exam.CoreOptions.mavenBundle;
 import static org.ops4j.pax.exam.cm.ConfigurationAdminOptions.newConfiguration;
+import static org.osgi.service.servlet.whiteboard.HttpWhiteboardConstants.HTTP_WHITEBOARD_SERVLET_PATTERN;
 
 import java.io.IOException;
 import java.net.URI;
 import java.time.Duration;
+import java.util.Dictionary;
 import java.util.Hashtable;
 import java.util.Map;
 import java.util.concurrent.CompletableFuture;
@@ -35,10 +37,13 @@ import jakarta.servlet.ServletContext;
 import jakarta.servlet.ServletException;
 import jakarta.servlet.http.HttpServlet;
 
+import org.apache.felix.http.javaxwrappers.ServletWrapper;
 import org.awaitility.Awaitility;
 import org.eclipse.jetty.client.HttpClient;
 import org.eclipse.jetty.client.transport.HttpClientTransportOverHTTP;
 import org.eclipse.jetty.ee10.websocket.server.JettyWebSocketServerContainer;
+import org.eclipse.jetty.ee10.websocket.server.JettyWebSocketServlet;
+import org.eclipse.jetty.ee10.websocket.server.JettyWebSocketServletFactory;
 import org.eclipse.jetty.websocket.api.Callback;
 import org.eclipse.jetty.websocket.api.Session;
 import org.eclipse.jetty.websocket.api.annotations.OnWebSocketMessage;
@@ -54,7 +59,6 @@ import org.ops4j.pax.exam.spi.reactors.ExamReactorStrategy;
 import org.ops4j.pax.exam.spi.reactors.PerClass;
 import org.osgi.framework.BundleContext;
 import org.osgi.service.http.HttpService;
-import org.osgi.service.servlet.whiteboard.HttpWhiteboardConstants;
 
 /**
  *
@@ -65,6 +69,9 @@ public class JettySpecificWebsocketIT extends AbstractJettyTestSupport {
 
     @Inject
     protected BundleContext bundleContext;
+
+    @Inject
+    protected HttpService httpService;
 
     @Override
     protected Option[] additionalOptions() throws IOException {
@@ -100,14 +107,46 @@ public class JettySpecificWebsocketIT extends AbstractJettyTestSupport {
                 .asOption();
     }
 
-
     @Test
     public void testWebSocketConversation() throws Exception {
         assertNotNull(bundleContext);
         bundleContext.registerService(Servlet.class, new MyWebSocketInitServlet(), new Hashtable<>(Map.of(
-                HttpWhiteboardConstants.HTTP_WHITEBOARD_SERVLET_PATTERN, "/mywebsocket1"
+                HTTP_WHITEBOARD_SERVLET_PATTERN, "/mywebsocket1"
         )));
 
+        assertWebSocketResponse("mywebsocket1");
+    }
+
+    @Test
+    public void testWebSocketServletWhiteboard() throws Exception {
+        final JettyWebSocketServlet webSocketServlet = new JettyWebSocketServlet() {
+            @Override
+            protected void configure(JettyWebSocketServletFactory jettyWebSocketServletFactory) {
+                jettyWebSocketServletFactory.register(MyServerWebSocket.class);
+            }
+        };
+        final Dictionary<String, Object> props = new Hashtable<>();
+        props.put(HTTP_WHITEBOARD_SERVLET_PATTERN, "/websocketservletwhiteboard");
+        bundleContext.registerService(Servlet.class, webSocketServlet, props);
+
+        assertWebSocketResponse("websocketservletwhiteboard");
+    }
+
+    @Test
+    public void testWebSocketServletHttpService() throws Exception {
+        final JettyWebSocketServlet webSocketServlet = new JettyWebSocketServlet() {
+            @Override
+            protected void configure(JettyWebSocketServletFactory jettyWebSocketServletFactory) {
+                jettyWebSocketServletFactory.register(MyServerWebSocket.class);
+            }
+        };
+
+        httpService.registerServlet("/websocketservlethttpservice", new ServletWrapper(webSocketServlet), null, null);
+
+        assertWebSocketResponse("websocketservlethttpservice");
+    }
+
+    private void assertWebSocketResponse(String servletPath) throws Exception {
         HttpClientTransportOverHTTP transport = new HttpClientTransportOverHTTP();
         HttpClient httpClient = new org.eclipse.jetty.client.HttpClient(transport);
         WebSocketClient webSocketClient = new WebSocketClient(httpClient);
@@ -115,7 +154,7 @@ public class JettySpecificWebsocketIT extends AbstractJettyTestSupport {
 
         Object value = bundleContext.getServiceReference(HttpService.class).getProperty("org.osgi.service.http.port");
         int httpPort = Integer.parseInt((String)value);
-        URI destUri = new URI(String.format("ws://localhost:%d/mywebsocket1", httpPort));
+        URI destUri = new URI(String.format("ws://localhost:%d/%s", httpPort, servletPath));
 
         MyClientWebSocket clientWebSocket = new MyClientWebSocket();
         ClientUpgradeRequest request = new ClientUpgradeRequest();
