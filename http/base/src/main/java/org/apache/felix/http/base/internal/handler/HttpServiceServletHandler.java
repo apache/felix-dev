@@ -38,7 +38,7 @@ public final class HttpServiceServletHandler extends ServletHandler
             final ServletInfo servletInfo,
             final javax.servlet.Servlet servlet)
     {
-        this(HttpServiceFactory.HTTP_SERVICE_CONTEXT_SERVICE_ID, context, servletInfo, ServletWrapper.getRegisteredServlet(servlet));
+        this(HttpServiceFactory.HTTP_SERVICE_CONTEXT_SERVICE_ID, context, servletInfo, new ServletWrapper(servlet));
     }
 
     /**

@@ -188,10 +188,10 @@ public class ConfigurationListenerImpl {
             }
             catch (IllegalAccessException | IllegalArgumentException | InvocationTargetException e) {
                 if (e instanceof InvocationTargetException) {
-                    m_log.log(getClass().getName(), m_context.getBundle(), null, LogLevel.ERROR, "An error occured reflecting on ConfigurationAdmin.", ((InvocationTargetException)e).getTargetException());
+                    m_log.log(getClass().getName(), m_context.getBundle(), null, LogLevel.ERROR, "An error occurred reflecting on ConfigurationAdmin.", ((InvocationTargetException)e).getTargetException());
                 }
                 else {
-                    m_log.log(getClass().getName(), m_context.getBundle(), null, LogLevel.ERROR, "An error occured reflecting on ConfigurationAdmin.", e);
+                    m_log.log(getClass().getName(), m_context.getBundle(), null, LogLevel.ERROR, "An error occurred reflecting on ConfigurationAdmin.", e);
                 }
             }
             return Collections.emptyList();

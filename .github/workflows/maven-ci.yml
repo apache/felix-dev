@@ -5,10 +5,14 @@ on:
     branches: [ "master" ]
     paths:
       - 'scr/**'
+      - 'http/**'
+      - 'tools/maven-bundle-plugin/**'
   pull_request:
     branches: [ "master" ]
     paths:
       - 'scr/**'
+      - 'http/**'
+      - 'tools/maven-bundle-plugin/**'
     
 permissions: {}
 
@@ -27,8 +31,27 @@ jobs:
       uses: stCarolas/setup-maven@d6af6abeda15e98926a57b5aa970a96bb37f97d1 # v5
       with:
         maven-version: 3.9.7
+    - name: Check which subproject changed and build affected ones
+      uses: dorny/paths-filter@v3
+      id: changes
+      with:
+        filters: |
+          scr:
+            - 'scr/**'
+          http:
+            - 'http/**'
+          maven-bundle-plugin:
+            - 'tools/maven-bundle-plugin/**'
+
     - name: Felix SCR
+      if: steps.changes.outputs.scr == 'true'
       run: mvn -B -V -Dstyle.color=always --file scr/pom.xml clean verify
+    - name: Felix HTTP 
+      if: steps.changes.outputs.http == 'true'
+      run: mvn -B -V -Dstyle.color=always "-Dit.test=!MissingWebsocketDependenciesIT" --file http/pom.xml clean install verify
+    - name: Felix Maven bundle plugin 
+      if: steps.changes.outputs.maven-bundle-plugin == 'true'
+      run: mvn -B -V -Dstyle.color=always --file tools/maven-bundle-plugin/pom.xml clean install verify
     - name: Upload Test Results
       if: always()
       uses: actions/upload-artifact@65462800fd760344b1a7b4382951275a0abb4808 # v4.3.3

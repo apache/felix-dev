@@ -39,7 +39,7 @@
     </scm>
 
     <properties>
-        <jetty.version>12.0.15</jetty.version>
+        <jetty.version>12.0.16</jetty.version>
     </properties>
 
     <build>
@@ -47,7 +47,7 @@
             <plugin>
                 <groupId>org.apache.felix</groupId>
                 <artifactId>maven-bundle-plugin</artifactId>
-                <version>5.1.9</version>
+                <version>6.0.0</version>
                 <extensions>true</extensions>
                 <executions>
                     <execution>
@@ -96,7 +96,7 @@
         <dependency>
             <groupId>org.apache.felix</groupId>
             <artifactId>org.apache.felix.http.jetty12</artifactId>
-            <version>1.0.5-SNAPSHOT</version>
+            <version>1.0.20-SNAPSHOT</version>
             <scope>provided</scope>
         </dependency>
         <dependency>

@@ -165,7 +165,7 @@ public class InstanceHandler extends CompositeHandler implements InstanceStateLi
         } catch (MissingHandlerException e) {
             error("The instance creation has failed, at least one handler is missing", e);
         } catch (ConfigurationException e) {
-            error("The instance creation has failed, an error during the configuration has occured", e);
+            error("The instance creation has failed, an error during the configuration has occurred", e);
         }
     }
 
