@@ -114,9 +114,7 @@ final class ServletResponseWrapper extends HttpServletResponseWrapper
                                 errorResolution.getContext(),
                                 requestInfo,
                                 DispatcherType.ERROR,
-                                false,
-                                null,
-                                null);
+                                false);
                         final FilterChain filterChain = new InvocationChain(errorResolution, filterHandlers);
                         filterChain.doFilter(reqWrapper, this);
 

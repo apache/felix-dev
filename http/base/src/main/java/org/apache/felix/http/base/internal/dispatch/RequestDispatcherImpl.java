@@ -67,13 +67,24 @@ public final class RequestDispatcherImpl implements RequestDispatcher
 
         try
         {
-            final ServletRequestWrapper req = new ServletRequestWrapper((HttpServletRequest) request,
-                    this.resolution.handler.getContext(),
-                    this.requestInfo,
-                    DispatcherType.FORWARD,
-                    this.resolution.handler.getServletInfo().isAsyncSupported(),
-                    this.resolution.handler.getMultipartConfig(),
-                    this.resolution.handler.getMultipartSecurityContext());
+            MultipartConfig multipartConfig = this.resolution.handler.getMultipartConfig();
+            ServletRequestWrapper req;
+			if (multipartConfig == null) {
+				req = new ServletRequestWrapper((HttpServletRequest) request,
+						this.resolution.handler.getContext(),
+						this.requestInfo,
+						DispatcherType.FORWARD,
+						this.resolution.handler.getServletInfo().isAsyncSupported());
+
+			} else {
+				req = new ServletRequestMultipartWrapper((HttpServletRequest) request,
+						this.resolution.handler.getContext(),
+						this.requestInfo,
+						DispatcherType.FORWARD,
+						this.resolution.handler.getServletInfo().isAsyncSupported(),
+						multipartConfig,
+						this.resolution.handler.getMultipartSecurityContext());
+			}
             final String requestURI = UriUtils.concat(this.requestInfo.servletPath, this.requestInfo.pathInfo);
             final FilterHandler[] filterHandlers = this.resolution.handlerRegistry.getFilterHandlers(this.resolution.handler, DispatcherType.FORWARD, requestURI);
 
@@ -104,13 +115,25 @@ public final class RequestDispatcherImpl implements RequestDispatcher
     @Override
     public void include(ServletRequest request, ServletResponse response) throws ServletException, IOException
     {
-        final ServletRequestWrapper req = new ServletRequestWrapper((HttpServletRequest) request,
-                this.resolution.handler.getContext(),
-                this.requestInfo,
-                DispatcherType.INCLUDE,
-                this.resolution.handler.getServletInfo().isAsyncSupported(),
-                this.resolution.handler.getMultipartConfig(),
-                this.resolution.handler.getMultipartSecurityContext());
+        MultipartConfig multipartConfig = this.resolution.handler.getMultipartConfig();
+        ServletRequestWrapper req;
+		if (multipartConfig == null) {
+			req = new ServletRequestWrapper((HttpServletRequest) request,
+					this.resolution.handler.getContext(),
+					this.requestInfo,
+					DispatcherType.INCLUDE,
+					this.resolution.handler.getServletInfo().isAsyncSupported());
+		} else {
+			req = new ServletRequestMultipartWrapper((HttpServletRequest) request,
+					this.resolution.handler.getContext(),
+					this.requestInfo,
+					DispatcherType.INCLUDE,
+					this.resolution.handler.getServletInfo().isAsyncSupported(),
+					multipartConfig,
+					this.resolution.handler.getMultipartSecurityContext());
+
+		}
+
         final String requestURI = UriUtils.concat(this.requestInfo.servletPath, this.requestInfo.pathInfo);
         final FilterHandler[] filterHandlers = this.resolution.handlerRegistry.getFilterHandlers(this.resolution.handler, DispatcherType.INCLUDE, requestURI);
 

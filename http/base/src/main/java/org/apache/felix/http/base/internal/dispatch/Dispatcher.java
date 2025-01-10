@@ -137,10 +137,24 @@ public final class Dispatcher
 		        final ExtServletContext servletContext = pr.handler.getContext();
 		        final RequestInfo requestInfo = new RequestInfo(pr.servletPath, pr.pathInfo, null, req.getRequestURI(),
 		                pr.handler.getName(), pr.matchedPattern, pr.matchValue, pr.match, false);
-		        final HttpServletRequest wrappedRequest = new ServletRequestWrapper(req, servletContext, requestInfo, null,
-		                pr.handler.getServletInfo().isAsyncSupported(),
-		                pr.handler.getMultipartConfig(),
-		                pr.handler.getMultipartSecurityContext());
+		        
+		        MultipartConfig multipartConfig = pr.handler.getMultipartConfig();
+		        HttpServletRequest wrappedRequest;
+		        if(multipartConfig==null){
+		        	wrappedRequest = new ServletRequestWrapper(req,
+		        			servletContext,
+		        			requestInfo,
+		        			null,
+		        			pr.handler.getServletInfo().isAsyncSupported());		        	
+		        }else {
+		        	wrappedRequest = new ServletRequestMultipartWrapper(req,
+		        			servletContext,
+		        			requestInfo,
+		        			null,
+		        			pr.handler.getServletInfo().isAsyncSupported(),
+		        			multipartConfig,
+		        			pr.handler.getMultipartSecurityContext());
+				}
 		        final FilterHandler[] filterHandlers = handlerRegistry.getFilters(pr, req.getDispatcherType(), pr.requestURI);
 
 		        try
