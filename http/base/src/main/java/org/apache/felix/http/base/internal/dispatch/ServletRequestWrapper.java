@@ -384,12 +384,12 @@ class ServletRequestWrapper extends HttpServletRequestWrapper
     @Override
     @SuppressWarnings({ "unchecked", "rawtypes" })
     public Collection<Part> getParts() throws IOException, ServletException {
-        return null;
+        throw new ServletException("No Multipart-Support available");
     }
 
     @Override
     public Part getPart(String name) throws IOException, ServletException {
-        return null;
+        throw new ServletException("No Multipart-Support available");
     }
 
     @Override
