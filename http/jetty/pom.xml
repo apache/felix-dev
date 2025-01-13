@@ -465,11 +465,13 @@
             <groupId>org.eclipse.jetty.websocket</groupId>
             <artifactId>websocket-jakarta-server</artifactId>
             <version>${jetty.version}</version>
+            <optional>true</optional>
         </dependency>
         <dependency>
             <groupId>org.eclipse.jetty.websocket</groupId>
             <artifactId>websocket-jetty-server</artifactId>
             <version>${jetty.version}</version>
+            <optional>true</optional>
         </dependency>
         <dependency>
             <groupId>org.osgi</groupId>
