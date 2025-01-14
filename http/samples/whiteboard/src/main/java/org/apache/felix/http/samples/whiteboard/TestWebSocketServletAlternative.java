@@ -19,6 +19,7 @@ package org.apache.felix.http.samples.whiteboard;
 import jakarta.servlet.ServletConfig;
 import jakarta.servlet.ServletException;
 
+import org.eclipse.jetty.ee10.websocket.server.JettyWebSocketServlet;
 import org.eclipse.jetty.ee10.websocket.server.JettyWebSocketServletFactory;
 import org.eclipse.jetty.websocket.api.Callback;
 import org.eclipse.jetty.websocket.api.Session;
@@ -30,10 +31,10 @@ import org.eclipse.jetty.websocket.api.annotations.WebSocket;
 
 /**
  * Example of a WebSocket servlet that uses the Jetty WebSocket API, and is registered by extending JettyWebSocketServlet.
- * It does respect the path this servlet is registered to, but requires a further workaround. See FelixJettyWebSocketServlet.
+ * It does respect the path this servlet is registered to.
  * Requires setting `org.apache.felix.jetty.websocket.enable=true`.
  */
-public class TestWebSocketServletAlternative extends FelixJettyWebSocketServlet {
+public class TestWebSocketServletAlternative extends JettyWebSocketServlet {
     private final String name;
 
     public TestWebSocketServletAlternative(String name) {
