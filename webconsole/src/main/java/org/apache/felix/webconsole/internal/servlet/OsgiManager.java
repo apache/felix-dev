@@ -249,11 +249,6 @@ public class OsgiManager extends HttpServlet {
         brandingTracker = new BrandingServiceTracker(this);
         brandingTracker.open();
 
-        this.requiredSecurityProviders = splitCommaSeparatedString(bundleContext.getProperty(FRAMEWORK_PROP_SECURITY_PROVIDERS));
-
-        // add support for pluggable security
-        securityProviderTracker = new ServiceTracker<>(bundleContext, SecurityProvider.class, new UpdateDependenciesStateCustomizer());
-        securityProviderTracker.open();
 
         // load the default configuration from the framework
         this.defaultConfiguration = new HashMap<>();
@@ -274,6 +269,12 @@ public class OsgiManager extends HttpServlet {
         
         // configure and start listening for configuration
         updateConfiguration(null);
+
+        this.requiredSecurityProviders = splitCommaSeparatedString(bundleContext.getProperty(FRAMEWORK_PROP_SECURITY_PROVIDERS));
+
+        // add support for pluggable security
+        securityProviderTracker = new ServiceTracker<>(bundleContext, SecurityProvider.class, new UpdateDependenciesStateCustomizer());
+        securityProviderTracker.open();
 
         // register managed service as a service factory
         this.configurationListener = bundleContext.registerService( "org.osgi.service.cm.ManagedService",
