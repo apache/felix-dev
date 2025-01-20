@@ -43,11 +43,11 @@
         <module>bridge</module>
         <module>inventoryprinter</module>
         <module>itest</module>
+        <module>servlet-api</module>
         <module>jetty</module>
         <module>jetty12</module>
         <module>proxy</module>
         <module>samples/whiteboard</module>
-        <module>servlet-api</module>
         <module>sslfilter</module>
         <module>webconsoleplugin</module>
         <module>wrappers</module>
