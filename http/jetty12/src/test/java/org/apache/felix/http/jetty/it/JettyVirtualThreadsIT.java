@@ -64,10 +64,12 @@ public class JettyVirtualThreadsIT extends AbstractJettyTestSupport {
                 mavenBundle().groupId("org.eclipse.jetty").artifactId("jetty-ee").version(jettyVersion),
                 mavenBundle().groupId("org.eclipse.jetty.ee10").artifactId("jetty-ee10-servlet").version(jettyVersion),
                 mavenBundle().groupId("org.eclipse.jetty").artifactId("jetty-xml").version(jettyVersion),
+                mavenBundle().groupId("org.eclipse.jetty.compression").artifactId("jetty-compression-common").version(jettyVersion),
 
                 // additional bundles for the client side
                 mavenBundle().groupId("org.eclipse.jetty").artifactId("jetty-alpn-client").version(jettyVersion),
-                mavenBundle().groupId("org.eclipse.jetty").artifactId("jetty-client").version(jettyVersion)
+                mavenBundle().groupId("org.eclipse.jetty").artifactId("jetty-client").version(jettyVersion),
+                mavenBundle().groupId("org.eclipse.jetty.compression").artifactId("jetty-compression-gzip").version(jettyVersion)
         };
     }
 
