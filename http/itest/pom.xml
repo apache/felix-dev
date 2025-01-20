@@ -44,8 +44,8 @@
             <id>jetty12</id>
             <properties>
                 <felix.java.version>17</felix.java.version>
-                <http.servlet.api.version>3.0.0</http.servlet.api.version>
-                <http.jetty.version>1.0.20-SNAPSHOT</http.jetty.version>
+                <http.servlet.api.version>3.1.0-SNAPSHOT</http.servlet.api.version>
+                <http.jetty.version>1.1.0-SNAPSHOT</http.jetty.version>
                 <http.jetty.id>org.apache.felix.http.jetty12</http.jetty.id>
             </properties>
         </profile>

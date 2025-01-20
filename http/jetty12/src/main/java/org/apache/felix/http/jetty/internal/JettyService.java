@@ -38,10 +38,10 @@ import java.util.concurrent.Executors;
 import org.apache.felix.http.base.internal.HttpServiceController;
 import org.apache.felix.http.base.internal.logger.SystemLogger;
 import org.eclipse.jetty.alpn.server.ALPNServerConnectionFactory;
-import org.eclipse.jetty.ee10.servlet.ServletContextHandler;
-import org.eclipse.jetty.ee10.servlet.ServletHolder;
-import org.eclipse.jetty.ee10.servlet.SessionHandler;
-import org.eclipse.jetty.ee10.servlet.ServletHandler;
+import org.eclipse.jetty.ee11.servlet.ServletContextHandler;
+import org.eclipse.jetty.ee11.servlet.ServletHolder;
+import org.eclipse.jetty.ee11.servlet.SessionHandler;
+import org.eclipse.jetty.ee11.servlet.ServletHandler;
 import org.eclipse.jetty.http.HttpVersion;
 import org.eclipse.jetty.http.UriCompliance;
 import org.eclipse.jetty.http2.server.HTTP2ServerConnectionFactory;
@@ -555,32 +555,32 @@ public final class JettyService
      * @param handler the sevlet context handler to initialize
      */
     private void maybeInitializeJakartaWebsocket(ServletContextHandler handler) {
-        if (isClassNameVisible("org.eclipse.jetty.ee10.websocket.jakarta.server.config.JakartaWebSocketServletContainerInitializer")) {
+        if (isClassNameVisible("org.eclipse.jetty.ee11.websocket.jakarta.server.config.JakartaWebSocketServletContainerInitializer")) {
             // Ensure that JakartaWebSocketServletContainerInitializer is initialized,
             // to setup the ServerContainer for this web application context.
-            org.eclipse.jetty.ee10.websocket.jakarta.server.config.JakartaWebSocketServletContainerInitializer.configure(handler, null);
-            SystemLogger.LOGGER.info("Jakarta WebSocket EE10 servlet container initialized");
+            org.eclipse.jetty.ee11.websocket.jakarta.server.config.JakartaWebSocketServletContainerInitializer.configure(handler, null);
+            SystemLogger.LOGGER.info("Jakarta WebSocket ee11 servlet container initialized");
         } else {
-            SystemLogger.LOGGER.warn("Failed to initialize jakarta EE10 standard websocket support since the initializer class was not found. "
-                    + "Check if the jetty-ee10-websocket-jakarta-server bundle is deployed.");
+            SystemLogger.LOGGER.warn("Failed to initialize jakarta ee11 standard websocket support since the initializer class was not found. "
+                    + "Check if the jetty-ee11-websocket-jakarta-server bundle is deployed.");
         }
     }
 
     /**
-     * Initialize the jetty EE10 websocket support for the servlet context handler.
+     * Initialize the jetty ee11 websocket support for the servlet context handler.
      * If the optional initializer class is not present then a warning will be logged.
      *
      * @param handler the sevlet context handler to initialize
      */
     private void maybeInitializeJettyWebsocket(ServletContextHandler handler) {
-        if (isClassNameVisible("org.eclipse.jetty.ee10.websocket.server.config.JettyWebSocketServletContainerInitializer")) {
+        if (isClassNameVisible("org.eclipse.jetty.ee11.websocket.server.config.JettyWebSocketServletContainerInitializer")) {
             // Ensure that JettyWebSocketServletContainerInitializer is initialized,
             // to setup the JettyWebSocketServerContainer for this web application context.
-            org.eclipse.jetty.ee10.websocket.server.config.JettyWebSocketServletContainerInitializer.configure(handler, null);
-            SystemLogger.LOGGER.info("Jetty WebSocket EE10 servlet container initialized");
+            org.eclipse.jetty.ee11.websocket.server.config.JettyWebSocketServletContainerInitializer.configure(handler, null);
+            SystemLogger.LOGGER.info("Jetty WebSocket ee11 servlet container initialized");
         } else {
-            SystemLogger.LOGGER.warn("Failed to initialize jetty EE10 specific websocket support since the initializer class was not found. "
-                    + "Check if the jetty-ee10-websocket-jetty-server bundle is deployed.");
+            SystemLogger.LOGGER.warn("Failed to initialize jetty ee11 specific websocket support since the initializer class was not found. "
+                    + "Check if the jetty-ee11-websocket-jetty-server bundle is deployed.");
         }
     }
 
@@ -593,13 +593,13 @@ public final class JettyService
         // when the server is started, retrieve the container attribute and
         // set it on the shared servlet context once available
         if (this.config.isUseJettyWebsocket() &&
-                isClassNameVisible("org.eclipse.jetty.ee10.websocket.server.config.JettyWebSocketServletContainerInitializer")) {
-            String attribute = org.eclipse.jetty.ee10.websocket.server.JettyWebSocketServerContainer.JETTY_WEBSOCKET_CONTAINER_ATTRIBUTE;
+                isClassNameVisible("org.eclipse.jetty.ee11.websocket.server.config.JettyWebSocketServletContainerInitializer")) {
+            String attribute = org.eclipse.jetty.ee11.websocket.server.JettyWebSocketServerContainer.JETTY_WEBSOCKET_CONTAINER_ATTRIBUTE;
             this.controller.setAttributeSharedServletContext(attribute, context.getServletContext().getAttribute(attribute));
         }
         if (this.config.isUseJakartaWebsocket() &&
-                isClassNameVisible("org.eclipse.jetty.ee10.websocket.jakarta.server.config.JakartaWebSocketServletContainerInitializer")) {
-            String attribute = org.eclipse.jetty.ee10.websocket.jakarta.server.config.JakartaWebSocketServletContainerInitializer.ATTR_JAKARTA_SERVER_CONTAINER;
+                isClassNameVisible("org.eclipse.jetty.ee11.websocket.jakarta.server.config.JakartaWebSocketServletContainerInitializer")) {
+            String attribute = org.eclipse.jetty.ee11.websocket.jakarta.server.config.JakartaWebSocketServletContainerInitializer.ATTR_JAKARTA_SERVER_CONTAINER;
             this.controller.setAttributeSharedServletContext(attribute, context.getServletContext().getAttribute(attribute));
         }
     }

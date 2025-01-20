@@ -75,9 +75,9 @@
 
                                     if (artifact.getArtifactHandler().isAddedToClasspath() && !org.apache.maven.artifact.Artifact.SCOPE_TEST.equals( artifact.getScope() )
                                             && !"org.eclipse.jetty.websocket".equals(artifact.getGroupId()) // skip the optional websocket artifacts
-                                            && !"org.eclipse.jetty.ee10.websocket".equals(artifact.getGroupId()) // skip the optional websocket artifacts
-                                            && !"jetty-annotations".equals(artifact.getArtifactId()) // skip the transitive artifacts from the optional websocket artifacts
-                                            && !"jetty-plus".equals(artifact.getArtifactId())
+                                            && !"org.eclipse.jetty.ee11.websocket".equals(artifact.getGroupId()) // skip the optional websocket artifacts
+                                            && !"jetty-ee11-annotations".equals(artifact.getArtifactId()) // skip the transitive artifacts from the optional websocket artifacts
+                                            && !"jetty-ee11-plus".equals(artifact.getArtifactId())
                                             && !"jetty-webapp".equals(artifact.getArtifactId())
                                             && !"jetty-ee".equals(artifact.getArtifactId())) {
                                         def jar;
@@ -184,8 +184,8 @@
                             org.eclipse.jetty.server.*,
                             org.eclipse.jetty.util.*,
                             org.eclipse.jetty.ee.*,
-                            !org.eclipse.jetty.ee10.websocket.*,
-                            org.eclipse.jetty.ee10.servlet.*,
+                            !org.eclipse.jetty.ee11.websocket.*,
+                            org.eclipse.jetty.ee11.servlet.*,
                             org.eclipse.jetty.compression.*,
                             org.apache.felix.http.jetty,
                             org.apache.felix.http.jakartawrappers,
@@ -374,9 +374,9 @@
                                     org.eclipse.jetty.server.*,
                                     org.eclipse.jetty.util.*,
                                     org.eclipse.jetty.ee.*,
-                                    org.eclipse.jetty.ee10.servlet.*,
-                                    !org.eclipse.jetty.ee10.websocket.jakarta.*,
-                                    org.eclipse.jetty.ee10.websocket.*,
+                                    org.eclipse.jetty.ee11.servlet.*,
+                                    !org.eclipse.jetty.ee11.websocket.jakarta.*,
+                                    org.eclipse.jetty.ee11.websocket.*,
                                     org.eclipse.jetty.websocket.*,
                                     org.eclipse.jetty.compression.*,
                                     org.apache.felix.http.jetty,
@@ -482,10 +482,10 @@
                                     org.eclipse.jetty.server.*,
                                     org.eclipse.jetty.util.*,
                                     org.eclipse.jetty.ee.*,
-                                    !org.eclipse.jetty.ee10.websocket.server.*,
-                                    !org.eclipse.jetty.ee10.websocket.servlet.*,
-                                    org.eclipse.jetty.ee10.websocket.jakarta.*,
-                                    org.eclipse.jetty.ee10.servlet.*,
+                                    !org.eclipse.jetty.ee11.websocket.server.*,
+                                    !org.eclipse.jetty.ee11.websocket.servlet.*,
+                                    org.eclipse.jetty.ee11.websocket.jakarta.*,
+                                    org.eclipse.jetty.ee11.servlet.*,
                                     org.eclipse.jetty.websocket.*,
                                     org.eclipse.jetty.compression.*,
                                     org.apache.felix.http.jetty,
@@ -634,8 +634,8 @@
             <scope>provided</scope>
         </dependency>
         <dependency>
-            <groupId>org.eclipse.jetty.ee10</groupId>
-            <artifactId>jetty-ee10-servlet</artifactId>
+            <groupId>org.eclipse.jetty.ee11</groupId>
+            <artifactId>jetty-ee11-servlet</artifactId>
             <version>${jetty.version}</version>
         </dependency>
         <dependency>
@@ -684,14 +684,14 @@
             <version>${jetty.version}</version>
         </dependency>
         <dependency>
-            <groupId>org.eclipse.jetty.ee10.websocket</groupId>
-            <artifactId>jetty-ee10-websocket-jakarta-server</artifactId>
+            <groupId>org.eclipse.jetty.ee11.websocket</groupId>
+            <artifactId>jetty-ee11-websocket-jakarta-server</artifactId>
             <version>${jetty.version}</version>
             <optional>true</optional>
         </dependency>
         <dependency>
-            <groupId>org.eclipse.jetty.ee10.websocket</groupId>
-            <artifactId>jetty-ee10-websocket-jetty-server</artifactId>
+            <groupId>org.eclipse.jetty.ee11.websocket</groupId>
+            <artifactId>jetty-ee11-websocket-jetty-server</artifactId>
             <version>${jetty.version}</version>
             <optional>true</optional>
         </dependency>
@@ -737,7 +737,7 @@
         <dependency>
             <groupId>org.apache.felix</groupId>
             <artifactId>org.apache.felix.http.base</artifactId>
-            <version>5.1.9-SNAPSHOT</version>
+            <version>6.0.0-SNAPSHOT</version>
         </dependency>
         <dependency>
             <groupId>org.apache.felix</groupId>

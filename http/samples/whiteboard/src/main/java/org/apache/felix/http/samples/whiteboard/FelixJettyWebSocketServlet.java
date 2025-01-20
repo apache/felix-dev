@@ -24,7 +24,7 @@ import jakarta.servlet.ServletException;
 import jakarta.servlet.ServletRequest;
 import jakarta.servlet.ServletResponse;
 
-import org.eclipse.jetty.ee10.websocket.server.JettyWebSocketServlet;
+import org.eclipse.jetty.ee11.websocket.server.JettyWebSocketServlet;
 
 /**
  * Abstract class that hides all Jetty Websocket specifics and provides a way for the developer to focus on the actual WebSocket implementation.

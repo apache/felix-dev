@@ -38,7 +38,7 @@ import jakarta.servlet.http.HttpServlet;
 import org.awaitility.Awaitility;
 import org.eclipse.jetty.client.HttpClient;
 import org.eclipse.jetty.client.transport.HttpClientTransportOverHTTP;
-import org.eclipse.jetty.ee10.websocket.server.JettyWebSocketServerContainer;
+import org.eclipse.jetty.ee11.websocket.server.JettyWebSocketServerContainer;
 import org.eclipse.jetty.websocket.api.Callback;
 import org.eclipse.jetty.websocket.api.Session;
 import org.eclipse.jetty.websocket.api.annotations.OnWebSocketMessage;
@@ -73,14 +73,14 @@ public class JettySpecificWebsocketIT extends AbstractJettyTestSupport {
                 spifly(),
 
                 // bundles for the server side
-                mavenBundle().groupId("org.eclipse.jetty.ee10").artifactId("jetty-ee10-webapp").version(jettyVersion),
+                mavenBundle().groupId("org.eclipse.jetty.ee11").artifactId("jetty-ee11-webapp").version(jettyVersion),
                 mavenBundle().groupId("org.eclipse.jetty.websocket").artifactId("jetty-websocket-core-common").version(jettyVersion),
                 mavenBundle().groupId("org.eclipse.jetty.websocket").artifactId("jetty-websocket-core-server").version(jettyVersion),
                 mavenBundle().groupId("org.eclipse.jetty.websocket").artifactId("jetty-websocket-jetty-api").version(jettyVersion),
                 mavenBundle().groupId("org.eclipse.jetty.websocket").artifactId("jetty-websocket-jetty-common").version(jettyVersion),
                 mavenBundle().groupId("org.eclipse.jetty.websocket").artifactId("jetty-websocket-jetty-server").version(jettyVersion),
-                mavenBundle().groupId("org.eclipse.jetty.ee10.websocket").artifactId("jetty-ee10-websocket-servlet").version(jettyVersion),
-                mavenBundle().groupId("org.eclipse.jetty.ee10.websocket").artifactId("jetty-ee10-websocket-jetty-server").version(jettyVersion),
+                mavenBundle().groupId("org.eclipse.jetty.ee11.websocket").artifactId("jetty-ee11-websocket-servlet").version(jettyVersion),
+                mavenBundle().groupId("org.eclipse.jetty.ee11.websocket").artifactId("jetty-ee11-websocket-jetty-server").version(jettyVersion),
                 mavenBundle().groupId("org.eclipse.jetty").artifactId("jetty-xml").version(jettyVersion),
                 mavenBundle().groupId("org.eclipse.jetty").artifactId("jetty-ee").version(jettyVersion),
                 mavenBundle().groupId("org.eclipse.jetty.compression").artifactId("jetty-compression-common").version(jettyVersion),
