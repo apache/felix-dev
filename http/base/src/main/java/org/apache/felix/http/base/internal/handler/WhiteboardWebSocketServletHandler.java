@@ -53,9 +53,7 @@ public final class WhiteboardWebSocketServletHandler extends WhiteboardServletHa
 
     @Override
     public int init() {
-        SystemLogger.LOGGER.error("WhiteboardWebSocketServletHandler.init()");
         if (webSocketHandler.shouldInit()) {
-            SystemLogger.LOGGER.error("WhiteboardWebSocketServletHandler.init - called()");
             return super.init();
         }
         // do nothing, delay init until first service call
@@ -64,16 +62,13 @@ public final class WhiteboardWebSocketServletHandler extends WhiteboardServletHa
 
     @Override
     public void handle(ServletRequest req, ServletResponse res) throws ServletException, IOException {
-        SystemLogger.LOGGER.error("WhiteboardWebSocketServletHandler.handle()");
         this.webSocketHandler.lazyInit();
         super.handle(req, res);
     }
 
     @Override
     public boolean destroy() {
-        SystemLogger.LOGGER.error("WhiteboardWebSocketServletHandler.destroy()");
         if (webSocketHandler.shouldDestroy()) {
-            SystemLogger.LOGGER.error("WhiteboardWebSocketServletHandler.destroy() - called");
             return super.destroy();
         }
         return false;

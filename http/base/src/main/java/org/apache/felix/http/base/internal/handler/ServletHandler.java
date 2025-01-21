@@ -19,11 +19,6 @@ package org.apache.felix.http.base.internal.handler;
 import java.io.File;
 import java.io.IOException;
 
-import jakarta.servlet.Servlet;
-import jakarta.servlet.ServletException;
-import jakarta.servlet.ServletRequest;
-import jakarta.servlet.ServletResponse;
-
 import org.apache.felix.http.base.internal.context.ExtServletContext;
 import org.apache.felix.http.base.internal.dispatch.MultipartConfig;
 import org.apache.felix.http.base.internal.logger.SystemLogger;
@@ -31,6 +26,11 @@ import org.apache.felix.http.base.internal.runtime.ServletInfo;
 import org.apache.felix.http.jakartawrappers.ServletWrapper;
 import org.osgi.framework.Bundle;
 import org.osgi.service.servlet.runtime.dto.DTOConstants;
+
+import jakarta.servlet.Servlet;
+import jakarta.servlet.ServletException;
+import jakarta.servlet.ServletRequest;
+import jakarta.servlet.ServletResponse;
 
 /**
  * The servlet handler handles the initialization and destruction of
@@ -177,7 +177,8 @@ public abstract class ServletHandler implements Comparable<ServletHandler>
         {
             servlet.init(new ServletConfigImpl(getName(), getContext(), getServletInfo().getInitParameters()));
         }
-        catch (final Exception e) {
+        catch (final Exception e)
+        {
             SystemLogger.LOGGER.error(SystemLogger.formatMessage(this.getServletInfo().getServiceReference(),
                             "Error during calling init() on servlet ".concat(this.servletInfo.getClassName(this.servlet))),
                     e);
