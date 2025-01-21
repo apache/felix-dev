@@ -16,16 +16,20 @@
  */
 package org.apache.felix.http.base.internal.service;
 
+import static org.apache.felix.http.base.internal.util.WebSocketUtil.isJettyWebSocketServlet;
+
 import java.util.HashMap;
 import java.util.Iterator;
 import java.util.Map;
 
 import org.apache.felix.http.base.internal.context.ExtServletContext;
 import org.apache.felix.http.base.internal.handler.HttpServiceServletHandler;
+import org.apache.felix.http.base.internal.handler.HttpServiceWebSocketServletHandler;
 import org.apache.felix.http.base.internal.handler.ServletHandler;
 import org.apache.felix.http.base.internal.logger.SystemLogger;
 import org.apache.felix.http.base.internal.registry.HandlerRegistry;
 import org.apache.felix.http.base.internal.runtime.ServletInfo;
+import org.apache.felix.http.base.internal.util.WebSocketUtil;
 import org.apache.felix.http.jakartawrappers.ServletWrapper;
 import org.jetbrains.annotations.NotNull;
 import org.osgi.service.http.NamespaceException;
@@ -69,7 +73,7 @@ public final class SharedHttpServiceImpl
             @NotNull final javax.servlet.Servlet servlet,
             @NotNull final ServletInfo servletInfo) throws javax.servlet.ServletException, NamespaceException
     {
-        final ServletHandler handler = new HttpServiceServletHandler(httpContext, servletInfo, servlet);
+        final ServletHandler handler = getServletHandler(httpContext, servlet, servletInfo);
 
         // Track properties from shared context
         setAttributes(httpContext);
@@ -84,6 +88,19 @@ public final class SharedHttpServiceImpl
 
             this.aliasMap.put(alias, handler);
         }
+    }
+
+    @NotNull
+    private static HttpServiceServletHandler getServletHandler(
+            @NotNull ExtServletContext httpContext,
+            @NotNull javax.servlet.Servlet servlet,
+            @NotNull ServletInfo servletInfo)
+    {
+        if (isJettyWebSocketServlet(servlet))
+        {
+            return new HttpServiceWebSocketServletHandler(httpContext, servletInfo, servlet);
+        }
+        return new HttpServiceServletHandler(httpContext, servletInfo, servlet);
     }
 
     /**

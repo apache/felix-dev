@@ -29,7 +29,7 @@ import jakarta.servlet.Servlet;
 /**
  * Servlet handler for servlets registered through the http whiteboard.
  */
-public final class WhiteboardServletHandler extends ServletHandler
+public class WhiteboardServletHandler extends ServletHandler
 {
     private final BundleContext bundleContext;
 
