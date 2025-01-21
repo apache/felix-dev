@@ -18,8 +18,11 @@ package org.apache.felix.http.base.internal.handler;
 
 import java.io.File;
 import java.io.IOException;
-import java.util.concurrent.CountDownLatch;
-import java.util.concurrent.atomic.AtomicBoolean;
+
+import jakarta.servlet.Servlet;
+import jakarta.servlet.ServletException;
+import jakarta.servlet.ServletRequest;
+import jakarta.servlet.ServletResponse;
 
 import org.apache.felix.http.base.internal.context.ExtServletContext;
 import org.apache.felix.http.base.internal.dispatch.MultipartConfig;
@@ -28,11 +31,6 @@ import org.apache.felix.http.base.internal.runtime.ServletInfo;
 import org.apache.felix.http.jakartawrappers.ServletWrapper;
 import org.osgi.framework.Bundle;
 import org.osgi.service.servlet.runtime.dto.DTOConstants;
-
-import jakarta.servlet.Servlet;
-import jakarta.servlet.ServletException;
-import jakarta.servlet.ServletRequest;
-import jakarta.servlet.ServletResponse;
 
 /**
  * The servlet handler handles the initialization and destruction of
