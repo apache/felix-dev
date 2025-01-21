@@ -44,9 +44,6 @@ public abstract class ServletHandler implements Comparable<ServletHandler>
 
     private static final String JAVA_SERVLET_TEMP_DIR_PROP = "jakarta.servlet.content.tempdir";
 
-    // The Jetty class used for Jetty WebSocket servlets
-    private static final String JETTY_WEB_SOCKET_SERVLET_CLASS = "JettyWebSocketServlet";
-
     private final long contextServiceId;
 
     private final ServletInfo servletInfo;
@@ -56,9 +53,6 @@ public abstract class ServletHandler implements Comparable<ServletHandler>
     private volatile Servlet servlet;
 
     protected volatile int useCount;
-
-    private final AtomicBoolean lazyFirstInitCall = new AtomicBoolean(true);
-    private final CountDownLatch initBarrier = new CountDownLatch(1);
 
     private final MultipartConfig mpConfig;
 
@@ -133,9 +127,6 @@ public abstract class ServletHandler implements Comparable<ServletHandler>
         final Servlet local = this.servlet;
         if ( local != null )
         {
-            // Lazy init if needed, thread-safe
-            lazyInit();
-
             local.service(req, res);
         }
         else
@@ -184,17 +175,15 @@ public abstract class ServletHandler implements Comparable<ServletHandler>
             return DTOConstants.FAILURE_REASON_SERVICE_NOT_GETTABLE;
         }
 
-        if (!isJettyWebSocketServlet(servlet)) {
-            try {
-                servlet.init(new ServletConfigImpl(getName(), getContext(), getServletInfo().getInitParameters()));
-            } catch (final Exception e) {
-                SystemLogger.LOGGER.error(SystemLogger.formatMessage(this.getServletInfo().getServiceReference(),
-                                "Error during calling init() on servlet ".concat(this.servletInfo.getClassName(this.servlet))),
-                        e);
-                return DTOConstants.FAILURE_REASON_EXCEPTION_ON_INIT;
-            } finally {
-                initBarrier.countDown();
-            }
+        try
+        {
+            servlet.init(new ServletConfigImpl(getName(), getContext(), getServletInfo().getInitParameters()));
+        }
+        catch (final Exception e) {
+            SystemLogger.LOGGER.error(SystemLogger.formatMessage(this.getServletInfo().getServiceReference(),
+                            "Error during calling init() on servlet ".concat(this.servletInfo.getClassName(this.servlet))),
+                    e);
+            return DTOConstants.FAILURE_REASON_EXCEPTION_ON_INIT;
         }
         this.useCount++;
         return -1;
@@ -212,9 +201,7 @@ public abstract class ServletHandler implements Comparable<ServletHandler>
         {
             try
             {
-                if (!isJettyWebSocketServlet(servlet) || !lazyFirstInitCall.get()) {
-                    servlet.destroy();
-                }
+                servlet.destroy();
             }
             catch ( final Exception ignore )
             {
@@ -265,53 +252,5 @@ public abstract class ServletHandler implements Comparable<ServletHandler>
     public Bundle getMultipartSecurityContext()
     {
         return null;
-    }
-
-    /**
-     * Check if the servlet is a JettyWebSocketServlet.
-     * JettyWebSocket classes are handled differently due to FELIX-6746.
-     * @param servlet the servlet to check
-     * @return true if the servlet is a JettyWebSocketServlet, false otherwise
-     */
-    private static boolean isJettyWebSocketServlet(Object servlet) {
-        final Class<?> superClass = servlet.getClass().getSuperclass();
-        SystemLogger.LOGGER.debug("Checking if the servlet is a JettyWebSocketServlet: '" + superClass.getSimpleName() + "'");
-
-        // Now check if the servlet class extends 'JettyWebSocketServlet'
-        boolean isJettyWebSocketServlet = superClass.getSimpleName().endsWith(JETTY_WEB_SOCKET_SERVLET_CLASS);
-        if (!isJettyWebSocketServlet) {
-            // Recurse through the wrapped servlets, in case of double-wrapping
-            if (servlet instanceof org.apache.felix.http.jakartawrappers.ServletWrapper) {
-                final javax.servlet.Servlet wrappedServlet = ((org.apache.felix.http.jakartawrappers.ServletWrapper) servlet).getServlet();
-                return isJettyWebSocketServlet(wrappedServlet);
-            } else if (servlet instanceof org.apache.felix.http.javaxwrappers.ServletWrapper) {
-                final jakarta.servlet.Servlet wrappedServlet = ((org.apache.felix.http.javaxwrappers.ServletWrapper) servlet).getServlet();
-                return isJettyWebSocketServlet(wrappedServlet);
-            }
-        }
-        return isJettyWebSocketServlet;
-    }
-
-    /*
-     * Lazy initialization of the servlet.
-     * Will only be called once for each servlet instance and is thread-safe.
-     */
-    private void lazyInit() {
-        if (lazyFirstInitCall.compareAndSet(true, false)) {
-            try {
-                servlet.init(new ServletConfigImpl(getName(), getContext(), getServletInfo().getInitParameters()));
-            } catch (final Exception e) {
-                SystemLogger.LOGGER.error(SystemLogger.formatMessage(this.getServletInfo().getServiceReference(),
-                                "Error calling init() lazy on servlet ".concat(this.servletInfo.getClassName(this.servlet))), e);
-            } finally {
-                initBarrier.countDown();
-            }
-        } else {
-            try {
-                initBarrier.await();
-            } catch (final InterruptedException e) {
-                Thread.currentThread().interrupt();
-            }
-        }
     }
 }
