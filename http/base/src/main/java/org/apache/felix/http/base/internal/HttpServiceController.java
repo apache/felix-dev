@@ -145,6 +145,7 @@ public final class HttpServiceController
      */
     public void setAttributeSharedServletContext(String key, Object value) {
         this.whiteboardManager.setAttributeSharedServletContext(key, value);
+        this.httpServiceFactory.setAttributeSharedServletContext(key, value);
     }
 
     /**

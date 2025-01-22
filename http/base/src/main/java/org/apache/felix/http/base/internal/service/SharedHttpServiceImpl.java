@@ -16,13 +16,17 @@
  */
 package org.apache.felix.http.base.internal.service;
 
+import static org.apache.felix.http.base.internal.handler.WebSocketHandler.isJettyWebSocketServlet;
+
 import java.util.HashMap;
 import java.util.Iterator;
 import java.util.Map;
 
 import org.apache.felix.http.base.internal.context.ExtServletContext;
 import org.apache.felix.http.base.internal.handler.HttpServiceServletHandler;
+import org.apache.felix.http.base.internal.handler.HttpServiceWebSocketServletHandler;
 import org.apache.felix.http.base.internal.handler.ServletHandler;
+import org.apache.felix.http.base.internal.logger.SystemLogger;
 import org.apache.felix.http.base.internal.registry.HandlerRegistry;
 import org.apache.felix.http.base.internal.runtime.ServletInfo;
 import org.apache.felix.http.jakartawrappers.ServletWrapper;
@@ -38,6 +42,7 @@ public final class SharedHttpServiceImpl
     private final HandlerRegistry handlerRegistry;
 
     private final Map<String, ServletHandler> aliasMap = new HashMap<>();
+    private Map<String, Object> attributesForSharedContext;
 
     /**
      * Create a new implementation
@@ -67,7 +72,10 @@ public final class SharedHttpServiceImpl
             @NotNull final javax.servlet.Servlet servlet,
             @NotNull final ServletInfo servletInfo) throws javax.servlet.ServletException, NamespaceException
     {
-        final ServletHandler handler = new HttpServiceServletHandler(httpContext, servletInfo, servlet);
+        final ServletHandler handler = getServletHandler(httpContext, servlet, servletInfo);
+
+        // Track properties from shared context
+        setAttributes(httpContext);
 
         synchronized (this.aliasMap)
         {
@@ -79,6 +87,19 @@ public final class SharedHttpServiceImpl
 
             this.aliasMap.put(alias, handler);
         }
+    }
+
+    @NotNull
+    private static HttpServiceServletHandler getServletHandler(
+            @NotNull ExtServletContext httpContext,
+            @NotNull javax.servlet.Servlet servlet,
+            @NotNull ServletInfo servletInfo)
+    {
+        if (isJettyWebSocketServlet(servlet))
+        {
+            return new HttpServiceWebSocketServletHandler(httpContext, servletInfo, servlet);
+        }
+        return new HttpServiceServletHandler(httpContext, servletInfo, servlet);
     }
 
     /**
@@ -155,4 +176,23 @@ public final class SharedHttpServiceImpl
 	{
 		return this.handlerRegistry;
 	}
+
+    public void setSharedContextAttributes(Map<String, Object> attributesForSharedContext) {
+        this.attributesForSharedContext = attributesForSharedContext;
+    }
+
+    /**
+     * Set the stored attributes on the servlet context.
+     * @param context the servlet context
+     */
+    private void setAttributes(ExtServletContext context) {
+        if (context != null && attributesForSharedContext != null) {
+            attributesForSharedContext.forEach((key, value) -> {
+                if (key != null && value != null) {
+                    SystemLogger.LOGGER.info("SharedHttpServiceImpl: Shared context found, setting stored attribute key: '{}', value: '{}'", key, value);
+                    context.setAttribute(key, value);
+                }
+            });
+        }
+    }
 }
