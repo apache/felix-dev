@@ -180,14 +180,13 @@ public abstract class ServletHandler implements Comparable<ServletHandler>
         catch (final Exception e)
         {
             SystemLogger.LOGGER.error(SystemLogger.formatMessage(this.getServletInfo().getServiceReference(),
-                    "Error during calling init() on servlet ".concat(this.servletInfo.getClassName(this.servlet))),
+                            "Error during calling init() on servlet ".concat(this.servletInfo.getClassName(this.servlet))),
                     e);
             return DTOConstants.FAILURE_REASON_EXCEPTION_ON_INIT;
         }
         this.useCount++;
         return -1;
     }
-
 
     public boolean destroy()
     {

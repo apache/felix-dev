@@ -16,6 +16,7 @@
  */
 package org.apache.felix.http.base.internal.whiteboard;
 
+import static org.apache.felix.http.base.internal.handler.WebSocketHandler.isJettyWebSocketServlet;
 import static org.osgi.service.servlet.runtime.dto.DTOConstants.FAILURE_REASON_NO_SERVLET_CONTEXT_MATCHING;
 import static org.osgi.service.servlet.runtime.dto.DTOConstants.FAILURE_REASON_SHADOWED_BY_OTHER_SERVICE;
 import static org.osgi.service.servlet.runtime.dto.DTOConstants.FAILURE_REASON_UNKNOWN;
@@ -39,7 +40,9 @@ import org.apache.felix.http.base.internal.handler.HttpSessionWrapper;
 import org.apache.felix.http.base.internal.handler.ListenerHandler;
 import org.apache.felix.http.base.internal.handler.PreprocessorHandler;
 import org.apache.felix.http.base.internal.handler.ServletHandler;
+import org.apache.felix.http.base.internal.handler.WebSocketHandler;
 import org.apache.felix.http.base.internal.handler.WhiteboardServletHandler;
+import org.apache.felix.http.base.internal.handler.WhiteboardWebSocketServletHandler;
 import org.apache.felix.http.base.internal.logger.SystemLogger;
 import org.apache.felix.http.base.internal.registry.EventListenerRegistry;
 import org.apache.felix.http.base.internal.registry.HandlerRegistry;
@@ -416,7 +419,7 @@ public final class WhiteboardManager
         if (context != null) {
             attributesForSharedContext.forEach((key, value) -> {
                 if (key != null && value != null) {
-                    SystemLogger.LOGGER.info("Shared context found, setting stored attribute key: '{}', value: '{}'", key, value);
+                    SystemLogger.LOGGER.info("WhiteboardManager: Shared context found, setting stored attribute key: '{}', value: '{}'", key, value);
                     context.setAttribute(key, value);
                 }
             });
@@ -726,13 +729,7 @@ public final class WhiteboardManager
                 }
                 else
                 {
-                    final ServletHandler servletHandler = new WhiteboardServletHandler(
-                        handler.getContextInfo().getServiceId(),
-                        servletContext,
-                        (ServletInfo)info,
-                        handler.getBundleContext(),
-                        info.getServiceReference().getBundle(),
-                        this.httpBundleContext.getBundle());
+                    final ServletHandler servletHandler = getServletHandler(handler, info, servletContext);
                     handler.getRegistry().registerServlet(servletHandler);
                 }
             }
@@ -803,6 +800,31 @@ public final class WhiteboardManager
         {
             this.failureStateHandler.addFailure(info, handler.getContextInfo().getServiceId(), FAILURE_REASON_UNKNOWN, e);
         }
+    }
+
+    @NotNull
+    private WhiteboardServletHandler getServletHandler(WhiteboardContextHandler handler,
+                                                       WhiteboardServiceInfo<?> info,
+                                                       ExtServletContext servletContext)
+    {
+        Object servlet = info.getService(handler.getBundleContext());
+        if (isJettyWebSocketServlet(servlet))
+        {
+            return new WhiteboardWebSocketServletHandler(
+                    handler.getContextInfo().getServiceId(),
+                    servletContext,
+                    (ServletInfo) info,
+                    handler.getBundleContext(),
+                    info.getServiceReference().getBundle(),
+                    this.httpBundleContext.getBundle(), servlet);
+        }
+        return new WhiteboardServletHandler(
+                handler.getContextInfo().getServiceId(),
+                servletContext,
+                (ServletInfo) info,
+                handler.getBundleContext(),
+                info.getServiceReference().getBundle(),
+                this.httpBundleContext.getBundle());
     }
 
     /**
@@ -981,7 +1003,7 @@ public final class WhiteboardManager
      * @param value attribute value
      */
     public void setAttributeSharedServletContext(String key, Object value) {
-        SystemLogger.LOGGER.info("Storing attribute for shared servlet context. Key '{}', value: '{}'", key, value);
+        SystemLogger.LOGGER.info("WhiteboardManager: Storing attribute for shared servlet context. Key '{}', value: '{}'", key, value);
         this.attributesForSharedContext.put(key, value);
     }
 }
