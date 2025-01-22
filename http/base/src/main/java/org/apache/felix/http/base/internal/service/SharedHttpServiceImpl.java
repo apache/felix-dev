@@ -16,7 +16,7 @@
  */
 package org.apache.felix.http.base.internal.service;
 
-import static org.apache.felix.http.base.internal.util.WebSocketUtil.isJettyWebSocketServlet;
+import static org.apache.felix.http.base.internal.handler.WebSocketHandler.isJettyWebSocketServlet;
 
 import java.util.HashMap;
 import java.util.Iterator;
@@ -29,7 +29,6 @@ import org.apache.felix.http.base.internal.handler.ServletHandler;
 import org.apache.felix.http.base.internal.logger.SystemLogger;
 import org.apache.felix.http.base.internal.registry.HandlerRegistry;
 import org.apache.felix.http.base.internal.runtime.ServletInfo;
-import org.apache.felix.http.base.internal.util.WebSocketUtil;
 import org.apache.felix.http.jakartawrappers.ServletWrapper;
 import org.jetbrains.annotations.NotNull;
 import org.osgi.service.http.NamespaceException;

@@ -16,7 +16,7 @@
  */
 package org.apache.felix.http.base.internal.whiteboard;
 
-import static org.apache.felix.http.base.internal.util.WebSocketUtil.isJettyWebSocketServlet;
+import static org.apache.felix.http.base.internal.handler.WebSocketHandler.isJettyWebSocketServlet;
 import static org.osgi.service.servlet.runtime.dto.DTOConstants.FAILURE_REASON_NO_SERVLET_CONTEXT_MATCHING;
 import static org.osgi.service.servlet.runtime.dto.DTOConstants.FAILURE_REASON_SHADOWED_BY_OTHER_SERVICE;
 import static org.osgi.service.servlet.runtime.dto.DTOConstants.FAILURE_REASON_UNKNOWN;
@@ -40,6 +40,7 @@ import org.apache.felix.http.base.internal.handler.HttpSessionWrapper;
 import org.apache.felix.http.base.internal.handler.ListenerHandler;
 import org.apache.felix.http.base.internal.handler.PreprocessorHandler;
 import org.apache.felix.http.base.internal.handler.ServletHandler;
+import org.apache.felix.http.base.internal.handler.WebSocketHandler;
 import org.apache.felix.http.base.internal.handler.WhiteboardServletHandler;
 import org.apache.felix.http.base.internal.handler.WhiteboardWebSocketServletHandler;
 import org.apache.felix.http.base.internal.logger.SystemLogger;
@@ -60,7 +61,6 @@ import org.apache.felix.http.base.internal.runtime.dto.RegistryRuntime;
 import org.apache.felix.http.base.internal.runtime.dto.ServletContextDTOBuilder;
 import org.apache.felix.http.base.internal.service.HttpServiceFactory;
 import org.apache.felix.http.base.internal.service.HttpServiceRuntimeImpl;
-import org.apache.felix.http.base.internal.util.WebSocketUtil;
 import org.apache.felix.http.base.internal.whiteboard.tracker.FilterTracker;
 import org.apache.felix.http.base.internal.whiteboard.tracker.JavaxFilterTracker;
 import org.apache.felix.http.base.internal.whiteboard.tracker.JavaxListenersTracker;

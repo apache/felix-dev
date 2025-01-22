@@ -27,6 +27,9 @@ import org.apache.felix.http.base.internal.logger.SystemLogger;
  * Class that handles initialization for servlets extending JettyWebSocketServlet.
  */
 public final class WebSocketHandler {
+    // The Jetty class used for Jetty WebSocket servlets
+    private static final String JETTY_WEB_SOCKET_SERVLET_CLASS = "JettyWebSocketServlet";
+
     private final AtomicBoolean lazyFirstInitCall = new AtomicBoolean(true);
     private final CountDownLatch initBarrier = new CountDownLatch(1);
     private final ServletHandler servletHandler;
@@ -83,5 +86,30 @@ public final class WebSocketHandler {
             return true;
         }
         return false;
+    }
+
+      /**
+     * Check if the servlet is a JettyWebSocketServlet.
+     * JettyWebSocket classes are handled differently due to FELIX-6746.
+     * @param servlet the servlet to check
+     * @return true if the servlet is a JettyWebSocketServlet, false otherwise
+     */
+    public static boolean isJettyWebSocketServlet(Object servlet) {
+        final Class<?> superClass = servlet.getClass().getSuperclass();
+        SystemLogger.LOGGER.debug("Checking if the servlet is a JettyWebSocketServlet: '" + superClass.getSimpleName() + "'");
+
+        // Now check if the servlet class extends 'JettyWebSocketServlet'
+        boolean isJettyWebSocketServlet = superClass.getSimpleName().endsWith(JETTY_WEB_SOCKET_SERVLET_CLASS);
+        if (!isJettyWebSocketServlet) {
+            // Recurse through the wrapped servlets, in case of double-wrapping
+            if (servlet instanceof org.apache.felix.http.jakartawrappers.ServletWrapper) {
+                final javax.servlet.Servlet wrappedServlet = ((org.apache.felix.http.jakartawrappers.ServletWrapper) servlet).getServlet();
+                return isJettyWebSocketServlet(wrappedServlet);
+            } else if (servlet instanceof org.apache.felix.http.javaxwrappers.ServletWrapper) {
+                final jakarta.servlet.Servlet wrappedServlet = ((org.apache.felix.http.javaxwrappers.ServletWrapper) servlet).getServlet();
+                return isJettyWebSocketServlet(wrappedServlet);
+            }
+        }
+        return isJettyWebSocketServlet;
     }
 }
