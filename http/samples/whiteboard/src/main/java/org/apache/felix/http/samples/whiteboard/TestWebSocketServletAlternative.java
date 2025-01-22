@@ -19,6 +19,7 @@ package org.apache.felix.http.samples.whiteboard;
 import jakarta.servlet.ServletConfig;
 import jakarta.servlet.ServletException;
 
+import org.eclipse.jetty.ee11.websocket.server.JettyWebSocketServlet;
 import org.eclipse.jetty.ee11.websocket.server.JettyWebSocketServletFactory;
 import org.eclipse.jetty.websocket.api.Callback;
 import org.eclipse.jetty.websocket.api.Session;
