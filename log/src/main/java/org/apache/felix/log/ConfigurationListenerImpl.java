@@ -52,7 +52,7 @@ public class ConfigurationListenerImpl {
     final Log m_log;
     final LoggerAdminImpl m_loggerAdmin;
 
-    public ConfigurationListenerImpl(final BundleContext context, final Log log, final LoggerAdminImpl loggerAdmin) throws Exception {
+    ConfigurationListenerImpl(final BundleContext context, final Log log, final LoggerAdminImpl loggerAdmin) throws Exception {
         m_context = context;
         m_log = log;
         m_loggerAdmin = loggerAdmin;

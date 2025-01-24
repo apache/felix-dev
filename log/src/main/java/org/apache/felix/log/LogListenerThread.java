@@ -106,6 +106,7 @@ final class LogListenerThread extends Thread
      * The main method of the thread: waits for new messages to be receieved
      * and then delivers them to any registered log listeners.
      */
+    @Override
     public void run()
     {
         while (!isInterrupted())
@@ -138,10 +139,10 @@ final class LogListenerThread extends Thread
             {
                 // Take a snapshot of all current listeners and deliver all
                 // pending messages to them...
-                List<LogListener> listeners = new ArrayList<>();
+                List<LogListener> listeners;
                 synchronized (m_listeners)
                 {
-                    listeners.addAll(m_listeners);
+                    listeners = new ArrayList<>(m_listeners);
                 }
 
                 Iterator<LogEntry> entriesIt = entriesToDeliver.iterator();
