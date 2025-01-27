@@ -44,7 +44,7 @@ jobs:
             - 'http/**'
           maven-bundle-plugin:
             - 'tools/maven-bundle-plugin/**'
-          maven-osgicheck-plugin
+          maven-osgicheck-plugin:
             - 'tools/osgicheck-maven-plugin/**'
 
     - name: Felix SCR
