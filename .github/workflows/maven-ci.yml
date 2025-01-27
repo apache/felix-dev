@@ -7,12 +7,14 @@ on:
       - 'scr/**'
       - 'http/**'
       - 'tools/maven-bundle-plugin/**'
+      - 'tools/osgicheck-maven-plugin/**'
   pull_request:
     branches: [ "master" ]
     paths:
       - 'scr/**'
       - 'http/**'
       - 'tools/maven-bundle-plugin/**'
+      - 'tools/osgicheck-maven-plugin/**'
     
 permissions: {}
 
@@ -42,6 +44,8 @@ jobs:
             - 'http/**'
           maven-bundle-plugin:
             - 'tools/maven-bundle-plugin/**'
+          maven-osgicheck-plugin:
+            - 'tools/osgicheck-maven-plugin/**'
 
     - name: Felix SCR
       if: steps.changes.outputs.scr == 'true'
@@ -52,6 +56,9 @@ jobs:
     - name: Felix Maven bundle plugin 
       if: steps.changes.outputs.maven-bundle-plugin == 'true'
       run: mvn -B -V -Dstyle.color=always --file tools/maven-bundle-plugin/pom.xml clean install verify
+    - name: Felix Maven OSGi check plugin
+      if: steps.changes.outputs.maven-osgicheck-plugin == 'true'
+      run: mvn -B -V -Dstyle.color=always --file tools/osgicheck-maven-plugin/pom.xml clean install verify
     - name: Upload Test Results
       if: always()
       uses: actions/upload-artifact@65c4c4a1ddee5b72f698fdd19549f0f0fb45cf08 # v4.6.0
