@@ -114,7 +114,7 @@ public class ServicesServlet extends AbstractOsgiManagerPlugin
 
     private final String TEMPLATE;
 
-    /** 
+    /**
      * Default constructor
      * @throws IOException If template can't be read
      */
@@ -122,7 +122,7 @@ public class ServicesServlet extends AbstractOsgiManagerPlugin
         // load templates
         TEMPLATE = readTemplateFile( "/templates/services.html" );
     }
-    
+
     @Override
     protected String getCategory() {
         return CATEGORY_OSGI;
@@ -466,7 +466,7 @@ public class ServicesServlet extends AbstractOsgiManagerPlugin
         vars.put( "bundlePath", appRoot +  "/" + BundlesServlet.NAME + "/" );
         vars.put( "drawDetails", String.valueOf(reqInfo.serviceRequested));
         vars.put( "__data__", w.toString() );
-        vars.put( "filter", filter == null ? "" : Encode.forHtmlContent(filter) );
+        vars.put( "filter", filter == null ? "" : Encode.forJavaScript(filter));
 
         response.getWriter().print( TEMPLATE );
     }
