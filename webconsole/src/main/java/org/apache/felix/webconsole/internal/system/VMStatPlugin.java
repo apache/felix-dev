@@ -165,7 +165,14 @@ public class VMStatPlugin extends AbstractOsgiManagerPlugin {
             if ( ( restart instanceof Boolean ) && ( ( Boolean ) restart ).booleanValue() ) {
                 StringWriter json = new StringWriter();
 
-                int reloadTimeout = (int) configuration.get( OsgiManager.PROP_RELOAD_TIMEOUT );
+                int reloadTimeout = OsgiManager.DEFAULT_RELOAD_TIMEOUT;
+                try {
+                    reloadTimeout = Integer.parseInt((String) configuration.get( OsgiManager.PROP_RELOAD_TIMEOUT ));
+                } catch (NumberFormatException nfe) {
+                    Util.LOGGER.error( "Invalid '" + OsgiManager.PROP_RELOAD_TIMEOUT + "' configuration value provided. Assume default (" + reloadTimeout + ")");
+                }
+
+
                 JSONWriter jw = new JSONWriter(json);
                 jw.object();
                 jw.key( "reloadTimeout").value( reloadTimeout );
@@ -217,7 +224,13 @@ public class VMStatPlugin extends AbstractOsgiManagerPlugin {
         jw.key( "mem_used").value(usedMem );
         jw.key( "shutdownType").value(shutdownType );
 
-        int shutdownTimeout = (int) configuration.get( OsgiManager.PROP_SHUTDOWN_TIMEOUT );
+        int shutdownTimeout = OsgiManager.DEFAULT_SHUTDOWN_TIMEOUT;
+        try {
+            shutdownTimeout = Integer.parseInt((String) configuration.get( OsgiManager.PROP_SHUTDOWN_TIMEOUT ));
+        } catch (NumberFormatException nfe) {
+            Util.LOGGER.error( "Invalid '" + OsgiManager.PROP_SHUTDOWN_TIMEOUT + "' configuration value provided. Assume default (" + shutdownTimeout + ")");
+        }
+
         jw.key( "shutdownTimeout").value(shutdownTimeout );
 
         // only add the processors if the number is available

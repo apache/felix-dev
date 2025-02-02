@@ -146,9 +146,9 @@ public class OsgiManager extends HttpServlet {
 
     static final String DEFAULT_CATEGORY = "Main";
 
-    static final int DEFAULT_SHUTDOWN_TIMEOUT = 5;
+    public static final int DEFAULT_SHUTDOWN_TIMEOUT = 5;
 
-    static final int DEFAULT_RELOAD_TIMEOUT = 40;
+    public static final int DEFAULT_RELOAD_TIMEOUT = 40;
 
     /** Default value for secret heuristics */
     public static final boolean DEFAULT_ENABLE_SECRET_HEURISTIC = false;
