@@ -8,6 +8,7 @@ on:
       - 'http/**'
       - 'tools/maven-bundle-plugin/**'
       - 'tools/osgicheck-maven-plugin/**'
+      - 'webconsole/**'
   pull_request:
     branches: [ "master" ]
     paths:
@@ -15,6 +16,7 @@ on:
       - 'http/**'
       - 'tools/maven-bundle-plugin/**'
       - 'tools/osgicheck-maven-plugin/**'
+      - 'webconsole/**'
     
 permissions: {}
 
@@ -46,7 +48,8 @@ jobs:
             - 'tools/maven-bundle-plugin/**'
           maven-osgicheck-plugin:
             - 'tools/osgicheck-maven-plugin/**'
-
+          webconsole:
+            - 'webconsole/**'
     - name: Felix SCR
       if: steps.changes.outputs.scr == 'true'
       run: mvn -B -V -Dstyle.color=always --file scr/pom.xml clean verify
@@ -59,6 +62,9 @@ jobs:
     - name: Felix Maven OSGi check plugin
       if: steps.changes.outputs.maven-osgicheck-plugin == 'true'
       run: mvn -B -V -Dstyle.color=always --file tools/osgicheck-maven-plugin/pom.xml clean install verify
+    - name: Felix Webconsole
+      if: steps.changes.outputs.webconsole == 'true'
+      run: mvn -B -V -Dstyle.color=always --file webconsole/pom.xml clean install verify
     - name: Upload Test Results
       if: always()
       uses: actions/upload-artifact@65c4c4a1ddee5b72f698fdd19549f0f0fb45cf08 # v4.6.0
