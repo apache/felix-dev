@@ -129,7 +129,7 @@ public class OsgiManager extends HttpServlet {
     static final String PROP_ENABLE_SECRET_HEURISTIC = "secret.heuristic.enabled";
 
     static final String PROP_HTTP_SERVICE_SELECTOR = "http.service.filter";
-    
+
     /** The framework shutdown timeout */
     public static final String PROP_SHUTDOWN_TIMEOUT = "shutdown.timeout";
 
@@ -203,10 +203,10 @@ public class OsgiManager extends HttpServlet {
 
     // not-null when the ServletContextHelper service is registered
     private volatile ServiceRegistration<ServletContextHelper> servletContextRegistration;
-    
+
     // not-null when the main servlet and the resources are registered
     private volatile ServiceRegistration<Servlet> servletRegistration;
-    
+
     // default configuration from framework properties
     private Map<String, Object> defaultConfiguration;
 
@@ -266,7 +266,7 @@ public class OsgiManager extends HttpServlet {
             ConfigurationUtil.getProperty( bundleContext, FRAMEWORK_SHUTDOWN_TIMEOUT, DEFAULT_SHUTDOWN_TIMEOUT ) );
         this.defaultConfiguration.put( PROP_RELOAD_TIMEOUT,
             ConfigurationUtil.getProperty( bundleContext, FRAMEWORK_RELOAD_TIMEOUT, DEFAULT_RELOAD_TIMEOUT ) );
-        
+
         // configure and start listening for configuration
         updateConfiguration(null);
 
@@ -821,7 +821,7 @@ public class OsgiManager extends HttpServlet {
                 props.put(HttpWhiteboardConstants.HTTP_WHITEBOARD_RESOURCE_PATTERN, "/res/*");
                 props.put(HttpWhiteboardConstants.HTTP_WHITEBOARD_RESOURCE_PREFIX, "/res");
 
-                this.servletRegistration = getBundleContext().registerService(Servlet.class, this, props);                
+                this.servletRegistration = getBundleContext().registerService(Servlet.class, this, props);
             }
         } catch (final Exception e) {
             Util.LOGGER.error("registerHttpWhiteboardServices: Problem setting up", e);
@@ -872,7 +872,16 @@ public class OsgiManager extends HttpServlet {
         if ( osgiConfig != null ) {
             for ( Enumeration<String> keys = osgiConfig.keys(); keys.hasMoreElements(); ) {
                 final String key = keys.nextElement();
-                config.put( key, osgiConfig.get( key ) );
+                final Object value = osgiConfig.get( key );
+                if (PROP_SHUTDOWN_TIMEOUT.equals(key) || PROP_RELOAD_TIMEOUT.equals(key)) {
+                    try {
+                        config.put(key, Integer.parseInt(value.toString()));
+                    } catch (final NumberFormatException nfe) {
+                        Util.LOGGER.warn("Ignoring invalid value for {}: {}", key, value);
+                    }
+                } else {
+                    config.put(key, value);
+                }
             }
         }
 
