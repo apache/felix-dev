@@ -88,10 +88,17 @@ public class HttpServicePlugin extends HttpServlet {
         return test;
     }
 
+    private String getRequestPath(final HttpServletRequest request) {
+        final int pos = request.getPathInfo().indexOf("/", 1);
+        return request.getContextPath()
+            .concat(request.getServletPath())
+            .concat(pos == -1 ? request.getPathInfo() : request.getPathInfo().substring(0, pos));
+    }
+
     @Override
     protected void doPost(final HttpServletRequest request, final HttpServletResponse response) throws ServletException, IOException {
         final String test = this.getTestPath(request);
-        final String path = request.getContextPath().concat(request.getServletPath()).concat(request.getPathInfo());
+        final String path = this.getRequestPath(request);
         final String redirectTo = test == null ? path : path.concat("?").concat(ATTR_TEST).concat("=").concat(URLEncoder.encode(test, StandardCharsets.UTF_8));
 
         response.sendRedirect(redirectTo);
@@ -103,16 +110,13 @@ public class HttpServicePlugin extends HttpServlet {
 
         final PrintWriter pw = resp.getWriter();
 
-        String path = req.getContextPath() + req.getServletPath();
-        if ( req.getPathInfo() != null ) {
-            path = path + req.getPathInfo();
-        }
+        final String path = this.getRequestPath(req);
         printForm(pw, this.getTestPath(req), path);
 
         printRuntimeDetails(pw, dto.serviceDTO);
 
         printPreprocessorDetails(pw, dto.preprocessorDTOs);
-    
+
         for(final ServletContextDTO ctxDto : dto.servletContextDTOs ) {
             printContextDetails(pw, ctxDto);
         }
@@ -211,7 +215,7 @@ public class HttpServicePlugin extends HttpServlet {
                         appendBundleLink(sb, ref.getBundle().getBundleId(), ref.getBundle().getSymbolicName());
                         sb.append("\n");
                     }
- 
+
                     odd = this.printRow(pw, odd, "${Servlet}", sb.toString(), "");
                 } else {
                     final StringBuilder sb = new StringBuilder();
@@ -225,7 +229,7 @@ public class HttpServicePlugin extends HttpServlet {
                         appendBundleLink(sb, ref.getBundle().getBundleId(), ref.getBundle().getSymbolicName());
                         sb.append("\n");
                     }
- 
+
                     odd = this.printRow(pw, odd, "${Resource}", sb.toString(), "");
                 }
             }
@@ -366,7 +370,7 @@ public class HttpServicePlugin extends HttpServlet {
                     final char type = text.charAt(pos + LINK_MARKER_START.length());
                     final int id = Integer.valueOf(text.substring(pos + LINK_MARKER_START.length() + 1, endPos));
                     final int tokenEndPos = text.indexOf(LINK_MARKER_END, pos);
-                    final String linkTest = text.substring(endPos + 1, tokenEndPos); 
+                    final String linkTest = text.substring(endPos + 1, tokenEndPos);
                     text = text.substring(0, pos)
                                .concat("<a href=\"${appRoot}/")
                                .concat(type == 'S' ? "services/" : "bundles/")
