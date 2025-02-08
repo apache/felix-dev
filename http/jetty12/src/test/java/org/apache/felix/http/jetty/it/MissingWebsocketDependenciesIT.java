@@ -68,11 +68,11 @@ public class MissingWebsocketDependenciesIT extends AbstractJettyTestSupport {
                 .until(() -> containsString(logFile, "org.apache.felix.http.jetty12[org.apache.felix.http]"));
 
         assertTrue(containsString(logFile, "org.apache.felix.http.jetty12[org.apache.felix.http] : Failed to "
-                + "initialize jetty EE10 specific websocket support since the initializer class was not found. "
-                + "Check if the jetty-ee10-websocket-jetty-server bundle is deployed."));
+                + "initialize jetty ee11 specific websocket support since the initializer class was not found. "
+                + "Check if the jetty-ee11-websocket-jetty-server bundle is deployed."));
         assertTrue(containsString(logFile, "org.apache.felix.http.jetty12[org.apache.felix.http] : Failed to "
-                + "initialize jakarta EE10 standard websocket support since the initializer class was not found. "
-                + "Check if the jetty-ee10-websocket-jakarta-server bundle is deployed."));
+                + "initialize jakarta ee11 standard websocket support since the initializer class was not found. "
+                + "Check if the jetty-ee11-websocket-jakarta-server bundle is deployed."));
     }
 
     /**
