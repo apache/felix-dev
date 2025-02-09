@@ -29,7 +29,7 @@
     <name>Apache Felix Http Bridge</name>
     <description>This is an implementation of the OSGi Servlet Service, the OSGi Http Service and the OSGi Http Whiteboard Specification used when run as a web application</description>
     <artifactId>org.apache.felix.http.bridge</artifactId>
-    <version>5.1.9-SNAPSHOT</version>
+    <version>6.0.0-SNAPSHOT</version>
     <packaging>bundle</packaging>
 
     <scm>
@@ -78,8 +78,8 @@
                             org.apache.commons.*
                         </Conditional-Package>
                         <Import-Package>
-                            jakarta.servlet;version="[5.0,7)",
-                            jakarta.servlet.http;version="[5.0,7)",
+                            jakarta.servlet,
+                            jakarta.servlet.http,
                        	    org.osgi.service.useradmin;resolution:=optional;version="[1.1,2)",
                             sun.misc;resolution:=optional,
                             sun.nio.ch;resolution:=optional,
@@ -108,12 +108,14 @@
                             <goal>bundle</goal>
                         </goals>
                     </execution>
+<!--
                     <execution>
                         <id>baseline</id>
                         <goals>
                           <goal>baseline</goal>
                         </goals>
                     </execution>
+-->
                     <execution>
                         <id>light-bundle</id>
                         <goals>
@@ -146,7 +148,7 @@
         <dependency>
             <groupId>jakarta.servlet</groupId>
             <artifactId>jakarta.servlet-api</artifactId>
-            <version>5.0.0</version>
+            <version>6.0.0</version>
         </dependency>
         <dependency>
             <groupId>org.osgi</groupId>
@@ -184,12 +186,12 @@
         <dependency>
             <groupId>org.apache.felix</groupId>
             <artifactId>org.apache.felix.http.base</artifactId>
-            <version>5.1.8</version>
+            <version>5.1.10</version>
         </dependency>
         <dependency>
             <groupId>org.apache.felix</groupId>
             <artifactId>org.apache.felix.http.wrappers</artifactId>
-            <version>1.0.2</version>
+            <version>1.1.8</version>
 	    </dependency>
     </dependencies>
 </project>

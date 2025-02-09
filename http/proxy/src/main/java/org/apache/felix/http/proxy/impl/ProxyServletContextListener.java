@@ -23,7 +23,6 @@ import jakarta.servlet.ServletContextEvent;
 import jakarta.servlet.ServletContextListener;
 import jakarta.servlet.annotation.WebListener;
 
-import org.apache.felix.http.proxy.AbstractProxyListener;
 import org.osgi.framework.BundleContext;
 import org.osgi.framework.InvalidSyntaxException;
 
@@ -52,17 +51,17 @@ public class ProxyServletContextListener
         // add all required listeners
 
         this.servletContext.addListener(new AbstractProxyListener() {
-            
+
             @Override
             protected void stopTracking() {
                 ProxyServletContextListener.this.stopTracking();
             }
-            
+
             @Override
             protected void startTracking(final Object bundleContextAttr) {
                 ProxyServletContextListener.this.startTracking(bundleContextAttr);
             }
-            
+
             @Override
             protected EventDispatcherTracker getEventDispatcherTracker() {
                 return eventDispatcherTracker;
