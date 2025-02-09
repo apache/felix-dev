@@ -14,7 +14,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package org.apache.felix.http.proxy;
+package org.apache.felix.http.proxy.impl;
 
 import jakarta.servlet.ServletConfig;
 import jakarta.servlet.http.HttpServlet;
@@ -25,14 +25,10 @@ import org.osgi.framework.Filter;
 import org.osgi.framework.ServiceReference;
 import org.osgi.util.tracker.ServiceTracker;
 
-/**
- * @deprecated
- */
-@Deprecated
 public final class DispatcherTracker
-    extends ServiceTracker
+    extends ServiceTracker<HttpServlet, HttpServlet>
 {
-    final static String DEFAULT_FILTER = "(http.felix.dispatcher=*)";
+    final static String DEFAULT_FILTER = "((http.felix.dispatcher=*)(" + Constants.OBJECTCLASS + "=" + HttpServlet.class.getName() + "))";
 
     private final ServletConfig config;
     private HttpServlet dispatcher;
@@ -50,23 +46,17 @@ public final class DispatcherTracker
     }
 
     @Override
-    public Object addingService(ServiceReference ref)
+    public HttpServlet addingService(ServiceReference<HttpServlet> ref)
     {
-        Object service = super.addingService(ref);
-        if (service instanceof HttpServlet) {
-            setDispatcher((HttpServlet)service);
-        }
-
+        HttpServlet service = super.addingService(ref);
+        setDispatcher(service);
         return service;
     }
 
     @Override
-    public void removedService(ServiceReference ref, Object service)
+    public void removedService(ServiceReference<HttpServlet> ref, HttpServlet service)
     {
-        if (service instanceof HttpServlet) {
-            setDispatcher(null);
-        }
-
+        setDispatcher(null);
         super.removedService(ref, service);
     }
 
