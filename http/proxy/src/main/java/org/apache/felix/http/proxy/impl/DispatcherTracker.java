@@ -28,7 +28,7 @@ import org.osgi.util.tracker.ServiceTracker;
 public final class DispatcherTracker
     extends ServiceTracker<HttpServlet, HttpServlet>
 {
-    final static String DEFAULT_FILTER = "((http.felix.dispatcher=*)(" + Constants.OBJECTCLASS + "=" + HttpServlet.class.getName() + "))";
+    final static String DEFAULT_FILTER = "(&(http.felix.dispatcher=*)(" + Constants.OBJECTCLASS + "=" + HttpServlet.class.getName() + "))";
 
     private final ServletConfig config;
     private HttpServlet dispatcher;
