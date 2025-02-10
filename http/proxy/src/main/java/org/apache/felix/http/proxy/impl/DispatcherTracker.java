@@ -21,7 +21,6 @@ import jakarta.servlet.http.HttpServlet;
 
 import org.osgi.framework.BundleContext;
 import org.osgi.framework.Constants;
-import org.osgi.framework.Filter;
 import org.osgi.framework.ServiceReference;
 import org.osgi.util.tracker.ServiceTracker;
 
@@ -33,10 +32,10 @@ public final class DispatcherTracker
     private final ServletConfig config;
     private HttpServlet dispatcher;
 
-    public DispatcherTracker(BundleContext context, String filter, ServletConfig config)
+    public DispatcherTracker(BundleContext context, ServletConfig config)
         throws Exception
     {
-        super(context, createFilter(context, filter), null);
+        super(context, context.createFilter(DEFAULT_FILTER), null);
         this.config = config;
     }
 
@@ -93,15 +92,5 @@ public final class DispatcherTracker
         } catch (Exception e) {
             log("Failed to initialize dispatcher", e);
         }
-    }
-
-    private static Filter createFilter(BundleContext context, String filter)
-        throws Exception
-    {
-        StringBuffer str = new StringBuffer();
-        str.append("(&(").append(Constants.OBJECTCLASS).append("=");
-        str.append(HttpServlet.class.getName()).append(")");
-        str.append(filter != null ? filter : DEFAULT_FILTER).append(")");
-        return context.createFilter(str.toString());
     }
 }
