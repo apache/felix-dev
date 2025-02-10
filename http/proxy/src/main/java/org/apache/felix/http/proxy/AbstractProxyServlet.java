@@ -90,7 +90,7 @@ public abstract class AbstractProxyServlet
                 }
             };
         }
-        this.tracker = new DispatcherTracker(getBundleContext(), null, config);
+        this.tracker = new DispatcherTracker(getBundleContext(), config);
         this.tracker.open();
     }
 
