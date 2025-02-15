@@ -78,7 +78,7 @@ public abstract class AbstractJettyTestSupport {
                         localMavenRepo(),
                         CoreOptions.workingDirectory(workingDirectory()),
                         optionalRemoteDebug(),
-                        mavenBundle().groupId("org.apache.felix").artifactId("org.apache.felix.http.servlet-api").version("3.0.0"),
+                        mavenBundle().groupId("org.apache.felix").artifactId("org.apache.felix.http.servlet-api").version("3.1.0-SNAPSHOT"),
                         testBundle("bundle.filename"),
                         junitBundles(),
                         awaitility(),
