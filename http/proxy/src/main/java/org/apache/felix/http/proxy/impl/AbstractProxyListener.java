@@ -16,60 +16,33 @@
  * specific language governing permissions and limitations
  * under the License.
  */
-package org.apache.felix.http.proxy;
+package org.apache.felix.http.proxy.impl;
 
-import jakarta.servlet.ServletContext;
-import jakarta.servlet.ServletContextEvent;
-import jakarta.servlet.ServletContextListener;
+import jakarta.servlet.ServletContextAttributeEvent;
+import jakarta.servlet.ServletContextAttributeListener;
 import jakarta.servlet.http.HttpSessionAttributeListener;
 import jakarta.servlet.http.HttpSessionBindingEvent;
 import jakarta.servlet.http.HttpSessionEvent;
 import jakarta.servlet.http.HttpSessionIdListener;
 import jakarta.servlet.http.HttpSessionListener;
 
-import org.apache.felix.http.proxy.impl.EventDispatcherTracker;
-import org.apache.felix.http.proxy.impl.ProxyServletContextListener;
 import org.osgi.framework.BundleContext;
-import org.osgi.framework.InvalidSyntaxException;
 
 /**
  * The <code>ProxyListener</code> implements a Servlet API listener for HTTP
  * Session related events. These events are provided by the servlet container
  * and forwarded to the event dispatcher.
  *
- * @since 2.1.0
- * @deprecated Use the {@link ProxyServletContextListener} instead.
+ * @since 3.1.0
  */
-@Deprecated
-public class ProxyListener
-    implements HttpSessionAttributeListener,
-               HttpSessionListener,
+public abstract class AbstractProxyListener
+    implements HttpSessionListener,
                HttpSessionIdListener,
-               ServletContextListener
+               HttpSessionAttributeListener,
+               ServletContextAttributeListener
 {
 
-    private volatile ServletContext servletContext;
-
-    private volatile EventDispatcherTracker eventDispatcherTracker;
-
-    // ---------- ServletContextListener
-
-    @Override
-    public void contextInitialized(final ServletContextEvent sce)
-    {
-        this.servletContext = sce.getServletContext();
-    }
-
-    @Override
-    public void contextDestroyed(final ServletContextEvent sce)
-    {
-        if (this.eventDispatcherTracker != null)
-        {
-            this.eventDispatcherTracker.close();
-            this.eventDispatcherTracker = null;
-        }
-        this.servletContext = null;
-    }
+    private static final String ATTR_BUNDLE_CONTEXT = BundleContext.class.getName();
 
     // ---------- HttpSessionListener
 
@@ -137,58 +110,70 @@ public class ProxyListener
         }
     }
 
+    // ServletContextAttributeListener
+
+    @Override
+    public void attributeAdded(final ServletContextAttributeEvent event)
+    {
+        if ( event.getName().equals(ATTR_BUNDLE_CONTEXT) )
+        {
+            startTracking(event.getValue());
+        }
+    }
+
+    @Override
+    public void attributeRemoved(final ServletContextAttributeEvent event)
+    {
+        if ( event.getName().equals(ATTR_BUNDLE_CONTEXT) )
+        {
+            stopTracking();
+        }
+    }
+
+    @Override
+    public void attributeReplaced(final ServletContextAttributeEvent event)
+    {
+        if ( event.getName().equals(ATTR_BUNDLE_CONTEXT) )
+        {
+            stopTracking();
+            startTracking(event.getServletContext().getAttribute(event.getName()));
+        }
+    }
+
     // ---------- internal
 
-    private Object getDispatcher()
-    {
-        if (this.eventDispatcherTracker == null)
-        {
-            // the bundle context may or may not be already provided;
-            // if not we cannot access the dispatcher yet
-            Object bundleContextAttr = this.servletContext.getAttribute(BundleContext.class.getName());
-            if (!(bundleContextAttr instanceof BundleContext))
-            {
-                return null;
-            }
+    protected abstract EventDispatcherTracker getEventDispatcherTracker();
 
-            try
-            {
-                BundleContext bundleContext = (BundleContext) bundleContextAttr;
-                this.eventDispatcherTracker = new EventDispatcherTracker(bundleContext);
-                this.eventDispatcherTracker.open();
-            }
-            catch (InvalidSyntaxException e)
-            {
-                // not expected for our simple filter
-            }
+    protected abstract void stopTracking();
 
-        }
-        return this.eventDispatcherTracker.getService();
-    }
+    protected abstract void startTracking(Object bundleContext);
 
     private HttpSessionListener getSessionDispatcher()
     {
-        if (this.eventDispatcherTracker != null)
+        final EventDispatcherTracker eventDispatcherTracker = getEventDispatcherTracker();
+        if (eventDispatcherTracker != null)
         {
-            return this.eventDispatcherTracker.getHttpSessionListener();
+            return eventDispatcherTracker.getHttpSessionListener();
         }
         return null;
     }
 
     private HttpSessionIdListener getSessionIdDispatcher()
     {
-        if (this.eventDispatcherTracker != null)
+        final EventDispatcherTracker eventDispatcherTracker = getEventDispatcherTracker();
+        if (eventDispatcherTracker != null)
         {
-            return this.eventDispatcherTracker.getHttpSessionIdListener();
+            return eventDispatcherTracker.getHttpSessionIdListener();
         }
         return null;
     }
 
     private HttpSessionAttributeListener getAttributeDispatcher()
     {
-        if (this.eventDispatcherTracker != null)
+        final EventDispatcherTracker eventDispatcherTracker = getEventDispatcherTracker();
+        if (eventDispatcherTracker != null)
         {
-            return this.eventDispatcherTracker.getHttpSessionAttributeListener();
+            return eventDispatcherTracker.getHttpSessionAttributeListener();
         }
         return null;
     }

@@ -1,1 +1,3 @@
-This directory contains the implementation  the Apache Felix Http Bridge.
+This directory contains the implementation of the Apache Felix Http Bridge.
+
+It requires Jakarta Servlet 6.
