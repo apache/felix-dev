@@ -16,6 +16,7 @@
  */
 package org.apache.felix.http.jetty.internal;
 
+import static org.eclipse.jetty.http.UriCompliance.JETTY_11;
 import static org.eclipse.jetty.http.UriCompliance.LEGACY;
 import static org.eclipse.jetty.http.UriCompliance.UNAMBIGUOUS;
 import static org.eclipse.jetty.http.UriCompliance.UNSAFE;
@@ -716,7 +717,8 @@ public final class JettyService
                 UriCompliance compliance = UriCompliance.valueOf(uriComplianceMode);
                 config.setUriCompliance(compliance);
 
-                if (LEGACY.equals(compliance) || UNSAFE.equals(compliance) || UNAMBIGUOUS.equals(compliance)) {
+                if (LEGACY.equals(compliance) || UNSAFE.equals(compliance) ||
+                        UNAMBIGUOUS.equals(compliance) || JETTY_11.equals(compliance)) {
                     // See https://github.com/jetty/jetty.project/issues/11448#issuecomment-1969206031
                     this.server.getContainedBeans(ServletHandler.class)
                             .forEach(handler -> handler.setDecodeAmbiguousURIs(true));
