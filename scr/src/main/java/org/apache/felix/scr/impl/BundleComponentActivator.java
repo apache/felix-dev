@@ -270,6 +270,24 @@ public class BundleComponentActivator implements ComponentActivator
                 URL[] descriptorURLs = findDescriptors(m_bundle, descriptorLocation);
                 if (descriptorURLs.length == 0)
                 {
+                    if (descriptorLocation.contains("*")) {
+                        // 112.4.1 The last component of each path in the Service-Component header may
+                        // use wildcards so that Bundle.findEntries can be used to locate the XML
+                        // document within the bundle and its fragments. For example:
+                        //
+                        // Service-Component: OSGI-INF/*.xml
+                        //
+                        // A Service-Component manifest header specified in a fragment is ignored by
+                        // SCR. However, XML documents referenced by a bundle's Service-Component
+                        // manifest header may be contained in attached fragments.
+
+                        // in case of such wildcard, finding nothing does not mean an error (because it
+                        // *might* be found in a fragment that is attached later.
+                        logger.log(Level.TRACE,
+                                "Component descriptor entry ''{0}'' with wildcard has no matches", null,
+                                descriptorLocation);
+                        continue;
+                    }
                     // 112.4.1 If an XML document specified by the header cannot be located in the bundle and its attached
                     // fragments, SCR must log an error message with the Log Service, if present, and continue.
                     logger.log(Level.ERROR,
