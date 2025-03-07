@@ -14,6 +14,7 @@ on:
     paths:
       - 'scr/**'
       - 'http/**'
+      - 'gogo/**'
       - 'tools/maven-bundle-plugin/**'
       - 'tools/osgicheck-maven-plugin/**'
       - 'webconsole/**'
@@ -44,6 +45,8 @@ jobs:
             - 'scr/**'
           http:
             - 'http/**'
+          gogo:
+            - 'gogo/**'
           maven-bundle-plugin:
             - 'tools/maven-bundle-plugin/**'
           maven-osgicheck-plugin:
@@ -65,6 +68,9 @@ jobs:
     - name: Felix Webconsole
       if: steps.changes.outputs.webconsole == 'true'
       run: mvn -B -V -Dstyle.color=always --file webconsole/pom.xml clean install verify
+    - name: Felix Gogo Shell
+      if: steps.changes.outputs.gogo == 'true'
+      run: mvn -B -V -Dstyle.color=always --file gogo/pom.xml clean install verify
     - name: Upload Test Results
       if: always()
       uses: actions/upload-artifact@4cec3d8aa04e39d1a68397de0c4cd6fb9dce8ec1 # v4.6.1

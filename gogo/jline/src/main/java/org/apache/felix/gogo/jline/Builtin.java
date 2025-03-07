@@ -18,6 +18,8 @@
  */
 package org.apache.felix.gogo.jline;
 
+import static org.apache.felix.gogo.jline.Shell.getCommands;
+
 import java.io.BufferedReader;
 import java.io.BufferedWriter;
 import java.io.ByteArrayInputStream;
@@ -49,12 +51,12 @@ import java.util.TreeSet;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
-import org.apache.felix.service.command.Job;
-import org.apache.felix.service.command.Process;
 import org.apache.felix.gogo.runtime.CommandSessionImpl;
 import org.apache.felix.service.command.CommandSession;
 import org.apache.felix.service.command.Converter;
 import org.apache.felix.service.command.Function;
+import org.apache.felix.service.command.Job;
+import org.apache.felix.service.command.Process;
 import org.jline.builtins.Commands;
 import org.jline.builtins.Completers.DirectoriesCompleter;
 import org.jline.builtins.Completers.FilesCompleter;
@@ -64,8 +66,7 @@ import org.jline.reader.LineReader;
 import org.jline.reader.ParsedLine;
 import org.jline.reader.Widget;
 import org.jline.terminal.Terminal;
-
-import static org.apache.felix.gogo.jline.Shell.getCommands;
+import org.jline.utils.StyleResolver;
 
 /**
  * gosh built-in commands.
@@ -683,7 +684,7 @@ public class Builtin {
         List<Candidate> candidates = new ArrayList<>();
         new FilesCompleter(session.currentDir()) {
             @Override
-            protected String getDisplay(Terminal terminal, Path p) {
+            protected String getDisplay(Terminal terminal, Path p, StyleResolver resolver, String separator) {
                 return getFileDisplay(session, p);
             }
         }.complete(reader, line, candidates);
@@ -696,7 +697,7 @@ public class Builtin {
         List<Candidate> candidates = new ArrayList<>();
         new DirectoriesCompleter(session.currentDir()) {
             @Override
-            protected String getDisplay(Terminal terminal, Path p) {
+            protected String getDisplay(Terminal terminal, Path p, StyleResolver resolver, String separator) {
                 return getFileDisplay(session, p);
             }
         }.complete(reader, line, candidates);
