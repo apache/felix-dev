@@ -85,6 +85,7 @@ import org.osgi.service.packageadmin.ExportedPackage;
 import org.osgi.service.packageadmin.PackageAdmin;
 import org.osgi.util.tracker.ServiceTracker;
 import org.osgi.util.tracker.ServiceTrackerCustomizer;
+import org.owasp.encoder.Encode;
 
 
 /**
@@ -154,24 +155,24 @@ public class BundlesServlet extends SimpleWebConsolePlugin implements OsgiManage
         super.activate( bundleContext );
 
         bundleInfoTracker = new ServiceTracker<>( bundleContext, BundleInfoProvider.class, new ServiceTrackerCustomizer<BundleInfoProvider,BundleInfoProvider>() {
-                
+
                 @Override
                 public BundleInfoProvider addingService(ServiceReference<BundleInfoProvider> reference) {
                     return bundleContext.getService(reference);
                 }
-    
+
                 @Override
                 public void modifiedService(ServiceReference<BundleInfoProvider> reference, BundleInfoProvider service) {
                     // nothing to do
                 }
-    
+
                 @Override
                 public void removedService(ServiceReference<BundleInfoProvider> reference, BundleInfoProvider service) {
                     try {
                         bundleContext.ungetService(reference);
                     } catch ( final IllegalStateException ise) {
                         // might happen on shutdown, ignore
-                    } 
+                    }
                 }
         });
         bundleInfoTracker.open();
@@ -759,10 +760,15 @@ public class BundlesServlet extends SimpleWebConsolePlugin implements OsgiManage
         {
             final Map<String, Object> obj = new LinkedHashMap<String, Object>();
             obj.put("key", key);
-            obj.put("value", val);
+            if ( val instanceof String ) {
+                 obj.put("value", Encode.forJavaScript((String)val));
+            } else {
+                 obj.put("value", val);
+            }
             props.add(obj);
         }
     }
+
     private final void bundleDetails( final Map<String, Object> result,
             final Bundle bundle,
             final String pluginRoot,
