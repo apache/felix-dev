@@ -28,7 +28,7 @@
 
     <name>Apache Felix Http Webconsole Plugin</name>
     <artifactId>org.apache.felix.http.webconsoleplugin</artifactId>
-    <version>1.2.2</version>
+    <version>1.2.3-SNAPSHOT</version>
     <packaging>bundle</packaging>
 
     <scm>
