@@ -37,7 +37,7 @@
         <connection>scm:git:https://github.com/apache/felix-dev.git</connection>
         <developerConnection>scm:git:https://github.com/apache/felix-dev.git</developerConnection>
         <url>https://gitbox.apache.org/repos/asf?p=felix-dev.git</url>
-      <tag>org.apache.felix.http.jetty12-1.0.24</tag>
+      <tag>org.apache.felix.http.jetty12-1.0.10</tag>
   </scm>
 
     <properties>
