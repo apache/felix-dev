@@ -50,64 +50,92 @@ public class CookieWrapper extends Cookie {
      * @param c Wrapped cookie
      */
     public CookieWrapper(@NotNull final javax.servlet.http.Cookie c) {
-        super(c.getName(), c.getValue());
+        super("dummy", "dummy");
         this.cookie = c;
-        super.setComment(c.getComment());
-        if ( c.getDomain() != null ) {
-            super.setDomain(c.getDomain());
-        }
-        super.setHttpOnly(c.isHttpOnly());
-        super.setMaxAge(c.getMaxAge());
-        super.setPath(c.getPath());
-        super.setSecure(c.getSecure());
-        super.setVersion(c.getVersion());
+    }
+
+    @Override
+    public String getName() {
+        return this.cookie.getName();
+    }
+
+    @Override
+    public String getValue() {
+        return this.cookie.getValue();
+    }
+
+    @Override
+    public void setValue(String value) {
+        this.cookie.setValue(value);
     }
 
     @Override
     public void setComment(final String purpose) {
         this.cookie.setComment(purpose);
-        super.setComment(purpose);
+    }
+
+    @Override
+    public String getComment() {
+        return this.cookie.getComment();
     }
 
     @Override
     public void setDomain(final String domain) {
         this.cookie.setDomain(domain);
-        super.setDomain(domain);
+    }
+
+    @Override
+    public String getDomain() {
+        return this.cookie.getDomain();
     }
 
     @Override
     public void setMaxAge(final int expiry) {
         this.cookie.setMaxAge(expiry);
-        super.setMaxAge(expiry);
+    }
+
+    @Override
+    public int getMaxAge() {
+        return this.cookie.getMaxAge();
     }
 
     @Override
     public void setPath(final String uri) {
         this.cookie.setPath(uri);
-        super.setPath(uri);
+    }
+
+    @Override
+    public String getPath() {
+        return this.cookie.getPath();
     }
 
     @Override
     public void setSecure(final boolean flag) {
         this.cookie.setSecure(flag);
-        super.setSecure(flag);
     }
 
     @Override
-    public void setValue(final String newValue) {
-        this.cookie.setValue(newValue);
-        super.setValue(newValue);
+    public boolean getSecure() {
+        return this.cookie.getSecure();
     }
 
     @Override
     public void setVersion(final int v) {
         this.cookie.setVersion(v);
-        super.setVersion(v);
+    }
+
+    @Override
+    public int getVersion() {
+        return this.cookie.getVersion();
     }
 
     @Override
     public void setHttpOnly(final boolean isHttpOnly) {
         this.cookie.setHttpOnly(isHttpOnly);
-        super.setHttpOnly(isHttpOnly);
+    }
+
+    @Override
+    public boolean isHttpOnly() {
+        return this.cookie.isHttpOnly();
     }
 }
