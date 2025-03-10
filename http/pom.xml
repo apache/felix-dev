@@ -44,12 +44,12 @@
         <module>inventoryprinter</module>
         <module>itest</module>
         <module>servlet-api</module>
+        <module>wrappers</module>
         <module>jetty</module>
         <module>jetty12</module>
         <module>proxy</module>
         <module>samples/whiteboard</module>
         <module>sslfilter</module>
         <module>webconsoleplugin</module>
-        <module>wrappers</module>
     </modules>
 </project>
