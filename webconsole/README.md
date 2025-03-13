@@ -113,6 +113,37 @@ In this case the Configuration Manager displays the name "myRealm, myClass" as d
 
 ## Releases
 
+### Changes in 5.0.10 (5/Feb/25)
+
+#### Bug
+
+- [FELIX-6747](https://issues.apache.org/jira/browse/FELIX-6747) : NPE in activator of webconsole
+- [FELIX-6751](https://issues.apache.org/jira/browse/FELIX-6751) : Use proper encoding for service filter
+
+
+### Changes in 5.0.8 (19/Sep/24)
+
+#### Bug
+
+- [FELIX-6727](https://issues.apache.org/jira/browse/FELIX-6727) : NullPointerException when using REST API to install a bundle
+
+
+### Changes in 5.0.6 (10/Jul/24)
+
+#### Bug
+
+- [FELIX-6715](https://issues.apache.org/jira/browse/FELIX-6715) : Incorrect link in "Using bundles" for /system/console/services/<serviceid>
+
+
+### Changes in 5.0.4 (20/Jun/24)
+
+#### Improvements
+
+- [FELIX-6712](https://issues.apache.org/jira/browse/FELIX-6712) : Release Websonsole - without JSON License
+#### Docs
+
+- [FELIX-6703]()https://issues.apache.org/jira/browse/FELIX-6703 : Missing conf properties in the documentation
+
 ### Changes in 5.0.2 (14/Apr/24)
 
 #### Bug
@@ -135,7 +166,18 @@ In this case the Configuration Manager displays the name "myRealm, myClass" as d
 - [FELIX-6654](https://issues.apache.org/jira/browse/FELIX-6654) : Remove support for commons fileupload
 
 
-### Changes in 4.9.8 (14/Apr/24)                                                                                                                                                                                                                                          #### Bug                                                                                                                                                                                                                                                                  - [FELIX-6688](https://issues.apache.org/jira/browse/FELIX-6688) : Context path of outer servlet container is not respected for authentication
+### Changes in 4.9.10 (5/Feb/25)
+
+#### Bug
+
+- [FELIX-6747](https://issues.apache.org/jira/browse/FELIX-6747) : NPE in activator of webconsole
+- [FELIX-6751](https://issues.apache.org/jira/browse/FELIX-6751) : Use proper encoding for service filter
+
+
+### Changes in 4.9.8 (14/Apr/24)                                                                                                                                                                                                                                          
+#### Bug                                                                                                                                                                  
+
+- [FELIX-6688](https://issues.apache.org/jira/browse/FELIX-6688) : Context path of outer servlet container is not respected for authentication
 
 ### Changes in 4.9.6 (7/Oct/23)
 
