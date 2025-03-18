@@ -1,0 +1,17 @@
+-include: ../base.bndrun
+
+-runfw: org.apache.felix.framework
+
+-runrequires:\
+    osgi.identity;filter:='(osgi.identity=org.apache.felix.log)',\
+    osgi.identity;filter:='(osgi.identity=org.apache.felix.log.itests.logevents)'
+
+-runbundles: \
+	org.apache.felix.configadmin;version='[1.9.22,1.9.23)',\
+	org.apache.felix.log;version='[1.3.1,1.3.2)',\
+	org.apache.felix.eventadmin;version='[1.6.4,1.6.5)',\
+	org.apache.servicemix.bundles.junit;version='[4.13.2,4.13.3)',\
+	org.osgi.service.event;version='[1.4.1,1.4.2)',\
+	org.apache.felix.log.itests.logevents;version='[1.0.0,1.0.1)'
+
+#-runjdb: 8000

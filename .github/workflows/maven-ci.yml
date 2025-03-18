@@ -8,6 +8,7 @@ on:
       - 'http/**'
       - 'tools/maven-bundle-plugin/**'
       - 'tools/osgicheck-maven-plugin/**'
+      - 'log/**'
       - 'webconsole/**'
   pull_request:
     branches: [ "master" ]
@@ -17,7 +18,8 @@ on:
       - 'tools/maven-bundle-plugin/**'
       - 'tools/osgicheck-maven-plugin/**'
       - 'webconsole/**'
-    
+      - 'log/**'
+
 permissions: {}
 
 jobs:
@@ -34,7 +36,7 @@ jobs:
     - name: Set up Maven
       uses: stCarolas/setup-maven@d6af6abeda15e98926a57b5aa970a96bb37f97d1 # v5
       with:
-        maven-version: 3.9.7
+        maven-version: 3.9.9
     - name: Check which subproject changed and build affected ones
       uses: dorny/paths-filter@v3
       id: changes
@@ -50,10 +52,16 @@ jobs:
             - 'tools/osgicheck-maven-plugin/**'
           webconsole:
             - 'webconsole/**'
+          log:
+            - 'log/**'
+
     - name: Felix SCR
       if: steps.changes.outputs.scr == 'true'
       run: mvn -B -V -Dstyle.color=always --file scr/pom.xml clean verify
-    - name: Felix HTTP 
+    - name: Felix Log
+      if: steps.changes.outputs.log == 'true'
+      run: mvn -B -V -Dstyle.color=always --file log/pom.xml clean verify
+    - name: Felix HTTP
       if: steps.changes.outputs.http == 'true'
       run: mvn -B -V -Dstyle.color=always "-Dit.test=!MissingWebsocketDependenciesIT" --file http/pom.xml clean install verify
     - name: Felix Maven bundle plugin 
