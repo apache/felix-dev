@@ -18,6 +18,9 @@ The required dependencies are:
 
 The installation of the web console is straight forward. Provide an OSGi Framework with the mentioned required dependenices and install the bundle.
 
+**Important:** The webconsole does not provide a CSRF protection out of the box! Therefore it is advisable to install additional software to protect the webconsole. For example the bundle from [Apache Sling Security](https://github.com/apache/sling-org-apache-sling-security) provides this additional protection. Make sure to use the latest version (1.3.0 or higher).
+
+
 ## Configuration
 
 The Web Console can be configured via framework properties as well as via a configuration through the OSGi Configuration Admin Service. The framework properties can be used in case your runtime does not provide a OSGi Configuration Admin Service.
@@ -55,6 +58,8 @@ Such framework properties will also be considered actual default values for miss
 Please note that setting any of these properties as framework property makes them visible to all bundles deployed. This is particularly to be considered in case of the `felix.webconsole.password` property (as for authentication, the use of a [Web Console Security Provider](EXTENSIONS.md) is suggested anyway).
 
 ## Security
+
+**Important:** The webconsole does not provide a CSRF protection out of the box! Therefore it is advisable to install additional software to protect the webconsole. For example the bundle from [Apache Sling Security](https://github.com/apache/sling-org-apache-sling-security) provides this additional protection. Make sure to use the latest version (1.3.0 or higher).
 
 The Web Console only has very basic security at the moment supporting only HTTP Basic authentication. This security is enabled by default and may be disabled by simply clearing the `username` property.
 
