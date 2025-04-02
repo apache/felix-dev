@@ -88,13 +88,16 @@ public final class WebSocketHandler {
         return false;
     }
 
-      /**
+    /**
      * Check if the servlet is a JettyWebSocketServlet.
      * JettyWebSocket classes are handled differently due to FELIX-6746.
      * @param servlet the servlet to check
      * @return true if the servlet is a JettyWebSocketServlet, false otherwise
      */
     public static boolean isJettyWebSocketServlet(Object servlet) {
+        if (servlet == null) {
+            return false;
+        }
         final Class<?> superClass = servlet.getClass().getSuperclass();
         SystemLogger.LOGGER.debug("Checking if the servlet is a JettyWebSocketServlet: '" + superClass.getSimpleName() + "'");
 

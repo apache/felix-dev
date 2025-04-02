@@ -16,7 +16,6 @@
  */
 package org.apache.felix.http.base.internal.whiteboard;
 
-import static org.apache.felix.http.base.internal.handler.WebSocketHandler.isJettyWebSocketServlet;
 import static org.osgi.service.servlet.runtime.dto.DTOConstants.FAILURE_REASON_NO_SERVLET_CONTEXT_MATCHING;
 import static org.osgi.service.servlet.runtime.dto.DTOConstants.FAILURE_REASON_SHADOWED_BY_OTHER_SERVICE;
 import static org.osgi.service.servlet.runtime.dto.DTOConstants.FAILURE_REASON_UNKNOWN;
@@ -40,9 +39,7 @@ import org.apache.felix.http.base.internal.handler.HttpSessionWrapper;
 import org.apache.felix.http.base.internal.handler.ListenerHandler;
 import org.apache.felix.http.base.internal.handler.PreprocessorHandler;
 import org.apache.felix.http.base.internal.handler.ServletHandler;
-import org.apache.felix.http.base.internal.handler.WebSocketHandler;
 import org.apache.felix.http.base.internal.handler.WhiteboardServletHandler;
-import org.apache.felix.http.base.internal.handler.WhiteboardWebSocketServletHandler;
 import org.apache.felix.http.base.internal.logger.SystemLogger;
 import org.apache.felix.http.base.internal.registry.EventListenerRegistry;
 import org.apache.felix.http.base.internal.registry.HandlerRegistry;
@@ -807,17 +804,6 @@ public final class WhiteboardManager
                                                        WhiteboardServiceInfo<?> info,
                                                        ExtServletContext servletContext)
     {
-        Object servlet = info.getService(handler.getBundleContext());
-        if (isJettyWebSocketServlet(servlet))
-        {
-            return new WhiteboardWebSocketServletHandler(
-                    handler.getContextInfo().getServiceId(),
-                    servletContext,
-                    (ServletInfo) info,
-                    handler.getBundleContext(),
-                    info.getServiceReference().getBundle(),
-                    this.httpBundleContext.getBundle(), servlet);
-        }
         return new WhiteboardServletHandler(
                 handler.getContextInfo().getServiceId(),
                 servletContext,
