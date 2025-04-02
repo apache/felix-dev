@@ -11,7 +11,7 @@ This is an implementation of the [R8.1 Whiteboard Specification for Jakarta Serv
       * [Jetty WebSocket support](https://github.com/apache/felix-dev/pull/309), see example code [here](https://github.com/apache/felix-dev/blob/master/http/samples/whiteboard/src/main/java/org/apache/felix/http/samples/whiteboard/TestWebSocketServlet.java).
   * Correctly versioned Servlet API.
 
-## Installing
+## Installing 
 
 The Apache Felix HTTP Service project includes several bundles.
 
