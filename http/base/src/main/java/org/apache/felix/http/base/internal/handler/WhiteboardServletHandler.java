@@ -112,7 +112,9 @@ public class WhiteboardServletHandler extends ServletHandler
         this.setServlet(this.getServletInfo().getService(this.bundleContext));
 
         if (WebSocketHandler.isJettyWebSocketServlet(this.getServlet())) {
-            this.webSocketHandler = new WebSocketHandler(this);
+            if (this.webSocketHandler == null) {
+                this.webSocketHandler = new WebSocketHandler(this);
+            }
             if (!webSocketHandler.shouldInit()) {
                 // do nothing, delay init until first service call
                 return -1;
