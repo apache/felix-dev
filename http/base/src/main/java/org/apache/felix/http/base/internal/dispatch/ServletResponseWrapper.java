@@ -96,6 +96,10 @@ final class ServletResponseWrapper extends HttpServletResponseWrapper
                         {
                             request.setAttribute(RequestDispatcher.ERROR_SERVLET_NAME, this.servletName);
                         }
+                        request.setAttribute(RequestDispatcher.ERROR_METHOD, this.request.getMethod());
+                        if (this.request.getQueryString() != null) {
+                            request.setAttribute(RequestDispatcher.ERROR_QUERY_STRING, this.request.getQueryString());
+                        }
 
                         final String servletPath = null;
                         final String pathInfo = request.getRequestURI();
@@ -132,6 +136,8 @@ final class ServletResponseWrapper extends HttpServletResponseWrapper
                         request.removeAttribute(RequestDispatcher.ERROR_SERVLET_NAME);
                         request.removeAttribute(RequestDispatcher.ERROR_EXCEPTION);
                         request.removeAttribute(RequestDispatcher.ERROR_EXCEPTION_TYPE);
+                        request.removeAttribute(RequestDispatcher.ERROR_METHOD);
+                        request.removeAttribute(RequestDispatcher.ERROR_QUERY_STRING);
                     }
                 }
             }
