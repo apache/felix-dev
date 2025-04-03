@@ -130,4 +130,15 @@ public class HttpServletResponseWrapper extends ServletResponseWrapper
     public Collection<String> getHeaderNames() {
         return this.response.getHeaderNames();
     }
+
+    @Override
+    public void sendRedirect(final String location, final int sc, final boolean clearBuffer) throws IOException {
+        if (!clearBuffer) {
+            throw new IOException("javax.servlet API does not support sendRedirect(String, int, false)");
+        }
+        if (sc != 302) {
+            throw new IOException("javax.servlet API does not support sendRedirect(String, int, boolean) with sc != 302");
+        }
+        this.response.sendRedirect(location);
+    }
 }
