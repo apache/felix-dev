@@ -10,6 +10,7 @@ on:
       - 'tools/osgicheck-maven-plugin/**'
       - 'log/**'
       - 'webconsole/**'
+      - 'framework/**'
   pull_request:
     branches: [ "master" ]
     paths:
@@ -19,6 +20,7 @@ on:
       - 'tools/osgicheck-maven-plugin/**'
       - 'webconsole/**'
       - 'log/**'
+      - 'framework/**'
 
 permissions: {}
 
@@ -54,6 +56,8 @@ jobs:
             - 'webconsole/**'
           log:
             - 'log/**'
+          framework:
+            - 'framework/**'
 
     - name: Felix SCR
       if: steps.changes.outputs.scr == 'true'
@@ -73,6 +77,9 @@ jobs:
     - name: Felix Webconsole
       if: steps.changes.outputs.webconsole == 'true'
       run: mvn -B -V -Dstyle.color=always --file webconsole/pom.xml clean install verify
+    - name: Felix Framework
+      if: steps.changes.outputs.framework == 'true'
+      run: mvn -B -V -Dstyle.color=always --file framework/pom.xml clean verify
     - name: Upload Test Results
       if: always()
       uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4.6.2
