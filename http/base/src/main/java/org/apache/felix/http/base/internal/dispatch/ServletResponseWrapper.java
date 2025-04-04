@@ -35,6 +35,9 @@ import org.apache.felix.http.base.internal.registry.PerContextHandlerRegistry;
 
 final class ServletResponseWrapper extends HttpServletResponseWrapper
 {
+    // Attributes from servlet API 6.1 - added here to avoid dependency to 6.1
+    private static final String ERROR_METHOD = "jakarta.servlet.error.method";
+    private static final String ERROR_QUERY_STRING = "jakarta.servlet.error.query_string";
 
     private final HttpServletRequest request;
 
@@ -96,9 +99,9 @@ final class ServletResponseWrapper extends HttpServletResponseWrapper
                         {
                             request.setAttribute(RequestDispatcher.ERROR_SERVLET_NAME, this.servletName);
                         }
-                        request.setAttribute(RequestDispatcher.ERROR_METHOD, this.request.getMethod());
+                        request.setAttribute(ERROR_METHOD, this.request.getMethod());
                         if (this.request.getQueryString() != null) {
-                            request.setAttribute(RequestDispatcher.ERROR_QUERY_STRING, this.request.getQueryString());
+                            request.setAttribute(ERROR_QUERY_STRING, this.request.getQueryString());
                         }
 
                         final String servletPath = null;
@@ -136,8 +139,8 @@ final class ServletResponseWrapper extends HttpServletResponseWrapper
                         request.removeAttribute(RequestDispatcher.ERROR_SERVLET_NAME);
                         request.removeAttribute(RequestDispatcher.ERROR_EXCEPTION);
                         request.removeAttribute(RequestDispatcher.ERROR_EXCEPTION_TYPE);
-                        request.removeAttribute(RequestDispatcher.ERROR_METHOD);
-                        request.removeAttribute(RequestDispatcher.ERROR_QUERY_STRING);
+                        request.removeAttribute(ERROR_METHOD);
+                        request.removeAttribute(ERROR_QUERY_STRING);
                     }
                 }
             }
