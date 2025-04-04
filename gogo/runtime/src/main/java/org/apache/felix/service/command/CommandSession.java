@@ -111,6 +111,12 @@ public interface CommandSession extends AutoCloseable
      * @return Object
      */
     Object convert(Class<?> type, Object instance);
+    
+    /**
+     * When this session is stopped, execute the runnable.
+     * @param runnable the runnable to run
+     */
+    void onClose( Runnable runnable);
 
     //
     // Job support
