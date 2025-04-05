@@ -81,13 +81,13 @@ public class CapabilitySet
     public CapabilitySet(final List<String> indexProps, final boolean caseSensitive)
     {
         m_indices = (caseSensitive)
-            ? new ConcurrentSkipListMap<String, Map<Object, Set<BundleCapability>>>()
-            : new ConcurrentSkipListMap<String, Map<Object, Set<BundleCapability>>>(
+            ? new ConcurrentSkipListMap<>()
+            : new ConcurrentSkipListMap<>(
                 StringComparator.COMPARATOR);
         for (int i = 0; (indexProps != null) && (i < indexProps.size()); i++)
         {
             m_indices.put(
-                indexProps.get(i), new ConcurrentHashMap<Object, Set<BundleCapability>>());
+                indexProps.get(i), new ConcurrentHashMap<>());
         }
     }
 

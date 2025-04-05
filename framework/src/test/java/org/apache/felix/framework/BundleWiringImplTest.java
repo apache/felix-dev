@@ -88,10 +88,10 @@ public class BundleWiringImplTest
 
         Logger logger = new Logger();
         Map configMap = new HashMap();
-        List<BundleRevision> fragments = new ArrayList<BundleRevision>();
-        List<BundleWire> wires = new ArrayList<BundleWire>();
-        Map<String, BundleRevision> importedPkgs = new HashMap<String, BundleRevision>();
-        Map<String, List<BundleRevision>> requiredPkgs = new HashMap<String, List<BundleRevision>>();
+        List<BundleRevision> fragments = new ArrayList<>();
+        List<BundleWire> wires = new ArrayList<>();
+        Map<String, BundleRevision> importedPkgs = new HashMap<>();
+        Map<String, List<BundleRevision>> requiredPkgs = new HashMap<>();
 
         when(mockRevisionImpl.getBundle()).thenReturn(mockBundle);
         when(mockBundle.getBundleId()).thenReturn(Long.valueOf(1));
@@ -139,7 +139,7 @@ public class BundleWiringImplTest
         String testClassAsPath = testClassName.replace('.', '/') + ".class";
         byte[] testClassBytes = createTestClassBytes(testClass, testClassAsPath);
 
-        List<Content> contentPath = new ArrayList<Content>();
+        List<Content> contentPath = new ArrayList<>();
         contentPath.add(mockContent);
         initializeSimpleBundleWiring();
 
@@ -172,12 +172,12 @@ public class BundleWiringImplTest
         ServiceReference<WeavingHook> mockServiceReferenceWeavingHook = mock(ServiceReference.class);
         ServiceReference<WovenClassListener> mockServiceReferenceWovenClassListener = mock(ServiceReference.class);
 
-        Set<ServiceReference<WeavingHook>> hooks = new HashSet<ServiceReference<WeavingHook>>();
+        Set<ServiceReference<WeavingHook>> hooks = new HashSet<>();
         hooks.add(mockServiceReferenceWeavingHook);
 
         DummyWovenClassListener dummyWovenClassListener = new DummyWovenClassListener();
 
-        Set<ServiceReference<WovenClassListener>> listeners = new HashSet<ServiceReference<WovenClassListener>>();
+        Set<ServiceReference<WovenClassListener>> listeners = new HashSet<>();
         listeners.add(mockServiceReferenceWovenClassListener);
 
         Class testClass = TestClass.class;
@@ -185,7 +185,7 @@ public class BundleWiringImplTest
         String testClassAsPath = testClassName.replace('.', '/') + ".class";
         byte[] testClassBytes = createTestClassBytes(testClass, testClassAsPath);
 
-        List<Content> contentPath = new ArrayList<Content>();
+        List<Content> contentPath = new ArrayList<>();
         contentPath.add(mockContent);
         initializeSimpleBundleWiring();
 
@@ -236,12 +236,12 @@ public class BundleWiringImplTest
         ServiceReference<WeavingHook> mockServiceReferenceWeavingHook = mock(ServiceReference.class);
         ServiceReference<WovenClassListener> mockServiceReferenceWovenClassListener = mock(ServiceReference.class);
 
-        Set<ServiceReference<WeavingHook>> hooks = new HashSet<ServiceReference<WeavingHook>>();
+        Set<ServiceReference<WeavingHook>> hooks = new HashSet<>();
         hooks.add(mockServiceReferenceWeavingHook);
 
         DummyWovenClassListener dummyWovenClassListener = new DummyWovenClassListener();
 
-        Set<ServiceReference<WovenClassListener>> listeners = new HashSet<ServiceReference<WovenClassListener>>();
+        Set<ServiceReference<WovenClassListener>> listeners = new HashSet<>();
         listeners.add(mockServiceReferenceWovenClassListener);
 
         Class testClass = TestClass.class;
@@ -249,7 +249,7 @@ public class BundleWiringImplTest
         String testClassAsPath = testClassName.replace('.', '/') + ".class";
         byte[] testClassBytes = createTestClassBytes(testClass, testClassAsPath);
 
-        List<Content> contentPath = new ArrayList<Content>();
+        List<Content> contentPath = new ArrayList<>();
         contentPath.add(mockContent);
         initializeSimpleBundleWiring();
 
@@ -303,12 +303,12 @@ public class BundleWiringImplTest
         ServiceReference<WeavingHook> mockServiceReferenceWeavingHook = mock(ServiceReference.class);
         ServiceReference<WovenClassListener> mockServiceReferenceWovenClassListener = mock(ServiceReference.class);
 
-        Set<ServiceReference<WeavingHook>> hooks = new HashSet<ServiceReference<WeavingHook>>();
+        Set<ServiceReference<WeavingHook>> hooks = new HashSet<>();
         hooks.add(mockServiceReferenceWeavingHook);
 
         DummyWovenClassListener dummyWovenClassListener = new DummyWovenClassListener();
 
-        Set<ServiceReference<WovenClassListener>> listeners = new HashSet<ServiceReference<WovenClassListener>>();
+        Set<ServiceReference<WovenClassListener>> listeners = new HashSet<>();
         listeners.add(mockServiceReferenceWovenClassListener);
 
         Class testClass = TestClass.class;
@@ -316,7 +316,7 @@ public class BundleWiringImplTest
         String testClassAsPath = testClassName.replace('.', '/') + ".class";
         byte[] testClassBytes = createTestClassBytes(testClass, testClassAsPath);
 
-        List<Content> contentPath = new ArrayList<Content>();
+        List<Content> contentPath = new ArrayList<>();
         contentPath.add(mockContent);
         initializeSimpleBundleWiring();
 
@@ -410,8 +410,8 @@ public class BundleWiringImplTest
 
         Logger logger = new Logger();
         Map configMap = new HashMap();
-        List<BundleRevision> fragments = new ArrayList<BundleRevision>();
-        List<BundleWire> wires = new ArrayList<BundleWire>();
+        List<BundleRevision> fragments = new ArrayList<>();
+        List<BundleWire> wires = new ArrayList<>();
 
         when(mockRevisionImpl.getBundle()).thenReturn(mockBundle);
         when(mockBundle.getBundleId()).thenReturn(Long.valueOf(1));
@@ -541,7 +541,7 @@ public class BundleWiringImplTest
         BundleClassLoader notFoundClassLoader = mock(BundleClassLoader.class);
         BundleRevision bundleRevision1 = getBundleRevision(classToBeLoaded, foundClassLoader, String.class);
         BundleRevision bundleRevision2 = getBundleRevision(classToBeLoaded, notFoundClassLoader, null);
-        Map<String, BundleRevision> importedPkgsActual = new LinkedHashMap<String, BundleRevision>();
+        Map<String, BundleRevision> importedPkgsActual = new LinkedHashMap<>();
         importedPkgsActual.put("sun.reflect1", bundleRevision1);
         importedPkgsActual.put("sun.reflect2", bundleRevision2);
         when(importedPkgs.values()).thenReturn(importedPkgsActual.values());
@@ -595,7 +595,7 @@ public class BundleWiringImplTest
 
         Map<String, BundleRevision> importedPkgs = mock(Map.class);
         BundleRevision bundleRevision1 = mock(BundleRevision.class);
-        Map<String, BundleRevision> importedPkgsActual = new HashMap<String, BundleRevision>();
+        Map<String, BundleRevision> importedPkgsActual = new HashMap<>();
         importedPkgsActual.put("sun.reflect1", bundleRevision1);
         when(importedPkgs.values()).thenReturn(importedPkgsActual.values());
         Map<String, List<BundleRevision>> requiredPkgs = mock(Map.class);
@@ -657,7 +657,7 @@ public class BundleWiringImplTest
         final String testClassAsPath3 = testClassName3.replace('.', '/') + ".class";
         byte[] testClassBytes3 = createTestClassBytes(testClass3, testClassAsPath3);
 
-        List<Content> contentPath = new ArrayList<Content>();
+        List<Content> contentPath = new ArrayList<>();
         contentPath.add(mockContent);
         BundleWiringImpl bundleWiring;
 
@@ -673,10 +673,10 @@ public class BundleWiringImplTest
 
         Logger logger = new Logger();
         Map configMap = new HashMap();
-        List<BundleRevision> fragments = new ArrayList<BundleRevision>();
-        List<BundleWire> wires = new ArrayList<BundleWire>();
-        Map<String, BundleRevision> importedPkgs = new HashMap<String, BundleRevision>();
-        Map<String, List<BundleRevision>> requiredPkgs = new HashMap<String, List<BundleRevision>>();
+        List<BundleRevision> fragments = new ArrayList<>();
+        List<BundleWire> wires = new ArrayList<>();
+        Map<String, BundleRevision> importedPkgs = new HashMap<>();
+        Map<String, List<BundleRevision>> requiredPkgs = new HashMap<>();
 
         when(mockRevisionImpl.getBundle()).thenReturn(mockBundle);
         when(mockBundle.getBundleId()).thenReturn(Long.valueOf(1));
@@ -854,7 +854,7 @@ public class BundleWiringImplTest
         final String testClassAsPath3 = testClassName3.replace('.', '/') + ".class";
         byte[] testClassBytes3 = createTestClassBytes(testClass3, testClassAsPath3);
 
-        List<Content> contentPath = new ArrayList<Content>();
+        List<Content> contentPath = new ArrayList<>();
         contentPath.add(mockContent);
         BundleWiringImpl bundleWiring;
 
@@ -870,10 +870,10 @@ public class BundleWiringImplTest
 
         Logger logger = new Logger();
         Map configMap = new HashMap();
-        List<BundleRevision> fragments = new ArrayList<BundleRevision>();
-        List<BundleWire> wires = new ArrayList<BundleWire>();
-        Map<String, BundleRevision> importedPkgs = new HashMap<String, BundleRevision>();
-        Map<String, List<BundleRevision>> requiredPkgs = new HashMap<String, List<BundleRevision>>();
+        List<BundleRevision> fragments = new ArrayList<>();
+        List<BundleWire> wires = new ArrayList<>();
+        Map<String, BundleRevision> importedPkgs = new HashMap<>();
+        Map<String, List<BundleRevision>> requiredPkgs = new HashMap<>();
 
         when(mockRevisionImpl.getBundle()).thenReturn(mockBundle);
         when(mockBundle.getBundleId()).thenReturn(Long.valueOf(1));
@@ -1170,7 +1170,7 @@ public class BundleWiringImplTest
 
     class DummyWovenClassListener implements WovenClassListener
     {
-        public List<Integer> stateList = new ArrayList<Integer>();
+        public List<Integer> stateList = new ArrayList<>();
 
         @Override
         public void modified(WovenClass wovenClass)

@@ -99,7 +99,7 @@ public class MultiReleaseContent implements Content
         Enumeration<String> entries = m_content.getEntries();
         if (entries != null)
         {
-            Set<String> result = new LinkedHashSet<String>();
+            Set<String> result = new LinkedHashSet<>();
             while (entries.hasMoreElements())
             {
                 String path = entries.nextElement();

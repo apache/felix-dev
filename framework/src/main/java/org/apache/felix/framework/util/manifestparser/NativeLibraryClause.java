@@ -89,9 +89,9 @@ public class NativeLibraryClause
     private static final String PROC_SPARC = "sparc";
 
 
-    private static final Map<String, List<String>> OS_ALIASES = new HashMap<String, List<String>>();
+    private static final Map<String, List<String>> OS_ALIASES = new HashMap<>();
 
-    private static final Map<String, List<String>> PROC_ALIASES = new HashMap<String, List<String>>();
+    private static final Map<String, List<String>> PROC_ALIASES = new HashMap<>();
 
     private final String[] m_libraryEntries;
     private final String[] m_osnames;
@@ -147,7 +147,7 @@ public class NativeLibraryClause
             if(currentAliasesString != null)
             {
                 String[] aliases = currentAliasesString.split(",");
-                List<String> fullAliasList = new ArrayList<String>();
+                List<String> fullAliasList = new ArrayList<>();
                 //normalized name is always first.
                 fullAliasList.add(currentNormalizedName);
                 fullAliasList.addAll(Arrays.asList(aliases));
@@ -176,7 +176,7 @@ public class NativeLibraryClause
                 List<String> aliasList = aliasMap.get(currentNormalizedName);
                 if(aliasList == null)
                 {
-                    aliasMap.put(currentNormalizedName, new ArrayList<String>(Collections.singletonList(currentNormalizedName)));
+                    aliasMap.put(currentNormalizedName, new ArrayList<>(Collections.singletonList(currentNormalizedName)));
                 }
                 else
                 {
@@ -189,7 +189,7 @@ public class NativeLibraryClause
 
     private static Map<String, String> getAllKeysWithPrefix(String prefix, Map<String, String> configMap)
     {
-        Map<String, String> keysWithPrefix = new HashMap<String, String>();
+        Map<String, String> keysWithPrefix = new HashMap<>();
         for(Map.Entry<String, String> currentEntry: configMap.entrySet())
         {
             if(currentEntry.getKey().startsWith(prefix))

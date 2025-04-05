@@ -41,7 +41,7 @@ class ServiceRegistrationImplTest
         sri.markCurrentThread();
         assertThat(sri.currentThreadMarked()).isTrue();
 
-        final List<Throwable> exceptions = new ArrayList<Throwable>();
+        final List<Throwable> exceptions = new ArrayList<>();
         Thread t = new TestThread(exceptions, new Runnable() {
             @Override
             public void run()

@@ -808,7 +808,7 @@ class ServiceRegistryTest
         assertThat(orgInUseMap.get(b).length).isEqualTo(2);
         assertThat(uc.m_ref).isSameAs(ref);
         assertThat(uc.m_prototype).isFalse();
-        List<UsageCount> l = new ArrayList<UsageCount>(Arrays.asList(orgInUseMap.get(b)));
+        List<UsageCount> l = new ArrayList<>(Arrays.asList(orgInUseMap.get(b)));
         l.remove(uc);
         assertThat(l.size()).as("There should be one UsageCount left").isEqualTo(1);
         assertNotSame(ref, l.get(0).m_ref);
@@ -1139,7 +1139,7 @@ class ServiceRegistryTest
 
         latch.await();
 
-        List<String> counterValues = new ArrayList<String>();
+        List<String> counterValues = new ArrayList<>();
         for (Exception ex : exceptions)
         {
             counterValues.add(ex.getMessage());

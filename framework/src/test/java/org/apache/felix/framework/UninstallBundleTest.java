@@ -46,7 +46,7 @@ class UninstallBundleTest
 
     @Test
     void uninstallBundleCleansUpRevision() throws Exception {
-        Map<String, String> params = new HashMap<String, String>();
+        Map<String, String> params = new HashMap<>();
         params.put(Constants.FRAMEWORK_SYSTEMPACKAGES,
             "org.osgi.framework; version=1.4.0,"
             + "org.osgi.service.packageadmin; version=1.2.0,"
@@ -76,7 +76,7 @@ class UninstallBundleTest
                 + "Import-Package: org.foo.bar, org.foo.bbr\n";
         File bundleCFile = createBundle(mfC, cacheDir);
 
-        final List<Bundle> shouldNotBeRefreshed = new ArrayList<Bundle>();
+        final List<Bundle> shouldNotBeRefreshed = new ArrayList<>();
         Felix felix = new Felix(params) {
             @Override
             void refreshPackages(Collection<Bundle> targets, FrameworkListener[] listeners)

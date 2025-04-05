@@ -207,7 +207,7 @@ public class BundleRevisionImpl implements BundleRevision, Resource
         List<BundleCapability> result = m_declaredCaps;
         if (namespace != null)
         {
-            result = new ArrayList<BundleCapability>();
+            result = new ArrayList<>();
             for (BundleCapability cap : m_declaredCaps)
             {
                 if (cap.getNamespace().equals(namespace))
@@ -234,7 +234,7 @@ public class BundleRevisionImpl implements BundleRevision, Resource
         List<BundleRequirement> result = m_declaredReqs;
         if (namespace != null)
         {
-            result = new ArrayList<BundleRequirement>();
+            result = new ArrayList<>();
             for (BundleRequirement req : m_declaredReqs)
             {
                 if (req.getNamespace().equals(namespace))
@@ -422,7 +422,7 @@ public class BundleRevisionImpl implements BundleRevision, Resource
 
         if (classPathStrings == null)
         {
-            classPathStrings = new ArrayList<String>(0);
+            classPathStrings = new ArrayList<>(0);
         }
 
         // Create the bundles class path.

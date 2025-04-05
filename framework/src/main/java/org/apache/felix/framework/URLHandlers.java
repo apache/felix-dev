@@ -90,15 +90,15 @@ class URLHandlers implements URLStreamHandlerFactory, ContentHandlerFactory
 
     // This maps classloaders of URLHandlers in other classloaders to lists of
     // their frameworks.
-    private final static ConcurrentHashMap<ClassLoader, List<Object>> m_classloaderToFrameworkLists = new ConcurrentHashMap<ClassLoader, List<Object>>();
+    private final static ConcurrentHashMap<ClassLoader, List<Object>> m_classloaderToFrameworkLists = new ConcurrentHashMap<>();
 
     // The list to hold all enabled frameworks registered with this handlers
-    private static final CopyOnWriteArrayList<Felix> m_frameworks = new CopyOnWriteArrayList<Felix>();
+    private static final CopyOnWriteArrayList<Felix> m_frameworks = new CopyOnWriteArrayList<>();
     private static volatile int m_counter = 0;
 
-    private static final ConcurrentHashMap<String, ContentHandler> m_contentHandlerCache = new ConcurrentHashMap<String, ContentHandler>();
-    private static final ConcurrentHashMap<String, URLStreamHandler> m_streamHandlerCache = new ConcurrentHashMap<String, URLStreamHandler>();
-    private static final ConcurrentHashMap<String, URL> m_protocolToURL = new ConcurrentHashMap<String, URL>();
+    private static final ConcurrentHashMap<String, ContentHandler> m_contentHandlerCache = new ConcurrentHashMap<>();
+    private static final ConcurrentHashMap<String, URLStreamHandler> m_streamHandlerCache = new ConcurrentHashMap<>();
+    private static final ConcurrentHashMap<String, URL> m_protocolToURL = new ConcurrentHashMap<>();
 
     private static volatile URLStreamHandlerFactory m_streamHandlerFactory;
     private static volatile ContentHandlerFactory m_contentHandlerFactory;
@@ -107,7 +107,7 @@ class URLHandlers implements URLStreamHandlerFactory, ContentHandlerFactory
     private static volatile Object m_rootURLHandlers;
 
     private static final String m_streamPkgs;
-    private static final ConcurrentHashMap<String, URLStreamHandler> m_builtIn = new ConcurrentHashMap<String, URLStreamHandler>();
+    private static final ConcurrentHashMap<String, URLStreamHandler> m_builtIn = new ConcurrentHashMap<>();
     private static final boolean m_loaded;
 
     static

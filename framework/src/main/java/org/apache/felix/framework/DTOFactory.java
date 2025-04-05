@@ -142,7 +142,7 @@ public class DTOFactory
         if (!(br instanceof BundleRevisionImpl))
             return null;
 
-        return createBundleRevisionDTO(bundle, (BundleRevisionImpl) br, new HashSet<BundleRevisionDTO>());
+        return createBundleRevisionDTO(bundle, (BundleRevisionImpl) br, new HashSet<>());
     }
 
     private static BundleRevisionDTO[] createBundleRevisionDTOArray(Bundle bundle)
@@ -156,7 +156,7 @@ public class DTOFactory
         for (int i=0; i < revisions.size(); i++)
         {
             if (revisions.get(i) instanceof BundleRevisionImpl)
-                dtos[i] = createBundleRevisionDTO(bundle, (BundleRevisionImpl) revisions.get(i), new HashSet<BundleRevisionDTO>());
+                dtos[i] = createBundleRevisionDTO(bundle, (BundleRevisionImpl) revisions.get(i), new HashSet<>());
         }
         return dtos;
     }
@@ -180,27 +180,27 @@ public class DTOFactory
         dto.type = revision.getTypes();
         dto.version = revision.getVersion().toString();
 
-        dto.capabilities = new ArrayList<CapabilityDTO>();
+        dto.capabilities = new ArrayList<>();
         for (Capability cap : revision.getCapabilities(null))
         {
             CapabilityDTO cdto = new CapabilityDTO();
             cdto.id = getCapabilityID(cap);
             cdto.namespace = cap.getNamespace();
             cdto.attributes = convertAttrsToDTO(cap.getAttributes());
-            cdto.directives = new HashMap<String, String>(cap.getDirectives());
+            cdto.directives = new HashMap<>(cap.getDirectives());
             cdto.resource = getResourceIDAndAdd(cap.getResource(), resources);
 
             dto.capabilities.add(cdto);
         }
 
-        dto.requirements = new ArrayList<RequirementDTO>();
+        dto.requirements = new ArrayList<>();
         for (Requirement req : revision.getRequirements(null))
         {
             RequirementDTO rdto = new RequirementDTO();
             rdto.id = getRequirementID(req);
             rdto.namespace = req.getNamespace();
             rdto.attributes = convertAttrsToDTO(req.getAttributes());
-            rdto.directives = new HashMap<String, String>(req.getDirectives());
+            rdto.directives = new HashMap<>(req.getDirectives());
             rdto.resource = getResourceIDAndAdd(req.getResource(), resources);
 
             dto.requirements.add(rdto);
@@ -219,8 +219,8 @@ public class DTOFactory
         BundleWiringDTO dto = new BundleWiringDTO();
         dto.bundle = wiring.getBundle().getBundleId();
         dto.root = getWiringID(wiring);
-        dto.nodes = new HashSet<BundleWiringDTO.NodeDTO>();
-        dto.resources = new HashSet<BundleRevisionDTO>();
+        dto.nodes = new HashSet<>();
+        dto.resources = new HashSet<>();
 
         createBundleRevisionDTO(wiring.getRevision(), dto.resources);
         createBundleWiringNodeDTO(wiring, dto.resources, dto.nodes);
@@ -255,7 +255,7 @@ public class DTOFactory
         node.inUse = bw.isInUse();
         node.resource = getResourceIDAndAdd(bw.getResource(), resources);
 
-        node.capabilities = new ArrayList<CapabilityRefDTO>();
+        node.capabilities = new ArrayList<>();
         for (Capability cap : bw.getCapabilities(null))
         {
             CapabilityRefDTO cdto = new CapabilityRefDTO();
@@ -264,7 +264,7 @@ public class DTOFactory
             node.capabilities.add(cdto);
         }
 
-        node.requirements = new ArrayList<RequirementRefDTO>();
+        node.requirements = new ArrayList<>();
         for (Requirement req : bw.getRequirements(null))
         {
             RequirementRefDTO rdto = new RequirementRefDTO();
@@ -273,13 +273,13 @@ public class DTOFactory
             node.requirements.add(rdto);
         }
 
-        node.providedWires = new ArrayList<WireDTO>();
+        node.providedWires = new ArrayList<>();
         for (Wire pw : bw.getProvidedWires(null))
         {
             node.providedWires.add(createBundleWireDTO(pw, resources, nodes));
         }
 
-        node.requiredWires = new ArrayList<WireDTO>();
+        node.requiredWires = new ArrayList<>();
         for (Wire rw : bw.getRequiredWires(null))
         {
             node.requiredWires.add(createBundleWireDTO(rw, resources, nodes));
@@ -348,12 +348,12 @@ public class DTOFactory
         ServiceReferenceDTO dto = new ServiceReferenceDTO();
         dto.bundle = (Long)svc.getProperty(Constants.SERVICE_BUNDLEID);
         dto.id = (Long) svc.getProperty(Constants.SERVICE_ID);
-        Map<String, Object> props = new HashMap<String, Object>();
+        Map<String, Object> props = new HashMap<>();
         for (String key : svc.getPropertyKeys())
         {
             props.put(key, svc.getProperty(key));
         }
-        dto.properties = new HashMap<String, Object>(props);
+        dto.properties = new HashMap<>(props);
 
         Bundle[] ubs = svc.getUsingBundles();
         if (ubs == null)
@@ -377,13 +377,13 @@ public class DTOFactory
         FrameworkDTO dto = new FrameworkDTO();
         dto.properties = convertAttrsToDTO(framework.getConfig());
 
-        dto.bundles = new ArrayList<BundleDTO>();
+        dto.bundles = new ArrayList<>();
         for (Bundle b : framework._getBundleContext().getBundles())
         {
             dto.bundles.add(DTOFactory.createDTO(b, BundleDTO.class));
         }
 
-        dto.services = new ArrayList<ServiceReferenceDTO>();
+        dto.services = new ArrayList<>();
 
         ServiceReference<?>[] refs = null;
         try
@@ -418,10 +418,10 @@ public class DTOFactory
     {
         FrameworkWiringDTO dto = new FrameworkWiringDTO();
 
-        dto.resources = new HashSet<BundleRevisionDTO>();
-        dto.wirings = new HashSet<NodeDTO>();
+        dto.resources = new HashSet<>();
+        dto.wirings = new HashSet<>();
 
-        Set<Bundle> bundles = new LinkedHashSet<Bundle>(Arrays.asList(framework.getBundles()));
+        Set<Bundle> bundles = new LinkedHashSet<>(Arrays.asList(framework.getBundles()));
         bundles.addAll(framework.getRemovalPendingBundles());
 
         for (Bundle bundle : bundles)
@@ -481,7 +481,7 @@ public class DTOFactory
     // these are found they need to be converted to String values.
     private static Map<String, Object> convertAttrsToDTO(Map<String, Object> map)
     {
-        Map<String, Object> m = new HashMap<String, Object>();
+        Map<String, Object> m = new HashMap<>();
         for (Map.Entry<String, Object> entry : map.entrySet())
         {
             Object value = convertAttrToDTO(entry.getValue());
