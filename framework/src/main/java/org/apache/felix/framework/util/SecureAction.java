@@ -912,9 +912,9 @@ public class SecureAction
         {
             Method addURL =
                 URLClassLoader.class.getDeclaredMethod("addURL",
-                new Class[] {URL.class});
+                URL.class);
             getAccessor(URLClassLoader.class).accept(new AccessibleObject[]{addURL});
-            addURL.invoke(loader, new Object[]{extension});
+            addURL.invoke(loader, extension);
         }
     }
 
@@ -1937,9 +1937,9 @@ public class SecureAction
                 case ADD_EXTENSION_URL_ACTION:
                     Method addURL =
                         URLClassLoader.class.getDeclaredMethod("addURL",
-                        new Class[] {URL.class});
+                        URL.class);
                     getAccessor(URLClassLoader.class).accept(new AccessibleObject[]{addURL});
-                    addURL.invoke(arg2, new Object[]{arg1});
+                    addURL.invoke(arg2, arg1);
                     return null;
                 case CREATE_TMPFILE_ACTION:
                     return File.createTempFile((String) arg1, (String) arg2, (File) arg3);
