@@ -74,15 +74,15 @@ public class URLHandlersStreamHandlerProxy extends URLStreamHandler
         SecureAction action = new SecureAction();
 
         EQUALS = reflect(action, "equals",
-            new Class[]{URL.class, URL.class});
+            URL.class, URL.class);
         GET_DEFAULT_PORT = reflect(action, "getDefaultPort",
             (Class[]) null);
-        GET_HOST_ADDRESS = reflect(action, "getHostAddress", new Class[]{URL.class});
-        HASH_CODE = reflect(action, "hashCode", new Class[]{URL.class});
-        HOSTS_EQUAL = reflect(action, "hostsEqual", new Class[]{URL.class, URL.class});
-        OPEN_CONNECTION = reflect(action, "openConnection", new Class[]{URL.class});
-        SAME_FILE = reflect(action, "sameFile", new Class[]{URL.class, URL.class});
-        TO_EXTERNAL_FORM =reflect(action, "toExternalForm", new Class[]{URL.class});
+        GET_HOST_ADDRESS = reflect(action, "getHostAddress", URL.class);
+        HASH_CODE = reflect(action, "hashCode", URL.class);
+        HOSTS_EQUAL = reflect(action, "hostsEqual", URL.class, URL.class);
+        OPEN_CONNECTION = reflect(action, "openConnection", URL.class);
+        SAME_FILE = reflect(action, "sameFile", URL.class, URL.class);
+        TO_EXTERNAL_FORM =reflect(action, "toExternalForm", URL.class);
 
         URL_PROXY_CLASS = new Class[]{URL.class, java.net.Proxy.class};
         OPEN_CONNECTION_PROXY = reflect(action, "openConnection", URL_PROXY_CLASS);
@@ -153,7 +153,7 @@ public class URLHandlersStreamHandlerProxy extends URLStreamHandler
         }
         try
         {
-            return ((Boolean) EQUALS.invoke(svc, new Object[]{url1, url2})).booleanValue();
+            return ((Boolean) EQUALS.invoke(svc, url1, url2)).booleanValue();
         }
         catch (Exception ex)
         {
@@ -196,7 +196,7 @@ public class URLHandlersStreamHandlerProxy extends URLStreamHandler
         }
         try
         {
-            return (InetAddress) GET_HOST_ADDRESS.invoke(svc, new Object[]{url});
+            return (InetAddress) GET_HOST_ADDRESS.invoke(svc, url);
         }
         catch (Exception ex)
         {
@@ -218,7 +218,7 @@ public class URLHandlersStreamHandlerProxy extends URLStreamHandler
         }
         try
         {
-            return ((Integer) HASH_CODE.invoke(svc, new Object[]{url})).intValue();
+            return ((Integer) HASH_CODE.invoke(svc, url)).intValue();
         }
         catch (Exception ex)
         {
@@ -240,7 +240,7 @@ public class URLHandlersStreamHandlerProxy extends URLStreamHandler
         }
         try
         {
-            return ((Boolean) HOSTS_EQUAL.invoke(svc, new Object[]{url1, url2})).booleanValue();
+            return ((Boolean) HOSTS_EQUAL.invoke(svc, url1, url2)).booleanValue();
         }
         catch (Exception ex)
         {
@@ -289,7 +289,7 @@ public class URLHandlersStreamHandlerProxy extends URLStreamHandler
                     throw new IOException(ex.getMessage());
                 }
             }
-            return (URLConnection) OPEN_CONNECTION.invoke(svc, new Object[]{url});
+            return (URLConnection) OPEN_CONNECTION.invoke(svc, url);
         }
         catch (IOException ex)
         {
@@ -324,7 +324,7 @@ public class URLHandlersStreamHandlerProxy extends URLStreamHandler
             try
             {
                 m_action.setAccesssible(method);
-                return (URLConnection) method.invoke(svc, new Object[]{url, proxy});
+                return (URLConnection) method.invoke(svc, url, proxy);
             }
             catch (Exception e)
             {
@@ -337,7 +337,7 @@ public class URLHandlersStreamHandlerProxy extends URLStreamHandler
         }
         try
         {
-            return (URLConnection) OPEN_CONNECTION_PROXY.invoke(svc, new Object[]{url, proxy});
+            return (URLConnection) OPEN_CONNECTION_PROXY.invoke(svc, url, proxy);
         }
         catch (Exception ex)
         {
@@ -437,7 +437,7 @@ public class URLHandlersStreamHandlerProxy extends URLStreamHandler
         try
         {
             return ((Boolean) SAME_FILE.invoke(
-                svc, new Object[]{url1, url2})).booleanValue();
+                svc, url1, url2)).booleanValue();
         }
         catch (Exception ex)
         {
@@ -479,7 +479,7 @@ public class URLHandlersStreamHandlerProxy extends URLStreamHandler
             try
             {
                 String result = (String) TO_EXTERNAL_FORM.invoke(
-                    svc, new Object[]{url});
+                    svc, url);
 
                 // mika does return an invalid format if we have a url with the
                 // protocol only (<proto>://null) - we catch this case now
