@@ -146,7 +146,7 @@ class EventDispatcherTest
         Mockito.when(b.getBundleContext()).thenReturn(bc);
 //        b.getState();
 //        Mockito.expectLastCall().thenReturn(Integer.valueOf(Bundle.ACTIVE));
-        Mockito.when(b.getState()).thenReturn(Integer.valueOf(Bundle.ACTIVE));
+        Mockito.when(b.getState()).thenReturn(Bundle.ACTIVE);
         Mockito.when(bc.getBundle()).thenReturn(b);
 
         return b;
