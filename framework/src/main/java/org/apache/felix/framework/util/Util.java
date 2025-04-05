@@ -453,9 +453,8 @@ public class Util
             // one of the class's implemented interface
             // class loaders.
             Class[] ifcs = clazz.getInterfaces();
-            for (int i = 0; i < ifcs.length; i++)
-            {
-                loadedClass = loadClassUsingClass(ifcs[i], name, action);
+            for (Class ifc : ifcs) {
+                loadedClass = loadClassUsingClass(ifc, name, action);
                 if (loadedClass != null)
                 {
                     return loadedClass;
@@ -482,9 +481,8 @@ public class Util
             // one of the class's implemented interface
             // is the name.
             Class[] ifcs = clazz.getInterfaces();
-            for (int i = 0; i < ifcs.length; i++)
-            {
-                if (checkImplementsWithName(ifcs[i], name)) {
+            for (Class ifc : ifcs) {
+                if (checkImplementsWithName(ifc, name)) {
                     return true;
                 }
             }

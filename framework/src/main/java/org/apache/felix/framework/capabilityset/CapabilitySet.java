@@ -216,9 +216,8 @@ public class CapabilitySet
             // Evaluate each subfilter against the remaining capabilities.
             // For OR we calculate the union of each subfilter.
             List<SimpleFilter> sfs = (List<SimpleFilter>) sf.getValue();
-            for (int i = 0; i < sfs.size(); i++)
-            {
-                matches.addAll(match(caps, sfs.get(i)));
+            for (SimpleFilter sFilter : sfs) {
+                matches.addAll(match(caps, sFilter));
             }
         }
         else if (sf.getOperation() == SimpleFilter.NOT)
@@ -227,9 +226,8 @@ public class CapabilitySet
             // For OR we calculate the union of each subfilter.
             matches.addAll(caps);
             List<SimpleFilter> sfs = (List<SimpleFilter>) sf.getValue();
-            for (int i = 0; i < sfs.size(); i++)
-            {
-                matches.removeAll(match(caps, sfs.get(i)));
+            for (SimpleFilter sFilter : sfs) {
+                matches.removeAll(match(caps, sFilter));
             }
         }
         else
@@ -249,9 +247,7 @@ public class CapabilitySet
             }
             else
             {
-                for (Iterator<Capability> it = caps.iterator(); it.hasNext(); )
-                {
-                    Capability cap = it.next();
+                for (Capability cap : caps) {
                     Object lhs = cap.getAttributes().get(sf.getName());
                     if (lhs != null)
                     {
@@ -308,9 +304,8 @@ public class CapabilitySet
             // Evaluate each subfilter against the remaining capabilities.
             // For OR we calculate the union of each subfilter.
             List<SimpleFilter> sfs = (List<SimpleFilter>) sf.getValue();
-            for (int i = 0; i < sfs.size(); i++)
-            {
-                matched = !(matchesInternal(cap, sfs.get(i)));
+            for (SimpleFilter sFilter : sfs) {
+                matched = !(matchesInternal(cap, sFilter));
             }
         }
         else
@@ -363,11 +358,10 @@ public class CapabilitySet
         else if (sf.getOperation() == SimpleFilter.AND)
         {
             List list = (List) sf.getValue();
-            for (int i = 0; i < list.size(); i++)
-            {
-                SimpleFilter sf2 = (SimpleFilter) list.get(i);
-                if ((sf2.getName() != null)
-                    && sf2.getName().equals(attrName))
+            for (Object element : list) {
+                SimpleFilter sFilter = (SimpleFilter) element;
+                if ((sFilter.getName() != null)
+                    && sFilter.getName().equals(attrName))
                 {
                     return true;
                 }

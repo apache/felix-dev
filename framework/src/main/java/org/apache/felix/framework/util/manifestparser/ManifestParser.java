@@ -1235,9 +1235,8 @@ public class ManifestParser
             {
                 int index = Integer.parseInt(indexList.get(i).toString());
                 String[] osversions = clauseList.get(index).getOSVersions();
-                for (int k = 0; k < osversions.length; k++)
-                {
-                    VersionRange range = new VersionRange(osversions[k]);
+                for (String osversion : osversions) {
+                    VersionRange range = new VersionRange(osversion);
                     if ((range.getLeft()).compareTo(osVersionRangeMaxFloor) >= 0)
                     {
                         selection.add("" + indexList.get(i));
@@ -1298,13 +1297,11 @@ public class ManifestParser
         // duplicate imports.
         Map<String, String> map =  new HashMap<String, String>();
         // Add existing imports.
-        for (int impIdx = 0; impIdx < imports.size(); impIdx++)
-        {
-            for (int pathIdx = 0; pathIdx < imports.get(impIdx).m_paths.size(); pathIdx++)
-            {
+        for (ParsedHeaderClause import1 : imports) {
+            for (String element : import1.m_paths) {
                 map.put(
-                    imports.get(impIdx).m_paths.get(pathIdx),
-                    imports.get(impIdx).m_paths.get(pathIdx));
+                    element,
+                    element);
             }
         }
         // Add import requirement for each export capability.
@@ -1345,13 +1342,11 @@ public class ManifestParser
         // necessary since R3 bundles assumed a single class space,
         // but R4 allows for multiple class spaces.
         String usesValue = "";
-        for (int i = 0; i < imports.size(); i++)
-        {
-            for (int pathIdx = 0; pathIdx < imports.get(i).m_paths.size(); pathIdx++)
-            {
+        for (ParsedHeaderClause import1 : imports) {
+            for (String element : import1.m_paths) {
                 usesValue = usesValue
                     + ((usesValue.length() > 0) ? "," : "")
-                    + imports.get(i).m_paths.get(pathIdx);
+                    + element;
             }
         }
         for (int i = 0; i < exports.size(); i++)

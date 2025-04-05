@@ -124,9 +124,8 @@ public class SimpleFilter
     private static String toString(List list)
     {
         StringBuilder sb = new StringBuilder();
-        for (int i = 0; i < list.size(); i++)
-        {
-            sb.append(list.get(i).toString());
+        for (Object element : list) {
+            sb.append(element.toString());
         }
         return sb.toString();
     }

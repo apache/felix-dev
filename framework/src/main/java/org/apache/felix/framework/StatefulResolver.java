@@ -1287,12 +1287,9 @@ class StatefulResolver
     {
         if (wireMap != null)
         {
-            Iterator<Entry<Resource, List<Wire>>> iter =
-                wireMap.entrySet().iterator();
+            
             // Iterate over the map to fire necessary RESOLVED events.
-            while (iter.hasNext())
-            {
-                Entry<Resource, List<Wire>> entry = iter.next();
+            for (Entry<Resource, List<Wire>> entry : wireMap.entrySet()) {
                 Resource resource = entry.getKey();
                 if (!(resource instanceof BundleRevision))
                     continue;
@@ -1302,10 +1299,9 @@ class StatefulResolver
                 // Fire RESOLVED events for all fragments.
                 List<BundleRevision> fragments =
                     Util.getFragments(revision.getWiring());
-                for (int i = 0; i < fragments.size(); i++)
-                {
+                for (BundleRevision fragment : fragments) {
                     m_felix.fireBundleEvent(
-                        BundleEvent.RESOLVED, fragments.get(i).getBundle());
+                        BundleEvent.RESOLVED, fragment.getBundle());
                 }
                 m_felix.fireBundleEvent(BundleEvent.RESOLVED, revision.getBundle());
             }

@@ -679,23 +679,22 @@ class ExtensionManager implements Content
 
     void startPendingExtensionBundles(Felix felix)
     {
-        for (int i = 0;i < m_extensionTuples.size();i++)
-        {
-            if (!m_extensionTuples.get(i).m_started)
+        for (ExtensionTuple m_extensionTuple : m_extensionTuples) {
+            if (!m_extensionTuple.m_started)
             {
-                m_extensionTuples.get(i).m_started = true;
+                m_extensionTuple.m_started = true;
                 try
                 {
-                    Felix.m_secureAction.startActivator(m_extensionTuples.get(i).m_activator, felix._getBundleContext());
+                    Felix.m_secureAction.startActivator(m_extensionTuple.m_activator, felix._getBundleContext());
                 }
                 catch (Throwable ex)
                 {
-                    m_extensionTuples.get(i).m_failed = true;
+                    m_extensionTuple.m_failed = true;
 
-                    felix.fireFrameworkEvent(FrameworkEvent.ERROR, m_extensionTuples.get(i).m_bundle,
+                    felix.fireFrameworkEvent(FrameworkEvent.ERROR, m_extensionTuple.m_bundle,
                                 new BundleException("Unable to start Bundle", BundleException.ACTIVATOR_ERROR, ex));
 
-                    m_logger.log(m_extensionTuples.get(i).m_bundle, Logger.LOG_WARNING,
+                    m_logger.log(m_extensionTuple.m_bundle, Logger.LOG_WARNING,
                         "Unable to start Extension Activator", ex);
                 }
             }

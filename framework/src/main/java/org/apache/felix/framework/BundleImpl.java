@@ -720,14 +720,13 @@ class BundleImpl implements Bundle, BundleRevisions
 
             List result = new ArrayList();
 
-            for (int i = 0; i < refs.length; i++)
-            {
+            for (ServiceReference ref : refs) {
                 try
                 {
                     ((SecurityManager) sm).checkPermission(new ServicePermission(
-                        refs[i], ServicePermission.GET));
+                        ref, ServicePermission.GET));
 
-                    result.add(refs[i]);
+                    result.add(ref);
                 }
                 catch (Exception ex)
                 {
@@ -764,14 +763,13 @@ class BundleImpl implements Bundle, BundleRevisions
 
             List result = new ArrayList();
 
-            for (int i = 0; i < refs.length; i++)
-            {
+            for (ServiceReference ref : refs) {
                 try
                 {
                     ((SecurityManager) sm).checkPermission(
-                        new ServicePermission(refs[i], ServicePermission.GET));
+                        new ServicePermission(ref, ServicePermission.GET));
 
-                    result.add(refs[i]);
+                    result.add(ref);
                 }
                 catch (Exception ex)
                 {
