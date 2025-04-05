@@ -1488,7 +1488,7 @@ public class BundleWiringImpl implements BundleWiring
                         for (BundleRevision revision : revisions)
                         {
                             ClassLoader loader = revision.getWiring().getClassLoader();
-                            if (loader != null && loader instanceof BundleClassLoader)
+                            if (loader instanceof BundleClassLoader)
                             {
                                 BundleClassLoader bundleClassLoader = (BundleClassLoader) loader;
                                 result = bundleClassLoader.findLoadedClassInternal(name);
