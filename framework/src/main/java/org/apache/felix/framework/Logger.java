@@ -124,7 +124,8 @@ public class Logger extends org.apache.felix.resolver.Logger
         doLog(level, s.toString(), throwable);
     }
 
-    protected void doLog(int level, String msg, Throwable throwable)
+    @Override
+	protected void doLog(int level, String msg, Throwable throwable)
     {
         if (m_logger != null)
         {

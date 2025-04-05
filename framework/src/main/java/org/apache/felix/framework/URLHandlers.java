@@ -520,7 +520,8 @@ class URLHandlers implements URLStreamHandlerFactory, ContentHandlerFactory
      * @param protocol the protocol for which a stream handler should be returned.
      * @return a stream handler proxy for the specified protocol.
     **/
-    public URLStreamHandler createURLStreamHandler(String protocol)
+    @Override
+	public URLStreamHandler createURLStreamHandler(String protocol)
     {
         // See if there is a cached stream handler.
         // IMPLEMENTATION NOTE: Caching is not strictly necessary for
@@ -577,7 +578,8 @@ class URLHandlers implements URLStreamHandlerFactory, ContentHandlerFactory
      * @param mimeType the mime type for which a content handler should be returned.
      * @return a content handler proxy for the specified mime type.
     **/
-    public ContentHandler createContentHandler(String mimeType)
+    @Override
+	public ContentHandler createContentHandler(String mimeType)
     {
         // See if there is a cached stream handler.
         // IMPLEMENTATION NOTE: Caching is not strictly necessary for

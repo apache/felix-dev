@@ -643,7 +643,8 @@ public class WeakZipFileFactory
                 }
             }
 
-            public int read() throws IOException
+            @Override
+			public int read() throws IOException
             {
                 ensureInputStreamIsValid();
                 try

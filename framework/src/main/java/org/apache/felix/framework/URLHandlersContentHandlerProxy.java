@@ -86,7 +86,8 @@ class URLHandlersContentHandlerProxy extends ContentHandler
     // ContentHandler interface method.
     //
 
-    public Object getContent(URLConnection urlc) throws IOException
+    @Override
+	public Object getContent(URLConnection urlc) throws IOException
     {
         ContentHandler svc = getContentHandlerService();
         if (svc == null)

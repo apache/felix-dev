@@ -37,7 +37,8 @@ public class ContentDirectoryContent implements Content
             ? path + "/" : path;
     }
 
-    public void close()
+    @Override
+	public void close()
     {
         // We do not actually close the associated content
         // from which we are filtering our directory because
@@ -45,7 +46,8 @@ public class ContentDirectoryContent implements Content
         // the owner of that content.
     }
 
-    public boolean hasEntry(String name) throws IllegalStateException
+    @Override
+	public boolean hasEntry(String name) throws IllegalStateException
     {
         name = getName(name);
 
@@ -60,20 +62,23 @@ public class ContentDirectoryContent implements Content
         return m_content.isDirectory(m_rootPath + name);
     }
 
-    public Enumeration<String> getEntries()
+    @Override
+	public Enumeration<String> getEntries()
     {
         Enumeration<String> result = new EntriesEnumeration(m_content.getEntries(), m_rootPath);
         return result.hasMoreElements() ? result : null;
     }
 
-    public byte[] getEntryAsBytes(String name) throws IllegalStateException
+    @Override
+	public byte[] getEntryAsBytes(String name) throws IllegalStateException
     {
         name = getName(name);
 
         return m_content.getEntryAsBytes(m_rootPath + name);
     }
 
-    public InputStream getEntryAsStream(String name)
+    @Override
+	public InputStream getEntryAsStream(String name)
         throws IllegalStateException, IOException
     {
         name = getName(name);
@@ -89,7 +94,8 @@ public class ContentDirectoryContent implements Content
         return name;
     }
 
-    public URL getEntryAsURL(String name)
+    @Override
+	public URL getEntryAsURL(String name)
     {
         return m_content.getEntryAsURL(m_rootPath + name);
     }
@@ -102,21 +108,24 @@ public class ContentDirectoryContent implements Content
         return m_content.getContentTime(m_rootPath + name);
     }
 
-    public Content getEntryAsContent(String name)
+    @Override
+	public Content getEntryAsContent(String name)
     {
         name = getName(name);
 
         return m_content.getEntryAsContent(m_rootPath + name);
     }
 
-    public String getEntryAsNativeLibrary(String name)
+    @Override
+	public String getEntryAsNativeLibrary(String name)
     {
         name = getName(name);
 
         return m_content.getEntryAsNativeLibrary(m_rootPath + name);
     }
 
-    public String toString()
+    @Override
+	public String toString()
     {
         return "CONTENT DIR " + m_rootPath + " (" + m_content + ")";
     }
@@ -134,12 +143,14 @@ public class ContentDirectoryContent implements Content
             m_nextEntry = findNextEntry();
         }
 
-        public synchronized boolean hasMoreElements()
+        @Override
+		public synchronized boolean hasMoreElements()
         {
             return (m_nextEntry != null);
         }
 
-        public synchronized Object nextElement()
+        @Override
+		public synchronized Object nextElement()
         {
             if (m_nextEntry == null)
             {

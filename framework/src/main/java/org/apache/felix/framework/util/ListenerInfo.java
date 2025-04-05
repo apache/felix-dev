@@ -67,7 +67,8 @@ public class ListenerInfo implements ListenerHook.ListenerInfo
         return m_bundle;
     }
 
-    public BundleContext getBundleContext()
+    @Override
+	public BundleContext getBundleContext()
     {
         return m_context;
     }
@@ -87,7 +88,8 @@ public class ListenerInfo implements ListenerHook.ListenerInfo
         return m_filter;
     }
 
-    public String getFilter()
+    @Override
+	public String getFilter()
     {
         if (m_filter != null)
         {
@@ -101,7 +103,8 @@ public class ListenerInfo implements ListenerHook.ListenerInfo
         return m_acc;
     }
 
-    public boolean isRemoved()
+    @Override
+	public boolean isRemoved()
     {
         return m_removed;
     }

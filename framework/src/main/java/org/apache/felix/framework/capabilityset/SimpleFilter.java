@@ -50,7 +50,8 @@ public class SimpleFilter
         m_op = op;
     }
 
-    public boolean equals(Object o)
+    @Override
+	public boolean equals(Object o)
     {
         if (o instanceof SimpleFilter)
         {
@@ -62,7 +63,8 @@ public class SimpleFilter
         return false;
     }
 
-    public int hashCode()
+    @Override
+	public int hashCode()
     {
         return m_op + Objects.hashCode(m_name) + Objects.hashCode(m_value);
     }
@@ -82,7 +84,8 @@ public class SimpleFilter
         return m_op;
     }
 
-    public String toString()
+    @Override
+	public String toString()
     {
         String s = null;
         switch (m_op)

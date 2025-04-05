@@ -40,37 +40,44 @@ public class BundleWireImpl implements BundleWire
         m_cap = cap;
     }
 
-    public BundleRevision getRequirer()
+    @Override
+	public BundleRevision getRequirer()
     {
         return m_requirer;
     }
 
-    public BundleWiring getRequirerWiring()
+    @Override
+	public BundleWiring getRequirerWiring()
     {
         return m_requirer.getWiring();
     }
 
-    public BundleRequirement getRequirement()
+    @Override
+	public BundleRequirement getRequirement()
     {
         return m_req;
     }
 
-    public BundleRevision getProvider()
+    @Override
+	public BundleRevision getProvider()
     {
         return m_provider;
     }
 
-    public BundleWiring getProviderWiring()
+    @Override
+	public BundleWiring getProviderWiring()
     {
         return m_provider.getWiring();
     }
 
-    public BundleCapability getCapability()
+    @Override
+	public BundleCapability getCapability()
     {
         return m_cap;
     }
 
-    public String toString()
+    @Override
+	public String toString()
     {
         return m_req
             + " -> "
