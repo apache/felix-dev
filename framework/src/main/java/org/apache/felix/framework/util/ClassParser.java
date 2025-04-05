@@ -616,14 +616,9 @@ public class ClassParser
 
     public Set<String> parseClassFileUses(String path, InputStream in) throws Exception
     {
-        DataInputStream din = new DataInputStream(in);
-        try
+        try (DataInputStream din = new DataInputStream(in))
         {
             return new Clazz(this, path).parseClassFileData(din);
-        }
-        finally
-        {
-            din.close();
         }
     }
 
