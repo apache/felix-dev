@@ -94,7 +94,7 @@ public class BundleWiringImplTest
         Map<String, List<BundleRevision>> requiredPkgs = new HashMap<>();
 
         when(mockRevisionImpl.getBundle()).thenReturn(mockBundle);
-        when(mockBundle.getBundleId()).thenReturn(Long.valueOf(1));
+        when(mockBundle.getBundleId()).thenReturn(1L);
 
         bundleWiring = new BundleWiringImpl(logger, configMap, mockResolver,
                 mockRevisionImpl, fragments, wires, importedPkgs, requiredPkgs);
@@ -414,7 +414,7 @@ public class BundleWiringImplTest
         List<BundleWire> wires = new ArrayList<>();
 
         when(mockRevisionImpl.getBundle()).thenReturn(mockBundle);
-        when(mockBundle.getBundleId()).thenReturn(Long.valueOf(1));
+        when(mockBundle.getBundleId()).thenReturn((long) 1);
 
         bundleWiring = new BundleWiringImpl(logger, configMap, mockResolver,
                 mockRevisionImpl, fragments, wires, importedPkgs, requiredPkgs);
@@ -679,7 +679,7 @@ public class BundleWiringImplTest
         Map<String, List<BundleRevision>> requiredPkgs = new HashMap<>();
 
         when(mockRevisionImpl.getBundle()).thenReturn(mockBundle);
-        when(mockBundle.getBundleId()).thenReturn(Long.valueOf(1));
+        when(mockBundle.getBundleId()).thenReturn((long) 1);
 
         bundleWiring = new BundleWiringImpl(logger, configMap, mockResolver,
             mockRevisionImpl, fragments, wires, importedPkgs, requiredPkgs);
@@ -876,7 +876,7 @@ public class BundleWiringImplTest
         Map<String, List<BundleRevision>> requiredPkgs = new HashMap<>();
 
         when(mockRevisionImpl.getBundle()).thenReturn(mockBundle);
-        when(mockBundle.getBundleId()).thenReturn(Long.valueOf(1));
+        when(mockBundle.getBundleId()).thenReturn((long) 1);
 
         bundleWiring = new BundleWiringImpl(logger, configMap, mockResolver,
             mockRevisionImpl, fragments, wires, importedPkgs, requiredPkgs);
