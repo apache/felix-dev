@@ -1240,12 +1240,11 @@ public class SecureAction
                 if ((condition == null) || !result.getClass().getName().equals(condition.getName()))
                 {
                     // reset cache
-                    for (int i = 0; i < fields.length; i++)
-                    {
-                        if (Modifier.isStatic(fields[i].getModifiers()) &&
-                            (fields[i].getType() == Hashtable.class))
+                    for (Field field : fields) {
+                        if (Modifier.isStatic(field.getModifiers()) &&
+                            (field.getType() == Hashtable.class))
                         {
-                            Hashtable cache = (Hashtable) fields[i].get(null);
+                            Hashtable cache = (Hashtable) field.get(null);
                             if (cache != null)
                             {
                                 cache.clear();
@@ -1287,14 +1286,13 @@ public class SecureAction
             Field[] fields = targetClazz.getDeclaredFields();
             getAccessor(targetClazz).accept(fields);
             // reset cache
-            for (int i = 0; i < fields.length; i++)
-            {
-                if (Modifier.isStatic(fields[i].getModifiers()) &&
-                    ((fields[i].getType() == Hashtable.class) || (fields[i].getType() == HashMap.class)))
+            for (Field field : fields) {
+                if (Modifier.isStatic(field.getModifiers()) &&
+                    ((field.getType() == Hashtable.class) || (field.getType() == HashMap.class)))
                 {
-                    if (fields[i].getType() == Hashtable.class)
+                    if (field.getType() == Hashtable.class)
                     {
-                        Hashtable cache = (Hashtable) fields[i].get(null);
+                        Hashtable cache = (Hashtable) field.get(null);
                         if (cache != null)
                         {
                             cache.clear();
@@ -1302,7 +1300,7 @@ public class SecureAction
                     }
                     else
                     {
-                        HashMap cache = (HashMap) fields[i].get(null);
+                        HashMap cache = (HashMap) field.get(null);
                         if (cache != null)
                         {
                             cache.clear();

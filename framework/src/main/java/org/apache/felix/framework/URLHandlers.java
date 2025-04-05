@@ -763,9 +763,8 @@ class URLHandlers implements URLStreamHandlerFactory, ContentHandlerFactory
         // Find the first class that is loaded from a bundle.
         Class targetClass = null;
         ClassLoader targetClassLoader = null;
-        for (int i = 0; i < stack.length; i++)
-        {
-            ClassLoader classLoader = m_secureAction.getClassLoader(stack[i]);
+        for (Class element : stack) {
+            ClassLoader classLoader = m_secureAction.getClassLoader(element);
 			if (classLoader != null)
             {
                 String name = classLoader.getClass().getName();
@@ -773,7 +772,7 @@ class URLHandlers implements URLStreamHandlerFactory, ContentHandlerFactory
                     || name.equals("org.apache.felix.framework.searchpolicy.ContentClassLoader")
                     || name.startsWith("org.apache.felix.framework.BundleWiringImpl$BundleClassLoader"))
                 {
-                    targetClass = stack[i];
+                    targetClass = element;
                     targetClassLoader = classLoader;
                     break;
                 }

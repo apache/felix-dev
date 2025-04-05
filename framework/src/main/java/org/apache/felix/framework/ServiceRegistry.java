@@ -22,9 +22,8 @@ import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.Dictionary;
-import java.util.Iterator;
 import java.util.List;
-import java.util.Map;
+import java.util.Map.Entry;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ConcurrentMap;
 import java.util.concurrent.CountDownLatch;
@@ -281,10 +280,9 @@ public class ServiceRegistry
         {
             final ServiceReference<?>[] refs = new ServiceReference[usages.length];
             int count = 0;
-            for (int i = 0; i < usages.length; i++)
-            {
-                if (usages[i].m_count.get() > 0) {
-                    refs[count++] = usages[i].m_ref;
+            for (UsageCount usage : usages) {
+                if (usage.m_count.get() > 0) {
+                    refs[count++] = usage.m_ref;
                 }
             }
 
@@ -572,13 +570,12 @@ public class ServiceRegistry
 
         // Remove each service object from the
         // service cache.
-        for (int i = 0; i < usages.length; i++)
-        {
-            if (usages[i].m_svcHolderRef.get() == null)
+        for (UsageCount usage : usages) {
+            if (usage.m_svcHolderRef.get() == null)
                 continue;
 
             // Keep ungetting until all usage count is zero.
-            while (ungetService(bundle, usages[i].m_ref, usages[i].m_prototype ? usages[i].getService() : null))
+            while (ungetService(bundle, usage.m_ref, usage.m_prototype ? usage.getService() : null))
             {
                 // Empty loop body.
             }
@@ -588,14 +585,11 @@ public class ServiceRegistry
     public Bundle[] getUsingBundles(ServiceReference<?> ref)
     {
         Bundle[] bundles = null;
-        for (Iterator<Map.Entry<Bundle, UsageCount[]>> iter = m_inUseMap.entrySet().iterator(); iter.hasNext(); )
-        {
-            Map.Entry<Bundle, UsageCount[]> entry = iter.next();
+        for (Entry<Bundle, UsageCount[]> entry : m_inUseMap.entrySet()) {
             Bundle bundle = entry.getKey();
             UsageCount[] usages = entry.getValue();
-            for (int useIdx = 0; useIdx < usages.length; useIdx++)
-            {
-                if (usages[useIdx].m_ref.equals(ref) && usages[useIdx].m_count.get() > 0)
+            for (UsageCount usage : usages) {
+                if (usage.m_ref.equals(ref) && usage.m_count.get() > 0)
                 {
                     // Add the bundle to the array to be returned.
                     if (bundles == null)
