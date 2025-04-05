@@ -28,7 +28,6 @@ import java.util.Set;
 import java.util.StringTokenizer;
 import java.util.function.Function;
 
-import org.apache.felix.framework.capabilityset.SimpleFilter;
 import org.apache.felix.framework.util.Util;
 import org.apache.felix.framework.util.manifestparser.ManifestParser;
 import org.osgi.framework.Constants;
