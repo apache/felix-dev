@@ -426,8 +426,7 @@ public class NativeLibraryClause
                     {
                         property = (token.substring(0, token.indexOf("=")))
                             .trim().toLowerCase();
-                        value = (token.substring(token.indexOf("=") + 1, token
-                            .length())).trim();
+                        value = (token.substring(token.indexOf("=") + 1)).trim();
                     }
 
                     // Values may be quoted, so remove quotes if present.
@@ -758,7 +757,7 @@ public class NativeLibraryClause
             {
                 String s = value.substring(1, value.length() - 1);
                 String vlo = s.substring(0, s.indexOf(',')).trim();
-                String vhi = s.substring(s.indexOf(',') + 1, s.length()).trim();
+                String vhi = s.substring(s.indexOf(',') + 1).trim();
                 return new VersionRange(value.charAt(0), toOsgiVersion(vlo), toOsgiVersion(vhi),
                     value.charAt(value.length() - 1)).toString();
             }

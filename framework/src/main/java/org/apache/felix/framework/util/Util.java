@@ -819,7 +819,7 @@ public class Util
         // value.
         val = val.substring(0, startDelim)
             + substValue
-            + val.substring(stopDelim + DELIM_STOP.length(), val.length());
+            + val.substring(stopDelim + DELIM_STOP.length());
 
         // Now perform substitution again, since there could still
         // be substitutions to make.
