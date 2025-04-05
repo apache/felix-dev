@@ -401,7 +401,7 @@ public class CapabilitySet
                 //Do nothing will check later if rhs is null
             }
 
-            if(rhs != null && rhs instanceof VersionRange)
+            if(rhs instanceof VersionRange)
             {
                 return ((VersionRange)rhs).includes((Version)lhs);
             }
