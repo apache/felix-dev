@@ -20,7 +20,6 @@ package org.apache.felix.framework.util;
 
 import java.util.Collection;
 import java.util.Map;
-import java.util.Map.Entry;
 import java.util.Set;
 
 public class ShrinkableMap<K, V> implements Map<K, V>

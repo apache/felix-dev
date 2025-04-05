@@ -24,7 +24,6 @@ import java.util.List;
 
 import org.osgi.framework.AdminPermission;
 import org.osgi.framework.Bundle;
-import org.osgi.framework.BundleContext;
 import org.osgi.framework.FrameworkListener;
 import org.osgi.framework.ServiceRegistration;
 import org.osgi.framework.wiring.BundleCapability;

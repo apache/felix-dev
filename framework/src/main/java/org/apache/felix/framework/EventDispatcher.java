@@ -49,7 +49,6 @@ import org.osgi.framework.ServiceReference;
 import org.osgi.framework.SynchronousBundleListener;
 import org.osgi.framework.UnfilteredServiceListener;
 import org.osgi.framework.hooks.service.ListenerHook;
-import org.osgi.framework.launch.Framework;
 
 public class EventDispatcher
 {
