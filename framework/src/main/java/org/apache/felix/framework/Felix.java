@@ -748,7 +748,7 @@ public class Felix extends BundleImpl implements Framework
 
                 // Add the system bundle to the set of installed bundles.
                 maps[LOCATION_MAP_IDX].put(_getLocation(), this);
-                maps[IDENTIFIER_MAP_IDX].put(new Long(0), this);
+                maps[IDENTIFIER_MAP_IDX].put(0L, this);
                 m_installedBundles = maps;
 
 
@@ -934,7 +934,7 @@ public class Felix extends BundleImpl implements Framework
                                     new TreeMap<Long, BundleImpl>(m_installedBundles[IDENTIFIER_MAP_IDX])
                                 };
                                 maps[LOCATION_MAP_IDX].remove(((BundleImpl) bundle)._getLocation());
-                                maps[IDENTIFIER_MAP_IDX].remove(new Long(((BundleImpl) bundle).getBundleId()));
+                                maps[IDENTIFIER_MAP_IDX].remove(Long.valueOf(((BundleImpl) bundle).getBundleId()));
                                 m_installedBundles = maps;
 
                                 m_logger.log(
@@ -2962,7 +2962,7 @@ public class Felix extends BundleImpl implements Framework
                 target = (BundleImpl) maps[LOCATION_MAP_IDX].remove(bundle._getLocation());
                 if (target != null)
                 {
-                    maps[IDENTIFIER_MAP_IDX].remove(new Long(target.getBundleId()));
+                    maps[IDENTIFIER_MAP_IDX].remove(Long.valueOf(target.getBundleId()));
                     m_installedBundles = maps;
 
                     // Set the bundle's persistent state to uninstalled.
@@ -3192,7 +3192,7 @@ public class Felix extends BundleImpl implements Framework
                     new TreeMap<Long, BundleImpl>(m_installedBundles[IDENTIFIER_MAP_IDX])
                 };
                 maps[LOCATION_MAP_IDX].put(bundle._getLocation(), bundle);
-                maps[IDENTIFIER_MAP_IDX].put(new Long(bundle.getBundleId()), bundle);
+                maps[IDENTIFIER_MAP_IDX].put(Long.valueOf(bundle.getBundleId()), bundle);
                 m_installedBundles = maps;
             }
             finally
@@ -3357,7 +3357,7 @@ public class Felix extends BundleImpl implements Framework
                         new TreeMap<Long, BundleImpl>(m_installedBundles[IDENTIFIER_MAP_IDX])
                     };
                     maps[LOCATION_MAP_IDX].put(location, bundle);
-                    maps[IDENTIFIER_MAP_IDX].put(new Long(bundle.getBundleId()), bundle);
+                    maps[IDENTIFIER_MAP_IDX].put(Long.valueOf(bundle.getBundleId()), bundle);
                     m_installedBundles = maps;
                 }
                 finally
@@ -3469,7 +3469,7 @@ public class Felix extends BundleImpl implements Framework
     Bundle getBundle(BundleContext bc, long id)
     {
         BundleImpl bundle = (BundleImpl)
-            m_installedBundles[IDENTIFIER_MAP_IDX].get(new Long(id));
+            m_installedBundles[IDENTIFIER_MAP_IDX].get(Long.valueOf(id));
         if (bundle != null)
         {
             List<BundleImpl> uninstalledBundles = m_uninstalledBundles;
@@ -3531,7 +3531,7 @@ public class Felix extends BundleImpl implements Framework
     Bundle getBundle(long id)
     {
         BundleImpl bundle = (BundleImpl)
-            m_installedBundles[IDENTIFIER_MAP_IDX].get(new Long(id));
+            m_installedBundles[IDENTIFIER_MAP_IDX].get(Long.valueOf(id));
         if (bundle != null)
         {
             return bundle;

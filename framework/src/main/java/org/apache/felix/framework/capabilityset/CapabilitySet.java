@@ -585,7 +585,7 @@ public class CapabilitySet
             // does not take a string, so handle it separately.
             if (lhs instanceof Character)
             {
-                rhs = new Character(rhsString.charAt(0));
+                rhs = Character.valueOf(rhsString.charAt(0));
             }
             else if(lhs instanceof Version && rhsString.indexOf(',') >= 0)
             {
