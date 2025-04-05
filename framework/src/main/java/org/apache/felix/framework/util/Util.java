@@ -238,8 +238,8 @@ public class Util
         Map<String,Set<String>> exports = null;
         if (!MODULES_MAP.isEmpty())
         {
-            Set<String> modules = new TreeSet<String>();
-            exports = new HashMap<String, Set<String>>();
+            Set<String> modules = new TreeSet<>();
+            exports = new HashMap<>();
             for (Map.Entry<String, Set<String>> module : MODULES_MAP.entrySet())
             {
                 Object name = module.getKey();
@@ -274,7 +274,7 @@ public class Util
 
     public static Map<String, String> getPropertiesWithPrefix(Properties props, String prefix)
     {
-        Map<String, String> result = new HashMap<String, String>();
+        Map<String, String> result = new HashMap<>();
 
         Set<String> propertySet = props.stringPropertyNames();
 
@@ -537,7 +537,7 @@ public class Util
                 {
                     if (result == null)
                     {
-                        result = new ArrayList<BundleRequirement>();
+                        result = new ArrayList<>();
                     }
                     result.add(req);
                 }
@@ -892,7 +892,7 @@ public class Util
                         // Create array list if needed.
                         if (fragments.isEmpty())
                         {
-                            fragments = new ArrayList<BundleRevision>();
+                            fragments = new ArrayList<>();
                         }
                         fragments.add(w.getRequirerWiring().getRevision());
                     }

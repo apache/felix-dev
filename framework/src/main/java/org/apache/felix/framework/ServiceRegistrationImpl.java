@@ -68,7 +68,7 @@ class ServiceRegistrationImpl implements ServiceRegistration
     // Flag indicating that we are unregistering.
     private volatile boolean m_isUnregistering = false;
     // This threadlocal is used to detect cycles.
-    private final ThreadLocal<Boolean> m_threadLoopDetection = new ThreadLocal<Boolean>();
+    private final ThreadLocal<Boolean> m_threadLoopDetection = new ThreadLocal<>();
 
     private final Object syncObject = new Object();
 
@@ -701,7 +701,7 @@ class ServiceRegistrationImpl implements ServiceRegistration
         @Override
         public Dictionary<String, Object> getProperties()
         {
-            return new Hashtable<String, Object>(ServiceRegistrationImpl.this.m_propMap);
+            return new Hashtable<>(ServiceRegistrationImpl.this.m_propMap);
         }
 
         @Override

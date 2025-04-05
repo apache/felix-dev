@@ -62,7 +62,7 @@ class RequirementsCapabilitiesTest
 
         String cache = cacheDir.getPath();
 
-        Map<String,String> params = new HashMap<String, String>();
+        Map<String,String> params = new HashMap<>();
         params.put("felix.cache.profiledir", cache);
         params.put("felix.cache.dir", cache);
         params.put(Constants.FRAMEWORK_STORAGE, cache);
@@ -110,7 +110,7 @@ class RequirementsCapabilitiesTest
         List<Capability> bwbCaps = bbr.getCapabilities("osgi.wiring.bundle");
         assertThat(bwbCaps).hasSize(1);
 
-        Map<String, Object> expectedBWBAttrs = new HashMap<String, Object>();
+        Map<String, Object> expectedBWBAttrs = new HashMap<>();
         expectedBWBAttrs.put("osgi.wiring.bundle", "cap.bundle");
         expectedBWBAttrs.put("bundle-version", Version.parseVersion("1.2.3.Blah"));
         Capability expectedBWBCap = new TestCapability("osgi.wiring.bundle",
@@ -120,7 +120,7 @@ class RequirementsCapabilitiesTest
         List<Capability> bwhCaps = bbr.getCapabilities("osgi.wiring.host");
         assertThat(bwhCaps).hasSize(1);
 
-        Map<String, Object> expectedBWHAttrs = new HashMap<String, Object>();
+        Map<String, Object> expectedBWHAttrs = new HashMap<>();
         expectedBWHAttrs.put("osgi.wiring.host", "cap.bundle");
         expectedBWHAttrs.put("bundle-version", Version.parseVersion("1.2.3.Blah"));
         Capability expectedBWHCap = new TestCapability("osgi.wiring.host",
@@ -130,7 +130,7 @@ class RequirementsCapabilitiesTest
         List<Capability> bwiCaps = bbr.getCapabilities("osgi.identity");
         assertThat(bwiCaps).hasSize(1);
 
-        Map<String, Object> expectedBWIAttrs = new HashMap<String, Object>();
+        Map<String, Object> expectedBWIAttrs = new HashMap<>();
         expectedBWIAttrs.put("osgi.identity", "cap.bundle");
         expectedBWIAttrs.put("type", "osgi.bundle");
         expectedBWIAttrs.put("version", Version.parseVersion("1.2.3.Blah"));
@@ -146,7 +146,7 @@ class RequirementsCapabilitiesTest
         List<Capability> fwpCaps = fbr.getCapabilities("osgi.wiring.package");
         assertThat(fwpCaps).hasSize(1);
 
-        Map<String, Object> expectedFWAttrs = new HashMap<String, Object>();
+        Map<String, Object> expectedFWAttrs = new HashMap<>();
         expectedFWAttrs.put("osgi.wiring.package", "org.foo.bar");
         expectedFWAttrs.put("version", Version.parseVersion("2"));
         expectedFWAttrs.put("bundle-symbolic-name", "cap.frag");
@@ -157,7 +157,7 @@ class RequirementsCapabilitiesTest
 
         List<Capability> fiCaps = fbr.getCapabilities("osgi.identity");
         assertThat(fiCaps).hasSize(1);
-        Map<String, Object> expectedFIAttrs = new HashMap<String, Object>();
+        Map<String, Object> expectedFIAttrs = new HashMap<>();
         expectedFIAttrs.put("osgi.identity", "cap.frag");
         expectedFIAttrs.put("type", "osgi.fragment");
         expectedFIAttrs.put("version", Version.parseVersion("1.0.0"));
@@ -208,7 +208,7 @@ class RequirementsCapabilitiesTest
 
         List<Capability> feCaps = fbr.getCapabilities("osgi.identity");
         assertThat(feCaps).hasSize(1);
-        Map<String, Object> expectedFEAttrs = new HashMap<String, Object>();
+        Map<String, Object> expectedFEAttrs = new HashMap<>();
         expectedFEAttrs.put("osgi.identity", "fram.ext");
         expectedFEAttrs.put("type", "osgi.fragment");
         expectedFEAttrs.put("version", Version.parseVersion("1.2.3.test"));

@@ -78,7 +78,7 @@ public class ConcurrencyTest
     @Test
     void concurrentComponents() throws Exception
     {
-        Map<String, Object> params = new HashMap<String, Object>();
+        Map<String, Object> params = new HashMap<>();
         params.put(Constants.FRAMEWORK_SYSTEMPACKAGES,
             "org.osgi.framework; version=1.4.0," + "org.osgi.service.packageadmin; version=1.2.0,"
                 + "org.osgi.service.startlevel; version=1.1.0," + "org.osgi.util.tracker; version=1.3.3,"
@@ -163,7 +163,7 @@ public class ConcurrencyTest
                     e.printStackTrace();
                     return;
                 }
-                m_tracker = new ServiceTracker<Component, Component>(m_ctx, filter, this);
+                m_tracker = new ServiceTracker<>(m_ctx, filter, this);
                 m_tracker.open();
             }
             else
@@ -221,7 +221,7 @@ public class ConcurrencyTest
         }
         
         private void register() {
-            Hashtable<String, Object> properties = new Hashtable<String, Object>();
+            Hashtable<String, Object> properties = new Hashtable<>();
             properties.put("id", String.valueOf(m_id));
             m_registration = m_ctx.registerService(Component.class.getName(), this, properties);
         }
@@ -279,7 +279,7 @@ public class ConcurrencyTest
         private void createComponentsConcurrently(int iteration) throws Exception
         {
             // Create components.
-            final List<Component> components = new ArrayList<Component>();
+            final List<Component> components = new ArrayList<>();
             for (int i = 0; i < COMPONENTS; i++)
             {
                 components.add(createComponents(iteration, i));
