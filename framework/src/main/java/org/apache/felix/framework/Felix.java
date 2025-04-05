@@ -4364,11 +4364,7 @@ public class Felix extends BundleImpl implements Framework
                         }
                     }
                 }
-                catch (ResolutionException ex)
-                {
-                    result = false;
-                }
-                catch (BundleException ex)
+                catch (ResolutionException | BundleException ex)
                 {
                     result = false;
                 }
