@@ -748,7 +748,7 @@ public class ManifestParser
                     {
                         clause.m_attrs.put(
                             entry.getKey(),
-                            new Double(clause.m_attrs.get(entry.getKey()).toString().trim()));
+                            Double.valueOf(clause.m_attrs.get(entry.getKey()).toString().trim()));
                     }
                     else if (type.equals("Version"))
                     {
@@ -760,7 +760,7 @@ public class ManifestParser
                     {
                         clause.m_attrs.put(
                             entry.getKey(),
-                            new Long(clause.m_attrs.get(entry.getKey()).toString().trim()));
+                            Long.valueOf(clause.m_attrs.get(entry.getKey()).toString().trim()));
                     }
                     else if (type.startsWith("List"))
                     {
@@ -793,7 +793,7 @@ public class ManifestParser
                             }
                             else if (listType.equals("Double"))
                             {
-                                values.add(new Double(token.trim()));
+                                values.add(Double.valueOf(token.trim()));
                             }
                             else if (listType.equals("Version"))
                             {
@@ -801,7 +801,7 @@ public class ManifestParser
                             }
                             else if (listType.equals("Long"))
                             {
-                                values.add(new Long(token.trim()));
+                                values.add(Long.valueOf(token.trim()));
                             }
                             else
                             {

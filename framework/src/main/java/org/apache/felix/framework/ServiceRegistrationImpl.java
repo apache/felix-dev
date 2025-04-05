@@ -685,14 +685,14 @@ class ServiceRegistrationImpl implements ServiceRegistration
             Object otherRankObj = other.getProperty(Constants.SERVICE_RANKING);
 
             // If no rank, then spec says it defaults to zero.
-            rankObj = (rankObj == null) ? new Integer(0) : rankObj;
-            otherRankObj = (otherRankObj == null) ? new Integer(0) : otherRankObj;
+            rankObj = (rankObj == null) ? Integer.valueOf(0) : rankObj;
+            otherRankObj = (otherRankObj == null) ? Integer.valueOf(0) : otherRankObj;
 
             // If rank is not Integer, then spec says it defaults to zero.
             Integer rank = (rankObj instanceof Integer)
-                ? (Integer) rankObj : new Integer(0);
+                ? (Integer) rankObj : 0;
             Integer otherRank = (otherRankObj instanceof Integer)
-                ? (Integer) otherRankObj : new Integer(0);
+                ? (Integer) otherRankObj : 0;
 
             // Sort by rank in ascending order.
             if (rank.compareTo(otherRank) < 0)

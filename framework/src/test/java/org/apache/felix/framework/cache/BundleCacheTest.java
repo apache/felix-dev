@@ -193,7 +193,7 @@ class BundleCacheTest
 
         assertThat(archive).isNotNull();
 
-        assertThat(archive.getCurrentRevisionNumber()).isEqualTo(Long.valueOf(0));
+        assertThat(archive.getCurrentRevisionNumber()).isEqualTo(0L);
 
         revision(archive);
 
@@ -204,7 +204,7 @@ class BundleCacheTest
 
         archive.revise(location, file != null ? new FileInputStream(file) : null);
 
-        assertThat(archive.getCurrentRevisionNumber()).isEqualTo(Long.valueOf(1));
+        assertThat(archive.getCurrentRevisionNumber()).isEqualTo(1L);
 
         revision(archive);
 
@@ -216,7 +216,7 @@ class BundleCacheTest
 
         archive.purge();
 
-        assertThat(archive.getCurrentRevisionNumber()).isEqualTo(Long.valueOf(1));
+        assertThat(archive.getCurrentRevisionNumber()).isEqualTo(1L);
 
         revision(archive);
 
