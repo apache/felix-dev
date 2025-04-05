@@ -513,15 +513,15 @@ class ServiceRegistrationImpl implements ServiceRegistration
         public String toString()
         {
             String[] ocs = (String[]) getProperty("objectClass");
-            String oc = "[";
+            StringBuilder oc = new StringBuilder("[");
             for(int i = 0; i < ocs.length; i++)
             {
-                oc = oc + ocs[i];
+                oc.append(ocs[i]);
                 if (i < ocs.length - 1)
-                    oc = oc + ", ";
+                    oc.append(", ");
             }
-            oc = oc + "]";
-            return oc;
+            oc.append("]");
+            return oc.toString();
         }
 
         @Override

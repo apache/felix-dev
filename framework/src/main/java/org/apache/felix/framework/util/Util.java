@@ -253,11 +253,11 @@ public class Util
                 }
             }
 
-            String modulesString = "";
+            StringBuilder modulesString = new StringBuilder();
             for (String module : modules) {
-                modulesString += "${" + module + "}";
+                modulesString.append("${").append(module).append("}");
             }
-            properties.put("jre-jpms", modulesString);
+            properties.put("jre-jpms", modulesString.toString());
         }
 
         return exports;

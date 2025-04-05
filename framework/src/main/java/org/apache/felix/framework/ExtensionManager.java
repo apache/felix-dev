@@ -322,26 +322,26 @@ class ExtensionManager implements Content
                         }
                     }
 
-                    String pkgs = "";
+                    StringBuilder pkgs = new StringBuilder();
 
                     for (String pkg : exports.get(moduleKey))
                     {
-                        pkgs += "," + pkg;
+                        pkgs.append(",").append(pkg);
                         SortedSet<String> uses = referred.get(pkg);
                         if (uses != null && !uses.isEmpty())
                         {
-                            pkgs += ";uses:=\"";
+                            pkgs.append(";uses:=\"");
                             String sep = "";
                             for (String u : uses)
                             {
-                                pkgs += sep + u;
+                                pkgs.append(sep).append(u);
                                 sep = ",";
                             }
-                            pkgs += "\"";
+                            pkgs.append("\"");
                         }
-                        pkgs += ";version=\"" + defaultProperties.getProperty("felix.detect.java.version") + "\"";
+                        pkgs.append(";version=\"").append(defaultProperties.getProperty("felix.detect.java.version")).append("\"");
                     }
-                    defaultProperties.put(module, pkgs);
+                    defaultProperties.put(module, pkgs.toString());
                 }
             }
         }
