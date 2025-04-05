@@ -18,161 +18,160 @@
  */
 package org.apache.felix.framework.util.manifestparser;
 
-import org.junit.Test;
+import static org.assertj.core.api.Assertions.assertThat;
 
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertTrue;
+import org.junit.jupiter.api.Test;
 
-public class NativeLibraryClauseTest {
+class NativeLibraryClauseTest {
 
     @Test
-    public void testNormalizeOSName() {
-        assertEquals("win32", NativeLibraryClause.normalizeOSName("win 32"));
-        assertEquals("win32", NativeLibraryClause.normalizeOSName("Win*"));
-        assertEquals("win32", NativeLibraryClause.normalizeOSName("Windows NonExistingFutureVersion 4711"));
-        assertEquals("windows95", NativeLibraryClause.normalizeOSName("Windows 95"));
-        assertEquals("windows98", NativeLibraryClause.normalizeOSName("Windows 98"));
-        assertEquals("windowsnt", NativeLibraryClause.normalizeOSName("WinNT"));
-        assertEquals("windows2000", NativeLibraryClause.normalizeOSName("Win2000"));
-        assertEquals("windows2003", NativeLibraryClause.normalizeOSName("Win2003"));
-        assertEquals("windowsserver2008", NativeLibraryClause.normalizeOSName("Windows Server 2008"));
-        assertEquals("windowsserver2012", NativeLibraryClause.normalizeOSName("Windows Server 2012"));
-        assertEquals("windowsserver2016", NativeLibraryClause.normalizeOSName("Windows Server 2016"));
-        assertEquals("windowsxp", NativeLibraryClause.normalizeOSName("WinXP"));
-        assertEquals("windowsce", NativeLibraryClause.normalizeOSName("WinCE"));
-        assertEquals("windowsvista", NativeLibraryClause.normalizeOSName("WinVista"));
-        assertEquals("windows7", NativeLibraryClause.normalizeOSName("Windows 7"));
-        assertEquals("windows8", NativeLibraryClause.normalizeOSName("Win8"));
-        assertEquals("windows10", NativeLibraryClause.normalizeOSName("Windows 10"));
-        assertEquals("linux", NativeLibraryClause.normalizeOSName("Linux1.2.3"));
-        assertEquals("aix", NativeLibraryClause.normalizeOSName("AIX-4.5.6"));
-        assertEquals("digitalunix", NativeLibraryClause.normalizeOSName("digitalunix_blah"));
-        assertEquals("hpux", NativeLibraryClause.normalizeOSName("HPUX-999"));
-        assertEquals("irix", NativeLibraryClause.normalizeOSName("Irixxxx"));
-        assertEquals("macosx", NativeLibraryClause.normalizeOSName("mac OS X"));
-        assertEquals("netware", NativeLibraryClause.normalizeOSName("Netware"));
-        assertEquals("openbsd", NativeLibraryClause.normalizeOSName("OpenBSD-0000"));
-        assertEquals("netbsd", NativeLibraryClause.normalizeOSName("netbsd "));
-        assertEquals("os2", NativeLibraryClause.normalizeOSName("os/2"));
-        assertEquals("qnx", NativeLibraryClause.normalizeOSName("procnto"));
-        assertEquals("solaris", NativeLibraryClause.normalizeOSName("Solaris 9"));
-        assertEquals("sunos", NativeLibraryClause.normalizeOSName("SunOS8"));
-        assertEquals("vxworks", NativeLibraryClause.normalizeOSName("VxWorks"));
+    void normalizeOSName() {
+        assertThat(NativeLibraryClause.normalizeOSName("win 32")).isEqualTo("win32");
+        assertThat(NativeLibraryClause.normalizeOSName("Win*")).isEqualTo("win32");
+        assertThat(NativeLibraryClause.normalizeOSName("Windows NonExistingFutureVersion 4711")).isEqualTo("win32");
+        assertThat(NativeLibraryClause.normalizeOSName("Windows 95")).isEqualTo("windows95");
+        assertThat(NativeLibraryClause.normalizeOSName("Windows 98")).isEqualTo("windows98");
+        assertThat(NativeLibraryClause.normalizeOSName("WinNT")).isEqualTo("windowsnt");
+        assertThat(NativeLibraryClause.normalizeOSName("Win2000")).isEqualTo("windows2000");
+        assertThat(NativeLibraryClause.normalizeOSName("Win2003")).isEqualTo("windows2003");
+        assertThat(NativeLibraryClause.normalizeOSName("Windows Server 2008")).isEqualTo("windowsserver2008");
+        assertThat(NativeLibraryClause.normalizeOSName("Windows Server 2012")).isEqualTo("windowsserver2012");
+        assertThat(NativeLibraryClause.normalizeOSName("Windows Server 2016")).isEqualTo("windowsserver2016");
+        assertThat(NativeLibraryClause.normalizeOSName("WinXP")).isEqualTo("windowsxp");
+        assertThat(NativeLibraryClause.normalizeOSName("WinCE")).isEqualTo("windowsce");
+        assertThat(NativeLibraryClause.normalizeOSName("WinVista")).isEqualTo("windowsvista");
+        assertThat(NativeLibraryClause.normalizeOSName("Windows 7")).isEqualTo("windows7");
+        assertThat(NativeLibraryClause.normalizeOSName("Win8")).isEqualTo("windows8");
+        assertThat(NativeLibraryClause.normalizeOSName("Windows 10")).isEqualTo("windows10");
+        assertThat(NativeLibraryClause.normalizeOSName("Linux1.2.3")).isEqualTo("linux");
+        assertThat(NativeLibraryClause.normalizeOSName("AIX-4.5.6")).isEqualTo("aix");
+        assertThat(NativeLibraryClause.normalizeOSName("digitalunix_blah")).isEqualTo("digitalunix");
+        assertThat(NativeLibraryClause.normalizeOSName("HPUX-999")).isEqualTo("hpux");
+        assertThat(NativeLibraryClause.normalizeOSName("Irixxxx")).isEqualTo("irix");
+        assertThat(NativeLibraryClause.normalizeOSName("mac OS X")).isEqualTo("macosx");
+        assertThat(NativeLibraryClause.normalizeOSName("Netware")).isEqualTo("netware");
+        assertThat(NativeLibraryClause.normalizeOSName("OpenBSD-0000")).isEqualTo("openbsd");
+        assertThat(NativeLibraryClause.normalizeOSName("netbsd ")).isEqualTo("netbsd");
+        assertThat(NativeLibraryClause.normalizeOSName("os/2")).isEqualTo("os2");
+        assertThat(NativeLibraryClause.normalizeOSName("procnto")).isEqualTo("qnx");
+        assertThat(NativeLibraryClause.normalizeOSName("Solaris 9")).isEqualTo("solaris");
+        assertThat(NativeLibraryClause.normalizeOSName("SunOS8")).isEqualTo("sunos");
+        assertThat(NativeLibraryClause.normalizeOSName("VxWorks")).isEqualTo("vxworks");
 
         // Try all the already normalized names
-        assertEquals("aix", NativeLibraryClause.normalizeOSName("aix"));
-        assertEquals("digitalunix", NativeLibraryClause.normalizeOSName("digitalunix"));
-        assertEquals("hpux", NativeLibraryClause.normalizeOSName("hpux"));
-        assertEquals("irix", NativeLibraryClause.normalizeOSName("irix"));
-        assertEquals("linux", NativeLibraryClause.normalizeOSName("linux"));
-        assertEquals("macos", NativeLibraryClause.normalizeOSName("macos"));
-        assertEquals("netbsd", NativeLibraryClause.normalizeOSName("netbsd"));
-        assertEquals("netware", NativeLibraryClause.normalizeOSName("netware"));
-        assertEquals("openbsd", NativeLibraryClause.normalizeOSName("openbsd"));
-        assertEquals("os2", NativeLibraryClause.normalizeOSName("os2"));
-        assertEquals("qnx", NativeLibraryClause.normalizeOSName("qnx"));
-        assertEquals("solaris", NativeLibraryClause.normalizeOSName("solaris"));
-        assertEquals("sunos", NativeLibraryClause.normalizeOSName("sunos"));
-        assertEquals("vxworks", NativeLibraryClause.normalizeOSName("vxworks"));
-        assertEquals("windows2000", NativeLibraryClause.normalizeOSName("windows2000"));
-        assertEquals("windows2003", NativeLibraryClause.normalizeOSName("windows2003"));
-        assertEquals("windows7", NativeLibraryClause.normalizeOSName("windows7"));
-        assertEquals("windows8", NativeLibraryClause.normalizeOSName("windows8"));
-        assertEquals("windows9", NativeLibraryClause.normalizeOSName("windows9"));
-        assertEquals("windows10", NativeLibraryClause.normalizeOSName("windows10"));
-        assertEquals("windows95", NativeLibraryClause.normalizeOSName("windows95"));
-        assertEquals("windows98", NativeLibraryClause.normalizeOSName("windows98"));
-        assertEquals("windowsce", NativeLibraryClause.normalizeOSName("windowsce"));
-        assertEquals("windowsnt", NativeLibraryClause.normalizeOSName("windowsnt"));
-        assertEquals("windowsserver2008", NativeLibraryClause.normalizeOSName("windowsserver2008"));
-        assertEquals("windowsserver2012", NativeLibraryClause.normalizeOSName("windowsserver2012"));
-        assertEquals("windowsvista", NativeLibraryClause.normalizeOSName("windowsvista"));
-        assertEquals("windowsxp", NativeLibraryClause.normalizeOSName("windowsxp"));
-        assertEquals("win32", NativeLibraryClause.normalizeOSName("win32"));
+        assertThat(NativeLibraryClause.normalizeOSName("aix")).isEqualTo("aix");
+        assertThat(NativeLibraryClause.normalizeOSName("digitalunix")).isEqualTo("digitalunix");
+        assertThat(NativeLibraryClause.normalizeOSName("hpux")).isEqualTo("hpux");
+        assertThat(NativeLibraryClause.normalizeOSName("irix")).isEqualTo("irix");
+        assertThat(NativeLibraryClause.normalizeOSName("linux")).isEqualTo("linux");
+        assertThat(NativeLibraryClause.normalizeOSName("macos")).isEqualTo("macos");
+        assertThat(NativeLibraryClause.normalizeOSName("netbsd")).isEqualTo("netbsd");
+        assertThat(NativeLibraryClause.normalizeOSName("netware")).isEqualTo("netware");
+        assertThat(NativeLibraryClause.normalizeOSName("openbsd")).isEqualTo("openbsd");
+        assertThat(NativeLibraryClause.normalizeOSName("os2")).isEqualTo("os2");
+        assertThat(NativeLibraryClause.normalizeOSName("qnx")).isEqualTo("qnx");
+        assertThat(NativeLibraryClause.normalizeOSName("solaris")).isEqualTo("solaris");
+        assertThat(NativeLibraryClause.normalizeOSName("sunos")).isEqualTo("sunos");
+        assertThat(NativeLibraryClause.normalizeOSName("vxworks")).isEqualTo("vxworks");
+        assertThat(NativeLibraryClause.normalizeOSName("windows2000")).isEqualTo("windows2000");
+        assertThat(NativeLibraryClause.normalizeOSName("windows2003")).isEqualTo("windows2003");
+        assertThat(NativeLibraryClause.normalizeOSName("windows7")).isEqualTo("windows7");
+        assertThat(NativeLibraryClause.normalizeOSName("windows8")).isEqualTo("windows8");
+        assertThat(NativeLibraryClause.normalizeOSName("windows9")).isEqualTo("windows9");
+        assertThat(NativeLibraryClause.normalizeOSName("windows10")).isEqualTo("windows10");
+        assertThat(NativeLibraryClause.normalizeOSName("windows95")).isEqualTo("windows95");
+        assertThat(NativeLibraryClause.normalizeOSName("windows98")).isEqualTo("windows98");
+        assertThat(NativeLibraryClause.normalizeOSName("windowsce")).isEqualTo("windowsce");
+        assertThat(NativeLibraryClause.normalizeOSName("windowsnt")).isEqualTo("windowsnt");
+        assertThat(NativeLibraryClause.normalizeOSName("windowsserver2008")).isEqualTo("windowsserver2008");
+        assertThat(NativeLibraryClause.normalizeOSName("windowsserver2012")).isEqualTo("windowsserver2012");
+        assertThat(NativeLibraryClause.normalizeOSName("windowsvista")).isEqualTo("windowsvista");
+        assertThat(NativeLibraryClause.normalizeOSName("windowsxp")).isEqualTo("windowsxp");
+        assertThat(NativeLibraryClause.normalizeOSName("win32")).isEqualTo("win32");
     }
 
     @Test
-    public void testgetOsNameWithAliases() {
-        assertTrue(NativeLibraryClause.getOsNameWithAliases("win 32").contains("win32"));
-        assertTrue(NativeLibraryClause.getOsNameWithAliases("Win*").contains("win32"));
-        assertTrue(NativeLibraryClause.getOsNameWithAliases("Windows 95").contains("windows95"));
-        assertTrue(NativeLibraryClause.getOsNameWithAliases("Windows 98").contains("windows98"));
-        assertTrue(NativeLibraryClause.getOsNameWithAliases("WinNT").contains("windowsnt"));
-        assertTrue(NativeLibraryClause.getOsNameWithAliases("Win2000").contains("windows2000"));
-        assertTrue(NativeLibraryClause.getOsNameWithAliases("Win2003").contains("windows2003"));
-        assertTrue(NativeLibraryClause.getOsNameWithAliases("Windows Server 2008").contains("windowsserver2008"));
-        assertTrue(NativeLibraryClause.getOsNameWithAliases("Windows Server 2012").contains("windowsserver2012"));
-        assertTrue(NativeLibraryClause.getOsNameWithAliases("WinXP").contains("windowsxp"));
-        assertTrue(NativeLibraryClause.getOsNameWithAliases("WinCE").contains("windowsce"));
-        assertTrue(NativeLibraryClause.getOsNameWithAliases("WinVista").contains("windowsvista"));
-        assertTrue(NativeLibraryClause.getOsNameWithAliases("Windows 7").contains("windows7"));
-        assertTrue(NativeLibraryClause.getOsNameWithAliases("Windows7").contains("windows7"));
-        assertTrue(NativeLibraryClause.getOsNameWithAliases("Win8").contains("windows8"));
-        assertTrue(NativeLibraryClause.getOsNameWithAliases("Windows 10").contains("windows10"));
-        assertTrue(NativeLibraryClause.getOsNameWithAliases("Linux1.2.3").contains("linux"));
-        assertTrue(NativeLibraryClause.getOsNameWithAliases("AIX-4.5.6").contains("aix"));
-        assertTrue(NativeLibraryClause.getOsNameWithAliases("digitalunix_blah").contains("digitalunix"));
-        assertTrue(NativeLibraryClause.getOsNameWithAliases("HPUX-999").contains("hpux"));
-        assertTrue(NativeLibraryClause.getOsNameWithAliases("Irixxxx").contains("irix"));
-        assertTrue(NativeLibraryClause.getOsNameWithAliases("mac OS X").contains("macosx"));
-        assertTrue(NativeLibraryClause.getOsNameWithAliases("Netware").contains("netware"));
-        assertTrue(NativeLibraryClause.getOsNameWithAliases("OpenBSD-0000").contains("openbsd"));
-        assertTrue(NativeLibraryClause.getOsNameWithAliases("netbsd ").contains("netbsd"));
-        assertTrue(NativeLibraryClause.getOsNameWithAliases("os/2").contains("os2"));
-        assertTrue(NativeLibraryClause.getOsNameWithAliases("procnto").contains("qnx"));
-        assertTrue(NativeLibraryClause.getOsNameWithAliases("Solaris 9").contains("solaris"));
-        assertTrue(NativeLibraryClause.getOsNameWithAliases("SunOS8").contains("sunos"));
-        assertTrue(NativeLibraryClause.getOsNameWithAliases("VxWorks").contains("vxworks"));
+    void testgetOsNameWithAliases() {
+        assertThat(NativeLibraryClause.getOsNameWithAliases("win 32")).contains("win32");
+        assertThat(NativeLibraryClause.getOsNameWithAliases("Win*")).contains("win32");
+        assertThat(NativeLibraryClause.getOsNameWithAliases("Windows 95")).contains("windows95");
+        assertThat(NativeLibraryClause.getOsNameWithAliases("Windows 98")).contains("windows98");
+        assertThat(NativeLibraryClause.getOsNameWithAliases("WinNT")).contains("windowsnt");
+        assertThat(NativeLibraryClause.getOsNameWithAliases("Win2000")).contains("windows2000");
+        assertThat(NativeLibraryClause.getOsNameWithAliases("Win2003")).contains("windows2003");
+        assertThat(NativeLibraryClause.getOsNameWithAliases("Windows Server 2008")).contains("windowsserver2008");
+        assertThat(NativeLibraryClause.getOsNameWithAliases("Windows Server 2012")).contains("windowsserver2012");
+        assertThat(NativeLibraryClause.getOsNameWithAliases("WinXP")).contains("windowsxp");
+        assertThat(NativeLibraryClause.getOsNameWithAliases("WinCE")).contains("windowsce");
+        assertThat(NativeLibraryClause.getOsNameWithAliases("WinVista")).contains("windowsvista");
+        assertThat(NativeLibraryClause.getOsNameWithAliases("Windows 7")).contains("windows7");
+        assertThat(NativeLibraryClause.getOsNameWithAliases("Windows7")).contains("windows7");
+        assertThat(NativeLibraryClause.getOsNameWithAliases("Win8")).contains("windows8");
+        assertThat(NativeLibraryClause.getOsNameWithAliases("Windows 10")).contains("windows10");
+        assertThat(NativeLibraryClause.getOsNameWithAliases("Linux1.2.3")).contains("linux");
+        assertThat(NativeLibraryClause.getOsNameWithAliases("AIX-4.5.6")).contains("aix");
+        assertThat(NativeLibraryClause.getOsNameWithAliases("digitalunix_blah")).contains("digitalunix");
+        assertThat(NativeLibraryClause.getOsNameWithAliases("HPUX-999")).contains("hpux");
+        assertThat(NativeLibraryClause.getOsNameWithAliases("Irixxxx")).contains("irix");
+        assertThat(NativeLibraryClause.getOsNameWithAliases("mac OS X")).contains("macosx");
+        assertThat(NativeLibraryClause.getOsNameWithAliases("Netware")).contains("netware");
+        assertThat(NativeLibraryClause.getOsNameWithAliases("OpenBSD-0000")).contains("openbsd");
+        assertThat(NativeLibraryClause.getOsNameWithAliases("netbsd ")).contains("netbsd");
+        assertThat(NativeLibraryClause.getOsNameWithAliases("os/2")).contains("os2");
+        assertThat(NativeLibraryClause.getOsNameWithAliases("procnto")).contains("qnx");
+        assertThat(NativeLibraryClause.getOsNameWithAliases("Solaris 9")).contains("solaris");
+        assertThat(NativeLibraryClause.getOsNameWithAliases("SunOS8")).contains("sunos");
+        assertThat(NativeLibraryClause.getOsNameWithAliases("VxWorks")).contains("vxworks");
 
         // Try all the already normalized names
-        assertTrue(NativeLibraryClause.getOsNameWithAliases("aix").contains("aix"));
-        assertTrue(NativeLibraryClause.getOsNameWithAliases("digitalunix").contains("digitalunix"));
-        assertTrue(NativeLibraryClause.getOsNameWithAliases("hpux").contains("hpux"));
-        assertTrue(NativeLibraryClause.getOsNameWithAliases("irix").contains("irix"));
-        assertTrue(NativeLibraryClause.getOsNameWithAliases("linux").contains("linux"));
-        assertTrue(NativeLibraryClause.getOsNameWithAliases("mac os").contains("macos"));
-        assertTrue(NativeLibraryClause.getOsNameWithAliases("netbsd").contains("netbsd"));
-        assertTrue(NativeLibraryClause.getOsNameWithAliases("netware").contains("netware"));
-        assertTrue(NativeLibraryClause.getOsNameWithAliases("openbsd").contains("openbsd"));
-        assertTrue(NativeLibraryClause.getOsNameWithAliases("os2").contains("os2"));
-        assertTrue(NativeLibraryClause.getOsNameWithAliases("qnx").contains("qnx"));
-        assertTrue(NativeLibraryClause.getOsNameWithAliases("solaris").contains("solaris"));
-        assertTrue(NativeLibraryClause.getOsNameWithAliases("sunos").contains("sunos"));
-        assertTrue(NativeLibraryClause.getOsNameWithAliases("vxworks").contains("vxworks"));
-        assertTrue(NativeLibraryClause.getOsNameWithAliases("windows2000").contains("windows2000"));
-        assertTrue(NativeLibraryClause.getOsNameWithAliases("windows2003").contains("windows2003"));
-        assertTrue(NativeLibraryClause.getOsNameWithAliases("windows7").contains("windows7"));
-        assertTrue(NativeLibraryClause.getOsNameWithAliases("windows8").contains("windows8"));
-        assertTrue(NativeLibraryClause.getOsNameWithAliases("windows9").contains("windows9"));
-        assertTrue(NativeLibraryClause.getOsNameWithAliases("windows10").contains("windows10"));
-        assertTrue(NativeLibraryClause.getOsNameWithAliases("windows95").contains("windows95"));
-        assertTrue(NativeLibraryClause.getOsNameWithAliases("windows98").contains("windows98"));
-        assertTrue(NativeLibraryClause.getOsNameWithAliases("windowsce").contains("windowsce"));
-        assertTrue(NativeLibraryClause.getOsNameWithAliases("windowsnt").contains("windowsnt"));
-        assertTrue(NativeLibraryClause.getOsNameWithAliases("windowsserver2008").contains("windowsserver2008"));
-        assertTrue(NativeLibraryClause.getOsNameWithAliases("windowsserver2012").contains("windowsserver2012"));
-        assertTrue(NativeLibraryClause.getOsNameWithAliases("windowsvista").contains("windowsvista"));
-        assertTrue(NativeLibraryClause.getOsNameWithAliases("windowsxp").contains("windowsxp"));
-        assertTrue(NativeLibraryClause.getOsNameWithAliases("win32").contains("win32"));
+        assertThat(NativeLibraryClause.getOsNameWithAliases("aix")).contains("aix");
+        assertThat(NativeLibraryClause.getOsNameWithAliases("digitalunix")).contains("digitalunix");
+        assertThat(NativeLibraryClause.getOsNameWithAliases("hpux")).contains("hpux");
+        assertThat(NativeLibraryClause.getOsNameWithAliases("irix")).contains("irix");
+        assertThat(NativeLibraryClause.getOsNameWithAliases("linux")).contains("linux");
+        assertThat(NativeLibraryClause.getOsNameWithAliases("mac os")).contains("macos");
+        assertThat(NativeLibraryClause.getOsNameWithAliases("netbsd")).contains("netbsd");
+        assertThat(NativeLibraryClause.getOsNameWithAliases("netware")).contains("netware");
+        assertThat(NativeLibraryClause.getOsNameWithAliases("openbsd")).contains("openbsd");
+        assertThat(NativeLibraryClause.getOsNameWithAliases("os2")).contains("os2");
+        assertThat(NativeLibraryClause.getOsNameWithAliases("qnx")).contains("qnx");
+        assertThat(NativeLibraryClause.getOsNameWithAliases("solaris")).contains("solaris");
+        assertThat(NativeLibraryClause.getOsNameWithAliases("sunos")).contains("sunos");
+        assertThat(NativeLibraryClause.getOsNameWithAliases("vxworks")).contains("vxworks");
+        assertThat(NativeLibraryClause.getOsNameWithAliases("windows2000")).contains("windows2000");
+        assertThat(NativeLibraryClause.getOsNameWithAliases("windows2003")).contains("windows2003");
+        assertThat(NativeLibraryClause.getOsNameWithAliases("windows7")).contains("windows7");
+        assertThat(NativeLibraryClause.getOsNameWithAliases("windows8")).contains("windows8");
+        assertThat(NativeLibraryClause.getOsNameWithAliases("windows9")).contains("windows9");
+        assertThat(NativeLibraryClause.getOsNameWithAliases("windows10")).contains("windows10");
+        assertThat(NativeLibraryClause.getOsNameWithAliases("windows95")).contains("windows95");
+        assertThat(NativeLibraryClause.getOsNameWithAliases("windows98")).contains("windows98");
+        assertThat(NativeLibraryClause.getOsNameWithAliases("windowsce")).contains("windowsce");
+        assertThat(NativeLibraryClause.getOsNameWithAliases("windowsnt")).contains("windowsnt");
+        assertThat(NativeLibraryClause.getOsNameWithAliases("windowsserver2008")).contains("windowsserver2008");
+        assertThat(NativeLibraryClause.getOsNameWithAliases("windowsserver2012")).contains("windowsserver2012");
+        assertThat(NativeLibraryClause.getOsNameWithAliases("windowsvista")).contains("windowsvista");
+        assertThat(NativeLibraryClause.getOsNameWithAliases("windowsxp")).contains("windowsxp");
+        assertThat(NativeLibraryClause.getOsNameWithAliases("win32")).contains("win32");
     }
 
     @Test
-    public void testNormalizeOSVersion() {
+    void normalizeOSVersion() {
         // valid
-        assertEquals("1.0.0", NativeLibraryClause.normalizeOSVersion("1"));
-        assertEquals("1.2.0", NativeLibraryClause.normalizeOSVersion("1.2"));
-        assertEquals("1.2.3", NativeLibraryClause.normalizeOSVersion("1.2.3"));
-        assertEquals("1.2.3.qualifier", NativeLibraryClause.normalizeOSVersion("1.2.3.qualifier"));
+        assertThat(NativeLibraryClause.normalizeOSVersion("1")).isEqualTo("1.0.0");
+        assertThat(NativeLibraryClause.normalizeOSVersion("1.2")).isEqualTo("1.2.0");
+        assertThat(NativeLibraryClause.normalizeOSVersion("1.2.3")).isEqualTo("1.2.3");
+        assertThat(NativeLibraryClause.normalizeOSVersion("1.2.3.qualifier")).isEqualTo("1.2.3.qualifier");
 
         // to normalize
-        assertEquals("1.0.0.qualifier", NativeLibraryClause.normalizeOSVersion("1.qualifier"));
-        assertEquals("1.2.0.qualifier", NativeLibraryClause.normalizeOSVersion("1.2.qualifier"));
+        assertThat(NativeLibraryClause.normalizeOSVersion("1.qualifier")).isEqualTo("1.0.0.qualifier");
+        assertThat(NativeLibraryClause.normalizeOSVersion("1.2.qualifier")).isEqualTo("1.2.0.qualifier");
 
-        assertEquals("3.13.0.39-generic", NativeLibraryClause.normalizeOSVersion("3.13.0-39-generic"));
+        assertThat(NativeLibraryClause.normalizeOSVersion("3.13.0-39-generic")).isEqualTo("3.13.0.39-generic");
 
-        assertEquals("3.14.22.100_fc19_i686_PAE", NativeLibraryClause.normalizeOSVersion("3.14.22-100.fc19.i686.PAE"));
-        assertEquals("4.9.35", NativeLibraryClause.normalizeOSVersion("4.9.35+"));
-        assertEquals("4.9.0", NativeLibraryClause.normalizeOSVersion("4.9+"));
-        assertEquals("4.0.0", NativeLibraryClause.normalizeOSVersion("4+"));
+        assertThat(NativeLibraryClause.normalizeOSVersion("3.14.22-100.fc19.i686.PAE")).isEqualTo("3.14.22.100_fc19_i686_PAE");
+        assertThat(NativeLibraryClause.normalizeOSVersion("4.9.35+")).isEqualTo("4.9.35");
+        assertThat(NativeLibraryClause.normalizeOSVersion("4.9+")).isEqualTo("4.9.0");
+        assertThat(NativeLibraryClause.normalizeOSVersion("4+")).isEqualTo("4.0.0");
     }
 }

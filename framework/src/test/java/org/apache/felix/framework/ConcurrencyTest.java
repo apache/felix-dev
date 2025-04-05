@@ -20,6 +20,8 @@ package org.apache.felix.framework;
 
 import static java.lang.System.err;
 import static java.lang.System.out;
+import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.Assertions.fail;
 
 import java.io.File;
 import java.io.IOException;
@@ -33,6 +35,7 @@ import java.util.concurrent.Executor;
 import java.util.concurrent.Executors;
 import java.util.concurrent.TimeUnit;
 
+import org.junit.jupiter.api.Test;
 import org.osgi.framework.BundleContext;
 import org.osgi.framework.Constants;
 import org.osgi.framework.Filter;
@@ -43,9 +46,6 @@ import org.osgi.framework.launch.Framework;
 import org.osgi.util.tracker.ServiceTracker;
 import org.osgi.util.tracker.ServiceTrackerCustomizer;
 
-import junit.framework.Assert;
-import junit.framework.TestCase;
-
 /**
  * This test performs concurrent registration of service components that have dependencies between each other.
  * There are 10 components. The first one has an optional dependency on the second one, the second on the third , etc ... The last component
@@ -55,7 +55,7 @@ import junit.framework.TestCase;
  * At the end of an iteration test, we check that all nth component are properly injected (satisfied) with the nth+1 component (except the 
  * last one which has no dependency).
  */
-public class ConcurrencyTest extends TestCase
+public class ConcurrencyTest
 {
     public static final int DELAY = 1000;
     final static int NPROCS = Runtime.getRuntime().availableProcessors();
@@ -75,7 +75,8 @@ public class ConcurrencyTest extends TestCase
     /**
      * Starts a concurrent test.
      */
-    public void testConcurrentComponents() throws Exception
+    @Test
+    void concurrentComponents() throws Exception
     {
         Map<String, Object> params = new HashMap<String, Object>();
         params.put(Constants.FRAMEWORK_SYSTEMPACKAGES,
@@ -100,7 +101,7 @@ public class ConcurrencyTest extends TestCase
             Loader loader = new Loader(f.getBundleContext());
             loader.start();
 
-            Assert.assertTrue(m_testDone.await(60, TimeUnit.SECONDS));
+            assertThat(m_testDone.await(60, TimeUnit.SECONDS)).isTrue();
             loader.stop();
         }
         finally
@@ -120,7 +121,7 @@ public class ConcurrencyTest extends TestCase
                 deleteDir(file);
             }
         }
-        assertTrue(root.delete());
+        assertThat(root.delete()).isTrue();
     }
 
     /**
@@ -326,7 +327,7 @@ public class ConcurrencyTest extends TestCase
                         out.println("Component #" + i + " unsatisfied.");
                     }
                 }
-                Assert.fail("Found unsatisfied components: " + String.valueOf(COMPONENTS - satisfied));
+                fail("Found unsatisfied components: " + String.valueOf(COMPONENTS - satisfied));
                 return;
             }            
 
