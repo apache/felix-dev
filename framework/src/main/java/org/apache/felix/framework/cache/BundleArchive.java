@@ -708,10 +708,8 @@ public class BundleArchive
     **/
     private void initialize() throws Exception
     {
-        OutputStream os = null;
-        BufferedWriter bw = null;
-
-        try
+        try (OutputStream os = null;
+			 BufferedWriter bw = null)
         {
             // If the archive directory exists, then we don't
             // need to initialize since it has already been done.
@@ -730,11 +728,6 @@ public class BundleArchive
             }
 
             writeBundleInfo();
-        }
-        finally
-        {
-            if (bw != null) bw.close();
-            if (os != null) os.close();
         }
     }
 
