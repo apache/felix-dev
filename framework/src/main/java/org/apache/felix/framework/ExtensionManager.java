@@ -206,10 +206,8 @@ class ExtensionManager implements Content
         String osName = (String) configMap.get(FelixConstants.FRAMEWORK_OS_NAME);
         String osVersion = (String) configMap.get(FelixConstants.FRAMEWORK_OS_VERSION);
         String userLang = (String) configMap.get(FelixConstants.FRAMEWORK_LANGUAGE);
-        Map<String, Object> attributes = new HashMap<>();
-
         //Add all startup properties so we can match selection-filters
-        attributes.putAll(configMap);
+        Map<String, Object> attributes = new HashMap<>(configMap);
 
         if( osArchitecture != null )
         {
