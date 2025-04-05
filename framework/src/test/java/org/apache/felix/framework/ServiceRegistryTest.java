@@ -18,9 +18,12 @@
  */
 package org.apache.felix.framework;
 
-import static org.hamcrest.CoreMatchers.is;
-import static org.hamcrest.CoreMatchers.nullValue;
-import static org.hamcrest.MatcherAssert.assertThat;
+import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.Assertions.fail;
+import static org.junit.jupiter.api.Assertions.assertFalse;
+import static org.junit.jupiter.api.Assertions.assertNotSame;
+import static org.junit.jupiter.api.Assertions.assertTrue;
+import static org.mockito.Mockito.mock;
 
 import java.lang.reflect.Field;
 import java.util.ArrayList;
@@ -39,7 +42,7 @@ import java.util.concurrent.atomic.AtomicInteger;
 import org.apache.felix.framework.ServiceRegistrationImpl.ServiceReferenceImpl;
 import org.apache.felix.framework.ServiceRegistry.ServiceHolder;
 import org.apache.felix.framework.ServiceRegistry.UsageCount;
-import org.easymock.MockControl;
+import org.junit.jupiter.api.Test;
 import org.mockito.AdditionalAnswers;
 import org.mockito.InOrder;
 import org.mockito.Mockito;
@@ -57,20 +60,14 @@ import org.osgi.framework.hooks.service.EventHook;
 import org.osgi.framework.hooks.service.FindHook;
 import org.osgi.framework.hooks.service.ListenerHook;
 
-import junit.framework.TestCase;
-
-public class ServiceRegistryTest extends TestCase
+class ServiceRegistryTest
 {
-    public void testRegisterEventHookService()
+    @Test
+    void registerEventHookService()
     {
-        MockControl control = MockControl.createNiceControl(Bundle.class);
-        Bundle b = (Bundle) control.getMock();
-        control.replay();
-
-        MockControl controlContext = MockControl.createNiceControl(BundleContext.class);
-        BundleContext c = (BundleContext) controlContext.getMock();
-        controlContext.expectAndReturn(c.getBundle(), b);
-        controlContext.replay();
+        Bundle b = mock(Bundle.class);
+        BundleContext c = mock(BundleContext.class);
+        Mockito.when(c.getBundle()).thenReturn(b);
 
         ServiceRegistry sr = new ServiceRegistry(new Logger(), null);
         EventHook hook = new EventHook()
@@ -81,65 +78,57 @@ public class ServiceRegistryTest extends TestCase
             }
         };
 
-        assertEquals("Precondition failed", 0, sr.getHookRegistry().getHooks(EventHook.class).size());
-        assertEquals("Precondition failed", 0, sr.getHookRegistry().getHooks(FindHook.class).size());
-        assertEquals("Precondition failed", 0, sr.getHookRegistry().getHooks(ListenerHook.class).size());
+        assertThat(sr.getHookRegistry().getHooks(EventHook.class).size()).as("Precondition failed").isEqualTo(0);
+        assertThat(sr.getHookRegistry().getHooks(FindHook.class).size()).as("Precondition failed").isEqualTo(0);
+        assertThat(sr.getHookRegistry().getHooks(ListenerHook.class).size()).as("Precondition failed").isEqualTo(0);
         ServiceRegistration reg = sr.registerService(c.getBundle(), new String [] {EventHook.class.getName()}, hook, new Hashtable());
-        assertEquals(1, sr.getHookRegistry().getHooks(EventHook.class).size());
-        assertTrue(sr.getHookRegistry().getHooks(EventHook.class).iterator().next() instanceof ServiceReference);
-        assertSame(reg.getReference(), sr.getHookRegistry().getHooks(EventHook.class).iterator().next());
-        assertSame(hook, ((ServiceRegistrationImpl) reg).getService());
-        assertEquals("Postcondition failed", 0, sr.getHookRegistry().getHooks(FindHook.class).size());
-        assertEquals("Postcondition failed", 0, sr.getHookRegistry().getHooks(ListenerHook.class).size());
+        assertThat(sr.getHookRegistry().getHooks(EventHook.class)).hasSize(1);
+        assertThat(sr.getHookRegistry().getHooks(EventHook.class).iterator().next() instanceof ServiceReference).isTrue();
+        assertThat(sr.getHookRegistry().getHooks(EventHook.class).iterator().next()).isSameAs(reg.getReference());
+        assertThat(((ServiceRegistrationImpl) reg).getService()).isSameAs(hook);
+        assertThat(sr.getHookRegistry().getHooks(FindHook.class).size()).as("Postcondition failed").isEqualTo(0);
+        assertThat(sr.getHookRegistry().getHooks(ListenerHook.class).size()).as("Postcondition failed").isEqualTo(0);
 
         sr.unregisterService(b, reg);
-        assertEquals("Should be no hooks left after unregistration", 0, sr.getHookRegistry().getHooks(EventHook.class).size());
-        assertEquals("Should be no hooks left after unregistration", 0, sr.getHookRegistry().getHooks(FindHook.class).size());
-        assertEquals("Should be no hooks left after unregistration", 0, sr.getHookRegistry().getHooks(ListenerHook.class).size());
+        assertThat(sr.getHookRegistry().getHooks(EventHook.class).size()).as("Should be no hooks left after unregistration").isEqualTo(0);
+        assertThat(sr.getHookRegistry().getHooks(FindHook.class).size()).as("Should be no hooks left after unregistration").isEqualTo(0);
+        assertThat(sr.getHookRegistry().getHooks(ListenerHook.class).size()).as("Should be no hooks left after unregistration").isEqualTo(0);
     }
 
-    public void testRegisterEventHookServiceFactory()
+    @Test
+    void registerEventHookServiceFactory()
     {
-        MockControl control = MockControl.createNiceControl(Bundle.class);
-        Bundle b = (Bundle) control.getMock();
-        control.replay();
-
-        MockControl controlContext = MockControl.createNiceControl(BundleContext.class);
-        BundleContext c = (BundleContext) controlContext.getMock();
-        controlContext.expectAndReturn(c.getBundle(), b);
-        controlContext.replay();
+        Bundle b = mock(Bundle.class);
+        BundleContext c = mock(BundleContext.class);
+        Mockito.when(c.getBundle()).thenReturn(b);
 
         ServiceRegistry sr = new ServiceRegistry(new Logger(), null);
-        MockControl sfControl = MockControl.createNiceControl(ServiceFactory.class);
-        sfControl.replay();
-        ServiceFactory sf = (ServiceFactory) sfControl.getMock();
+        ServiceFactory sf = mock(ServiceFactory.class);
 
-        assertEquals("Precondition failed", 0, sr.getHookRegistry().getHooks(EventHook.class).size());
-        assertEquals("Precondition failed", 0, sr.getHookRegistry().getHooks(FindHook.class).size());
-        assertEquals("Precondition failed", 0, sr.getHookRegistry().getHooks(ListenerHook.class).size());
+        assertThat(sr.getHookRegistry().getHooks(EventHook.class).size()).as("Precondition failed").isEqualTo(0);
+        assertThat(sr.getHookRegistry().getHooks(FindHook.class).size()).as("Precondition failed").isEqualTo(0);
+        assertThat(sr.getHookRegistry().getHooks(ListenerHook.class).size()).as("Precondition failed").isEqualTo(0);
         ServiceRegistration reg = sr.registerService(c.getBundle(), new String [] {EventHook.class.getName()}, sf, new Hashtable());
-        assertEquals(1, sr.getHookRegistry().getHooks(EventHook.class).size());
-        assertSame(reg.getReference(), sr.getHookRegistry().getHooks(EventHook.class).iterator().next());
-        assertSame(sf, ((ServiceRegistrationImpl) reg).getService());
-        assertEquals("Postcondition failed", 0, sr.getHookRegistry().getHooks(FindHook.class).size());
-        assertEquals("Postcondition failed", 0, sr.getHookRegistry().getHooks(ListenerHook.class).size());
+        assertThat(sr.getHookRegistry().getHooks(EventHook.class)).hasSize(1);
+        assertThat(sr.getHookRegistry().getHooks(EventHook.class).iterator().next()).isSameAs(reg.getReference());
+        assertThat(((ServiceRegistrationImpl) reg).getService()).isSameAs(sf);
+        assertThat(sr.getHookRegistry().getHooks(FindHook.class).size()).as("Postcondition failed").isEqualTo(0);
+        assertThat(sr.getHookRegistry().getHooks(ListenerHook.class).size()).as("Postcondition failed").isEqualTo(0);
 
         sr.unregisterService(b, reg);
-        assertEquals("Should be no hooks left after unregistration", 0, sr.getHookRegistry().getHooks(EventHook.class).size());
-        assertEquals("Should be no hooks left after unregistration", 0, sr.getHookRegistry().getHooks(FindHook.class).size());
-        assertEquals("Should be no hooks left after unregistration", 0, sr.getHookRegistry().getHooks(ListenerHook.class).size());
+        assertThat(sr.getHookRegistry().getHooks(EventHook.class).size()).as("Should be no hooks left after unregistration").isEqualTo(0);
+        assertThat(sr.getHookRegistry().getHooks(FindHook.class).size()).as("Should be no hooks left after unregistration").isEqualTo(0);
+        assertThat(sr.getHookRegistry().getHooks(ListenerHook.class).size()).as("Should be no hooks left after unregistration").isEqualTo(0);
     }
 
-    public void testRegisterFindHookService()
+    @Test
+    void registerFindHookService()
     {
-        MockControl control = MockControl.createNiceControl(Bundle.class);
-        Bundle b = (Bundle) control.getMock();
-        control.replay();
+        Bundle b = mock(Bundle.class);
+        BundleContext c = mock(BundleContext.class);
+        Mockito.when(c.getBundle()).thenReturn(b);
 
-        MockControl controlContext = MockControl.createNiceControl(BundleContext.class);
-        BundleContext c = (BundleContext) controlContext.getMock();
-        controlContext.expectAndReturn(c.getBundle(), b);
-        controlContext.replay();
+
 
         ServiceRegistry sr = new ServiceRegistry(new Logger(), null);
         FindHook hook = new FindHook()
@@ -151,66 +140,57 @@ public class ServiceRegistryTest extends TestCase
             }
         };
 
-        assertEquals("Precondition failed", 0, sr.getHookRegistry().getHooks(EventHook.class).size());
-        assertEquals("Precondition failed", 0, sr.getHookRegistry().getHooks(FindHook.class).size());
-        assertEquals("Precondition failed", 0, sr.getHookRegistry().getHooks(ListenerHook.class).size());
+        assertThat(sr.getHookRegistry().getHooks(EventHook.class).size()).as("Precondition failed").isEqualTo(0);
+        assertThat(sr.getHookRegistry().getHooks(FindHook.class).size()).as("Precondition failed").isEqualTo(0);
+        assertThat(sr.getHookRegistry().getHooks(ListenerHook.class).size()).as("Precondition failed").isEqualTo(0);
         ServiceRegistration reg = sr.registerService(c.getBundle(), new String [] {FindHook.class.getName()}, hook, new Hashtable());
-        assertEquals(1, sr.getHookRegistry().getHooks(FindHook.class).size());
-        assertSame(reg.getReference(), sr.getHookRegistry().getHooks(FindHook.class).iterator().next());
-        assertSame(hook, ((ServiceRegistrationImpl) reg).getService());
-        assertEquals("Postcondition failed", 0, sr.getHookRegistry().getHooks(EventHook.class).size());
-        assertEquals("Postcondition failed", 0, sr.getHookRegistry().getHooks(ListenerHook.class).size());
+        assertThat(sr.getHookRegistry().getHooks(FindHook.class)).hasSize(1);
+        assertThat(sr.getHookRegistry().getHooks(FindHook.class).iterator().next()).isSameAs(reg.getReference());
+        assertThat(((ServiceRegistrationImpl) reg).getService()).isSameAs(hook);
+        assertThat(sr.getHookRegistry().getHooks(EventHook.class).size()).as("Postcondition failed").isEqualTo(0);
+        assertThat(sr.getHookRegistry().getHooks(ListenerHook.class).size()).as("Postcondition failed").isEqualTo(0);
 
         sr.unregisterService(b, reg);
-        assertEquals("Should be no hooks left after unregistration", 0, sr.getHookRegistry().getHooks(EventHook.class).size());
-        assertEquals("Should be no hooks left after unregistration", 0, sr.getHookRegistry().getHooks(FindHook.class).size());
-        assertEquals("Should be no hooks left after unregistration", 0, sr.getHookRegistry().getHooks(ListenerHook.class).size());
+        assertThat(sr.getHookRegistry().getHooks(EventHook.class).size()).as("Should be no hooks left after unregistration").isEqualTo(0);
+        assertThat(sr.getHookRegistry().getHooks(FindHook.class).size()).as("Should be no hooks left after unregistration").isEqualTo(0);
+        assertThat(sr.getHookRegistry().getHooks(ListenerHook.class).size()).as("Should be no hooks left after unregistration").isEqualTo(0);
     }
 
-    public void testRegisterFindHookServiceFactory()
+    @Test
+    void registerFindHookServiceFactory()
     {
-        MockControl control = MockControl.createNiceControl(Bundle.class);
-        Bundle b = (Bundle) control.getMock();
-        control.replay();
-
-        MockControl controlContext = MockControl.createNiceControl(BundleContext.class);
-        BundleContext c = (BundleContext) controlContext.getMock();
-        controlContext.expectAndReturn(c.getBundle(), b);
-        controlContext.replay();
+        Bundle b = mock(Bundle.class);
+        BundleContext c = mock(BundleContext.class);
+        Mockito.when(c.getBundle()).thenReturn(b);
 
         ServiceRegistry sr = new ServiceRegistry(new Logger(), null);
-        MockControl sfControl = MockControl.createNiceControl(ServiceFactory.class);
-        sfControl.replay();
-        ServiceFactory sf = (ServiceFactory) sfControl.getMock();
+        ServiceFactory sf = mock(ServiceFactory.class);
 
-        assertEquals("Precondition failed", 0, sr.getHookRegistry().getHooks(EventHook.class).size());
-        assertEquals("Precondition failed", 0, sr.getHookRegistry().getHooks(FindHook.class).size());
-        assertEquals("Precondition failed", 0, sr.getHookRegistry().getHooks(ListenerHook.class).size());
+        assertThat(sr.getHookRegistry().getHooks(EventHook.class).size()).as("Precondition failed").isEqualTo(0);
+        assertThat(sr.getHookRegistry().getHooks(FindHook.class).size()).as("Precondition failed").isEqualTo(0);
+        assertThat(sr.getHookRegistry().getHooks(ListenerHook.class).size()).as("Precondition failed").isEqualTo(0);
         ServiceRegistration reg = sr.registerService(c.getBundle(), new String [] {FindHook.class.getName()}, sf, new Hashtable());
-        assertEquals(1, sr.getHookRegistry().getHooks(FindHook.class).size());
-        assertSame(reg.getReference(), sr.getHookRegistry().getHooks(FindHook.class).iterator().next());
-        assertSame(sf, ((ServiceRegistrationImpl) reg).getService());
-        assertEquals("Postcondition failed", 0, sr.getHookRegistry().getHooks(EventHook.class).size());
-        assertEquals("Postcondition failed", 0, sr.getHookRegistry().getHooks(ListenerHook.class).size());
+        assertThat(sr.getHookRegistry().getHooks(FindHook.class)).hasSize(1);
+        assertThat(sr.getHookRegistry().getHooks(FindHook.class).iterator().next()).isSameAs(reg.getReference());
+        assertThat(((ServiceRegistrationImpl) reg).getService()).isSameAs(sf);
+        assertThat(sr.getHookRegistry().getHooks(EventHook.class).size()).as("Postcondition failed").isEqualTo(0);
+        assertThat(sr.getHookRegistry().getHooks(ListenerHook.class).size()).as("Postcondition failed").isEqualTo(0);
 
         sr.unregisterService(b, reg);
-        assertEquals("Should be no hooks left after unregistration", 0, sr.getHookRegistry().getHooks(EventHook.class).size());
-        assertEquals("Should be no hooks left after unregistration", 0, sr.getHookRegistry().getHooks(FindHook.class).size());
-        assertEquals("Should be no hooks left after unregistration", 0, sr.getHookRegistry().getHooks(ListenerHook.class).size());
+        assertThat(sr.getHookRegistry().getHooks(EventHook.class).size()).as("Should be no hooks left after unregistration").isEqualTo(0);
+        assertThat(sr.getHookRegistry().getHooks(FindHook.class).size()).as("Should be no hooks left after unregistration").isEqualTo(0);
+        assertThat(sr.getHookRegistry().getHooks(ListenerHook.class).size()).as("Should be no hooks left after unregistration").isEqualTo(0);
     }
 
-    public void testRegisterListenerHookService()
+    @Test
+    void registerListenerHookService()
     {
-        MockControl control = MockControl.createNiceControl(Bundle.class);
-        Bundle b = (Bundle) control.getMock();
-        control.replay();
-
-        MockControl controlContext = MockControl.createNiceControl(BundleContext.class);
-        BundleContext c = (BundleContext) controlContext.getMock();
-        controlContext.expectAndReturn(c.getBundle(), b);
-        controlContext.replay();
+        Bundle b = mock(Bundle.class);
+        BundleContext c = mock(BundleContext.class);
+        Mockito.when(c.getBundle()).thenReturn(b);
 
         ServiceRegistry sr = new ServiceRegistry(new Logger(), null);
+
         ListenerHook hook = new ListenerHook()
         {
             @Override
@@ -224,64 +204,54 @@ public class ServiceRegistryTest extends TestCase
             }
         };
 
-        assertEquals("Precondition failed", 0, sr.getHookRegistry().getHooks(EventHook.class).size());
-        assertEquals("Precondition failed", 0, sr.getHookRegistry().getHooks(FindHook.class).size());
-        assertEquals("Precondition failed", 0, sr.getHookRegistry().getHooks(ListenerHook.class).size());
+        assertThat(sr.getHookRegistry().getHooks(EventHook.class).size()).as("Precondition failed").isEqualTo(0);
+        assertThat(sr.getHookRegistry().getHooks(FindHook.class).size()).as("Precondition failed").isEqualTo(0);
+        assertThat(sr.getHookRegistry().getHooks(ListenerHook.class).size()).as("Precondition failed").isEqualTo(0);
         ServiceRegistration reg = sr.registerService(c.getBundle(), new String [] {ListenerHook.class.getName()}, hook, new Hashtable());
-        assertEquals(1, sr.getHookRegistry().getHooks(ListenerHook.class).size());
-        assertSame(reg.getReference(), sr.getHookRegistry().getHooks(ListenerHook.class).iterator().next());
-        assertSame(hook, ((ServiceRegistrationImpl) reg).getService());
-        assertEquals("Postcondition failed", 0, sr.getHookRegistry().getHooks(EventHook.class).size());
-        assertEquals("Postcondition failed", 0, sr.getHookRegistry().getHooks(FindHook.class).size());
+        assertThat(sr.getHookRegistry().getHooks(ListenerHook.class)).hasSize(1);
+        assertThat(sr.getHookRegistry().getHooks(ListenerHook.class).iterator().next()).isSameAs(reg.getReference());
+        assertThat(((ServiceRegistrationImpl) reg).getService()).isSameAs(hook);
+        assertThat(sr.getHookRegistry().getHooks(EventHook.class).size()).as("Postcondition failed").isEqualTo(0);
+        assertThat(sr.getHookRegistry().getHooks(FindHook.class).size()).as("Postcondition failed").isEqualTo(0);
 
         sr.unregisterService(b, reg);
-        assertEquals("Should be no hooks left after unregistration", 0, sr.getHookRegistry().getHooks(EventHook.class).size());
-        assertEquals("Should be no hooks left after unregistration", 0, sr.getHookRegistry().getHooks(FindHook.class).size());
-        assertEquals("Should be no hooks left after unregistration", 0, sr.getHookRegistry().getHooks(ListenerHook.class).size());
+        assertThat(sr.getHookRegistry().getHooks(EventHook.class).size()).as("Should be no hooks left after unregistration").isEqualTo(0);
+        assertThat(sr.getHookRegistry().getHooks(FindHook.class).size()).as("Should be no hooks left after unregistration").isEqualTo(0);
+        assertThat(sr.getHookRegistry().getHooks(ListenerHook.class).size()).as("Should be no hooks left after unregistration").isEqualTo(0);
     }
 
-    public void testRegisterListenerHookServiceFactory()
+    @Test
+    void registerListenerHookServiceFactory()
     {
-        MockControl control = MockControl.createNiceControl(Bundle.class);
-        Bundle b = (Bundle) control.getMock();
-        control.replay();
-
-        MockControl controlContext = MockControl.createNiceControl(BundleContext.class);
-        BundleContext c = (BundleContext) controlContext.getMock();
-        controlContext.expectAndReturn(c.getBundle(), b);
-        controlContext.replay();
+        Bundle b = mock(Bundle.class);
+        BundleContext c = mock(BundleContext.class);
+        Mockito.when(c.getBundle()).thenReturn(b);
 
         ServiceRegistry sr = new ServiceRegistry(new Logger(), null);
-        MockControl sfControl = MockControl.createNiceControl(ServiceFactory.class);
-        sfControl.replay();
-        ServiceFactory sf = (ServiceFactory) sfControl.getMock();
+        ServiceFactory sf = mock(ServiceFactory.class);
 
-        assertEquals("Precondition failed", 0, sr.getHookRegistry().getHooks(EventHook.class).size());
-        assertEquals("Precondition failed", 0, sr.getHookRegistry().getHooks(FindHook.class).size());
-        assertEquals("Precondition failed", 0, sr.getHookRegistry().getHooks(ListenerHook.class).size());
+        assertThat(sr.getHookRegistry().getHooks(EventHook.class).size()).as("Precondition failed").isEqualTo(0);
+        assertThat(sr.getHookRegistry().getHooks(FindHook.class).size()).as("Precondition failed").isEqualTo(0);
+        assertThat(sr.getHookRegistry().getHooks(ListenerHook.class).size()).as("Precondition failed").isEqualTo(0);
         ServiceRegistration reg = sr.registerService(c.getBundle(), new String [] {ListenerHook.class.getName()}, sf, new Hashtable());
-        assertEquals(1, sr.getHookRegistry().getHooks(ListenerHook.class).size());
-        assertSame(reg.getReference(), sr.getHookRegistry().getHooks(ListenerHook.class).iterator().next());
-        assertSame(sf, ((ServiceRegistrationImpl) reg).getService());
-        assertEquals("Postcondition failed", 0, sr.getHookRegistry().getHooks(EventHook.class).size());
-        assertEquals("Postcondition failed", 0, sr.getHookRegistry().getHooks(FindHook.class).size());
+        assertThat(sr.getHookRegistry().getHooks(ListenerHook.class)).hasSize(1);
+        assertThat(sr.getHookRegistry().getHooks(ListenerHook.class).iterator().next()).isSameAs(reg.getReference());
+        assertThat(((ServiceRegistrationImpl) reg).getService()).isSameAs(sf);
+        assertThat(sr.getHookRegistry().getHooks(EventHook.class).size()).as("Postcondition failed").isEqualTo(0);
+        assertThat(sr.getHookRegistry().getHooks(FindHook.class).size()).as("Postcondition failed").isEqualTo(0);
 
         sr.unregisterService(b, reg);
-        assertEquals("Should be no hooks left after unregistration", 0, sr.getHookRegistry().getHooks(EventHook.class).size());
-        assertEquals("Should be no hooks left after unregistration", 0, sr.getHookRegistry().getHooks(FindHook.class).size());
-        assertEquals("Should be no hooks left after unregistration", 0, sr.getHookRegistry().getHooks(ListenerHook.class).size());
+        assertThat(sr.getHookRegistry().getHooks(EventHook.class).size()).as("Should be no hooks left after unregistration").isEqualTo(0);
+        assertThat(sr.getHookRegistry().getHooks(FindHook.class).size()).as("Should be no hooks left after unregistration").isEqualTo(0);
+        assertThat(sr.getHookRegistry().getHooks(ListenerHook.class).size()).as("Should be no hooks left after unregistration").isEqualTo(0);
     }
 
     public void testRegisterCombinedService()
     {
-        MockControl control = MockControl.createNiceControl(Bundle.class);
-        Bundle b = (Bundle) control.getMock();
-        control.replay();
+        Bundle b = mock(Bundle.class);
+        BundleContext c = mock(BundleContext.class);
+        Mockito.when(c.getBundle()).thenReturn(b);
 
-        MockControl controlContext = MockControl.createNiceControl(BundleContext.class);
-        BundleContext c = (BundleContext) controlContext.getMock();
-        controlContext.expectAndReturn(c.getBundle(), b);
-        controlContext.replay();
 
         ServiceRegistry sr = new ServiceRegistry(new Logger(), null);
         class CombinedService implements ListenerHook, FindHook, EventHook, Runnable
@@ -315,59 +285,56 @@ public class ServiceRegistryTest extends TestCase
         }
         CombinedService hook = new CombinedService();
 
-        assertEquals("Precondition failed", 0, sr.getHookRegistry().getHooks(EventHook.class).size());
-        assertEquals("Precondition failed", 0, sr.getHookRegistry().getHooks(FindHook.class).size());
-        assertEquals("Precondition failed", 0, sr.getHookRegistry().getHooks(ListenerHook.class).size());
+        assertThat(sr.getHookRegistry().getHooks(EventHook.class)).as("Precondition failed").hasSize(0);
+        assertThat( sr.getHookRegistry().getHooks(FindHook.class)).as("Precondition failed").hasSize(0);
+        assertThat( sr.getHookRegistry().getHooks(ListenerHook.class)).as("Precondition failed").hasSize(0);
         ServiceRegistration reg = sr.registerService(c.getBundle(), new String [] {
             Runnable.class.getName(),
             ListenerHook.class.getName(),
             FindHook.class.getName(),
             EventHook.class.getName()}, hook, new Hashtable());
-        assertEquals(1, sr.getHookRegistry().getHooks(ListenerHook.class).size());
-        assertSame(reg.getReference(), sr.getHookRegistry().getHooks(ListenerHook.class).iterator().next());
-        assertSame(hook, ((ServiceRegistrationImpl) reg).getService());
-        assertEquals(1, sr.getHookRegistry().getHooks(EventHook.class).size());
-        assertSame(reg.getReference(), sr.getHookRegistry().getHooks(EventHook.class).iterator().next());
-        assertSame(hook, ((ServiceRegistrationImpl) reg).getService());
-        assertEquals(1, sr.getHookRegistry().getHooks(FindHook.class).size());
-        assertSame(reg.getReference(), sr.getHookRegistry().getHooks(FindHook.class).iterator().next());
-        assertSame(hook, ((ServiceRegistrationImpl) reg).getService());
+        assertThat(sr.getHookRegistry().getHooks(ListenerHook.class)).hasSize(1);
+        assertThat(sr.getHookRegistry().getHooks(ListenerHook.class).iterator().next()).isSameAs(reg.getReference());
+        assertThat(((ServiceRegistrationImpl) reg).getService()).isSameAs(hook);
+        assertThat(sr.getHookRegistry().getHooks(EventHook.class)).hasSize(1);
+        assertThat(sr.getHookRegistry().getHooks(EventHook.class).iterator().next()).isSameAs(reg.getReference());
+        assertThat(((ServiceRegistrationImpl) reg).getService()).isSameAs(hook);
+        assertThat(sr.getHookRegistry().getHooks(FindHook.class)).hasSize(1);
+        assertThat(sr.getHookRegistry().getHooks(FindHook.class).iterator().next()).isSameAs(reg.getReference());
+        assertThat(((ServiceRegistrationImpl) reg).getService()).isSameAs(hook);
 
         sr.unregisterService(b, reg);
-        assertEquals("Should be no hooks left after unregistration", 0, sr.getHookRegistry().getHooks(EventHook.class).size());
-        assertEquals("Should be no hooks left after unregistration", 0, sr.getHookRegistry().getHooks(FindHook.class).size());
-        assertEquals("Should be no hooks left after unregistration", 0, sr.getHookRegistry().getHooks(ListenerHook.class).size());
+        assertThat(sr.getHookRegistry().getHooks(EventHook.class)).as("Should be no hooks left after unregistration").isEmpty();
+        assertThat(sr.getHookRegistry().getHooks(FindHook.class)).as("Should be no hooks left after unregistration").isEmpty();
+        assertThat( sr.getHookRegistry().getHooks(ListenerHook.class)).as("Should be no hooks left after unregistration").isEmpty();
     }
 
-    public void testRegisterPlainService()
+    @Test
+    void registerPlainService()
     {
-        MockControl control = MockControl.createNiceControl(Bundle.class);
-        Bundle b = (Bundle) control.getMock();
-        control.replay();
-
-        MockControl controlContext = MockControl.createNiceControl(BundleContext.class);
-        BundleContext c = (BundleContext) controlContext.getMock();
-        controlContext.expectAndReturn(c.getBundle(), b);
-        controlContext.replay();
+        Bundle b = mock(Bundle.class);
+        BundleContext c = mock(BundleContext.class);
+        Mockito.when(c.getBundle()).thenReturn(b);
 
         ServiceRegistry sr = new ServiceRegistry(new Logger(), null);
         String svcObj = "hello";
-        assertEquals("Precondition failed", 0, sr.getHookRegistry().getHooks(EventHook.class).size());
-        assertEquals("Precondition failed", 0, sr.getHookRegistry().getHooks(FindHook.class).size());
-        assertEquals("Precondition failed", 0, sr.getHookRegistry().getHooks(ListenerHook.class).size());
+        assertThat(sr.getHookRegistry().getHooks(EventHook.class).size()).as("Precondition failed").isEqualTo(0);
+        assertThat(sr.getHookRegistry().getHooks(FindHook.class).size()).as("Precondition failed").isEqualTo(0);
+        assertThat(sr.getHookRegistry().getHooks(ListenerHook.class).size()).as("Precondition failed").isEqualTo(0);
         ServiceRegistration reg = sr.registerService(c.getBundle(), new String [] {String.class.getName()}, svcObj, new Hashtable());
-        assertEquals("Postcondition failed", 0, sr.getHookRegistry().getHooks(EventHook.class).size());
-        assertEquals("Postcondition failed", 0, sr.getHookRegistry().getHooks(FindHook.class).size());
-        assertEquals("Postcondition failed", 0, sr.getHookRegistry().getHooks(ListenerHook.class).size());
+        assertThat(sr.getHookRegistry().getHooks(EventHook.class).size()).as("Postcondition failed").isEqualTo(0);
+        assertThat(sr.getHookRegistry().getHooks(FindHook.class).size()).as("Postcondition failed").isEqualTo(0);
+        assertThat(sr.getHookRegistry().getHooks(ListenerHook.class).size()).as("Postcondition failed").isEqualTo(0);
 
         sr.unregisterService(b, reg);
-        assertEquals("Unregistration should have no effect", 0, sr.getHookRegistry().getHooks(EventHook.class).size());
-        assertEquals("Unregistration should have no effect", 0, sr.getHookRegistry().getHooks(FindHook.class).size());
-        assertEquals("Unregistration should have no effect", 0, sr.getHookRegistry().getHooks(ListenerHook.class).size());
+        assertThat(sr.getHookRegistry().getHooks(EventHook.class).size()).as("Unregistration should have no effect").isEqualTo(0);
+        assertThat(sr.getHookRegistry().getHooks(FindHook.class).size()).as("Unregistration should have no effect").isEqualTo(0);
+        assertThat(sr.getHookRegistry().getHooks(ListenerHook.class).size()).as("Unregistration should have no effect").isEqualTo(0);
     }
 
     @SuppressWarnings("unchecked")
-    public void testGetService()
+    @Test
+    void getService()
     {
         ServiceRegistry sr = new ServiceRegistry(null, null);
 
@@ -381,11 +348,12 @@ public class ServiceRegistryTest extends TestCase
         ServiceReferenceImpl ref = Mockito.mock(ServiceReferenceImpl.class);
         Mockito.when(ref.getRegistration()).thenReturn(reg);
 
-        assertSame(svc, sr.getService(b, ref, false));
+        assertThat(sr.getService(b, ref, false)).isSameAs(svc);
     }
 
     @SuppressWarnings("unchecked")
-    public void testGetServiceHolderAwait() throws Exception
+    @Test
+    void getServiceHolderAwait() throws Exception
     {
         ServiceRegistry sr = new ServiceRegistry(null, null);
 
@@ -404,7 +372,7 @@ public class ServiceRegistryTest extends TestCase
         final ServiceHolder sh = new ServiceHolder();
         uc.m_svcHolderRef.set(sh);
 
-        final StringBuffer sb = new StringBuffer();
+        final StringBuilder sb = new StringBuilder();
         final AtomicBoolean threadException = new AtomicBoolean(false);
         Thread t = new Thread() {
             @Override
@@ -420,21 +388,22 @@ public class ServiceRegistryTest extends TestCase
                 sh.m_latch.countDown();
             }
         };
-        assertFalse(t.isInterrupted());
+        assertThat(t.isInterrupted()).isFalse();
         t.start();
 
         Object actualSvc = sr.getService(b, ref, false);
         sb.append(actualSvc);
 
         t.join();
-        assertFalse("This thread did not wait until the latch was count down",
-                threadException.get());
+        assertFalse(threadException.get(),
+                "This thread did not wait until the latch was count down");
 
-        assertSame(svc, actualSvc);
+        assertThat(actualSvc).isSameAs(svc);
     }
 
     @SuppressWarnings("unchecked")
-    public void testGetServicePrototype() throws Exception
+    @Test
+    void getServicePrototype() throws Exception
     {
         ServiceRegistry sr = new ServiceRegistry(null, null);
 
@@ -448,20 +417,21 @@ public class ServiceRegistryTest extends TestCase
         ServiceReferenceImpl ref = Mockito.mock(ServiceReferenceImpl.class);
         Mockito.when(ref.getRegistration()).thenReturn(reg);
 
-        assertSame(svc, sr.getService(b, ref, true));
+        assertThat(sr.getService(b, ref, true)).isSameAs(svc);
 
         final ConcurrentMap<Bundle, UsageCount[]> inUseMap =
                 (ConcurrentMap<Bundle, UsageCount[]>) getPrivateField(sr, "m_inUseMap");
         UsageCount[] uca = inUseMap.get(b);
-        assertEquals(1, uca.length);
-        assertEquals(1, uca[0].m_serviceObjectsCount.get());
+        assertThat(uca.length).isEqualTo(1);
+        assertThat(uca[0].m_serviceObjectsCount.get()).isEqualTo(1);
 
         sr.getService(b, ref, true);
-        assertEquals(2, uca[0].m_serviceObjectsCount.get());
+        assertThat(uca[0].m_serviceObjectsCount.get()).isEqualTo(2);
     }
 
     @SuppressWarnings("unchecked")
-    public void testGetServiceThreadMarking() throws Exception
+    @Test
+    void getServiceThreadMarking() throws Exception
     {
         ServiceRegistry sr = new ServiceRegistry(null, null);
 
@@ -480,7 +450,8 @@ public class ServiceRegistryTest extends TestCase
     }
 
     @SuppressWarnings("unchecked")
-    public void testGetServiceThreadMarking2() throws Exception
+    @Test
+    void getServiceThreadMarking2() throws Exception
     {
         ServiceRegistry sr = new ServiceRegistry(null, null);
 
@@ -502,12 +473,13 @@ public class ServiceRegistryTest extends TestCase
         }
         catch (ServiceException se)
         {
-            assertEquals(ServiceException.FACTORY_ERROR, se.getType());
+            assertThat(se.getType()).isEqualTo(ServiceException.FACTORY_ERROR);
         }
     }
 
     @SuppressWarnings("unchecked")
-    public void testUngetService() throws Exception
+    @Test
+    void ungetService() throws Exception
     {
         ServiceRegistry sr = new ServiceRegistry(null, null);
 
@@ -525,12 +497,13 @@ public class ServiceRegistryTest extends TestCase
 
         inUseMap.put(b, new UsageCount[] {uc});
 
-        assertFalse(sr.ungetService(b, ref, null));
-        assertNull(uc.m_svcHolderRef.get());
+        assertThat(sr.ungetService(b, ref, null)).isFalse();
+        assertThat(uc.m_svcHolderRef.get()).isNull();
     }
 
     @SuppressWarnings("unchecked")
-    public void testUngetService2() throws Exception
+    @Test
+    void ungetService2() throws Exception
     {
         ServiceRegistry sr = new ServiceRegistry(null, null);
 
@@ -554,15 +527,16 @@ public class ServiceRegistryTest extends TestCase
             ungetService(Mockito.isA(Bundle.class), Mockito.any());
         inUseMap.put(b, new UsageCount[] {uc});
 
-        assertTrue(sr.ungetService(b, ref, null));
-        assertNull(uc.m_svcHolderRef.get());
+        assertThat(sr.ungetService(b, ref, null)).isTrue();
+        assertThat(uc.m_svcHolderRef.get()).isNull();
 
-        Mockito.verify(reg, Mockito.times(1)).
+        Mockito.verify(reg).
             ungetService(Mockito.isA(Bundle.class), Mockito.eq(svc));
     }
 
     @SuppressWarnings("unchecked")
-    public void testUngetService3() throws Exception
+    @Test
+    void ungetService3() throws Exception
     {
         ServiceRegistry sr = new ServiceRegistry(null, null);
 
@@ -582,16 +556,17 @@ public class ServiceRegistryTest extends TestCase
 
         inUseMap.put(b, new UsageCount[] {uc});
 
-        assertTrue(sr.ungetService(b, ref, null));
-        assertNotNull(uc.m_svcHolderRef.get());
-        assertNotNull(inUseMap.get(b));
+        assertThat(sr.ungetService(b, ref, null)).isTrue();
+        assertThat(uc.m_svcHolderRef.get()).isNotNull();
+        assertThat(inUseMap.get(b)).isNotNull();
 
         Mockito.verify(reg, Mockito.never()).
             ungetService(Mockito.isA(Bundle.class), Mockito.any());
     }
 
     @SuppressWarnings("unchecked")
-    public void testUngetService4() throws Exception
+    @Test
+    void ungetService4() throws Exception
     {
         ServiceRegistry sr = new ServiceRegistry(null, null);
 
@@ -611,15 +586,16 @@ public class ServiceRegistryTest extends TestCase
 
         inUseMap.put(b, new UsageCount[] {uc});
 
-        assertTrue(sr.ungetService(b, ref, null));
-        assertNull(uc.m_svcHolderRef.get());
+        assertThat(sr.ungetService(b, ref, null)).isTrue();
+        assertThat(uc.m_svcHolderRef.get()).isNull();
 
         Mockito.verify(reg, Mockito.never()).
             ungetService(Mockito.isA(Bundle.class), Mockito.any());
     }
 
     @SuppressWarnings("unchecked")
-    public void testUngetService5() throws Exception
+    @Test
+    void ungetService5() throws Exception
     {
         ServiceRegistry sr = new ServiceRegistry(null, null);
 
@@ -646,19 +622,20 @@ public class ServiceRegistryTest extends TestCase
 
         try
         {
-            assertTrue(sr.ungetService(b, ref, null));
+            assertThat(sr.ungetService(b, ref, null)).isTrue();
             fail("Should have propagated the runtime exception");
         }
         catch (RuntimeException re)
         {
-            assertEquals("Test!", re.getMessage());
+            assertThat(re.getMessage()).isEqualTo("Test!");
         }
-        assertNull(uc.m_svcHolderRef.get());
+        assertThat(uc.m_svcHolderRef.get()).isNull();
 
-        Mockito.verify(reg, Mockito.times(1)).ungetService(b, svc);
+        Mockito.verify(reg).ungetService(b, svc);
     }
 
-    public void testUngetServiceThreadMarking()
+    @Test
+    void ungetServiceThreadMarking()
     {
         ServiceRegistry sr = new ServiceRegistry(null, null);
 
@@ -668,8 +645,8 @@ public class ServiceRegistryTest extends TestCase
         ServiceReferenceImpl ref = Mockito.mock(ServiceReferenceImpl.class);
         Mockito.when(ref.getRegistration()).thenReturn(reg);
 
-        assertFalse("There is no usage count, so this method should return false",
-                sr.ungetService(b, ref, null));
+        assertFalse(sr.ungetService(b, ref, null),
+                "There is no usage count, so this method should return false");
 
         InOrder inOrder = Mockito.inOrder(reg);
         inOrder.verify(reg, Mockito.times(1)).currentThreadMarked();
@@ -677,7 +654,8 @@ public class ServiceRegistryTest extends TestCase
         inOrder.verify(reg, Mockito.times(1)).unmarkCurrentThread();
     }
 
-    public void testUngetServiceThreadMarking2()
+    @Test
+    void ungetServiceThreadMarking2()
     {
         ServiceRegistry sr = new ServiceRegistry(null, null);
 
@@ -699,34 +677,36 @@ public class ServiceRegistryTest extends TestCase
         }
     }
 
-    public void testObtainUsageCount() throws Exception
+    @Test
+    void obtainUsageCount() throws Exception
     {
         ServiceRegistry sr = new ServiceRegistry(null, null);
 
         @SuppressWarnings("unchecked")
         ConcurrentMap<Bundle, UsageCount[]> inUseMap = (ConcurrentMap<Bundle, UsageCount[]>) getPrivateField(sr, "m_inUseMap");
 
-        assertEquals("Precondition", 0, inUseMap.size());
+        assertThat(inUseMap.size()).as("Precondition").isEqualTo(0);
 
         Bundle b = Mockito.mock(Bundle.class);
         ServiceReference<?> ref = Mockito.mock(ServiceReference.class);
         UsageCount uc = sr.obtainUsageCount(b, ref, null, false);
-        assertEquals(1, inUseMap.size());
-        assertEquals(1, inUseMap.get(b).length);
-        assertSame(uc, inUseMap.get(b)[0]);
-        assertSame(ref, uc.m_ref);
-        assertFalse(uc.m_prototype);
+        assertThat(inUseMap).hasSize(1);
+        assertThat(inUseMap.get(b).length).isEqualTo(1);
+        assertThat(inUseMap.get(b)[0]).isSameAs(uc);
+        assertThat(uc.m_ref).isSameAs(ref);
+        assertThat(uc.m_prototype).isFalse();
 
         UsageCount uc2 = sr.obtainUsageCount(b, ref, null, false);
-        assertSame(uc, uc2);
+        assertThat(uc2).isSameAs(uc);
 
         ServiceReference<?> ref2 = Mockito.mock(ServiceReference.class);
         UsageCount uc3 = sr.obtainUsageCount(b, ref2, null, false);
         assertNotSame(uc3, uc2);
-        assertSame(ref2, uc3.m_ref);
+        assertThat(uc3.m_ref).isSameAs(ref2);
     }
 
-    public void testObtainUsageCountPrototype() throws Exception
+    @Test
+    void obtainUsageCountPrototype() throws Exception
     {
         ServiceRegistry sr = new ServiceRegistry(null, null);
 
@@ -736,19 +716,20 @@ public class ServiceRegistryTest extends TestCase
         Bundle b = Mockito.mock(Bundle.class);
         ServiceReference<?> ref = Mockito.mock(ServiceReference.class);
         UsageCount uc = sr.obtainUsageCount(b, ref, null, true);
-        assertEquals(1, inUseMap.size());
-        assertEquals(1, inUseMap.values().iterator().next().length);
+        assertThat(inUseMap).hasSize(1);
+        assertThat(inUseMap.values().iterator().next().length).isEqualTo(1);
 
         ServiceReference<?> ref2 = Mockito.mock(ServiceReference.class);
         UsageCount uc2 = sr.obtainUsageCount(b, ref2, null, true);
-        assertEquals(1, inUseMap.size());
-        assertEquals(2, inUseMap.values().iterator().next().length);
+        assertThat(inUseMap).hasSize(1);
+        assertThat(inUseMap.values().iterator().next().length).isEqualTo(2);
         List<UsageCount> ucl = Arrays.asList(inUseMap.get(b));
-        assertTrue(ucl.contains(uc));
-        assertTrue(ucl.contains(uc2));
+        assertThat(ucl).contains(uc);
+        assertThat(ucl).contains(uc2);
     }
 
-    public void testObtainUsageCountPrototypeUnknownLookup() throws Exception
+    @Test
+    void obtainUsageCountPrototypeUnknownLookup() throws Exception
     {
         ServiceRegistry sr = new ServiceRegistry(null, null);
 
@@ -765,13 +746,14 @@ public class ServiceRegistryTest extends TestCase
         uc.m_svcHolderRef.set(sh);
         inUseMap.put(b, new UsageCount[] {uc});
 
-        assertNull(sr.obtainUsageCount(b, Mockito.mock(ServiceReference.class), null, null));
+        assertThat(sr.obtainUsageCount(b, Mockito.mock(ServiceReference.class), null, null)).isNull();
 
         UsageCount uc2 = sr.obtainUsageCount(b, ref, svc, null);
-        assertSame(uc, uc2);
+        assertThat(uc2).isSameAs(uc);
     }
 
-    public void testObtainUsageCountPrototypeUnknownLookup2() throws Exception
+    @Test
+    void obtainUsageCountPrototypeUnknownLookup2() throws Exception
     {
         ServiceRegistry sr = new ServiceRegistry(null, null);
 
@@ -784,14 +766,15 @@ public class ServiceRegistryTest extends TestCase
         UsageCount uc = new UsageCount(ref, false);
         inUseMap.put(b, new UsageCount[] {uc});
 
-        assertNull(sr.obtainUsageCount(b, Mockito.mock(ServiceReference.class), null, null));
+        assertThat(sr.obtainUsageCount(b, Mockito.mock(ServiceReference.class), null, null)).isNull();
 
         UsageCount uc2 = sr.obtainUsageCount(b, ref, null, null);
-        assertSame(uc, uc2);
+        assertThat(uc2).isSameAs(uc);
     }
 
     @SuppressWarnings("unchecked")
-    public void testObtainUsageCountRetry1() throws Exception
+    @Test
+    void obtainUsageCountRetry1() throws Exception
     {
         ServiceRegistry sr = new ServiceRegistry(null, null);
 
@@ -819,20 +802,21 @@ public class ServiceRegistryTest extends TestCase
 
         ServiceReference<?> ref = Mockito.mock(ServiceReference.class);
 
-        assertEquals(0, orgInUseMap.size());
+        assertThat(orgInUseMap).hasSize(0);
         UsageCount uc = sr.obtainUsageCount(b, ref, null, false);
-        assertEquals(1, orgInUseMap.size());
-        assertEquals(2, orgInUseMap.get(b).length);
-        assertSame(ref, uc.m_ref);
-        assertFalse(uc.m_prototype);
-        List<UsageCount> l = new ArrayList<UsageCount>(Arrays.asList(orgInUseMap.get(b)));
+        assertThat(orgInUseMap).hasSize(1);
+        assertThat(orgInUseMap.get(b).length).isEqualTo(2);
+        assertThat(uc.m_ref).isSameAs(ref);
+        assertThat(uc.m_prototype).isFalse();
+        List<UsageCount> l = new ArrayList<>(Arrays.asList(orgInUseMap.get(b)));
         l.remove(uc);
-        assertEquals("There should be one UsageCount left", 1, l.size());
+        assertThat(l.size()).as("There should be one UsageCount left").isEqualTo(1);
         assertNotSame(ref, l.get(0).m_ref);
     }
 
     @SuppressWarnings("unchecked")
-    public void testObtainUsageCountRetry2() throws Exception
+    @Test
+    void obtainUsageCountRetry2() throws Exception
     {
         ServiceRegistry sr = new ServiceRegistry(null, null);
 
@@ -858,17 +842,17 @@ public class ServiceRegistryTest extends TestCase
 
         ServiceReference<?> ref = Mockito.mock(ServiceReference.class);
 
-        assertEquals("Precondition", 1, inUseMap.size());
-        assertEquals("Precondition", 1, inUseMap.values().iterator().next().length);
-        assertNotSame("Precondition", ref, inUseMap.get(b)[0].m_ref);
+        assertThat(inUseMap.size()).as("Precondition").isEqualTo(1);
+        assertThat(inUseMap.values().iterator().next().length).as("Precondition").isEqualTo(1);
+        assertNotSame(ref, inUseMap.get(b)[0].m_ref, "Precondition");
         sr.obtainUsageCount(b, ref, null, false);
-        assertEquals(1, inUseMap.size());
-        assertEquals(1, inUseMap.values().iterator().next().length);
-        assertSame("The old usage count should have been removed by the mock and this one should have been added",
-                ref, inUseMap.get(b)[0].m_ref);
+        assertThat(inUseMap).hasSize(1);
+        assertThat(inUseMap.values().iterator().next().length).isEqualTo(1);
+        assertThat(inUseMap.get(b)[0].m_ref).as("The old usage count should have been removed by the mock and this one should have been added").isSameAs(ref);
     }
 
-    public void testFlushUsageCount() throws Exception
+    @Test
+    void flushUsageCount() throws Exception
     {
         ServiceRegistry sr = new ServiceRegistry(null, null);
 
@@ -884,19 +868,20 @@ public class ServiceRegistryTest extends TestCase
 
         inUseMap.put(b, new UsageCount[] {uc, uc2});
 
-        assertEquals("Precondition", 1, inUseMap.size());
-        assertEquals("Precondition", 2, inUseMap.values().iterator().next().length);
+        assertThat(inUseMap.size()).as("Precondition").isEqualTo(1);
+        assertThat(inUseMap.values().iterator().next().length).as("Precondition").isEqualTo(2);
 
         sr.flushUsageCount(b, ref, uc);
-        assertEquals(1, inUseMap.size());
-        assertEquals(1, inUseMap.values().iterator().next().length);
-        assertSame(uc2, inUseMap.values().iterator().next()[0]);
+        assertThat(inUseMap).hasSize(1);
+        assertThat(inUseMap.values().iterator().next().length).isEqualTo(1);
+        assertThat(inUseMap.values().iterator().next()[0]).isSameAs(uc2);
 
         sr.flushUsageCount(b, ref2, uc2);
-        assertEquals(0, inUseMap.size());
+        assertThat(inUseMap).hasSize(0);
     }
 
-    public void testFlushUsageCountNullRef() throws Exception
+    @Test
+    void flushUsageCountNullRef() throws Exception
     {
         ServiceRegistry sr = new ServiceRegistry(null, null);
 
@@ -916,16 +901,17 @@ public class ServiceRegistryTest extends TestCase
         inUseMap.put(b, new UsageCount[] {uc2, uc});
         inUseMap.put(b2, new UsageCount[] {uc3});
 
-        assertEquals("Precondition", 2, inUseMap.size());
+        assertThat(inUseMap.size()).as("Precondition").isEqualTo(2);
 
         sr.flushUsageCount(b, null, uc);
-        assertEquals(2, inUseMap.size());
+        assertThat(inUseMap).hasSize(2);
 
         sr.flushUsageCount(b, null, uc2);
-        assertEquals(1, inUseMap.size());
+        assertThat(inUseMap).hasSize(1);
     }
 
-    public void testFlushUsageCountAlienObject() throws Exception
+    @Test
+    void flushUsageCountAlienObject() throws Exception
     {
         ServiceRegistry sr = new ServiceRegistry(null, null);
 
@@ -938,16 +924,17 @@ public class ServiceRegistryTest extends TestCase
         UsageCount uc = new UsageCount(ref, false);
 
         inUseMap.put(b, new UsageCount[] {uc});
-        assertEquals("Precondition", 1, inUseMap.size());
-        assertEquals("Precondition", 1, inUseMap.values().iterator().next().length);
+        assertThat(inUseMap.size()).as("Precondition").isEqualTo(1);
+        assertThat(inUseMap.values().iterator().next().length).as("Precondition").isEqualTo(1);
 
         UsageCount uc2 = new UsageCount(Mockito.mock(ServiceReference.class), false);
         sr.flushUsageCount(b, ref, uc2);
-        assertEquals("Should be no changes", 1, inUseMap.size());
-        assertEquals("Should be no changes", 1, inUseMap.values().iterator().next().length);
+        assertThat(inUseMap.size()).as("Should be no changes").isEqualTo(1);
+        assertThat(inUseMap.values().iterator().next().length).as("Should be no changes").isEqualTo(1);
     }
 
-    public void testFlushUsageCountNull() throws Exception
+    @Test
+    void flushUsageCountNull() throws Exception
     {
         ServiceRegistry sr = new ServiceRegistry(null, null);
 
@@ -967,18 +954,19 @@ public class ServiceRegistryTest extends TestCase
         inUseMap.put(b, new UsageCount[] {uc2, uc});
         inUseMap.put(b2, new UsageCount[] {uc3});
 
-        assertEquals("Precondition", 2, inUseMap.size());
+        assertThat(inUseMap.size()).as("Precondition").isEqualTo(2);
 
         sr.flushUsageCount(b, ref, null);
-        assertEquals(2, inUseMap.size());
+        assertThat(inUseMap).hasSize(2);
 
         sr.flushUsageCount(b, ref2, null);
-        assertEquals(1, inUseMap.size());
+        assertThat(inUseMap).hasSize(1);
 
     }
 
     @SuppressWarnings("unchecked")
-    public void testFlushUsageCountRetry() throws Exception
+    @Test
+    void flushUsageCountRetry() throws Exception
     {
         ServiceRegistry sr = new ServiceRegistry(null, null);
 
@@ -1009,12 +997,12 @@ public class ServiceRegistryTest extends TestCase
 
         sr.flushUsageCount(b, null, uc);
 
-        assertNull("A 'concurrent' process has removed uc2 as well, "
-                + "so the entry for 'b' should have been removed",
-                inUseMap.get(b));
+        assertThat(inUseMap.get(b)).as("A 'concurrent' process has removed uc2 as well, "
+            + "so the entry for 'b' should have been removed").isNull();
     }
 
-    public void testFlushUsageCountRetry2() throws Exception
+    @Test
+    void flushUsageCountRetry2() throws Exception
     {
         ServiceRegistry sr = new ServiceRegistry(null, null);
 
@@ -1044,11 +1032,12 @@ public class ServiceRegistryTest extends TestCase
 
         sr.flushUsageCount(b, null, uc);
 
-        assertEquals(1, inUseMap.get(b).length);
-        assertSame(uc2, inUseMap.get(b)[0]);
+        assertThat(inUseMap.get(b).length).isEqualTo(1);
+        assertThat(inUseMap.get(b)[0]).isSameAs(uc2);
     }
 
-    public void testGetUngetServiceFactory() throws Exception
+    @Test
+    void getUngetServiceFactory() throws Exception
     {
         final ServiceRegistry sr = new ServiceRegistry(null, null);
         final Bundle regBundle = Mockito.mock(Bundle.class);
@@ -1091,13 +1080,13 @@ public class ServiceRegistryTest extends TestCase
 
         // check simple get/unget
         final Object obj = sr.getService(clientBundle, reg.getReference(), false);
-        assertNotNull(obj);
-        assertTrue(obj instanceof Observer);
+        assertThat(obj).isNotNull();
+        assertThat(obj instanceof Observer).isTrue();
         ((Observer)obj).update(null, null);
         sr.ungetService(clientBundle, reg.getReference(), null);
         try {
             ((Observer)obj).update(null, null);
-            fail();
+            fail("");
         }
         catch ( final IllegalArgumentException iae)
         {
@@ -1150,16 +1139,17 @@ public class ServiceRegistryTest extends TestCase
 
         latch.await();
 
-        List<String> counterValues = new ArrayList<String>();
+        List<String> counterValues = new ArrayList<>();
         for (Exception ex : exceptions)
         {
             counterValues.add(ex.getMessage());
         }
 
-        assertTrue("" + counterValues, exceptions.isEmpty());
+        assertTrue(exceptions.isEmpty(), "" + counterValues);
     }
 
-    public void testUsageCountCleanup() throws Exception
+    @Test
+    void usageCountCleanup() throws Exception
     {
         ServiceRegistry sr = new ServiceRegistry(null, null);
         Bundle regBundle = Mockito.mock(Bundle.class);
@@ -1170,18 +1160,19 @@ public class ServiceRegistryTest extends TestCase
         final Bundle clientBundle = Mockito.mock(Bundle.class);
         Mockito.when(clientBundle.getBundleId()).thenReturn(327L);
 
-        assertEquals("hi", sr.getService(clientBundle, reg.getReference(), false));
+        assertThat(sr.getService(clientBundle, reg.getReference(), false)).isEqualTo("hi");
         sr.ungetService(clientBundle, reg.getReference(), null);
 
         ConcurrentMap<Bundle, UsageCount[]> inUseMap =
                 (ConcurrentMap<Bundle, UsageCount[]>) getPrivateField(sr, "m_inUseMap");
 
         sr.unregisterService(regBundle, reg);
-        assertEquals(0, inUseMap.size());
+        assertThat(inUseMap).hasSize(0);
     }
 
     @SuppressWarnings("unchecked")
-    public void testGetServiceThrowsException() throws Exception
+    @Test
+    void getServiceThrowsException() throws Exception
     {
         final ServiceRegistry sr = new ServiceRegistry(null, null);
 
@@ -1200,7 +1191,7 @@ public class ServiceRegistryTest extends TestCase
         final ServiceReferenceImpl ref = Mockito.mock(ServiceReferenceImpl.class);
         Mockito.when(ref.getRegistration()).thenReturn(reg);
 
-        final StringBuffer sb = new StringBuffer();
+        final StringBuilder sb = new StringBuilder();
         Thread t = new Thread()
         {
             @Override
@@ -1208,8 +1199,7 @@ public class ServiceRegistryTest extends TestCase
             {
                 try
                 {
-                    assertEquals("Should not yet have given the service to the other thread",
-                            "", sb.toString());
+                    assertThat(sb.toString()).as("Should not yet have given the service to the other thread").isEqualTo("");
                     sr.getService(b, ref, false);
                 }
                 catch (Exception e)
@@ -1229,11 +1219,12 @@ public class ServiceRegistryTest extends TestCase
         // factory. This thread will then end up in m_latch.await().
         // The factory implementation of the other thread then throws an exception. This test
         // ultimately checks that this thread here is not stuck waiting forwever.
-        assertNull(sr.getService(b, ref, false));
+        assertThat(sr.getService(b, ref, false)).isNull();
         sb.append("Obtained service");
     }
 
-    public void testUsingBundlesWithoutZeroCounts() throws Exception
+    @Test
+    void usingBundlesWithoutZeroCounts() throws Exception
     {
         ServiceRegistry sr = new ServiceRegistry(null, null);
         Bundle regBundle = Mockito.mock(Bundle.class);
@@ -1242,18 +1233,19 @@ public class ServiceRegistryTest extends TestCase
 
         final Bundle clientBundle = Mockito.mock(Bundle.class);
         Mockito.when(clientBundle.getBundleId()).thenReturn(42L);
-        assertThat(sr.getService(clientBundle, ref, false), is("hi"));
+        assertThat(sr.getService(clientBundle, ref, false)).isEqualTo("hi");
 
         final Bundle clientBundle2 = Mockito.mock(Bundle.class);
         Mockito.when(clientBundle.getBundleId()).thenReturn(327L);
-        assertThat(sr.getService(clientBundle2, ref, false), is("hi"));
+        assertThat(sr.getService(clientBundle2, ref, false)).isEqualTo("hi");
 
-        assertThat(sr.ungetService(clientBundle, ref, null), is(true));
+        assertThat(sr.ungetService(clientBundle, ref, null)).isEqualTo(true);
 
-        assertThat(sr.getUsingBundles(ref), is(new Bundle[]{clientBundle2}));
+        assertThat(sr.getUsingBundles(ref)).isEqualTo(new Bundle[]{clientBundle2});
     }
 
-    public void testServicesInUseWithoutZeroCounts() throws Exception
+    @Test
+    void servicesInUseWithoutZeroCounts() throws Exception
     {
         ServiceRegistry sr = new ServiceRegistry(null, null);
         Bundle regBundle = Mockito.mock(Bundle.class);
@@ -1266,16 +1258,17 @@ public class ServiceRegistryTest extends TestCase
 
         sr.getService(clientBundle, refHi, false);
         sr.getService(clientBundle, refBye, false);
-        assertThat(sr.getServicesInUse(clientBundle).length, is(2));
+        assertThat(sr.getServicesInUse(clientBundle).length).isEqualTo(2);
 
         sr.ungetService(clientBundle, refBye, null);
-        assertThat(sr.getServicesInUse(clientBundle), is(new ServiceReference[]{refHi}));
+        assertThat(sr.getServicesInUse(clientBundle)).isEqualTo(new ServiceReference[]{refHi});
 
         sr.ungetService(clientBundle, refHi, null);
-        assertThat(sr.getServicesInUse(clientBundle), nullValue());
+        assertThat(sr.getServicesInUse(clientBundle)).isNull();
     }
 
-    public void testPrototypeService() throws Exception
+    @Test
+    void prototypeService() throws Exception
     {
         ServiceRegistry sr = new ServiceRegistry(null, null);
         Bundle regBundle = Mockito.mock(Bundle.class);
@@ -1301,15 +1294,15 @@ public class ServiceRegistryTest extends TestCase
         ServiceReference<String> ref =  reg.getReference();
 
         final String val = sr.getService(regBundle, ref, true);
-        assertEquals("foo", val);
+        assertThat(val).isEqualTo("foo");
 
         // first unget is ok
-        assertTrue(sr.ungetService(regBundle, ref, val));
+        assertThat(sr.ungetService(regBundle, ref, val)).isTrue();
         // second unget of the same object, should be ok to
         // This sould return true, but current returns false, see FELIX-6429
-        assertFalse(sr.ungetService(regBundle, ref, val));
+        assertThat(sr.ungetService(regBundle, ref, val)).isFalse();
         // ungetting an unknown object must return false
-        assertFalse(sr.ungetService(regBundle, ref, "bar"));
+        assertThat(sr.ungetService(regBundle, ref, "bar")).isFalse();
 
     }
 

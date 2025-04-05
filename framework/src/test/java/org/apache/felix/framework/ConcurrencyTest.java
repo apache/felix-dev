@@ -20,6 +20,8 @@ package org.apache.felix.framework;
 
 import static java.lang.System.err;
 import static java.lang.System.out;
+import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.Assertions.fail;
 
 import java.io.File;
 import java.io.IOException;
@@ -33,6 +35,7 @@ import java.util.concurrent.Executor;
 import java.util.concurrent.Executors;
 import java.util.concurrent.TimeUnit;
 
+import org.junit.jupiter.api.Test;
 import org.osgi.framework.BundleContext;
 import org.osgi.framework.Constants;
 import org.osgi.framework.Filter;
@@ -43,9 +46,6 @@ import org.osgi.framework.launch.Framework;
 import org.osgi.util.tracker.ServiceTracker;
 import org.osgi.util.tracker.ServiceTrackerCustomizer;
 
-import junit.framework.Assert;
-import junit.framework.TestCase;
-
 /**
  * This test performs concurrent registration of service components that have dependencies between each other.
  * There are 10 components. The first one has an optional dependency on the second one, the second on the third , etc ... The last component
@@ -55,7 +55,7 @@ import junit.framework.TestCase;
  * At the end of an iteration test, we check that all nth component are properly injected (satisfied) with the nth+1 component (except the 
  * last one which has no dependency).
  */
-public class ConcurrencyTest extends TestCase
+public class ConcurrencyTest
 {
     public static final int DELAY = 1000;
     final static int NPROCS = Runtime.getRuntime().availableProcessors();
@@ -75,9 +75,10 @@ public class ConcurrencyTest extends TestCase
     /**
      * Starts a concurrent test.
      */
-    public void testConcurrentComponents() throws Exception
+    @Test
+    void concurrentComponents() throws Exception
     {
-        Map<String, Object> params = new HashMap<String, Object>();
+        Map<String, Object> params = new HashMap<>();
         params.put(Constants.FRAMEWORK_SYSTEMPACKAGES,
             "org.osgi.framework; version=1.4.0," + "org.osgi.service.packageadmin; version=1.2.0,"
                 + "org.osgi.service.startlevel; version=1.1.0," + "org.osgi.util.tracker; version=1.3.3,"
@@ -100,7 +101,7 @@ public class ConcurrencyTest extends TestCase
             Loader loader = new Loader(f.getBundleContext());
             loader.start();
 
-            Assert.assertTrue(m_testDone.await(60, TimeUnit.SECONDS));
+            assertThat(m_testDone.await(60, TimeUnit.SECONDS)).isTrue();
             loader.stop();
         }
         finally
@@ -120,7 +121,7 @@ public class ConcurrencyTest extends TestCase
                 deleteDir(file);
             }
         }
-        assertTrue(root.delete());
+        assertThat(root.delete()).isTrue();
     }
 
     /**
@@ -162,7 +163,7 @@ public class ConcurrencyTest extends TestCase
                     e.printStackTrace();
                     return;
                 }
-                m_tracker = new ServiceTracker<Component, Component>(m_ctx, filter, this);
+                m_tracker = new ServiceTracker<>(m_ctx, filter, this);
                 m_tracker.open();
             }
             else
@@ -187,7 +188,8 @@ public class ConcurrencyTest extends TestCase
             m_registration.unregister();
         }
 
-        public Component addingService(ServiceReference<Component> reference)
+        @Override
+		public Component addingService(ServiceReference<Component> reference)
         {
             Component service = m_ctx.getService(reference);
             String id = (String) reference.getProperty("id");
@@ -203,11 +205,13 @@ public class ConcurrencyTest extends TestCase
             return service;
         }
 
-        public void modifiedService(ServiceReference<Component> reference, Component service)
+        @Override
+		public void modifiedService(ServiceReference<Component> reference, Component service)
         {
         }
 
-        public void removedService(ServiceReference<Component> reference, Component service)
+        @Override
+		public void removedService(ServiceReference<Component> reference, Component service)
         {
             try
             {
@@ -220,7 +224,7 @@ public class ConcurrencyTest extends TestCase
         }
         
         private void register() {
-            Hashtable<String, Object> properties = new Hashtable<String, Object>();
+            Hashtable<String, Object> properties = new Hashtable<>();
             properties.put("id", String.valueOf(m_id));
             m_registration = m_ctx.registerService(Component.class.getName(), this, properties);
         }
@@ -247,7 +251,8 @@ public class ConcurrencyTest extends TestCase
             m_thread.interrupt();
         }
 
-        public void run()
+        @Override
+		public void run()
         {
             // Creates all components. Each nth components will depends on the
             // nth+1 component. The last component does not depend on another one.
@@ -278,7 +283,7 @@ public class ConcurrencyTest extends TestCase
         private void createComponentsConcurrently(int iteration) throws Exception
         {
             // Create components.
-            final List<Component> components = new ArrayList<Component>();
+            final List<Component> components = new ArrayList<>();
             for (int i = 0; i < COMPONENTS; i++)
             {
                 components.add(createComponents(iteration, i));
@@ -291,7 +296,8 @@ public class ConcurrencyTest extends TestCase
                 final Component component = components.get(i);
                 TPOOL.execute(new Runnable()
                 {
-                    public void run()
+                    @Override
+					public void run()
                     {
                         try
                         {
@@ -326,7 +332,7 @@ public class ConcurrencyTest extends TestCase
                         out.println("Component #" + i + " unsatisfied.");
                     }
                 }
-                Assert.fail("Found unsatisfied components: " + String.valueOf(COMPONENTS - satisfied));
+                fail("Found unsatisfied components: " + String.valueOf(COMPONENTS - satisfied));
                 return;
             }            
 

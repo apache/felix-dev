@@ -18,6 +18,7 @@
  */
 package org.apache.felix.framework.util.manifestparser;
 
+import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
 
@@ -32,6 +33,7 @@ import org.apache.felix.framework.BundleRevisionImpl;
 import org.apache.felix.framework.cache.ConnectContentContent;
 import org.apache.felix.framework.cache.Content;
 import org.apache.felix.framework.util.FelixConstants;
+import org.junit.jupiter.api.Test;
 import org.osgi.framework.BundleException;
 import org.osgi.framework.Constants;
 import org.osgi.framework.Filter;
@@ -43,28 +45,27 @@ import org.osgi.framework.namespace.IdentityNamespace;
 import org.osgi.framework.namespace.NativeNamespace;
 import org.osgi.framework.wiring.BundleCapability;
 import org.osgi.framework.wiring.BundleRequirement;
-import org.osgi.framework.wiring.BundleRevision;
 
-import junit.framework.TestCase;
-
-public class ManifestParserTest extends TestCase
+class ManifestParserTest
 {
-    public void testIdentityCapabilityMinimal() throws BundleException
+    @Test
+    void identityCapabilityMinimal() throws BundleException
     {
-        Map<String, Object> headers = new HashMap<String, Object>();
+        Map<String, Object> headers = new HashMap<>();
         headers.put(Constants.BUNDLE_MANIFESTVERSION, "2");
         headers.put(Constants.BUNDLE_SYMBOLICNAME, "foo.bar");
         ManifestParser mp = new ManifestParser(null, null, null, headers);
 
         BundleCapability ic = findCapability(mp.getCapabilities(), IdentityNamespace.IDENTITY_NAMESPACE);
-        assertEquals("foo.bar", ic.getAttributes().get(IdentityNamespace.IDENTITY_NAMESPACE));
-        assertEquals(IdentityNamespace.TYPE_BUNDLE, ic.getAttributes().get(IdentityNamespace.CAPABILITY_TYPE_ATTRIBUTE));
-        assertEquals(0, ic.getDirectives().size());
+        assertThat(ic.getAttributes()).containsEntry(IdentityNamespace.IDENTITY_NAMESPACE, "foo.bar");
+        assertThat(ic.getAttributes()).containsEntry(IdentityNamespace.CAPABILITY_TYPE_ATTRIBUTE, IdentityNamespace.TYPE_BUNDLE);
+        assertThat(ic.getDirectives()).isEmpty();
     }
 
-    public void testIdentityCapabilityFull() throws BundleException
+    @Test
+    void identityCapabilityFull() throws BundleException
     {
-        Map<String, Object> headers = new HashMap<String, Object>();
+        Map<String, Object> headers = new HashMap<>();
         headers.put(Constants.BUNDLE_MANIFESTVERSION, "2");
         headers.put(Constants.BUNDLE_SYMBOLICNAME, "abc;singleton:=true;foo=bar;" + IdentityNamespace.CAPABILITY_TAGS_ATTRIBUTE + "=test");
         headers.put(Constants.BUNDLE_VERSION, "1.2.3.something");
@@ -85,23 +86,24 @@ public class ManifestParserTest extends TestCase
         ManifestParser mp = new ManifestParser(null, null, mockBundleRevision, headers);
 
         BundleCapability ic = findCapability(mp.getCapabilities(), IdentityNamespace.IDENTITY_NAMESPACE);
-        assertEquals("abc", ic.getAttributes().get(IdentityNamespace.IDENTITY_NAMESPACE));
-        assertEquals(new Version("1.2.3.something"), ic.getAttributes().get(IdentityNamespace.CAPABILITY_VERSION_ATTRIBUTE));
-        assertEquals(IdentityNamespace.TYPE_BUNDLE, ic.getAttributes().get(IdentityNamespace.CAPABILITY_TYPE_ATTRIBUTE));
-        assertEquals(copyright, ic.getAttributes().get(IdentityNamespace.CAPABILITY_COPYRIGHT_ATTRIBUTE));
-        assertEquals(description, ic.getAttributes().get(IdentityNamespace.CAPABILITY_DESCRIPTION_ATTRIBUTE));
-        assertEquals(docurl, ic.getAttributes().get(IdentityNamespace.CAPABILITY_DOCUMENTATION_ATTRIBUTE));
-        assertEquals(license, ic.getAttributes().get(IdentityNamespace.CAPABILITY_LICENSE_ATTRIBUTE));
-        assertEquals(Arrays.asList("test", ConnectContent.TAG_OSGI_CONNECT), ic.getAttributes().get(IdentityNamespace.CAPABILITY_TAGS_ATTRIBUTE));
-        assertEquals("bar", ic.getAttributes().get("foo"));
+        assertThat(ic.getAttributes()).containsEntry(IdentityNamespace.IDENTITY_NAMESPACE, "abc");
+        assertThat(ic.getAttributes()).containsEntry(IdentityNamespace.CAPABILITY_VERSION_ATTRIBUTE, new Version("1.2.3.something"));
+        assertThat(ic.getAttributes()).containsEntry(IdentityNamespace.CAPABILITY_TYPE_ATTRIBUTE, IdentityNamespace.TYPE_BUNDLE);
+        assertThat(ic.getAttributes()).containsEntry(IdentityNamespace.CAPABILITY_COPYRIGHT_ATTRIBUTE, copyright);
+        assertThat(ic.getAttributes()).containsEntry(IdentityNamespace.CAPABILITY_DESCRIPTION_ATTRIBUTE, description);
+        assertThat(ic.getAttributes()).containsEntry(IdentityNamespace.CAPABILITY_DOCUMENTATION_ATTRIBUTE, docurl);
+        assertThat(ic.getAttributes()).containsEntry(IdentityNamespace.CAPABILITY_LICENSE_ATTRIBUTE, license);
+        assertThat(ic.getAttributes()).containsEntry(IdentityNamespace.CAPABILITY_TAGS_ATTRIBUTE, Arrays.asList("test", ConnectContent.TAG_OSGI_CONNECT));
+        assertThat(ic.getAttributes()).containsEntry("foo", "bar");
 
-        assertEquals(1, ic.getDirectives().size());
-        assertEquals("true", ic.getDirectives().get(IdentityNamespace.CAPABILITY_SINGLETON_DIRECTIVE));
+        assertThat(ic.getDirectives()).hasSize(1);
+        assertThat(ic.getDirectives()).containsEntry(IdentityNamespace.CAPABILITY_SINGLETON_DIRECTIVE, "true");
     }
-    
+
     @SuppressWarnings("unchecked")
-	public void testNativeCapability() throws BundleException {
-        Map<String, Object> headers = new HashMap<String, Object>();
+    @Test
+    void nativeCapability() throws BundleException {
+        Map<String, Object> headers = new HashMap<>();
         headers.put(Constants.BUNDLE_MANIFESTVERSION,  "2");
         headers.put(Constants.BUNDLE_SYMBOLICNAME, FelixConstants.SYSTEM_BUNDLE_SYMBOLICNAME);
         headers.put(Constants.PROVIDE_CAPABILITY, " osgi.native;" +
@@ -118,19 +120,20 @@ public class ManifestParserTest extends TestCase
         ManifestParser mp = new ManifestParser(null, null, mockBundleRevision, headers);
 
         BundleCapability ic = findCapability(mp.getCapabilities(), NativeNamespace.NATIVE_NAMESPACE);
-    	
-        assertEquals("en", ic.getAttributes().get(NativeNamespace.CAPABILITY_LANGUAGE_ATTRIBUTE));
+
+        assertThat(ic.getAttributes()).containsEntry(NativeNamespace.CAPABILITY_LANGUAGE_ATTRIBUTE, "en");
         List<String> osList = (List<String>) ic.getAttributes().get(NativeNamespace.CAPABILITY_OSNAME_ATTRIBUTE);
-        assertEquals(4, osList.size());
-        assertEquals(new Version("7.0"), ic.getAttributes().get(NativeNamespace.CAPABILITY_OSVERSION_ATTRIBUTE));
+        assertThat(osList).hasSize(4);
+        assertThat(ic.getAttributes()).containsEntry(NativeNamespace.CAPABILITY_OSVERSION_ATTRIBUTE, new Version("7.0"));
         List<String> nativeProcesserList = (List<String>) ic.getAttributes().get(NativeNamespace.CAPABILITY_PROCESSOR_ATTRIBUTE);
-        assertEquals(4, nativeProcesserList.size());
+        assertThat(nativeProcesserList).hasSize(4);
     
     }
-    
+
     @SuppressWarnings("unchecked")
-    public void testAttributes() throws BundleException {
-        Map<String, Object> headers = new HashMap<String, Object>();
+    @Test
+    void attributes() throws BundleException {
+        Map<String, Object> headers = new HashMap<>();
         headers.put(Constants.BUNDLE_MANIFESTVERSION,  "2");
         headers.put(Constants.BUNDLE_SYMBOLICNAME,"com.example.test.sample");
         headers.put(Constants.PROVIDE_CAPABILITY,
@@ -148,22 +151,24 @@ public class ManifestParserTest extends TestCase
 
         BundleCapability bc = findCapability(mp.getCapabilities(), "com.example");
         Long cLong = (Long) bc.getAttributes().get("theLong");
-        assertEquals(Long.valueOf(111), cLong);
+        assertThat(cLong).isEqualTo(Long.valueOf(111));
         List<String> cList = (List<String>)
                 bc.getAttributes().get("theList");
-        assertEquals(3, cList.size());
-        assertTrue(cList.contains("red"));
+        assertThat(cList)
+                .hasSize(3)
+                .contains("red");
 
         BundleRequirement br = findRequirement(mp.getRequirements(), "com.example.other");
         Long rLong = (Long) br.getAttributes().get("theLong");
-        assertEquals(Long.valueOf(999), rLong);
+        assertThat(rLong).isEqualTo(Long.valueOf(999));
         List<String> rList = (List<String>) br.getAttributes().get("theList");
-        assertEquals(3, rList.size());
+        assertThat(rList).hasSize(3);
     }
-    
-    public void testConvertNativeCode() throws InvalidSyntaxException
+
+    @Test
+    void convertNativeCode() throws InvalidSyntaxException
     {
-        List<NativeLibraryClause> nativeLibraryClauses = new ArrayList<NativeLibraryClause>();
+        List<NativeLibraryClause> nativeLibraryClauses = new ArrayList<>();
         String[] libraryFiles = {"lib/http.dll", "lib/zlib.dll"};
         String[] osNames = {"Windows95", "Windows98", "WindowsNT"};
         String[] processors = {"x86"};
@@ -181,7 +186,7 @@ public class ManifestParserTest extends TestCase
         
         BundleRequirement ir = findRequirement(nativeBundleReq, NativeNamespace.NATIVE_NAMESPACE);
         
-        String filterStr = (String)ir.getDirectives().get(NativeNamespace.REQUIREMENT_FILTER_DIRECTIVE);
+        String filterStr = ir.getDirectives().get(NativeNamespace.REQUIREMENT_FILTER_DIRECTIVE);
         
         Filter actualFilter = FrameworkUtil.createFilter(filterStr);
         
@@ -193,7 +198,7 @@ public class ManifestParserTest extends TestCase
                 "(osgi.native.language~=se)" + 
                 ")"+
                 "(com.acme.windowing=win32))");
-        assertEquals("Filter Should contain native requirements", expectedFilter, actualFilter);
+        assertThat(actualFilter).as("Filter Should contain native requirements").isEqualTo(expectedFilter);
         
     }
 

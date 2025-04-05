@@ -182,17 +182,20 @@ public class BundleRevisionImpl implements BundleRevision, Resource
     // BundleRevision methods.
     //
 
-    public String getSymbolicName()
+    @Override
+	public String getSymbolicName()
     {
         return m_symbolicName;
     }
 
-    public Version getVersion()
+    @Override
+	public Version getVersion()
     {
         return m_version;
     }
 
-    public List<Capability> getCapabilities(String namespace)
+    @Override
+	public List<Capability> getCapabilities(String namespace)
     {
         return asCapabilityList(getDeclaredCapabilities(namespace));
     }
@@ -202,12 +205,13 @@ public class BundleRevisionImpl implements BundleRevision, Resource
         return reqs;
     }
 
-    public List<BundleCapability> getDeclaredCapabilities(String namespace)
+    @Override
+	public List<BundleCapability> getDeclaredCapabilities(String namespace)
     {
         List<BundleCapability> result = m_declaredCaps;
         if (namespace != null)
         {
-            result = new ArrayList<BundleCapability>();
+            result = new ArrayList<>();
             for (BundleCapability cap : m_declaredCaps)
             {
                 if (cap.getNamespace().equals(namespace))
@@ -219,7 +223,8 @@ public class BundleRevisionImpl implements BundleRevision, Resource
         return result;
     }
 
-    public List<Requirement> getRequirements(String namespace)
+    @Override
+	public List<Requirement> getRequirements(String namespace)
     {
         return asRequirementList(getDeclaredRequirements(namespace));
     }
@@ -229,12 +234,13 @@ public class BundleRevisionImpl implements BundleRevision, Resource
         return reqs;
     }
 
-    public List<BundleRequirement> getDeclaredRequirements(String namespace)
+    @Override
+	public List<BundleRequirement> getDeclaredRequirements(String namespace)
     {
         List<BundleRequirement> result = m_declaredReqs;
         if (namespace != null)
         {
-            result = new ArrayList<BundleRequirement>();
+            result = new ArrayList<>();
             for (BundleRequirement req : m_declaredReqs)
             {
                 if (req.getNamespace().equals(namespace))
@@ -246,17 +252,20 @@ public class BundleRevisionImpl implements BundleRevision, Resource
         return result;
     }
 
-    public int getTypes()
+    @Override
+	public int getTypes()
     {
         return (getManifestVersion().equals("2") && m_isFragment) ? BundleRevision.TYPE_FRAGMENT : 0;
     }
 
-    public BundleWiring getWiring()
+    @Override
+	public BundleWiring getWiring()
     {
         return m_wiring;
     }
 
-    public BundleImpl getBundle()
+    @Override
+	public BundleImpl getBundle()
     {
         return m_bundle;
     }
@@ -422,7 +431,7 @@ public class BundleRevisionImpl implements BundleRevision, Resource
 
         if (classPathStrings == null)
         {
-            classPathStrings = new ArrayList<String>(0);
+            classPathStrings = new ArrayList<>(0);
         }
 
         // Create the bundles class path.
@@ -469,7 +478,7 @@ public class BundleRevisionImpl implements BundleRevision, Resource
                 {
 // TODO: FRAMEWORK - Per the spec, this should fire a FrameworkEvent.INFO event;
 //       need to create an "Eventer" class like "Logger" perhaps.
-                    ((BundleImpl) m_bundle).getFramework().getLogger().log(
+                    m_bundle.getFramework().getLogger().log(
                         getBundle(), Logger.LOG_INFO,
                         "Class path entry not found: "
                         + classPathStrings.get(i));
@@ -706,7 +715,7 @@ public class BundleRevisionImpl implements BundleRevision, Resource
         }
         catch (Exception ex)
         {
-            ((BundleImpl) m_bundle).getFramework().getLogger().log(
+            m_bundle.getFramework().getLogger().log(
                 Logger.LOG_ERROR, "Error releasing revision: " + ex.getMessage(), ex);
         }
         m_content.close();

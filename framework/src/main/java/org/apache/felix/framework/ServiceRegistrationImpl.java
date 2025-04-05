@@ -68,7 +68,7 @@ class ServiceRegistrationImpl implements ServiceRegistration
     // Flag indicating that we are unregistering.
     private volatile boolean m_isUnregistering = false;
     // This threadlocal is used to detect cycles.
-    private final ThreadLocal<Boolean> m_threadLoopDetection = new ThreadLocal<Boolean>();
+    private final ThreadLocal<Boolean> m_threadLoopDetection = new ThreadLocal<>();
 
     private final Object syncObject = new Object();
 
@@ -102,7 +102,8 @@ class ServiceRegistrationImpl implements ServiceRegistration
         m_svcObj = null;
     }
 
-    public synchronized ServiceReference getReference()
+    @Override
+	public synchronized ServiceReference getReference()
     {
         // Make sure registration is valid.
         if (!isValid())
@@ -113,7 +114,8 @@ class ServiceRegistrationImpl implements ServiceRegistration
         return m_ref;
     }
 
-    public void setProperties(Dictionary dict)
+    @Override
+	public void setProperties(Dictionary dict)
     {
         Map oldProps;
         synchronized (this)
@@ -133,7 +135,8 @@ class ServiceRegistrationImpl implements ServiceRegistration
         m_registry.servicePropertiesModified(this, new MapToDictionary(oldProps));
     }
 
-    public void unregister()
+    @Override
+	public void unregister()
     {
         synchronized (this)
         {
@@ -356,25 +359,24 @@ class ServiceRegistrationImpl implements ServiceRegistration
         }
         if (svcObj != null)
         {
-            for (int i = 0; i < m_classes.length; i++)
-            {
+            for (String m_Class : m_classes) {
                 Class clazz = Util.loadClassUsingClass(
-                    svcObj.getClass(), m_classes[i], Felix.m_secureAction);
+                    svcObj.getClass(), m_Class, Felix.m_secureAction);
                 if ((clazz == null) || !clazz.isAssignableFrom(svcObj.getClass()))
                 {
                     if (clazz == null)
                     {
-                        if (!Util.checkImplementsWithName(svcObj.getClass(), m_classes[i]))
+                        if (!Util.checkImplementsWithName(svcObj.getClass(), m_Class))
                         {
                             throw new ServiceException(
-                                    "Service cannot be cast due to missing class: " + m_classes[i],
+                                    "Service cannot be cast due to missing class: " + m_Class,
                                     ServiceException.FACTORY_ERROR);
                         }
                     }
                     else
                     {
                         throw new ServiceException(
-                            "Service cannot be cast: " + m_classes[i],
+                            "Service cannot be cast: " + m_Class,
                             ServiceException.FACTORY_ERROR);
                     }
                 }
@@ -409,7 +411,8 @@ class ServiceRegistrationImpl implements ServiceRegistration
             m_svcObj = svcObj;
         }
 
-        public Object run() throws Exception
+        @Override
+		public Object run() throws Exception
         {
             if (m_svcObj == null)
             {
@@ -480,24 +483,28 @@ class ServiceRegistrationImpl implements ServiceRegistration
         // ServiceReference methods.
         //
 
-        public Object getProperty(String s)
+        @Override
+		public Object getProperty(String s)
         {
             return ServiceRegistrationImpl.this.getProperty(s);
         }
 
-        public String[] getPropertyKeys()
+        @Override
+		public String[] getPropertyKeys()
         {
             return ServiceRegistrationImpl.this.getPropertyKeys();
         }
 
-        public Bundle getBundle()
+        @Override
+		public Bundle getBundle()
         {
             // The spec says that this should return null if
             // the service is unregistered.
             return (isValid()) ? m_bundle : null;
         }
 
-        public Bundle[] getUsingBundles()
+        @Override
+		public Bundle[] getUsingBundles()
         {
             return ServiceRegistrationImpl.this.getUsingBundles();
         }
@@ -506,18 +513,19 @@ class ServiceRegistrationImpl implements ServiceRegistration
         public String toString()
         {
             String[] ocs = (String[]) getProperty("objectClass");
-            String oc = "[";
+            StringBuilder oc = new StringBuilder("[");
             for(int i = 0; i < ocs.length; i++)
             {
-                oc = oc + ocs[i];
+                oc.append(ocs[i]);
                 if (i < ocs.length - 1)
-                    oc = oc + ", ";
+                    oc.append(", ");
             }
-            oc = oc + "]";
-            return oc;
+            oc.append("]");
+            return oc.toString();
         }
 
-        public boolean isAssignableTo(Bundle requester, String className)
+        @Override
+		public boolean isAssignableTo(Bundle requester, String className)
         {
             // Always return true if the requester is the same as the provider.
             if (requester == m_bundle)
@@ -660,7 +668,8 @@ class ServiceRegistrationImpl implements ServiceRegistration
             return allow;
         }
 
-        public int compareTo(Object reference)
+        @Override
+		public int compareTo(Object reference)
         {
             ServiceReference other = (ServiceReference) reference;
 
@@ -676,14 +685,14 @@ class ServiceRegistrationImpl implements ServiceRegistration
             Object otherRankObj = other.getProperty(Constants.SERVICE_RANKING);
 
             // If no rank, then spec says it defaults to zero.
-            rankObj = (rankObj == null) ? new Integer(0) : rankObj;
-            otherRankObj = (otherRankObj == null) ? new Integer(0) : otherRankObj;
+            rankObj = (rankObj == null) ? Integer.valueOf(0) : rankObj;
+            otherRankObj = (otherRankObj == null) ? Integer.valueOf(0) : otherRankObj;
 
             // If rank is not Integer, then spec says it defaults to zero.
             Integer rank = (rankObj instanceof Integer)
-                ? (Integer) rankObj : new Integer(0);
+                ? (Integer) rankObj : 0;
             Integer otherRank = (otherRankObj instanceof Integer)
-                ? (Integer) otherRankObj : new Integer(0);
+                ? (Integer) otherRankObj : 0;
 
             // Sort by rank in ascending order.
             if (rank.compareTo(otherRank) < 0)
@@ -702,7 +711,7 @@ class ServiceRegistrationImpl implements ServiceRegistration
         @Override
         public Dictionary<String, Object> getProperties()
         {
-            return new Hashtable<String, Object>(ServiceRegistrationImpl.this.m_propMap);
+            return new Hashtable<>(ServiceRegistrationImpl.this.m_propMap);
         }
 
         @Override
@@ -718,62 +727,74 @@ class ServiceRegistrationImpl implements ServiceRegistration
 
     private class ServiceReferenceMap implements Map
     {
-        public int size()
+        @Override
+		public int size()
         {
             throw new UnsupportedOperationException("Not supported yet.");
         }
 
-        public boolean isEmpty()
+        @Override
+		public boolean isEmpty()
         {
             throw new UnsupportedOperationException("Not supported yet.");
         }
 
-        public boolean containsKey(Object o)
+        @Override
+		public boolean containsKey(Object o)
         {
             throw new UnsupportedOperationException("Not supported yet.");
         }
 
-        public boolean containsValue(Object o)
+        @Override
+		public boolean containsValue(Object o)
         {
             throw new UnsupportedOperationException("Not supported yet.");
         }
 
-        public Object get(Object o)
+        @Override
+		public Object get(Object o)
         {
             return ServiceRegistrationImpl.this.getProperty((String) o);
         }
 
-        public Object put(Object k, Object v)
+        @Override
+		public Object put(Object k, Object v)
         {
             throw new UnsupportedOperationException("Not supported yet.");
         }
 
-        public Object remove(Object o)
+        @Override
+		public Object remove(Object o)
         {
             throw new UnsupportedOperationException("Not supported yet.");
         }
 
-        public void putAll(Map map)
+        @Override
+		public void putAll(Map map)
         {
             throw new UnsupportedOperationException("Not supported yet.");
         }
 
-        public void clear()
+        @Override
+		public void clear()
         {
             throw new UnsupportedOperationException("Not supported yet.");
         }
 
-        public Set<Object> keySet()
+        @Override
+		public Set<Object> keySet()
         {
             throw new UnsupportedOperationException("Not supported yet.");
         }
 
-        public Collection<Object> values()
+        @Override
+		public Collection<Object> values()
         {
             throw new UnsupportedOperationException("Not supported yet.");
         }
 
-        public Set<Entry<Object, Object>> entrySet()
+        @Override
+		public Set<Entry<Object, Object>> entrySet()
         {
             return Collections.EMPTY_SET;
         }

@@ -93,7 +93,7 @@ class ExtensionManager implements Content
 {
     static final ClassPathExtenderFactory.ClassPathExtender m_extenderFramework;
     static final ClassPathExtenderFactory.ClassPathExtender m_extenderBoot;
-    private static final Set<String> IDENTITY = new HashSet<String>(Arrays.asList(
+    private static final Set<String> IDENTITY = new HashSet<>(Arrays.asList(
         BundleNamespace.BUNDLE_NAMESPACE,
         HostNamespace.HOST_NAMESPACE,
         IdentityNamespace.IDENTITY_NAMESPACE));
@@ -167,9 +167,9 @@ class ExtensionManager implements Content
 
     private final List<ExtensionTuple> m_extensionTuples = Collections.synchronizedList(new ArrayList<ExtensionTuple>());
 
-    private final List<BundleRevisionImpl> m_resolvedExtensions = new CopyOnWriteArrayList<BundleRevisionImpl>();
-    private final List<BundleRevisionImpl> m_unresolvedExtensions = new CopyOnWriteArrayList<BundleRevisionImpl>();
-    private final List<BundleRevisionImpl> m_failedExtensions = new CopyOnWriteArrayList<BundleRevisionImpl>();
+    private final List<BundleRevisionImpl> m_resolvedExtensions = new CopyOnWriteArrayList<>();
+    private final List<BundleRevisionImpl> m_unresolvedExtensions = new CopyOnWriteArrayList<>();
+    private final List<BundleRevisionImpl> m_failedExtensions = new CopyOnWriteArrayList<>();
 
     private static class ExtensionTuple
     {
@@ -206,10 +206,8 @@ class ExtensionManager implements Content
         String osName = (String) configMap.get(FelixConstants.FRAMEWORK_OS_NAME);
         String osVersion = (String) configMap.get(FelixConstants.FRAMEWORK_OS_VERSION);
         String userLang = (String) configMap.get(FelixConstants.FRAMEWORK_LANGUAGE);
-        Map<String, Object> attributes = new HashMap<String, Object>();
-
         //Add all startup properties so we can match selection-filters
-        attributes.putAll(configMap);
+        Map<String, Object> attributes = new HashMap<>(configMap);
 
         if( osArchitecture != null )
         {
@@ -262,7 +260,7 @@ class ExtensionManager implements Content
         if (exports != null && (sysprops == null || "true".equalsIgnoreCase(felix._getProperty(FelixConstants.USE_PROPERTY_SUBSTITUTION_IN_SYSTEMPACKAGES))))
         {
             final ClassParser classParser = new ClassParser();
-            final Set<String> imports = new HashSet<String>();
+            final Set<String> imports = new HashSet<>();
             for (Set<String> moduleImport : exports.values())
             {
                 for (String pkg : moduleImport)
@@ -279,7 +277,7 @@ class ExtensionManager implements Content
                 String module = idx == -1 ? moduleKey : moduleKey.substring(0, idx);
                 if (felix._getProperty(module) == null && !exports.get(moduleKey).isEmpty() && defaultProperties.getProperty(module) == null)
                 {
-                    final SortedMap<String, SortedSet<String>> referred = new TreeMap<String, SortedSet<String>>();
+                    final SortedMap<String, SortedSet<String>> referred = new TreeMap<>();
                     if ("true".equalsIgnoreCase(felix._getProperty(FelixConstants.CALCULATE_SYSTEMPACKAGES_USES)))
                     {
                         java.nio.file.FileSystem fs = java.nio.file.FileSystems.getFileSystem(URI.create("jrt:/"));
@@ -297,7 +295,7 @@ class ExtensionManager implements Content
                                 for (Enumeration<?> keys = cachedProps.propertyNames(); keys.hasMoreElements();)
                                 {
                                     String pkg = (String) keys.nextElement();
-                                    referred.put(pkg, new TreeSet<String>(Arrays.asList(cachedProps.getProperty(pkg).split(","))));
+                                    referred.put(pkg, new TreeSet<>(Arrays.asList(cachedProps.getProperty(pkg).split(","))));
                                 }
                             }
                             else
@@ -324,26 +322,26 @@ class ExtensionManager implements Content
                         }
                     }
 
-                    String pkgs = "";
+                    StringBuilder pkgs = new StringBuilder();
 
                     for (String pkg : exports.get(moduleKey))
                     {
-                        pkgs += "," + pkg;
+                        pkgs.append(",").append(pkg);
                         SortedSet<String> uses = referred.get(pkg);
                         if (uses != null && !uses.isEmpty())
                         {
-                            pkgs += ";uses:=\"";
+                            pkgs.append(";uses:=\"");
                             String sep = "";
                             for (String u : uses)
                             {
-                                pkgs += sep + u;
+                                pkgs.append(sep).append(u);
                                 sep = ",";
                             }
-                            pkgs += "\"";
+                            pkgs.append("\"");
                         }
-                        pkgs += ";version=\"" + defaultProperties.getProperty("felix.detect.java.version") + "\"";
+                        pkgs.append(";version=\"").append(defaultProperties.getProperty("felix.detect.java.version")).append("\"");
                     }
-                    defaultProperties.put(module, pkgs);
+                    defaultProperties.put(module, pkgs.toString());
                 }
             }
         }
@@ -485,9 +483,9 @@ class ExtensionManager implements Content
         }
 
         // Collect the highest version of unresolved that are not already resolved by bsn
-        List<BundleRevisionImpl> extensions = new ArrayList<BundleRevisionImpl>();
+        List<BundleRevisionImpl> extensions = new ArrayList<>();
         // Collect the unresolved that where filtered out as alternatives in case the highest version doesn't resolve
-        List<BundleRevisionImpl> alt = new ArrayList<BundleRevisionImpl>();
+        List<BundleRevisionImpl> alt = new ArrayList<>();
 
         outer : for (BundleRevisionImpl revision : m_unresolvedExtensions)
         {
@@ -519,7 +517,7 @@ class ExtensionManager implements Content
         // This will return all resolvable revisions with the wires they need
         Map<BundleRevisionImpl, List<BundleWire>> wirings = findResolvableExtensions(extensions, alt);
 
-        List<Bundle> result = new ArrayList<Bundle>();
+        List<Bundle> result = new ArrayList<>();
 
         for (Map.Entry<BundleRevisionImpl, List<BundleWire>> entry : wirings.entrySet())
         {
@@ -546,7 +544,7 @@ class ExtensionManager implements Content
 
             felix.getDependencies().addDependent(wire);
 
-            List<BundleCapability> caps = new ArrayList<BundleCapability>();
+            List<BundleCapability> caps = new ArrayList<>();
             for (BundleCapability cap : entry.getKey().getDeclaredCapabilities(null))
             {
                 if (!IDENTITY.contains(cap.getNamespace()))
@@ -679,23 +677,22 @@ class ExtensionManager implements Content
 
     void startPendingExtensionBundles(Felix felix)
     {
-        for (int i = 0;i < m_extensionTuples.size();i++)
-        {
-            if (!m_extensionTuples.get(i).m_started)
+        for (ExtensionTuple m_extensionTuple : m_extensionTuples) {
+            if (!m_extensionTuple.m_started)
             {
-                m_extensionTuples.get(i).m_started = true;
+                m_extensionTuple.m_started = true;
                 try
                 {
-                    Felix.m_secureAction.startActivator(m_extensionTuples.get(i).m_activator, felix._getBundleContext());
+                    Felix.m_secureAction.startActivator(m_extensionTuple.m_activator, felix._getBundleContext());
                 }
                 catch (Throwable ex)
                 {
-                    m_extensionTuples.get(i).m_failed = true;
+                    m_extensionTuple.m_failed = true;
 
-                    felix.fireFrameworkEvent(FrameworkEvent.ERROR, m_extensionTuples.get(i).m_bundle,
+                    felix.fireFrameworkEvent(FrameworkEvent.ERROR, m_extensionTuple.m_bundle,
                                 new BundleException("Unable to start Bundle", BundleException.ACTIVATOR_ERROR, ex));
 
-                    m_logger.log(m_extensionTuples.get(i).m_bundle, Logger.LOG_WARNING,
+                    m_logger.log(m_extensionTuple.m_bundle, Logger.LOG_WARNING,
                         "Unable to start Extension Activator", ex);
                 }
             }
@@ -740,11 +737,11 @@ class ExtensionManager implements Content
         // This resolve doesn't take into account that maybe a revision could be resolved with a revision from alt but
         // not with the current extensions. In that case, it will be removed (assuming the current extension can be resolved)
         // in other words, it will prefer to resolve the highest version of each extension over install order
-        Map<BundleRevisionImpl, List<BundleWire>> wires = new LinkedHashMap<BundleRevisionImpl, List<BundleWire>>();
+        Map<BundleRevisionImpl, List<BundleWire>> wires = new LinkedHashMap<>();
 
         for (BundleRevisionImpl bri : extensions)
         {
-            List<BundleWire> wi = new ArrayList<BundleWire>();
+            List<BundleWire> wi = new ArrayList<>();
             boolean resolved = true;
             outer: for (BundleRequirement req : bri.getDeclaredRequirements(null))
             {
@@ -818,8 +815,8 @@ class ExtensionManager implements Content
             {
                 // we failed to resolve this extension - try again without it. Yes, this throws away the work done
                 // up to this point
-                List<BundleRevisionImpl> next = new ArrayList<BundleRevisionImpl>(extensions);
-                List<BundleRevisionImpl> nextAlt = new ArrayList<BundleRevisionImpl>();
+                List<BundleRevisionImpl> next = new ArrayList<>(extensions);
+                List<BundleRevisionImpl> nextAlt = new ArrayList<>();
 
                 outer : for (BundleRevisionImpl replacement : alt)
                 {
@@ -848,28 +845,33 @@ class ExtensionManager implements Content
         return wires;
     }
 
-    public void close()
+    @Override
+	public void close()
     {
         // Do nothing on close, since we have nothing open.
     }
 
-    public Enumeration getEntries()
+    @Override
+	public Enumeration getEntries()
     {
         return new Enumeration()
         {
-            public boolean hasMoreElements()
+            @Override
+			public boolean hasMoreElements()
             {
                 return false;
             }
 
-            public Object nextElement() throws NoSuchElementException
+            @Override
+			public Object nextElement() throws NoSuchElementException
             {
                 throw new NoSuchElementException();
             }
         };
     }
 
-    public boolean hasEntry(String name)
+    @Override
+	public boolean hasEntry(String name)
     {
         return false;
     }
@@ -880,27 +882,32 @@ class ExtensionManager implements Content
         return false;
     }
 
-    public byte[] getEntryAsBytes(String name)
+    @Override
+	public byte[] getEntryAsBytes(String name)
     {
         return null;
     }
 
-    public InputStream getEntryAsStream(String name) throws IOException
+    @Override
+	public InputStream getEntryAsStream(String name) throws IOException
     {
         return null;
     }
 
-    public Content getEntryAsContent(String name)
+    @Override
+	public Content getEntryAsContent(String name)
     {
         return null;
     }
 
-    public String getEntryAsNativeLibrary(String name)
+    @Override
+	public String getEntryAsNativeLibrary(String name)
     {
         return null;
     }
 
-    public URL getEntryAsURL(String name)
+    @Override
+	public URL getEntryAsURL(String name)
     {
         return null;
     }
@@ -1030,7 +1037,7 @@ class ExtensionManager implements Content
 
         private void appendCapabilities(List<BundleCapability> caps)
         {
-            List<BundleCapability> newCaps = new ArrayList<BundleCapability>(m_capabilities.size() + caps.size());
+            List<BundleCapability> newCaps = new ArrayList<>(m_capabilities.size() + caps.size());
             newCaps.addAll(m_capabilities);
             newCaps.addAll(caps);
             m_capabilities = Util.newImmutableList(newCaps);
@@ -1092,7 +1099,7 @@ class ExtensionManager implements Content
             List<BundleCapability> result;
             if (namespace != null)
             {
-                result = new ArrayList<BundleCapability>();
+                result = new ArrayList<>();
                 for (BundleCapability cap : caps)
                 {
                     if (cap.getNamespace().equals(namespace))
@@ -1103,7 +1110,7 @@ class ExtensionManager implements Content
             }
             else
             {
-                result = new ArrayList<BundleCapability>(m_capabilities);
+                result = new ArrayList<>(m_capabilities);
             }
             return result;
         }

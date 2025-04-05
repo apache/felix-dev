@@ -37,7 +37,7 @@ class WovenClassImpl implements WovenClass, List<String>
     private final String m_className;
     private final BundleWiring m_wiring;
     private byte[] m_bytes;
-    private List<String> m_imports = new ArrayList<String>();
+    private List<String> m_imports = new ArrayList<>();
     private Class m_definedClass = null;
     private boolean m_isComplete = false;
     private int m_state;
@@ -68,7 +68,8 @@ class WovenClassImpl implements WovenClass, List<String>
         m_definedClass = definedClass;
     }
 
-    public synchronized byte[] getBytes()
+    @Override
+	public synchronized byte[] getBytes()
     {
         SecurityManager sm = System.getSecurityManager();
         if (sm != null)
@@ -85,7 +86,8 @@ class WovenClassImpl implements WovenClass, List<String>
         return bytes;
     }
 
-    public synchronized void setBytes(byte[] bytes)
+    @Override
+	public synchronized void setBytes(byte[] bytes)
     {
         SecurityManager sm = System.getSecurityManager();
         if (sm != null)
@@ -108,33 +110,39 @@ class WovenClassImpl implements WovenClass, List<String>
         return m_imports;
     }
 
-    public synchronized List<String> getDynamicImports()
+    @Override
+	public synchronized List<String> getDynamicImports()
     {
         return this;
     }
 
-    public synchronized boolean isWeavingComplete()
+    @Override
+	public synchronized boolean isWeavingComplete()
     {
         return m_isComplete;
     }
 
-    public String getClassName()
+    @Override
+	public String getClassName()
     {
         return m_className;
     }
 
-    public ProtectionDomain getProtectionDomain()
+    @Override
+	public ProtectionDomain getProtectionDomain()
     {
         return ((BundleImpl) m_wiring.getRevision().getBundle())
                 .getProtectionDomain();
     }
 
-    public synchronized Class<?> getDefinedClass()
+    @Override
+	public synchronized Class<?> getDefinedClass()
     {
         return m_definedClass;
     }
 
-    public BundleWiring getBundleWiring()
+    @Override
+	public BundleWiring getBundleWiring()
     {
         return m_wiring;
     }
@@ -146,37 +154,44 @@ class WovenClassImpl implements WovenClass, List<String>
     // but since it will only ever be used for this purpose it didn't
     // appear to make much sense to introduce another type for it.
 
-    public synchronized int size()
+    @Override
+	public synchronized int size()
     {
         return m_imports.size();
     }
 
-    public synchronized boolean isEmpty()
+    @Override
+	public synchronized boolean isEmpty()
     {
         return m_imports.isEmpty();
     }
 
-    public synchronized boolean contains(Object o)
+    @Override
+	public synchronized boolean contains(Object o)
     {
         return m_imports.contains(o);
     }
 
-    public synchronized Iterator<String> iterator()
+    @Override
+	public synchronized Iterator<String> iterator()
     {
         return m_imports.iterator();
     }
 
-    public synchronized Object[] toArray()
+    @Override
+	public synchronized Object[] toArray()
     {
         return m_imports.toArray();
     }
 
-    public synchronized <T> T[] toArray(T[] ts)
+    @Override
+	public synchronized <T> T[] toArray(T[] ts)
     {
         return m_imports.toArray(ts);
     }
 
-    public synchronized boolean add(String s)
+    @Override
+	public synchronized boolean add(String s)
     {
         SecurityManager sm = System.getSecurityManager();
         if (sm != null)
@@ -211,7 +226,8 @@ class WovenClassImpl implements WovenClass, List<String>
         }
     }
 
-    public synchronized boolean remove(Object o)
+    @Override
+	public synchronized boolean remove(Object o)
     {
         SecurityManager sm = System.getSecurityManager();
         if (sm != null)
@@ -222,12 +238,14 @@ class WovenClassImpl implements WovenClass, List<String>
         return m_imports.remove(o);
     }
 
-    public synchronized boolean containsAll(Collection<?> collection)
+    @Override
+	public synchronized boolean containsAll(Collection<?> collection)
     {
         return m_imports.containsAll(collection);
     }
 
-    public synchronized boolean addAll(Collection<? extends String> collection)
+    @Override
+	public synchronized boolean addAll(Collection<? extends String> collection)
     {
         SecurityManager sm = System.getSecurityManager();
         if (sm != null)
@@ -251,7 +269,8 @@ class WovenClassImpl implements WovenClass, List<String>
         return m_imports.addAll(collection);
     }
 
-    public synchronized boolean addAll(int i,
+    @Override
+	public synchronized boolean addAll(int i,
             Collection<? extends String> collection)
     {
         SecurityManager sm = System.getSecurityManager();
@@ -276,7 +295,8 @@ class WovenClassImpl implements WovenClass, List<String>
         return m_imports.addAll(i, collection);
     }
 
-    public synchronized boolean removeAll(Collection<?> collection)
+    @Override
+	public synchronized boolean removeAll(Collection<?> collection)
     {
         SecurityManager sm = System.getSecurityManager();
         if (sm != null)
@@ -287,7 +307,8 @@ class WovenClassImpl implements WovenClass, List<String>
         return m_imports.removeAll(collection);
     }
 
-    public synchronized boolean retainAll(Collection<?> collection)
+    @Override
+	public synchronized boolean retainAll(Collection<?> collection)
     {
         SecurityManager sm = System.getSecurityManager();
         if (sm != null)
@@ -298,7 +319,8 @@ class WovenClassImpl implements WovenClass, List<String>
         return m_imports.retainAll(collection);
     }
 
-    public synchronized void clear()
+    @Override
+	public synchronized void clear()
     {
         SecurityManager sm = System.getSecurityManager();
         if (sm != null)
@@ -309,12 +331,14 @@ class WovenClassImpl implements WovenClass, List<String>
         m_imports.clear();
     }
 
-    public synchronized String get(int i)
+    @Override
+	public synchronized String get(int i)
     {
         return m_imports.get(i);
     }
 
-    public synchronized String set(int i, String s)
+    @Override
+	public synchronized String set(int i, String s)
     {
         SecurityManager sm = System.getSecurityManager();
         if (sm != null)
@@ -335,7 +359,8 @@ class WovenClassImpl implements WovenClass, List<String>
         return m_imports.set(i, s);
     }
 
-    public synchronized void add(int i, String s)
+    @Override
+	public synchronized void add(int i, String s)
     {
         SecurityManager sm = System.getSecurityManager();
         if (sm != null)
@@ -357,7 +382,8 @@ class WovenClassImpl implements WovenClass, List<String>
         m_imports.add(i, s);
     }
 
-    public synchronized String remove(int i)
+    @Override
+	public synchronized String remove(int i)
     {
         SecurityManager sm = System.getSecurityManager();
         if (sm != null)
@@ -368,27 +394,32 @@ class WovenClassImpl implements WovenClass, List<String>
         return m_imports.remove(i);
     }
 
-    public synchronized int indexOf(Object o)
+    @Override
+	public synchronized int indexOf(Object o)
     {
         return m_imports.indexOf(o);
     }
 
-    public synchronized int lastIndexOf(Object o)
+    @Override
+	public synchronized int lastIndexOf(Object o)
     {
         return m_imports.lastIndexOf(o);
     }
 
-    public synchronized ListIterator<String> listIterator()
+    @Override
+	public synchronized ListIterator<String> listIterator()
     {
         return m_imports.listIterator();
     }
 
-    public synchronized ListIterator<String> listIterator(int i)
+    @Override
+	public synchronized ListIterator<String> listIterator(int i)
     {
         return m_imports.listIterator(i);
     }
 
-    public synchronized List<String> subList(int i, int i1)
+    @Override
+	public synchronized List<String> subList(int i, int i1)
     {
         return m_imports.subList(i, i1);
     }
@@ -409,7 +440,8 @@ class WovenClassImpl implements WovenClass, List<String>
      *
      * @see org.osgi.framework.hooks.weaving.WovenClass#getState()
      */
-    public synchronized int getState()
+    @Override
+	public synchronized int getState()
     {
         return m_state;
     }

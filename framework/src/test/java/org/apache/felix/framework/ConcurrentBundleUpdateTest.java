@@ -23,8 +23,6 @@ import java.io.File;
 import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
-import java.net.InetSocketAddress;
-import java.net.Proxy.Type;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.concurrent.Semaphore;
@@ -32,6 +30,11 @@ import java.util.concurrent.TimeUnit;
 import java.util.jar.JarOutputStream;
 import java.util.jar.Manifest;
 import java.util.zip.ZipEntry;
+
+import org.junit.jupiter.api.Test;
+
+import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.Assertions.fail;
 
 import org.osgi.framework.Bundle;
 import org.osgi.framework.BundleActivator;
@@ -41,11 +44,10 @@ import org.osgi.framework.BundleException;
 import org.osgi.framework.Constants;
 import org.osgi.framework.SynchronousBundleListener;
 
-import junit.framework.TestCase;
-
-public class ConcurrentBundleUpdateTest extends TestCase 
+class ConcurrentBundleUpdateTest 
 {
-    public void testConcurrentBundleUpdate() throws Exception
+    @Test
+    void concurrentBundleUpdate() throws Exception
     {
         Map params = new HashMap();
         params.put(Constants.FRAMEWORK_SYSTEMPACKAGES,
@@ -97,7 +99,8 @@ public class ConcurrentBundleUpdateTest extends TestCase
                 felix.getBundleContext().addBundleListener(listenerStarting);
                 new Thread()
                 {
-                    public void run() 
+                    @Override
+					public void run() 
                     {
                         try
                         {
@@ -109,17 +112,18 @@ public class ConcurrentBundleUpdateTest extends TestCase
                         }
                     }
                 }.start();
-                
-                assertTrue(step.tryAcquire(1, TimeUnit.SECONDS));
+
+                assertThat(step.tryAcquire(1, TimeUnit.SECONDS)).isTrue();
                 
                 felix.getBundleContext().removeBundleListener(listenerStarting);
-                
-                assertEquals(Bundle.STARTING, updater.getState());
-                assertEquals(0, step.availablePermits());
+
+                assertThat(updater.getState()).isEqualTo(Bundle.STARTING);
+                assertThat(step.availablePermits()).isEqualTo(0);
                 
                 new Thread() 
                 {
-                    public void run() 
+                    @Override
+					public void run() 
                     {
                         try 
                         {
@@ -132,7 +136,7 @@ public class ConcurrentBundleUpdateTest extends TestCase
                         }
                     }
                 }.start();
-                assertTrue(step.tryAcquire(1, TimeUnit.SECONDS));
+                assertThat(step.tryAcquire(1, TimeUnit.SECONDS)).isTrue();
                 SynchronousBundleListener listenerStarted = new SynchronousBundleListener() 
                 {    
                     @Override
@@ -151,36 +155,36 @@ public class ConcurrentBundleUpdateTest extends TestCase
                 felix.getBundleContext().addBundleListener(listenerStarted);
                 
                 ((Runnable) updater.getActivator()).run();
-                
-                assertTrue(step.tryAcquire(2, 1, TimeUnit.SECONDS));
+
+                assertThat(step.tryAcquire(2, 1, TimeUnit.SECONDS)).isTrue();
                 
                 felix.getBundleContext().removeBundleListener(listenerStarted);
-                
-                assertEquals(0, step.availablePermits());
-                
-                assertEquals(Bundle.STOPPING, updater.getState());
+
+                assertThat(step.availablePermits()).isEqualTo(0);
+
+                assertThat(updater.getState()).isEqualTo(Bundle.STOPPING);
                 
                 felix.getBundleContext().addBundleListener(listenerStarting);
 
                 ((Runnable) updater.getActivator()).run();
-            
-                assertTrue(step.tryAcquire(1, TimeUnit.SECONDS));
+
+                assertThat(step.tryAcquire(1, TimeUnit.SECONDS)).isTrue();
                 
                 felix.getBundleContext().removeBundleListener(listenerStarting);
-                
-                assertEquals(Bundle.STARTING, updater.getState());
+
+                assertThat(updater.getState()).isEqualTo(Bundle.STARTING);
                 
                 ((Runnable) updater.getActivator()).run();
-                
-                assertTrue(step.tryAcquire(1, TimeUnit.SECONDS));
-                
-                assertEquals(Bundle.ACTIVE, updater.getState());
+
+                assertThat(step.tryAcquire(1, TimeUnit.SECONDS)).isTrue();
+
+                assertThat(updater.getState()).isEqualTo(Bundle.ACTIVE);
                 
                 ((Runnable) updater.getActivator()).run();
                 
                 updater.uninstall();
-                
-                assertEquals(Bundle.UNINSTALLED, updater.getState());
+
+                assertThat(updater.getState()).isEqualTo(Bundle.UNINSTALLED);
                 
                 try 
                 {
@@ -202,8 +206,9 @@ public class ConcurrentBundleUpdateTest extends TestCase
             delete(cacheDir);
         }
     }
-    
-    public void testConcurrentBundleCycleUpdate() throws Exception
+
+    @Test
+    void concurrentBundleCycleUpdate() throws Exception
     {
         Map params = new HashMap();
         params.put(Constants.FRAMEWORK_SYSTEMPACKAGES,
@@ -254,7 +259,8 @@ public class ConcurrentBundleUpdateTest extends TestCase
                 felix.getBundleContext().addBundleListener(listenerStarting);
                 new Thread()
                 {
-                    public void run() 
+                    @Override
+					public void run() 
                     {
                         try 
                         {
@@ -266,22 +272,22 @@ public class ConcurrentBundleUpdateTest extends TestCase
                         }
                     }
                 }.start();
-                
-                assertTrue(step.tryAcquire(1, TimeUnit.SECONDS));
+
+                assertThat(step.tryAcquire(1, TimeUnit.SECONDS)).isTrue();
                 
                 felix.getBundleContext().removeBundleListener(listenerStarting);
-                
-                assertEquals(Bundle.STARTING, updater.getState());
-                assertEquals(0, step.availablePermits());
+
+                assertThat(updater.getState()).isEqualTo(Bundle.STARTING);
+                assertThat(step.availablePermits()).isEqualTo(0);
 
                 ((Runnable) updater.getActivator()).run();
-                
-                assertTrue(step.tryAcquire(1, TimeUnit.SECONDS));
-                assertEquals(Bundle.RESOLVED, updater.getState());
+
+                assertThat(step.tryAcquire(1, TimeUnit.SECONDS)).isTrue();
+                assertThat(updater.getState()).isEqualTo(Bundle.RESOLVED);
                 
                 updater.uninstall();
-                
-                assertEquals(Bundle.UNINSTALLED, updater.getState());
+
+                assertThat(updater.getState()).isEqualTo(Bundle.UNINSTALLED);
                 
                 try 
                 {

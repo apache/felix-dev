@@ -100,21 +100,21 @@ class StatefulResolver
         m_executor = getExecutor();
         m_resolver = new ResolverImpl(m_logger, m_executor);
 
-        m_revisions = new HashSet<BundleRevision>();
-        m_fragments = new HashSet<BundleRevision>();
-        m_capSets = new HashMap<String, CapabilitySet>();
-        m_singletons = new HashMap<String, List<BundleRevision>>();
-        m_selectedSingletons = new HashSet<BundleRevision>();
+        m_revisions = new HashSet<>();
+        m_fragments = new HashSet<>();
+        m_capSets = new HashMap<>();
+        m_singletons = new HashMap<>();
+        m_selectedSingletons = new HashSet<>();
 
-        List<String> indices = new ArrayList<String>();
+        List<String> indices = new ArrayList<>();
         indices.add(BundleRevision.BUNDLE_NAMESPACE);
         m_capSets.put(BundleRevision.BUNDLE_NAMESPACE, new CapabilitySet(indices, true));
 
-        indices = new ArrayList<String>();
+        indices = new ArrayList<>();
         indices.add(BundleRevision.PACKAGE_NAMESPACE);
         m_capSets.put(BundleRevision.PACKAGE_NAMESPACE, new CapabilitySet(indices, true));
 
-        indices = new ArrayList<String>();
+        indices = new ArrayList<>();
         indices.add(BundleRevision.HOST_NAMESPACE);
         m_capSets.put(BundleRevision.HOST_NAMESPACE,  new CapabilitySet(indices, true));
     }
@@ -138,7 +138,8 @@ class StatefulResolver
         {
             return new Executor()
             {
-                public void execute(Runnable command)
+                @Override
+				public void execute(Runnable command)
                 {
                     command.run();
                 }
@@ -149,7 +150,7 @@ class StatefulResolver
             ThreadPoolExecutor executor = new ThreadPoolExecutor(
                     parallelism, parallelism,
                     60, TimeUnit.SECONDS,
-                    new LinkedBlockingQueue<Runnable>(),
+                    new LinkedBlockingQueue<>(),
                     new ThreadFactory()
                     {
                         final AtomicInteger counter = new AtomicInteger();
@@ -256,7 +257,7 @@ class StatefulResolver
         final boolean obeyMandatory,
         final boolean invokeHooksAndSecurity)
     {
-        List<BundleCapability> result = new ArrayList<BundleCapability>();
+        List<BundleCapability> result = new ArrayList<>();
 
         CapabilitySet capSet = m_capSets.get(req.getNamespace());
         if (capSet != null)
@@ -330,7 +331,7 @@ class StatefulResolver
 
                 // Now give the hooks a chance to do fine-grained filtering.
                 ShrinkableCollection<BundleCapability> shrinkable =
-                    new ShrinkableCollection<BundleCapability>(result);
+                    new ShrinkableCollection<>(result);
                 for (ResolverHook hook : record.getResolverHooks())
                 {
                     try
@@ -441,9 +442,9 @@ class StatefulResolver
         {
             // Make our own copy of revisions.
             mandatory = (mandatory.isEmpty())
-                ? mandatory : new HashSet<BundleRevision>(mandatory);
+                ? mandatory : new HashSet<>(mandatory);
             optional = (optional.isEmpty())
-                ? optional : new HashSet<BundleRevision>(optional);
+                ? optional : new HashSet<>(optional);
 
             // Prepare resolver hooks, if any.
             ResolverHookRecord record = prepareResolverHooks(mandatory, optional);
@@ -732,7 +733,7 @@ class StatefulResolver
         // The hooks are added in the order that m_felix.getHooks() returns them which
         // is also the order in which they should be called.
         Map<ServiceReference<ResolverHookFactory>, ResolverHook> hookMap =
-            new LinkedHashMap<ServiceReference<ResolverHookFactory>, ResolverHook>();
+            new LinkedHashMap<>();
 
         // Get resolver hook factories.
         Set<ServiceReference<ResolverHookFactory>> hookRefs =
@@ -745,7 +746,7 @@ class StatefulResolver
             Set<BundleRevision> triggers;
             if (!mandatory.isEmpty() && !optional.isEmpty())
             {
-                triggers = new HashSet<BundleRevision>(mandatory);
+                triggers = new HashSet<>(mandatory);
                 triggers.addAll(optional);
             }
             else
@@ -807,7 +808,7 @@ class StatefulResolver
             }
 
             // Ask hooks to indicate which revisions should not be resolved.
-            whitelist = new ShrinkableCollection<BundleRevision>(getUnresolvedRevisions());
+            whitelist = new ShrinkableCollection<>(getUnresolvedRevisions());
             int originalSize = whitelist.size();
             for (ResolverHook hook : hookMap.values())
             {
@@ -1033,7 +1034,7 @@ class StatefulResolver
             // First pass: Loop through the wire map to find the host wires
             // for any fragments and map a host to all of its fragments.
             Map<Resource, List<BundleRevision>> hosts =
-                new HashMap<Resource, List<BundleRevision>>();
+                new HashMap<>();
             for (Entry<Resource, List<Wire>> entry : wireMap.entrySet())
             {
                 Resource revision = entry.getKey();
@@ -1046,7 +1047,7 @@ class StatefulResolver
                         List<BundleRevision> fragments = hosts.get(w.getProvider());
                         if (fragments == null)
                         {
-                            fragments = new ArrayList<BundleRevision>();
+                            fragments = new ArrayList<>();
                             hosts.put(w.getProvider(), fragments);
                         }
 
@@ -1064,7 +1065,7 @@ class StatefulResolver
             // to mark anything as resolved unless we succussfully create
             // all wirings.
             Map<BundleRevision, BundleWiringImpl> wirings =
-                new HashMap<BundleRevision, BundleWiringImpl>(wireMap.size());
+                new HashMap<>(wireMap.size());
             for (Entry<Resource, List<Wire>> entry : wireMap.entrySet())
             {
                 Resource resource = entry.getKey();
@@ -1075,7 +1076,7 @@ class StatefulResolver
                 List<Wire> resolverWires = entry.getValue();
 
                 List<BundleWire> bundleWires =
-                    new ArrayList<BundleWire>(resolverWires.size());
+                    new ArrayList<>(resolverWires.size());
 
                 // Need to special case fragments since they may already have
                 // wires if they are already attached to another host; if that
@@ -1091,9 +1092,9 @@ class StatefulResolver
                 // space implied by the wires as well as to record the
                 // dependencies.
                 Map<String, BundleRevision> importedPkgs =
-                    new HashMap<String, BundleRevision>();
+                    new HashMap<>();
                 Map<String, List<BundleRevision>> requiredPkgs =
-                    new HashMap<String, List<BundleRevision>>();
+                    new HashMap<>();
                 for (Wire rw : resolverWires)
                 {
                     // TODO is a rw already a BundleWire?
@@ -1148,14 +1149,14 @@ class StatefulResolver
                             Set<String> pkgs = calculateExportedAndReexportedPackages(
                                     provider,
                                     wireMap,
-                                    new HashSet<String>(),
-                                    new HashSet<BundleRevision>());
+                                    new HashSet<>(),
+                                    new HashSet<>());
                             for (String pkg : pkgs)
                             {
                                 List<BundleRevision> revs = requiredPkgs.get(pkg);
                                 if (revs == null)
                                 {
-                                    revs = new ArrayList<BundleRevision>();
+                                    revs = new ArrayList<>();
                                     requiredPkgs.put(pkg, revs);
                                 }
                                 revs.add(provider);
@@ -1287,12 +1288,9 @@ class StatefulResolver
     {
         if (wireMap != null)
         {
-            Iterator<Entry<Resource, List<Wire>>> iter =
-                wireMap.entrySet().iterator();
+            
             // Iterate over the map to fire necessary RESOLVED events.
-            while (iter.hasNext())
-            {
-                Entry<Resource, List<Wire>> entry = iter.next();
+            for (Entry<Resource, List<Wire>> entry : wireMap.entrySet()) {
                 Resource resource = entry.getKey();
                 if (!(resource instanceof BundleRevision))
                     continue;
@@ -1302,10 +1300,9 @@ class StatefulResolver
                 // Fire RESOLVED events for all fragments.
                 List<BundleRevision> fragments =
                     Util.getFragments(revision.getWiring());
-                for (int i = 0; i < fragments.size(); i++)
-                {
+                for (BundleRevision fragment : fragments) {
                     m_felix.fireBundleEvent(
-                        BundleEvent.RESOLVED, fragments.get(i).getBundle());
+                        BundleEvent.RESOLVED, fragment.getBundle());
                 }
                 m_felix.fireBundleEvent(BundleEvent.RESOLVED, revision.getBundle());
             }
@@ -1492,11 +1489,11 @@ class StatefulResolver
         // bundle capabilities instead, since this is what the resolver
         // hooks require.
         Map<BundleCapability, Collection<BundleCapability>> allCollisions
-            = new HashMap<BundleCapability, Collection<BundleCapability>>();
+            = new HashMap<>();
         for (Entry<String, List<BundleRevision>> entry : m_singletons.entrySet())
         {
             Collection<BundleCapability> bundleCaps =
-                new ArrayList<BundleCapability>();
+                new ArrayList<>();
             for (BundleRevision br : entry.getValue())
             {
                 List<BundleCapability> caps =
@@ -1510,8 +1507,8 @@ class StatefulResolver
             for (BundleCapability bc : bundleCaps)
             {
                 Collection<BundleCapability> capCopy =
-                    new ShrinkableCollection<BundleCapability>(
-                        new ArrayList<BundleCapability>(bundleCaps));
+                    new ShrinkableCollection<>(
+                        new ArrayList<>(bundleCaps));
                 capCopy.remove(bc);
                 allCollisions.put(bc, capCopy);
             }
@@ -1540,11 +1537,11 @@ class StatefulResolver
 
         // Create groups according to how the resolver hooks filtered the
         // collisions.
-        List<List<BundleRevision>> groups = new ArrayList<List<BundleRevision>>();
+        List<List<BundleRevision>> groups = new ArrayList<>();
         while (!allCollisions.isEmpty())
         {
             BundleCapability target = allCollisions.entrySet().iterator().next().getKey();
-            groups.add(groupSingletons(allCollisions, target, new ArrayList<BundleRevision>()));
+            groups.add(groupSingletons(allCollisions, target, new ArrayList<>()));
         }
 
         // Now select the singletons available for this resolve operation.
@@ -1658,7 +1655,7 @@ class StatefulResolver
 
     private synchronized Set<BundleRevision> getUnresolvedRevisions()
     {
-        Set<BundleRevision> unresolved = new HashSet<BundleRevision>();
+        Set<BundleRevision> unresolved = new HashSet<>();
         for (BundleRevision revision : m_revisions)
         {
             if (revision.getWiring() == null)
@@ -1671,7 +1668,7 @@ class StatefulResolver
 
     private synchronized Map<Resource, Wiring> getWirings()
     {
-        Map<Resource, Wiring> wirings = new HashMap<Resource, Wiring>();
+        Map<Resource, Wiring> wirings = new HashMap<>();
 
         for (BundleRevision revision : m_revisions)
         {
@@ -1689,7 +1686,7 @@ class StatefulResolver
         List<BundleRevision> revisions = singletons.get(br.getSymbolicName());
         if (revisions == null)
         {
-            revisions = new ArrayList<BundleRevision>();
+            revisions = new ArrayList<>();
         }
         revisions.add(br);
         singletons.put(br.getSymbolicName(), revisions);

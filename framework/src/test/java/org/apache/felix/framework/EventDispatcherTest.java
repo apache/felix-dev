@@ -20,9 +20,10 @@ package org.apache.felix.framework;
 
 import java.util.*;
 
-import junit.framework.TestCase;
+import static org.assertj.core.api.Assertions.assertThat;
 
-import org.easymock.EasyMock;
+import org.junit.jupiter.api.Test;
+import org.mockito.Mockito;
 import org.osgi.framework.Bundle;
 import org.osgi.framework.BundleContext;
 import org.osgi.framework.Constants;
@@ -31,9 +32,10 @@ import org.osgi.framework.ServiceListener;
 import org.osgi.framework.ServiceReference;
 import org.osgi.framework.hooks.service.EventHook;
 
-public class EventDispatcherTest extends TestCase
+class EventDispatcherTest
 {
-    public void testFireServiceEvent()
+    @Test
+    void fireServiceEvent()
     {
         final Bundle b1 = getMockBundle();
         final Bundle b2 = getMockBundle();
@@ -43,14 +45,16 @@ public class EventDispatcherTest extends TestCase
         final Set calledHooks = new HashSet();
         final EventHook eh1 = new EventHook()
         {
-            public void event(ServiceEvent event, Collection contexts)
+            @Override
+			public void event(ServiceEvent event, Collection contexts)
             {
                 calledHooks.add(this);
             }
         };
         final EventHook eh2 = new EventHook()
         {
-            public void event(ServiceEvent event, Collection contexts)
+            @Override
+			public void event(ServiceEvent event, Collection contexts)
             {
                 calledHooks.add(this);
                 for (Iterator it = contexts.iterator(); it.hasNext();)
@@ -80,7 +84,8 @@ public class EventDispatcherTest extends TestCase
         final List fired = Collections.synchronizedList(new ArrayList());
         ServiceListener sl1 = new ServiceListener()
         {
-            public void serviceChanged(ServiceEvent arg0)
+            @Override
+			public void serviceChanged(ServiceEvent arg0)
             {
                 fired.add(this);
             }
@@ -89,7 +94,8 @@ public class EventDispatcherTest extends TestCase
 
         ServiceListener sl2 = new ServiceListener()
         {
-            public void serviceChanged(ServiceEvent arg0)
+            @Override
+			public void serviceChanged(ServiceEvent arg0)
             {
                 fired.add(this);
             }
@@ -98,7 +104,8 @@ public class EventDispatcherTest extends TestCase
 
         ServiceListener sl3 = new ServiceListener()
         {
-            public void serviceChanged(ServiceEvent arg0)
+            @Override
+			public void serviceChanged(ServiceEvent arg0)
             {
                 fired.add(this);
             }
@@ -106,51 +113,46 @@ public class EventDispatcherTest extends TestCase
         ed.addListener(b3.getBundleContext(), ServiceListener.class, sl3, null);
 
         // --- make the invocation
-        ServiceReference sr = EasyMock.createNiceMock(ServiceReference.class);
-        EasyMock.expect(sr.getProperty(Constants.OBJECTCLASS)).andReturn(new String[]
+        ServiceReference sr = Mockito.mock(ServiceReference.class);
+        Mockito.when(sr.getProperty(Constants.OBJECTCLASS)).thenReturn(new String[]
             {
                 "java.lang.String"
-            }).anyTimes();
-        sr.isAssignableTo(b1, String.class.getName());
-        EasyMock.expectLastCall().andReturn(Boolean.TRUE).anyTimes();
-        sr.isAssignableTo(b2, String.class.getName());
-        EasyMock.expectLastCall().andReturn(Boolean.TRUE).anyTimes();
-        sr.isAssignableTo(b3, String.class.getName());
-        EasyMock.expectLastCall().andReturn(Boolean.TRUE).anyTimes();
-        EasyMock.replay(new Object[]
-            {
-                sr
             });
+        
+        Mockito.when(sr.isAssignableTo(b1, String.class.getName())).thenReturn(true);
+        Mockito.when(sr.isAssignableTo(b2, String.class.getName())).thenReturn(true);
+        Mockito.when(sr.isAssignableTo(b3, String.class.getName())).thenReturn(true);
+//        sr.isAssignableTo(b1, String.class.getName());
+//        Mockito.expectLastCall().thenReturn(Boolean.TRUE);
+//        sr.isAssignableTo(b2, String.class.getName());
+//        Mockito.expectLastCall().thenReturn(Boolean.TRUE);
+//        sr.isAssignableTo(b3, String.class.getName());
+//        Mockito.expectLastCall().thenReturn(Boolean.TRUE);
 
         ServiceEvent event = new ServiceEvent(ServiceEvent.REGISTERED, sr);
 
-        assertEquals("Precondition failed", 0, fired.size());
+        assertThat(fired.size()).as("Precondition failed").isEqualTo(0);
 
         Felix framework = new Felix(new HashMap());
 
         ed.fireServiceEvent(event, null, framework);
-        assertEquals(1, fired.size());
-        assertSame(sl3, fired.iterator().next());
+        assertThat(fired).hasSize(1);
+        assertThat(fired.iterator().next()).isSameAs(sl3);
 
-        assertEquals(2, calledHooks.size());
-        assertTrue(calledHooks.contains(eh1));
-        assertTrue(calledHooks.contains(eh2));
+        assertThat(calledHooks).hasSize(2);
+        assertThat(calledHooks).contains(eh1);
+        assertThat(calledHooks).contains(eh2);
     }
 
     private Bundle getMockBundle()
     {
-        BundleContext bc = EasyMock.createNiceMock(BundleContext.class);
-        Bundle b = EasyMock.createNiceMock(Bundle.class);
-        EasyMock.expect(b.getBundleContext()).andReturn(bc).anyTimes();
-        b.getState();
-        EasyMock.expectLastCall().andReturn(Integer.valueOf(Bundle.ACTIVE)).anyTimes();
-
-        EasyMock.expect(bc.getBundle()).andReturn(b).anyTimes();
-
-        EasyMock.replay(new Object[]
-            {
-                bc, b
-            });
+        BundleContext bc = Mockito.mock(BundleContext.class);
+        Bundle b = Mockito.mock(Bundle.class);
+        Mockito.when(b.getBundleContext()).thenReturn(bc);
+//        b.getState();
+//        Mockito.expectLastCall().thenReturn(Integer.valueOf(Bundle.ACTIVE));
+        Mockito.when(b.getState()).thenReturn(Bundle.ACTIVE);
+        Mockito.when(bc.getBundle()).thenReturn(b);
 
         return b;
     }

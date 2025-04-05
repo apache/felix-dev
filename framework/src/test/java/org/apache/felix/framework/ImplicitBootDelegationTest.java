@@ -32,19 +32,20 @@ import java.util.jar.JarOutputStream;
 import java.util.jar.Manifest;
 import java.util.zip.ZipEntry;
 
-import org.junit.Assert;
-import org.junit.Assume;
+import org.junit.jupiter.api.Assumptions;
+import org.junit.jupiter.api.Test;
 import org.osgi.framework.BundleActivator;
 import org.osgi.framework.BundleContext;
 import org.osgi.framework.BundleReference;
 import org.osgi.framework.Constants;
 
-import junit.framework.Test;
-import junit.framework.TestCase;
+import static org.assertj.core.api.Assertions.assertThat;
+import static org.junit.jupiter.api.Assertions.fail;
 
-public class ImplicitBootDelegationTest extends TestCase {
-	
-	public void testDoesBootdelegateForClassloaderClassload() throws Exception{
+class ImplicitBootDelegationTest {
+
+    @Test
+    void doesBootdelegateForClassloaderClassload() throws Exception {
 		withFelixDo(new ThrowingConsumer<Felix>() {
 			@Override
 			public void accept(Felix felix) throws Exception {
@@ -55,14 +56,14 @@ public class ImplicitBootDelegationTest extends TestCase {
 				
 				Runnable testClass = felix.getBundleContext().getService(
 						felix.getBundleContext().getServiceReference(Runnable.class));
-				
-				Assert.assertEquals(TestClass.class,  
-						testClass.getClass().getClassLoader().loadClass(TestClass.class.getName()));
+
+                assertThat(testClass.getClass().getClassLoader().loadClass(TestClass.class.getName())).isEqualTo(TestClass.class);
 			}
 		});
 	}
-	
-	public void testDoesNotBootdelegateForClassloadFromInsideBundle() throws Exception{
+
+    @Test
+    void doesNotBootdelegateForClassloadFromInsideBundle() throws Exception {
 		withFelixDo(new ThrowingConsumer<Felix>() {
 			@Override
 			public void accept(Felix felix) throws Exception {
@@ -77,15 +78,16 @@ public class ImplicitBootDelegationTest extends TestCase {
 				try
 				{
 					testClass.run();
-					Assert.fail("Expected to not be able to load an implicit bootdelegated class from inside the bundle");
+					fail("Expected to not be able to load an implicit bootdelegated class from inside the bundle");
 				} catch (NoClassDefFoundError ex) {
 					
 				}
 			}
 		});
 	}
-	
-	public void testDoesNotBootdelegateForBundleClassload() throws Exception {
+
+    @Test
+    void doesNotBootdelegateForBundleClassload() throws Exception {
 		withFelixDo(new ThrowingConsumer<Felix>() {
 			@Override
 			public void accept(Felix felix) throws Exception {
@@ -94,7 +96,7 @@ public class ImplicitBootDelegationTest extends TestCase {
 				try
 				{
 					bundle.loadClass(TestClass.class.getName());
-					Assert.fail("Expected to not be able to bundle.loadClass an implicit bootdelegated class");
+					fail("Expected to not be able to bundle.loadClass an implicit bootdelegated class");
 				}
 				catch (ClassNotFoundException ex) {
 					
@@ -102,8 +104,9 @@ public class ImplicitBootDelegationTest extends TestCase {
 			}
 		});
 	}
-	
-	public void testDoesNotBootdelegateForServiceAssignability() throws Exception {
+
+    @Test
+    void doesNotBootdelegateForServiceAssignability() throws Exception {
 		withFelixDo(new ThrowingConsumer<Felix>() {
 			@Override
 			public void accept(Felix felix) throws Exception {
@@ -111,8 +114,8 @@ public class ImplicitBootDelegationTest extends TestCase {
 						ProvidesActivator.class, TestClass.class).toURI().toURL().toString());
 				
 				provider.start();
-				
-				Assert.assertNotNull(felix.getBundleContext().getAllServiceReferences(TestClass.class.getName(), null));
+
+                assertThat(felix.getBundleContext().getAllServiceReferences(TestClass.class.getName(), null)).isNotNull();
 				
 				BundleImpl requirer = (BundleImpl) felix.getBundleContext().installBundle(createBundle(
 						RequireActivator.class).toURI().toURL().toString());
@@ -122,17 +125,17 @@ public class ImplicitBootDelegationTest extends TestCase {
 				Runnable requirerActivtor = felix.getBundleContext().getService(
 						felix.getBundleContext().getServiceReference(Runnable.class));
 				
-				Assume.assumeTrue(requirerActivtor.getClass().getClassLoader().loadClass(TestClass.class.getName()) 
+				Assumptions.assumeTrue(requirerActivtor.getClass().getClassLoader().loadClass(TestClass.class.getName()) 
 						== TestClass.class);
 				
 				requirerActivtor.run();
 				
 				Object service = requirer.getBundleContext().getService(
 						requirer.getBundleContext().getServiceReference(TestClass.class.getName()));
-				
-				assertNotNull(service);
-				assertTrue(!(service instanceof TestClass));
-				assertTrue(service.getClass().getName().equals(TestClass.class.getName()));
+
+                assertThat(service).isNotNull();
+                assertThat((service instanceof TestClass)).isFalse();
+                assertThat(TestClass.class.getName()).isEqualTo(service.getClass().getName());
 			}
 		});
 	}
@@ -151,6 +154,7 @@ public class ImplicitBootDelegationTest extends TestCase {
 			
 		}
 		
+		@Override
 		public void run() {
 			Object service = context.getService(context.getServiceReference(
 					"org.apache.felix.framework.ImplicitBootDelegationTest$TestClass"));
@@ -242,6 +246,7 @@ public class ImplicitBootDelegationTest extends TestCase {
 		public void stop(BundleContext context) throws Exception {
 		}
 		
+		@Override
 		public void run() 
 		{
 			new TestClass();
@@ -278,7 +283,7 @@ public class ImplicitBootDelegationTest extends TestCase {
 		Class[] classesCombined;
 		
 		if (classes.length > 0) {
-			List<Class> list = new ArrayList<Class>(Arrays.asList(classes));
+			List<Class> list = new ArrayList<>(Arrays.asList(classes));
 			list.add(activator);
 			classesCombined = list.toArray(new Class[0]);
 		}

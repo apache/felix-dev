@@ -31,7 +31,8 @@ public class CompoundEnumeration implements Enumeration
         m_enums = enums;
     }
 
-    public boolean hasMoreElements()
+    @Override
+	public boolean hasMoreElements()
     {
         // if the current enum is null that means this enum is finished
         if (currentEnumeration() == null)
@@ -75,7 +76,8 @@ public class CompoundEnumeration implements Enumeration
         return null;
     }
 
-    public Object nextElement()
+    @Override
+	public Object nextElement()
     {
         // ask for the next element of the current enum.
         if (currentEnumeration() != null)

@@ -549,7 +549,7 @@ class BundleImpl implements Bundle, BundleRevisions
         }
 
         // Create a list of the revision and any attached fragment revisions.
-        List<BundleRevision> result = new ArrayList<BundleRevision>();
+        List<BundleRevision> result = new ArrayList<>();
         result.add(br);
         BundleWiring wiring = br.getWiring();
         if (wiring != null)
@@ -720,14 +720,13 @@ class BundleImpl implements Bundle, BundleRevisions
 
             List result = new ArrayList();
 
-            for (int i = 0; i < refs.length; i++)
-            {
+            for (ServiceReference ref : refs) {
                 try
                 {
                     ((SecurityManager) sm).checkPermission(new ServicePermission(
-                        refs[i], ServicePermission.GET));
+                        ref, ServicePermission.GET));
 
-                    result.add(refs[i]);
+                    result.add(ref);
                 }
                 catch (Exception ex)
                 {
@@ -764,14 +763,13 @@ class BundleImpl implements Bundle, BundleRevisions
 
             List result = new ArrayList();
 
-            for (int i = 0; i < refs.length; i++)
-            {
+            for (ServiceReference ref : refs) {
                 try
                 {
                     ((SecurityManager) sm).checkPermission(
-                        new ServicePermission(refs[i], ServicePermission.GET));
+                        new ServicePermission(ref, ServicePermission.GET));
 
-                    result.add(refs[i]);
+                    result.add(ref);
                 }
                 catch (Exception ex)
                 {
@@ -1205,7 +1203,7 @@ class BundleImpl implements Bundle, BundleRevisions
     @Override
     public synchronized List<BundleRevision> getRevisions()
     {
-        return new ArrayList<BundleRevision>(m_revisions);
+        return new ArrayList<>(m_revisions);
     }
 
     /**
@@ -1303,7 +1301,7 @@ class BundleImpl implements Bundle, BundleRevisions
             bundleVersion = (bundleVersion == null) ? Version.emptyVersion : bundleVersion;
             String symName = revision.getSymbolicName();
 
-            List<Bundle> collisionCanditates = new ArrayList<Bundle>();
+            List<Bundle> collisionCanditates = new ArrayList<>();
             Bundle[] bundles = getFramework().getBundles();
             for (int i = 0; (bundles != null) && (i < bundles.length); i++)
             {
@@ -1322,7 +1320,7 @@ class BundleImpl implements Bundle, BundleRevisions
                 Set<ServiceReference<CollisionHook>> hooks = getFramework().getHookRegistry().getHooks(CollisionHook.class);
                 if (!hooks.isEmpty())
                 {
-                    Collection<Bundle> shrinkableCollisionCandidates = new ShrinkableCollection<Bundle>(collisionCanditates);
+                    Collection<Bundle> shrinkableCollisionCandidates = new ShrinkableCollection<>(collisionCanditates);
                     for (ServiceReference<CollisionHook> hook : hooks)
                     {
                         CollisionHook ch = getFramework().getService(getFramework(), hook, false);

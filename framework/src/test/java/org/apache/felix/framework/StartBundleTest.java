@@ -20,19 +20,23 @@ package org.apache.felix.framework;
 
 import java.util.HashMap;
 
-import junit.framework.TestCase;
-
 import org.apache.felix.framework.util.FelixConstants;
+
+import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.Assertions.fail;
+
+import org.junit.jupiter.api.Test;
 import org.mockito.Mockito;
 import org.osgi.framework.Bundle;
 import org.osgi.framework.BundleException;
 import org.osgi.framework.wiring.BundleRevision;
 
-public class StartBundleTest extends TestCase
+class StartBundleTest
 {
-    public void testTransientExeption() throws Exception
+    @Test
+    void transientExeption() throws Exception
     {
-        HashMap<String, String> config = new HashMap<String, String>();
+        HashMap<String, String> config = new HashMap<>();
         config.put(FelixConstants.BUNDLE_STARTLEVEL_PROP, "1");
         final Felix f = new Felix(config);
 
@@ -51,7 +55,7 @@ public class StartBundleTest extends TestCase
         }
         catch (BundleException e)
         {
-            assertEquals(BundleException.START_TRANSIENT_ERROR, e.getType());
+            assertThat(e.getType()).isEqualTo(BundleException.START_TRANSIENT_ERROR);
         }
     }
 }

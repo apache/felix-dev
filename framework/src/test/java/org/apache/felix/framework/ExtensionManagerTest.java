@@ -20,9 +20,9 @@ package org.apache.felix.framework;
 
 import org.apache.felix.framework.util.FelixConstants;
 import org.apache.felix.framework.util.manifestparser.NativeLibraryClause;
-import org.junit.After;
-import org.junit.Before;
-import org.junit.Test;
+import org.junit.jupiter.api.AfterEach;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
 import org.osgi.framework.BundleActivator;
 import org.osgi.framework.BundleContext;
 import org.osgi.framework.Constants;
@@ -44,28 +44,27 @@ import java.util.jar.JarOutputStream;
 import java.util.jar.Manifest;
 import java.util.zip.ZipEntry;
 
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertTrue;
+import static org.assertj.core.api.Assertions.assertThat;
 
 /**
  *
  * Test Classes for the ExtentionManager
  *
  */
-public class ExtensionManagerTest {
+class ExtensionManagerTest {
     private int counter;
     private File testDir;
 
-    @Before
-    public void setUp() throws Exception {
+    @BeforeEach
+    void setUp() throws Exception {
         testDir = File.createTempFile("felix-temp", ".dir");
-        assertTrue("precondition", testDir.delete());
-        assertTrue("precondition", testDir.mkdirs());
+        assertThat(testDir.delete()).as("precondition").isTrue();
+        assertThat(testDir.mkdirs()).as("precondition").isTrue();
 
     }
 
-    @After
-    public void tearDown() throws Exception
+    @AfterEach
+    void tearDown() throws Exception
     {
         deleteDir(testDir);
     }
@@ -79,7 +78,7 @@ public class ExtensionManagerTest {
                 deleteDir(file);
             }
         }
-        assertTrue(root.delete());
+        assertThat(root.delete()).isTrue();
     }
 
     /**
@@ -90,9 +89,9 @@ public class ExtensionManagerTest {
      *
      */
     @Test
-    public void testBuildNativeCapabilities() {
+    void buildNativeCapabilities() {
         Logger logger = new Logger();
-        Map<String, String> configMap = new HashMap<String, String>();
+        Map<String, String> configMap = new HashMap<>();
         configMap.put(FelixConstants.FELIX_VERSION_PROPERTY, "1.0");
         configMap.put(FelixConstants.FRAMEWORK_LANGUAGE, "en");
         configMap.put(FelixConstants.FRAMEWORK_PROCESSOR, "x86_64");
@@ -106,35 +105,25 @@ public class ExtensionManagerTest {
 
         BundleCapability nativeBundleCapability = extensionManager
                 .buildNativeCapabilites(extensionManager.getRevision(), configMap);
-        assertEquals(
-                "Native Language should be same as framework Language",
-                "en",
-                nativeBundleCapability.getAttributes().get(
-                        NativeNamespace.CAPABILITY_LANGUAGE_ATTRIBUTE));
-        assertTrue(
-                "Native Processor should be same as framework Processor",
-                Arrays.asList("x86-64", "amd64", "em64t", "x86_64").containsAll((List)
-                nativeBundleCapability.getAttributes().get(
-                        NativeNamespace.CAPABILITY_PROCESSOR_ATTRIBUTE)));
-        assertTrue(
-                "Native OS Name should be the same as the framework os name",
-                Arrays.asList("windows8", "windows 8", "win32").containsAll((List)
-                nativeBundleCapability.getAttributes().get(
-                        NativeNamespace.CAPABILITY_OSNAME_ATTRIBUTE)));
-        assertEquals(
-                "Native OS Version should be the same as the framework OS Version",
-                new Version("6.3"),
-                nativeBundleCapability.getAttributes().get(
-                        NativeNamespace.CAPABILITY_OSVERSION_ATTRIBUTE));
+        assertThat(nativeBundleCapability.getAttributes().get(
+            NativeNamespace.CAPABILITY_LANGUAGE_ATTRIBUTE)).as("Native Language should be same as framework Language").isEqualTo("en");
+        assertThat(Arrays.asList("x86-64", "amd64", "em64t", "x86_64").containsAll((List)
+            nativeBundleCapability.getAttributes().get(
+                NativeNamespace.CAPABILITY_PROCESSOR_ATTRIBUTE))).as("Native Processor should be same as framework Processor").isTrue();
+        assertThat(Arrays.asList("windows8", "windows 8", "win32").containsAll((List)
+            nativeBundleCapability.getAttributes().get(
+                NativeNamespace.CAPABILITY_OSNAME_ATTRIBUTE))).as("Native OS Name should be the same as the framework os name").isTrue();
+        assertThat(nativeBundleCapability.getAttributes().get(
+            NativeNamespace.CAPABILITY_OSVERSION_ATTRIBUTE)).as("Native OS Version should be the same as the framework OS Version").isEqualTo(new Version("6.3"));
     }
 
     @Test
-    public void testExtensionBundleActivator() throws Exception {
+    void extensionBundleActivator() throws Exception {
         File cacheDir = new File(testDir, "cache");
         cacheDir.mkdirs();
         String cache = cacheDir.getAbsolutePath();
 
-        Map<String, Object> params = new HashMap<String, Object>();
+        Map<String, Object> params = new HashMap<>();
         params.put("felix.cache.profiledir", cache);
         params.put("felix.cache.dir", cache);
         params.put(Constants.FRAMEWORK_STORAGE, cache);
@@ -146,26 +135,26 @@ public class ExtensionManagerTest {
         try {
             File ebf = createExtensionBundle();
 
-            assertEquals("Precondition", 0, activatorCalls.length());
+            assertThat(activatorCalls.length()).as("Precondition").isEqualTo(0);
             framework.getBundleContext().installBundle(
                     ebf.toURI().toURL().toExternalForm());
 
-            assertEquals("start", activatorCalls.toString());
+            assertThat(activatorCalls).hasToString("start");
         } finally {
             framework.stop();
         }
 
         framework.waitForStop(10000);
-        assertEquals("startstop", activatorCalls.toString());
+        assertThat(activatorCalls).hasToString("startstop");
     }
 
     @Test
-    public void testExtensionBundleEntries() throws Exception {
+    void extensionBundleEntries() throws Exception {
         File cacheDir = new File(testDir, "cache");
         cacheDir.mkdirs();
         String cache = cacheDir.getAbsolutePath();
 
-        Map<String, Object> params = new HashMap<String, Object>();
+        Map<String, Object> params = new HashMap<>();
         params.put("felix.cache.profiledir", cache);
         params.put("felix.cache.dir", cache);
         params.put(Constants.FRAMEWORK_STORAGE, cache);
@@ -177,13 +166,13 @@ public class ExtensionManagerTest {
         try {
             File ebf = createExtensionBundle();
 
-            assertEquals("Precondition", null, framework.getBundleContext().getBundle(0).getEntry("/META-INF/MANIFEST.MF"));
-            assertEquals("Precondition", null, framework.getBundleContext().getBundle(0).findEntries("/", "MANIFEST.MF", true));
+            assertThat(framework.getBundleContext().getBundle(0).getEntry("/META-INF/MANIFEST.MF")).as("Precondition").isNull();
+            assertThat(framework.getBundleContext().getBundle(0).findEntries("/", "MANIFEST.MF", true)).as("Precondition").isNull();
 
             framework.getBundleContext().installBundle(
                     ebf.toURI().toURL().toExternalForm());
-            assertEquals( null, framework.getBundleContext().getBundle(0).getEntry("/META-INF/MANIFEST.MF"));
-            assertEquals(null, framework.getBundleContext().getBundle(0).findEntries("/", "MANIFEST.MF", true));
+            assertThat(framework.getBundleContext().getBundle(0).getEntry("/META-INF/MANIFEST.MF")).isNull();
+            assertThat(framework.getBundleContext().getBundle(0).findEntries("/", "MANIFEST.MF", true)).isNull();
 
         } finally {
             framework.stop();
@@ -193,13 +182,13 @@ public class ExtensionManagerTest {
     }
 
     @Test
-    public void testSystemBundleHeaders() throws Exception
+    void systemBundleHeaders() throws Exception
     {
         File cacheDir = new File(testDir, "cache");
         cacheDir.mkdirs();
         String cache = cacheDir.getAbsolutePath();
 
-        Map<String, Object> params = new HashMap<String, Object>();
+        Map<String, Object> params = new HashMap<>();
         params.put("felix.cache.profiledir", cache);
         params.put("felix.cache.dir", cache);
         params.put(Constants.FRAMEWORK_STORAGE, cache);
@@ -218,7 +207,7 @@ public class ExtensionManagerTest {
         {
             versionString = String.format("0.0.0.JavaSE_%03d", version.getMajor());
         }
-        assert(framework.getHeaders().get(Constants.EXPORT_PACKAGE).contains("java.lang; version=\"" + versionString + "\""));
+        assertThat(framework.getHeaders().get(Constants.EXPORT_PACKAGE)).contains("java.lang; version=\"" + versionString + "\"");
     }
 
     private File createExtensionBundle() throws IOException {
@@ -264,12 +253,15 @@ public class ExtensionManagerTest {
     }
 
     private static StringBuilder activatorCalls = new StringBuilder();
+
     public static class TestActivator implements BundleActivator {
-        public void start(BundleContext context) throws Exception {
+        @Override
+		public void start(BundleContext context) throws Exception {
             activatorCalls.append("start");
         }
 
-        public void stop(BundleContext context) throws Exception {
+        @Override
+		public void stop(BundleContext context) throws Exception {
             activatorCalls.append("stop");
         }
     }

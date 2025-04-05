@@ -28,7 +28,6 @@ import java.io.File;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.UncheckedIOException;
-import java.net.MalformedURLException;
 import java.net.URL;
 import java.util.Enumeration;
 import java.util.HashMap;
@@ -77,12 +76,14 @@ public class DirectoryContent implements Content
         return m_dir;
     }
 
-    public void close()
+    @Override
+	public void close()
     {
         // Nothing to clean up.
     }
 
-    public boolean hasEntry(String name) throws IllegalStateException
+    @Override
+	public boolean hasEntry(String name) throws IllegalStateException
     {
         name = getName(name);
 
@@ -123,7 +124,8 @@ public class DirectoryContent implements Content
         return BundleCache.getSecureAction().isFileDirectory(file);
     }
 
-    public Enumeration<String> getEntries()
+    @Override
+	public Enumeration<String> getEntries()
     {
         // Wrap entries enumeration to filter non-matching entries.
         Enumeration<String> e = new EntriesEnumeration(m_dir);
@@ -132,7 +134,8 @@ public class DirectoryContent implements Content
         return (e.hasMoreElements()) ? e : null;
     }
 
-    public byte[] getEntryAsBytes(String name) throws IllegalStateException
+    @Override
+	public byte[] getEntryAsBytes(String name) throws IllegalStateException
     {
         name = getName(name);
 
@@ -153,7 +156,8 @@ public class DirectoryContent implements Content
         }
     }
 
-    public InputStream getEntryAsStream(String name)
+    @Override
+	public InputStream getEntryAsStream(String name)
             throws IllegalStateException, IOException
     {
         name = getName(name);
@@ -196,7 +200,8 @@ public class DirectoryContent implements Content
         return result;
     }
 
-    public URL getEntryAsURL(String name)
+    @Override
+	public URL getEntryAsURL(String name)
     {
         name = getName(name);
 
@@ -232,7 +237,8 @@ public class DirectoryContent implements Content
         return BundleCache.getSecureAction().getLastModified(file);
     }
 
-    public Content getEntryAsContent(String entryName)
+    @Override
+	public Content getEntryAsContent(String entryName)
     {
         // If the entry name refers to the content itself, then
         // just return it immediately.
@@ -289,7 +295,8 @@ public class DirectoryContent implements Content
     }
 
     // TODO: SECURITY - This will need to consider security.
-    public String getEntryAsNativeLibrary(String entryName)
+    @Override
+	public String getEntryAsNativeLibrary(String entryName)
     {
         // Return result.
         String result = null;
@@ -339,7 +346,7 @@ public class DirectoryContent implements Content
                 }
                 Integer libCount = (Integer) m_nativeLibMap.get(entryName);
                 // Either set or increment the library count.
-                libCount = (libCount == null) ? new Integer(0) : new Integer(libCount.intValue() + 1);
+                libCount = (libCount == null) ? 0 : libCount.intValue() + 1;
                 m_nativeLibMap.put(entryName, libCount);
                 File libFile = new File(
                         libDir, libCount.toString() + File.separatorChar + entryName);
@@ -399,7 +406,8 @@ public class DirectoryContent implements Content
         return result;
     }
 
-    public String toString()
+    @Override
+	public String toString()
     {
         return "DIRECTORY " + m_dir;
     }
@@ -416,12 +424,14 @@ public class DirectoryContent implements Content
             m_children = listFilesRecursive(m_dir);
         }
 
-        public synchronized boolean hasMoreElements()
+        @Override
+		public synchronized boolean hasMoreElements()
         {
             return (m_children != null) && (m_counter < m_children.length);
         }
 
-        public synchronized Object nextElement()
+        @Override
+		public synchronized Object nextElement()
         {
             if ((m_children == null) || (m_counter >= m_children.length))
             {
@@ -451,11 +461,10 @@ public class DirectoryContent implements Content
             File[] combined = children;
             if (children != null)
             {
-                for (int i = 0; i < children.length; i++)
-                {
-                    if (BundleCache.getSecureAction().isFileDirectory(children[i]))
+                for (File child : children) {
+                    if (BundleCache.getSecureAction().isFileDirectory(child))
                     {
-                        File[] grandchildren = listFilesRecursive(children[i]);
+                        File[] grandchildren = listFilesRecursive(child);
                         if (grandchildren != null && grandchildren.length > 0)
                         {
                             File[] tmp = new File[combined.length + grandchildren.length];

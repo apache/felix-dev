@@ -160,7 +160,8 @@ class URLHandlersBundleURLConnection extends URLConnection
         m_path = path;
     }
 
-    public synchronized void connect() throws IOException
+    @Override
+	public synchronized void connect() throws IOException
     {
         if (!connected)
         {
@@ -177,7 +178,8 @@ class URLHandlersBundleURLConnection extends URLConnection
         }
     }
 
-    public InputStream getInputStream()
+    @Override
+	public InputStream getInputStream()
         throws IOException
     {
         connect();
@@ -185,12 +187,14 @@ class URLHandlersBundleURLConnection extends URLConnection
         return m_is;
     }
 
-    public int getContentLength()
+    @Override
+	public int getContentLength()
     {
         return (int) getContentLengthLong();
     }
 
-    public long getContentLengthLong()
+    @Override
+	public long getContentLengthLong()
     {
         try
         {
@@ -204,7 +208,8 @@ class URLHandlersBundleURLConnection extends URLConnection
         return m_contentLength;
     }
 
-    public long getLastModified()
+    @Override
+	public long getLastModified()
     {
         try
         {
@@ -225,7 +230,8 @@ class URLHandlersBundleURLConnection extends URLConnection
         }
     }
 
-    public String getContentType()
+    @Override
+	public String getContentType()
     {
         try
         {
@@ -239,7 +245,8 @@ class URLHandlersBundleURLConnection extends URLConnection
         return m_contentType;
     }
 
-    public Permission getPermission()
+    @Override
+	public Permission getPermission()
     {
         // TODO: SECURITY - This should probably return a FilePermission
         // to access the bundle JAR file, but we don't have the

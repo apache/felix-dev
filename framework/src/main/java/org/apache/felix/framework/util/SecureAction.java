@@ -112,7 +112,8 @@ public class SecureAction
 
     private static final ThreadLocal m_actions = new ThreadLocal()
     {
-        public Object initialValue()
+        @Override
+		public Object initialValue()
         {
             return new Actions();
         }
@@ -266,7 +267,7 @@ public class SecureAction
             {
                 Actions actions = (Actions) m_actions.get();
                 actions.set(Actions.CREATE_URL_ACTION, protocol, host,
-                    new Integer(port), path, handler);
+                    Integer.valueOf(port), path, handler);
                 return (URL) AccessController.doPrivileged(actions, m_acc);
             }
             catch (PrivilegedActionException ex)
@@ -361,8 +362,7 @@ public class SecureAction
             {
                 Actions actions = (Actions) m_actions.get();
                 actions.set(Actions.FILE_EXISTS_ACTION, file);
-                return ((Boolean) AccessController.doPrivileged(actions, m_acc))
-                    .booleanValue();
+                return ((Boolean) AccessController.doPrivileged(actions, m_acc));
             }
             catch (PrivilegedActionException ex)
             {
@@ -383,8 +383,7 @@ public class SecureAction
             {
                 Actions actions = (Actions) m_actions.get();
                 actions.set(Actions.FILE_IS_FILE_ACTION, file);
-                return ((Boolean) AccessController.doPrivileged(actions, m_acc))
-                        .booleanValue();
+                return ((Boolean) AccessController.doPrivileged(actions, m_acc));
             }
             catch (PrivilegedActionException ex)
             {
@@ -405,8 +404,7 @@ public class SecureAction
             {
                 Actions actions = (Actions) m_actions.get();
                 actions.set(Actions.FILE_IS_DIRECTORY_ACTION, file);
-                return ((Boolean) AccessController.doPrivileged(actions, m_acc))
-                    .booleanValue();
+                return ((Boolean) AccessController.doPrivileged(actions, m_acc));
             }
             catch (PrivilegedActionException ex)
             {
@@ -427,8 +425,7 @@ public class SecureAction
             {
                 Actions actions = (Actions) m_actions.get();
                 actions.set(Actions.MAKE_DIRECTORY_ACTION, file);
-                return ((Boolean) AccessController.doPrivileged(actions, m_acc))
-                    .booleanValue();
+                return ((Boolean) AccessController.doPrivileged(actions, m_acc));
             }
             catch (PrivilegedActionException ex)
             {
@@ -449,8 +446,7 @@ public class SecureAction
             {
                 Actions actions = (Actions) m_actions.get();
                 actions.set(Actions.MAKE_DIRECTORIES_ACTION, file);
-                return ((Boolean) AccessController.doPrivileged(actions, m_acc))
-                    .booleanValue();
+                return ((Boolean) AccessController.doPrivileged(actions, m_acc));
             }
             catch (PrivilegedActionException ex)
             {
@@ -492,8 +488,7 @@ public class SecureAction
             {
                 Actions actions = (Actions) m_actions.get();
                 actions.set(Actions.RENAME_FILE_ACTION, oldFile, newFile);
-                return ((Boolean) AccessController.doPrivileged(actions, m_acc))
-                    .booleanValue();
+                return ((Boolean) AccessController.doPrivileged(actions, m_acc));
             }
             catch (PrivilegedActionException ex)
             {
@@ -686,8 +681,7 @@ public class SecureAction
             {
                 Actions actions = (Actions) m_actions.get();
                 actions.set(Actions.DELETE_FILE_ACTION, target);
-                return ((Boolean) AccessController.doPrivileged(actions, m_acc))
-                    .booleanValue();
+                return ((Boolean) AccessController.doPrivileged(actions, m_acc));
             }
             catch (PrivilegedActionException ex)
             {
@@ -912,9 +906,9 @@ public class SecureAction
         {
             Method addURL =
                 URLClassLoader.class.getDeclaredMethod("addURL",
-                new Class[] {URL.class});
+                URL.class);
             getAccessor(URLClassLoader.class).accept(new AccessibleObject[]{addURL});
-            addURL.invoke(loader, new Object[]{extension});
+            addURL.invoke(loader, extension);
         }
     }
 
@@ -1157,7 +1151,7 @@ public class SecureAction
                     Class<Consumer<AccessibleObject[]>> result;
                     try {
                         Method defineAnonymousClass = unsafeClass.getMethod("defineAnonymousClass", Class.class, byte[].class, Object[].class); //$NON-NLS-1$
-                        result = (Class<Consumer<AccessibleObject[]>>) defineAnonymousClass.invoke(unsafe, URL.class, accessor , null);;
+                        result = (Class<Consumer<AccessibleObject[]>>) defineAnonymousClass.invoke(unsafe, URL.class, accessor , null);
                     }
                     catch (NoSuchMethodException ex)
                     {
@@ -1240,12 +1234,11 @@ public class SecureAction
                 if ((condition == null) || !result.getClass().getName().equals(condition.getName()))
                 {
                     // reset cache
-                    for (int i = 0; i < fields.length; i++)
-                    {
-                        if (Modifier.isStatic(fields[i].getModifiers()) &&
-                            (fields[i].getType() == Hashtable.class))
+                    for (Field field : fields) {
+                        if (Modifier.isStatic(field.getModifiers()) &&
+                            (field.getType() == Hashtable.class))
                         {
-                            Hashtable cache = (Hashtable) fields[i].get(null);
+                            Hashtable cache = (Hashtable) field.get(null);
                             if (cache != null)
                             {
                                 cache.clear();
@@ -1287,14 +1280,13 @@ public class SecureAction
             Field[] fields = targetClazz.getDeclaredFields();
             getAccessor(targetClazz).accept(fields);
             // reset cache
-            for (int i = 0; i < fields.length; i++)
-            {
-                if (Modifier.isStatic(fields[i].getModifiers()) &&
-                    ((fields[i].getType() == Hashtable.class) || (fields[i].getType() == HashMap.class)))
+            for (Field field : fields) {
+                if (Modifier.isStatic(field.getModifiers()) &&
+                    ((field.getType() == Hashtable.class) || (field.getType() == HashMap.class)))
                 {
-                    if (fields[i].getType() == Hashtable.class)
+                    if (field.getType() == Hashtable.class)
                     {
-                        Hashtable cache = (Hashtable) fields[i].get(null);
+                        Hashtable cache = (Hashtable) field.get(null);
                         if (cache != null)
                         {
                             cache.clear();
@@ -1302,7 +1294,7 @@ public class SecureAction
                     }
                     else
                     {
-                        HashMap cache = (HashMap) fields[i].get(null);
+                        HashMap cache = (HashMap) field.get(null);
                         if (cache != null)
                         {
                             cache.clear();
@@ -1918,7 +1910,8 @@ public class SecureAction
             m_arg6 = null;
         }
 
-        public Object run() throws Exception
+        @Override
+		public Object run() throws Exception
         {
             int action =  m_action;
             Object arg1 = m_arg1;
@@ -1937,15 +1930,15 @@ public class SecureAction
                 case ADD_EXTENSION_URL_ACTION:
                     Method addURL =
                         URLClassLoader.class.getDeclaredMethod("addURL",
-                        new Class[] {URL.class});
+                        URL.class);
                     getAccessor(URLClassLoader.class).accept(new AccessibleObject[]{addURL});
-                    addURL.invoke(arg2, new Object[]{arg1});
+                    addURL.invoke(arg2, arg1);
                     return null;
                 case CREATE_TMPFILE_ACTION:
                     return File.createTempFile((String) arg1, (String) arg2, (File) arg3);
                 case CREATE_URL_ACTION:
                     return new URL((String) arg1, (String) arg2,
-                        ((Integer) arg3).intValue(), (String) arg4,
+                        ((Integer) arg3), (String) arg4,
                         (URLStreamHandler) arg5);
                 case CREATE_URL_WITH_CONTEXT_ACTION:
                     return new URL((URL) arg1, (String) arg2, (URLStreamHandler) arg3);
@@ -2022,7 +2015,7 @@ public class SecureAction
                     return _swapStaticFieldIfNotClass((Class) arg1,
                         (Class) arg2, (Class) arg3, (String) arg4);
                 case SYSTEM_EXIT_ACTION:
-                    System.exit(((Integer) arg1).intValue());
+                    System.exit(((Integer) arg1));
                 case FLUSH_FIELD_ACTION:
                     _flush(((Class) arg1), arg2);
                     return null;
@@ -2047,7 +2040,7 @@ public class SecureAction
                 case INVOKE_SERVICE_FIND_HOOK:
                     ((org.osgi.framework.hooks.service.FindHook) arg1).find(
                         (BundleContext) arg2, (String) arg3, (String) arg4,
-                        ((Boolean) arg5).booleanValue(),
+                        ((Boolean) arg5),
                         (Collection<ServiceReference<?>>) arg6);
                     return null;
                 case INVOKE_SERVICE_LISTENER_HOOK_ADDED:

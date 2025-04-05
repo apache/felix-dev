@@ -41,42 +41,50 @@ public class MapToDictionary extends Dictionary
         m_map = map;
     }
 
-    public Enumeration elements()
+    @Override
+	public Enumeration elements()
     {
         return Collections.enumeration(m_map.values());
     }
 
-    public Object get(Object key)
+    @Override
+	public Object get(Object key)
     {
         return m_map.get(key);
     }
 
-    public boolean isEmpty()
+    @Override
+	public boolean isEmpty()
     {
         return m_map.isEmpty();
     }
 
-    public Enumeration keys()
+    @Override
+	public Enumeration keys()
     {
         return Collections.enumeration(m_map.keySet());
     }
 
-    public Object put(Object key, Object value)
+    @Override
+	public Object put(Object key, Object value)
     {
         throw new UnsupportedOperationException();
     }
 
-    public Object remove(Object key)
+    @Override
+	public Object remove(Object key)
     {
         throw new UnsupportedOperationException();
     }
 
-    public int size()
+    @Override
+	public int size()
     {
         return m_map.size();
     }
 
-    public String toString()
+    @Override
+	public String toString()
     {
         return m_map.toString();
     }

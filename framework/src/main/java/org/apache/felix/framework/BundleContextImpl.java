@@ -61,7 +61,8 @@ class BundleContextImpl implements BundleContext
         m_valid = false;
     }
 
-    public String getProperty(String name)
+    @Override
+	public String getProperty(String name)
     {
         checkValidity();
 
@@ -89,7 +90,8 @@ class BundleContextImpl implements BundleContext
         return m_felix.getProperty(name);
     }
 
-    public Bundle getBundle()
+    @Override
+	public Bundle getBundle()
     {
         checkValidity();
 
@@ -101,7 +103,8 @@ class BundleContextImpl implements BundleContext
         return m_bundle;
     }
 
-    public Filter createFilter(String expr)
+    @Override
+	public Filter createFilter(String expr)
         throws InvalidSyntaxException
     {
         checkValidity();
@@ -114,13 +117,15 @@ class BundleContextImpl implements BundleContext
         return new FilterImpl(expr);
     }
 
-    public Bundle installBundle(String location)
+    @Override
+	public Bundle installBundle(String location)
         throws BundleException
     {
         return installBundle(location, null);
     }
 
-    public Bundle installBundle(String location, InputStream is)
+    @Override
+	public Bundle installBundle(String location, InputStream is)
         throws BundleException
     {
         checkValidity();
@@ -150,7 +155,8 @@ class BundleContextImpl implements BundleContext
         return result;
     }
 
-    public Bundle getBundle(long id)
+    @Override
+	public Bundle getBundle(long id)
     {
         checkValidity();
 
@@ -162,7 +168,8 @@ class BundleContextImpl implements BundleContext
         return m_felix.getBundle(this, id);
     }
 
-    public Bundle getBundle(String location)
+    @Override
+	public Bundle getBundle(String location)
     {
         checkValidity();
 
@@ -174,7 +181,8 @@ class BundleContextImpl implements BundleContext
         return m_felix.getBundle(location);
     }
 
-    public Bundle[] getBundles()
+    @Override
+	public Bundle[] getBundles()
     {
         checkValidity();
 
@@ -186,7 +194,8 @@ class BundleContextImpl implements BundleContext
         return m_felix.getBundles(this);
     }
 
-    public void addBundleListener(BundleListener l)
+    @Override
+	public void addBundleListener(BundleListener l)
     {
         checkValidity();
 
@@ -210,7 +219,8 @@ class BundleContextImpl implements BundleContext
         m_felix.addBundleListener(m_bundle, l);
     }
 
-    public void removeBundleListener(BundleListener l)
+    @Override
+	public void removeBundleListener(BundleListener l)
     {
         checkValidity();
 
@@ -233,7 +243,8 @@ class BundleContextImpl implements BundleContext
         m_felix.removeBundleListener(m_bundle, l);
     }
 
-    public void addServiceListener(ServiceListener l)
+    @Override
+	public void addServiceListener(ServiceListener l)
     {
         try
         {
@@ -245,7 +256,8 @@ class BundleContextImpl implements BundleContext
         }
     }
 
-    public void addServiceListener(ServiceListener l, String s)
+    @Override
+	public void addServiceListener(ServiceListener l, String s)
         throws InvalidSyntaxException
     {
         checkValidity();
@@ -259,7 +271,8 @@ class BundleContextImpl implements BundleContext
         m_felix.addServiceListener(m_bundle, l, s);
     }
 
-    public void removeServiceListener(ServiceListener l)
+    @Override
+	public void removeServiceListener(ServiceListener l)
     {
         checkValidity();
 
@@ -271,7 +284,8 @@ class BundleContextImpl implements BundleContext
         m_felix.removeServiceListener(m_bundle, l);
     }
 
-    public void addFrameworkListener(FrameworkListener l)
+    @Override
+	public void addFrameworkListener(FrameworkListener l)
     {
         checkValidity();
 
@@ -284,7 +298,8 @@ class BundleContextImpl implements BundleContext
         m_felix.addFrameworkListener(m_bundle, l);
     }
 
-    public void removeFrameworkListener(FrameworkListener l)
+    @Override
+	public void removeFrameworkListener(FrameworkListener l)
     {
         checkValidity();
 
@@ -296,13 +311,15 @@ class BundleContextImpl implements BundleContext
         m_felix.removeFrameworkListener(m_bundle, l);
     }
 
-    public ServiceRegistration<?> registerService(
+    @Override
+	public ServiceRegistration<?> registerService(
         String clazz, Object svcObj, Dictionary<String, ? > dict)
     {
         return registerService(new String[] { clazz }, svcObj, dict);
     }
 
-    public ServiceRegistration<?> registerService(
+    @Override
+	public ServiceRegistration<?> registerService(
         String[] clazzes, Object svcObj, Dictionary<String, ? > dict)
     {
         checkValidity();
@@ -317,10 +334,9 @@ class BundleContextImpl implements BundleContext
         {
             if (clazzes != null)
             {
-                for (int i = 0;i < clazzes.length;i++)
-                {
+                for (String clazz : clazzes) {
                     ((SecurityManager) sm).checkPermission(
-                        new ServicePermission(clazzes[i], ServicePermission.REGISTER));
+                        new ServicePermission(clazz, ServicePermission.REGISTER));
                 }
             }
         }
@@ -328,14 +344,16 @@ class BundleContextImpl implements BundleContext
         return m_felix.registerService(this, clazzes, svcObj, dict);
     }
 
-    public <S> ServiceRegistration<S> registerService(
+    @Override
+	public <S> ServiceRegistration<S> registerService(
         Class<S> clazz, S svcObj, Dictionary<String, ? > dict)
     {
         return (ServiceRegistration<S>)
             registerService(new String[] { clazz.getName() }, svcObj, dict);
     }
 
-    public ServiceReference<?> getServiceReference(String clazz)
+    @Override
+	public ServiceReference<?> getServiceReference(String clazz)
     {
         checkValidity();
 
@@ -356,7 +374,8 @@ class BundleContextImpl implements BundleContext
         return null;
     }
 
-    public <S> ServiceReference<S> getServiceReference(Class<S> clazz)
+    @Override
+	public <S> ServiceReference<S> getServiceReference(Class<S> clazz)
     {
         return (ServiceReference<S>) getServiceReference(clazz.getName());
     }
@@ -387,7 +406,8 @@ class BundleContextImpl implements BundleContext
         return bestRef;
     }
 
-    public ServiceReference<?>[] getAllServiceReferences(String clazz, String filter)
+    @Override
+	public ServiceReference<?>[] getAllServiceReferences(String clazz, String filter)
         throws InvalidSyntaxException
     {
         checkValidity();
@@ -401,7 +421,8 @@ class BundleContextImpl implements BundleContext
 
     }
 
-    public ServiceReference<?>[] getServiceReferences(String clazz, String filter)
+    @Override
+	public ServiceReference<?>[] getServiceReferences(String clazz, String filter)
         throws InvalidSyntaxException
     {
         checkValidity();
@@ -415,7 +436,8 @@ class BundleContextImpl implements BundleContext
 
     }
 
-    public <S> Collection<ServiceReference<S>> getServiceReferences(
+    @Override
+	public <S> Collection<ServiceReference<S>> getServiceReferences(
         Class<S> clazz, String filter)
         throws InvalidSyntaxException
     {
@@ -426,7 +448,8 @@ class BundleContextImpl implements BundleContext
             : (Collection<ServiceReference<S>>) Arrays.asList(refs);
     }
 
-    public <S> S getService(ServiceReference<S> ref)
+    @Override
+	public <S> S getService(ServiceReference<S> ref)
     {
         checkValidity();
 
@@ -450,7 +473,8 @@ class BundleContextImpl implements BundleContext
         return m_felix.getService(m_bundle, ref, false);
     }
 
-    public boolean ungetService(ServiceReference<?> ref)
+    @Override
+	public boolean ungetService(ServiceReference<?> ref)
     {
         checkValidity();
 
@@ -463,7 +487,8 @@ class BundleContextImpl implements BundleContext
         return m_felix.ungetService(m_bundle, ref, null);
     }
 
-    public File getDataFile(String s)
+    @Override
+	public File getDataFile(String s)
     {
         checkValidity();
 
@@ -494,7 +519,8 @@ class BundleContextImpl implements BundleContext
     /**
      * @see org.osgi.framework.BundleContext#registerService(java.lang.Class, org.osgi.framework.ServiceFactory, java.util.Dictionary)
      */
-    public <S> ServiceRegistration<S> registerService(Class<S> clazz,
+    @Override
+	public <S> ServiceRegistration<S> registerService(Class<S> clazz,
             ServiceFactory<S> factory, Dictionary<String, ?> properties)
     {
         return (ServiceRegistration<S>)
@@ -504,7 +530,8 @@ class BundleContextImpl implements BundleContext
     /**
      * @see org.osgi.framework.BundleContext#getServiceObjects(org.osgi.framework.ServiceReference)
      */
-    public <S> ServiceObjects<S> getServiceObjects(final ServiceReference<S> ref)
+    @Override
+	public <S> ServiceObjects<S> getServiceObjects(final ServiceReference<S> ref)
     {
     	checkValidity();
 
@@ -536,7 +563,8 @@ class BundleContextImpl implements BundleContext
             this.m_ref = ref;
         }
 
-        public S getService() {
+        @Override
+		public S getService() {
             checkValidity();
 
             // CONCURRENCY NOTE: This is a check-then-act situation,
@@ -554,7 +582,8 @@ class BundleContextImpl implements BundleContext
             return m_felix.getService(m_bundle, m_ref, true);
         }
 
-        public void ungetService(final S srvObj)
+        @Override
+		public void ungetService(final S srvObj)
         {
             checkValidity();
 
@@ -565,7 +594,8 @@ class BundleContextImpl implements BundleContext
             }
         }
 
-        public ServiceReference<S> getServiceReference()
+        @Override
+		public ServiceReference<S> getServiceReference()
         {
             return m_ref;
         }

@@ -21,54 +21,57 @@ package org.apache.felix.framework;
 import java.util.ArrayList;
 import java.util.List;
 
-import junit.framework.TestCase;
+import org.junit.jupiter.api.Test;
+
+import static org.assertj.core.api.Assertions.assertThat;
 
 import org.mockito.Mockito;
 import org.osgi.framework.Bundle;
 
-public class ServiceRegistrationImplTest extends TestCase
+class ServiceRegistrationImplTest
 {
-    public void testMarkCurrentThread() throws Exception
+    @Test
+    void markCurrentThread() throws Exception
     {
         final ServiceRegistrationImpl sri = new ServiceRegistrationImpl(
                 new ServiceRegistry(null, null), Mockito.mock(Bundle.class),
                 new String [] {String.class.getName()}, 1L, "foo", null);
 
-        assertFalse(sri.currentThreadMarked());
+        assertThat(sri.currentThreadMarked()).isFalse();
         sri.markCurrentThread();
-        assertTrue(sri.currentThreadMarked());
+        assertThat(sri.currentThreadMarked()).isTrue();
 
-        final List<Throwable> exceptions = new ArrayList<Throwable>();
+        final List<Throwable> exceptions = new ArrayList<>();
         Thread t = new TestThread(exceptions, new Runnable() {
             @Override
             public void run()
             {
-                assertFalse(sri.currentThreadMarked());
+                assertThat(sri.currentThreadMarked()).isFalse();
                 sri.markCurrentThread();
-                assertTrue(sri.currentThreadMarked());
+                assertThat(sri.currentThreadMarked()).isTrue();
             }
         });
         t.start();
         t.join();
-        assertEquals("There should be no exceptions: " + exceptions, 0, exceptions.size());
+        assertThat(exceptions.size()).as("There should be no exceptions: " + exceptions).isEqualTo(0);
 
         sri.unmarkCurrentThread();
-        assertFalse(sri.currentThreadMarked());
+        assertThat(sri.currentThreadMarked()).isFalse();
 
         Thread t2 = new TestThread(exceptions, new Runnable() {
             @Override
             public void run()
             {
-                assertFalse(sri.currentThreadMarked());
+                assertThat(sri.currentThreadMarked()).isFalse();
                 sri.markCurrentThread();
-                assertTrue(sri.currentThreadMarked());
+                assertThat(sri.currentThreadMarked()).isTrue();
                 sri.unmarkCurrentThread();
-                assertFalse(sri.currentThreadMarked());
+                assertThat(sri.currentThreadMarked()).isFalse();
             }
         });
         t2.start();
         t2.join();
-        assertEquals("There should be no exceptions: " + exceptions, 0, exceptions.size());
+        assertThat(exceptions.size()).as("There should be no exceptions: " + exceptions).isEqualTo(0);
     }
 
     static class TestThread extends Thread {

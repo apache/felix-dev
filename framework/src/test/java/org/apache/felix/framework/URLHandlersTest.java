@@ -15,6 +15,8 @@
  */
 package org.apache.felix.framework;
 
+import static org.assertj.core.api.Assertions.fail;
+
 import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
 import java.io.File;
@@ -25,19 +27,16 @@ import java.net.ContentHandler;
 import java.net.InetAddress;
 import java.net.JarURLConnection;
 import java.net.URL;
-import java.net.URLClassLoader;
 import java.net.URLConnection;
 import java.security.Permission;
-import java.util.Arrays;
-import java.util.Collections;
-import java.util.Enumeration;
 import java.util.HashMap;
 import java.util.Hashtable;
 import java.util.Map;
 import java.util.jar.JarOutputStream;
 import java.util.jar.Manifest;
 import java.util.zip.ZipEntry;
-import junit.framework.TestCase;
+
+import org.junit.jupiter.api.Test;
 import org.osgi.framework.Bundle;
 import org.osgi.framework.BundleActivator;
 import org.osgi.framework.BundleContext;
@@ -52,10 +51,13 @@ import org.osgi.service.url.URLStreamHandlerSetter;
  *
  * @author pauls
  */
-public class URLHandlersTest extends TestCase
+public class URLHandlersTest
 {
 
-    public void testURLHandlers() throws Exception
+	public URLHandlersTest() {
+	}
+    @Test
+    public void urlHandlers() throws Exception
     {
         String mf = "Bundle-SymbolicName: url.test\n"
             + "Bundle-Version: 1.0.0\n"
@@ -90,7 +92,8 @@ public class URLHandlersTest extends TestCase
         }
     }
 
-    public void testURLHandlersWithClassLoaderIsolation() throws Exception
+    @Test
+    void urlHandlersWithClassLoaderIsolation() throws Exception
     {
         DelegatingClassLoader cl1 = new DelegatingClassLoader(this.getClass().getClassLoader());
         DelegatingClassLoader cl2 = new DelegatingClassLoader(this.getClass().getClassLoader());
@@ -112,20 +115,20 @@ public class URLHandlersTest extends TestCase
         bundle.start();
 
         Class clazz1 = cl1.loadClass(URLHandlersTest.class.getName());
-
-        clazz1.getMethod("testURLHandlers").invoke(clazz1.newInstance());
+        clazz1.getMethod("urlHandlers").invoke(clazz1.newInstance());
 
         bundle.stop();
         bundle.start();
         Class clazz2 = cl2.loadClass(URLHandlersTest.class.getName());
 
-        clazz2.getMethod("testURLHandlers").invoke(clazz2.newInstance());
+        clazz2.getMethod("urlHandlers").invoke(clazz2.newInstance());
         bundle.stop();
         bundle.start();
         f.stop();
     }
 
-    public void testURLHandlersWithSecurity() throws Exception
+    @Test
+    void urlHandlersWithSecurity() throws Exception
     {
         System.setSecurityManager(new SecurityManager()
         {
@@ -134,7 +137,7 @@ public class URLHandlersTest extends TestCase
         });
         try
         {
-            testURLHandlers();
+            urlHandlers();
         }
         finally
         {
@@ -142,7 +145,8 @@ public class URLHandlersTest extends TestCase
         }
     }
 
-    public void testURLHandlersWithClassLoaderIsolationWithSecurity() throws Exception
+    @Test
+    void urlHandlersWithClassLoaderIsolationWithSecurity() throws Exception
     {
         System.setSecurityManager(new SecurityManager()
         {
@@ -151,7 +155,7 @@ public class URLHandlersTest extends TestCase
         });
         try
         {
-            testURLHandlersWithClassLoaderIsolation();
+            urlHandlersWithClassLoaderIsolation();
         }
         finally
         {
@@ -205,6 +209,7 @@ public class URLHandlersTest extends TestCase
             return super.defineClass(name, buffer, 0, buffer.length, null);
         }
     }
+
     public static class UC extends URLConnection
     {
         public UC(URL u)
@@ -236,53 +241,63 @@ public class URLHandlersTest extends TestCase
 
         private volatile ServiceRegistration m_reg = null;
 
-        public URLConnection openConnection(URL u) throws IOException
+        @Override
+		public URLConnection openConnection(URL u) throws IOException
         {
             return new UC(u);//throw new UnsupportedOperationException("Not supported yet.");
         }
 
-        public void parseURL(URLStreamHandlerSetter realHandler, URL u, String spec, int start, int limit)
+        @Override
+		public void parseURL(URLStreamHandlerSetter realHandler, URL u, String spec, int start, int limit)
         {
             realHandler.setURL(u, spec, spec, start, spec, spec, spec, spec, spec);
             //throw new UnsupportedOperationException("Not supported yet.");
         }
 
-        public String toExternalForm(URL u)
+        @Override
+		public String toExternalForm(URL u)
         {
             return u.toString();//throw new UnsupportedOperationException("Not supported yet.");
         }
 
-        public boolean equals(URL u1, URL u2)
+        @Override
+		public boolean equals(URL u1, URL u2)
         {
             throw new UnsupportedOperationException("Not supported yet.");
         }
 
-        public int getDefaultPort()
+        @Override
+		public int getDefaultPort()
         {
             throw new UnsupportedOperationException("Not supported yet.");
         }
 
-        public InetAddress getHostAddress(URL u)
+        @Override
+		public InetAddress getHostAddress(URL u)
         {
             throw new UnsupportedOperationException("Not supported yet.");
         }
 
-        public int hashCode(URL u)
+        @Override
+		public int hashCode(URL u)
         {
             throw new UnsupportedOperationException("Not supported yet.");
         }
 
-        public boolean hostsEqual(URL u1, URL u2)
+        @Override
+		public boolean hostsEqual(URL u1, URL u2)
         {
             throw new UnsupportedOperationException("Not supported yet.");
         }
 
-        public boolean sameFile(URL u1, URL u2)
+        @Override
+		public boolean sameFile(URL u1, URL u2)
         {
             throw new UnsupportedOperationException("Not supported yet.");
         }
 
-        public void start(final BundleContext context) throws Exception
+        @Override
+		public void start(final BundleContext context) throws Exception
         {
             try
             {
@@ -459,7 +474,8 @@ public class URLHandlersTest extends TestCase
             return f;
         }
 
-        public void stop(BundleContext context) throws Exception
+        @Override
+		public void stop(BundleContext context) throws Exception
         {
             if (m_reg != null)
             {

@@ -19,31 +19,35 @@
 package org.apache.felix.framework.util;
 
 import java.util.Properties;
-import junit.framework.TestCase;
 
-public class UtilTest extends TestCase
+import org.junit.jupiter.api.Test;
+
+import static org.assertj.core.api.Assertions.assertThat;
+
+class UtilTest
 {
-    public void testVariableSubstitution()
+    @Test
+    void variableSubstitution()
     {
         Properties props = new Properties();
         props.setProperty("one", "${two}");
         props.setProperty("two", "2");
         String v = Util.substVars(props.getProperty("one"), "one", null, props);
-        assertEquals("2", v);
+        assertThat(v).isEqualTo("2");
 
         props.clear();
         props.setProperty("one", "${two}${three}");
         props.setProperty("two", "2");
         props.setProperty("three", "3");
         v = Util.substVars(props.getProperty("one"), "one", null, props);
-        assertEquals("23", v);
+        assertThat(v).isEqualTo("23");
 
         props.clear();
         props.setProperty("one", "${two${three}}");
         props.setProperty("two3", "2");
         props.setProperty("three", "3");
         v = Util.substVars(props.getProperty("one"), "one", null, props);
-        assertEquals("2", v);
+        assertThat(v).isEqualTo("2");
 
         props.clear();
         props.setProperty("one", "${two${three}}");
@@ -51,62 +55,62 @@ public class UtilTest extends TestCase
         System.setProperty("three", "3");
         v = Util.substVars(props.getProperty("one"), "one", null, props);
         System.getProperties().remove("three");
-        assertEquals("2", v);
+        assertThat(v).isEqualTo("2");
 
         props.clear();
         props.setProperty("one", "${two}");
         v = Util.substVars(props.getProperty("one"), "one", null, props);
-        assertEquals("", v);
+        assertThat(v).isEmpty();
 
         props.clear();
         props.setProperty("one", "{two");
         v = Util.substVars(props.getProperty("one"), "one", null, props);
-        assertEquals("{two", v);
+        assertThat(v).isEqualTo("{two");
 
         props.clear();
         props.setProperty("one", "{two}");
         v = Util.substVars(props.getProperty("one"), "one", null, props);
-        assertEquals("{two}", v);
+        assertThat(v).isEqualTo("{two}");
 
         props.clear();
         props.setProperty("one", "${two");
         v = Util.substVars(props.getProperty("one"), "one", null, props);
-        assertEquals("${two", v);
+        assertThat(v).isEqualTo("${two");
 
         props.clear();
         props.setProperty("one", "${two${two}");
         props.setProperty("two", "2");
         v = Util.substVars(props.getProperty("one"), "one", null, props);
-        assertEquals("${two2", v);
+        assertThat(v).isEqualTo("${two2");
 
         props.clear();
         props.setProperty("one", "{two${two}}");
         props.setProperty("two", "2");
         v = Util.substVars(props.getProperty("one"), "one", null, props);
-        assertEquals("{two2}", v);
+        assertThat(v).isEqualTo("{two2}");
 
         props.clear();
         props.setProperty("one", "{two}${two");
         v = Util.substVars(props.getProperty("one"), "one", null, props);
-        assertEquals("{two}${two", v);
+        assertThat(v).isEqualTo("{two}${two");
 
         props.clear();
         props.setProperty("one", "leading text ${two}");
         props.setProperty("two", "2");
         v = Util.substVars(props.getProperty("one"), "one", null, props);
-        assertEquals("leading text 2", v);
+        assertThat(v).isEqualTo("leading text 2");
 
         props.clear();
         props.setProperty("one", "${two} trailing text");
         props.setProperty("two", "2");
         v = Util.substVars(props.getProperty("one"), "one", null, props);
-        assertEquals("2 trailing text", v);
+        assertThat(v).isEqualTo("2 trailing text");
 
         props.clear();
         props.setProperty("one", "${two} middle text ${three}");
         props.setProperty("two", "2");
         props.setProperty("three", "3");
         v = Util.substVars(props.getProperty("one"), "one", null, props);
-        assertEquals("2 middle text 3", v);
+        assertThat(v).isEqualTo("2 middle text 3");
     }
 }

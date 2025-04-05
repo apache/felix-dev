@@ -238,8 +238,8 @@ public class Util
         Map<String,Set<String>> exports = null;
         if (!MODULES_MAP.isEmpty())
         {
-            Set<String> modules = new TreeSet<String>();
-            exports = new HashMap<String, Set<String>>();
+            Set<String> modules = new TreeSet<>();
+            exports = new HashMap<>();
             for (Map.Entry<String, Set<String>> module : MODULES_MAP.entrySet())
             {
                 Object name = module.getKey();
@@ -253,11 +253,11 @@ public class Util
                 }
             }
 
-            String modulesString = "";
+            StringBuilder modulesString = new StringBuilder();
             for (String module : modules) {
-                modulesString += "${" + module + "}";
+                modulesString.append("${").append(module).append("}");
             }
-            properties.put("jre-jpms", modulesString);
+            properties.put("jre-jpms", modulesString.toString());
         }
 
         return exports;
@@ -274,7 +274,7 @@ public class Util
 
     public static Map<String, String> getPropertiesWithPrefix(Properties props, String prefix)
     {
-        Map<String, String> result = new HashMap<String, String>();
+        Map<String, String> result = new HashMap<>();
 
         Set<String> propertySet = props.stringPropertyNames();
 
@@ -453,9 +453,8 @@ public class Util
             // one of the class's implemented interface
             // class loaders.
             Class[] ifcs = clazz.getInterfaces();
-            for (int i = 0; i < ifcs.length; i++)
-            {
-                loadedClass = loadClassUsingClass(ifcs[i], name, action);
+            for (Class ifc : ifcs) {
+                loadedClass = loadClassUsingClass(ifc, name, action);
                 if (loadedClass != null)
                 {
                     return loadedClass;
@@ -482,9 +481,8 @@ public class Util
             // one of the class's implemented interface
             // is the name.
             Class[] ifcs = clazz.getInterfaces();
-            for (int i = 0; i < ifcs.length; i++)
-            {
-                if (checkImplementsWithName(ifcs[i], name)) {
+            for (Class ifc : ifcs) {
+                if (checkImplementsWithName(ifc, name)) {
                     return true;
                 }
             }
@@ -539,7 +537,7 @@ public class Util
                 {
                     if (result == null)
                     {
-                        result = new ArrayList<BundleRequirement>();
+                        result = new ArrayList<>();
                     }
                     result.add(req);
                 }
@@ -819,7 +817,7 @@ public class Util
         // value.
         val = val.substring(0, startDelim)
             + substValue
-            + val.substring(stopDelim + DELIM_STOP.length(), val.length());
+            + val.substring(stopDelim + DELIM_STOP.length());
 
         // Now perform substitution again, since there could still
         // be substitutions to make.
@@ -894,7 +892,7 @@ public class Util
                         // Create array list if needed.
                         if (fragments.isEmpty())
                         {
-                            fragments = new ArrayList<BundleRevision>();
+                            fragments = new ArrayList<>();
                         }
                         fragments.add(w.getRequirerWiring().getRevision());
                     }

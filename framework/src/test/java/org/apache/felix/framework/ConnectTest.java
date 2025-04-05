@@ -34,9 +34,12 @@ import java.util.jar.JarOutputStream;
 import java.util.jar.Manifest;
 import java.util.zip.ZipEntry;
 
-
-import junit.framework.TestCase;
 import org.apache.felix.framework.util.StringMap;
+
+import static org.assertj.core.api.Assertions.assertThat;
+import static org.junit.jupiter.api.Assertions.assertNotSame;
+
+import org.junit.jupiter.api.Test;
 import org.osgi.framework.Bundle;
 import org.osgi.framework.BundleActivator;
 import org.osgi.framework.Constants;
@@ -52,16 +55,17 @@ import org.osgi.framework.wiring.BundleRevision;
 import org.osgi.framework.wiring.BundleWiring;
 import org.osgi.framework.wiring.FrameworkWiring;
 
-public class ConnectTest extends TestCase
+class ConnectTest
 {
-    public void testSimpleConnect() throws Exception
+    @Test
+    void simpleConnect() throws Exception
     {
         File cacheDir = File.createTempFile("felix-cache", ".dir");
         cacheDir.delete();
         cacheDir.mkdirs();
         String cache = cacheDir.getPath();
 
-        Map<String, String> params = new HashMap<String, String>();
+        Map<String, String> params = new HashMap<>();
         params.put("felix.cache.profiledir", cache);
         params.put("felix.cache.dir", cache);
         params.put(Constants.FRAMEWORK_STORAGE, cache);
@@ -71,7 +75,7 @@ public class ConnectTest extends TestCase
         Framework framework = null;
         try
         {
-            final AtomicReference<String> version = new AtomicReference<String>("1.0.0");
+            final AtomicReference<String> version = new AtomicReference<>("1.0.0");
             ModuleConnector connectFactory = new ModuleConnector()
             {
                 @Override
@@ -149,7 +153,7 @@ public class ConnectTest extends TestCase
                                 @Override
                                 public Optional<Map<String, String>> getHeaders()
                                 {
-                                    Map<String, String> headers = new HashMap<String, String>();
+                                    Map<String, String> headers = new HashMap<>();
                                     headers.put(Constants.BUNDLE_MANIFESTVERSION, "2");
                                     headers.put(Constants.BUNDLE_SYMBOLICNAME, "connect.foo");
                                     headers.put(Constants.BUNDLE_VERSION, version.get());
@@ -228,7 +232,7 @@ public class ConnectTest extends TestCase
                                 @Override
                                 public Optional<Map<String, String>> getHeaders()
                                 {
-                                    Map<String, String> headers = new HashMap<String, String>();
+                                    Map<String, String> headers = new HashMap<>();
                                     headers.put(Constants.BUNDLE_MANIFESTVERSION, "2");
                                     headers.put(Constants.BUNDLE_SYMBOLICNAME, "connect.extension");
                                     headers.put(Constants.BUNDLE_VERSION, "1.0.0");
@@ -255,16 +259,16 @@ public class ConnectTest extends TestCase
             framework.start();
             Bundle b = framework.getBundleContext().installBundle("connect:foo");
 
-            TestCase.assertNotNull(b);
-            TestCase.assertEquals("connect.foo", b.getSymbolicName());
-            TestCase.assertEquals(b, framework.getBundleContext().getBundle("connect:foo"));
+            assertThat(b).isNotNull();
+            assertThat(b.getSymbolicName()).isEqualTo("connect.foo");
+            assertThat(framework.getBundleContext().getBundle("connect:foo")).isEqualTo(b);
 
-            TestCase.assertNotNull(b.getEntry("foo.txt"));
-            TestCase.assertNull(b.getEntry("bar.txt"));
+            assertThat(b.getEntry("foo.txt")).isNotNull();
+            assertThat(b.getEntry("bar.txt")).isNull();
 
             Bundle extension = framework.getBundleContext().installBundle("connect:extension");
 
-            TestCase.assertEquals(Bundle.RESOLVED, extension.getState());
+            assertThat(extension.getState()).isEqualTo(Bundle.RESOLVED);
 
             framework.stop();
             framework.waitForStop(1000);
@@ -272,12 +276,12 @@ public class ConnectTest extends TestCase
             framework.start();
 
             b = framework.getBundleContext().getBundle("connect:foo");
-            assertNotNull(b);
-            TestCase.assertEquals("connect.foo", b.getSymbolicName());
-            TestCase.assertNotNull(b.getEntry("foo.txt"));
-            TestCase.assertNull(b.getEntry("bar.txt"));
+            assertThat(b).isNotNull();
+            assertThat(b.getSymbolicName()).isEqualTo("connect.foo");
+            assertThat(b.getEntry("foo.txt")).isNotNull();
+            assertThat(b.getEntry("bar.txt")).isNull();
 
-            TestCase.assertEquals(ConnectTest.class, b.loadClass(ConnectTest.class.getName()));
+            assertThat(b.loadClass(ConnectTest.class.getName())).isEqualTo(ConnectTest.class);
 
             String mf = "Bundle-SymbolicName: connect.test\n"
                 + "Bundle-Version: 1.0.0\n"
@@ -289,14 +293,13 @@ public class ConnectTest extends TestCase
 
             Bundle b2 = framework.getBundleContext().installBundle(bundleFile.toURI().toURL().toString());
             b2.start();
-            TestCase.assertEquals(Bundle.ACTIVE, b2.getState());
-            TestCase.assertEquals(ConnectTest.class, b2.loadClass(ConnectTest.class.getName()));
-            TestCase.assertNotSame(StringMap.class, b2.loadClass(StringMap.class.getName()));
-            TestCase.assertEquals(Version.parseVersion("1.0.0"), b.getVersion());
+            assertThat(b2.getState()).isEqualTo(Bundle.ACTIVE);
+            assertThat(b2.loadClass(ConnectTest.class.getName())).isEqualTo(ConnectTest.class);
+            assertNotSame(StringMap.class, b2.loadClass(StringMap.class.getName()));
+            assertThat(b.getVersion()).isEqualTo(Version.parseVersion("1.0.0"));
             Version revVersion = b.adapt(BundleRevision.class).getVersion();
 
-            TestCase.assertEquals(b.adapt(BundleRevision.class),
-                b2.adapt(BundleWiring.class).getRequiredWires(PackageNamespace.PACKAGE_NAMESPACE).get(0).getProvider());
+            assertThat(b2.adapt(BundleWiring.class).getRequiredWires(PackageNamespace.PACKAGE_NAMESPACE).get(0).getProvider()).isEqualTo(b.adapt(BundleRevision.class));
 
             version.set("2.0.0");
 
@@ -316,14 +319,13 @@ public class ConnectTest extends TestCase
             latch.await(1, TimeUnit.SECONDS);
 
 
-            TestCase.assertEquals(Version.parseVersion("2.0.0"), b.getVersion());
+            assertThat(b.getVersion()).isEqualTo(Version.parseVersion("2.0.0"));
 
-            TestCase.assertEquals(Bundle.ACTIVE, b2.getState());
-            TestCase.assertEquals(ConnectTest.class, b2.loadClass(ConnectTest.class.getName()));
-            TestCase.assertNotSame(StringMap.class, b2.loadClass(StringMap.class.getName()));
-            TestCase.assertEquals(b.adapt(BundleRevision.class),
-                b2.adapt(BundleWiring.class).getRequiredWires(PackageNamespace.PACKAGE_NAMESPACE).get(0).getProvider());
-            TestCase.assertNotSame(revVersion, b2.adapt(BundleWiring.class).getRequiredWires(PackageNamespace.PACKAGE_NAMESPACE).get(0).getProvider());
+            assertThat(b2.getState()).isEqualTo(Bundle.ACTIVE);
+            assertThat(b2.loadClass(ConnectTest.class.getName())).isEqualTo(ConnectTest.class);
+            assertNotSame(StringMap.class, b2.loadClass(StringMap.class.getName()));
+            assertThat(b2.adapt(BundleWiring.class).getRequiredWires(PackageNamespace.PACKAGE_NAMESPACE).get(0).getProvider()).isEqualTo(b.adapt(BundleRevision.class));
+            assertNotSame(revVersion, b2.adapt(BundleWiring.class).getRequiredWires(PackageNamespace.PACKAGE_NAMESPACE).get(0).getProvider());
 
         }
         finally

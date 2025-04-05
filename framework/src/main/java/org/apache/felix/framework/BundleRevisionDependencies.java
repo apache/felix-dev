@@ -38,7 +38,7 @@ import java.util.Set;
 class BundleRevisionDependencies
 {
     private final Map<BundleRevision, Map<BundleCapability, Set<BundleWire>>>
-        m_dependentsMap = new HashMap<BundleRevision, Map<BundleCapability, Set<BundleWire>>>();
+        m_dependentsMap = new HashMap<>();
 
     public synchronized void addDependent(BundleWire bw)
     {
@@ -47,13 +47,13 @@ class BundleRevisionDependencies
             m_dependentsMap.get(provider);
         if (caps == null)
         {
-            caps = new HashMap<BundleCapability, Set<BundleWire>>();
+            caps = new HashMap<>();
             m_dependentsMap.put(provider, caps);
         }
         Set<BundleWire> dependents = caps.get(bw.getCapability());
         if (dependents == null)
         {
-            dependents = new HashSet<BundleWire>();
+            dependents = new HashSet<>();
             caps.put(bw.getCapability(), dependents);
         }
         dependents.add(bw);
@@ -132,7 +132,7 @@ class BundleRevisionDependencies
     public synchronized List<BundleWire> getProvidedWires(
         BundleRevision revision, String namespace)
     {
-        List<BundleWire> providedWires = new ArrayList<BundleWire>();
+        List<BundleWire> providedWires = new ArrayList<>();
 
         Map<BundleCapability, Set<BundleWire>> providedCaps =
             m_dependentsMap.get(revision);
@@ -162,7 +162,7 @@ class BundleRevisionDependencies
 
     public synchronized Set<Bundle> getDependentBundles(Bundle bundle)
     {
-        Set<Bundle> result = new HashSet<Bundle>();
+        Set<Bundle> result = new HashSet<>();
 
         List<BundleRevision> revisions = bundle.adapt(BundleRevisions.class).getRevisions();
         for (BundleRevision revision : revisions)
@@ -207,7 +207,7 @@ class BundleRevisionDependencies
         Bundle exporter, BundleCapability exportCap)
     {
         // Create set for storing importing bundles.
-        Set<Bundle> result = new HashSet<Bundle>();
+        Set<Bundle> result = new HashSet<>();
 
         // Get exported package name.
         String pkgName = (String)
@@ -245,7 +245,7 @@ class BundleRevisionDependencies
     public synchronized Set<Bundle> getRequiringBundles(Bundle bundle)
     {
         // Create set for storing requiring bundles.
-        Set<Bundle> result = new HashSet<Bundle>();
+        Set<Bundle> result = new HashSet<>();
 
         // Get all requirers for all revisions of the bundle.
         for (BundleRevision revision : bundle.adapt(BundleRevisions.class).getRevisions())
@@ -286,7 +286,7 @@ class BundleRevisionDependencies
                         m_dependentsMap.get(bw.getProvider());
                     if (caps != null)
                     {
-                        List<BundleCapability> gc = new ArrayList<BundleCapability>();
+                        List<BundleCapability> gc = new ArrayList<>();
                         for (Entry<BundleCapability, Set<BundleWire>> entry
                             : caps.entrySet())
                         {

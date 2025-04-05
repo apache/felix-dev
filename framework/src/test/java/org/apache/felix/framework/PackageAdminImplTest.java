@@ -30,33 +30,35 @@ import java.util.Set;
 import java.util.jar.JarOutputStream;
 import java.util.jar.Manifest;
 
-import junit.framework.TestCase;
+import org.junit.jupiter.api.AfterEach;
 
+import static org.assertj.core.api.Assertions.assertThat;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
 import org.osgi.framework.Bundle;
 import org.osgi.framework.Constants;
 import org.osgi.framework.Version;
 import org.osgi.service.packageadmin.ExportedPackage;
 
-public class PackageAdminImplTest extends TestCase
+class PackageAdminImplTest
 {
     private File tempDir;
     private Felix felix;
     private File cacheDir;
 
-    @Override
-    protected void setUp() throws Exception
+    @BeforeEach
+    void setUp() throws Exception
     {
-        super.setUp();
         tempDir = File.createTempFile("felix-temp", ".dir");
-        assertTrue("precondition", tempDir.delete());
-        assertTrue("precondition", tempDir.mkdirs());
+        assertThat(tempDir.delete()).as("precondition").isTrue();
+        assertThat(tempDir.mkdirs()).as("precondition").isTrue();
 
         cacheDir = new File(tempDir, "felix-cache");
-        assertTrue("precondition", cacheDir.mkdir());
+        assertThat(cacheDir.mkdir()).as("precondition").isTrue();
 
         String cache = cacheDir.getPath();
 
-        Map<String,String> params = new HashMap<String, String>();
+        Map<String,String> params = new HashMap<>();
         params.put("felix.cache.profiledir", cache);
         params.put("felix.cache.dir", cache);
         params.put(Constants.FRAMEWORK_STORAGE, cache);
@@ -66,10 +68,9 @@ public class PackageAdminImplTest extends TestCase
         felix.start();
     }
 
-    @Override
-    protected void tearDown() throws Exception
+    @AfterEach
+    void tearDown() throws Exception
     {
-        super.tearDown();
 
         felix.stop(); // Note that this method is async
         felix = null;
@@ -79,7 +80,8 @@ public class PackageAdminImplTest extends TestCase
         cacheDir = null;
     }
 
-    public void testExportedPackages() throws Exception
+    @Test
+    void exportedPackages() throws Exception
     {
         String bmf = "Bundle-SymbolicName: pkg.bundle\n"
                 + "Bundle-Version: 1\n"
@@ -101,30 +103,29 @@ public class PackageAdminImplTest extends TestCase
         try
         {
             PackageAdminImpl pa = new PackageAdminImpl(felix);
-            assertEquals(b, pa.getExportedPackage("org.foo.bundle").getExportingBundle());
-            assertEquals(b, pa.getExportedPackage("org.foo.fragment").getExportingBundle());
+            assertThat(pa.getExportedPackage("org.foo.bundle").getExportingBundle()).isEqualTo(b);
+            assertThat(pa.getExportedPackage("org.foo.fragment").getExportingBundle()).isEqualTo(b);
 
-            Set<String> expected = new HashSet<String>();
+            Set<String> expected = new HashSet<>();
             expected.addAll(Arrays.asList("org.foo.bundle", "org.foo.fragment"));
 
-            Set<String> actual = new HashSet<String>();
+            Set<String> actual = new HashSet<>();
             for (ExportedPackage ep : pa.getExportedPackages(b))
             {
                 actual.add(ep.getName());
-                assertEquals(b, ep.getExportingBundle());
+                assertThat(ep.getExportingBundle()).isEqualTo(b);
             }
-            assertEquals(expected, actual);
+            assertThat(actual).isEqualTo(expected);
 
             ExportedPackage[] bundlePkgs = pa.getExportedPackages("org.foo.bundle");
-            assertEquals(1, bundlePkgs.length);
-            assertEquals(b, bundlePkgs[0].getExportingBundle());
-            assertEquals(new Version("0"), bundlePkgs[0].getVersion());
+            assertThat(bundlePkgs.length).isEqualTo(1);
+            assertThat(bundlePkgs[0].getExportingBundle()).isEqualTo(b);
+            assertThat(bundlePkgs[0].getVersion()).isEqualTo(new Version("0"));
 
             ExportedPackage[] fragPkgs = pa.getExportedPackages("org.foo.fragment");
-            assertEquals(1, fragPkgs.length);
-            assertEquals("The fragment package should be exposed through the bundle",
-                    b, fragPkgs[0].getExportingBundle());
-            assertEquals(new Version("2"), fragPkgs[0].getVersion());
+            assertThat(fragPkgs.length).isEqualTo(1);
+            assertThat(fragPkgs[0].getExportingBundle()).as("The fragment package should be exposed through the bundle").isEqualTo(b);
+            assertThat(fragPkgs[0].getVersion()).isEqualTo(new Version("2"));
         }
         finally
         {

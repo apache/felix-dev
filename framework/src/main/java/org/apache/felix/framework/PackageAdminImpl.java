@@ -36,7 +36,8 @@ import org.osgi.service.packageadmin.RequiredBundle;
 public class PackageAdminImpl implements PackageAdmin
 {
     private static final Comparator COMPARATOR = new Comparator() {
-        public int compare(Object o1, Object o2)
+        @Override
+		public int compare(Object o1, Object o2)
         {
             // Reverse arguments to sort in descending order.
             return ((ExportedPackage) o2).getVersion().compareTo(
@@ -58,7 +59,8 @@ public class PackageAdminImpl implements PackageAdmin
      * @param clazz the class for which to determine its associated bundle.
      * @return the bundle associated with the specified class, otherwise null.
     **/
-    public Bundle getBundle(Class clazz)
+    @Override
+	public Bundle getBundle(Class clazz)
     {
         return m_felix.getBundle(clazz);
     }
@@ -73,7 +75,8 @@ public class PackageAdminImpl implements PackageAdmin
      * @param versionRange the target version range.
      * @return an array of matching bundles sorted in descending version order.
     **/
-    public Bundle[] getBundles(String symbolicName, String versionRange)
+    @Override
+	public Bundle[] getBundles(String symbolicName, String versionRange)
     {
         VersionRange vr = (versionRange == null) ? null : new VersionRange(versionRange);
         Bundle[] bundles = m_felix.getBundles();
@@ -96,7 +99,8 @@ public class PackageAdminImpl implements PackageAdmin
         }
         bundles = (Bundle[]) list.toArray(new Bundle[list.size()]);
         Arrays.sort(bundles,new Comparator() {
-            public int compare(Object o1, Object o2)
+            @Override
+			public int compare(Object o1, Object o2)
             {
                 Version v1 = ((Bundle) o1).adapt(BundleRevision.class).getVersion();
                 Version v2 = ((Bundle) o2).adapt(BundleRevision.class).getVersion();
@@ -107,10 +111,10 @@ public class PackageAdminImpl implements PackageAdmin
         return bundles;
     }
 
-    public int getBundleType(Bundle bundle)
+    @Override
+	public int getBundleType(Bundle bundle)
     {
-        Map headerMap = ((BundleRevisionImpl)
-            bundle.adapt(BundleRevisionImpl.class)).getHeaders();
+        Map headerMap = bundle.adapt(BundleRevisionImpl.class).getHeaders();
         if (headerMap.containsKey(Constants.FRAGMENT_HOST))
         {
             return PackageAdmin.BUNDLE_TYPE_FRAGMENT;
@@ -126,7 +130,8 @@ public class PackageAdminImpl implements PackageAdmin
      * @param name the name of the exported package to find.
      * @return the exported package or null if no matching package was found.
     **/
-    public ExportedPackage getExportedPackage(String name)
+    @Override
+	public ExportedPackage getExportedPackage(String name)
     {
         // Get all versions of the exported package.
         ExportedPackage[] pkgs = m_felix.getExportedPackages(name);
@@ -141,7 +146,8 @@ public class PackageAdminImpl implements PackageAdmin
         return pkgs[0];
     }
 
-    public ExportedPackage[] getExportedPackages(String name)
+    @Override
+	public ExportedPackage[] getExportedPackages(String name)
     {
         ExportedPackage[] pkgs = m_felix.getExportedPackages(name);
         return ((pkgs == null) || pkgs.length == 0) ? null : pkgs;
@@ -154,18 +160,20 @@ public class PackageAdminImpl implements PackageAdmin
      * @return an array of packages exported by the bundle or null if the
      *         bundle does not export any packages.
     **/
-    public ExportedPackage[] getExportedPackages(Bundle bundle)
+    @Override
+	public ExportedPackage[] getExportedPackages(Bundle bundle)
     {
         ExportedPackage[] pkgs = m_felix.getExportedPackages(bundle);
         return ((pkgs == null) || pkgs.length == 0) ? null : pkgs;
     }
 
-    public Bundle[] getFragments(Bundle bundle)
+    @Override
+	public Bundle[] getFragments(Bundle bundle)
     {
         // If the bundle is not a fragment, then return its fragments.
         if ((getBundleType(bundle) & BUNDLE_TYPE_FRAGMENT) == 0)
         {
-            List<Bundle> list = new ArrayList<Bundle>();
+            List<Bundle> list = new ArrayList<>();
             // Iterate through revisions
             for (BundleRevision revision : bundle.adapt(BundleRevisions.class).getRevisions())
             {
@@ -192,12 +200,13 @@ public class PackageAdminImpl implements PackageAdmin
         return null;
     }
 
-    public Bundle[] getHosts(Bundle bundle)
+    @Override
+	public Bundle[] getHosts(Bundle bundle)
     {
         // If the bundle is a fragment, return its hosts
         if ((getBundleType(bundle) & BUNDLE_TYPE_FRAGMENT) != 0)
         {
-            List<Bundle> list = new ArrayList<Bundle>();
+            List<Bundle> list = new ArrayList<>();
             // Iterate through revisions
             for (BundleRevision revision : bundle.adapt(BundleRevisions.class).getRevisions())
             {
@@ -227,7 +236,8 @@ public class PackageAdminImpl implements PackageAdmin
         return null;
     }
 
-    public RequiredBundle[] getRequiredBundles(String symbolicName)
+    @Override
+	public RequiredBundle[] getRequiredBundles(String symbolicName)
     {
         List list = new ArrayList();
         for (Bundle bundle : m_felix.getBundles())
@@ -250,7 +260,8 @@ public class PackageAdminImpl implements PackageAdmin
      * @param bundles array of bundles to refresh or <tt>null</tt> to refresh
      *                any bundles in need of refreshing.
     **/
-    public void refreshPackages(Bundle[] bundles)
+    @Override
+	public void refreshPackages(Bundle[] bundles)
         throws SecurityException
     {
         List<Bundle> list = (bundles == null)
@@ -259,7 +270,8 @@ public class PackageAdminImpl implements PackageAdmin
         m_felix.adapt(FrameworkWiring.class).refreshBundles(list);
     }
 
-    public boolean resolveBundles(Bundle[] bundles)
+    @Override
+	public boolean resolveBundles(Bundle[] bundles)
     {
         List<Bundle> list = (bundles == null)
             ? null

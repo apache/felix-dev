@@ -24,7 +24,6 @@ import java.util.List;
 
 import org.osgi.framework.AdminPermission;
 import org.osgi.framework.Bundle;
-import org.osgi.framework.BundleContext;
 import org.osgi.framework.FrameworkListener;
 import org.osgi.framework.ServiceRegistration;
 import org.osgi.framework.wiring.BundleCapability;
@@ -38,7 +37,7 @@ class FrameworkWiringImpl implements FrameworkWiring, Runnable
     private final ServiceRegistry m_registry;
     private final List<Collection<Bundle>> m_requests = new ArrayList();
     private final List<FrameworkListener[]> m_requestListeners
-        = new ArrayList<FrameworkListener[]>();
+        = new ArrayList<>();
     private ServiceRegistration<PackageAdmin> m_paReg;
     private Thread m_thread = null;
 
@@ -81,12 +80,14 @@ class FrameworkWiringImpl implements FrameworkWiring, Runnable
         }
     }
 
-    public Bundle getBundle()
+    @Override
+	public Bundle getBundle()
     {
         return m_felix;
     }
 
-    public void refreshBundles(Collection<Bundle> bundles, FrameworkListener... listeners)
+    @Override
+	public void refreshBundles(Collection<Bundle> bundles, FrameworkListener... listeners)
     {
         Object sm = System.getSecurityManager();
 
@@ -112,7 +113,8 @@ class FrameworkWiringImpl implements FrameworkWiring, Runnable
         }
     }
 
-    public boolean resolveBundles(Collection<Bundle> bundles)
+    @Override
+	public boolean resolveBundles(Collection<Bundle> bundles)
     {
         Object sm = System.getSecurityManager();
 
@@ -130,12 +132,14 @@ class FrameworkWiringImpl implements FrameworkWiring, Runnable
         return m_felix.resolveBundles(bundles);
     }
 
-    public Collection<Bundle> getRemovalPendingBundles()
+    @Override
+	public Collection<Bundle> getRemovalPendingBundles()
     {
         return m_felix.getRemovalPendingBundles();
     }
 
-    public Collection<Bundle> getDependencyClosure(Collection<Bundle> targets)
+    @Override
+	public Collection<Bundle> getDependencyClosure(Collection<Bundle> targets)
     {
         return m_felix.getDependencyClosure(targets);
     }
@@ -145,7 +149,8 @@ class FrameworkWiringImpl implements FrameworkWiring, Runnable
      * asynchronously; this is the run() method for the package
      * refreshing thread.
     **/
-    public void run()
+    @Override
+	public void run()
     {
         // This thread loops forever, thus it should
         // be a daemon thread.
@@ -196,7 +201,8 @@ class FrameworkWiringImpl implements FrameworkWiring, Runnable
     /**
      * @see org.osgi.framework.wiring.FrameworkWiring#findProviders(org.osgi.resource.Requirement)
      */
-    public Collection<BundleCapability> findProviders(final Requirement requirement)
+    @Override
+	public Collection<BundleCapability> findProviders(final Requirement requirement)
     {
         return m_felix.findProviders(requirement);
     }

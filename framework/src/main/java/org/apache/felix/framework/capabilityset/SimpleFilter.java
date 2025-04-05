@@ -50,7 +50,8 @@ public class SimpleFilter
         m_op = op;
     }
 
-    public boolean equals(Object o)
+    @Override
+	public boolean equals(Object o)
     {
         if (o instanceof SimpleFilter)
         {
@@ -62,7 +63,8 @@ public class SimpleFilter
         return false;
     }
 
-    public int hashCode()
+    @Override
+	public int hashCode()
     {
         return m_op + Objects.hashCode(m_name) + Objects.hashCode(m_value);
     }
@@ -82,7 +84,8 @@ public class SimpleFilter
         return m_op;
     }
 
-    public String toString()
+    @Override
+	public String toString()
     {
         String s = null;
         switch (m_op)
@@ -124,9 +127,8 @@ public class SimpleFilter
     private static String toString(List list)
     {
         StringBuilder sb = new StringBuilder();
-        for (int i = 0; i < list.size(); i++)
-        {
-            sb.append(list.get(i).toString());
+        for (Object element : list) {
+            sb.append(element.toString());
         }
         return sb.toString();
     }
@@ -213,7 +215,7 @@ public class SimpleFilter
                     }
                     else
                     {
-                        stack.add(0, new Integer(idx));
+                        stack.add(0, Integer.valueOf(idx));
                     }
                 }
                 else if (filter.charAt(idx) == '|')
@@ -226,7 +228,7 @@ public class SimpleFilter
                     }
                     else
                     {
-                        stack.add(0, new Integer(idx));
+                        stack.add(0, Integer.valueOf(idx));
                     }
                 }
                 else if (filter.charAt(idx) == '!')
@@ -239,12 +241,12 @@ public class SimpleFilter
                     }
                     else
                     {
-                        stack.add(0, new Integer(idx));
+                        stack.add(0, Integer.valueOf(idx));
                     }
                 }
                 else
                 {
-                    stack.add(0, new Integer(idx));
+                    stack.add(0, Integer.valueOf(idx));
                 }
             }
             else if (!isEscaped && (filter.charAt(idx) == ')'))
@@ -264,11 +266,11 @@ public class SimpleFilter
                 else if (!stack.isEmpty() && (stack.get(0) instanceof SimpleFilter))
                 {
                     ((List) ((SimpleFilter) stack.get(0)).m_value).add(
-                        SimpleFilter.subfilter(filter, ((Integer) top).intValue(), idx));
+                        SimpleFilter.subfilter(filter, ((Integer) top), idx));
                 }
                 else
                 {
-                    sf = SimpleFilter.subfilter(filter, ((Integer) top).intValue(), idx);
+                    sf = SimpleFilter.subfilter(filter, ((Integer) top), idx);
                 }
             }
             else if (!isEscaped && (filter.charAt(idx) == '\\'))
@@ -577,7 +579,7 @@ loop:   for (int i = 0; i < len; i++)
         // Rather than building a filter string to be parsed into a SimpleFilter,
         // we will just create the parsed SimpleFilter directly.
 
-        List<SimpleFilter> filters = new ArrayList<SimpleFilter>();
+        List<SimpleFilter> filters = new ArrayList<>();
 
         for (Entry<String, Object> entry : attrs.entrySet())
         {

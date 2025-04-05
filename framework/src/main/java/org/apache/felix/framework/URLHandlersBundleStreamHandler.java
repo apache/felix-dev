@@ -46,7 +46,8 @@ class URLHandlersBundleStreamHandler extends URLStreamHandler
         m_action = action;
     }
 
-    protected URLConnection openConnection(URL url) throws IOException
+    @Override
+	protected URLConnection openConnection(URL url) throws IOException
     {
         if (!"felix".equals(url.getAuthority()))
         {
@@ -86,7 +87,8 @@ class URLHandlersBundleStreamHandler extends URLStreamHandler
         throw new IOException("No framework context found");
     }
 
-    protected void parseURL(URL u, String spec, int start, int limit)
+    @Override
+	protected void parseURL(URL u, String spec, int start, int limit)
     {
         super.parseURL(u, spec, start, limit);
 
@@ -96,7 +98,8 @@ class URLHandlersBundleStreamHandler extends URLStreamHandler
         }
     }
 
-    protected String toExternalForm(URL u)
+    @Override
+	protected String toExternalForm(URL u)
     {
         StringBuilder result = new StringBuilder();
         result.append(u.getProtocol());
@@ -121,7 +124,8 @@ class URLHandlersBundleStreamHandler extends URLStreamHandler
         return result.toString();
     }
 
-    protected java.net.InetAddress getHostAddress(URL u)
+    @Override
+	protected java.net.InetAddress getHostAddress(URL u)
     {
         return null;
     }

@@ -29,8 +29,11 @@ import java.util.Map;
 import java.util.jar.JarOutputStream;
 import java.util.jar.Manifest;
 
-import junit.framework.TestCase;
+import org.junit.jupiter.api.AfterEach;
 
+import static org.assertj.core.api.Assertions.assertThat;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
 import org.osgi.framework.Bundle;
 import org.osgi.framework.Constants;
 import org.osgi.framework.Version;
@@ -41,26 +44,25 @@ import org.osgi.framework.wiring.BundleWiring;
 import org.osgi.resource.Capability;
 import org.osgi.resource.Resource;
 
-public class RequirementsCapabilitiesTest extends TestCase
+class RequirementsCapabilitiesTest
 {
     private File tempDir;
     private Framework felix;
     private File cacheDir;
 
-    @Override
-    protected void setUp() throws Exception
+    @BeforeEach
+    void setUp() throws Exception
     {
-        super.setUp();
         tempDir = File.createTempFile("felix-temp", ".dir");
-        assertTrue("precondition", tempDir.delete());
-        assertTrue("precondition", tempDir.mkdirs());
+        assertThat(tempDir.delete()).as("precondition").isTrue();
+        assertThat(tempDir.mkdirs()).as("precondition").isTrue();
 
         cacheDir = new File(tempDir, "felix-cache");
-        assertTrue("precondition", cacheDir.mkdir());
+        assertThat(cacheDir.mkdir()).as("precondition").isTrue();
 
         String cache = cacheDir.getPath();
 
-        Map<String,String> params = new HashMap<String, String>();
+        Map<String,String> params = new HashMap<>();
         params.put("felix.cache.profiledir", cache);
         params.put("felix.cache.dir", cache);
         params.put(Constants.FRAMEWORK_STORAGE, cache);
@@ -70,10 +72,9 @@ public class RequirementsCapabilitiesTest extends TestCase
         felix.start();
     }
 
-    @Override
-    protected void tearDown() throws Exception
+    @AfterEach
+    void tearDown() throws Exception
     {
-        super.tearDown();
 
         felix.stop(); // Note that this method is async
         felix = null;
@@ -83,7 +84,8 @@ public class RequirementsCapabilitiesTest extends TestCase
         cacheDir = null;
     }
 
-    public void testIdentityCapabilityBundleFragment() throws Exception
+    @Test
+    void identityCapabilityBundleFragment() throws Exception
     {
         String bmf = "Bundle-SymbolicName: cap.bundle\n"
                 + "Bundle-Version: 1.2.3.Blah\n"
@@ -106,9 +108,9 @@ public class RequirementsCapabilitiesTest extends TestCase
         // First check the capabilities on the Bundle Revision, which is available on installed bundles
         BundleRevision bbr = b.adapt(BundleRevision.class);
         List<Capability> bwbCaps = bbr.getCapabilities("osgi.wiring.bundle");
-        assertEquals(1, bwbCaps.size());
+        assertThat(bwbCaps).hasSize(1);
 
-        Map<String, Object> expectedBWBAttrs = new HashMap<String, Object>();
+        Map<String, Object> expectedBWBAttrs = new HashMap<>();
         expectedBWBAttrs.put("osgi.wiring.bundle", "cap.bundle");
         expectedBWBAttrs.put("bundle-version", Version.parseVersion("1.2.3.Blah"));
         Capability expectedBWBCap = new TestCapability("osgi.wiring.bundle",
@@ -116,9 +118,9 @@ public class RequirementsCapabilitiesTest extends TestCase
         assertCapsEquals(expectedBWBCap, bwbCaps.get(0));
 
         List<Capability> bwhCaps = bbr.getCapabilities("osgi.wiring.host");
-        assertEquals(1, bwhCaps.size());
+        assertThat(bwhCaps).hasSize(1);
 
-        Map<String, Object> expectedBWHAttrs = new HashMap<String, Object>();
+        Map<String, Object> expectedBWHAttrs = new HashMap<>();
         expectedBWHAttrs.put("osgi.wiring.host", "cap.bundle");
         expectedBWHAttrs.put("bundle-version", Version.parseVersion("1.2.3.Blah"));
         Capability expectedBWHCap = new TestCapability("osgi.wiring.host",
@@ -126,9 +128,9 @@ public class RequirementsCapabilitiesTest extends TestCase
         assertCapsEquals(expectedBWHCap, bwhCaps.get(0));
 
         List<Capability> bwiCaps = bbr.getCapabilities("osgi.identity");
-        assertEquals(1, bwiCaps.size());
+        assertThat(bwiCaps).hasSize(1);
 
-        Map<String, Object> expectedBWIAttrs = new HashMap<String, Object>();
+        Map<String, Object> expectedBWIAttrs = new HashMap<>();
         expectedBWIAttrs.put("osgi.identity", "cap.bundle");
         expectedBWIAttrs.put("type", "osgi.bundle");
         expectedBWIAttrs.put("version", Version.parseVersion("1.2.3.Blah"));
@@ -136,16 +138,15 @@ public class RequirementsCapabilitiesTest extends TestCase
                 expectedBWIAttrs, Collections.<String, String>emptyMap());
         assertCapsEquals(expectedBWICap, bwiCaps.get(0));
 
-        assertEquals("The Bundle should not directly expose osgi.wiring.package",
-                0, bbr.getCapabilities("osgi.wiring.package").size());
+        assertThat(bbr.getCapabilities("osgi.wiring.package").size()).as("The Bundle should not directly expose osgi.wiring.package").isEqualTo(0);
 
         // Check the fragment's capabilities.
         // First check the capabilities on the Bundle Revision, which is available on installed fragments
         BundleRevision fbr = f.adapt(BundleRevision.class);
         List<Capability> fwpCaps = fbr.getCapabilities("osgi.wiring.package");
-        assertEquals(1, fwpCaps.size());
+        assertThat(fwpCaps).hasSize(1);
 
-        Map<String, Object> expectedFWAttrs = new HashMap<String, Object>();
+        Map<String, Object> expectedFWAttrs = new HashMap<>();
         expectedFWAttrs.put("osgi.wiring.package", "org.foo.bar");
         expectedFWAttrs.put("version", Version.parseVersion("2"));
         expectedFWAttrs.put("bundle-symbolic-name", "cap.frag");
@@ -155,8 +156,8 @@ public class RequirementsCapabilitiesTest extends TestCase
         assertCapsEquals(expectedFWCap, fwpCaps.get(0));
 
         List<Capability> fiCaps = fbr.getCapabilities("osgi.identity");
-        assertEquals(1, fiCaps.size());
-        Map<String, Object> expectedFIAttrs = new HashMap<String, Object>();
+        assertThat(fiCaps).hasSize(1);
+        Map<String, Object> expectedFIAttrs = new HashMap<>();
         expectedFIAttrs.put("osgi.identity", "cap.frag");
         expectedFIAttrs.put("type", "osgi.fragment");
         expectedFIAttrs.put("version", Version.parseVersion("1.0.0"));
@@ -171,28 +172,28 @@ public class RequirementsCapabilitiesTest extends TestCase
         // All the other capabilities should have migrated to the bundle's BundleWiring.
         BundleWiring fbw = f.adapt(BundleWiring.class);
         List<BundleCapability> fbwCaps = fbw.getCapabilities(null);
-        assertEquals("Fragment should only have 1 capability: it's osgi.identity", 1, fbwCaps.size());
+        assertThat(fbwCaps.size()).as("Fragment should only have 1 capability: it's osgi.identity").isEqualTo(1);
         assertCapsEquals(expectedFICap, fbwCaps.get(0));
 
         // Check the Bundle Wiring on the bundle. It should contain all the capabilities originally on the
         // bundle and also contain the osgi.wiring.package capability from the fragment.
         BundleWiring bbw = b.adapt(BundleWiring.class);
         List<BundleCapability> bwbCaps2 = bbw.getCapabilities("osgi.wiring.bundle");
-        assertEquals(1, bwbCaps2.size());
+        assertThat(bwbCaps2).hasSize(1);
         assertCapsEquals(expectedBWBCap, bwbCaps2.get(0));
         List<BundleCapability> bwhCaps2 = bbw.getCapabilities("osgi.wiring.host");
-        assertEquals(1, bwhCaps2.size());
+        assertThat(bwhCaps2).hasSize(1);
         assertCapsEquals(expectedBWHCap, bwhCaps2.get(0));
         List<BundleCapability> bwiCaps2 = bbw.getCapabilities("osgi.identity");
-        assertEquals(1, bwiCaps2.size());
+        assertThat(bwiCaps2).hasSize(1);
         assertCapsEquals(expectedBWICap, bwiCaps2.get(0));
         List<BundleCapability> bwpCaps2 = bbw.getCapabilities("osgi.wiring.package");
-        assertEquals("Bundle should have inherited the osgi.wiring.package capability from the fragment",
-                1, bwpCaps2.size());
+        assertThat(bwpCaps2.size()).as("Bundle should have inherited the osgi.wiring.package capability from the fragment").isEqualTo(1);
         assertCapsEquals(expectedFWCap, bwpCaps2.get(0));
     }
 
-    public void testIdentityCapabilityFrameworkExtension() throws Exception
+    @Test
+    void identityCapabilityFrameworkExtension() throws Exception
     {
         String femf = "Bundle-SymbolicName: fram.ext\n"
                 + "Bundle-Version: 1.2.3.test\n"
@@ -206,8 +207,8 @@ public class RequirementsCapabilitiesTest extends TestCase
         BundleRevision fbr = fe.adapt(BundleRevision.class);
 
         List<Capability> feCaps = fbr.getCapabilities("osgi.identity");
-        assertEquals(1, feCaps.size());
-        Map<String, Object> expectedFEAttrs = new HashMap<String, Object>();
+        assertThat(feCaps).hasSize(1);
+        Map<String, Object> expectedFEAttrs = new HashMap<>();
         expectedFEAttrs.put("osgi.identity", "fram.ext");
         expectedFEAttrs.put("type", "osgi.fragment");
         expectedFEAttrs.put("version", Version.parseVersion("1.2.3.test"));
@@ -229,18 +230,11 @@ public class RequirementsCapabilitiesTest extends TestCase
 
     private static void assertCapsEquals(Capability expected, Capability actual)
     {
-        assertEquals(expected.getNamespace(), actual.getNamespace());
-        assertSubMap(expected.getAttributes(), actual.getAttributes());
-        assertSubMap(expected.getDirectives(), actual.getDirectives());
-        // We ignore the resource in the comparison
-    }
+        assertThat(actual.getNamespace()).isEqualTo(expected.getNamespace());
+        assertThat(actual.getAttributes()).containsAllEntriesOf(expected.getAttributes());
+        assertThat(actual.getDirectives()).containsAllEntriesOf(expected.getDirectives());
 
-    private static void assertSubMap(Map<?,?> subMap, Map<?,?> fullMap)
-    {
-        for (Map.Entry<?,?> entry : subMap.entrySet())
-        {
-            assertEquals(entry.getValue(), fullMap.get(entry.getKey()));
-        }
+        // We ignore the resource in the comparison
     }
 
     private static void deleteDir(File root) throws IOException
@@ -252,7 +246,7 @@ public class RequirementsCapabilitiesTest extends TestCase
                 deleteDir(file);
             }
         }
-        assertTrue(root.delete());
+        assertThat(root.delete()).isTrue();
     }
 
     static class TestCapability implements Capability
@@ -268,22 +262,26 @@ public class RequirementsCapabilitiesTest extends TestCase
             directives = dirs;
         }
 
-        public String getNamespace()
+        @Override
+		public String getNamespace()
         {
             return namespace;
         }
 
-        public Map<String, Object> getAttributes()
+        @Override
+		public Map<String, Object> getAttributes()
         {
             return attributes;
         }
 
-        public Map<String, String> getDirectives()
+        @Override
+		public Map<String, String> getDirectives()
         {
             return directives;
         }
 
-        public Resource getResource()
+        @Override
+		public Resource getResource()
         {
             return null;
         }

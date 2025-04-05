@@ -25,13 +25,9 @@ import java.util.Collections;
 import java.util.Dictionary;
 import java.util.HashMap;
 import java.util.Hashtable;
-import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 import java.util.StringTokenizer;
-import java.util.regex.Matcher;
-import java.util.regex.Pattern;
-
 import org.apache.felix.framework.Logger;
 import org.apache.felix.framework.util.FelixConstants;
 import org.osgi.framework.BundleException;
@@ -93,9 +89,9 @@ public class NativeLibraryClause
     private static final String PROC_SPARC = "sparc";
 
 
-    private static final Map<String, List<String>> OS_ALIASES = new HashMap<String, List<String>>();
+    private static final Map<String, List<String>> OS_ALIASES = new HashMap<>();
 
-    private static final Map<String, List<String>> PROC_ALIASES = new HashMap<String, List<String>>();
+    private static final Map<String, List<String>> PROC_ALIASES = new HashMap<>();
 
     private final String[] m_libraryEntries;
     private final String[] m_osnames;
@@ -151,7 +147,7 @@ public class NativeLibraryClause
             if(currentAliasesString != null)
             {
                 String[] aliases = currentAliasesString.split(",");
-                List<String> fullAliasList = new ArrayList<String>();
+                List<String> fullAliasList = new ArrayList<>();
                 //normalized name is always first.
                 fullAliasList.add(currentNormalizedName);
                 fullAliasList.addAll(Arrays.asList(aliases));
@@ -180,7 +176,7 @@ public class NativeLibraryClause
                 List<String> aliasList = aliasMap.get(currentNormalizedName);
                 if(aliasList == null)
                 {
-                    aliasMap.put(currentNormalizedName, new ArrayList<String>(Collections.singletonList(currentNormalizedName)));
+                    aliasMap.put(currentNormalizedName, new ArrayList<>(Collections.singletonList(currentNormalizedName)));
                 }
                 else
                 {
@@ -193,7 +189,7 @@ public class NativeLibraryClause
 
     private static Map<String, String> getAllKeysWithPrefix(String prefix, Map<String, String> configMap)
     {
-        Map<String, String> keysWithPrefix = new HashMap<String, String>();
+        Map<String, String> keysWithPrefix = new HashMap<>();
         for(Map.Entry<String, String> currentEntry: configMap.entrySet())
         {
             if(currentEntry.getKey().startsWith(prefix))
@@ -356,9 +352,7 @@ public class NativeLibraryClause
     {
         // Get all framework properties
         Dictionary dict = new Hashtable();
-        for (Iterator i = configMap.keySet().iterator(); i.hasNext(); )
-        {
-            Object key = i.next();
+        for (Object key : configMap.keySet()) {
             dict.put(key, configMap.get(key));
         }
         // Compute expression
@@ -429,8 +423,7 @@ public class NativeLibraryClause
                     {
                         property = (token.substring(0, token.indexOf("=")))
                             .trim().toLowerCase();
-                        value = (token.substring(token.indexOf("=") + 1, token
-                            .length())).trim();
+                        value = (token.substring(token.indexOf("=") + 1)).trim();
                     }
 
                     // Values may be quoted, so remove quotes if present.
@@ -761,7 +754,7 @@ public class NativeLibraryClause
             {
                 String s = value.substring(1, value.length() - 1);
                 String vlo = s.substring(0, s.indexOf(',')).trim();
-                String vhi = s.substring(s.indexOf(',') + 1, s.length()).trim();
+                String vhi = s.substring(s.indexOf(',') + 1).trim();
                 return new VersionRange(value.charAt(0), toOsgiVersion(vlo), toOsgiVersion(vhi),
                     value.charAt(value.length() - 1)).toString();
             }

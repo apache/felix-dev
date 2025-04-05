@@ -106,7 +106,7 @@ public class BundleArchive
 
     // Maps a Long revision number to a BundleRevision.
     private final SortedMap<Long, BundleArchiveRevision> m_revisions
-        = new TreeMap<Long, BundleArchiveRevision>();
+        = new TreeMap<>();
 
     /**
      * <p>
@@ -152,7 +152,7 @@ public class BundleArchive
         initialize();
 
         // Add a revision for the content.
-        reviseInternal(false, new Long(0), m_originalLocation, is);
+        reviseInternal(false, 0L, m_originalLocation, is);
     }
 
     /**
@@ -457,8 +457,8 @@ public class BundleArchive
         throws Exception
     {
         Long revNum = (m_revisions.isEmpty())
-            ? new Long(0)
-            : new Long(m_revisions.lastKey().longValue() + 1);
+            ? 0L
+            : m_revisions.lastKey().longValue() + 1;
 
         reviseInternal(false, revNum, location, is);
     }
@@ -708,10 +708,8 @@ public class BundleArchive
     **/
     private void initialize() throws Exception
     {
-        OutputStream os = null;
-        BufferedWriter bw = null;
-
-        try
+        try (OutputStream os = null;
+			 BufferedWriter bw = null)
         {
             // If the archive directory exists, then we don't
             // need to initialize since it has already been done.
@@ -730,11 +728,6 @@ public class BundleArchive
             }
 
             writeBundleInfo();
-        }
-        finally
-        {
-            if (bw != null) bw.close();
-            if (os != null) os.close();
         }
     }
 
