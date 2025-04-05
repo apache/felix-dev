@@ -469,7 +469,7 @@ public class BundleRevisionImpl implements BundleRevision, Resource
                 {
 // TODO: FRAMEWORK - Per the spec, this should fire a FrameworkEvent.INFO event;
 //       need to create an "Eventer" class like "Logger" perhaps.
-                    ((BundleImpl) m_bundle).getFramework().getLogger().log(
+                    m_bundle.getFramework().getLogger().log(
                         getBundle(), Logger.LOG_INFO,
                         "Class path entry not found: "
                         + classPathStrings.get(i));
@@ -706,7 +706,7 @@ public class BundleRevisionImpl implements BundleRevision, Resource
         }
         catch (Exception ex)
         {
-            ((BundleImpl) m_bundle).getFramework().getLogger().log(
+            m_bundle.getFramework().getLogger().log(
                 Logger.LOG_ERROR, "Error releasing revision: " + ex.getMessage(), ex);
         }
         m_content.close();

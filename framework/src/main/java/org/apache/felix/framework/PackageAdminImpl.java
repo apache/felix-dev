@@ -109,8 +109,7 @@ public class PackageAdminImpl implements PackageAdmin
 
     public int getBundleType(Bundle bundle)
     {
-        Map headerMap = ((BundleRevisionImpl)
-            bundle.adapt(BundleRevisionImpl.class)).getHeaders();
+        Map headerMap = bundle.adapt(BundleRevisionImpl.class).getHeaders();
         if (headerMap.containsKey(Constants.FRAGMENT_HOST))
         {
             return PackageAdmin.BUNDLE_TYPE_FRAGMENT;

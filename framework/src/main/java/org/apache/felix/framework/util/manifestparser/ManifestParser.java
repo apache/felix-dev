@@ -308,9 +308,9 @@ public class ManifestParser
         m_requirements = new ArrayList<BundleRequirement>(
             hostReqs.size() + importReqs.size() + rbReqs.size()
             + requireReqs.size() + dynamicReqs.size() + breeReqs.size());
-        m_requirements.addAll(hostReqs.stream().map(req -> BundleRequirementImpl.createFrom((BundleRequirementImpl) req, cache)).collect(Collectors.toList()));
+        m_requirements.addAll(hostReqs.stream().map(req -> BundleRequirementImpl.createFrom(req, cache)).collect(Collectors.toList()));
         m_requirements.addAll(importReqs.stream().map(req -> BundleRequirementImpl.createFrom((BundleRequirementImpl) req, cache)).collect(Collectors.toList()));
-        m_requirements.addAll(rbReqs.stream().map(req -> BundleRequirementImpl.createFrom((BundleRequirementImpl) req, cache)).collect(Collectors.toList()));
+        m_requirements.addAll(rbReqs.stream().map(req -> BundleRequirementImpl.createFrom(req, cache)).collect(Collectors.toList()));
         m_requirements.addAll(requireReqs.stream().map(req -> BundleRequirementImpl.createFrom((BundleRequirementImpl) req, cache)).collect(Collectors.toList()));
         m_requirements.addAll(dynamicReqs.stream().map(req -> BundleRequirementImpl.createFrom((BundleRequirementImpl) req, cache)).collect(Collectors.toList()));
         m_requirements.addAll(breeReqs.stream().map(req -> BundleRequirementImpl.createFrom((BundleRequirementImpl) req, cache)).collect(Collectors.toList()));
@@ -319,7 +319,7 @@ public class ManifestParser
         // Combine all capabilities.
         m_capabilities = new ArrayList<BundleCapability>(
              capList.size() + exportCaps.size() + provideCaps.size());
-        m_capabilities.addAll(capList.stream().map(cap -> BundleCapabilityImpl.createFrom((BundleCapabilityImpl) cap, cache)).collect(Collectors.toList()));
+        m_capabilities.addAll(capList.stream().map(cap -> BundleCapabilityImpl.createFrom(cap, cache)).collect(Collectors.toList()));
         m_capabilities.addAll(exportCaps.stream().map(cap -> BundleCapabilityImpl.createFrom((BundleCapabilityImpl) cap, cache)).collect(Collectors.toList()));
         m_capabilities.addAll(provideCaps.stream().map(cap -> BundleCapabilityImpl.createFrom((BundleCapabilityImpl) cap, cache)).collect(Collectors.toList()));
 
@@ -1185,7 +1185,7 @@ public class ManifestParser
             {
                 selected = firstSortedClause(clauseList);
             }
-            return ((NativeLibraryClause) clauseList.get(selected));
+            return (clauseList.get(selected));
         }
 
         return null;
@@ -1208,7 +1208,7 @@ public class ManifestParser
         for (int i = 0; i < indexList.size(); i++)
         {
             int index = Integer.parseInt(indexList.get(i).toString());
-            String[] osversions = ((NativeLibraryClause) clauseList.get(index)).getOSVersions();
+            String[] osversions = clauseList.get(index).getOSVersions();
             if (osversions != null)
             {
                 selection.add("" + indexList.get(i));
@@ -1236,7 +1236,7 @@ public class ManifestParser
             for (int i = 0; i < indexList.size(); i++)
             {
                 int index = Integer.parseInt(indexList.get(i).toString());
-                String[] osversions = ((NativeLibraryClause) clauseList.get(index)).getOSVersions();
+                String[] osversions = clauseList.get(index).getOSVersions();
                 for (int k = 0; k < osversions.length; k++)
                 {
                     VersionRange range = new VersionRange(osversions[k]);
@@ -1272,7 +1272,7 @@ public class ManifestParser
         for (int i = 0; i < indexList.size(); i++)
         {
             int index = Integer.parseInt(indexList.get(i).toString());
-            if (((NativeLibraryClause) clauseList.get(index)).getLanguages() != null)
+            if (clauseList.get(index).getLanguages() != null)
             {
                 selection.add("" + indexList.get(i));
             }
@@ -1485,7 +1485,7 @@ public class ManifestParser
             }
 
             // Create a require capability and return it.
-            String symName = (String) clauses.get(0).m_paths.get(0);
+            String symName = clauses.get(0).m_paths.get(0);
             clauses.get(0).m_attrs.put(BundleRevision.BUNDLE_NAMESPACE, symName);
             clauses.get(0).m_attrs.put(Constants.BUNDLE_VERSION_ATTRIBUTE, bundleVersion);
             return new BundleCapabilityImpl(

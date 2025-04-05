@@ -586,7 +586,7 @@ public class URLHandlersStreamHandlerProxy extends URLStreamHandler
             }
             if (service instanceof URLStreamHandlerService)
             {
-                return (URLStreamHandlerService) service;
+                return service;
             }
             
             return m_action.createProxy(

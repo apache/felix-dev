@@ -787,7 +787,7 @@ class URLHandlers implements URLStreamHandlerFactory, ContentHandlerFactory
         {
             ClassLoader index = m_secureAction.getClassLoader(targetClassLoader.getClass());
 
-            List frameworks = (List) m_classloaderToFrameworkLists.get(index);
+            List frameworks = m_classloaderToFrameworkLists.get(index);
 
             if ((frameworks == null) && (index == URLHANDLERS_CLASS.getClassLoader()))
             {

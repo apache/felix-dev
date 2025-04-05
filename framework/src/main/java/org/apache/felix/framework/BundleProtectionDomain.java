@@ -323,7 +323,7 @@ public class BundleProtectionDomain extends ProtectionDomain
 
             if (System.getSecurityManager() != null)
             {
-                property = (String) AccessController.doPrivileged(new PrivilegedAction<String>(){
+                property = AccessController.doPrivileged(new PrivilegedAction<String>(){
                     @Override
                     public String run()
                     {
