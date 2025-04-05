@@ -918,7 +918,7 @@ public class ClassParser
                 if (o instanceof ClassConstant)
                 {
                     ClassConstant cc = (ClassConstant) o;
-                    if (cc.referred == false)
+                    if (!cc.referred)
                     {
                         detectLdc = true;
                     }
