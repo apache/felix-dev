@@ -1213,14 +1213,12 @@ public class BundleWiringImpl implements BundleWiring
             {
                 provider = m_resolver.resolve(m_revision, pkgName);
             }
-            catch (ResolutionException ex)
+            catch (ResolutionException | BundleException ex)
             {
-                // Ignore this since it is likely normal.
+                // ResolutionException - Ignore this since it is likely normal.
+            	// BundleException - Ignore this since it is likely the result of a resolver hook.
             }
-            catch (BundleException ex)
-            {
-                // Ignore this since it is likely the result of a resolver hook.
-            }
+
             if (provider != null)
             {
                 // Delegate to the provider revision.
@@ -1668,11 +1666,7 @@ public class BundleWiringImpl implements BundleWiring
         {
             provider = m_resolver.resolve(m_revision, pkgName);
         }
-        catch (ResolutionException ex)
-        {
-            // Ignore this since it is likely normal.
-        }
-        catch (BundleException ex)
+        catch (ResolutionException | BundleException ex)
         {
             // Ignore this since it is likely the result of a resolver hook.
         }
@@ -2792,11 +2786,7 @@ public class BundleWiringImpl implements BundleWiring
                 .getClassLoader(BundleClassLoader.class).loadClass(name);
                 classpath = true;
             }
-            catch (NoClassDefFoundError err)
-            {
-                // Ignore
-            }
-            catch (Exception ex)
+            catch (NoClassDefFoundError | Exception ex)
             {
                 // Ignore
             }
