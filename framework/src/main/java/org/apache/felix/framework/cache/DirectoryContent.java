@@ -346,7 +346,7 @@ public class DirectoryContent implements Content
                 }
                 Integer libCount = (Integer) m_nativeLibMap.get(entryName);
                 // Either set or increment the library count.
-                libCount = (libCount == null) ? new Integer(0) : new Integer(libCount.intValue() + 1);
+                libCount = (libCount == null) ? 0 : libCount.intValue() + 1;
                 m_nativeLibMap.put(entryName, libCount);
                 File libFile = new File(
                         libDir, libCount.toString() + File.separatorChar + entryName);

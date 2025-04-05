@@ -215,7 +215,7 @@ public class SimpleFilter
                     }
                     else
                     {
-                        stack.add(0, new Integer(idx));
+                        stack.add(0, Integer.valueOf(idx));
                     }
                 }
                 else if (filter.charAt(idx) == '|')
@@ -228,7 +228,7 @@ public class SimpleFilter
                     }
                     else
                     {
-                        stack.add(0, new Integer(idx));
+                        stack.add(0, Integer.valueOf(idx));
                     }
                 }
                 else if (filter.charAt(idx) == '!')
@@ -241,12 +241,12 @@ public class SimpleFilter
                     }
                     else
                     {
-                        stack.add(0, new Integer(idx));
+                        stack.add(0, Integer.valueOf(idx));
                     }
                 }
                 else
                 {
-                    stack.add(0, new Integer(idx));
+                    stack.add(0, Integer.valueOf(idx));
                 }
             }
             else if (!isEscaped && (filter.charAt(idx) == ')'))

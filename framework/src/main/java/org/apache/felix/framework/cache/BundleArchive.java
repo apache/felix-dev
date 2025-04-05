@@ -152,7 +152,7 @@ public class BundleArchive
         initialize();
 
         // Add a revision for the content.
-        reviseInternal(false, new Long(0), m_originalLocation, is);
+        reviseInternal(false, 0L, m_originalLocation, is);
     }
 
     /**
@@ -457,8 +457,8 @@ public class BundleArchive
         throws Exception
     {
         Long revNum = (m_revisions.isEmpty())
-            ? new Long(0)
-            : new Long(m_revisions.lastKey().longValue() + 1);
+            ? 0L
+            : m_revisions.lastKey().longValue() + 1;
 
         reviseInternal(false, revNum, location, is);
     }

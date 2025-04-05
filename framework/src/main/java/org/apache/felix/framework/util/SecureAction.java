@@ -267,7 +267,7 @@ public class SecureAction
             {
                 Actions actions = (Actions) m_actions.get();
                 actions.set(Actions.CREATE_URL_ACTION, protocol, host,
-                    new Integer(port), path, handler);
+                    Integer.valueOf(port), path, handler);
                 return (URL) AccessController.doPrivileged(actions, m_acc);
             }
             catch (PrivilegedActionException ex)
