@@ -3782,22 +3782,21 @@ public class Felix extends BundleImpl implements Framework
         // service object is a service factory.
         if (!(svcObj instanceof ServiceFactory))
         {
-            for (int i = 0; i < classNames.length; i++)
-            {
-                Class clazz = Util.loadClassUsingClass(svcObj.getClass(), classNames[i], m_secureAction);
+            for (String className : classNames) {
+                Class clazz = Util.loadClassUsingClass(svcObj.getClass(), className, m_secureAction);
                 if (clazz == null)
                 {
-                    if (!Util.checkImplementsWithName(svcObj.getClass(), classNames[i]))
+                    if (!Util.checkImplementsWithName(svcObj.getClass(), className))
                     {
                         throw new IllegalArgumentException(
-                                "Cannot cast service: " + classNames[i]);
+                                "Cannot cast service: " + className);
                     }
                 }
                 else if (!clazz.isAssignableFrom(svcObj.getClass()))
                 {
                     throw new IllegalArgumentException(
                         "Service object is not an instance of \""
-                        + classNames[i] + "\".");
+                        + className + "\".");
                 }
             }
         }
@@ -3955,12 +3954,11 @@ public class Felix extends BundleImpl implements Framework
 
         List result = new ArrayList();
 
-        for (int i = 0; i < refs.length; i++)
-        {
+        for (ServiceReference ref : refs) {
             try
             {
-                ((SecurityManager) sm).checkPermission(new ServicePermission(refs[i], ServicePermission.GET));
-                result.add(refs[i]);
+                ((SecurityManager) sm).checkPermission(new ServicePermission(ref, ServicePermission.GET));
+                result.add(ref);
             }
             catch (Exception ex)
             {
@@ -4243,10 +4241,9 @@ public class Felix extends BundleImpl implements Framework
 
                 // Now get exported packages from installed bundles.
                 Bundle[] bundles = getBundles();
-                for (int bundleIdx = 0; bundleIdx < bundles.length; bundleIdx++)
-                {
-                    BundleImpl bundle = (BundleImpl) bundles[bundleIdx];
-                    getExportedPackages(bundle, list);
+                for (Bundle bundle : bundles) {
+                    BundleImpl bundleImpl = (BundleImpl) bundle;
+                    getExportedPackages(bundleImpl, list);
                 }
             }
             finally
@@ -5172,9 +5169,8 @@ public class Felix extends BundleImpl implements Framework
 
             // Refresh all updated bundles.
             Bundle[] bundles = getBundles();
-            for (int i = 0; i < bundles.length; i++)
-            {
-                BundleImpl bundle = (BundleImpl) bundles[i];
+            for (Bundle bundle2 : bundles) {
+                BundleImpl bundle = (BundleImpl) bundle2;
                 if (bundle.isRemovalPending())
                 {
                     try
@@ -5210,19 +5206,17 @@ public class Felix extends BundleImpl implements Framework
 
             // Dispose of the bundles to close their associated contents.
             bundles = getBundles();
-            for (int i = 0; i < bundles.length; i++)
-            {
-                ((BundleImpl) bundles[i]).close();
+            for (Bundle bundle : bundles) {
+                ((BundleImpl) bundle).close();
             }
 
             m_extensionManager.stopExtensionBundles(Felix.this);
             // Stop all system bundle activators.
-            for (int i = 0; i < m_activatorList.size(); i++)
-            {
+            for (Object element : m_activatorList) {
                 try
                 {
                     Felix.m_secureAction.stopActivator((BundleActivator)
-                        m_activatorList.get(i), _getBundleContext());
+                        element, _getBundleContext());
                 }
                 catch (Throwable throwable)
                 {

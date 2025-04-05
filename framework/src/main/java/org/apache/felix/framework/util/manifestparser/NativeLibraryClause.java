@@ -25,7 +25,6 @@ import java.util.Collections;
 import java.util.Dictionary;
 import java.util.HashMap;
 import java.util.Hashtable;
-import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 import java.util.StringTokenizer;
@@ -353,9 +352,7 @@ public class NativeLibraryClause
     {
         // Get all framework properties
         Dictionary dict = new Hashtable();
-        for (Iterator i = configMap.keySet().iterator(); i.hasNext(); )
-        {
-            Object key = i.next();
+        for (Object key : configMap.keySet()) {
             dict.put(key, configMap.get(key));
         }
         // Compute expression

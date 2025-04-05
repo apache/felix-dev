@@ -317,10 +317,9 @@ class BundleContextImpl implements BundleContext
         {
             if (clazzes != null)
             {
-                for (int i = 0;i < clazzes.length;i++)
-                {
+                for (String clazz : clazzes) {
                     ((SecurityManager) sm).checkPermission(
-                        new ServicePermission(clazzes[i], ServicePermission.REGISTER));
+                        new ServicePermission(clazz, ServicePermission.REGISTER));
                 }
             }
         }

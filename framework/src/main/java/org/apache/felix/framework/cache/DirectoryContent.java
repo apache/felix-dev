@@ -450,11 +450,10 @@ public class DirectoryContent implements Content
             File[] combined = children;
             if (children != null)
             {
-                for (int i = 0; i < children.length; i++)
-                {
-                    if (BundleCache.getSecureAction().isFileDirectory(children[i]))
+                for (File child : children) {
+                    if (BundleCache.getSecureAction().isFileDirectory(child))
                     {
-                        File[] grandchildren = listFilesRecursive(children[i]);
+                        File[] grandchildren = listFilesRecursive(child);
                         if (grandchildren != null && grandchildren.length > 0)
                         {
                             File[] tmp = new File[combined.length + grandchildren.length];

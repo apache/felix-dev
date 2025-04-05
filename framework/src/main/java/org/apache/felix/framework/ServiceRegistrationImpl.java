@@ -356,25 +356,24 @@ class ServiceRegistrationImpl implements ServiceRegistration
         }
         if (svcObj != null)
         {
-            for (int i = 0; i < m_classes.length; i++)
-            {
+            for (String m_Class : m_classes) {
                 Class clazz = Util.loadClassUsingClass(
-                    svcObj.getClass(), m_classes[i], Felix.m_secureAction);
+                    svcObj.getClass(), m_Class, Felix.m_secureAction);
                 if ((clazz == null) || !clazz.isAssignableFrom(svcObj.getClass()))
                 {
                     if (clazz == null)
                     {
-                        if (!Util.checkImplementsWithName(svcObj.getClass(), m_classes[i]))
+                        if (!Util.checkImplementsWithName(svcObj.getClass(), m_Class))
                         {
                             throw new ServiceException(
-                                    "Service cannot be cast due to missing class: " + m_classes[i],
+                                    "Service cannot be cast due to missing class: " + m_Class,
                                     ServiceException.FACTORY_ERROR);
                         }
                     }
                     else
                     {
                         throw new ServiceException(
-                            "Service cannot be cast: " + m_classes[i],
+                            "Service cannot be cast: " + m_Class,
                             ServiceException.FACTORY_ERROR);
                     }
                 }
