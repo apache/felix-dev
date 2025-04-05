@@ -187,7 +187,7 @@ class ManifestParserTest
         
         BundleRequirement ir = findRequirement(nativeBundleReq, NativeNamespace.NATIVE_NAMESPACE);
         
-        String filterStr = (String)ir.getDirectives().get(NativeNamespace.REQUIREMENT_FILTER_DIRECTIVE);
+        String filterStr = ir.getDirectives().get(NativeNamespace.REQUIREMENT_FILTER_DIRECTIVE);
         
         Filter actualFilter = FrameworkUtil.createFilter(filterStr);
         
