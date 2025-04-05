@@ -138,7 +138,7 @@ class EventDispatcherTest
         BundleContext bc = Mockito.mock(BundleContext.class);
         Bundle b = Mockito.mock(Bundle.class);
         Mockito.when(b.getBundleContext()).thenReturn(bc);
-        Mockito.when(b.getState()).thenReturn(Integer.valueOf(Bundle.ACTIVE));
+        Mockito.when(b.getState()).thenReturn(Bundle.ACTIVE);
         Mockito.when(bc.getBundle()).thenReturn(b);
 
         return b;
