@@ -45,14 +45,16 @@ class EventDispatcherTest
         final Set calledHooks = new HashSet();
         final EventHook eh1 = new EventHook()
         {
-            public void event(ServiceEvent event, Collection contexts)
+            @Override
+			public void event(ServiceEvent event, Collection contexts)
             {
                 calledHooks.add(this);
             }
         };
         final EventHook eh2 = new EventHook()
         {
-            public void event(ServiceEvent event, Collection contexts)
+            @Override
+			public void event(ServiceEvent event, Collection contexts)
             {
                 calledHooks.add(this);
                 for (Iterator it = contexts.iterator(); it.hasNext();)
@@ -82,7 +84,8 @@ class EventDispatcherTest
         final List fired = Collections.synchronizedList(new ArrayList());
         ServiceListener sl1 = new ServiceListener()
         {
-            public void serviceChanged(ServiceEvent arg0)
+            @Override
+			public void serviceChanged(ServiceEvent arg0)
             {
                 fired.add(this);
             }
@@ -91,7 +94,8 @@ class EventDispatcherTest
 
         ServiceListener sl2 = new ServiceListener()
         {
-            public void serviceChanged(ServiceEvent arg0)
+            @Override
+			public void serviceChanged(ServiceEvent arg0)
             {
                 fired.add(this);
             }
@@ -100,7 +104,8 @@ class EventDispatcherTest
 
         ServiceListener sl3 = new ServiceListener()
         {
-            public void serviceChanged(ServiceEvent arg0)
+            @Override
+			public void serviceChanged(ServiceEvent arg0)
             {
                 fired.add(this);
             }

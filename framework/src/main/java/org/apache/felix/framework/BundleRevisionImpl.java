@@ -182,17 +182,20 @@ public class BundleRevisionImpl implements BundleRevision, Resource
     // BundleRevision methods.
     //
 
-    public String getSymbolicName()
+    @Override
+	public String getSymbolicName()
     {
         return m_symbolicName;
     }
 
-    public Version getVersion()
+    @Override
+	public Version getVersion()
     {
         return m_version;
     }
 
-    public List<Capability> getCapabilities(String namespace)
+    @Override
+	public List<Capability> getCapabilities(String namespace)
     {
         return asCapabilityList(getDeclaredCapabilities(namespace));
     }
@@ -202,7 +205,8 @@ public class BundleRevisionImpl implements BundleRevision, Resource
         return reqs;
     }
 
-    public List<BundleCapability> getDeclaredCapabilities(String namespace)
+    @Override
+	public List<BundleCapability> getDeclaredCapabilities(String namespace)
     {
         List<BundleCapability> result = m_declaredCaps;
         if (namespace != null)
@@ -219,7 +223,8 @@ public class BundleRevisionImpl implements BundleRevision, Resource
         return result;
     }
 
-    public List<Requirement> getRequirements(String namespace)
+    @Override
+	public List<Requirement> getRequirements(String namespace)
     {
         return asRequirementList(getDeclaredRequirements(namespace));
     }
@@ -229,7 +234,8 @@ public class BundleRevisionImpl implements BundleRevision, Resource
         return reqs;
     }
 
-    public List<BundleRequirement> getDeclaredRequirements(String namespace)
+    @Override
+	public List<BundleRequirement> getDeclaredRequirements(String namespace)
     {
         List<BundleRequirement> result = m_declaredReqs;
         if (namespace != null)
@@ -246,17 +252,20 @@ public class BundleRevisionImpl implements BundleRevision, Resource
         return result;
     }
 
-    public int getTypes()
+    @Override
+	public int getTypes()
     {
         return (getManifestVersion().equals("2") && m_isFragment) ? BundleRevision.TYPE_FRAGMENT : 0;
     }
 
-    public BundleWiring getWiring()
+    @Override
+	public BundleWiring getWiring()
     {
         return m_wiring;
     }
 
-    public BundleImpl getBundle()
+    @Override
+	public BundleImpl getBundle()
     {
         return m_bundle;
     }

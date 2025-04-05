@@ -34,7 +34,8 @@ import java.net.*;
 **/
 class FakeURLStreamHandler extends URLStreamHandler
 {
-    protected URLConnection openConnection(URL url) throws IOException
+    @Override
+	protected URLConnection openConnection(URL url) throws IOException
     {
         throw new IOException("FakeURLStreamHandler can not be used!");
     }

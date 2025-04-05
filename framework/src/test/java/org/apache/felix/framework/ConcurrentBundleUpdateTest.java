@@ -99,7 +99,8 @@ class ConcurrentBundleUpdateTest
                 felix.getBundleContext().addBundleListener(listenerStarting);
                 new Thread()
                 {
-                    public void run() 
+                    @Override
+					public void run() 
                     {
                         try
                         {
@@ -121,7 +122,8 @@ class ConcurrentBundleUpdateTest
                 
                 new Thread() 
                 {
-                    public void run() 
+                    @Override
+					public void run() 
                     {
                         try 
                         {
@@ -257,7 +259,8 @@ class ConcurrentBundleUpdateTest
                 felix.getBundleContext().addBundleListener(listenerStarting);
                 new Thread()
                 {
-                    public void run() 
+                    @Override
+					public void run() 
                     {
                         try 
                         {

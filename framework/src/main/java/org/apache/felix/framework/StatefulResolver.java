@@ -138,7 +138,8 @@ class StatefulResolver
         {
             return new Executor()
             {
-                public void execute(Runnable command)
+                @Override
+				public void execute(Runnable command)
                 {
                     command.run();
                 }

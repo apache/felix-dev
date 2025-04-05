@@ -65,7 +65,8 @@ class ConcurrentClassLoaderTest
         for (int i = 0; i < CONCURRENCY_LEVEL; i++) {
             new Thread()
             {
-                public void run()
+                @Override
+				public void run()
                 {
                     try {
                         latch.countDown();

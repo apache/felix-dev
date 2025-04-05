@@ -112,7 +112,8 @@ public class SecureAction
 
     private static final ThreadLocal m_actions = new ThreadLocal()
     {
-        public Object initialValue()
+        @Override
+		public Object initialValue()
         {
             return new Actions();
         }
@@ -1909,7 +1910,8 @@ public class SecureAction
             m_arg6 = null;
         }
 
-        public Object run() throws Exception
+        @Override
+		public Object run() throws Exception
         {
             int action =  m_action;
             Object arg1 = m_arg1;

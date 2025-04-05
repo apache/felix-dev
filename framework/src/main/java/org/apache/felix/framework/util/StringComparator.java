@@ -25,7 +25,8 @@ public class StringComparator implements Comparator<String>
 
     public static final StringComparator COMPARATOR = new StringComparator();
 
-    public int compare(String s1, String s2)
+    @Override
+	public int compare(String s1, String s2)
     {
         int n1 = s1.length();
         int n2 = s2.length();

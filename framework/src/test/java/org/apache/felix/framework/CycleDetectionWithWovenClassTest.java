@@ -119,7 +119,8 @@ class CycleDetectionWithWovenClassTest {
             
         }
         
-        public void run() {
+        @Override
+		public void run() {
             try
             {
                 ((Callable<Boolean>) context.getBundle().loadClass("org.apache.felix.framework.CycleDetectionWithWovenClassTest$Hook").newInstance()).call();

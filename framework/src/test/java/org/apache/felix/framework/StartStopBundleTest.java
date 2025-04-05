@@ -77,7 +77,8 @@ public class StartStopBundleTest
 
             new Thread()
             {
-                public void run()
+                @Override
+				public void run()
                 {
                     try
                     {
@@ -101,7 +102,8 @@ public class StartStopBundleTest
 
             new Thread()
             {
-                public void run()
+                @Override
+				public void run()
                 {
                     try
                     {
@@ -162,12 +164,14 @@ public class StartStopBundleTest
     }
    public static class TestBundleActivator implements BundleActivator
     {
-        public void start(BundleContext context) throws Exception
+        @Override
+		public void start(BundleContext context) throws Exception
         {
             Thread.sleep(DELAY);
         }
 
-        public void stop(BundleContext context) throws Exception
+        @Override
+		public void stop(BundleContext context) throws Exception
         {
             Thread.sleep(DELAY);
         }

@@ -55,7 +55,8 @@ class BootLoaderTest
 
         Map bundle2Classloader = new HashMap()
         {
-            public Object get(Object o)
+            @Override
+			public Object get(Object o)
             {
                 queriedFor.add(o);
                 return myClassloader;
@@ -99,7 +100,8 @@ class BootLoaderTest
 
     public static final class CL extends ClassLoader
     {
-        protected Class findClass(String name) throws ClassNotFoundException
+        @Override
+		protected Class findClass(String name) throws ClassNotFoundException
         {
             if (name.equals("boot.test.Test"))
             {

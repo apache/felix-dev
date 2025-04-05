@@ -188,7 +188,8 @@ public class ConcurrencyTest
             m_registration.unregister();
         }
 
-        public Component addingService(ServiceReference<Component> reference)
+        @Override
+		public Component addingService(ServiceReference<Component> reference)
         {
             Component service = m_ctx.getService(reference);
             String id = (String) reference.getProperty("id");
@@ -204,11 +205,13 @@ public class ConcurrencyTest
             return service;
         }
 
-        public void modifiedService(ServiceReference<Component> reference, Component service)
+        @Override
+		public void modifiedService(ServiceReference<Component> reference, Component service)
         {
         }
 
-        public void removedService(ServiceReference<Component> reference, Component service)
+        @Override
+		public void removedService(ServiceReference<Component> reference, Component service)
         {
             try
             {
@@ -248,7 +251,8 @@ public class ConcurrencyTest
             m_thread.interrupt();
         }
 
-        public void run()
+        @Override
+		public void run()
         {
             // Creates all components. Each nth components will depends on the
             // nth+1 component. The last component does not depend on another one.
@@ -292,7 +296,8 @@ public class ConcurrencyTest
                 final Component component = components.get(i);
                 TPOOL.execute(new Runnable()
                 {
-                    public void run()
+                    @Override
+					public void run()
                     {
                         try
                         {

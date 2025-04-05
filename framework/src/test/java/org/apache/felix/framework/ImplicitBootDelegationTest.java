@@ -154,6 +154,7 @@ class ImplicitBootDelegationTest {
 			
 		}
 		
+		@Override
 		public void run() {
 			Object service = context.getService(context.getServiceReference(
 					"org.apache.felix.framework.ImplicitBootDelegationTest$TestClass"));
@@ -245,6 +246,7 @@ class ImplicitBootDelegationTest {
 		public void stop(BundleContext context) throws Exception {
 		}
 		
+		@Override
 		public void run() 
 		{
 			new TestClass();

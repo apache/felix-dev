@@ -36,17 +36,20 @@ class RequiredBundleImpl implements RequiredBundle
         m_bundle = bundle;
     }
 
-    public String getSymbolicName()
+    @Override
+	public String getSymbolicName()
     {
         return m_bundle.getSymbolicName();
     }
 
-    public Bundle getBundle()
+    @Override
+	public Bundle getBundle()
     {
         return m_bundle;
     }
 
-    public Bundle[] getRequiringBundles()
+    @Override
+	public Bundle[] getRequiringBundles()
     {
         // If the package is stale, then return null per the spec.
         if (m_bundle.isStale())
@@ -57,17 +60,20 @@ class RequiredBundleImpl implements RequiredBundle
         return set.toArray(new Bundle[set.size()]);
     }
 
-    public Version getVersion()
+    @Override
+	public Version getVersion()
     {
         return m_bundle.getVersion();
     }
 
-    public boolean isRemovalPending()
+    @Override
+	public boolean isRemovalPending()
     {
         return m_bundle.isRemovalPending();
     }
 
-    public String toString()
+    @Override
+	public String toString()
     {
         if (m_toString == null)
         {

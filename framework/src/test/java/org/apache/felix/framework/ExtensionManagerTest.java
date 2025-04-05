@@ -255,11 +255,13 @@ class ExtensionManagerTest {
     private static StringBuilder activatorCalls = new StringBuilder();
 
     public static class TestActivator implements BundleActivator {
-        public void start(BundleContext context) throws Exception {
+        @Override
+		public void start(BundleContext context) throws Exception {
             activatorCalls.append("start");
         }
 
-        public void stop(BundleContext context) throws Exception {
+        @Override
+		public void stop(BundleContext context) throws Exception {
             activatorCalls.append("stop");
         }
     }

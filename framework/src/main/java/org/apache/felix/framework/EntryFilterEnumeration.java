@@ -87,12 +87,14 @@ class EntryFilterEnumeration implements Enumeration
         findNext();
     }
 
-    public synchronized boolean hasMoreElements()
+    @Override
+	public synchronized boolean hasMoreElements()
     {
         return !m_nextEntries.isEmpty();
     }
 
-    public synchronized Object nextElement()
+    @Override
+	public synchronized Object nextElement()
     {
         if (m_nextEntries.isEmpty())
         {
