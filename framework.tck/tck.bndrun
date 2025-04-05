@@ -1,0 +1,36 @@
+-runproperties: \
+	${runproperties}=,\
+	org.osgi.test.cases.framework.div.tb16=xyz,\
+	org.osgi.test.cases.framework.div.tb15=abc,\
+	org.osgi.framework.system.capabilities.extra='osgi.ee; osgi.ee="testOSGiEE", osgi.ee; osgi.ee="AA/BB", osgi.ee; osgi.ee="CC-XX/DD-YY", osgi.ee; osgi.ee="EE/FF-YY"; version:Version="2.0", osgi.ee; osgi.ee="GG-XX/HH"; version:Version="1.0", osgi.ee; osgi.ee="II-1.0/JJ-2.0", osgi.ee; osgi.ee="div/tb7a"',\
+	org.osgi.test.cases.framework.div.tb12=abc
+
+-runee: JavaSE-17
+-runrequires: \
+	bnd.identity;id='org.osgi.test.cases.framework',\
+	bnd.identity;id='net.bytebuddy.byte-buddy',\
+	bnd.identity;id=assertj-core,\
+	bnd.identity;id=junit-platform-commons,\
+	bnd.identity;id=junit-platform-engine,\
+	bnd.identity;id=junit-platform-launcher,\
+	bnd.identity;id=junit-vintage-engine,\
+	bnd.identity;id='biz.aQute.junit'
+
+
+-runfw: org.apache.felix.framework;version='[7.0.0,8)
+
+-tester: biz.aQute.tester.junit-platform
+
+# resolved bundles
+-runbundles: \
+	org.osgi.test.cases.framework;version='[8.0.0,8.0.1)',\
+	org.apache.servicemix.bundles.bcel;version='[5.2.0,5.2.1)',\
+	org.apache.servicemix.bundles.junit;version='[4.13.2,4.13.3)',\
+	junit-platform-commons;version='[1.12.1,1.12.2)',\
+	junit-platform-engine;version='[1.12.1,1.12.2)',\
+	org.opentest4j;version='[1.3.0,1.3.1)',\
+	junit-platform-launcher;version='[1.12.1,1.12.2)',\
+	assertj-core;version='[3.27.3,3.27.4)',\
+	biz.aQute.junit;version='[6.4.1,6.4.2)',\
+	junit-vintage-engine;version='[5.7.1,5.7.2)',\
+	net.bytebuddy.byte-buddy;version='[1.17.5,1.17.6)'
