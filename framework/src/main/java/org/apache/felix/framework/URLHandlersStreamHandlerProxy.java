@@ -153,7 +153,7 @@ public class URLHandlersStreamHandlerProxy extends URLStreamHandler
         }
         try
         {
-            return ((Boolean) EQUALS.invoke(svc, url1, url2)).booleanValue();
+            return ((Boolean) EQUALS.invoke(svc, url1, url2));
         }
         catch (Exception ex)
         {
@@ -174,7 +174,7 @@ public class URLHandlersStreamHandlerProxy extends URLStreamHandler
         }
         try
         {
-            return ((Integer) GET_DEFAULT_PORT.invoke(svc, null)).intValue();
+            return ((Integer) GET_DEFAULT_PORT.invoke(svc, null));
         }
         catch (Exception ex)
         {
@@ -218,7 +218,7 @@ public class URLHandlersStreamHandlerProxy extends URLStreamHandler
         }
         try
         {
-            return ((Integer) HASH_CODE.invoke(svc, url)).intValue();
+            return ((Integer) HASH_CODE.invoke(svc, url));
         }
         catch (Exception ex)
         {
@@ -240,7 +240,7 @@ public class URLHandlersStreamHandlerProxy extends URLStreamHandler
         }
         try
         {
-            return ((Boolean) HOSTS_EQUAL.invoke(svc, url1, url2)).booleanValue();
+            return ((Boolean) HOSTS_EQUAL.invoke(svc, url1, url2));
         }
         catch (Exception ex)
         {
@@ -437,7 +437,7 @@ public class URLHandlersStreamHandlerProxy extends URLStreamHandler
         try
         {
             return ((Boolean) SAME_FILE.invoke(
-                svc, url1, url2)).booleanValue();
+                svc, url1, url2));
         }
         catch (Exception ex)
         {

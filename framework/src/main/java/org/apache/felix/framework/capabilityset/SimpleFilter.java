@@ -263,11 +263,11 @@ public class SimpleFilter
                 else if (!stack.isEmpty() && (stack.get(0) instanceof SimpleFilter))
                 {
                     ((List) ((SimpleFilter) stack.get(0)).m_value).add(
-                        SimpleFilter.subfilter(filter, ((Integer) top).intValue(), idx));
+                        SimpleFilter.subfilter(filter, ((Integer) top), idx));
                 }
                 else
                 {
-                    sf = SimpleFilter.subfilter(filter, ((Integer) top).intValue(), idx);
+                    sf = SimpleFilter.subfilter(filter, ((Integer) top), idx);
                 }
             }
             else if (!isEscaped && (filter.charAt(idx) == '\\'))
