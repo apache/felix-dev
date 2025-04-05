@@ -18,15 +18,15 @@
  */
 package org.apache.felix.framework;
 
-import static org.junit.Assert.assertEquals;
+import static org.assertj.core.api.Assertions.assertThat;
 
-import org.junit.Test;
+import org.junit.jupiter.api.Test;
 import org.osgi.framework.Version;
 
-public class VersionConverterTest {
+class VersionConverterTest {
 
     @Test
-    public void testConversions() throws Exception {
+    void conversions() throws Exception {
         assertValid("1.0.0", "1");
         assertValid("2.3.0", "2.3");
         assertValid("1.0.0", "1.0.0");
@@ -43,6 +43,6 @@ public class VersionConverterTest {
 
 
     private void assertValid(String expectedVersion, String input) throws Exception {
-        assertEquals(new Version(expectedVersion), VersionConverter.toOsgiVersion(input));
+        assertThat(VersionConverter.toOsgiVersion(input)).isEqualTo(new Version(expectedVersion));
     }
 }

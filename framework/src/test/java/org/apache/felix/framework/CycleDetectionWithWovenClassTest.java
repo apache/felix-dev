@@ -33,8 +33,7 @@ import java.util.jar.JarOutputStream;
 import java.util.jar.Manifest;
 import java.util.zip.ZipEntry;
 
-import org.junit.Assert;
-import org.junit.Assume;
+import org.junit.jupiter.api.Test;
 import org.osgi.framework.Bundle;
 import org.osgi.framework.BundleActivator;
 import org.osgi.framework.BundleContext;
@@ -45,11 +44,10 @@ import org.osgi.framework.ServiceRegistration;
 import org.osgi.framework.hooks.weaving.WeavingHook;
 import org.osgi.framework.hooks.weaving.WovenClass;
 
-import junit.framework.TestCase;
+class CycleDetectionWithWovenClassTest {
 
-public class CycleDetectionWithWovenClassTest extends TestCase {
-    
-    public void testDoesBootdelegateForClassloaderClassload() throws Exception{
+    @Test
+    void doesBootdelegateForClassloaderClassload() throws Exception {
         withFelixDo(new ThrowingConsumer<Felix>() {
             @Override
             public void accept(Felix felix) throws Exception {
@@ -138,6 +136,7 @@ public class CycleDetectionWithWovenClassTest extends TestCase {
         }
         
     }
+
     public static class Hook implements WeavingHook, Callable<Boolean> {
 
         private static boolean woven = false;
