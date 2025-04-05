@@ -1151,7 +1151,7 @@ public class SecureAction
                     Class<Consumer<AccessibleObject[]>> result;
                     try {
                         Method defineAnonymousClass = unsafeClass.getMethod("defineAnonymousClass", Class.class, byte[].class, Object[].class); //$NON-NLS-1$
-                        result = (Class<Consumer<AccessibleObject[]>>) defineAnonymousClass.invoke(unsafe, URL.class, accessor , null);;
+                        result = (Class<Consumer<AccessibleObject[]>>) defineAnonymousClass.invoke(unsafe, URL.class, accessor , null);
                     }
                     catch (NoSuchMethodException ex)
                     {
