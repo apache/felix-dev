@@ -41,7 +41,7 @@ class FilterTest
     @Test
     void missingAttribute()
     {
-        Dictionary<String, Object> dict = new Hashtable<String, Object>();
+        Dictionary<String, Object> dict = new Hashtable<>();
         dict.put("one", "one-value");
         dict.put("two", "two-value");
         dict.put("three", "three-value");
@@ -68,7 +68,7 @@ class FilterTest
         assertThat(filter.match(createTestDict(array))).isTrue();
 
         //ArrayList
-        ArrayList<String> arrayList = new ArrayList<String>();
+        ArrayList<String> arrayList = new ArrayList<>();
         arrayList.addAll(Arrays.asList(array));
         assertThat(filter.match(createTestDict(arrayList))).isTrue();
 
@@ -82,7 +82,7 @@ class FilterTest
         assertThat(filter.match(createTestDict(unmodCollection))).isTrue();
 
         //hashSet
-        Set<String> hashSet = new HashSet<String>();
+        Set<String> hashSet = new HashSet<>();
         hashSet.addAll(arrayList);
         assertThat(filter.match(createTestDict(hashSet))).isTrue();
 
@@ -92,13 +92,13 @@ class FilterTest
         assertThat(filter.match(createTestDict(synchronizedCollection))).isTrue();
 
         //linkedList
-        Collection<String> linkedList = new LinkedList<String>(arrayList);
+        Collection<String> linkedList = new LinkedList<>(arrayList);
         assertThat(filter.match(createTestDict(linkedList))).isTrue();
     }
 
     private static Dictionary<String, Object> createTestDict(Object o)
     {
-        Hashtable<String, Object> dictionary = new Hashtable<String, Object>();
+        Hashtable<String, Object> dictionary = new Hashtable<>();
         dictionary.put("checkBool", true);
         dictionary.put("checkString", o);
         return dictionary;

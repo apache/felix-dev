@@ -58,7 +58,7 @@ class PackageAdminImplTest
 
         String cache = cacheDir.getPath();
 
-        Map<String,String> params = new HashMap<String, String>();
+        Map<String,String> params = new HashMap<>();
         params.put("felix.cache.profiledir", cache);
         params.put("felix.cache.dir", cache);
         params.put(Constants.FRAMEWORK_STORAGE, cache);
@@ -106,10 +106,10 @@ class PackageAdminImplTest
             assertThat(pa.getExportedPackage("org.foo.bundle").getExportingBundle()).isEqualTo(b);
             assertThat(pa.getExportedPackage("org.foo.fragment").getExportingBundle()).isEqualTo(b);
 
-            Set<String> expected = new HashSet<String>();
+            Set<String> expected = new HashSet<>();
             expected.addAll(Arrays.asList("org.foo.bundle", "org.foo.fragment"));
 
-            Set<String> actual = new HashSet<String>();
+            Set<String> actual = new HashSet<>();
             for (ExportedPackage ep : pa.getExportedPackages(b))
             {
                 actual.add(ep.getName());

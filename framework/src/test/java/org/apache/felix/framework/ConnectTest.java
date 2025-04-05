@@ -65,7 +65,7 @@ class ConnectTest
         cacheDir.mkdirs();
         String cache = cacheDir.getPath();
 
-        Map<String, String> params = new HashMap<String, String>();
+        Map<String, String> params = new HashMap<>();
         params.put("felix.cache.profiledir", cache);
         params.put("felix.cache.dir", cache);
         params.put(Constants.FRAMEWORK_STORAGE, cache);
@@ -75,7 +75,7 @@ class ConnectTest
         Framework framework = null;
         try
         {
-            final AtomicReference<String> version = new AtomicReference<String>("1.0.0");
+            final AtomicReference<String> version = new AtomicReference<>("1.0.0");
             ModuleConnector connectFactory = new ModuleConnector()
             {
                 @Override
@@ -153,7 +153,7 @@ class ConnectTest
                                 @Override
                                 public Optional<Map<String, String>> getHeaders()
                                 {
-                                    Map<String, String> headers = new HashMap<String, String>();
+                                    Map<String, String> headers = new HashMap<>();
                                     headers.put(Constants.BUNDLE_MANIFESTVERSION, "2");
                                     headers.put(Constants.BUNDLE_SYMBOLICNAME, "connect.foo");
                                     headers.put(Constants.BUNDLE_VERSION, version.get());
@@ -232,7 +232,7 @@ class ConnectTest
                                 @Override
                                 public Optional<Map<String, String>> getHeaders()
                                 {
-                                    Map<String, String> headers = new HashMap<String, String>();
+                                    Map<String, String> headers = new HashMap<>();
                                     headers.put(Constants.BUNDLE_MANIFESTVERSION, "2");
                                     headers.put(Constants.BUNDLE_SYMBOLICNAME, "connect.extension");
                                     headers.put(Constants.BUNDLE_VERSION, "1.0.0");

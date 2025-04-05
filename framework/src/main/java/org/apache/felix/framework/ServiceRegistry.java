@@ -49,13 +49,13 @@ public class ServiceRegistry
     private final AtomicLong m_currentServiceId = new AtomicLong(1);
 
     // Maps bundle to an array of service registrations.
-    private final ConcurrentMap<Bundle, List<ServiceRegistration<?>>> m_regsMap = new ConcurrentHashMap<Bundle, List<ServiceRegistration<?>>>();
+    private final ConcurrentMap<Bundle, List<ServiceRegistration<?>>> m_regsMap = new ConcurrentHashMap<>();
 
     // Capability set for all service registrations.
     private final CapabilitySet m_regCapSet = new CapabilitySet(Collections.singletonList(Constants.OBJECTCLASS), false);
 
     // Maps bundle to an array of usage counts.
-    private final ConcurrentMap<Bundle, UsageCount[]> m_inUseMap = new ConcurrentHashMap<Bundle, UsageCount[]>();
+    private final ConcurrentMap<Bundle, UsageCount[]> m_inUseMap = new ConcurrentHashMap<>();
 
     private final ServiceRegistryCallbacks m_callbacks;
 
@@ -77,7 +77,7 @@ public class ServiceRegistry
         final List<ServiceRegistration<?>> regs = m_regsMap.get(bundle);
         if (regs != null)
         {
-            final List<ServiceReference<?>> refs = new ArrayList<ServiceReference<?>>(regs.size());
+            final List<ServiceReference<?>> refs = new ArrayList<>(regs.size());
             // this is a per bundle list, therefore synchronizing this should be fine
             synchronized ( regs )
             {
@@ -123,7 +123,7 @@ public class ServiceRegistry
         this.hookRegistry.addHooks(classNames, svcObj, reg.getReference());
 
         // Get the bundles current registered services.
-        final List<ServiceRegistration<?>> newRegs = new ArrayList<ServiceRegistration<?>>();
+        final List<ServiceRegistration<?>> newRegs = new ArrayList<>();
         List<ServiceRegistration<?>> regs = m_regsMap.putIfAbsent(bundle, newRegs);
         if (regs == null)
         {
@@ -229,7 +229,7 @@ public class ServiceRegistry
             // we create a copy array and use that for iterating
             synchronized ( regs )
             {
-                copyRefs = new ArrayList<ServiceRegistration<?>>(regs);
+                copyRefs = new ArrayList<>(regs);
             }
             for (final ServiceRegistration<?> reg : copyRefs)
             {
@@ -263,7 +263,7 @@ public class ServiceRegistry
         else if ((className != null) && (filter != null))
         {
             // Return services matching the class name and filter.
-            final List<SimpleFilter> filters = new ArrayList<SimpleFilter>(2);
+            final List<SimpleFilter> filters = new ArrayList<>(2);
             filters.add(new SimpleFilter(Constants.OBJECTCLASS, className, SimpleFilter.EQ));
             filters.add(filter);
             filter = new SimpleFilter(null, filters, SimpleFilter.AND);
@@ -760,7 +760,7 @@ public class ServiceRegistry
 
         final AtomicLong m_count = new AtomicLong();
         final AtomicLong m_serviceObjectsCount = new AtomicLong();
-        final AtomicReference<ServiceHolder> m_svcHolderRef = new AtomicReference<ServiceHolder>();
+        final AtomicReference<ServiceHolder> m_svcHolderRef = new AtomicReference<>();
 
         UsageCount(final ServiceReference<?> ref, final boolean isPrototype)
         {

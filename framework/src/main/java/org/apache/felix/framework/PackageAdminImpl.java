@@ -164,7 +164,7 @@ public class PackageAdminImpl implements PackageAdmin
         // If the bundle is not a fragment, then return its fragments.
         if ((getBundleType(bundle) & BUNDLE_TYPE_FRAGMENT) == 0)
         {
-            List<Bundle> list = new ArrayList<Bundle>();
+            List<Bundle> list = new ArrayList<>();
             // Iterate through revisions
             for (BundleRevision revision : bundle.adapt(BundleRevisions.class).getRevisions())
             {
@@ -196,7 +196,7 @@ public class PackageAdminImpl implements PackageAdmin
         // If the bundle is a fragment, return its hosts
         if ((getBundleType(bundle) & BUNDLE_TYPE_FRAGMENT) != 0)
         {
-            List<Bundle> list = new ArrayList<Bundle>();
+            List<Bundle> list = new ArrayList<>();
             // Iterate through revisions
             for (BundleRevision revision : bundle.adapt(BundleRevisions.class).getRevisions())
             {

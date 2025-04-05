@@ -111,7 +111,7 @@ class ConcurrentClassLoaderTest
 
     private static Framework createFramework(File cacheDir)
     {
-        Map<String, String> params = new HashMap<String, String>();
+        Map<String, String> params = new HashMap<>();
         params.put(Constants.FRAMEWORK_SYSTEMPACKAGES, "org.osgi.framework; version=1.4.0,"
                 + "org.osgi.service.packageadmin; version=1.2.0,"
                 + "org.osgi.service.startlevel; version=1.1.0,"

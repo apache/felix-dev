@@ -576,7 +576,7 @@ loop:   for (int i = 0; i < len; i++)
         // Rather than building a filter string to be parsed into a SimpleFilter,
         // we will just create the parsed SimpleFilter directly.
 
-        List<SimpleFilter> filters = new ArrayList<SimpleFilter>();
+        List<SimpleFilter> filters = new ArrayList<>();
 
         for (Entry<String, Object> entry : attrs.entrySet())
         {

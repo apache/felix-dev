@@ -400,7 +400,7 @@ public class BundleProtectionDomain extends ProtectionDomain
                 RevisionAsJarURL.create(revision),
                 (Certificate[]) certificates),
             null, null, null);
-        m_revision = new WeakReference<BundleRevisionImpl>(revision);
+        m_revision = new WeakReference<>(revision);
         m_hashCode = revision.hashCode();
         m_toString = "[" + revision + "]";
     }

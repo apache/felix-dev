@@ -106,7 +106,7 @@ public class BundleArchive
 
     // Maps a Long revision number to a BundleRevision.
     private final SortedMap<Long, BundleArchiveRevision> m_revisions
-        = new TreeMap<Long, BundleArchiveRevision>();
+        = new TreeMap<>();
 
     /**
      * <p>

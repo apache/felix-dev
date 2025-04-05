@@ -65,7 +65,7 @@ class BundleCacheTest
         filesDir = new File(tempDir, "files");
         String cacheDirPath = cacheDir.getPath();
 
-        Map<String, String> params = new HashMap<String, String>();
+        Map<String, String> params = new HashMap<>();
         params.put("felix.cache.profiledir", cacheDirPath);
         params.put("felix.cache.dir", cacheDirPath);
         params.put(Constants.FRAMEWORK_STORAGE, cacheDirPath);
@@ -239,19 +239,19 @@ class BundleCacheTest
         assertThat(revision).isNotNull();
         assertThat(revision.getManifestHeader()).isNotNull();
         assertThat(revision.getManifestHeader()).containsEntry("foo", "bar");
-        perRevision(revision.getContent(),  new TreeSet<String>(Arrays.asList("META-INF/", "META-INF/MANIFEST.MF", "file1", "inner/", "inner/empty/", "inner/file1", "inner/i+?äö \\§$%nner.jar")));
-        perRevision(revision.getContent().getEntryAsContent("inner"),  new TreeSet<String>(Arrays.asList("file1", "empty/", "i+?äö \\§$%nner.jar")));
+        perRevision(revision.getContent(),  new TreeSet<>(Arrays.asList("META-INF/", "META-INF/MANIFEST.MF", "file1", "inner/", "inner/empty/", "inner/file1", "inner/i+?äö \\§$%nner.jar")));
+        perRevision(revision.getContent().getEntryAsContent("inner"),  new TreeSet<>(Arrays.asList("file1", "empty/", "i+?äö \\§$%nner.jar")));
         assertThat(revision.getContent().getEntryAsContent("inner/inner")).isNull();
         assertThat(revision.getContent().getEntryAsContent("inner/empty/")).isNotNull();
         assertThat(revision.getContent().getEntryAsContent("inner/empty").getEntries()).isNull();
-        perRevision(revision.getContent().getEntryAsContent("inner/").getEntryAsContent("i+?äö \\§$%nner.jar"), new TreeSet<String>(Arrays.asList("file1", "inner/", "inner/empty/", "inner/file1")));
+        perRevision(revision.getContent().getEntryAsContent("inner/").getEntryAsContent("i+?äö \\§$%nner.jar"), new TreeSet<>(Arrays.asList("file1", "inner/", "inner/empty/", "inner/file1")));
     }
 
     private void perRevision(Content content, Set<String> expectedEntries) throws Exception
     {
         assertThat(content).isNotNull();
         Enumeration<String> entries =  content.getEntries();
-        Set<String> foundEntries = new TreeSet<String>();
+        Set<String> foundEntries = new TreeSet<>();
         while (entries.hasMoreElements())
         {
             foundEntries.add(entries.nextElement());

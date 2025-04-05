@@ -213,7 +213,7 @@ class CycleDetectionWithWovenClassTest {
         Class[] classesCombined;
         
         if (classes.length > 0) {
-            List<Class> list = new ArrayList<Class>(Arrays.asList(classes));
+            List<Class> list = new ArrayList<>(Arrays.asList(classes));
             list.add(activator);
             classesCombined = list.toArray(new Class[0]);
         }

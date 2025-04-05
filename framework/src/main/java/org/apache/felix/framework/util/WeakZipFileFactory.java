@@ -45,8 +45,8 @@ public class WeakZipFileFactory
 
     private static final SecureAction m_secureAction = new SecureAction();
 
-    private final List<WeakZipFile> m_zipFiles = new ArrayList<WeakZipFile>();
-    private final List<WeakZipFile> m_openFiles = new ArrayList<WeakZipFile>();
+    private final List<WeakZipFile> m_zipFiles = new ArrayList<>();
+    private final List<WeakZipFile> m_openFiles = new ArrayList<>();
     private final Lock m_globalMutex = new ReentrantLock();
     private final int m_limit;
 
@@ -280,13 +280,13 @@ public class WeakZipFileFactory
                         // will be from a different zip file. It is not clear if this
                         // will cause any issues.
                         Enumeration<? extends ZipEntry> e = m_zipFile.entries();
-                        entries = new LinkedHashMap<String, ZipEntry>();
+                        entries = new LinkedHashMap<>();
                         while (e.hasMoreElements())
                         {
                             ZipEntry entry = e.nextElement();
                             entries.put(entry.getName(), entry);
                         }
-                        m_entries = new SoftReference<LinkedHashMap<String, ZipEntry>>(entries);
+                        m_entries = new SoftReference<>(entries);
                     }
                 }
             }

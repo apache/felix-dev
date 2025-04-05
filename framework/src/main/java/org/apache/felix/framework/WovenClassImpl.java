@@ -37,7 +37,7 @@ class WovenClassImpl implements WovenClass, List<String>
     private final String m_className;
     private final BundleWiring m_wiring;
     private byte[] m_bytes;
-    private List<String> m_imports = new ArrayList<String>();
+    private List<String> m_imports = new ArrayList<>();
     private Class m_definedClass = null;
     private boolean m_isComplete = false;
     private int m_state;

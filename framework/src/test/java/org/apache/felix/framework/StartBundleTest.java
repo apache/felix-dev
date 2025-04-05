@@ -36,7 +36,7 @@ class StartBundleTest
     @Test
     void transientExeption() throws Exception
     {
-        HashMap<String, String> config = new HashMap<String, String>();
+        HashMap<String, String> config = new HashMap<>();
         config.put(FelixConstants.BUNDLE_STARTLEVEL_PROP, "1");
         final Felix f = new Felix(config);
 

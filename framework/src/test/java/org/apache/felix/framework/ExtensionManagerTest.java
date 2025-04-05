@@ -91,7 +91,7 @@ class ExtensionManagerTest {
     @Test
     void buildNativeCapabilities() {
         Logger logger = new Logger();
-        Map<String, String> configMap = new HashMap<String, String>();
+        Map<String, String> configMap = new HashMap<>();
         configMap.put(FelixConstants.FELIX_VERSION_PROPERTY, "1.0");
         configMap.put(FelixConstants.FRAMEWORK_LANGUAGE, "en");
         configMap.put(FelixConstants.FRAMEWORK_PROCESSOR, "x86_64");
@@ -123,7 +123,7 @@ class ExtensionManagerTest {
         cacheDir.mkdirs();
         String cache = cacheDir.getAbsolutePath();
 
-        Map<String, Object> params = new HashMap<String, Object>();
+        Map<String, Object> params = new HashMap<>();
         params.put("felix.cache.profiledir", cache);
         params.put("felix.cache.dir", cache);
         params.put(Constants.FRAMEWORK_STORAGE, cache);
@@ -154,7 +154,7 @@ class ExtensionManagerTest {
         cacheDir.mkdirs();
         String cache = cacheDir.getAbsolutePath();
 
-        Map<String, Object> params = new HashMap<String, Object>();
+        Map<String, Object> params = new HashMap<>();
         params.put("felix.cache.profiledir", cache);
         params.put("felix.cache.dir", cache);
         params.put(Constants.FRAMEWORK_STORAGE, cache);
@@ -188,7 +188,7 @@ class ExtensionManagerTest {
         cacheDir.mkdirs();
         String cache = cacheDir.getAbsolutePath();
 
-        Map<String, Object> params = new HashMap<String, Object>();
+        Map<String, Object> params = new HashMap<>();
         params.put("felix.cache.profiledir", cache);
         params.put("felix.cache.dir", cache);
         params.put(Constants.FRAMEWORK_STORAGE, cache);
