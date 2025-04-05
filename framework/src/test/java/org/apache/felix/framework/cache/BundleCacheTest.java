@@ -322,14 +322,9 @@ class BundleCacheTest
 
         assertThat(target.getParentFile()).isDirectory();
 
-        FileOutputStream output = new FileOutputStream(target);
-        try
+        try (FileOutputStream output = new FileOutputStream(target))
         {
             output.write(content);
-        }
-        finally
-        {
-            output.close();
         }
     }
 
