@@ -2001,7 +2001,7 @@ public class ClassParser
             {
                 if ("+-*BCDFIJSZV".indexOf(c) < 0)
                 {
-                    ;// System.err.println("Should not skip: " + c);
+                    // System.err.println("Should not skip: " + c);
                 }
             }
 

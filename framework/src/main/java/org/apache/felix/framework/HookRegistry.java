@@ -53,7 +53,7 @@ public class HookRegistry
         addHookClass(org.osgi.framework.hooks.resolver.ResolverHookFactory.class);
         addHookClass(org.osgi.service.url.URLStreamHandlerService.class);
         addHookClass(java.net.ContentHandler.class);
-    };
+    }
 
     private static void addHookClass(final Class<?> c) {
         HOOK_CLASSES.put(c.getName(), c);
