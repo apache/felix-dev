@@ -4465,7 +4465,7 @@ public class Felix extends BundleImpl implements Framework
                     // bundles to be refreshed.
                     bundles.add(target);
                     // Add all importing bundles to map.
-                    populateDependentGraph((BundleImpl) target, bundles);
+                    populateDependentGraph(target, bundles);
                 }
             }
         }
@@ -4629,7 +4629,7 @@ public class Felix extends BundleImpl implements Framework
                     // bundles to be refreshed.
                     bundles.add(target);
                     // Add all importing bundles to map.
-                    populateDependentGraph((BundleImpl) target, bundles);
+                    populateDependentGraph(target, bundles);
                 }
             }
             return bundles;
@@ -4657,7 +4657,7 @@ public class Felix extends BundleImpl implements Framework
                     // Add each dependent bundle to set.
                     set.add(b);
                     // Now recurse into each bundle to get its dependents.
-                    set = populateDependentGraph((BundleImpl) b, set);
+                    set = populateDependentGraph(b, set);
                 }
             }
         }
