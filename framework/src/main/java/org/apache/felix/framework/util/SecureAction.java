@@ -361,8 +361,7 @@ public class SecureAction
             {
                 Actions actions = (Actions) m_actions.get();
                 actions.set(Actions.FILE_EXISTS_ACTION, file);
-                return ((Boolean) AccessController.doPrivileged(actions, m_acc))
-                    .booleanValue();
+                return ((Boolean) AccessController.doPrivileged(actions, m_acc));
             }
             catch (PrivilegedActionException ex)
             {
@@ -383,8 +382,7 @@ public class SecureAction
             {
                 Actions actions = (Actions) m_actions.get();
                 actions.set(Actions.FILE_IS_FILE_ACTION, file);
-                return ((Boolean) AccessController.doPrivileged(actions, m_acc))
-                        .booleanValue();
+                return ((Boolean) AccessController.doPrivileged(actions, m_acc));
             }
             catch (PrivilegedActionException ex)
             {
@@ -405,8 +403,7 @@ public class SecureAction
             {
                 Actions actions = (Actions) m_actions.get();
                 actions.set(Actions.FILE_IS_DIRECTORY_ACTION, file);
-                return ((Boolean) AccessController.doPrivileged(actions, m_acc))
-                    .booleanValue();
+                return ((Boolean) AccessController.doPrivileged(actions, m_acc));
             }
             catch (PrivilegedActionException ex)
             {
@@ -427,8 +424,7 @@ public class SecureAction
             {
                 Actions actions = (Actions) m_actions.get();
                 actions.set(Actions.MAKE_DIRECTORY_ACTION, file);
-                return ((Boolean) AccessController.doPrivileged(actions, m_acc))
-                    .booleanValue();
+                return ((Boolean) AccessController.doPrivileged(actions, m_acc));
             }
             catch (PrivilegedActionException ex)
             {
@@ -449,8 +445,7 @@ public class SecureAction
             {
                 Actions actions = (Actions) m_actions.get();
                 actions.set(Actions.MAKE_DIRECTORIES_ACTION, file);
-                return ((Boolean) AccessController.doPrivileged(actions, m_acc))
-                    .booleanValue();
+                return ((Boolean) AccessController.doPrivileged(actions, m_acc));
             }
             catch (PrivilegedActionException ex)
             {
@@ -492,8 +487,7 @@ public class SecureAction
             {
                 Actions actions = (Actions) m_actions.get();
                 actions.set(Actions.RENAME_FILE_ACTION, oldFile, newFile);
-                return ((Boolean) AccessController.doPrivileged(actions, m_acc))
-                    .booleanValue();
+                return ((Boolean) AccessController.doPrivileged(actions, m_acc));
             }
             catch (PrivilegedActionException ex)
             {
@@ -686,8 +680,7 @@ public class SecureAction
             {
                 Actions actions = (Actions) m_actions.get();
                 actions.set(Actions.DELETE_FILE_ACTION, target);
-                return ((Boolean) AccessController.doPrivileged(actions, m_acc))
-                    .booleanValue();
+                return ((Boolean) AccessController.doPrivileged(actions, m_acc));
             }
             catch (PrivilegedActionException ex)
             {
@@ -1943,7 +1936,7 @@ public class SecureAction
                     return File.createTempFile((String) arg1, (String) arg2, (File) arg3);
                 case CREATE_URL_ACTION:
                     return new URL((String) arg1, (String) arg2,
-                        ((Integer) arg3).intValue(), (String) arg4,
+                        ((Integer) arg3), (String) arg4,
                         (URLStreamHandler) arg5);
                 case CREATE_URL_WITH_CONTEXT_ACTION:
                     return new URL((URL) arg1, (String) arg2, (URLStreamHandler) arg3);
@@ -2020,7 +2013,7 @@ public class SecureAction
                     return _swapStaticFieldIfNotClass((Class) arg1,
                         (Class) arg2, (Class) arg3, (String) arg4);
                 case SYSTEM_EXIT_ACTION:
-                    System.exit(((Integer) arg1).intValue());
+                    System.exit(((Integer) arg1));
                 case FLUSH_FIELD_ACTION:
                     _flush(((Class) arg1), arg2);
                     return null;
@@ -2045,7 +2038,7 @@ public class SecureAction
                 case INVOKE_SERVICE_FIND_HOOK:
                     ((org.osgi.framework.hooks.service.FindHook) arg1).find(
                         (BundleContext) arg2, (String) arg3, (String) arg4,
-                        ((Boolean) arg5).booleanValue(),
+                        ((Boolean) arg5),
                         (Collection<ServiceReference<?>>) arg6);
                     return null;
                 case INVOKE_SERVICE_LISTENER_HOOK_ADDED:

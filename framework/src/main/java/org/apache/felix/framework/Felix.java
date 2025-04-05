@@ -4095,7 +4095,7 @@ public class Felix extends BundleImpl implements Framework
                     m_systemBundleClassCache.put(clazz, fromSystemBundle);
                 }
             }
-            return fromSystemBundle.booleanValue() ? this : null;
+            return fromSystemBundle ? this : null;
         }
         return null;
     }
