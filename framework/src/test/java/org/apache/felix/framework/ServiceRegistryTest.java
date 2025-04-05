@@ -372,7 +372,7 @@ class ServiceRegistryTest
         final ServiceHolder sh = new ServiceHolder();
         uc.m_svcHolderRef.set(sh);
 
-        final StringBuffer sb = new StringBuffer();
+        final StringBuilder sb = new StringBuilder();
         final AtomicBoolean threadException = new AtomicBoolean(false);
         Thread t = new Thread() {
             @Override
@@ -1191,7 +1191,7 @@ class ServiceRegistryTest
         final ServiceReferenceImpl ref = Mockito.mock(ServiceReferenceImpl.class);
         Mockito.when(ref.getRegistration()).thenReturn(reg);
 
-        final StringBuffer sb = new StringBuffer();
+        final StringBuilder sb = new StringBuilder();
         Thread t = new Thread()
         {
             @Override
