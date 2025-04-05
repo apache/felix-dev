@@ -847,28 +847,33 @@ class ExtensionManager implements Content
         return wires;
     }
 
-    public void close()
+    @Override
+	public void close()
     {
         // Do nothing on close, since we have nothing open.
     }
 
-    public Enumeration getEntries()
+    @Override
+	public Enumeration getEntries()
     {
         return new Enumeration()
         {
-            public boolean hasMoreElements()
+            @Override
+			public boolean hasMoreElements()
             {
                 return false;
             }
 
-            public Object nextElement() throws NoSuchElementException
+            @Override
+			public Object nextElement() throws NoSuchElementException
             {
                 throw new NoSuchElementException();
             }
         };
     }
 
-    public boolean hasEntry(String name)
+    @Override
+	public boolean hasEntry(String name)
     {
         return false;
     }
@@ -879,27 +884,32 @@ class ExtensionManager implements Content
         return false;
     }
 
-    public byte[] getEntryAsBytes(String name)
+    @Override
+	public byte[] getEntryAsBytes(String name)
     {
         return null;
     }
 
-    public InputStream getEntryAsStream(String name) throws IOException
+    @Override
+	public InputStream getEntryAsStream(String name) throws IOException
     {
         return null;
     }
 
-    public Content getEntryAsContent(String name)
+    @Override
+	public Content getEntryAsContent(String name)
     {
         return null;
     }
 
-    public String getEntryAsNativeLibrary(String name)
+    @Override
+	public String getEntryAsNativeLibrary(String name)
     {
         return null;
     }
 
-    public URL getEntryAsURL(String name)
+    @Override
+	public URL getEntryAsURL(String name)
     {
         return null;
     }

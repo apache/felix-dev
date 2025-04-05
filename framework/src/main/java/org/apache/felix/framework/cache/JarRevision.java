@@ -95,7 +95,8 @@ class JarRevision extends BundleArchiveRevision
         }
     }
 
-    public Map<String, Object> getManifestHeader() throws Exception
+    @Override
+	public Map<String, Object> getManifestHeader() throws Exception
     {
         // Read and parse headers into a case insensitive map of manifest attributes and return it.
         ZipEntry manifestEntry = m_zipFile.getEntry("META-INF/MANIFEST.MF");
@@ -105,13 +106,15 @@ class JarRevision extends BundleArchiveRevision
         return manifest;
     }
 
-    public Content getContent() throws Exception
+    @Override
+	public Content getContent() throws Exception
     {
         return new JarContent(getLogger(), getConfig(), m_zipFactory,
             this, getRevisionRootDir(), m_bundleFile, m_zipFile);
     }
 
-    protected void close() throws Exception
+    @Override
+	protected void close() throws Exception
     {
         m_zipFile.close();
     }

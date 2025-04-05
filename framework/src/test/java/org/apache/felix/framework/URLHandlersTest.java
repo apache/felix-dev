@@ -241,53 +241,63 @@ public class URLHandlersTest
 
         private volatile ServiceRegistration m_reg = null;
 
-        public URLConnection openConnection(URL u) throws IOException
+        @Override
+		public URLConnection openConnection(URL u) throws IOException
         {
             return new UC(u);//throw new UnsupportedOperationException("Not supported yet.");
         }
 
-        public void parseURL(URLStreamHandlerSetter realHandler, URL u, String spec, int start, int limit)
+        @Override
+		public void parseURL(URLStreamHandlerSetter realHandler, URL u, String spec, int start, int limit)
         {
             realHandler.setURL(u, spec, spec, start, spec, spec, spec, spec, spec);
             //throw new UnsupportedOperationException("Not supported yet.");
         }
 
-        public String toExternalForm(URL u)
+        @Override
+		public String toExternalForm(URL u)
         {
             return u.toString();//throw new UnsupportedOperationException("Not supported yet.");
         }
 
-        public boolean equals(URL u1, URL u2)
+        @Override
+		public boolean equals(URL u1, URL u2)
         {
             throw new UnsupportedOperationException("Not supported yet.");
         }
 
-        public int getDefaultPort()
+        @Override
+		public int getDefaultPort()
         {
             throw new UnsupportedOperationException("Not supported yet.");
         }
 
-        public InetAddress getHostAddress(URL u)
+        @Override
+		public InetAddress getHostAddress(URL u)
         {
             throw new UnsupportedOperationException("Not supported yet.");
         }
 
-        public int hashCode(URL u)
+        @Override
+		public int hashCode(URL u)
         {
             throw new UnsupportedOperationException("Not supported yet.");
         }
 
-        public boolean hostsEqual(URL u1, URL u2)
+        @Override
+		public boolean hostsEqual(URL u1, URL u2)
         {
             throw new UnsupportedOperationException("Not supported yet.");
         }
 
-        public boolean sameFile(URL u1, URL u2)
+        @Override
+		public boolean sameFile(URL u1, URL u2)
         {
             throw new UnsupportedOperationException("Not supported yet.");
         }
 
-        public void start(final BundleContext context) throws Exception
+        @Override
+		public void start(final BundleContext context) throws Exception
         {
             try
             {
@@ -464,7 +474,8 @@ public class URLHandlersTest
             return f;
         }
 
-        public void stop(BundleContext context) throws Exception
+        @Override
+		public void stop(BundleContext context) throws Exception
         {
             if (m_reg != null)
             {

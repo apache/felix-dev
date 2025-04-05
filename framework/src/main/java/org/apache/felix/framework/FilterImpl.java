@@ -51,7 +51,8 @@ public class FilterImpl implements Filter
         }
     }
 
-    public boolean match(ServiceReference sr)
+    @Override
+	public boolean match(ServiceReference sr)
     {
         if (sr instanceof ServiceReferenceImpl)
         {
@@ -63,32 +64,38 @@ public class FilterImpl implements Filter
         }
     }
 
-    public boolean match(Dictionary<String, ? > dctnr)
+    @Override
+	public boolean match(Dictionary<String, ? > dctnr)
     {
         return CapabilitySet.matches(new WrapperCapability(dctnr, false), m_filter);
     }
 
-    public boolean matchCase(Dictionary<String, ? > dctnr)
+    @Override
+	public boolean matchCase(Dictionary<String, ? > dctnr)
     {
         return CapabilitySet.matches(new WrapperCapability(dctnr, true), m_filter);
     }
 
-    public boolean matches(Map<String, ?> map)
+    @Override
+	public boolean matches(Map<String, ?> map)
     {
         return CapabilitySet.matches(new WrapperCapability(map), m_filter);
     }
 
-    public boolean equals(Object o)
+    @Override
+	public boolean equals(Object o)
     {
         return toString().equals(o.toString());
     }
 
-    public int hashCode()
+    @Override
+	public int hashCode()
     {
         return toString().hashCode();
     }
 
-    public String toString()
+    @Override
+	public String toString()
     {
         return m_filter.toString();
     }
@@ -186,27 +193,32 @@ public class FilterImpl implements Filter
             }
         }
 
-        public int size()
+        @Override
+		public int size()
         {
             throw new UnsupportedOperationException("Not supported yet.");
         }
 
-        public boolean isEmpty()
+        @Override
+		public boolean isEmpty()
         {
             throw new UnsupportedOperationException("Not supported yet.");
         }
 
-        public boolean containsKey(Object o)
+        @Override
+		public boolean containsKey(Object o)
         {
             throw new UnsupportedOperationException("Not supported yet.");
         }
 
-        public boolean containsValue(Object o)
+        @Override
+		public boolean containsValue(Object o)
         {
             throw new UnsupportedOperationException("Not supported yet.");
         }
 
-        public Object get(Object o)
+        @Override
+		public Object get(Object o)
         {
             if (m_dict != null)
             {
@@ -219,37 +231,44 @@ public class FilterImpl implements Filter
             return null;
         }
 
-        public Object put(Object k, Object v)
+        @Override
+		public Object put(Object k, Object v)
         {
             throw new UnsupportedOperationException("Not supported yet.");
         }
 
-        public Object remove(Object o)
+        @Override
+		public Object remove(Object o)
         {
             throw new UnsupportedOperationException("Not supported yet.");
         }
 
-        public void putAll(Map map)
+        @Override
+		public void putAll(Map map)
         {
             throw new UnsupportedOperationException("Not supported yet.");
         }
 
-        public void clear()
+        @Override
+		public void clear()
         {
             throw new UnsupportedOperationException("Not supported yet.");
         }
 
-        public Set<Object> keySet()
+        @Override
+		public Set<Object> keySet()
         {
             throw new UnsupportedOperationException("Not supported yet.");
         }
 
-        public Collection<Object> values()
+        @Override
+		public Collection<Object> values()
         {
             throw new UnsupportedOperationException("Not supported yet.");
         }
 
-        public Set<Entry<Object, Object>> entrySet()
+        @Override
+		public Set<Entry<Object, Object>> entrySet()
         {
             return Collections.EMPTY_SET;
         }

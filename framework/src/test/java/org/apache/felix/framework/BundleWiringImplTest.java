@@ -708,7 +708,8 @@ public class BundleWiringImplTest
 
         final AtomicInteger loaded = new AtomicInteger();
         new Thread() {
-            public void run() {
+            @Override
+			public void run() {
                 try
                 {
                     loaded.set(bundleClassLoader.findClass(testClassName2) != null ? 1 : 2);
@@ -728,7 +729,8 @@ public class BundleWiringImplTest
 
         final AtomicInteger loaded2 = new AtomicInteger();
         new Thread() {
-            public void run() {
+            @Override
+			public void run() {
                 try
                 {
                     loaded2.set(bundleClassLoader.findClass(testClassName3) != null ? 1 : 2);
@@ -751,7 +753,8 @@ public class BundleWiringImplTest
 
         loaded2.set(0);
         Thread tester = new Thread() {
-            public void run() {
+            @Override
+			public void run() {
                 try
                 {
                     loaded2.set(bundleClassLoader.findClass(testClassName2) != null ? 1 : 2);
@@ -905,7 +908,8 @@ public class BundleWiringImplTest
 
         final AtomicInteger loaded = new AtomicInteger();
         new Thread() {
-            public void run() {
+            @Override
+			public void run() {
                 try
                 {
                     loaded.set(bundleClassLoader.findClass(testClassName2) != null ? 1 : 2);
@@ -925,7 +929,8 @@ public class BundleWiringImplTest
 
         final AtomicInteger loaded2 = new AtomicInteger();
         new Thread() {
-            public void run() {
+            @Override
+			public void run() {
                 try
                 {
                     loaded2.set(bundleClassLoader.findClass(testClassName3) != null ? 1 : 2);
@@ -946,7 +951,8 @@ public class BundleWiringImplTest
 
         final AtomicInteger loaded3 = new AtomicInteger();
         Thread tester = new Thread() {
-            public void run() {
+            @Override
+			public void run() {
                 try
                 {
                     loaded3.set(bundleClassLoader.findClass(testClassName2) != null ? 1 : 2);

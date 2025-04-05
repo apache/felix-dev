@@ -139,7 +139,8 @@ public class URLHandlersStreamHandlerProxy extends URLStreamHandler
     //
     // URLStreamHandler interface methods.
     //
-    protected boolean equals(URL url1, URL url2)
+    @Override
+	protected boolean equals(URL url1, URL url2)
     {
         Object svc = getStreamHandlerService();
         if (svc == null)
@@ -161,7 +162,8 @@ public class URLHandlersStreamHandlerProxy extends URLStreamHandler
         }
     }
 
-    protected int getDefaultPort()
+    @Override
+	protected int getDefaultPort()
     {
         Object svc = getStreamHandlerService();
         if (svc == null)
@@ -182,7 +184,8 @@ public class URLHandlersStreamHandlerProxy extends URLStreamHandler
         }
     }
 
-    protected InetAddress getHostAddress(URL url)
+    @Override
+	protected InetAddress getHostAddress(URL url)
     {
         Object svc = getStreamHandlerService();
         if (svc == null)
@@ -204,7 +207,8 @@ public class URLHandlersStreamHandlerProxy extends URLStreamHandler
         }
     }
 
-    protected int hashCode(URL url)
+    @Override
+	protected int hashCode(URL url)
     {
         Object svc = getStreamHandlerService();
         if (svc == null)
@@ -226,7 +230,8 @@ public class URLHandlersStreamHandlerProxy extends URLStreamHandler
         }
     }
 
-    protected boolean hostsEqual(URL url1, URL url2)
+    @Override
+	protected boolean hostsEqual(URL url1, URL url2)
     {
         Object svc = getStreamHandlerService();
         if (svc == null)
@@ -248,7 +253,8 @@ public class URLHandlersStreamHandlerProxy extends URLStreamHandler
         }
     }
 
-    protected URLConnection openConnection(URL url) throws IOException
+    @Override
+	protected URLConnection openConnection(URL url) throws IOException
     {
         Object svc = getStreamHandlerService();
         if (svc == null)
@@ -301,7 +307,8 @@ public class URLHandlersStreamHandlerProxy extends URLStreamHandler
         }
     }
 
-    protected URLConnection openConnection(URL url, java.net.Proxy proxy) throws IOException
+    @Override
+	protected URLConnection openConnection(URL url, java.net.Proxy proxy) throws IOException
     {
         Object svc = getStreamHandlerService();
         if (svc == null)
@@ -353,7 +360,8 @@ public class URLHandlersStreamHandlerProxy extends URLStreamHandler
     // method. This can happen do to some difference between gnu/classpath and sun jvms
     // For more see inside the method.
     private static final ThreadLocal m_loopCheck = new ThreadLocal();
-    protected void parseURL(URL url, String spec, int start, int limit)
+    @Override
+	protected void parseURL(URL url, String spec, int start, int limit)
     {
         Object svc = getStreamHandlerService();
         if (svc == null)
@@ -422,7 +430,8 @@ public class URLHandlersStreamHandlerProxy extends URLStreamHandler
         }
     }
 
-    protected boolean sameFile(URL url1, URL url2)
+    @Override
+	protected boolean sameFile(URL url1, URL url2)
     {
         Object svc = getStreamHandlerService();
         if (svc == null)
@@ -445,20 +454,23 @@ public class URLHandlersStreamHandlerProxy extends URLStreamHandler
         }
     }
 
-    public void setURL(
+    @Override
+	public void setURL(
         URL url, String protocol, String host, int port, String authority,
         String userInfo, String path, String query, String ref)
     {
         super.setURL(url, protocol, host, port, authority, userInfo, path, query, ref);
     }
 
-    public void setURL(
+    @Override
+	public void setURL(
         URL url, String protocol, String host, int port, String file, String ref)
     {
         super.setURL(url, protocol, host, port, file, ref);
     }
 
-    protected String toExternalForm(URL url)
+    @Override
+	protected String toExternalForm(URL url)
     {
         return toExternalForm(url, getStreamHandlerService());
     }
@@ -611,7 +623,8 @@ public class URLHandlersStreamHandlerProxy extends URLStreamHandler
         }
     }
 
-    public Object invoke(Object obj, Method method, Object[] params)
+    @Override
+	public Object invoke(Object obj, Method method, Object[] params)
         throws Throwable
     {
         Class[] types = method.getParameterTypes();

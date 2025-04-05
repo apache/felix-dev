@@ -113,27 +113,32 @@ public class BundleCapabilityImpl implements BundleCapability
         m_mandatory = mandatory;
     }
 
-    public BundleRevision getResource()
+    @Override
+	public BundleRevision getResource()
     {
         return m_revision;
     }
 
-    public BundleRevision getRevision()
+    @Override
+	public BundleRevision getRevision()
     {
         return m_revision;
     }
 
-    public String getNamespace()
+    @Override
+	public String getNamespace()
     {
         return m_namespace;
     }
 
-    public Map<String, String> getDirectives()
+    @Override
+	public Map<String, String> getDirectives()
     {
         return m_dirs;
     }
 
-    public Map<String, Object> getAttributes()
+    @Override
+	public Map<String, Object> getAttributes()
     {
         return m_attrs;
     }
