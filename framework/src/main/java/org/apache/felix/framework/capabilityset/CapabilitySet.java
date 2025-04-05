@@ -614,7 +614,7 @@ public class CapabilitySet
                         && ((valueOfMethod.getModifiers() & Modifier.STATIC) > 0))
                     {
                         m_secureAction.setAccesssible(valueOfMethod);
-                        rhs = valueOfMethod.invoke(null, new Object[] { rhsString });
+                        rhs = valueOfMethod.invoke(null, rhsString);
                     }
                 }
                 catch (Exception ex)
@@ -626,7 +626,7 @@ public class CapabilitySet
                 {
                     Constructor ctor = m_secureAction.getConstructor(lhs.getClass(), STRING_CLASS);
                     m_secureAction.setAccesssible(ctor);
-                    rhs = ctor.newInstance(new Object[] { rhsString });
+                    rhs = ctor.newInstance(rhsString);
                 }
             }
         }
