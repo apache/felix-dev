@@ -357,7 +357,6 @@ public class Felix extends BundleImpl implements Framework
 
     public Felix(Map configMap, ModuleConnector connectFramework)
     {
-        super();
         // Copy the configuration properties; convert keys to strings.
         m_configMutableMap = new StringMap();
         if (configMap != null)
