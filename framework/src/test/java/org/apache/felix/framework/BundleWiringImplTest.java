@@ -485,7 +485,7 @@ public class BundleWiringImplTest
         //first attempt to populate the cache
         try {
             bundleClassLoader.loadClass(classToBeLoaded, true);
-            fail("");
+            fail("Class loading should fail");
         } catch (ClassNotFoundException cnf) {
             //this is expected
         }
