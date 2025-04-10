@@ -513,7 +513,7 @@ public class BundleWiringImplTest
 
         } catch (Exception e) {
             e.printStackTrace();
-            fail("");
+            fail("An unexpected failure occurred" + e.getMessage());
         }
     }
 
