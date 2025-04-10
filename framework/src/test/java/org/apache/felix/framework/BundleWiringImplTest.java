@@ -385,7 +385,8 @@ public class BundleWiringImplTest
 
         try {
             bundleClassLoader.loadClass(classToBeLoaded, true);
-            fail("");
+            fail("Class should not load");
+
         } catch (ClassNotFoundException cnf) {
             //this is expected
 
