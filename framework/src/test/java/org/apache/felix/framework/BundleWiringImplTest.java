@@ -500,7 +500,7 @@ public class BundleWiringImplTest
             when(mockFramework.getBootPackages()).thenReturn(new String[0]);
             when(bundleWiring.getBundle().getFramework()).thenReturn(mockFramework);
             bundleClassLoader.loadClass(classToBeLoaded, true);
-            fail("");
+            fail("Class loading should fail");
         } catch (ClassNotFoundException cnf) {
             //this is expected
 
