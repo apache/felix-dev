@@ -458,7 +458,7 @@ public class BundleWiringImplTest
             assertThat(getAccessorCache(bundleWiring)).containsEntry(classToBeLoaded, BundleWiringImpl.CNFE_CLASS_LOADER);
         } catch (Exception e) {
             e.printStackTrace();
-            fail("");
+            fail("An unexpected failure occurred" + e.getMessage());
         }
     }
 
