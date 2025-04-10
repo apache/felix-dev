@@ -443,7 +443,7 @@ public class BundleWiringImplTest
 
         try {
             bundleClassLoader.loadClass(classToBeLoaded, true);
-            fail("");
+            fail("Class loading should throw an exception");
         } catch (ClassNotFoundException cnf) {
             //this is expected
 
