@@ -51,7 +51,7 @@ class ManifestParserTest
     @Test
     void identityCapabilityMinimal() throws BundleException
     {
-        Map<String, Object> headers = new HashMap<>();
+        Map<String, String> headers = new HashMap<>();
         headers.put(Constants.BUNDLE_MANIFESTVERSION, "2");
         headers.put(Constants.BUNDLE_SYMBOLICNAME, "foo.bar");
         ManifestParser mp = new ManifestParser(null, null, null, headers);
@@ -65,7 +65,7 @@ class ManifestParserTest
     @Test
     void identityCapabilityFull() throws BundleException
     {
-        Map<String, Object> headers = new HashMap<>();
+        Map<String, String> headers = new HashMap<>();
         headers.put(Constants.BUNDLE_MANIFESTVERSION, "2");
         headers.put(Constants.BUNDLE_SYMBOLICNAME, "abc;singleton:=true;foo=bar;" + IdentityNamespace.CAPABILITY_TAGS_ATTRIBUTE + "=test");
         headers.put(Constants.BUNDLE_VERSION, "1.2.3.something");
@@ -103,7 +103,7 @@ class ManifestParserTest
     @SuppressWarnings("unchecked")
     @Test
     void nativeCapability() throws BundleException {
-        Map<String, Object> headers = new HashMap<>();
+        Map<String, String> headers = new HashMap<>();
         headers.put(Constants.BUNDLE_MANIFESTVERSION,  "2");
         headers.put(Constants.BUNDLE_SYMBOLICNAME, FelixConstants.SYSTEM_BUNDLE_SYMBOLICNAME);
         headers.put(Constants.PROVIDE_CAPABILITY, " osgi.native;" +
@@ -133,7 +133,7 @@ class ManifestParserTest
     @SuppressWarnings("unchecked")
     @Test
     void attributes() throws BundleException {
-        Map<String, Object> headers = new HashMap<>();
+        Map<String, String> headers = new HashMap<>();
         headers.put(Constants.BUNDLE_MANIFESTVERSION,  "2");
         headers.put(Constants.BUNDLE_SYMBOLICNAME,"com.example.test.sample");
         headers.put(Constants.PROVIDE_CAPABILITY,

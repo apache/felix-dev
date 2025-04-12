@@ -42,15 +42,15 @@ public class DirectoryContent implements Content
     private static final transient String LIBRARY_DIRECTORY = "-lib";
 
     private final Logger m_logger;
-    private final Map m_configMap;
+    private final Map<?,?> m_configMap;
     private final WeakZipFileFactory m_zipFactory;
     private final Object m_revisionLock;
     private final File m_rootDir;
     private final File m_dir;
-    private Map m_nativeLibMap;
+    private Map<String,Integer> m_nativeLibMap;
     private final String m_canonicalRoot;
 
-    public DirectoryContent(Logger logger, Map configMap,
+    public DirectoryContent(Logger logger, Map<?,?> configMap,
                             WeakZipFileFactory zipFactory, Object revisionLock, File rootDir, File dir)
     {
         m_logger = logger;
@@ -342,7 +342,7 @@ public class DirectoryContent implements Content
                 // as part of the extracted path.
                 if (m_nativeLibMap == null)
                 {
-                    m_nativeLibMap = new HashMap();
+                    m_nativeLibMap = new HashMap<>();
                 }
                 Integer libCount = (Integer) m_nativeLibMap.get(entryName);
                 // Either set or increment the library count.
@@ -412,7 +412,7 @@ public class DirectoryContent implements Content
         return "DIRECTORY " + m_dir;
     }
 
-    private static class EntriesEnumeration implements Enumeration
+    private static class EntriesEnumeration implements Enumeration<String>
     {
         private final File m_dir;
         private final File[] m_children;
@@ -431,7 +431,7 @@ public class DirectoryContent implements Content
         }
 
         @Override
-		public synchronized Object nextElement()
+		public synchronized String nextElement()
         {
             if ((m_children == null) || (m_counter >= m_children.length))
             {

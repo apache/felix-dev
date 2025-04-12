@@ -53,7 +53,7 @@ import static org.apache.felix.framework.util.Util.putIfAbsentAndReturn;
 **/
 class URLHandlersContentHandlerProxy extends ContentHandler
 {
-    private static final Class[] STRING_TYPES = new Class[]{String.class};
+    private static final Class<?>[] STRING_TYPES = new Class[]{String.class};
 
     private static final String CONTENT_HANDLER_PACKAGE_PROP = "java.content.handler.pkgs";
     private static final String DEFAULT_CONTENT_HANDLER_PACKAGE = "sun.net.www.content|sun.awt.www.content|com.ibm.oti.net.www.content|gnu.java.net.content|org.apache.harmony.luni.internal.net.www.content|COM.newmonics.www.content";
@@ -171,7 +171,7 @@ class URLHandlersContentHandlerProxy extends ContentHandler
             try
             {
                 // If a built-in handler is found then cache and return it
-                Class handler = m_action.forName(className, null);
+                Class<?> handler = m_action.forName(className, null);
                 if (handler != null)
                 {
                     return putIfAbsentAndReturn(m_builtIn, m_mimeType,

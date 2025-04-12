@@ -39,7 +39,7 @@ class DirectoryRevision extends BundleArchiveRevision
     private final File m_refDir;
 
     public DirectoryRevision(
-        Logger logger, Map configMap, WeakZipFileFactory zipFactory,
+        Logger logger, Map<?,?> configMap, WeakZipFileFactory zipFactory,
         File revisionRootDir, String location) throws Exception
     {
         super(logger, configMap, revisionRootDir, location);
@@ -68,11 +68,11 @@ class DirectoryRevision extends BundleArchiveRevision
     }
 
     @Override
-	public Map<String, Object> getManifestHeader()
+	public Map<String, String> getManifestHeader()
         throws Exception
     {
         File manifest = new File(m_refDir, "META-INF/MANIFEST.MF");
-        return BundleCache.getSecureAction().isFile(manifest) ? BundleCache.getMainAttributes(new StringMap(), BundleCache.getSecureAction().getInputStream(manifest), manifest.length()) : null;
+        return BundleCache.getSecureAction().isFile(manifest) ? BundleCache.getMainAttributes(new StringMap<>(), BundleCache.getSecureAction().getInputStream(manifest), manifest.length()) : null;
     }
 
     @Override

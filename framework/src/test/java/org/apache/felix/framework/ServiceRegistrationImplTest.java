@@ -33,7 +33,7 @@ class ServiceRegistrationImplTest
     @Test
     void markCurrentThread() throws Exception
     {
-        final ServiceRegistrationImpl sri = new ServiceRegistrationImpl(
+        final ServiceRegistrationImpl<?> sri = new ServiceRegistrationImpl<>(
                 new ServiceRegistry(null, null), Mockito.mock(Bundle.class),
                 new String [] {String.class.getName()}, 1L, "foo", null);
 

@@ -194,14 +194,14 @@ class ExtensionManager implements Content
      *
      * @param logger the logger to use.
      */
-    ExtensionManager(Logger logger, Map configMap, Felix felix)
+    ExtensionManager(Logger logger, Map<String,?> configMap, Felix felix)
     {
         m_logger = logger;
 
         m_systemBundleRevision = new ExtensionManagerRevision(configMap, felix);
     }
 
-    protected BundleCapability buildNativeCapabilites(BundleRevisionImpl revision, Map configMap) {
+    protected BundleCapability buildNativeCapabilites(BundleRevisionImpl revision, Map<String,?> configMap) {
         String osArchitecture = (String) configMap.get(FelixConstants.FRAMEWORK_PROCESSOR);
         String osName = (String) configMap.get(FelixConstants.FRAMEWORK_OS_NAME);
         String osVersion = (String) configMap.get(FelixConstants.FRAMEWORK_OS_VERSION);
@@ -233,9 +233,9 @@ class ExtensionManager implements Content
     }
 
     @IgnoreJRERequirement
-    void updateRevision(Felix felix, Map configMap)
+    void updateRevision(Felix felix, Map<String,?> configMap)
     {
-        Map config = new HashMap(configMap);
+        Map<String,Object> config = new HashMap<>(configMap);
         Properties defaultProperties = Util.loadDefaultProperties(m_logger);
 
         Util.initializeJPMSEE(felix._getProperty("java.specification.version"), defaultProperties, m_logger);
@@ -301,7 +301,7 @@ class ExtensionManager implements Content
                             else
                             {
                                 java.nio.file.Path path = fs.getPath("modules", module.substring("felix.jpms.".length()));
-                                java.nio.file.Files.walkFileTree(path, (java.nio.file.FileVisitor) Felix.class.getClassLoader().loadClass("org.apache.felix.framework.util.ClassFileVisitor")
+                                java.nio.file.Files.walkFileTree(path, (java.nio.file.FileVisitor<java.nio.file.Path>) Felix.class.getClassLoader().loadClass("org.apache.felix.framework.util.ClassFileVisitor")
                                     .getConstructor(Set.class, Set.class, ClassParser.class, SortedMap.class).newInstance(imports, exports.get(moduleKey), classParser, referred));
                                 for (String pkg : referred.keySet())
                                 {
@@ -346,11 +346,11 @@ class ExtensionManager implements Content
             }
         }
 
-        for (Map.Entry entry : defaultProperties.entrySet())
+        for (String propName : defaultProperties.stringPropertyNames())
         {
-            if (!config.containsKey(entry.getKey()))
+            if (!config.containsKey(propName))
             {
-                config.put(entry.getKey(), entry.getValue());
+                config.put(propName, defaultProperties.getProperty(propName));
             }
         }
 
@@ -534,7 +534,7 @@ class ExtensionManager implements Content
             try
             {
                 revision.resolve(new BundleWiringImpl(m_logger, m_systemBundleRevision.m_configMap, null, revision, null,
-                    Collections.singletonList(wire), Collections.EMPTY_MAP, Collections.EMPTY_MAP));
+                    Collections.singletonList(wire), Collections.emptyMap(), Collections.emptyMap()));
             }
             catch (Exception ex)
             {
@@ -839,7 +839,7 @@ class ExtensionManager implements Content
                 
                 next.remove(bri);
 
-                return next.isEmpty() ? Collections.EMPTY_MAP : findResolvableExtensions(next, nextAlt);
+                return next.isEmpty() ? Collections.emptyMap() : findResolvableExtensions(next, nextAlt);
             }
         }
         return wires;
@@ -852,9 +852,9 @@ class ExtensionManager implements Content
     }
 
     @Override
-	public Enumeration getEntries()
+	public Enumeration<String> getEntries()
     {
-        return new Enumeration()
+        return new Enumeration<String>()
         {
             @Override
 			public boolean hasMoreElements()
@@ -863,7 +863,7 @@ class ExtensionManager implements Content
             }
 
             @Override
-			public Object nextElement() throws NoSuchElementException
+			public String nextElement() throws NoSuchElementException
             {
                 throw new NoSuchElementException();
             }
@@ -924,13 +924,13 @@ class ExtensionManager implements Content
 
     class ExtensionManagerRevision extends BundleRevisionImpl
     {
-        private volatile Map m_configMap;
-        private final Map m_headerMap = new StringMap();
-        private volatile List<BundleCapability> m_capabilities = Collections.EMPTY_LIST;
+        private volatile Map<String,?> m_configMap;
+        private final Map<String,String> m_headerMap = new StringMap<>();
+        private volatile List<BundleCapability> m_capabilities = Collections.emptyList();
         private volatile Version m_version;
         private volatile BundleWiring m_wiring;
 
-        ExtensionManagerRevision(Map configMap, Felix felix)
+        ExtensionManagerRevision(Map<String,?> configMap, Felix felix)
         {
             super(felix, "0");
 
@@ -939,7 +939,7 @@ class ExtensionManager implements Content
 // TODO: FRAMEWORK - Not all of this stuff really belongs here
             // Populate system bundle header map.
             m_headerMap.put(FelixConstants.BUNDLE_VERSION,
-                m_configMap.get(FelixConstants.FELIX_VERSION_PROPERTY));
+                m_configMap.get(FelixConstants.FELIX_VERSION_PROPERTY).toString());
             m_headerMap.put(FelixConstants.BUNDLE_SYMBOLICNAME,
                 FelixConstants.SYSTEM_BUNDLE_SYMBOLICNAME);
             m_headerMap.put(FelixConstants.BUNDLE_NAME, "System Bundle");
@@ -967,14 +967,14 @@ class ExtensionManager implements Content
             }
             catch (Exception ex)
             {
-                m_capabilities = Collections.EMPTY_LIST;
+                m_capabilities = Collections.emptyList();
                 m_logger.log(
                     Logger.LOG_ERROR,
                     "Error parsing system bundle statement", ex);
             }
         }
 
-        private void update(Map configMap)
+        private void update(Map<String,?> configMap)
         {
             Properties configProps = Util.toProperties(configMap);
             // The system bundle exports framework packages as well as
@@ -1022,13 +1022,13 @@ class ExtensionManager implements Content
                     m_logger, m_configMap, this, m_headerMap);
                 List<BundleCapability> caps = ManifestParser.aliasSymbolicName(mp.getCapabilities(), this);
                 caps.add(buildNativeCapabilites(this, m_configMap));
-                m_capabilities = Collections.EMPTY_LIST;
+                m_capabilities = Collections.emptyList();
                 appendCapabilities(caps);
                 m_headerMap.put(Constants.EXPORT_PACKAGE, convertCapabilitiesToHeaders(caps));
             }
             catch (Exception ex)
             {
-                m_capabilities = Collections.EMPTY_LIST;
+                m_capabilities = Collections.emptyList();
                 m_logger.log(
                     Logger.LOG_ERROR,
                     "Error parsing system bundle statement.", ex);
@@ -1087,7 +1087,7 @@ class ExtensionManager implements Content
         }
 
         @Override
-        public Map getHeaders()
+        public Map<String,String> getHeaders()
         {
             return Util.newImmutableMap(m_headerMap);
         }
@@ -1188,11 +1188,11 @@ class ExtensionManager implements Content
     class ExtensionManagerWiring extends BundleWiringImpl
     {
         ExtensionManagerWiring(
-            Logger logger, Map configMap, BundleRevisionImpl revision)
+            Logger logger, Map<String,?> configMap, BundleRevisionImpl revision)
             throws Exception
         {
             super(logger, configMap, null, revision,
-                null, Collections.EMPTY_LIST, null, null);
+                null, Collections.emptyList(), null, null);
         }
 
         @Override
@@ -1210,11 +1210,11 @@ class ExtensionManager implements Content
         @Override
         public List<NativeLibrary> getNativeLibraries()
         {
-            return Collections.EMPTY_LIST;
+            return Collections.emptyList();
         }
 
         @Override
-        public Class getClassByDelegation(String name) throws ClassNotFoundException
+        public Class<?> getClassByDelegation(String name) throws ClassNotFoundException
         {
             return getClass().getClassLoader().loadClass(name);
         }
@@ -1226,7 +1226,7 @@ class ExtensionManager implements Content
         }
 
         @Override
-        public Enumeration getResourcesByDelegation(String name)
+        public Enumeration<URL> getResourcesByDelegation(String name)
         {
            try
            {

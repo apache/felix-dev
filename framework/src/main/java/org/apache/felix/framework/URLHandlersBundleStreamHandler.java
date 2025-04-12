@@ -70,10 +70,10 @@ class URLHandlersBundleStreamHandler extends URLStreamHandler
             {
                 ClassLoader loader = m_action.getClassLoader(framework.getClass());
 
-                Class targetClass = loader.loadClass(
+                Class<?> targetClass = loader.loadClass(
                     URLHandlersBundleURLConnection.class.getName());
 
-                Constructor constructor = m_action.getConstructor(targetClass,
+                Constructor<?> constructor = m_action.getConstructor(targetClass,
                         new Class[]{URL.class, loader.loadClass(
                                 Felix.class.getName())});
                 m_action.setAccesssible(constructor);

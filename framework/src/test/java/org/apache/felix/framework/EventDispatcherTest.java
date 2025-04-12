@@ -42,7 +42,7 @@ class EventDispatcherTest
         final Bundle b3 = getMockBundle();
         final Bundle b4 = getMockBundle();
 
-        final Set calledHooks = new HashSet();
+        final Set<EventHook> calledHooks = new HashSet<>();
         final EventHook eh1 = new EventHook()
         {
             @Override
@@ -81,7 +81,7 @@ class EventDispatcherTest
         EventDispatcher ed = new EventDispatcher(logger, registry);
 
         // -- Register some listeners
-        final List fired = Collections.synchronizedList(new ArrayList());
+        final List<Object> fired = Collections.synchronizedList(new ArrayList<>());
         ServiceListener sl1 = new ServiceListener()
         {
             @Override
@@ -113,7 +113,7 @@ class EventDispatcherTest
         ed.addListener(b3.getBundleContext(), ServiceListener.class, sl3, null);
 
         // --- make the invocation
-        ServiceReference sr = Mockito.mock(ServiceReference.class);
+        ServiceReference<?> sr = Mockito.mock(ServiceReference.class);
         Mockito.when(sr.getProperty(Constants.OBJECTCLASS)).thenReturn(new String[]
             {
                 "java.lang.String"
@@ -127,7 +127,7 @@ class EventDispatcherTest
 
         assertThat(fired.size()).as("Precondition failed").isEqualTo(0);
 
-        Felix framework = new Felix(new HashMap());
+        Felix framework = new Felix(new HashMap<>());
 
         ed.fireServiceEvent(event, null, framework);
         assertThat(fired).hasSize(1);

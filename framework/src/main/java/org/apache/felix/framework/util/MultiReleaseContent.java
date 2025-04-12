@@ -59,8 +59,8 @@ public class MultiReleaseContent implements Content
 
                 if (versionManifestInput != null)
                 {
-                    Map<String, Object> versionManifest = BundleCache.getMainAttributes(
-                            new StringMap(), new ByteArrayInputStream(versionManifestInput), versionManifestInput.length);
+                    Map<String, String> versionManifest = BundleCache.getMainAttributes(
+                            new StringMap<>(), new ByteArrayInputStream(versionManifestInput), versionManifestInput.length);
 
                     if ("true".equals(versionManifest.get("Multi-Release")))
                     {

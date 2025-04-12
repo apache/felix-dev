@@ -18,6 +18,44 @@
  */
 package org.apache.felix.framework;
 
+import java.io.BufferedReader;
+import java.io.BufferedWriter;
+import java.io.File;
+import java.io.FileNotFoundException;
+import java.io.IOException;
+import java.io.InputStream;
+import java.io.InputStreamReader;
+import java.io.OutputStream;
+import java.io.OutputStreamWriter;
+import java.io.PrintWriter;
+import java.net.MalformedURLException;
+import java.net.URL;
+import java.net.URLStreamHandler;
+import java.security.AccessControlException;
+import java.security.Permission;
+import java.security.cert.X509Certificate;
+import java.util.ArrayList;
+import java.util.Collection;
+import java.util.Collections;
+import java.util.Dictionary;
+import java.util.Enumeration;
+import java.util.HashMap;
+import java.util.HashSet;
+import java.util.Iterator;
+import java.util.LinkedHashSet;
+import java.util.List;
+import java.util.Map;
+import java.util.Map.Entry;
+import java.util.Properties;
+import java.util.Set;
+import java.util.SortedSet;
+import java.util.StringTokenizer;
+import java.util.TreeMap;
+import java.util.TreeSet;
+import java.util.WeakHashMap;
+import java.util.concurrent.locks.Condition;
+import java.util.concurrent.locks.ReentrantLock;
+
 import org.apache.felix.framework.BundleWiringImpl.BundleClassLoader;
 import org.apache.felix.framework.ServiceRegistry.ServiceRegistryCallbacks;
 import org.apache.felix.framework.cache.BundleArchive;
@@ -71,42 +109,6 @@ import org.osgi.framework.wiring.FrameworkWiring;
 import org.osgi.resource.Requirement;
 import org.osgi.service.packageadmin.ExportedPackage;
 import org.osgi.service.resolver.ResolutionException;
-
-import java.io.BufferedReader;
-import java.io.BufferedWriter;
-import java.io.File;
-import java.io.FileNotFoundException;
-import java.io.IOException;
-import java.io.InputStream;
-import java.io.InputStreamReader;
-import java.io.OutputStream;
-import java.io.OutputStreamWriter;
-import java.io.PrintWriter;
-import java.net.MalformedURLException;
-import java.net.URL;
-import java.net.URLStreamHandler;
-import java.security.AccessControlException;
-import java.security.Permission;
-import java.util.ArrayList;
-import java.util.Collection;
-import java.util.Collections;
-import java.util.Dictionary;
-import java.util.Enumeration;
-import java.util.HashMap;
-import java.util.HashSet;
-import java.util.Iterator;
-import java.util.LinkedHashSet;
-import java.util.List;
-import java.util.Map;
-import java.util.Properties;
-import java.util.Set;
-import java.util.SortedSet;
-import java.util.StringTokenizer;
-import java.util.TreeMap;
-import java.util.TreeSet;
-import java.util.WeakHashMap;
-import java.util.concurrent.locks.Condition;
-import java.util.concurrent.locks.ReentrantLock;
 
 public class Felix extends BundleImpl implements Framework
 {
@@ -184,7 +186,7 @@ public class Felix extends BundleImpl implements Framework
     private BundleCache m_cache = null;
 
     // System bundle activator list.
-    List m_activatorList = null;
+    List<BundleActivator> m_activatorList = null;
 
     // Next available bundle identifier.
     private long m_nextId = 1L;
@@ -350,28 +352,27 @@ public class Felix extends BundleImpl implements Framework
      * @param configMap A map for obtaining configuration properties,
      *        may be <tt>null</tt>.
     **/
-    public Felix(Map configMap)
+    public Felix(Map<String,?> configMap)
     {
         this(configMap, null);
     }
 
-    public Felix(Map configMap, ModuleConnector connectFramework)
+    public Felix(Map<String,?> configMap, ModuleConnector connectFramework)
     {
         // Copy the configuration properties; convert keys to strings.
-        m_configMutableMap = new StringMap();
+        m_configMutableMap = new StringMap<>();
         if (configMap != null)
         {
-            for (Iterator i = configMap.entrySet().iterator(); i.hasNext(); )
+            for (Entry<String,?> e : configMap.entrySet())
             {
-                Map.Entry entry = (Map.Entry) i.next();
-                m_configMutableMap.put(entry.getKey().toString(), entry.getValue());
+                m_configMutableMap.put(e.getKey().toString(), e.getValue());
             }
         }
 
 
         // Get any system bundle activators.
-        m_activatorList = (List) m_configMutableMap.remove(FelixConstants.SYSTEMBUNDLE_ACTIVATORS_PROP);
-        m_activatorList = (m_activatorList == null) ? new ArrayList() : new ArrayList(m_activatorList);
+        m_activatorList = (List<BundleActivator>) m_configMutableMap.remove(FelixConstants.SYSTEMBUNDLE_ACTIVATORS_PROP);
+        m_activatorList = (m_activatorList == null) ? new ArrayList<>() : new ArrayList<>(m_activatorList);
 
         m_configMap = createUnmodifiableMap(m_configMutableMap);
 
@@ -434,7 +435,7 @@ public class Felix extends BundleImpl implements Framework
         // Create service registry.
         m_registry = new ServiceRegistry(m_logger, new ServiceRegistryCallbacks() {
             @Override
-            public void serviceChanged(ServiceEvent event, Dictionary oldProps)
+            public void serviceChanged(ServiceEvent event, Dictionary<String,?> oldProps)
             {
                 fireServiceEvent(event, oldProps);
             }
@@ -504,9 +505,9 @@ public class Felix extends BundleImpl implements Framework
         return m_bootPkgWildcards;
     }
 
-    private Map createUnmodifiableMap(Map mutableMap)
+    private <K,V> Map<K,V> createUnmodifiableMap(Map<K,V> mutableMap)
     {
-        Map result = Collections.unmodifiableMap(mutableMap);
+        Map<K,V> result = Collections.unmodifiableMap(mutableMap);
 
         // Work around a bug in certain version of J9 where a call to
         // Collections.unmodifiableMap().keySet().iterator() throws
@@ -539,7 +540,8 @@ public class Felix extends BundleImpl implements Framework
         return this;
     }
 
-    @Override
+    @SuppressWarnings("unchecked")
+	@Override
     public <A> A adapt(Class<A> type)
     {
         checkAdapt(type);
@@ -644,7 +646,7 @@ public class Felix extends BundleImpl implements Framework
     @Override
     public void init() throws BundleException
     {
-        init(null);
+        init((FrameworkListener[])null);
     }
 
     /**
@@ -776,7 +778,7 @@ public class Felix extends BundleImpl implements Framework
                 {
                     m_resolver.resolve(
                         Collections.singleton(adapt(BundleRevision.class)),
-                        Collections.EMPTY_SET);
+                        Collections.emptySet());
                 }
                 catch (ResolutionException ex)
                 {
@@ -1079,7 +1081,7 @@ public class Felix extends BundleImpl implements Framework
         {
             BundleImpl bundleImpl = revisionImpl.getBundle();
             sp.checkBundle(bundleImpl);
-            Map signers = (Map) sp.getSignerMatcher(bundleImpl, Bundle.SIGNERS_TRUSTED);
+            Map<X509Certificate, List<X509Certificate>> signers = sp.getSignerMatcher(bundleImpl, Bundle.SIGNERS_TRUSTED);
             certificates = signers.keySet().toArray(new java.security.cert.Certificate[signers.size()]);
         }
         revisionImpl.setProtectionDomain(
@@ -1840,9 +1842,9 @@ public class Felix extends BundleImpl implements Framework
      * @param locale
      * @return localized bundle headers dictionary.
     **/
-    Dictionary getBundleHeaders(BundleImpl bundle, String locale)
+    Dictionary<String,String> getBundleHeaders(BundleImpl bundle, String locale)
     {
-        return new MapToDictionary(bundle.getCurrentLocalizedHeader(locale));
+        return new MapToDictionary<>(bundle.getCurrentLocalizedHeader(locale));
     }
 
     /**
@@ -1887,7 +1889,7 @@ public class Felix extends BundleImpl implements Framework
     /**
      * Implementation for Bundle.getResources().
     **/
-    Enumeration getBundleResources(BundleImpl bundle, String name)
+    Enumeration<URL> getBundleResources(BundleImpl bundle, String name)
     {
         if (bundle.getState() == Bundle.UNINSTALLED)
         {
@@ -1940,8 +1942,8 @@ public class Felix extends BundleImpl implements Framework
         {
             // Use the entry filter enumeration to search the bundle content
             // recursively for matching entries and return URLs to them.
-            Enumeration enumeration =
-                new EntryFilterEnumeration(
+            Enumeration<URL> enumeration =
+                new EntryFilterEnumeration<>(
                     bundle.adapt(BundleRevision.class), false, name, "*", true, true);
             // If the enumeration has elements, then that means we need
             // to synthesize the directory entry.
@@ -1964,7 +1966,7 @@ public class Felix extends BundleImpl implements Framework
     /**
      * Implementation for Bundle.getEntryPaths().
     **/
-    Enumeration getBundleEntryPaths(BundleImpl bundle, String path)
+    Enumeration<String> getBundleEntryPaths(BundleImpl bundle, String path)
     {
         if (bundle.getState() == Bundle.UNINSTALLED)
         {
@@ -1973,8 +1975,8 @@ public class Felix extends BundleImpl implements Framework
 
         // Get the entry enumeration from the revision content and
         // create a wrapper enumeration to filter it.
-        Enumeration enumeration =
-            new EntryFilterEnumeration(
+        Enumeration<String> enumeration =
+            new EntryFilterEnumeration<>(
                 bundle.adapt(BundleRevision.class), false, path, "*", false, false);
 
         // Return the enumeration if it has elements.
@@ -1984,7 +1986,7 @@ public class Felix extends BundleImpl implements Framework
     /**
      * Implementation for Bundle.findEntries().
     **/
-    Enumeration findBundleEntries(
+    Enumeration<URL> findBundleEntries(
             BundleImpl bundle, String path, String filePattern, boolean recurse)
     {
         if (bundle.getState() == Bundle.UNINSTALLED)
@@ -2009,19 +2011,19 @@ public class Felix extends BundleImpl implements Framework
     /**
      * Implementation for BundleWiring.findEntries().
      **/
-    Enumeration findBundleEntries(
+    Enumeration<URL> findBundleEntries(
         BundleRevision revision, String path, String filePattern, boolean recurse)
     {
         // Get the entry enumeration from the revision content and
         // create a wrapper enumeration to filter it.
-        Enumeration enumeration =
-            new EntryFilterEnumeration(revision, !(revision instanceof ExtensionManager.ExtensionManagerRevision), path, filePattern, recurse, true);
+        Enumeration<URL> enumeration =
+            new EntryFilterEnumeration<>(revision, !(revision instanceof ExtensionManager.ExtensionManagerRevision), path, filePattern, recurse, true);
 
         // Return the enumeration if it has elements.
         return (!enumeration.hasMoreElements()) ? null : enumeration;
     }
 
-    ServiceReference[] getBundleRegisteredServices(BundleImpl bundle)
+    ServiceReference<?>[] getBundleRegisteredServices(BundleImpl bundle)
     {
         if (bundle.getState() == Bundle.UNINSTALLED)
         {
@@ -2029,15 +2031,15 @@ public class Felix extends BundleImpl implements Framework
         }
 
         // Filter list of registered service references.
-        ServiceReference[] refs = m_registry.getRegisteredServices(bundle);
+        ServiceReference<?>[] refs = m_registry.getRegisteredServices(bundle);
 
         return refs;
     }
 
-    ServiceReference[] getBundleServicesInUse(Bundle bundle)
+    ServiceReference<?>[] getBundleServicesInUse(Bundle bundle)
     {
         // Filter list of "in use" service references.
-        ServiceReference[] refs = m_registry.getServicesInUse(bundle);
+        ServiceReference<?>[] refs = m_registry.getServicesInUse(bundle);
 
         return refs;
     }
@@ -2077,7 +2079,7 @@ public class Felix extends BundleImpl implements Framework
     /**
      * Implementation for Bundle.loadClass().
     **/
-    Class loadBundleClass(BundleImpl bundle, String name) throws ClassNotFoundException
+    Class<?> loadBundleClass(BundleImpl bundle, String name) throws ClassNotFoundException
     {
         if (bundle.getState() == Bundle.UNINSTALLED)
         {
@@ -3646,7 +3648,7 @@ public class Felix extends BundleImpl implements Framework
                 getHookRegistry().getHooks(org.osgi.framework.hooks.service.ListenerHook.class);
         if (oldFilter != null)
         {
-            final Collection removed = Collections.singleton(
+            final Collection<org.osgi.framework.hooks.service.ListenerHook.ListenerInfo> removed = Collections.singleton(
                 new ListenerInfo(bundle, bundle._getBundleContext(),
                     ServiceListener.class, l, oldFilter, null, true));
             for (ServiceReference<org.osgi.framework.hooks.service.ListenerHook> sr : listenerHooks)
@@ -3672,7 +3674,7 @@ public class Felix extends BundleImpl implements Framework
         }
 
         // Invoke the ListenerHook.added() on all hooks.
-        final Collection added = Collections.singleton(
+        final Collection<org.osgi.framework.hooks.service.ListenerHook.ListenerInfo> added = Collections.singleton(
             new ListenerInfo(bundle, bundle._getBundleContext(),
                 ServiceListener.class, l, newFilter, null, false));
         for (ServiceReference<org.osgi.framework.hooks.service.ListenerHook> sr : listenerHooks)
@@ -3715,7 +3717,7 @@ public class Felix extends BundleImpl implements Framework
             // Invoke the ListenerHook.removed() on all hooks.
             Set<ServiceReference<org.osgi.framework.hooks.service.ListenerHook>> listenerHooks =
                     getHookRegistry().getHooks(org.osgi.framework.hooks.service.ListenerHook.class);
-            Collection removed = Collections.singleton(listener);
+            Collection<org.osgi.framework.hooks.service.ListenerHook.ListenerInfo> removed = Collections.singleton(listener);
             for (ServiceReference<org.osgi.framework.hooks.service.ListenerHook> sr : listenerHooks)
             {
                 org.osgi.framework.hooks.service.ListenerHook lh = getService(this, sr, false);
@@ -3762,8 +3764,8 @@ public class Felix extends BundleImpl implements Framework
      *             service or null.
      * @return A <code>ServiceRegistration</code> object or null.
     **/
-    ServiceRegistration registerService(
-        BundleContextImpl context, String[] classNames, Object svcObj, Dictionary dict)
+    ServiceRegistration<?> registerService(
+        BundleContextImpl context, String[] classNames, Object svcObj, Dictionary<String,?> dict)
     {
         if (classNames == null)
         {
@@ -3774,7 +3776,7 @@ public class Felix extends BundleImpl implements Framework
             throw new IllegalArgumentException("Service object cannot be null.");
         }
 
-        ServiceRegistration reg = null;
+        ServiceRegistration<?> reg = null;
 
         // Check to make sure that the service object is
         // an instance of all service classes; ignore if
@@ -3782,7 +3784,7 @@ public class Felix extends BundleImpl implements Framework
         if (!(svcObj instanceof ServiceFactory))
         {
             for (String className : classNames) {
-                Class clazz = Util.loadClassUsingClass(svcObj.getClass(), className, m_secureAction);
+                Class<?> clazz = Util.loadClassUsingClass(svcObj.getClass(), className, m_secureAction);
                 if (clazz == null)
                 {
                     if (!Util.checkImplementsWithName(svcObj.getClass(), className))
@@ -3844,7 +3846,7 @@ public class Felix extends BundleImpl implements Framework
      * @return Array of ServiceReference objects that meet the criteria
      * @throws InvalidSyntaxException
      */
-    ServiceReference[] getServiceReferences(
+    ServiceReference<?>[] getServiceReferences(
         final BundleImpl bundle, final String className,
         final String expr, final boolean checkAssignable)
         throws InvalidSyntaxException
@@ -3864,15 +3866,15 @@ public class Felix extends BundleImpl implements Framework
         }
 
         // Ask the service registry for all matching service references.
-        final Collection refList = m_registry.getServiceReferences(className, filter);
+        final Collection<ServiceReference<?>> refList = m_registry.getServiceReferences(className, filter);
 
         // Filter on assignable references
         if (checkAssignable)
         {
-            for (Iterator refIter = refList.iterator(); refIter.hasNext();)
+            for (Iterator<ServiceReference<?>> refIter = refList.iterator(); refIter.hasNext();)
             {
                 // Get the current service reference.
-                ServiceReference ref = (ServiceReference) refIter.next();
+                ServiceReference<?> ref = refIter.next();
 
                 // Now check for castability.
                 if (!Util.isServiceAssignable(bundle, ref))
@@ -3883,7 +3885,7 @@ public class Felix extends BundleImpl implements Framework
         }
 
         // If the requesting bundle is the system bundle, ignore the effects of the findhooks
-        Collection resRefList = (bundle == this ? new ArrayList(refList) : refList);
+        Collection<ServiceReference<?>> resRefList = (bundle == this ? new ArrayList<>(refList) : refList);
 
         // activate findhooks
         Set<ServiceReference<org.osgi.framework.hooks.service.FindHook>> findHooks =
@@ -3901,7 +3903,7 @@ public class Felix extends BundleImpl implements Framework
                         className,
                         expr,
                         !checkAssignable,
-                        new ShrinkableCollection(refList));
+                        new ShrinkableCollection<>(refList));
                 }
                 catch (Throwable th)
                 {
@@ -3938,11 +3940,11 @@ public class Felix extends BundleImpl implements Framework
      * @return Array of ServiceReference objects that meet the criteria
      * @throws InvalidSyntaxException
      */
-    ServiceReference[] getAllowedServiceReferences(
+    ServiceReference<?>[] getAllowedServiceReferences(
         BundleImpl bundle, String className, String expr, boolean checkAssignable)
         throws InvalidSyntaxException
     {
-        ServiceReference[] refs = getServiceReferences(bundle, className, expr, checkAssignable);
+        ServiceReference<?>[] refs = getServiceReferences(bundle, className, expr, checkAssignable);
 
         Object sm = System.getSecurityManager();
 
@@ -3951,9 +3953,9 @@ public class Felix extends BundleImpl implements Framework
             return refs;
         }
 
-        List result = new ArrayList();
+        List<ServiceReference<?>> result = new ArrayList<>();
 
-        for (ServiceReference ref : refs) {
+        for (ServiceReference<?> ref : refs) {
             try
             {
                 ((SecurityManager) sm).checkPermission(new ServicePermission(ref, ServicePermission.GET));
@@ -3988,7 +3990,7 @@ public class Felix extends BundleImpl implements Framework
         return null;
     }
 
-    boolean ungetService(Bundle bundle, ServiceReference ref, Object srvObj)
+    boolean ungetService(Bundle bundle, ServiceReference<?> ref, Object srvObj)
     {
         return m_registry.ungetService(bundle, ref, srvObj);
     }
@@ -4032,7 +4034,7 @@ public class Felix extends BundleImpl implements Framework
     // PackageAdmin related methods.
     //
 
-    private final Map<Class, Boolean> m_systemBundleClassCache =
+    private final Map<Class<?>, Boolean> m_systemBundleClassCache =
         new WeakHashMap<>();
 
     /**
@@ -4046,7 +4048,7 @@ public class Felix extends BundleImpl implements Framework
      *         if the class was not loaded by a bundle or its associated
      *         bundle belongs to a different framework instance.
     **/
-    Bundle getBundle(Class clazz)
+    Bundle getBundle(Class<?> clazz)
     {
         // If the class comes from bundle class loader, then return
         // associated bundle if it is from this framework instance.
@@ -4071,7 +4073,7 @@ public class Felix extends BundleImpl implements Framework
             }
             if (fromSystemBundle == null)
             {
-                Class sbClass = null;
+                Class<?> sbClass = null;
                 try
                 {
                     sbClass = ((BundleWiringImpl) m_extensionManager
@@ -4115,7 +4117,7 @@ public class Felix extends BundleImpl implements Framework
         BundleRequirementImpl req = new BundleRequirementImpl(
             null,
             BundleRevision.PACKAGE_NAMESPACE,
-            Collections.EMPTY_MAP,
+            Collections.emptyMap(),
             attrs);
         List<BundleCapability> exports = m_resolver.findProviders(req, false);
 
@@ -4130,7 +4132,7 @@ public class Felix extends BundleImpl implements Framework
 
         if (exports != null)
         {
-            List pkgs = new ArrayList();
+            List<ExportedPackageImpl> pkgs = new ArrayList<>();
 
             for (Iterator<BundleCapability> it = exports.iterator(); it.hasNext(); )
             {
@@ -4205,7 +4207,7 @@ public class Felix extends BundleImpl implements Framework
     **/
     ExportedPackage[] getExportedPackages(Bundle b)
     {
-        List list = new ArrayList();
+        List<ExportedPackageImpl> list = new ArrayList<>();
 
         // If a bundle is specified, then return its
         // exported packages.
@@ -4262,7 +4264,7 @@ public class Felix extends BundleImpl implements Framework
      * @param bundle The bundle from which to retrieve exported packages.
      * @param list The list to which the exported packages are added
     **/
-    private void getExportedPackages(Bundle bundle, List list)
+    private void getExportedPackages(Bundle bundle, List<ExportedPackageImpl> list)
     {
         // Since a bundle may have many revisions associated with it,
         // one for each revision in the cache, search each revision
@@ -4350,7 +4352,7 @@ public class Felix extends BundleImpl implements Framework
                 }
                 try
                 {
-                    m_resolver.resolve(Collections.EMPTY_SET, revisions);
+                    m_resolver.resolve(Collections.emptySet(), revisions);
                     if (result)
                     {
                         for (BundleRevision br : revisions)
@@ -4382,7 +4384,7 @@ public class Felix extends BundleImpl implements Framework
     {
         try
         {
-            m_resolver.resolve(Collections.singleton(revision), Collections.EMPTY_SET);
+            m_resolver.resolve(Collections.singleton(revision), Collections.emptySet());
         }
         catch (ResolutionException ex)
         {
@@ -4424,7 +4426,7 @@ public class Felix extends BundleImpl implements Framework
             }
 
             // Then add all updated bundles.
-            Iterator iter = m_installedBundles[LOCATION_MAP_IDX].values().iterator();
+            Iterator<BundleImpl> iter = m_installedBundles[LOCATION_MAP_IDX].values().iterator();
             while (iter.hasNext())
             {
                 BundleImpl bundle = (BundleImpl) iter.next();
@@ -4609,7 +4611,7 @@ public class Felix extends BundleImpl implements Framework
         try
         {
             // If there are targets, then find all dependencies for each one.
-            Set<Bundle> bundles = Collections.EMPTY_SET;
+            Set<Bundle> bundles = Collections.emptySet();
             if (targets != null)
             {
                 // Create map of bundles that import the packages
@@ -4713,13 +4715,13 @@ public class Felix extends BundleImpl implements Framework
         m_securityProvider = securityProvider;
     }
 
-    Object getSignerMatcher(BundleImpl bundle, int signersType)
+    Map<X509Certificate, List<X509Certificate>> getSignerMatcher(BundleImpl bundle, int signersType)
     {
         if ((bundle != this) && (m_securityProvider != null))
         {
             return m_securityProvider.getSignerMatcher(bundle, signersType);
         }
-        return new HashMap();
+        return new HashMap<>();
     }
 
     boolean impliesBundlePermission(BundleProtectionDomain bundleProtectionDomain, Permission permission, boolean direct)
@@ -4753,13 +4755,13 @@ public class Felix extends BundleImpl implements Framework
 
         // Get the activator class from the header map.
         BundleActivator activator = null;
-        Map headerMap = ((BundleRevisionImpl) impl.adapt(BundleRevision.class)).getHeaders();
+        Map<String,String> headerMap = ((BundleRevisionImpl) impl.adapt(BundleRevision.class)).getHeaders();
         String className = (String) headerMap.get(Constants.BUNDLE_ACTIVATOR);
         // Try to instantiate activator class if present.
         if (className != null)
         {
             className = className.trim();
-            Class clazz;
+            Class<?> clazz;
             try
             {
                 clazz = ((BundleWiringImpl)
@@ -4850,7 +4852,7 @@ public class Felix extends BundleImpl implements Framework
      * @param event The service event to fire.
      * @param oldProps The old props of the service.
     **/
-    private void fireServiceEvent(ServiceEvent event, Dictionary oldProps)
+    private void fireServiceEvent(ServiceEvent event, Dictionary<String,?> oldProps)
     {
         m_dispatcher.fireServiceEvent(event, oldProps, this);
     }
@@ -4934,7 +4936,7 @@ public class Felix extends BundleImpl implements Framework
         }
     }
 
-    private void loadPrefixFromDefaultIfNotDefined(Map configMap, Properties defaultProperties, String prefix)
+    private void loadPrefixFromDefaultIfNotDefined(Map<String,Object> configMap, Properties defaultProperties, String prefix)
     {
         Map<String, String> defaultPropsWithPrefix = Util.getPropertiesWithPrefix(defaultProperties, prefix);
 
@@ -5415,7 +5417,7 @@ public class Felix extends BundleImpl implements Framework
 
             // Use a copy-on-write approach to add the bundle
             // to the uninstalled list.
-            List<BundleImpl> uninstalledBundles = new ArrayList(m_uninstalledBundles);
+            List<BundleImpl> uninstalledBundles = new ArrayList<>(m_uninstalledBundles);
             uninstalledBundles.add(bundle);
             m_uninstalledBundles = uninstalledBundles;
         }
@@ -5444,7 +5446,7 @@ public class Felix extends BundleImpl implements Framework
 
             // Use a copy-on-write approach to remove the bundle
             // from the uninstalled list.
-            List<BundleImpl> uninstalledBundles = new ArrayList(m_uninstalledBundles);
+            List<BundleImpl> uninstalledBundles = new ArrayList<>(m_uninstalledBundles);
             uninstalledBundles.remove(bundle);
             m_uninstalledBundles = uninstalledBundles;
         }

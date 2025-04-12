@@ -58,8 +58,8 @@ public class ManifestParser
     private static final String BUNDLE_LICENSE_HEADER = "Bundle-License"; // No constant defined by OSGi...
 
     private final Logger m_logger;
-    private final Map<String, Object> m_configMap;
-    private final Map<String, Object> m_headerMap;
+    private final Map<String, ?> m_configMap;
+    private final Map<String, String> m_headerMap;
     private volatile int m_activationPolicy = BundleRevisionImpl.EAGER_ACTIVATION;
     private volatile String m_activationIncludeDir;
     private volatile String m_activationExcludeDir;
@@ -97,7 +97,7 @@ public class ManifestParser
         return foo;
     };
 
-    public ManifestParser(Logger logger, Map<String, Object> configMap, BundleRevision owner, Map<String, Object> headerMap)
+    public ManifestParser(Logger logger, Map<String, ?> configMap, BundleRevision owner, Map<String, String> headerMap)
         throws BundleException
     {
         m_logger = logger;
@@ -497,7 +497,7 @@ public class ManifestParser
                         owner,
                         BundleRevision.PACKAGE_NAMESPACE,
                         newDirs,
-                        Collections.EMPTY_MAP,
+                        Collections.emptyMap(),
                         sf));
             }
         }
@@ -1027,7 +1027,7 @@ public class ManifestParser
         return (manifestVersion == null) ? "1" : manifestVersion;
     }
 
-    private static String getManifestVersion(Map<String, Object> headerMap)
+    private static String getManifestVersion(Map<String, String> headerMap)
     {
         String manifestVersion = (String) headerMap.get(Constants.BUNDLE_MANIFESTVERSION);
         return (manifestVersion == null) ? null : manifestVersion.trim();
@@ -1325,7 +1325,7 @@ public class ManifestParser
                     exports.get(i).getAttributes().get(BundleRevision.PACKAGE_NAMESPACE));
                 clauseList.add(
                     new ParsedHeaderClause(
-                        paths, Collections.EMPTY_MAP, attrs, Collections.EMPTY_MAP));
+                        paths, Collections.emptyMap(), attrs, Collections.emptyMap()));
             }
         }
 
@@ -1363,7 +1363,7 @@ public class ManifestParser
         return exports;
     }
 
-    private static boolean checkExtensionBundle(Map<String, Object> headerMap) throws BundleException
+    private static boolean checkExtensionBundle(Map<String, String> headerMap) throws BundleException
     {
         Object extension = parseExtensionBundleHeader(
             (String) headerMap.get(Constants.FRAGMENT_HOST));
@@ -1389,7 +1389,7 @@ public class ManifestParser
     }
 
     private static BundleCapabilityImpl parseBundleSymbolicName(Logger logger,
-        BundleRevision owner, Map<String, Object> headerMap)
+        BundleRevision owner, Map<String, String> headerMap)
         throws BundleException
     {
         List<ParsedHeaderClause> clauses = normalizeCapabilityClauses(logger, parseStandardHeader(
@@ -1441,7 +1441,7 @@ public class ManifestParser
             {
                 if (tagList instanceof List)
                 {
-                    for (Object member : ((List) tagList))
+                    for (Object member : ((List<?>) tagList))
                     {
                         if (member instanceof String)
                         {
@@ -1492,7 +1492,7 @@ public class ManifestParser
     }
 
     private static BundleCapabilityImpl addIdentityCapability(BundleRevision owner,
-        Map<String, Object> headerMap, BundleCapabilityImpl bundleCap) throws BundleException
+        Map<String, String> headerMap, BundleCapabilityImpl bundleCap) throws BundleException
     {
         Map<String, Object> attrs = new HashMap<>(bundleCap.getAttributes());
 
@@ -1541,7 +1541,7 @@ public class ManifestParser
     }
 
     private static List<BundleRequirementImpl> parseFragmentHost(
-        Logger logger, BundleRevision owner, Map<String, Object> headerMap)
+        Logger logger, BundleRevision owner, Map<String, String> headerMap)
         throws BundleException
     {
         List<BundleRequirementImpl> reqs = new ArrayList<>();
@@ -1856,7 +1856,7 @@ public class ManifestParser
         return result;
     }
 
-    private void parseActivationPolicy(Map<String, Object> headerMap)
+    private void parseActivationPolicy(Map<String, String> headerMap)
     {
         m_activationPolicy = BundleRevisionImpl.EAGER_ACTIVATION;
 

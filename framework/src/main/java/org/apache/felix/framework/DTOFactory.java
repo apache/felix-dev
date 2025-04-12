@@ -60,7 +60,6 @@ import org.osgi.resource.dto.CapabilityDTO;
 import org.osgi.resource.dto.CapabilityRefDTO;
 import org.osgi.resource.dto.RequirementDTO;
 import org.osgi.resource.dto.RequirementRefDTO;
-import org.osgi.resource.dto.WireDTO;
 
 /**
  * Creates various DTOs provided by the core framework.
@@ -120,7 +119,7 @@ public class DTOFactory
         return null;
     }
 
-    static ServiceReferenceDTO createDTO(ServiceReference ref)
+    static ServiceReferenceDTO createDTO(ServiceReference<?> ref)
     {
         return createServiceReferenceDTO(ref);
     }
@@ -371,7 +370,6 @@ public class DTOFactory
         return dto;
     }
 
-    @SuppressWarnings("unchecked")
     private static FrameworkDTO createFrameworkDTO(Felix framework)
     {
         FrameworkDTO dto = new FrameworkDTO();
@@ -507,8 +505,8 @@ public class DTOFactory
         }
         else if (value instanceof List)
         {
-            List result = new ArrayList();
-            for (Object v : ((List) value))
+            List<Object> result = new ArrayList<>();
+            for (Object v : ((List<?>) value))
             {
                 Object vv = convertAttrToDTO(v);
                 if (vv != null)
@@ -524,7 +522,7 @@ public class DTOFactory
         }
     }
 
-    private static boolean isPermissibleAttribute(Class clazz)
+    private static boolean isPermissibleAttribute(Class<?> clazz)
     {
         return clazz == Boolean.class || clazz == String.class
                 || DTO.class.isAssignableFrom(clazz) || Number.class.isAssignableFrom(clazz);

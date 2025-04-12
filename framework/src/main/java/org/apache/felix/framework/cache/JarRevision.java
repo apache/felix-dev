@@ -53,7 +53,7 @@ class JarRevision extends BundleArchiveRevision
     private final WeakZipFile m_zipFile;
 
     public JarRevision(
-        Logger logger, Map configMap, WeakZipFileFactory zipFactory,
+        Logger logger, Map<?,?> configMap, WeakZipFileFactory zipFactory,
         File revisionRootDir, String location, boolean byReference, InputStream is)
         throws Exception
     {
@@ -96,12 +96,12 @@ class JarRevision extends BundleArchiveRevision
     }
 
     @Override
-	public Map<String, Object> getManifestHeader() throws Exception
+	public Map<String, String> getManifestHeader() throws Exception
     {
         // Read and parse headers into a case insensitive map of manifest attributes and return it.
         ZipEntry manifestEntry = m_zipFile.getEntry("META-INF/MANIFEST.MF");
 
-        Map<String, Object> manifest = manifestEntry != null ? BundleCache.getMainAttributes(new StringMap(), m_zipFile.getInputStream(manifestEntry), manifestEntry.getSize()) : null;
+        Map<String, String> manifest = manifestEntry != null ? BundleCache.getMainAttributes(new StringMap<>(), m_zipFile.getInputStream(manifestEntry), manifestEntry.getSize()) : null;
 
         return manifest;
     }

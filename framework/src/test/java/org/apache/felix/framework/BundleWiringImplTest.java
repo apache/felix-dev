@@ -87,7 +87,7 @@ public class BundleWiringImplTest
         mockBundle = mock(BundleImpl.class);
 
         Logger logger = new Logger();
-        Map configMap = new HashMap();
+        Map<String,Object> configMap = new HashMap<>();
         List<BundleRevision> fragments = new ArrayList<>();
         List<BundleWire> wires = new ArrayList<>();
         Map<String, BundleRevision> importedPkgs = new HashMap<>();
@@ -409,7 +409,7 @@ public class BundleWiringImplTest
         mockBundle = mock(BundleImpl.class);
 
         Logger logger = new Logger();
-        Map configMap = new HashMap();
+        Map<String,?> configMap = new HashMap<>();
         List<BundleRevision> fragments = new ArrayList<>();
         List<BundleWire> wires = new ArrayList<>();
 
@@ -642,17 +642,17 @@ public class BundleWiringImplTest
         HookRegistry hReg = mock(HookRegistry.class);
         Mockito.when(mockFramework.getHookRegistry()).thenReturn(hReg);
         Content mockContent = mock(Content.class);
-        final Class testClass = TestClassSuper.class;
+        final Class<?> testClass = TestClassSuper.class;
         final String testClassName = testClass.getName();
         final String testClassAsPath = testClassName.replace('.', '/') + ".class";
         byte[] testClassBytes = createTestClassBytes(testClass, testClassAsPath);
 
-        final Class testClass2 = TestClassChild.class;
+        final Class<?> testClass2 = TestClassChild.class;
         final String testClassName2 = testClass2.getName();
         final String testClassAsPath2 = testClassName2.replace('.', '/') + ".class";
         byte[] testClassBytes2 = createTestClassBytes(testClass2, testClassAsPath2);
 
-        final Class testClass3 = TestClass.class;
+        final Class<?> testClass3 = TestClass.class;
         final String testClassName3 = testClass3.getName();
         final String testClassAsPath3 = testClassName3.replace('.', '/') + ".class";
         byte[] testClassBytes3 = createTestClassBytes(testClass3, testClassAsPath3);
@@ -672,7 +672,7 @@ public class BundleWiringImplTest
         mockBundle = mock(BundleImpl.class);
 
         Logger logger = new Logger();
-        Map configMap = new HashMap();
+        Map<String,?> configMap = new HashMap<>();
         List<BundleRevision> fragments = new ArrayList<>();
         List<BundleWire> wires = new ArrayList<>();
         Map<String, BundleRevision> importedPkgs = new HashMap<>();
@@ -842,17 +842,17 @@ public class BundleWiringImplTest
         HookRegistry hReg = mock(HookRegistry.class);
         Mockito.when(mockFramework.getHookRegistry()).thenReturn(hReg);
         Content mockContent = mock(Content.class);
-        final Class testClass = TestClassSuper.class;
+        final Class<?> testClass = TestClassSuper.class;
         final String testClassName = testClass.getName();
         final String testClassAsPath = testClassName.replace('.', '/') + ".class";
         byte[] testClassBytes = createTestClassBytes(testClass, testClassAsPath);
 
-        final Class testClass2 = TestClassChild.class;
+        final Class<?> testClass2 = TestClassChild.class;
         final String testClassName2 = testClass2.getName();
         final String testClassAsPath2 = testClassName2.replace('.', '/') + ".class";
         byte[] testClassBytes2 = createTestClassBytes(testClass2, testClassAsPath2);
 
-        final Class testClass3 = TestClass.class;
+        final Class<?> testClass3 = TestClass.class;
         final String testClassName3 = testClass3.getName();
         final String testClassAsPath3 = testClassName3.replace('.', '/') + ".class";
         byte[] testClassBytes3 = createTestClassBytes(testClass3, testClassAsPath3);
@@ -872,7 +872,7 @@ public class BundleWiringImplTest
         mockBundle = mock(BundleImpl.class);
 
         Logger logger = new Logger();
-        Map configMap = new HashMap();
+        Map<String,?> configMap = new HashMap<>();
         List<BundleRevision> fragments = new ArrayList<>();
         List<BundleWire> wires = new ArrayList<>();
         Map<String, BundleRevision> importedPkgs = new HashMap<>();
@@ -1010,7 +1010,7 @@ public class BundleWiringImplTest
         }
 
         @Override
-        protected Class loadClass(String name, boolean resolve) throws ClassNotFoundException
+        protected Class<?> loadClass(String name, boolean resolve) throws ClassNotFoundException
         {
             if (name.startsWith("java"))
             {
@@ -1020,7 +1020,7 @@ public class BundleWiringImplTest
         }
 
         @Override
-        protected Class findClass(String name) throws ClassNotFoundException
+        protected Class<?> findClass(String name) throws ClassNotFoundException
         {
             if (name.startsWith("java"))
             {
@@ -1043,7 +1043,7 @@ public class BundleWiringImplTest
         }
 
         @Override
-        protected Class loadClass(String name, boolean resolve) throws ClassNotFoundException
+        protected Class<?> loadClass(String name, boolean resolve) throws ClassNotFoundException
         {
             if (name.startsWith("java"))
             {
@@ -1053,7 +1053,7 @@ public class BundleWiringImplTest
         }
 
         @Override
-        protected Class findClass(String name) throws ClassNotFoundException
+        protected Class<?> findClass(String name) throws ClassNotFoundException
         {
             if (name.startsWith("java"))
             {

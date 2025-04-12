@@ -388,7 +388,7 @@ public class SimpleFilter
 
     public static List<String> parseSubstring(String value)
     {
-        List<String> pieces = new ArrayList();
+        List<String> pieces = new ArrayList<>();
         StringBuilder ss = new StringBuilder();
         // int kind = SIMPLE; // assume until proven otherwise
         boolean wasStar = false; // indicates last piece was a star
