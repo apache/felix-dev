@@ -29,7 +29,9 @@ import java.util.jar.JarOutputStream;
 import java.util.jar.Manifest;
 import java.util.zip.ZipEntry;
 
-import junit.framework.TestCase;
+import org.junit.jupiter.api.Test;
+
+import static org.assertj.core.api.Assertions.assertThat;
 
 import org.osgi.framework.Bundle;
 import org.osgi.framework.BundleActivator;
@@ -38,11 +40,12 @@ import org.osgi.framework.BundleException;
 import org.osgi.framework.Constants;
 import org.osgi.framework.launch.Framework;
 
-public class StartStopBundleTest extends TestCase
+public class StartStopBundleTest
 {
     public static final int DELAY = 1000;
 
-    public void testStartStopBundle() throws Exception
+    @Test
+    void startStopBundle() throws Exception
     {
         Map params = new HashMap();
         params.put(Constants.FRAMEWORK_SYSTEMPACKAGES,
@@ -91,8 +94,8 @@ public class StartStopBundleTest extends TestCase
             bundle.stop();
             long t1 = System.currentTimeMillis();
 
-            assertEquals(Bundle.RESOLVED, bundle.getState());
-            assertTrue((t1 - t0) > DELAY / 2);
+            assertThat(bundle.getState()).isEqualTo(Bundle.RESOLVED);
+            assertThat((t1 - t0) > DELAY / 2).isTrue();
 
             bundle.start();
 
@@ -115,8 +118,8 @@ public class StartStopBundleTest extends TestCase
             bundle.start();
             t1 = System.currentTimeMillis();
 
-            assertEquals(Bundle.ACTIVE, bundle.getState());
-            assertTrue((t1 - t0) > DELAY / 2);
+            assertThat(bundle.getState()).isEqualTo(Bundle.ACTIVE);
+            assertThat((t1 - t0) > DELAY / 2).isTrue();
         } finally {
             f.stop();
             Thread.sleep(DELAY);
@@ -155,7 +158,7 @@ public class StartStopBundleTest extends TestCase
                 deleteDir(file);
             }
         }
-        assertTrue(root.delete());
+        assertThat(root.delete()).isTrue();
     }
    public static class TestBundleActivator implements BundleActivator
     {

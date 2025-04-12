@@ -18,7 +18,9 @@
  */
 package org.apache.felix.framework;
 
-import junit.framework.TestCase;
+import static org.assertj.core.api.Assertions.assertThat;
+
+import org.junit.jupiter.api.Test;
 import org.osgi.framework.BundleContext;
 import org.osgi.framework.Constants;
 import org.osgi.framework.ServiceObjects;
@@ -31,9 +33,10 @@ import java.io.IOException;
 import java.util.HashMap;
 import java.util.Map;
 
-public class ServiceObjectsTest extends TestCase
+class ServiceObjectsTest
 {
-    public void testServiceObjects() throws Exception
+    @Test
+    void serviceObjects() throws Exception
     {
         Map params = new HashMap();
         File cacheDir = File.createTempFile("felix-cache", ".dir");
@@ -61,7 +64,7 @@ public class ServiceObjectsTest extends TestCase
 
             serviceObjects.ungetService(service);
 
-            assertEquals(service, serviceObjects.getService());
+            assertThat(serviceObjects.getService()).isEqualTo(service);
             service = serviceObjects.getService();
 
             registration.unregister();
@@ -85,6 +88,6 @@ public class ServiceObjectsTest extends TestCase
                 deleteDir(file);
             }
         }
-        assertTrue(root.delete());
+        assertThat(root.delete()).isTrue();
     }
 }

@@ -18,9 +18,15 @@
  */
 package org.apache.felix.framework;
 
-import junit.framework.TestCase;
+import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.Assertions.fail;
+
 import org.apache.felix.framework.util.FelixConstants;
-import org.osgi.framework.*;
+import org.junit.jupiter.api.Test;
+import org.osgi.framework.Bundle;
+import org.osgi.framework.BundleActivator;
+import org.osgi.framework.BundleContext;
+import org.osgi.framework.Constants;
 import org.osgi.framework.connect.ConnectModule;
 import org.osgi.framework.connect.ModuleConnector;
 import org.osgi.framework.launch.Framework;
@@ -32,9 +38,10 @@ import java.util.HashMap;
 import java.util.Map;
 import java.util.Optional;
 
-public class LaunchTest extends TestCase
+class LaunchTest
 {
-    public void testInit() throws Exception
+    @Test
+    void init() throws Exception
     {
         Map params = new HashMap();
         File cacheDir = File.createTempFile("felix-cache", ".dir");
@@ -112,7 +119,7 @@ public class LaunchTest extends TestCase
             {
 
             }
-            assertEquals(Bundle.INSTALLED, f.getState());
+            assertThat(f.getState()).isEqualTo(Bundle.INSTALLED);
             try
             {
                 f.init();
@@ -122,17 +129,17 @@ public class LaunchTest extends TestCase
             {
 
             }
-            assertEquals(Bundle.INSTALLED, f.getState());
+            assertThat(f.getState()).isEqualTo(Bundle.INSTALLED);
             f.init();
-            assertEquals(Bundle.STARTING, f.getState());
+            assertThat(f.getState()).isEqualTo(Bundle.STARTING);
             f.stop();
             f.waitForStop(0);
-            assertEquals(Bundle.RESOLVED, f.getState());
+            assertThat(f.getState()).isEqualTo(Bundle.RESOLVED);
             f.init();
-            assertEquals(1,f.getBundleContext().getServiceReferences(Resolver.class, null).size());
-            assertEquals(Bundle.STARTING, f.getState());
+            assertThat(f.getBundleContext().getServiceReferences(Resolver.class, null)).hasSize(1);
+            assertThat(f.getState()).isEqualTo(Bundle.STARTING);
             f.start();
-            assertEquals(Bundle.ACTIVE, f.getState());
+            assertThat(f.getState()).isEqualTo(Bundle.ACTIVE);
             f.stop();
             f.waitForStop(0);
         }
@@ -151,6 +158,6 @@ public class LaunchTest extends TestCase
                 deleteDir(file);
             }
         }
-        assertTrue(root.delete());
+        assertThat(root.delete()).isTrue();
     }
 }
