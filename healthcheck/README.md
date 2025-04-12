@@ -302,7 +302,7 @@ It is also possible to use a Condition in a reference and later on in the code f
 @Component
 public class MyComponent {
 
-    @Reference(target="(osgi.condition.id=felix.hc.dbavail)")
+    @Reference(target="(osgi.condition.id=felix.hc.dbavail)", policy = ReferencePolicy.DYNAMIC, cardinality = ReferenceCardinality.OPTIONAL)
     volatile Condition healthy;
 
     public void mymethod() {
