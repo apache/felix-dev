@@ -282,13 +282,24 @@ public class ConfigInstaller implements ArtifactInstaller, ConfigurationListener
                     {
                         props.remove(key);
                     }
-                    try (Writer fw = new OutputStreamWriter(new FileOutputStream(file), encoding()))
+
+                    // re-writing a config file must be guarded by a write lock as otherwise DirectoryWatcher
+                    // might pick up an empty file and as a result, write this file to disk in a follow-up event
+                    fileInstall.lock.writeLock().lockInterruptibly();
+                    try
                     {
-                        props.save( fw );
+                        try (Writer fw = new OutputStreamWriter(new FileOutputStream(file), encoding()))
+                        {
+                            props.save( fw );
+                        }
+                        // we're just writing out what's already loaded into ConfigAdmin, so
+                        // update file checksum since lastModified gets updated when writing
+                        fileInstall.updateChecksum(file);
                     }
-                    // we're just writing out what's already loaded into ConfigAdmin, so
-                    // update file checksum since lastModified gets updated when writing
-                    fileInstall.updateChecksum(file);
+                    finally
+                    {
+                        fileInstall.lock.writeLock().unlock();
+                    }
                 }
             }
             catch (Exception e)
