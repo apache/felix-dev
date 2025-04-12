@@ -30,7 +30,7 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        java: [17]
+        java: [17,21,23]
     steps:
     - uses: actions/checkout@v4
     - name: Set up JDK ${{ matrix.java }}
@@ -72,7 +72,7 @@ jobs:
     - name: Felix HTTP
       if: steps.changes.outputs.http == 'true'
       run: mvn -B -V -Dstyle.color=always "-Dit.test=!MissingWebsocketDependenciesIT" --file http/pom.xml clean install verify
-    - name: Felix Maven bundle plugin 
+    - name: Felix Maven bundle plugin
       if: steps.changes.outputs.maven-bundle-plugin == 'true'
       run: mvn -B -V -Dstyle.color=always --file tools/maven-bundle-plugin/pom.xml clean install verify
     - name: Felix Maven OSGi check plugin
