@@ -344,7 +344,7 @@ class ConnectTest
         }
     }
 
-    private static File createBundle(String manifest, File tempDir, Class... classes) throws IOException
+    private static File createBundle(String manifest, File tempDir, Class<?>... classes) throws IOException
     {
         File f = File.createTempFile("felix-bundle", ".jar", tempDir);
 
@@ -353,7 +353,7 @@ class ConnectTest
 
         JarOutputStream os = new JarOutputStream(new FileOutputStream(f), mf);
 
-        for (Class c : classes)
+        for (Class<?> c : classes)
         {
             String path = c.getName().replace('.', '/') + ".class";
             os.putNextEntry(new ZipEntry(path));

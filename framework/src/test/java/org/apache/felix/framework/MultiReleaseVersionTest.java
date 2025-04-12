@@ -41,7 +41,7 @@ import java.util.zip.ZipEntry;
 public class MultiReleaseVersionTest {
 	@Test
 	void multiReleaseVersionBundle() throws Exception {
-		Map params = new HashMap();
+		Map<String,Object> params = new HashMap<>();
 		/*
 		 * params.put(Constants.FRAMEWORK_SYSTEMPACKAGES,
 		 * "org.osgi.framework; version=1.4.0," +

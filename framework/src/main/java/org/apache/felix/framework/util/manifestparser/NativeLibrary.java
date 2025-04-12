@@ -83,7 +83,7 @@ public class NativeLibrary
      * @return <tt>true</tt> if this native library name matches this native
      *         library definition; <tt>false</tt> otherwise.
     **/
-    public boolean match(Map configMap, String name)
+    public boolean match(Map<String,?> configMap, String name)
     {
         // First, check for an exact match.
         boolean matched = false;

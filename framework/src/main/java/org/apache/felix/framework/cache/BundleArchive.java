@@ -78,7 +78,7 @@ public class BundleArchive
     private static final transient String DATA_DIRECTORY = "data";
 
     private final Logger m_logger;
-    private final Map m_configMap;
+    private final Map<?,?> m_configMap;
     private final WeakZipFileFactory m_zipFactory;
     private final File m_archiveRootDir;
 
@@ -125,7 +125,7 @@ public class BundleArchive
      * @param is input stream from which to read the bundle content.
      * @throws Exception if any error occurs.
     **/
-    public BundleArchive(Logger logger, Map configMap, WeakZipFileFactory zipFactory, ModuleConnector
+    public BundleArchive(Logger logger, Map<?,?> configMap, WeakZipFileFactory zipFactory, ModuleConnector
         connectFactory,
         File archiveRootDir, long id, int startLevel, String location, InputStream is)
         throws Exception
@@ -167,7 +167,7 @@ public class BundleArchive
      * @param configMap configMap for BundleArchive
      * @throws Exception if any error occurs.
     **/
-    public BundleArchive(Logger logger, Map configMap, WeakZipFileFactory zipFactory, ModuleConnector connectFactory,
+    public BundleArchive(Logger logger, Map<?,?> configMap, WeakZipFileFactory zipFactory, ModuleConnector connectFactory,
         File archiveRootDir)
         throws Exception
     {
@@ -647,7 +647,7 @@ public class BundleArchive
 
         // Record whether the current revision has native libraries, which
         // we'll use later to determine if we need to rename its directory.
-        Map<String, Object> headers = getCurrentRevision().getManifestHeader();
+        Map<String, String> headers = getCurrentRevision().getManifestHeader();
 
         boolean hasNativeLibs = headers != null && getCurrentRevision().getManifestHeader()
             .containsKey(Constants.BUNDLE_NATIVECODE);

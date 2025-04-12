@@ -29,14 +29,14 @@ public class ListenerInfo implements ListenerHook.ListenerInfo
 {
     private final Bundle m_bundle;
     private final BundleContext m_context;
-    private final Class m_listenerClass;
+    private final Class<?> m_listenerClass;
     private final EventListener m_listener;
     private final Filter m_filter;
     private final Object m_acc;
     private final boolean m_removed;
 
     public ListenerInfo(
-        Bundle bundle, BundleContext context, Class listenerClass, EventListener listener,
+        Bundle bundle, BundleContext context, Class<?> listenerClass, EventListener listener,
         Filter filter, Object acc, boolean removed)
     {
         // Technically, we could get the bundle from the bundle context, but
@@ -73,7 +73,7 @@ public class ListenerInfo implements ListenerHook.ListenerInfo
         return m_context;
     }
 
-    public Class getListenerClass()
+    public Class<?> getListenerClass()
     {
         return m_listenerClass;
     }

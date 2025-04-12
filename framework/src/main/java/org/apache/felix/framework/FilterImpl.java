@@ -52,7 +52,7 @@ public class FilterImpl implements Filter
     }
 
     @Override
-	public boolean match(ServiceReference sr)
+	public boolean match(ServiceReference<?> sr)
     {
         if (sr instanceof ServiceReferenceImpl)
         {
@@ -102,28 +102,27 @@ public class FilterImpl implements Filter
 
     static class WrapperCapability extends BundleCapabilityImpl
     {
-        private final Map m_map;
+        private final Map<String, Object> m_map;
 
-        public WrapperCapability(Map map)
+        public WrapperCapability(Map<String, ?> map)
         {
-            super(null, null, Collections.EMPTY_MAP, Collections.EMPTY_MAP);
-            m_map = (map == null) ? Collections.EMPTY_MAP : map;
+            super(null, null, Collections.emptyMap(), Collections.emptyMap());
+                m_map = Collections.emptyMap();
+                if(map != null ) {
+            }
+            m_map.putAll(map);
         }
 
-        public WrapperCapability(Dictionary dict, boolean caseSensitive)
+        public WrapperCapability(Dictionary<String, ?> dict, boolean caseSensitive)
         {
-            super(null, null, Collections.EMPTY_MAP, Collections.EMPTY_MAP);
+            super(null, null, Collections.emptyMap(), Collections.emptyMap());
             m_map = new DictionaryToMap(dict, caseSensitive);
         }
 
-        public WrapperCapability(ServiceReference sr)
+        public WrapperCapability(ServiceReference<?> sr)
         {
-            super(null, null, Collections.EMPTY_MAP, Collections.EMPTY_MAP);
-            m_map = new StringMap();
-            for (String key : sr.getPropertyKeys())
-            {
-                m_map.put(key, sr.getProperty(key));
-            }
+            super(null, null, Collections.emptyMap(), Collections.emptyMap());
+            m_map = new DictionaryToMap(sr.getProperties(), false);
         }
 
         @Override
@@ -157,23 +156,23 @@ public class FilterImpl implements Filter
         }
     }
 
-    private static class DictionaryToMap implements Map
+    private static class DictionaryToMap implements Map<String,Object>
     {
-        private final Map m_map;
-        private final Dictionary m_dict;
+        private final Map<String,Object> m_map;
+        private final Dictionary<String,?> m_dict;
 
-        public DictionaryToMap(Dictionary dict, boolean caseSensitive)
+        public DictionaryToMap(Dictionary<String,?> dict, boolean caseSensitive)
         {
             if (!caseSensitive)
             {
                 m_dict = null;
-                m_map = new StringMap();
+                m_map = new StringMap<Object>();
                 if (dict != null)
                 {
-                    Enumeration keys = dict.keys();
+                    Enumeration<String> keys = dict.keys();
                     while (keys.hasMoreElements())
                     {
-                        Object key = keys.nextElement();
+                        String key = keys.nextElement();
                         if (m_map.get(key) == null)
                         {
                             m_map.put(key, dict.get(key));
@@ -232,7 +231,7 @@ public class FilterImpl implements Filter
         }
 
         @Override
-		public Object put(Object k, Object v)
+		public Object put(String k, Object v)
         {
             throw new UnsupportedOperationException("Not supported yet.");
         }
@@ -244,7 +243,7 @@ public class FilterImpl implements Filter
         }
 
         @Override
-		public void putAll(Map map)
+		public void putAll(Map<? extends String, ? extends Object> map)
         {
             throw new UnsupportedOperationException("Not supported yet.");
         }
@@ -256,7 +255,7 @@ public class FilterImpl implements Filter
         }
 
         @Override
-		public Set<Object> keySet()
+		public Set<String> keySet()
         {
             throw new UnsupportedOperationException("Not supported yet.");
         }
@@ -268,9 +267,9 @@ public class FilterImpl implements Filter
         }
 
         @Override
-		public Set<Entry<Object, Object>> entrySet()
+		public Set<Entry<String, Object>> entrySet()
         {
-            return Collections.EMPTY_SET;
+            return Collections.emptySet();
         }
     }
 }

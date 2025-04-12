@@ -35,7 +35,7 @@ class FrameworkWiringImpl implements FrameworkWiring, Runnable
 {
     private final Felix m_felix;
     private final ServiceRegistry m_registry;
-    private final List<Collection<Bundle>> m_requests = new ArrayList();
+    private final List<Collection<Bundle>> m_requests = new ArrayList<>();
     private final List<FrameworkListener[]> m_requestListeners
         = new ArrayList<>();
     private ServiceRegistration<PackageAdmin> m_paReg;

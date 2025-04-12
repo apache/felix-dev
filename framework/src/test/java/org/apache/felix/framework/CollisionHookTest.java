@@ -77,7 +77,7 @@ class CollisionHookTest
         Mockito.when(felixMock.getService(felixMock, chRef, false)).thenReturn(testCollisionHook);
 
         // Mock the archive of the bundle being installed
-        Map<String, Object> headerMap = new HashMap<>();
+        Map<String, String> headerMap = new HashMap<>();
         headerMap.put(Constants.BUNDLE_SYMBOLICNAME, "foo");
         headerMap.put(Constants.BUNDLE_VERSION, "1.2.1.a");
         headerMap.put(Constants.BUNDLE_MANIFESTVERSION, "2");
@@ -144,7 +144,7 @@ class CollisionHookTest
         Mockito.when(felixMock.getService(felixMock, chRef, false)).thenReturn(testCollisionHook);
 
         // Mock the archive of the bundle being installed
-        Map<String, Object> headerMap = new HashMap<>();
+        Map<String, String> headerMap = new HashMap<>();
         headerMap.put(Constants.BUNDLE_SYMBOLICNAME, "zar");
         headerMap.put(Constants.BUNDLE_VERSION, "1.2.1.a");
         headerMap.put(Constants.BUNDLE_MANIFESTVERSION, "2");
@@ -204,7 +204,7 @@ class CollisionHookTest
         Mockito.when(felixMock.getService(felixMock, chRef, false)).thenReturn(testCollisionHook);
 
         // Mock the archive of the bundle being installed
-        Map<String, Object> headerMap = new HashMap<>();
+        Map<String, String> headerMap = new HashMap<>();
         headerMap.put(Constants.BUNDLE_SYMBOLICNAME, "foo");
         headerMap.put(Constants.BUNDLE_VERSION, "1.2.1.a");
         headerMap.put(Constants.BUNDLE_MANIFESTVERSION, "2");
@@ -248,7 +248,7 @@ class CollisionHookTest
         });
 
         // Mock the archive of the bundle being installed
-        Map<String, Object> headerMap = new HashMap<>();
+        Map<String, String> headerMap = new HashMap<>();
         headerMap.put(Constants.BUNDLE_SYMBOLICNAME, "foo");
         headerMap.put(Constants.BUNDLE_VERSION, "1.2.1.a");
         headerMap.put(Constants.BUNDLE_MANIFESTVERSION, "2");
@@ -282,7 +282,7 @@ class CollisionHookTest
         });
 
         // Mock the archive of the bundle being installed
-        Map<String, Object> headerMap = new HashMap<>();
+        Map<String, String> headerMap = new HashMap<>();
         headerMap.put(Constants.BUNDLE_SYMBOLICNAME, "foo");
         headerMap.put(Constants.BUNDLE_VERSION, "1.2.1.a");
         headerMap.put(Constants.BUNDLE_MANIFESTVERSION, "2");

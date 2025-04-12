@@ -130,13 +130,13 @@ public class ContentDirectoryContent implements Content
         return "CONTENT DIR " + m_rootPath + " (" + m_content + ")";
     }
 
-    private static class EntriesEnumeration implements Enumeration
+    private static class EntriesEnumeration implements Enumeration<String>
     {
-        private final Enumeration m_enumeration;
+        private final Enumeration<String> m_enumeration;
         private final String m_rootPath;
         private String m_nextEntry = null;
 
-        public EntriesEnumeration(Enumeration enumeration, String rootPath)
+        public EntriesEnumeration(Enumeration<String> enumeration, String rootPath)
         {
             m_enumeration = enumeration;
             m_rootPath = rootPath;
@@ -150,7 +150,7 @@ public class ContentDirectoryContent implements Content
         }
 
         @Override
-		public synchronized Object nextElement()
+		public synchronized String nextElement()
         {
             if (m_nextEntry == null)
             {
@@ -168,7 +168,7 @@ public class ContentDirectoryContent implements Content
                 // Find next entry that is inside the root directory.
                 while (m_enumeration.hasMoreElements())
                 {
-                    String next = (String) m_enumeration.nextElement();
+                    String next = m_enumeration.nextElement();
                     if (next.startsWith(m_rootPath) && !next.equals(m_rootPath))
                     {
                         // Strip off the root directory.
