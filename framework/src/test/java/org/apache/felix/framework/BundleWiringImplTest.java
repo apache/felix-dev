@@ -118,12 +118,11 @@ public class BundleWiringImplTest
         BundleClassLoader bundleClassLoader = createBundleClassLoader(
                 BundleClassLoader.class, bundleWiring);
         assertThat(bundleClassLoader).isNotNull();
-        AtomicReference<Class<?>> foundClassRef = new AtomicReference<>();
-        assertDoesNotThrow(() -> {
-        	foundClassRef.set( bundleClassLoader
-                .findClass("org.apache.felix.test.NonExistant"));
+        Class<?> foundClassRef = assertDoesNotThrow(() -> {
+        	return bundleClassLoader
+                .findClass("org.apache.felix.test.NonExistant");
         }, "Class should not throw exception");
-        Class foundClass = foundClassRef.get();
+        Class foundClass = foundClassRef;
         assertThat(foundClass).as("Nonexistant Class Should be null").isNull();
     }
 

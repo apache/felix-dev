@@ -117,12 +117,6 @@ class EventDispatcherTest
         Mockito.when(sr.isAssignableTo(b1, String.class.getName())).thenReturn(true);
         Mockito.when(sr.isAssignableTo(b2, String.class.getName())).thenReturn(true);
         Mockito.when(sr.isAssignableTo(b3, String.class.getName())).thenReturn(true);
-//        sr.isAssignableTo(b1, String.class.getName());
-//        Mockito.expectLastCall().thenReturn(Boolean.TRUE);
-//        sr.isAssignableTo(b2, String.class.getName());
-//        Mockito.expectLastCall().thenReturn(Boolean.TRUE);
-//        sr.isAssignableTo(b3, String.class.getName());
-//        Mockito.expectLastCall().thenReturn(Boolean.TRUE);
 
         ServiceEvent event = new ServiceEvent(ServiceEvent.REGISTERED, sr);
 
@@ -144,8 +138,6 @@ class EventDispatcherTest
         BundleContext bc = Mockito.mock(BundleContext.class);
         Bundle b = Mockito.mock(Bundle.class);
         Mockito.when(b.getBundleContext()).thenReturn(bc);
-//        b.getState();
-//        Mockito.expectLastCall().thenReturn(Integer.valueOf(Bundle.ACTIVE));
         Mockito.when(b.getState()).thenReturn(Integer.valueOf(Bundle.ACTIVE));
         Mockito.when(bc.getBundle()).thenReturn(b);
 
