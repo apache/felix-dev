@@ -1,4 +1,3 @@
-
 # Felix Health Checks
 
 Based on a simple `HealthCheck` SPI interface, Felix Health Checks are used to check the health/availability of Apache Felix instances at runtime based on inputs like
@@ -277,7 +276,7 @@ Property    | Type     | Default | Description
 `registerHealthyMarkerService` | boolean | true | For the case a given tag/name is healthy, will register a service `org.apache.felix.hc.api.condition.Healthy` with property tag=<tagname> (or name=<hc.name>) that other services can depend on. For the special case of the tag `systemready`, the marker service `org.apache.felix.hc.api.condition.SystemReady` is registered
 `registerUnhealthyMarkerService` | boolean | false | For the case a given tag/name is **un**healthy, will register a service `org.apache.felix.hc.api.condition.Unhealthy` with property tag=<tagname> (or name=<hc.name>) that other services can depend on
 `treatWarnAsHealthy` | boolean | true | `WARN` usually means [the system is usable](#semantic-meaning-of-health-check-results), hence WARN is treated as healthy by default. When set to false `WARN` is treated as `Unhealthy`
-`sendEvents` | enum `NONE`, `STATUS_CHANGES`, `STATUS_CHANGES_OR_NOT_OK` or `ALL` | `STATUS_CHANGES` | Whether to send events for health check status changes. See [below](#osgi-events-for-health-check-status-changes) for details.
+`sendEvents` | enum `NONE`, `STATUS_CHANGES`, `STATUS_CHANGES_OR_NOT_OK` or `ALL` | `STATUS_CHANGES` | Whether to send events for health check status changes. See [below](#osgi-events-for-health-check-status-changes-and-updates) for details.
 `logResults` | enum `NONE`, `STATUS_CHANGES`, `STATUS_CHANGES_OR_NOT_OK` or `ALL` | `NONE ` | Whether to log the result of the monitor to the regular log file
 `logAllResultsAsInfo` | boolean | false | If `logResults` is enabled and this is enabled, all results will be logged with INFO log level. Otherwise WARN and INFO are used depending on the health state.
 `isDynamic` | boolean | false | In dynamic mode all checks for names/tags are monitored individually (this means events are sent/services registered for name only, never for given tags). This mode allows to use `*` in tags to query for all health checks in system. It is also possible to query for all except certain tags by using `-`, e.g. by configuring the values `*`, `-tag1` and `-tag2` for `tags`.
@@ -385,23 +384,19 @@ Configure the factory configuration with PID
 
 | Name | Default/Required | Description |
 | --- | --- | --- |
-| `osgi.http.whiteboard.filter.regex` | required | Regex path on where the filter is active, e.g. `(?!/system/).*` or `.*`. See Http Whiteboard documentation [1] and hint [2] |
-| `osgi.http.whiteboard.context.select` | required | OSGi service filter for selecting relevant contexts, e.g. `(osgi.http.whiteboard.context.name=*)` selects all contexts. See Http Whiteboard documentation [1] and hint [2] |
+| `osgi.http.whiteboard.filter.regex` | required | Regex path on where the filter is active, e.g. `(?!/system/).*` or `.*`. See Http Whiteboard documentation[^1] and hint[^2] |
+| `osgi.http.whiteboard.context.select` | required | OSGi service filter for selecting relevant contexts, e.g. `(osgi.http.whiteboard.context.name=*)` selects all contexts. See Http Whiteboard documentation[^1] and hint[^2] |
 | `tags` | required | List of tags to query the status in order to decide if it is 503 or not  |
 | `statusFor503 ` | default `TEMPORARILY_UNAVAILABLE` | First status that causes a 503 response. The default `TEMPORARILY_UNAVAILABLE` will not send 503 for `OK` and `WARN` but for `TEMPORARILY_UNAVAILABLE`, `CRITICAL` and `HEALTH_CHECK_ERROR` |
 | `includeExecutionResult ` | `false` | Will include the execution result in the response (as html comment for html case, otherwise as text). |
 | `responseTextFor503 ` | required | Response text for 503 responses. Value can be either the content directly (e.g. just the string `Service Unavailable`) or in the format `classpath:<symbolic-bundle-id>:/path/to/file.html` (it uses `Bundle.getEntry()` to retrieve the file). The response content type is auto-detected to either `text/html` or `text/plain`.  |
 | `autoDisableFilter ` | default `false` | If true, will automatically disable the filter once the filter continued the filter chain without 503 for the first time. The filter will be automatically enabled again if the start level of the framework changes (hence on shutdown it will be active again). Useful for server startup scenarios.|
 | `avoid404DuringStartup` | default `false` | If true, will automatically register a dummy servlet to ensure this filter becomes effective (complex applications might have the http whiteboard active but no servlets be active during early phases of startup, a filter only ever becomes active if there is a servlet registered). Useful for server startup scenarios. |
-| `service.ranking` | default `Integer.MAX_VALUE` (first in filter chain) | The `service.ranking` for the filter as respected by http whiteboard [1]. |
-
-[1] [https://felix.apache.org/documentation/subprojects/apache-felix-http-service.html#filter-service-properties](https://felix.apache.org/documentation/subprojects/apache-felix-http-service.html#filter-service-properties)
-
-[2] Choose a combination of `osgi.http.whiteboard.filter.regex`/ `osgi.http.whiteboard.context.select` wisely, e.g. `osgi.http.whiteboard.context.select=(osgi.http.whiteboard.context.name=*)` and `osgi.http.whiteboard.filter.regex=.*` would also cut off all admin paths.
+| `service.ranking` | default `Integer.MAX_VALUE` (first in filter chain) | The `service.ranking` for the filter as respected by http whiteboard[^1]. |
 
 ### Adding ad hoc results during request processing
 
-For certain scenarios it is useful to add a health check dynamically for a specific tag durign request processing, e.g. it can be useful during deployment requests (the tag(s) being added can be queried by e.g. load balancer or Service Unavailable Filter.
+For certain scenarios it is useful to add a health check dynamically for a specific tag during request processing, e.g. it can be useful during deployment requests (the tag(s) being added can be queried by e.g. load balancer or Service Unavailable Filter.
 
 To achieve this configure the factory configuration with PID
 `org.apache.felix.hc.core.impl.filter.AdhocResultDuringRequestProcessingFilter` with specific parameters:
@@ -410,7 +405,7 @@ To achieve this configure the factory configuration with PID
 | --- | --- | --- |
 | `osgi.http.whiteboard.filter.regex` | required | Regex path on where the filter is active, e.g. `(?!/system/).*` or `.*`. See Http Whiteboard documentation |
 | `osgi.http.whiteboard.context.select` | required | OSGi service filter for selecting relevant contexts, e.g. `(osgi.http.whiteboard.context.name=*)` selects all contexts. See Http Whiteboard |
-| `service.ranking` | default `0` | The `service.ranking` for the filter as respected by http whiteboard [1]. |
+| `service.ranking` | default `0` | The `service.ranking` for the filter as respected by http whiteboard[^1]. |
 | `method` | default restriction not active | Relevant request method (leave empty to not restrict to a method) |
 | `userAgentRegEx` | default restriction not active | Relevant user agent header (leave emtpy to not restrict to a user agent) |
 | `hcName` | required | Name of health check during request processing  |
@@ -422,3 +417,5 @@ To achieve this configure the factory configuration with PID
 | `waitAfterProcessing.initialWait` | 3 sec  | Initial waiting time in sec until 'waitAfterProcessing.forTags' are checked for the first time. |
 | `waitAfterProcessing.maxDelay` | 120 sec | Maximum delay in sec that can be caused when 'waitAfterProcessing.forTags' is configured (waiting is aborted after that time) |
 
+[^1]: [https://felix.apache.org/documentation/subprojects/apache-felix-http-service.html#filter-service-properties](https://felix.apache.org/documentation/subprojects/apache-felix-http-service.html#filter-service-properties)
+[^2]: Choose a combination of `osgi.http.whiteboard.filter.regex`/ `osgi.http.whiteboard.context.select` wisely, e.g. `osgi.http.whiteboard.context.select=(osgi.http.whiteboard.context.name=*)` and `osgi.http.whiteboard.filter.regex=.*` would also cut off all admin paths.
