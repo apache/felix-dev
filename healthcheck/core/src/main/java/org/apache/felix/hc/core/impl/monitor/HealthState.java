@@ -18,6 +18,7 @@
 package org.apache.felix.hc.core.impl.monitor;
 
 import java.text.SimpleDateFormat;
+import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Date;
 import java.util.Dictionary;
@@ -40,13 +41,14 @@ import org.apache.felix.hc.core.impl.util.lang.StringUtils;
 import org.osgi.framework.ServiceReference;
 import org.osgi.framework.ServiceRegistration;
 import org.osgi.service.component.ComponentConstants;
+import org.osgi.service.condition.Condition;
 import org.osgi.service.event.Event;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 class HealthState {
     private static final Logger LOG = LoggerFactory.getLogger(HealthState.class);
-    
+
     public static final String TAG_SYSTEMREADY = "systemready";
 
     public static final String EVENT_TOPIC_PREFIX = "org/apache/felix/health";
@@ -57,15 +59,16 @@ class HealthState {
     public static final String EVENT_PROP_STATUS = "status";
     public static final String EVENT_PROP_PREVIOUS_STATUS = "previousStatus";
 
-    static final Healthy MARKER_SERVICE_HEALTHY = new Healthy() {
-    };
+    static final class HealthyCondition implements Condition, Healthy {};
+    static final class SystemReadyCondition implements Condition, SystemReady {};
+
+    static final Healthy MARKER_SERVICE_HEALTHY = new HealthyCondition();
     static final Unhealthy MARKER_SERVICE_UNHEALTHY = new Unhealthy() {
     };
-    static final SystemReady MARKER_SERVICE_SYSTEMREADY = new SystemReady() {
-    };
-    
+    static final SystemReady MARKER_SERVICE_SYSTEMREADY = new SystemReadyCondition();
+
     private final HealthCheckMonitor monitor;
-    
+
     private final String tagOrName;
     private final ServiceReference<HealthCheck> healthCheckRef;
     private final boolean isTag;
@@ -140,7 +143,7 @@ class HealthState {
         update(result);
 
     }
-    
+
     synchronized void update(HealthCheckExecutionResult executionResult) {
         if(!isLive) {
             LOG.trace("Not live anymore, skipping result update for {}", this);
@@ -177,20 +180,24 @@ class HealthState {
 
     private void registerHealthyService() {
         if (healthyRegistration == null) {
+            final boolean isSystemReady = TAG_SYSTEMREADY.equals(tagOrName);
             LOG.debug("HealthCheckMonitor: registerHealthyService() {} ", tagOrName);
             Dictionary<String, String> registrationProps = new Hashtable<>();
             registrationProps.put(propertyName, tagOrName);
             registrationProps.put("activated", new SimpleDateFormat("yyyy-MM-dd HH:mm:ss").format(new Date()));
+            registrationProps.put(Condition.CONDITION_ID, "felix.hc.".concat(tagOrName));
 
-            if (TAG_SYSTEMREADY.equals(tagOrName)) {
+            if (isSystemReady) {
                 LOG.debug("HealthCheckMonitor: SYSTEM READY");
-                healthyRegistration = monitor.getBundleContext().registerService(
-                        new String[] { SystemReady.class.getName(), Healthy.class.getName() },
-                        MARKER_SERVICE_SYSTEMREADY, registrationProps);
-            } else {
-                healthyRegistration = monitor.getBundleContext().registerService(Healthy.class, MARKER_SERVICE_HEALTHY,
-                        registrationProps);
             }
+            final List<String> services = new ArrayList<>();
+            services.add(Healthy.class.getName());
+            services.add(Condition.class.getName());
+            if (isSystemReady) {
+                services.add(SystemReady.class.getName());
+            }
+            final Object service = isSystemReady ? MARKER_SERVICE_SYSTEMREADY : MARKER_SERVICE_HEALTHY;
+            healthyRegistration = monitor.getBundleContext().registerService(services.toArray(new String[0]), service, registrationProps);
             LOG.debug("HealthCheckMonitor: Healthy service for {} '{}' registered", propertyName, tagOrName);
         }
     }
@@ -224,7 +231,7 @@ class HealthState {
 
     private void sendEvents(HealthCheckExecutionResult executionResult, Result.Status previousStatus) {
         ChangeType sendEventsConfig = monitor.getSendEvents();
-        if (sendEventsConfig == ChangeType.ALL 
+        if (sendEventsConfig == ChangeType.ALL
                 || (statusChanged && (sendEventsConfig == ChangeType.STATUS_CHANGES || sendEventsConfig == ChangeType.STATUS_CHANGES_OR_NOT_OK))
                 || (!executionResult.getHealthCheckResult().isOk() && sendEventsConfig == ChangeType.STATUS_CHANGES_OR_NOT_OK)) {
 
