@@ -21,6 +21,7 @@ on:
       - 'webconsole/**'
       - 'log/**'
       - 'framework/**'
+      - 'gogo/**'
 
 permissions: {}
 
@@ -62,6 +63,8 @@ jobs:
             - 'log/**'
           framework:
             - 'framework/**'
+          gogo:
+            - 'gogo/**'
 
     - name: Felix SCR
       if: steps.changes.outputs.scr == 'true'
@@ -87,6 +90,9 @@ jobs:
     - name: OSGi-TCK Framework
       if: steps.changes.outputs.framework == 'true'
       run: mvn -B -V -Dstyle.color=always --file framework.tck/pom.xml clean verify
+    - name: Felix Gogo Shell
+      if: steps.changes.outputs.gogo == 'true'
+      run: mvn -B -V -Dstyle.color=always --file gogo/pom.xml clean verify
     - name: Upload Test Results
       if: always()
       uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4.6.2

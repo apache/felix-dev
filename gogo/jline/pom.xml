@@ -21,7 +21,7 @@
     <parent>
         <groupId>org.apache.felix</groupId>
         <artifactId>gogo-parent</artifactId>
-        <version>6</version>
+        <version>7-SNAPSHOT</version>
         <relativePath>../gogo-parent/pom.xml</relativePath>
     </parent>
     <modelVersion>4.0.0</modelVersion>
@@ -43,7 +43,7 @@
         <felix.java.version>8</felix.java.version>
         <maven.compiler.source>1.8</maven.compiler.source>
         <maven.compiler.target>1.8</maven.compiler.target>
-        <bnd.version>4.1.0</bnd.version>
+        <bnd.version>7.1.0</bnd.version>
     </properties>
 
     <dependencies>
@@ -61,14 +61,34 @@
             <version>1.1.0</version>
         </dependency>
         <dependency>
+            <groupId>org.apache.felix</groupId>
+            <artifactId>org.apache.felix.gogo.command</artifactId>
+            <version>1.1.2</version>
+            <scope>test</scope>
+        </dependency>
+        <dependency>
             <groupId>org.jline</groupId>
             <artifactId>jline</artifactId>
-            <version>3.13.2</version>
+            <version>3.29.0</version>
         </dependency>
         <dependency>
             <groupId>org.apache.sshd</groupId>
             <artifactId>sshd-core</artifactId>
-            <version>2.7.0</version>
+            <version>2.15.0</version>
+            <optional>true</optional>
+            <scope>test</scope>
+        </dependency>
+        <dependency>
+            <groupId>org.apache.sshd</groupId>
+            <artifactId>sshd-scp</artifactId>
+            <version>2.15.0</version>
+            <optional>true</optional>
+            <scope>test</scope>
+        </dependency>
+          <dependency>
+            <groupId>org.apache.sshd</groupId>
+            <artifactId>sshd-sftp</artifactId>
+            <version>2.15.0</version>
             <optional>true</optional>
             <scope>test</scope>
         </dependency>
@@ -84,6 +104,15 @@
     <build>
         <plugins>
             <plugin>
+                <groupId>org.apache.maven.plugins</groupId>
+                <artifactId>maven-surefire-plugin</artifactId>
+                <configuration>
+                    <argLine>
+                        --add-opens java.base/java.lang.invoke=ALL-UNNAMED
+                    </argLine>
+                </configuration>
+            </plugin>
+            <plugin>
                 <groupId>org.apache.felix</groupId>
                 <artifactId>maven-bundle-plugin</artifactId>
                 <configuration>
@@ -94,7 +123,7 @@
                         </Export-Package>
                         <Import-Package>
                             !org.apache.felix.gogo.runtime.threadio,
-                            org.jline*;version="[3.13,4)",
+                            org.jline*;version="[3.29,4)",
                             *
                         </Import-Package>
                     </instructions>
