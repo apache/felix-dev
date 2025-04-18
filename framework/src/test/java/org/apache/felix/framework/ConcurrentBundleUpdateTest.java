@@ -49,7 +49,7 @@ class ConcurrentBundleUpdateTest
     @Test
     void concurrentBundleUpdate() throws Exception
     {
-        Map params = new HashMap();
+        Map<String,Object> params = new HashMap<>();
         params.put(Constants.FRAMEWORK_SYSTEMPACKAGES,
             "org.osgi.framework; version=1.4.0,"
             + "org.osgi.service.packageadmin; version=1.2.0,"
@@ -210,7 +210,7 @@ class ConcurrentBundleUpdateTest
     @Test
     void concurrentBundleCycleUpdate() throws Exception
     {
-        Map params = new HashMap();
+        Map<String,Object> params = new HashMap<>();
         params.put(Constants.FRAMEWORK_SYSTEMPACKAGES,
             "org.osgi.framework; version=1.4.0,"
             + "org.osgi.service.packageadmin; version=1.2.0,"
@@ -378,7 +378,7 @@ class ConcurrentBundleUpdateTest
         
     }
     
-    private static File createBundle(String manifest, Class... classes) throws IOException
+    private static File createBundle(String manifest, Class<?>... classes) throws IOException
     {
         File f = File.createTempFile("felix-bundle", ".jar");
         f.deleteOnExit();
@@ -386,7 +386,7 @@ class ConcurrentBundleUpdateTest
         Manifest mf = new Manifest(new ByteArrayInputStream(manifest.getBytes("utf-8")));
         JarOutputStream os = new JarOutputStream(new FileOutputStream(f), mf);
 
-        for (Class clazz : classes)
+        for (Class<?> clazz : classes)
         {
             String path = clazz.getName().replace('.', '/') + ".class";
             os.putNextEntry(new ZipEntry(path));

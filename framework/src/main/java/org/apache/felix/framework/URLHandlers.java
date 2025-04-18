@@ -79,9 +79,9 @@ import org.osgi.service.url.URLStreamHandlerService;
 **/
 class URLHandlers implements URLStreamHandlerFactory, ContentHandlerFactory
 {
-    private static final Class[] CLASS_TYPE = new Class[]{Class.class};
+    private static final Class<?>[] CLASS_TYPE = new Class[]{Class.class};
 
-    private static final Class URLHANDLERS_CLASS = URLHandlers.class;
+    private static final Class<?> URLHANDLERS_CLASS = URLHandlers.class;
 
     private static final SecureAction m_secureAction = new SecureAction();
 
@@ -353,7 +353,7 @@ class URLHandlers implements URLStreamHandlerFactory, ContentHandlerFactory
     }
 
     static void registerFrameworkListsForContextSearch(ClassLoader index,
-        List frameworkLists)
+        List<Object> frameworkLists)
     {
         synchronized (URL.class)
         {
@@ -453,7 +453,7 @@ class URLHandlers implements URLStreamHandlerFactory, ContentHandlerFactory
             try
             {
                 // If a built-in handler is found then cache and return it
-                Class handler = m_secureAction.forName(className, classLoader);
+                Class<?> handler = m_secureAction.forName(className, classLoader);
                 if (handler != null)
                 {
                     return (URLStreamHandler) handler.newInstance();
@@ -494,7 +494,7 @@ class URLHandlers implements URLStreamHandlerFactory, ContentHandlerFactory
             try
             {
                 // If a built-in handler is found then cache and return it
-                Class handler = m_secureAction.forName(androidHandler, classLoader);
+                Class<?> handler = m_secureAction.forName(androidHandler, classLoader);
                 if (handler != null)
                 {
                     return (URLStreamHandler) handler.newInstance();
@@ -761,11 +761,11 @@ class URLHandlers implements URLStreamHandlerFactory, ContentHandlerFactory
         }
 
         // get the current class call stack.
-        Class[] stack = m_sm.getClassContext();
+        Class<?>[] stack = m_sm.getClassContext();
         // Find the first class that is loaded from a bundle.
-        Class targetClass = null;
+        Class<?> targetClass = null;
         ClassLoader targetClassLoader = null;
-        for (Class element : stack) {
+        for (Class<?> element : stack) {
             ClassLoader classLoader = m_secureAction.getClassLoader(element);
 			if (classLoader != null)
             {
@@ -788,7 +788,7 @@ class URLHandlers implements URLStreamHandlerFactory, ContentHandlerFactory
         {
             ClassLoader index = m_secureAction.getClassLoader(targetClassLoader.getClass());
 
-            List frameworks = m_classloaderToFrameworkLists.get(index);
+            List<?> frameworks = m_classloaderToFrameworkLists.get(index);
 
             if ((frameworks == null) && (index == URLHANDLERS_CLASS.getClassLoader()))
             {
@@ -833,7 +833,7 @@ class URLHandlers implements URLStreamHandlerFactory, ContentHandlerFactory
                     return framework;
                 }
             }
-            for (List frameworks : m_classloaderToFrameworkLists.values())
+            for (List<?> frameworks : m_classloaderToFrameworkLists.values())
             {
                 for (Object framework : frameworks)
                 {

@@ -93,7 +93,7 @@ public class BundleWiringImpl implements BundleWiring
     };
 
     private final Logger m_logger;
-    private final Map m_configMap;
+    private final Map<String,?> m_configMap;
     private final StatefulResolver m_resolver;
     private final BundleRevisionImpl m_revision;
     private final List<BundleRevision> m_fragments;
@@ -135,7 +135,7 @@ public class BundleWiringImpl implements BundleWiring
             // Not on Java9
             try
             {
-                Constructor ctor = BundleRevisionImpl.getSecureAction().getDeclaredConstructor(
+                Constructor<?> ctor = BundleRevisionImpl.getSecureAction().getDeclaredConstructor(
                         SecureClassLoader.class, new Class[]{ClassLoader.class});
                 BundleRevisionImpl.getSecureAction().setAccesssible(ctor);
                 cl = (ClassLoader) BundleRevisionImpl.getSecureAction().invoke(
@@ -162,10 +162,10 @@ public class BundleWiringImpl implements BundleWiring
     private static SecurityManagerEx m_sm = new SecurityManagerEx();
 
     // Thread local to detect class loading cycles.
-    private final ThreadLocal m_cycleCheck = new ThreadLocal();
+    private final ThreadLocal<Set<String>> m_cycleCheck = new ThreadLocal<>();
 
     // Thread local to keep track of deferred activation.
-    private static final ThreadLocal m_deferredActivation = new ThreadLocal();
+    private static final ThreadLocal<List<Object[]>> m_deferredActivation = new ThreadLocal<>();
 
     // Flag indicating whether this wiring has been disposed.
     private volatile boolean m_isDisposed = false;
@@ -173,7 +173,7 @@ public class BundleWiringImpl implements BundleWiring
     private volatile ConcurrentHashMap<String, ClassLoader> m_accessorLookupCache;
 
     BundleWiringImpl(
-        Logger logger, Map configMap, StatefulResolver resolver,
+        Logger logger, Map<String,?> configMap, StatefulResolver resolver,
         BundleRevisionImpl revision, List<BundleRevision> fragments,
         List<BundleWire> wires,
         Map<String, BundleRevision> importedPkgs,
@@ -204,7 +204,7 @@ public class BundleWiringImpl implements BundleWiring
                 {
                     sorted.put(((BundleRevisionImpl) f).getId(), f);
                 }
-                fragments = new ArrayList(sorted.values());
+                fragments = new ArrayList<>(sorted.values());
             }
             fragmentContents = new ArrayList<>(fragments.size());
             for (int i = 0; (fragments != null) && (i < fragments.size()); i++)
@@ -420,9 +420,9 @@ public class BundleWiringImpl implements BundleWiring
 
         m_resolvedCaps = Util.newImmutableList(capList);
         m_includedPkgFilters = (includedPkgFilters.isEmpty())
-                ? Collections.EMPTY_MAP : includedPkgFilters;
+                ? Collections.emptyMap() : includedPkgFilters;
         m_excludedPkgFilters = (excludedPkgFilters.isEmpty())
-                ? Collections.EMPTY_MAP : excludedPkgFilters;
+                ? Collections.emptyMap() : excludedPkgFilters;
 
         List<NativeLibrary> libList = (m_revision.getDeclaredNativeLibraries() == null)
                 ? new ArrayList<>()
@@ -452,7 +452,7 @@ public class BundleWiringImpl implements BundleWiring
             Object map = m_configMap.get(FelixConstants.BOOT_CLASSLOADERS_PROP);
             if (map instanceof Map)
             {
-                Object l = ((Map) map).get(m_revision.getBundle());
+                Object l = ((Map<?,?>) map).get(m_revision.getBundle());
                 if (l instanceof ClassLoader)
                 {
                     bootLoader = (ClassLoader) l;
@@ -773,13 +773,13 @@ public class BundleWiringImpl implements BundleWiring
                 }
                 return  Util.newImmutableList(entries);
             }
-            return Collections.EMPTY_LIST;
+            return Collections.emptyList();
         }
         return null;
     }
 
     // Thread local to detect class loading cycles.
-    private final ThreadLocal m_listResourcesCycleCheck = new ThreadLocal();
+    private final ThreadLocal<Set<String>> m_listResourcesCycleCheck = new ThreadLocal<>();
 
     @Override
     public Collection<String> listResources(
@@ -852,7 +852,7 @@ public class BundleWiringImpl implements BundleWiring
             }
             if (cycles.contains(path))
             {
-                return Collections.EMPTY_LIST;
+                return Collections.emptyList();
             }
             cycles.add(path);
 
@@ -985,7 +985,7 @@ public class BundleWiringImpl implements BundleWiring
             BundleWire bw, BundleCapability cap, boolean recurse,
             String path, List<String> pattern, Set<String> noMerging)
     {
-        Collection<ResourceSource> resources = Collections.EMPTY_SET;
+        Collection<ResourceSource> resources = Collections.emptyList();
 
         // Convert package name to a path.
         String subpath = (String) cap.getAttributes().get(BundleRevision.PACKAGE_NAMESPACE);
@@ -1095,12 +1095,12 @@ public class BundleWiringImpl implements BundleWiring
         return m_revision.getBundle();
     }
 
-    public Enumeration getResourcesByDelegation(String name)
+    public Enumeration<URL> getResourcesByDelegation(String name)
     {
-        Set requestSet = (Set) m_cycleCheck.get();
+        Set<String> requestSet = m_cycleCheck.get();
         if (requestSet == null)
         {
-            requestSet = new HashSet();
+            requestSet = new HashSet<>();
             m_cycleCheck.set(requestSet);
         }
         if (!requestSet.contains(name))
@@ -1119,10 +1119,10 @@ public class BundleWiringImpl implements BundleWiring
         return null;
     }
 
-    private Enumeration findResourcesByDelegation(String name)
+    private Enumeration<URL> findResourcesByDelegation(String name)
     {
-        Enumeration urls = null;
-        List completeUrlList = new ArrayList();
+        Enumeration<URL> urls = null;
+        List<Enumeration<URL>> completeUrlList = new ArrayList<>();
 
         // Get the package of the target class/resource.
         String pkgName = Util.getResourcePackage(name);
@@ -1169,7 +1169,7 @@ public class BundleWiringImpl implements BundleWiring
 
             // Always return here since imported packages cannot be split
             // across required bundles or the revision's content.
-            return new CompoundEnumeration((Enumeration[])
+            return new CompoundEnumeration((Enumeration<URL>[])
                     completeUrlList.toArray(new Enumeration[completeUrlList.size()]));
         }
 
@@ -1327,7 +1327,7 @@ public class BundleWiringImpl implements BundleWiring
         return (parent == null) ? m_bootClassLoader : parent;
     }
 
-    public Class getClassByDelegation(String name) throws ClassNotFoundException
+    public Class<?> getClassByDelegation(String name) throws ClassNotFoundException
     {
         // We do not call getClassLoader().loadClass() for arrays because
         // it does not correctly handle array types, which is necessary in
@@ -1416,10 +1416,10 @@ public class BundleWiringImpl implements BundleWiring
     {
         Object result = null;
 
-        Set requestSet = (Set) m_cycleCheck.get();
+        Set<String> requestSet =  m_cycleCheck.get();
         if (requestSet == null)
         {
-            requestSet = new HashSet();
+            requestSet = new HashSet<>();
             m_cycleCheck.set(requestSet);
         }
         if (requestSet.add(name))
@@ -1713,7 +1713,7 @@ public class BundleWiringImpl implements BundleWiring
             // for the bundle and throw an exception.
 
             // Get the class context to see the classes on the stack.
-            final Class[] classes = m_sm.getClassContext();
+            final Class<?>[] classes = m_sm.getClassContext();
             try
             {
                 if (System.getSecurityManager() != null)
@@ -1750,7 +1750,7 @@ public class BundleWiringImpl implements BundleWiring
         return null;
     }
 
-    private Object doImplicitBootDelegation(Class[] classes, String name, boolean isClass)
+    private Object doImplicitBootDelegation(Class<?>[] classes, String name, boolean isClass)
             throws ClassNotFoundException, ResourceNotFoundException
     {
         // Start from 1 to skip security manager class.
@@ -1817,7 +1817,7 @@ public class BundleWiringImpl implements BundleWiring
         return null;
     }
 
-    private boolean isClassLoadedFromBundleRevision(Class clazz)
+    private boolean isClassLoadedFromBundleRevision(Class<?> clazz)
     {
         // The target class is loaded by a bundle class loader,
         // then return true.
@@ -1861,7 +1861,7 @@ public class BundleWiringImpl implements BundleWiring
      * @param clazz the class to determine if it is external or not.
      * @return <tt>true</tt> if the class is external, otherwise <tt>false</tt>.
      */
-    private boolean isClassExternal(Class clazz)
+    private boolean isClassExternal(Class<?> clazz)
     {
         if (clazz.getName().startsWith("org.apache.felix.framework."))
         {
@@ -1882,11 +1882,11 @@ public class BundleWiringImpl implements BundleWiring
         return true;
     }
 
-    static class ToLocalUrlEnumeration implements Enumeration
+    static class ToLocalUrlEnumeration implements Enumeration<URL>
     {
-        final Enumeration m_enumeration;
+        final Enumeration<URL> m_enumeration;
 
-        ToLocalUrlEnumeration(Enumeration enumeration)
+        ToLocalUrlEnumeration(Enumeration<URL> enumeration)
         {
             m_enumeration = enumeration;
         }
@@ -1898,7 +1898,7 @@ public class BundleWiringImpl implements BundleWiring
         }
 
         @Override
-        public Object nextElement()
+        public URL nextElement()
         {
             return convertToLocalUrl((URL) m_enumeration.nextElement());
         }
@@ -1958,16 +1958,16 @@ public class BundleWiringImpl implements BundleWiring
         }
 
         @Override
-        protected Class loadClass(String name, boolean resolve)
+        protected Class<?> loadClass(String name, boolean resolve)
                 throws ClassNotFoundException
         {
-            Class clazz = findLoadedClass(name);
+            Class<?> clazz = findLoadedClass(name);
 
             if (clazz == null)
             {
                 try
                 {
-                    clazz = (Class) m_wiring.findClassOrResourceByDelegation(name, true);
+                    clazz = (Class<?>) m_wiring.findClassOrResourceByDelegation(name, true);
                 }
                 catch (ResourceNotFoundException ex)
                 {
@@ -2002,9 +2002,9 @@ public class BundleWiringImpl implements BundleWiring
         }
 
         @Override
-        protected Class findClass(String name) throws ClassNotFoundException
+        protected Class<?> findClass(String name) throws ClassNotFoundException
         {
-            Class clazz = findLoadedClass(name);
+            Class<?> clazz = findLoadedClass(name);
 
             // Search for class in bundle revision.
             if (clazz == null)
@@ -2096,7 +2096,7 @@ public class BundleWiringImpl implements BundleWiring
 
                     // Perform deferred activation without holding the class loader lock,
                     // if the class we are returning is the instigating class.
-                    List deferredList = (List) m_deferredActivation.get();
+                    List<Object[]> deferredList =  m_deferredActivation.get();
                     if ((deferredList != null)
                             && (deferredList.size() > 0)
                             && ((Object[]) deferredList.get(0))[0].equals(name))
@@ -2128,10 +2128,10 @@ public class BundleWiringImpl implements BundleWiring
             return clazz;
         }
 
-        Class defineClassParallel(String name, Felix felix, Set<ServiceReference<WovenClassListener>> wovenClassListeners, WovenClassImpl wci, byte[] bytes,
+        Class<?> defineClassParallel(String name, Felix felix, Set<ServiceReference<WovenClassListener>> wovenClassListeners, WovenClassImpl wci, byte[] bytes,
             Content content, String pkgName) throws ClassFormatError
         {
-            Class clazz = null;
+            Class<?> clazz = null;
 
             Thread me = Thread.currentThread();
 
@@ -2159,10 +2159,10 @@ public class BundleWiringImpl implements BundleWiring
             return clazz;
         }
 
-        Class defineClassNotParallel(String name, Felix felix, Set<ServiceReference<WovenClassListener>> wovenClassListeners, WovenClassImpl wci, byte[] bytes,
+        Class<?> defineClassNotParallel(String name, Felix felix, Set<ServiceReference<WovenClassListener>> wovenClassListeners, WovenClassImpl wci, byte[] bytes,
             Content content, String pkgName) throws ClassFormatError
         {
-            Class clazz = findLoadedClass(name);
+            Class<?> clazz = findLoadedClass(name);
 
             if (clazz == null)
             {
@@ -2179,7 +2179,7 @@ public class BundleWiringImpl implements BundleWiring
             return clazz;
         }
 
-        Class defineClass(Felix felix,
+        Class<?> defineClass(Felix felix,
             Set<ServiceReference<WovenClassListener>> wovenClassListeners,
             WovenClassImpl wci, String name, byte[] bytes, Content content, String pkgName)
             throws ClassFormatError
@@ -2283,10 +2283,10 @@ public class BundleWiringImpl implements BundleWiring
                 && (activationPolicy == BundleRevisionImpl.LAZY_ACTIVATION)
                 && (getBundle().getState() == Bundle.STARTING))
             {
-                List deferredList = (List) m_deferredActivation.get();
+                List<Object[]> deferredList =  m_deferredActivation.get();
                 if (deferredList == null)
                 {
-                    deferredList = new ArrayList();
+                    deferredList = new ArrayList<>();
                     m_deferredActivation.set(deferredList);
                 }
                 deferredList.add(new Object[]{name, getBundle()});
@@ -2323,7 +2323,7 @@ public class BundleWiringImpl implements BundleWiring
                 }
             }
 
-            Class clazz = null;
+            Class<?> clazz = null;
             // If we have a security context, then use it to
             // define the class with it for security purposes,
             // otherwise define the class without a protection domain.
@@ -2466,7 +2466,7 @@ public class BundleWiringImpl implements BundleWiring
         }
 
         @Override
-        protected Enumeration findResources(String name)
+        protected Enumeration<URL> findResources(String name)
         {
             return m_wiring.m_revision.getResourcesLocal(name);
         }
@@ -2539,9 +2539,9 @@ public class BundleWiringImpl implements BundleWiring
         }
 
         @Override
-        public Enumeration getResources(String name)
+        public Enumeration<URL> getResources(String name)
         {
-            Enumeration urls = m_wiring.getResourcesByDelegation(name);
+            Enumeration<URL> urls = m_wiring.getResourcesByDelegation(name);
             if (m_wiring.m_useLocalURLs)
             {
                 urls = new ToLocalUrlEnumeration(urls);
@@ -2732,7 +2732,7 @@ public class BundleWiringImpl implements BundleWiring
         if (resolver.isAllowedDynamicImport(revision, pkgName))
         {
             // Try to see if there is an exporter available.
-            Map<String, String> dirs = Collections.EMPTY_MAP;
+            Map<String, String> dirs = Collections.emptyMap();
             Map<String, Object> attrs = Collections.singletonMap(
                     BundleRevision.PACKAGE_NAMESPACE, (Object) pkgName);
             BundleRequirementImpl req = new BundleRequirementImpl(
@@ -2771,7 +2771,7 @@ public class BundleWiringImpl implements BundleWiring
         }
 
         // Next, check to see if there are any exporters for the package at all.
-        Map<String, String> dirs = Collections.EMPTY_MAP;
+        Map<String, String> dirs = Collections.emptyMap();
         Map<String, Object> attrs = Collections.singletonMap(
                 BundleRevision.PACKAGE_NAMESPACE, (Object) pkgName);
         BundleRequirementImpl req = new BundleRequirementImpl(

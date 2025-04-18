@@ -47,7 +47,7 @@ public class StartStopBundleTest
     @Test
     void startStopBundle() throws Exception
     {
-        Map params = new HashMap();
+        Map<String,Object> params = new HashMap<>();
         params.put(Constants.FRAMEWORK_SYSTEMPACKAGES,
             "org.osgi.framework; version=1.4.0,"
             + "org.osgi.service.packageadmin; version=1.2.0,"

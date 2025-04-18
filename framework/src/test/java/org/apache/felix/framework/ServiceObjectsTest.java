@@ -38,7 +38,7 @@ class ServiceObjectsTest
     @Test
     void serviceObjects() throws Exception
     {
-        Map params = new HashMap();
+        Map<String,Object> params = new HashMap<>();
         File cacheDir = File.createTempFile("felix-cache", ".dir");
         cacheDir.delete();
         cacheDir.mkdirs();

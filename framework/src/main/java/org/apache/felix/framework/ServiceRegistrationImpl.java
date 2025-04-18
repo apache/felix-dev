@@ -47,7 +47,7 @@ import org.osgi.framework.wiring.BundleCapability;
 import org.osgi.framework.wiring.BundleRevision;
 import org.osgi.framework.wiring.BundleWire;
 
-class ServiceRegistrationImpl implements ServiceRegistration
+class ServiceRegistrationImpl<S> implements ServiceRegistration<S>
 {
     // Service registry.
     private final ServiceRegistry m_registry;
@@ -60,11 +60,11 @@ class ServiceRegistrationImpl implements ServiceRegistration
     // Service object.
     private volatile Object m_svcObj;
     // Service factory interface.
-    private volatile ServiceFactory m_factory;
+    private volatile ServiceFactory<S> m_factory;
     // Associated property dictionary.
-    private volatile Map<String, Object> m_propMap = new StringMap();
+    private volatile Map<String, Object> m_propMap = new StringMap<>();
     // Re-usable service reference.
-    private final ServiceReferenceImpl m_ref;
+    private final ServiceReferenceImpl<S> m_ref;
     // Flag indicating that we are unregistering.
     private volatile boolean m_isUnregistering = false;
     // This threadlocal is used to detect cycles.
@@ -75,7 +75,7 @@ class ServiceRegistrationImpl implements ServiceRegistration
     public ServiceRegistrationImpl(
         ServiceRegistry registry, Bundle bundle,
         String[] classes, Long serviceId,
-        Object svcObj, Dictionary dict)
+        Object svcObj, Dictionary<String, Object> dict)
     {
         m_registry = registry;
         m_bundle = bundle;
@@ -89,7 +89,7 @@ class ServiceRegistrationImpl implements ServiceRegistration
 
         // This reference is the "standard" reference for this
         // service and will always be returned by getReference().
-        m_ref = new ServiceReferenceImpl();
+        m_ref = new ServiceReferenceImpl<>();
     }
 
     protected boolean isValid()
@@ -103,7 +103,7 @@ class ServiceRegistrationImpl implements ServiceRegistration
     }
 
     @Override
-	public synchronized ServiceReference getReference()
+	public synchronized ServiceReference<S> getReference()
     {
         // Make sure registration is valid.
         if (!isValid())
@@ -115,9 +115,9 @@ class ServiceRegistrationImpl implements ServiceRegistration
     }
 
     @Override
-	public void setProperties(Dictionary dict)
+	public void setProperties(Dictionary<String, ?> dict)
     {
-        Map oldProps;
+        Map<String, ?> oldProps;
         synchronized (this)
         {
             // Make sure registration is valid.
@@ -132,7 +132,7 @@ class ServiceRegistrationImpl implements ServiceRegistration
             initializeProperties(dict);
         }
         // Tell registry about it.
-        m_registry.servicePropertiesModified(this, new MapToDictionary(oldProps));
+        m_registry.servicePropertiesModified(this, new MapToDictionary<>(oldProps));
     }
 
     @Override
@@ -165,7 +165,7 @@ class ServiceRegistrationImpl implements ServiceRegistration
      * @return <tt>true</tt> if the specified class is reachable from the
      *         service object's class loader, <tt>false</tt> otherwise.
     **/
-    private boolean isClassAccessible(Class clazz)
+    private boolean isClassAccessible(Class<?> clazz)
     {
         // We need to see if the class loader of the service object has
         // access to the specified class; however, we may not have a service
@@ -188,7 +188,7 @@ class ServiceRegistrationImpl implements ServiceRegistration
         {
             try
             {
-                Class providedClazz = m_bundle.loadClass(clazz.getName());
+                Class<?> providedClazz = m_bundle.loadClass(clazz.getName());
                 if (providedClazz != null)
                 {
                     return providedClazz == clazz;
@@ -202,7 +202,7 @@ class ServiceRegistrationImpl implements ServiceRegistration
         }
 
         // Case 1.
-        Class sourceClass = (m_factory != null) ? m_factory.getClass() : m_svcObj.getClass();
+        Class<?> sourceClass = (m_factory != null) ? m_factory.getClass() : m_svcObj.getClass();
         return Util.loadClassUsingClass(sourceClass, clazz.getName(), Felix.m_secureAction) == clazz;
     }
 
@@ -213,7 +213,7 @@ class ServiceRegistrationImpl implements ServiceRegistration
 
     private String[] getPropertyKeys()
     {
-        Set s = m_propMap.keySet();
+        Set<String> s = m_propMap.keySet();
         return (String[]) s.toArray(new String[s.size()]);
     }
 
@@ -245,7 +245,7 @@ class ServiceRegistrationImpl implements ServiceRegistration
                 if (System.getSecurityManager() != null)
                 {
                     svcObj = AccessController.doPrivileged(
-                        new ServiceFactoryPrivileged(acqBundle, null));
+                        new ServiceFactoryPrivileged<>(acqBundle, null));
                 }
                 else
                 {
@@ -273,7 +273,7 @@ class ServiceRegistrationImpl implements ServiceRegistration
         }
     }
 
-    void ungetService(Bundle relBundle, Object svcObj)
+    void ungetService(Bundle relBundle, S svcObj)
     {
         // If the service object is a service factory, then
         // let it release the service object.
@@ -284,7 +284,7 @@ class ServiceRegistrationImpl implements ServiceRegistration
                 if (System.getSecurityManager() != null)
                 {
                     AccessController.doPrivileged(
-                        new ServiceFactoryPrivileged(relBundle, svcObj));
+                        new ServiceFactoryPrivileged<>(relBundle, svcObj));
                 }
                 else
                 {
@@ -302,10 +302,10 @@ class ServiceRegistrationImpl implements ServiceRegistration
         }
     }
 
-    private void initializeProperties(Dictionary<String, Object> dict)
+    private void initializeProperties(Dictionary<String, ?> dict)
     {
         // Create a case-insensitive map for the properties.
-        Map<String, Object> props = new StringMap();
+        Map<String, Object> props = new StringMap<>();
 
         if (dict != null)
         {
@@ -344,9 +344,9 @@ class ServiceRegistrationImpl implements ServiceRegistration
         m_propMap = props;
     }
 
-    private Object getFactoryUnchecked(Bundle bundle)
+    private S getFactoryUnchecked(Bundle bundle)
     {
-        Object svcObj = null;
+        S svcObj = null;
         try
         {
             svcObj = m_factory.getService(bundle, this);
@@ -360,7 +360,7 @@ class ServiceRegistrationImpl implements ServiceRegistration
         if (svcObj != null)
         {
             for (String m_Class : m_classes) {
-                Class clazz = Util.loadClassUsingClass(
+                Class<?> clazz = Util.loadClassUsingClass(
                     svcObj.getClass(), m_Class, Felix.m_secureAction);
                 if ((clazz == null) || !clazz.isAssignableFrom(svcObj.getClass()))
                 {
@@ -390,7 +390,7 @@ class ServiceRegistrationImpl implements ServiceRegistration
         return svcObj;
     }
 
-    private void ungetFactoryUnchecked(Bundle bundle, Object svcObj)
+    private void ungetFactoryUnchecked(Bundle bundle, S svcObj)
     {
         m_factory.ungetService(bundle, this, svcObj);
     }
@@ -400,23 +400,24 @@ class ServiceRegistrationImpl implements ServiceRegistration
      * is called, that no other classes on the call stack interferes
      * with the permissions of the factory itself.
     **/
-    private class ServiceFactoryPrivileged implements PrivilegedExceptionAction
+    private class ServiceFactoryPrivileged<A> implements PrivilegedExceptionAction<A>
     {
         private Bundle m_bundle = null;
-        private Object m_svcObj = null;
+        private S m_svcObj = null;
 
-        public ServiceFactoryPrivileged(Bundle bundle, Object svcObj)
+        public ServiceFactoryPrivileged(Bundle bundle, S svcObj)
         {
             m_bundle = bundle;
             m_svcObj = svcObj;
         }
 
-        @Override
-		public Object run() throws Exception
+        @SuppressWarnings("unchecked")
+		@Override
+		public A run() throws Exception
         {
             if (m_svcObj == null)
             {
-                return getFactoryUnchecked(m_bundle);
+                return (A)getFactoryUnchecked(m_bundle);
             }
             else
             {
@@ -430,17 +431,17 @@ class ServiceRegistrationImpl implements ServiceRegistration
     // ServiceReference implementation
     //
 
-    class ServiceReferenceImpl extends BundleCapabilityImpl implements ServiceReference
+    class ServiceReferenceImpl<R> extends BundleCapabilityImpl implements ServiceReference<R>
     {
         private final ServiceReferenceMap m_map;
 
         private ServiceReferenceImpl()
         {
-            super(null, null, Collections.EMPTY_MAP, Collections.EMPTY_MAP);
+            super(null, null, Collections.emptyMap(), Collections.emptyMap());
             m_map = new ServiceReferenceMap();
         }
 
-        ServiceRegistrationImpl getRegistration()
+        ServiceRegistrationImpl<S> getRegistration()
         {
             return ServiceRegistrationImpl.this;
         }
@@ -464,7 +465,7 @@ class ServiceRegistrationImpl implements ServiceRegistration
         @Override
         public Map<String, String> getDirectives()
         {
-            return Collections.EMPTY_MAP;
+            return Collections.emptyMap();
         }
 
         @Override
@@ -476,7 +477,7 @@ class ServiceRegistrationImpl implements ServiceRegistration
         @Override
         public List<String> getUses()
         {
-            return Collections.EMPTY_LIST;
+            return Collections.emptyList();
         }
 
         //
@@ -573,7 +574,7 @@ class ServiceRegistrationImpl implements ServiceRegistration
                 // registration must have same class as requester.
                 try
                 {
-                    Class requestClass =
+                    Class<?> requestClass =
                         ((BundleWiringImpl) requesterRevision.getWiring())
                             .getClassByDelegation(className);
                     allow = getRegistration().isClassAccessible(requestClass);
@@ -601,7 +602,7 @@ class ServiceRegistrationImpl implements ServiceRegistration
                     try
                     {
                         // Try to load class from requester.
-                        Class requestClass =((BundleWiringImpl)
+                        Class<?> requestClass =((BundleWiringImpl)
                             requesterRevision.getWiring()).getClassByDelegation(className);
                         try
                         {
@@ -641,7 +642,7 @@ class ServiceRegistrationImpl implements ServiceRegistration
                     try
                     {
                         // Load the class from the requesting bundle.
-                        Class requestClass = ((BundleWiringImpl)
+                        Class<?> requestClass = ((BundleWiringImpl)
                             requesterRevision.getWiring())
                                 .getClassByDelegation(className);
                         // Get the service registration and ask it to check
@@ -671,7 +672,7 @@ class ServiceRegistrationImpl implements ServiceRegistration
         @Override
 		public int compareTo(Object reference)
         {
-            ServiceReference other = (ServiceReference) reference;
+            ServiceReference<?> other = (ServiceReference<?>) reference;
 
             Long id = (Long) getProperty(Constants.SERVICE_ID);
             Long otherId = (Long) other.getProperty(Constants.SERVICE_ID);
@@ -714,18 +715,19 @@ class ServiceRegistrationImpl implements ServiceRegistration
             return new Hashtable<>(ServiceRegistrationImpl.this.m_propMap);
         }
 
-        @Override
-        public Object adapt(Class type)
+        @SuppressWarnings("unchecked")
+		@Override
+        public <A> A adapt(Class<A> type)
         {
             if (type == ServiceReferenceDTO.class)
             {
-                return DTOFactory.createDTO(this);
+                return (A) DTOFactory.createDTO(this);
             }
             return null;
         }
     }
 
-    private class ServiceReferenceMap implements Map
+    private class ServiceReferenceMap implements Map<String,Object>
     {
         @Override
 		public int size()
@@ -758,7 +760,7 @@ class ServiceRegistrationImpl implements ServiceRegistration
         }
 
         @Override
-		public Object put(Object k, Object v)
+		public Object put(String k, Object v)
         {
             throw new UnsupportedOperationException("Not supported yet.");
         }
@@ -770,7 +772,7 @@ class ServiceRegistrationImpl implements ServiceRegistration
         }
 
         @Override
-		public void putAll(Map map)
+		public void putAll(Map<? extends String,? extends Object> map)
         {
             throw new UnsupportedOperationException("Not supported yet.");
         }
@@ -782,7 +784,7 @@ class ServiceRegistrationImpl implements ServiceRegistration
         }
 
         @Override
-		public Set<Object> keySet()
+		public Set<String> keySet()
         {
             throw new UnsupportedOperationException("Not supported yet.");
         }
@@ -794,9 +796,9 @@ class ServiceRegistrationImpl implements ServiceRegistration
         }
 
         @Override
-		public Set<Entry<Object, Object>> entrySet()
+		public Set<Entry<String, Object>> entrySet()
         {
-            return Collections.EMPTY_SET;
+            return Collections.emptySet();
         }
     }
 

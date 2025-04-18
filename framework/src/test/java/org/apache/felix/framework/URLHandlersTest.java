@@ -114,12 +114,12 @@ public class URLHandlersTest
         final Bundle bundle = f.getBundleContext().installBundle(bundleFile.toURI().toString());
         bundle.start();
 
-        Class clazz1 = cl1.loadClass(URLHandlersTest.class.getName());
+        Class<?> clazz1 = cl1.loadClass(URLHandlersTest.class.getName());
         clazz1.getMethod("urlHandlers").invoke(clazz1.newInstance());
 
         bundle.stop();
         bundle.start();
-        Class clazz2 = cl2.loadClass(URLHandlersTest.class.getName());
+        Class<?> clazz2 = cl2.loadClass(URLHandlersTest.class.getName());
 
         clazz2.getMethod("urlHandlers").invoke(clazz2.newInstance());
         bundle.stop();
@@ -239,7 +239,7 @@ public class URLHandlersTest
     public static class TestURLHandlersActivator extends ContentHandler implements BundleActivator, URLStreamHandlerService
     {
 
-        private volatile ServiceRegistration m_reg = null;
+        private volatile ServiceRegistration<?> m_reg = null;
 
         @Override
 		public URLConnection openConnection(URL u) throws IOException
@@ -309,10 +309,10 @@ public class URLHandlersTest
                 // pass
             }
 
-            Hashtable props = new Hashtable<String, String>();
+            Hashtable<String,String> props = new Hashtable<String, String>();
             props.put(URLConstants.URL_HANDLER_PROTOCOL, "test" + System.identityHashCode(TestURLHandlersActivator.this));
 
-            ServiceRegistration reg = context.registerService(URLStreamHandlerService.class, this, props);
+            ServiceRegistration<URLStreamHandlerService> reg = context.registerService(URLStreamHandlerService.class, this, props);
 
             new URL("test" + System.identityHashCode(TestURLHandlersActivator.this) + ":").openConnection();
 
@@ -337,7 +337,7 @@ public class URLHandlersTest
 
             try
             {
-                ServiceRegistration reg2 = context.registerService(ContentHandler.class, this, props);
+                ServiceRegistration<ContentHandler> reg2 = context.registerService(ContentHandler.class, this, props);
 
                 try
                 {
@@ -441,14 +441,14 @@ public class URLHandlersTest
                 if (fail) {
                     throw new Exception("Unexpected url2 resolve");
                 }
-                props = new Hashtable();
+                props = new Hashtable<>();
                 props.put(URLConstants.URL_HANDLER_PROTOCOL, "test" + System.identityHashCode(context.getBundle()));
                 m_reg = context.registerService(URLStreamHandlerService.class, this, props);
                 new URL("test" + System.identityHashCode(context.getBundle()) + ":").openConnection();
             }
         }
 
-        private static File createBundle(String manifest, Class... classes) throws IOException
+        private static File createBundle(String manifest, Class<?>... classes) throws IOException
         {
             File f = File.createTempFile("felix-bundle", ".jar");
             f.deleteOnExit();
@@ -456,7 +456,7 @@ public class URLHandlersTest
             Manifest mf = new Manifest(new ByteArrayInputStream(manifest.getBytes("utf-8")));
             JarOutputStream os = new JarOutputStream(new FileOutputStream(f), mf);
 
-            for (Class clazz : classes)
+            for (Class<?> clazz : classes)
             {
                 String path = clazz.getName().replace('.', '/') + ".class";
                 os.putNextEntry(new ZipEntry(path));
@@ -490,7 +490,7 @@ public class URLHandlersTest
         }
     }
 
-    private static File createBundle(String manifest, Class... classes) throws IOException
+    private static File createBundle(String manifest, Class<?>... classes) throws IOException
     {
         File f = File.createTempFile("felix-bundle", ".jar");
         f.deleteOnExit();
@@ -498,7 +498,7 @@ public class URLHandlersTest
         Manifest mf = new Manifest(new ByteArrayInputStream(manifest.getBytes("utf-8")));
         JarOutputStream os = new JarOutputStream(new FileOutputStream(f), mf);
 
-        for (Class clazz : classes)
+        for (Class<?> clazz : classes)
         {
             String path = clazz.getName().replace('.', '/') + ".class";
             os.putNextEntry(new ZipEntry(path));
@@ -518,7 +518,7 @@ public class URLHandlersTest
 
     private static Felix createFramework() throws Exception
     {
-        Map params = new HashMap();
+        Map<String,Object> params = new HashMap<>();
         params.put(Constants.FRAMEWORK_SYSTEMPACKAGES,
             "org.osgi.framework; version=1.4.0,"
             + "org.osgi.service.packageadmin; version=1.2.0,"

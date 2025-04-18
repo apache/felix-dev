@@ -107,10 +107,10 @@ class ExtensionManagerTest {
                 .buildNativeCapabilites(extensionManager.getRevision(), configMap);
         assertThat(nativeBundleCapability.getAttributes().get(
             NativeNamespace.CAPABILITY_LANGUAGE_ATTRIBUTE)).as("Native Language should be same as framework Language").isEqualTo("en");
-        assertThat(Arrays.asList("x86-64", "amd64", "em64t", "x86_64").containsAll((List)
+        assertThat(Arrays.asList("x86-64", "amd64", "em64t", "x86_64").containsAll((List<?>)
             nativeBundleCapability.getAttributes().get(
                 NativeNamespace.CAPABILITY_PROCESSOR_ATTRIBUTE))).as("Native Processor should be same as framework Processor").isTrue();
-        assertThat(Arrays.asList("windows8", "windows 8", "win32").containsAll((List)
+        assertThat(Arrays.asList("windows8", "windows 8", "win32").containsAll((List<?>)
             nativeBundleCapability.getAttributes().get(
                 NativeNamespace.CAPABILITY_OSNAME_ATTRIBUTE))).as("Native OS Name should be the same as the framework os name").isTrue();
         assertThat(nativeBundleCapability.getAttributes().get(

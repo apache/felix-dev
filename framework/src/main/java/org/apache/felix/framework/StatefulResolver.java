@@ -177,7 +177,7 @@ class StatefulResolver
 
     void stop()
     {
-        ServiceRegistration reg = m_serviceRegistration;
+        ServiceRegistration<?> reg = m_serviceRegistration;
         if (reg != null)
         {
             reg.unregister();
@@ -566,7 +566,7 @@ class StatefulResolver
                     // Prepare resolver hooks, if any.
                     ResolverHookRecord record =
                         prepareResolverHooks(
-                            Collections.singleton(revision), Collections.EMPTY_SET);
+                            Collections.singleton(revision), Collections.emptySet());
 
                     // Select any singletons in the resolver state.
                     selectSingletons(record);
@@ -587,7 +587,7 @@ class StatefulResolver
                         BundleRequirementImpl req = new BundleRequirementImpl(
                                 revision,
                                 BundleRevision.PACKAGE_NAMESPACE,
-                                Collections.EMPTY_MAP,
+                                Collections.emptyMap(),
                                 attrs);
                         final List<BundleCapability> candidates = findProvidersInternal(record, req, false, true);
 
@@ -971,7 +971,7 @@ class StatefulResolver
         BundleRequirementImpl req = new BundleRequirementImpl(
             revision,
             BundleRevision.PACKAGE_NAMESPACE,
-            Collections.EMPTY_MAP,
+            Collections.emptyMap(),
             attrs);
         List<BundleCapability> candidates = findProviders(req, false);
 
@@ -1638,7 +1638,7 @@ class StatefulResolver
 
     private synchronized Set<BundleRevision> getFragments()
     {
-        Set<BundleRevision> fragments = new HashSet(m_fragments);
+        Set<BundleRevision> fragments = new HashSet<>(m_fragments);
         // Filter out any fragments that are not the current revision.
         for (Iterator<BundleRevision> it = fragments.iterator(); it.hasNext(); )
         {

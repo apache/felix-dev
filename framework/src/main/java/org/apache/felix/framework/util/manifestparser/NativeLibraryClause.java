@@ -230,7 +230,7 @@ public class NativeLibraryClause
         return m_selectionFilter;
     }
 
-    public boolean match(Map configMap) throws BundleException
+    public boolean match(Map<String,?> configMap) throws BundleException
     {
         String osName = (String) configMap.get(FelixConstants.FRAMEWORK_OS_NAME);
         String processorName = (String) configMap.get(FelixConstants.FRAMEWORK_PROCESSOR);
@@ -347,12 +347,12 @@ public class NativeLibraryClause
         return false;
     }
 
-    private boolean checkSelectionFilter(Map configMap, String expr)
+    private boolean checkSelectionFilter(Map<String,?> configMap, String expr)
         throws BundleException
     {
         // Get all framework properties
-        Dictionary dict = new Hashtable();
-        for (Object key : configMap.keySet()) {
+        Dictionary<String,Object> dict = new Hashtable<>();
+        for (String key : configMap.keySet()) {
             dict.put(key, configMap.get(key));
         }
         // Compute expression
@@ -388,10 +388,10 @@ public class NativeLibraryClause
             // properties.
             StringTokenizer st = new StringTokenizer(s, ";");
             String[] libEntries = new String[st.countTokens()];
-            List osNameList = new ArrayList();
-            List osVersionList = new ArrayList();
-            List processorList = new ArrayList();
-            List languageList = new ArrayList();
+            List<String> osNameList = new ArrayList<>();
+            List<String> osVersionList = new ArrayList<>();
+            List<String> processorList = new ArrayList<>();
+            List<String> languageList = new ArrayList<>();
             String selectionFilter = null;
             int libCount = 0;
             while (st.hasMoreTokens())

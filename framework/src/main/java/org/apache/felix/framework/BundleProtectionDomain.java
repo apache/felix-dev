@@ -53,7 +53,7 @@ public class BundleProtectionDomain extends ProtectionDomain
     private static final class BundleInputStream extends InputStream
     {
         private final Content m_root;
-        private final Enumeration m_content;
+        private final Enumeration<String> m_content;
         private final OutputStreamBuffer m_outputBuffer = new OutputStreamBuffer();
 
         private ByteArrayInputStream m_buffer = null;
@@ -65,11 +65,11 @@ public class BundleProtectionDomain extends ProtectionDomain
         {
             m_root = root;
 
-            List entries = new ArrayList();
+            List<String> entries = new ArrayList<>();
 
             int count = 0;
             String manifest = null;
-            for (Enumeration e = m_root.getEntries(); e != null && e.hasMoreElements();)
+            for (Enumeration<String> e = m_root.getEntries(); e != null && e.hasMoreElements();)
             {
                 String entry = (String) e.nextElement();
                 if (entry.endsWith("/"))
@@ -233,12 +233,12 @@ public class BundleProtectionDomain extends ProtectionDomain
 
     private static final class RevisionAsJarURL extends URLStreamHandler
     {
-        private final WeakReference m_revision;
+        private final WeakReference<BundleRevisionImpl> m_revision;
         private volatile URL url;
 
         private RevisionAsJarURL(BundleRevisionImpl revision)
         {
-            m_revision = new WeakReference(revision);
+            m_revision = new WeakReference<>(revision);
         }
 
         @Override

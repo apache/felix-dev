@@ -87,7 +87,7 @@ public class BundleCache
     public static final String CACHE_ROOTDIR_PROP = "felix.cache.rootdir";
     public static final String CACHE_LOCKING_PROP = "felix.cache.locking";
     public static final String CACHE_FILELIMIT_PROP = "felix.cache.filelimit";
-    private static final ThreadLocal m_defaultBuffer = new ThreadLocal();
+    private static final ThreadLocal<SoftReference<byte[]>> m_defaultBuffer = new ThreadLocal<>();
     private static volatile int DEFAULT_BUFFER = 1024 * 64;
 
     private static transient final String CACHE_DIR_NAME = "felix-cache";
@@ -98,11 +98,11 @@ public class BundleCache
     private static final SecureAction m_secureAction = new SecureAction();
 
     private final Logger m_logger;
-    private final Map m_configMap;
+    private final Map<String, ?> m_configMap;
     private final WeakZipFileFactory m_zipFactory;
     private final Object m_lock;
 
-    public BundleCache(Logger logger, Map configMap)
+    public BundleCache(Logger logger, Map<String, ?> configMap)
         throws Exception
     {
         m_logger = logger;
@@ -181,7 +181,7 @@ public class BundleCache
     // to use less memory and be faster.
     //
     // @return the given map for convenience
-    public static Map<String, Object> getMainAttributes(Map<String, Object> headers, InputStream inputStream, long size) throws Exception
+    public static Map<String, String> getMainAttributes(Map<String, String> headers, InputStream inputStream, long size) throws Exception
     {
         if (size > 0)
         {
@@ -234,7 +234,7 @@ public class BundleCache
         return result;
     }
 
-    public static Map<String, Object> getMainAttributes(Map<String, Object> headers, InputStream inputStream, int size) throws Exception
+    public static Map<String, String> getMainAttributes(Map<String, String> headers, InputStream inputStream, int size) throws Exception
     {
         if (size <= 0)
         {
@@ -245,7 +245,7 @@ public class BundleCache
         // Get the buffer for this thread if there is one already otherwise,
         // create one of size DEFAULT_BUFFER (64K) if the manifest is less
         // than 64k or of the size of the manifest.
-        SoftReference ref = (SoftReference) m_defaultBuffer.get();
+        SoftReference<byte[]> ref = m_defaultBuffer.get();
         byte[] bytes = null;
         if (ref != null)
         {
@@ -255,12 +255,12 @@ public class BundleCache
         if (bytes == null)
         {
             bytes = new byte[size + 1 > DEFAULT_BUFFER ? size + 1 : DEFAULT_BUFFER];
-            m_defaultBuffer.set(new SoftReference(bytes));
+            m_defaultBuffer.set(new SoftReference<>(bytes));
         }
         else if (size + 1 > bytes.length)
         {
             bytes = new byte[size + 1];
-            m_defaultBuffer.set(new SoftReference(bytes));
+            m_defaultBuffer.set(new SoftReference<>(bytes));
         }
 
         // Now read in the manifest in one go into the bytes array.
@@ -412,7 +412,7 @@ public class BundleCache
 
         // Create the existing bundle archives in the directory, if any exist.
         File cacheDir = determineCacheDir(m_configMap);
-        List archiveList = new ArrayList();
+        List<BundleArchive> archiveList = new ArrayList<>();
         File[] children = getSecureAction().listDirectory(cacheDir);
         for (int i = 0; (children != null) && (i < children.length); i++)
         {
@@ -526,7 +526,7 @@ public class BundleCache
     {
         // Get the buffer for this thread if there is one already otherwise,
         // create one of size DEFAULT_BUFFER
-        SoftReference ref = (SoftReference) m_defaultBuffer.get();
+        SoftReference<byte[]> ref = m_defaultBuffer.get();
         byte[] bytes = null;
         if (ref != null)
         {
@@ -536,7 +536,7 @@ public class BundleCache
         if (bytes == null)
         {
             bytes = new byte[DEFAULT_BUFFER];
-            m_defaultBuffer.set(new SoftReference(bytes));
+            m_defaultBuffer.set(new SoftReference<>(bytes));
         }
 
         OutputStream os = null;
@@ -582,7 +582,7 @@ public class BundleCache
     // Private methods.
     //
 
-    private static File determineCacheDir(Map configMap)
+    private static File determineCacheDir(Map<String,?> configMap)
     {
         File cacheDir;
 

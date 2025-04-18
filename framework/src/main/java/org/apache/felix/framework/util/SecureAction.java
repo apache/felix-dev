@@ -110,10 +110,10 @@ public class SecureAction
         getAccessor(URL.class);
     }
 
-    private static final ThreadLocal m_actions = new ThreadLocal()
+    private static final ThreadLocal<Actions> m_actions = new ThreadLocal<Actions>()
     {
         @Override
-		public Object initialValue()
+		public Actions initialValue()
         {
             return new Actions();
         }
@@ -207,7 +207,7 @@ public class SecureAction
         }
     }
 
-    public ClassLoader getClassLoader(Class clazz)
+    public ClassLoader getClassLoader(Class<?> clazz)
     {
         if (System.getSecurityManager() != null)
         {
@@ -228,7 +228,7 @@ public class SecureAction
         }
     }
 
-    public Class forName(String name, ClassLoader classloader) throws ClassNotFoundException
+    public Class<?> forName(String name, ClassLoader classloader) throws ClassNotFoundException
     {
         if (System.getSecurityManager() != null)
         {
@@ -236,7 +236,7 @@ public class SecureAction
             {
                 Actions actions = (Actions) m_actions.get();
                 actions.set(Actions.FOR_NAME_ACTION, name, classloader);
-                return (Class) AccessController.doPrivileged(actions, m_acc);
+                return (Class<?>) AccessController.doPrivileged(actions, m_acc);
             }
             catch (PrivilegedActionException ex)
             {
@@ -912,7 +912,7 @@ public class SecureAction
         }
     }
 
-    public Constructor getConstructor(Class target, Class[] types) throws Exception
+    public Constructor<?> getConstructor(Class<?> target, Class<?>[] types) throws Exception
     {
         if (System.getSecurityManager() != null)
         {
@@ -920,7 +920,7 @@ public class SecureAction
             actions.set(Actions.GET_CONSTRUCTOR_ACTION, target, types);
             try
             {
-                return (Constructor) AccessController.doPrivileged(actions, m_acc);
+                return (Constructor<?>) AccessController.doPrivileged(actions, m_acc);
             }
             catch (PrivilegedActionException e)
             {
@@ -933,7 +933,7 @@ public class SecureAction
         }
     }
 
-    public Constructor getDeclaredConstructor(Class target, Class[] types) throws Exception
+    public Constructor<?> getDeclaredConstructor(Class<?> target, Class<?>[] types) throws Exception
     {
         if (System.getSecurityManager() != null)
         {
@@ -941,7 +941,7 @@ public class SecureAction
             actions.set(Actions.GET_DECLARED_CONSTRUCTOR_ACTION, target, types);
             try
             {
-                return (Constructor) AccessController.doPrivileged(actions, m_acc);
+                return (Constructor<?>) AccessController.doPrivileged(actions, m_acc);
             }
             catch (PrivilegedActionException e)
             {
@@ -954,7 +954,7 @@ public class SecureAction
         }
     }
 
-    public Method getMethod(Class target, String method, Class[] types) throws Exception
+    public Method getMethod(Class<?> target, String method, Class<?>[] types) throws Exception
     {
         if (System.getSecurityManager() != null)
         {
@@ -975,7 +975,7 @@ public class SecureAction
         }
     }
 
-    public Method getDeclaredMethod(Class target, String method, Class[] types) throws Exception
+    public Method getDeclaredMethod(Class<?> target, String method, Class<?>[] types) throws Exception
     {
         if (System.getSecurityManager() != null)
         {
@@ -1061,7 +1061,7 @@ public class SecureAction
         }
     }
 
-    public Object invoke(Constructor constructor, Object[] params) throws Exception
+    public Object invoke(Constructor<?> constructor, Object[] params) throws Exception
     {
         if (System.getSecurityManager() != null)
         {
@@ -1082,7 +1082,7 @@ public class SecureAction
         }
     }
 
-    public Object getDeclaredField(Class targetClass, String name, Object target)
+    public Object getDeclaredField(Class<?> targetClass, String name, Object target)
         throws Exception
     {
         if (System.getSecurityManager() != null)
@@ -1106,8 +1106,8 @@ public class SecureAction
         }
     }
 
-    public Object swapStaticFieldIfNotClass(Class targetClazz,
-        Class targetType, Class condition, String lockName) throws Exception
+    public Object swapStaticFieldIfNotClass(Class<?> targetClazz,
+        Class<?> targetType, Class<?> condition, String lockName) throws Exception
     {
         if (System.getSecurityManager() != null)
         {
@@ -1133,7 +1133,7 @@ public class SecureAction
     private static volatile Consumer<AccessibleObject[]> m_accessorCache = null;
 
     @SuppressWarnings("unchecked")
-    private static Consumer<AccessibleObject[]> getAccessor(Class clazz)
+    private static Consumer<AccessibleObject[]> getAccessor(Class<?> clazz)
     {
         String packageName = clazz.getPackage().getName();
         if ("java.net".equals(packageName) || "jdk.internal.loader".equals(packageName))
@@ -1183,8 +1183,8 @@ public class SecureAction
         }
     }
 
-    private static Object _swapStaticFieldIfNotClass(Class targetClazz,
-        Class targetType, Class condition, String lockName) throws Exception
+    private static Object _swapStaticFieldIfNotClass(Class<?> targetClazz,
+        Class<?> targetType, Class<?> condition, String lockName) throws Exception
     {
 
         Object lock = null;
@@ -1238,7 +1238,7 @@ public class SecureAction
                         if (Modifier.isStatic(field.getModifiers()) &&
                             (field.getType() == Hashtable.class))
                         {
-                            Hashtable cache = (Hashtable) field.get(null);
+                            Hashtable<?,?> cache = (Hashtable) field.get(null);
                             if (cache != null)
                             {
                                 cache.clear();
@@ -1252,7 +1252,7 @@ public class SecureAction
         return null;
     }
 
-    public void flush(Class targetClazz, Object lock) throws Exception
+    public void flush(Class<?>targetClazz, Object lock) throws Exception
     {
         if (System.getSecurityManager() != null)
         {
@@ -1273,7 +1273,7 @@ public class SecureAction
         }
     }
 
-    private static void _flush(Class targetClazz, Object lock) throws Exception
+    private static void _flush(Class<?>targetClazz, Object lock) throws Exception
     {
         synchronized (lock)
         {
@@ -1286,7 +1286,7 @@ public class SecureAction
                 {
                     if (field.getType() == Hashtable.class)
                     {
-                        Hashtable cache = (Hashtable) field.get(null);
+                        Hashtable<?,?> cache = (Hashtable) field.get(null);
                         if (cache != null)
                         {
                             cache.clear();
@@ -1294,7 +1294,7 @@ public class SecureAction
                     }
                     else
                     {
-                        HashMap cache = (HashMap) field.get(null);
+                        HashMap<?,?> cache = (HashMap) field.get(null);
                         if (cache != null)
                         {
                             cache.clear();
@@ -1765,7 +1765,7 @@ public class SecureAction
         }
     }
 
-    private static class Actions implements PrivilegedExceptionAction
+    private static class Actions implements PrivilegedExceptionAction<Object>
     {
         public static final int INITIALIZE_CONTEXT_ACTION = 0;
         public static final int ADD_EXTENSION_URL_ACTION = 1;
@@ -1956,14 +1956,14 @@ public class SecureAction
                 case GET_ABSOLUTE_PATH_ACTION:
                     return ((File) arg1).getAbsolutePath();
                 case GET_CONSTRUCTOR_ACTION:
-                    return ((Class) arg1).getConstructor((Class[]) arg2);
+                    return ((Class<?>) arg1).getConstructor((Class<?>[]) arg2);
                 case GET_DECLARED_CONSTRUCTOR_ACTION:
-                    return ((Class) arg1).getDeclaredConstructor((Class[]) arg2);
+                    return ((Class<?>) arg1).getDeclaredConstructor((Class<?>[]) arg2);
                 case GET_DECLARED_METHOD_ACTION:
-                    return ((Class) arg1).getDeclaredMethod((String) arg2, (Class[]) arg3);
+                    return ((Class<?>) arg1).getDeclaredMethod((String) arg2, (Class<?>[]) arg3);
                 case GET_FIELD_ACTION:
-                    Field field = ((Class) arg1).getDeclaredField((String) arg2);
-                    getAccessor((Class) arg1).accept(new AccessibleObject[]{field});
+                    Field field = ((Class<?>) arg1).getDeclaredField((String) arg2);
+                    getAccessor((Class<?>) arg1).accept(new AccessibleObject[]{field});
                     return field.get(arg3);
                 case GET_FILE_INPUT_ACTION:
                     return new FileInputStream((File) arg1);
@@ -1972,7 +1972,7 @@ public class SecureAction
                 case TO_URI_ACTION:
                     return ((File) arg1).toURI();
                 case GET_METHOD_ACTION:
-                    return ((Class) arg1).getMethod((String) arg2, (Class[]) arg3);
+                    return ((Class<?>) arg1).getMethod((String) arg2, (Class<?>[]) arg3);
                 case GET_POLICY_ACTION:
                     return Policy.getPolicy();
                 case GET_PROPERTY_ACTION:
@@ -1984,7 +1984,7 @@ public class SecureAction
                 case GET_URL_INPUT_ACTION:
                     return ((URLConnection) arg1).getInputStream();
                 case INVOKE_CONSTRUCTOR_ACTION:
-                    return ((Constructor) arg1).newInstance((Object[]) arg2);
+                    return ((Constructor<?>) arg1).newInstance((Object[]) arg2);
                 case INVOKE_DIRECTMETHOD_ACTION:
                     return ((Method) arg1).invoke(arg2, (Object[]) arg3);
                 case INVOKE_METHOD_ACTION:
@@ -2012,15 +2012,15 @@ public class SecureAction
                     ((BundleActivator) arg1).stop((BundleContext) arg2);
                     return null;
                 case SWAP_FIELD_ACTION:
-                    return _swapStaticFieldIfNotClass((Class) arg1,
-                        (Class) arg2, (Class) arg3, (String) arg4);
+                    return _swapStaticFieldIfNotClass((Class<?>) arg1,
+                        (Class<?>) arg2, (Class<?>) arg3, (String) arg4);
                 case SYSTEM_EXIT_ACTION:
                     System.exit(((Integer) arg1));
                 case FLUSH_FIELD_ACTION:
-                    _flush(((Class) arg1), arg2);
+                    _flush(((Class<?>) arg1), arg2);
                     return null;
                 case GET_CLASS_LOADER_ACTION:
-                    return ((Class) arg1).getClassLoader();
+                    return ((Class<?>) arg1).getClassLoader();
                 case INVOKE_BUNDLE_FIND_HOOK:
                     ((org.osgi.framework.hooks.bundle.FindHook) arg1).find(
                         (BundleContext) arg2, (Collection<Bundle>) arg3);

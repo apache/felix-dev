@@ -344,7 +344,8 @@ class BundleContextImpl implements BundleContext
         return m_felix.registerService(this, clazzes, svcObj, dict);
     }
 
-    @Override
+    @SuppressWarnings("unchecked")
+	@Override
 	public <S> ServiceRegistration<S> registerService(
         Class<S> clazz, S svcObj, Dictionary<String, ? > dict)
     {
@@ -364,7 +365,7 @@ class BundleContextImpl implements BundleContext
 
         try
         {
-            ServiceReference[] refs = getServiceReferences(clazz, null);
+            ServiceReference<?>[] refs = getServiceReferences(clazz, null);
             return getBestServiceReference(refs);
         }
         catch (InvalidSyntaxException ex)
@@ -374,13 +375,14 @@ class BundleContextImpl implements BundleContext
         return null;
     }
 
-    @Override
+    @SuppressWarnings("unchecked")
+	@Override
 	public <S> ServiceReference<S> getServiceReference(Class<S> clazz)
     {
         return (ServiceReference<S>) getServiceReference(clazz.getName());
     }
 
-    private ServiceReference getBestServiceReference(ServiceReference[] refs)
+    private ServiceReference<?> getBestServiceReference(ServiceReference<?>[] refs)
     {
         if (refs == null)
         {
@@ -394,7 +396,7 @@ class BundleContextImpl implements BundleContext
 
         // Loop through all service references and return
         // the "best" one according to its rank and ID.
-        ServiceReference bestRef = refs[0];
+        ServiceReference<?> bestRef = refs[0];
         for (int i = 1; i < refs.length; i++)
         {
             if (bestRef.compareTo(refs[i]) < 0)
@@ -441,10 +443,11 @@ class BundleContextImpl implements BundleContext
         Class<S> clazz, String filter)
         throws InvalidSyntaxException
     {
-        ServiceReference<S>[] refs =
+        @SuppressWarnings("unchecked")
+		ServiceReference<S>[] refs =
             (ServiceReference<S>[]) getServiceReferences(clazz.getName(), filter);
         return (refs == null)
-            ? Collections.EMPTY_LIST
+            ? Collections.emptyList()
             : (Collection<ServiceReference<S>>) Arrays.asList(refs);
     }
 
@@ -519,7 +522,8 @@ class BundleContextImpl implements BundleContext
     /**
      * @see org.osgi.framework.BundleContext#registerService(java.lang.Class, org.osgi.framework.ServiceFactory, java.util.Dictionary)
      */
-    @Override
+    @SuppressWarnings("unchecked")
+	@Override
 	public <S> ServiceRegistration<S> registerService(Class<S> clazz,
             ServiceFactory<S> factory, Dictionary<String, ?> properties)
     {
@@ -546,7 +550,7 @@ class BundleContextImpl implements BundleContext
                 ((ServiceRegistrationImpl.ServiceReferenceImpl) ref).getRegistration();
         if ( reg.isValid() )
         {
-        	return new ServiceObjectsImpl(ref);
+        	return new ServiceObjectsImpl<>(ref);
         }
         return null;
     }

@@ -56,17 +56,17 @@ public class EventDispatcher
     private final ServiceRegistry m_registry;
 
     private Map<BundleContext, List<ListenerInfo>>
-        m_fwkListeners = Collections.EMPTY_MAP;
+        m_fwkListeners = Collections.emptyMap();
     private Map<BundleContext, List<ListenerInfo>>
-        m_bndlListeners = Collections.EMPTY_MAP;
+        m_bndlListeners = Collections.emptyMap();
     private Map<BundleContext, List<ListenerInfo>>
-        m_syncBndlListeners = Collections.EMPTY_MAP;
+        m_syncBndlListeners = Collections.emptyMap();
     private Map<BundleContext, List<ListenerInfo>>
-        m_svcListeners = Collections.EMPTY_MAP;
+        m_svcListeners = Collections.emptyMap();
 
     // A single thread is used to deliver events for all dispatchers.
     private static Thread m_thread = null;
-    private final static String m_threadLock = new String("thread lock");
+    private final static String m_threadLock = "thread lock";
     private static int m_references = 0;
     private static volatile boolean m_stopping = false;
 
@@ -164,7 +164,7 @@ public class EventDispatcher
         }
     }
 
-    public Filter addListener(BundleContext bc, Class clazz, EventListener l, Filter filter)
+    public Filter addListener(BundleContext bc, Class<?> clazz, EventListener l, Filter filter)
     {
         // Verify the listener.
         if (l == null)
@@ -265,7 +265,7 @@ public class EventDispatcher
     }
 
     public ListenerHook.ListenerInfo removeListener(
-        BundleContext bc, Class clazz, EventListener l)
+        BundleContext bc, Class<?> clazz, EventListener l)
     {
         ListenerHook.ListenerInfo returnInfo = null;
 
@@ -389,7 +389,7 @@ public class EventDispatcher
         }
     }
 
-    public Filter updateListener(BundleContext bc, Class clazz, EventListener l, Filter filter)
+    public Filter updateListener(BundleContext bc, Class<?> clazz, EventListener l, Filter filter)
     {
         if (clazz == ServiceListener.class)
         {
@@ -528,7 +528,7 @@ public class EventDispatcher
     }
 
     public void fireServiceEvent(
-        final ServiceEvent event, final Dictionary oldProps, final Felix felix)
+        final ServiceEvent event, final Dictionary<String,?> oldProps, final Felix felix)
     {
         // Take a snapshot of the listener array.
         Map<BundleContext, List<ListenerInfo>> listeners = null;
@@ -808,7 +808,7 @@ public class EventDispatcher
     private static void fireEventImmediately(
         EventDispatcher dispatcher, int type,
         Map<BundleContext, List<ListenerInfo>> listeners,
-        EventObject event, Dictionary oldProps)
+        EventObject event, Dictionary<String,?> oldProps)
     {
         if (!listeners.isEmpty())
         {
@@ -918,7 +918,7 @@ public class EventDispatcher
 
     private static void invokeServiceListenerCallback(
         Bundle bundle, final EventListener l, Filter filter, Object acc,
-        final EventObject event, final Dictionary oldProps)
+        final EventObject event, final Dictionary<String,?> oldProps)
     {
         // Service events should be delivered to STARTING,
         // STOPPING, and ACTIVE bundles.
@@ -932,7 +932,7 @@ public class EventDispatcher
         // Check that the bundle has permission to get at least
         // one of the service interfaces; the objectClass property
         // of the service stores its service interfaces.
-        ServiceReference ref = ((ServiceEvent) event).getServiceReference();
+        ServiceReference<?> ref = ((ServiceEvent) event).getServiceReference();
 
         boolean hasPermission = true;
         Object sm = System.getSecurityManager();

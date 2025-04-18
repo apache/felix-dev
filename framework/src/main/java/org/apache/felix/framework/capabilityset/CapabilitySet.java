@@ -111,7 +111,7 @@ public class CapabilitySet
 
                 if (value instanceof Collection)
                 {
-                    Collection c = (Collection) value;
+                    Collection<?> c = (Collection<?>) value;
                     for (Object o : c)
                     {
                         indexCapability(index, cap, o);
@@ -153,7 +153,7 @@ public class CapabilitySet
 
                     if (value instanceof Collection)
                     {
-                        Collection c = (Collection) value;
+                        Collection<?> c = (Collection<?>) value;
                         for (Object o : c)
                         {
                             deindexCapability(index, cap, o);

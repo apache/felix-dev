@@ -57,8 +57,8 @@ import org.osgi.service.url.URLStreamHandlerSetter;
 public class URLHandlersStreamHandlerProxy extends URLStreamHandler
     implements URLStreamHandlerSetter, InvocationHandler
 {
-    private static final Class[] URL_PROXY_CLASS;
-    private static final Class[] STRING_TYPES = new Class[]{String.class};
+    private static final Class<?>[] URL_PROXY_CLASS;
+    private static final Class<?>[] STRING_TYPES = new Class[]{String.class};
     private static final Method EQUALS;
     private static final Method GET_DEFAULT_PORT;
     private static final Method GET_HOST_ADDRESS;
@@ -88,7 +88,7 @@ public class URLHandlersStreamHandlerProxy extends URLStreamHandler
         OPEN_CONNECTION_PROXY = reflect(action, "openConnection", URL_PROXY_CLASS);
     }
 
-    private static Method reflect(SecureAction action, String name, Class... classes)
+    private static Method reflect(SecureAction action, String name, Class<?>... classes)
     {
         try
         {
@@ -359,7 +359,7 @@ public class URLHandlersStreamHandlerProxy extends URLStreamHandler
     // We use this thread local to detect whether we have a reentrant entry to the parseURL
     // method. This can happen do to some difference between gnu/classpath and sun jvms
     // For more see inside the method.
-    private static final ThreadLocal m_loopCheck = new ThreadLocal();
+    private static final ThreadLocal<Thread> m_loopCheck = new ThreadLocal<>();
     @Override
 	protected void parseURL(URL url, String spec, int start, int limit)
     {
@@ -462,6 +462,7 @@ public class URLHandlersStreamHandlerProxy extends URLStreamHandler
         super.setURL(url, protocol, host, port, authority, userInfo, path, query, ref);
     }
 
+    @Deprecated
     @Override
 	public void setURL(
         URL url, String protocol, String host, int port, String file, String ref)
@@ -627,7 +628,7 @@ public class URLHandlersStreamHandlerProxy extends URLStreamHandler
 	public Object invoke(Object obj, Method method, Object[] params)
         throws Throwable
     {
-        Class[] types = method.getParameterTypes();
+        Class<?>[] types = method.getParameterTypes();
         if (m_service == null)
         {
             return m_action.invoke(m_action.getMethod(this.getClass(), method.getName(), types), this, params);

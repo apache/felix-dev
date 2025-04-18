@@ -42,16 +42,16 @@ public class JarContent implements Content
     private static final transient String LIBRARY_DIRECTORY = "-lib";
 
     private final Logger m_logger;
-    private final Map m_configMap;
+    private final Map<?,?> m_configMap;
     private final WeakZipFileFactory m_zipFactory;
     private final Object m_revisionLock;
     private final File m_rootDir;
     private final File m_file;
     private final WeakZipFile m_zipFile;
     private final boolean m_isZipFileOwner;
-    private Map m_nativeLibMap;
+    private Map<String,Integer> m_nativeLibMap;
 
-    public JarContent(Logger logger, Map configMap, WeakZipFileFactory zipFactory,
+    public JarContent(Logger logger, Map<?,?> configMap, WeakZipFileFactory zipFactory,
         Object revisionLock, File rootDir, File file, WeakZipFile zipFile)
     {
         m_logger = logger;
@@ -349,7 +349,7 @@ public class JarContent implements Content
                 // as part of the extracted path.
                 if (m_nativeLibMap == null)
                 {
-                    m_nativeLibMap = new HashMap();
+                    m_nativeLibMap = new HashMap<>();
                 }
                 Integer libCount = (Integer) m_nativeLibMap.get(entryName);
                 // Either set or increment the library count.

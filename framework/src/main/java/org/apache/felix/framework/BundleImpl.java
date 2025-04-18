@@ -18,6 +18,27 @@
  */
 package org.apache.felix.framework;
 
+import java.io.File;
+import java.io.IOException;
+import java.io.InputStream;
+import java.net.URL;
+import java.security.AccessControlContext;
+import java.security.ProtectionDomain;
+import java.security.cert.X509Certificate;
+import java.util.ArrayList;
+import java.util.Collection;
+import java.util.Dictionary;
+import java.util.Enumeration;
+import java.util.HashMap;
+import java.util.Iterator;
+import java.util.List;
+import java.util.Locale;
+import java.util.Map;
+import java.util.Map.Entry;
+import java.util.Properties;
+import java.util.Set;
+import java.util.StringTokenizer;
+
 import org.apache.felix.framework.cache.BundleArchive;
 import org.apache.felix.framework.util.SecurityManagerEx;
 import org.apache.felix.framework.util.ShrinkableCollection;
@@ -41,25 +62,6 @@ import org.osgi.framework.wiring.BundleRevisions;
 import org.osgi.framework.wiring.BundleWire;
 import org.osgi.framework.wiring.BundleWiring;
 
-import java.io.File;
-import java.io.IOException;
-import java.io.InputStream;
-import java.net.URL;
-import java.security.AccessControlContext;
-import java.security.ProtectionDomain;
-import java.util.ArrayList;
-import java.util.Collection;
-import java.util.Dictionary;
-import java.util.Enumeration;
-import java.util.HashMap;
-import java.util.Iterator;
-import java.util.List;
-import java.util.Locale;
-import java.util.Map;
-import java.util.Properties;
-import java.util.Set;
-import java.util.StringTokenizer;
-
 class BundleImpl implements Bundle, BundleRevisions
 {
     // No one should use this field directly, use getFramework() instead.
@@ -72,8 +74,8 @@ class BundleImpl implements Bundle, BundleRevisions
     private boolean m_useDeclaredActivationPolicy;
     private BundleActivator m_activator = null;
     private volatile BundleContext m_context = null;
-    private final Map m_cachedHeaders = new HashMap();
-    private Map m_uninstalledHeaders = null;
+    private final Map<String,Map<String,String>> m_cachedHeaders = new HashMap<>();
+    private Map<String,String> m_uninstalledHeaders = null;
     private long m_cachedHeadersTimestamp;
     private final Bundle m_installingBundle;
 
@@ -300,7 +302,7 @@ class BundleImpl implements Bundle, BundleRevisions
     }
 
     @Override
-    public Enumeration getEntryPaths(String path)
+    public Enumeration<String> getEntryPaths(String path)
     {
         Object sm = System.getSecurityManager();
 
@@ -321,7 +323,7 @@ class BundleImpl implements Bundle, BundleRevisions
     }
 
     @Override
-    public Enumeration findEntries(String path, String filePattern, boolean recurse)
+    public Enumeration<URL> findEntries(String path, String filePattern, boolean recurse)
     {
         Object sm = System.getSecurityManager();
 
@@ -343,13 +345,13 @@ class BundleImpl implements Bundle, BundleRevisions
     }
 
     @Override
-    public Dictionary getHeaders()
+    public Dictionary<String, String> getHeaders()
     {
         return getHeaders(Locale.getDefault().toString());
     }
 
     @Override
-    public Dictionary getHeaders(String locale)
+    public Dictionary<String, String> getHeaders(String locale)
     {
         Object sm = System.getSecurityManager();
 
@@ -367,14 +369,14 @@ class BundleImpl implements Bundle, BundleRevisions
         return getFramework().getBundleHeaders(this, locale);
     }
 
-    Map getCurrentLocalizedHeader(String locale)
+    Map<String,String> getCurrentLocalizedHeader(String locale)
     {
-        Map result = null;
+        Map<String,String> result = null;
 
         // Spec says empty local returns raw headers.
         if (locale.length() == 0)
         {
-            result = new StringMap(adapt(BundleRevisionImpl.class).getHeaders());
+            result = new StringMap<>(adapt(BundleRevisionImpl.class).getHeaders());
         }
 
         // If we have no result, try to get it from the cached headers.
@@ -400,7 +402,7 @@ class BundleImpl implements Bundle, BundleRevisions
                     // Check if headers for this locale have already been resolved
                     if (m_cachedHeaders.containsKey(locale))
                     {
-                        result = (Map) m_cachedHeaders.get(locale);
+                        result = (Map<String,String>) m_cachedHeaders.get(locale);
                     }
                 }
             }
@@ -410,13 +412,13 @@ class BundleImpl implements Bundle, BundleRevisions
         if (result == null)
         {
             // Get a modifiable copy of the raw headers.
-            Map headers = new StringMap(adapt(BundleRevisionImpl.class).getHeaders());
+            Map<String,String> headers = new StringMap<>(adapt(BundleRevisionImpl.class).getHeaders());
             // Assume for now that this will be the result.
             result = headers;
 
             // Check to see if we actually need to localize anything
             boolean localize = false;
-            for (Iterator it = headers.values().iterator(); !localize && it.hasNext(); )
+            for (Iterator<String> it = headers.values().iterator(); !localize && it.hasNext(); )
             {
                 if (((String) it.next()).startsWith("%"))
                 {
@@ -482,9 +484,9 @@ class BundleImpl implements Bundle, BundleRevisions
                 else
                 {
                     // Resolve all localized header entries
-                    for (Iterator it = headers.entrySet().iterator(); it.hasNext(); )
+                    for (Iterator<Entry<String,String>> it = headers.entrySet().iterator(); it.hasNext(); )
                     {
-                        Map.Entry entry = (Map.Entry) it.next();
+                        Map.Entry<String,String> entry = it.next();
                         String value = (String) entry.getValue();
                         if (value.startsWith("%"))
                         {
@@ -507,7 +509,7 @@ class BundleImpl implements Bundle, BundleRevisions
         return result;
     }
 
-    private void updateHeaderCache(String locale, Map localizedHeaders)
+    private void updateHeaderCache(String locale, Map<String,String> localizedHeaders)
     {
         synchronized (m_cachedHeaders)
         {
@@ -565,7 +567,7 @@ class BundleImpl implements Bundle, BundleRevisions
 
     private static List<String> createLocalizationResourceList(String basename, String locale)
     {
-        List<String> result = new ArrayList(4);
+        List<String> result = new ArrayList<>(4);
 
         StringTokenizer tokens;
         StringBuilder tempLocale = new StringBuilder(basename);
@@ -675,7 +677,7 @@ class BundleImpl implements Bundle, BundleRevisions
     }
 
     @Override
-    public Enumeration getResources(String name) throws IOException
+    public Enumeration<URL> getResources(String name) throws IOException
     {
         Object sm = System.getSecurityManager();
 
@@ -694,7 +696,7 @@ class BundleImpl implements Bundle, BundleRevisions
 
         // Spec says we should return null when resources not found,
         // even though ClassLoader.getResources() returns empty enumeration.
-        Enumeration e = getFramework().getBundleResources(this, name);
+        Enumeration<URL> e = getFramework().getBundleResources(this, name);
         return ((e == null) || !e.hasMoreElements()) ? null : e;
     }
 
@@ -705,22 +707,22 @@ class BundleImpl implements Bundle, BundleRevisions
      * @return an array of service references or null.
     **/
     @Override
-    public ServiceReference[] getRegisteredServices()
+    public ServiceReference<?>[] getRegisteredServices()
     {
         Object sm = System.getSecurityManager();
 
         if (sm != null)
         {
-            ServiceReference[] refs = getFramework().getBundleRegisteredServices(this);
+            ServiceReference<?>[] refs = getFramework().getBundleRegisteredServices(this);
 
             if (refs == null)
             {
                 return refs;
             }
 
-            List result = new ArrayList();
+            List<ServiceReference<?>> result = new ArrayList<>();
 
-            for (ServiceReference ref : refs) {
+            for (ServiceReference<?> ref : refs) {
                 try
                 {
                     ((SecurityManager) sm).checkPermission(new ServicePermission(
@@ -748,22 +750,22 @@ class BundleImpl implements Bundle, BundleRevisions
     }
 
     @Override
-    public ServiceReference[] getServicesInUse()
+    public ServiceReference<?>[] getServicesInUse()
     {
         Object sm = System.getSecurityManager();
 
         if (sm != null)
         {
-            ServiceReference[] refs = getFramework().getBundleServicesInUse(this);
+            ServiceReference<?>[] refs = getFramework().getBundleServicesInUse(this);
 
             if (refs == null)
             {
                 return refs;
             }
 
-            List result = new ArrayList();
+            List<ServiceReference<?>> result = new ArrayList<>();
 
-            for (ServiceReference ref : refs) {
+            for (ServiceReference<?> ref : refs) {
                 try
                 {
                     ((SecurityManager) sm).checkPermission(
@@ -952,14 +954,14 @@ class BundleImpl implements Bundle, BundleRevisions
     }
 
     @Override
-    public Map getSignerCertificates(int signersType)
+    public Map<X509Certificate, List<X509Certificate>> getSignerCertificates(int signersType)
     {
         // TODO: SECURITY - This needs to be adapted to our security mechanisms.
-        return (Map) getFramework().getSignerMatcher(this, signersType);
+        return getFramework().getSignerMatcher(this, signersType);
     }
 
     @Override
-    public Class loadClass(String name) throws ClassNotFoundException
+    public Class<?> loadClass(String name) throws ClassNotFoundException
     {
         if (isExtension())
         {
@@ -1055,7 +1057,7 @@ class BundleImpl implements Bundle, BundleRevisions
                 AdminPermission.LIFECYCLE));
         }
 
-        Map headers = getCurrentLocalizedHeader(Locale.getDefault().toString());
+        Map<String,String> headers = getCurrentLocalizedHeader(Locale.getDefault().toString());
 
         // Uninstall the bundle.
         getFramework().uninstallBundle(this);
@@ -1086,7 +1088,7 @@ class BundleImpl implements Bundle, BundleRevisions
         Object sm = System.getSecurityManager();
         if ((sm != null) && (getFramework().getSecurityProvider() != null))
         {
-            Class[] classes = m_smEx.getClassContext();
+            Class<?>[] classes = m_smEx.getClassContext();
             if (classes.length < 3 || ((Felix.m_secureAction.getClassLoader(classes[3]) != m_classloader) ||
                 !classes[3].getName().startsWith("org.apache.felix.framework.")))
             {
@@ -1096,7 +1098,8 @@ class BundleImpl implements Bundle, BundleRevisions
         }
     }
 
-    @Override
+	@SuppressWarnings("unchecked")
+	@Override
     public <A> A adapt(Class<A> type)
     {
         checkAdapt(type);
@@ -1276,7 +1279,7 @@ class BundleImpl implements Bundle, BundleRevisions
     {
         // Get and parse the manifest from the most recent revision and
         // create an associated revision object for it.
-        Map headerMap = Util.getMultiReleaseAwareManifestHeaders(
+        Map<String,String> headerMap = Util.getMultiReleaseAwareManifestHeaders(
             getFramework()._getProperty("java.specification.version"), m_archive.getCurrentRevision());
 
         // Create the bundle revision instance.

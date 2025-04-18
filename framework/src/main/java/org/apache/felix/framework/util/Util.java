@@ -197,7 +197,7 @@ public class Util
                 moduleLayer = c_ModuleLayer.getMethod("boot").invoke(null);
             }
 
-            for (Object module : ((Iterable) c_ModuleLayer.getMethod("modules").invoke(moduleLayer)))
+            for (Object module : ((Iterable<?>) c_ModuleLayer.getMethod("modules").invoke(moduleLayer)))
             {
                 if (!self.equals(module))
                 {
@@ -209,9 +209,9 @@ public class Util
 
                     if (!((Boolean) isAutomatic.invoke(descriptor)))
                     {
-                        for (Object export : ((Set) c_Descriptor.getMethod("exports").invoke(descriptor)))
+                        for (Object export : ((Set<?>) c_Descriptor.getMethod("exports").invoke(descriptor)))
                         {
-                            if (((Set) c_Exports.getMethod("targets").invoke(export)).isEmpty())
+                            if (((Set<?>) c_Exports.getMethod("targets").invoke(export)).isEmpty())
                             {
                                 pkgs.add((String) c_Exports.getMethod("source").invoke(export));
                             }
@@ -292,12 +292,12 @@ public class Util
         return result;
     }
 
-    public static Properties toProperties(Map map)
+    public static Properties toProperties(Map<?,?> map)
     {
         Properties result = new Properties();
-        for (Iterator iter = map.entrySet().iterator(); iter.hasNext();)
+        for (Iterator<?> iter = map.entrySet().iterator(); iter.hasNext();)
         {
-            Entry entry = (Entry) iter.next();
+            Entry<?,?> entry = (Entry<?,?>) iter.next();
             if (entry.getKey() != null && entry.getValue() != null)
             {
                 result.setProperty(entry.getKey().toString(), entry.getValue().toString());
@@ -430,9 +430,9 @@ public class Util
      * @return the loaded class or <tt>null</tt> if it could not be
      *         loaded.
     **/
-    public static Class loadClassUsingClass(Class clazz, String name, SecureAction action)
+    public static Class<?> loadClassUsingClass(Class<?> clazz, String name, SecureAction action)
     {
-        Class loadedClass = null;
+        Class<?> loadedClass = null;
 
         while (clazz != null)
         {
@@ -452,8 +452,8 @@ public class Util
             // Try to see if we can load the class from
             // one of the class's implemented interface
             // class loaders.
-            Class[] ifcs = clazz.getInterfaces();
-            for (Class ifc : ifcs) {
+            Class<?>[] ifcs = clazz.getInterfaces();
+            for (Class<?> ifc : ifcs) {
                 loadedClass = loadClassUsingClass(ifc, name, action);
                 if (loadedClass != null)
                 {
@@ -480,8 +480,8 @@ public class Util
             // Try to see if
             // one of the class's implemented interface
             // is the name.
-            Class[] ifcs = clazz.getInterfaces();
-            for (Class ifc : ifcs) {
+            Class<?>[] ifcs = clazz.getInterfaces();
+            for (Class<?> ifc : ifcs) {
                 if (checkImplementsWithName(ifc, name)) {
                     return true;
                 }
@@ -502,7 +502,7 @@ public class Util
      * @return <tt>true</tt> if the requesting bundle is able to case
      *         the service object to a known type.
     **/
-    public static boolean isServiceAssignable(Bundle requester, ServiceReference ref)
+    public static boolean isServiceAssignable(Bundle requester, ServiceReference<?> ref)
     {
         // Boolean flag.
         boolean allow = true;
@@ -726,14 +726,14 @@ public class Util
      *         property placeholder syntax or a recursive variable reference.
     **/
     public static String substVars(String val, String currentKey,
-        Map cycleMap, Properties configProps)
+        Map<String,String> cycleMap, Properties configProps)
         throws IllegalArgumentException
     {
         // If there is currently no cycle map, then create
         // one for detecting cycles for this invocation.
         if (cycleMap == null)
         {
-            cycleMap = new HashMap();
+            cycleMap = new HashMap<>();
         }
 
         // Put the current key in the cycle map.
@@ -846,7 +846,7 @@ public class Util
                 {
                     if (entry.getKey().equalsIgnoreCase(Constants.SINGLETON_DIRECTIVE))
                     {
-                        return Boolean.valueOf(entry.getValue());
+                        return Boolean.parseBoolean(entry.getValue());
                     }
                 }
                 // Can only have one bundle capability, so break.
@@ -878,7 +878,7 @@ public class Util
 
     public static List<BundleRevision> getFragments(BundleWiring wiring)
     {
-        List<BundleRevision> fragments = Collections.EMPTY_LIST;
+        List<BundleRevision> fragments = Collections.emptyList();
         if (wiring != null)
         {
             List<BundleWire> wires = wiring.getProvidedWires(null);
@@ -1054,9 +1054,9 @@ public class Util
         return null;
     }
 
-    public static Map<String, Object> getMultiReleaseAwareManifestHeaders(String version, BundleArchiveRevision revision) throws Exception
+    public static Map<String, String> getMultiReleaseAwareManifestHeaders(String version, BundleArchiveRevision revision) throws Exception
     {
-        Map<String, Object> manifest = revision.getManifestHeader();
+        Map<String, String> manifest = revision.getManifestHeader();
         if (manifest == null)
         {
             throw new FileNotFoundException("META-INF/MANIFEST.MF");
@@ -1070,8 +1070,8 @@ public class Util
 
                 if (versionManifestInput != null)
                 {
-                    Map<String, Object> versionManifest = BundleCache.getMainAttributes(
-                        new StringMap(), new ByteArrayInputStream(versionManifestInput), versionManifestInput.length);
+                    Map<String, String> versionManifest = BundleCache.getMainAttributes(
+                        new StringMap<>(), new ByteArrayInputStream(versionManifestInput), versionManifestInput.length);
 
                     if (versionManifest.get(Constants.IMPORT_PACKAGE) != null)
                     {
@@ -1088,16 +1088,16 @@ public class Util
         return manifest;
     }
 
-    private static final List EMPTY_LIST = Collections.unmodifiableList(Collections.EMPTY_LIST);
-    private static final Map EMPTY_MAP = Collections.unmodifiableMap(Collections.EMPTY_MAP);
+    private static final List EMPTY_LIST = Collections.unmodifiableList(Collections.emptyList());
+    private static final Map<?,?> EMPTY_MAP = Collections.unmodifiableMap(Collections.emptyMap());
 
-    public static <T> List<T> newImmutableList(List<T> list)
+    public static <T> List<T> newImmutableList(List<? extends T> list)
     {
         return list == null || list.isEmpty() ? EMPTY_LIST : Collections.unmodifiableList(list);
     }
 
     public static <K,V> Map<K,V> newImmutableMap(Map<K,V> map)
     {
-        return map == null || map.isEmpty() ? EMPTY_MAP : Collections.unmodifiableMap(map);
+        return map == null || map.isEmpty() ? Collections.emptyMap() : Collections.unmodifiableMap(map);
     }
 }

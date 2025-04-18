@@ -38,13 +38,13 @@ public class ConnectContentContent implements Content
 
     private final Logger m_logger;
     private final WeakZipFileFactory m_zipFactory;
-    private final Map m_configMap;
+    private final Map<?,?> m_configMap;
     private final String m_name;
     private final File m_rootDir;
     private final Object m_revisionLock;
     private final ConnectContent m_content;
 
-    public ConnectContentContent(Logger logger, WeakZipFileFactory zipFactory, Map configMap, String name, File rootDir, Object revisionLock, ConnectContent content) throws IOException
+    public ConnectContentContent(Logger logger, WeakZipFileFactory zipFactory, Map<?,?> configMap, String name, File rootDir, Object revisionLock, ConnectContent content) throws IOException
     {
         m_logger = logger;
         m_zipFactory = zipFactory;

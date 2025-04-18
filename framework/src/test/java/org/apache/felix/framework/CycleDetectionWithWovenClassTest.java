@@ -80,7 +80,7 @@ class CycleDetectionWithWovenClassTest {
                     // TODO Auto-generated method stub
                     try
                     {
-                        Class hook = getClass().getClassLoader().loadClass("org.apache.felix.framework.CycleDetectionWithWovenClassTest$Hook");
+                        Class<?> hook = getClass().getClassLoader().loadClass("org.apache.felix.framework.CycleDetectionWithWovenClassTest$Hook");
                         if (hook == null)
                         {
                             wasNull = true;
@@ -184,7 +184,7 @@ class CycleDetectionWithWovenClassTest {
     
     
     private Felix getFramework(File cacheDir) {
-        Map params = new HashMap();
+        Map<String,Object> params = new HashMap<>();
         params.put(Constants.FRAMEWORK_SYSTEMPACKAGES,
             "org.osgi.framework; version=1.4.0,"
             + "org.osgi.service.packageadmin; version=1.2.0,"
@@ -202,7 +202,7 @@ class CycleDetectionWithWovenClassTest {
         return new Felix(params);
     }
     
-    private static File createBundle(Class activator, Class...classes) throws IOException
+    private static File createBundle(Class<?> activator, Class<?>...classes) throws IOException
     {
         String mf = "Bundle-SymbolicName: " + activator.getName() +"\n"
                 + "Bundle-Version: 1.0.0\n"
@@ -211,10 +211,10 @@ class CycleDetectionWithWovenClassTest {
                 + "Manifest-Version: 1.0\n"
                 + "Bundle-Activator: " + activator.getName() + "\n\n";
         
-        Class[] classesCombined;
+        Class<?>[] classesCombined;
         
         if (classes.length > 0) {
-            List<Class> list = new ArrayList<>(Arrays.asList(classes));
+            List<Class<?>> list = new ArrayList<>(Arrays.asList(classes));
             list.add(activator);
             classesCombined = list.toArray(new Class[0]);
         }
@@ -226,7 +226,7 @@ class CycleDetectionWithWovenClassTest {
         
     }
     
-    private static File createBundle(String manifest, Class... classes) throws IOException
+    private static File createBundle(String manifest, Class<?>... classes) throws IOException
     {
         File f = File.createTempFile("felix-bundle", ".jar");
         f.deleteOnExit();
@@ -234,7 +234,7 @@ class CycleDetectionWithWovenClassTest {
         Manifest mf = new Manifest(new ByteArrayInputStream(manifest.getBytes("utf-8")));
         JarOutputStream os = new JarOutputStream(new FileOutputStream(f), mf);
 
-        for (Class clazz : classes)
+        for (Class<?> clazz : classes)
         {
             String path = clazz.getName().replace('.', '/') + ".class";
             os.putNextEntry(new ZipEntry(path));

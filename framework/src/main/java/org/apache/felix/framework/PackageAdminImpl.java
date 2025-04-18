@@ -20,6 +20,7 @@ package org.apache.felix.framework;
 
 import java.util.*;
 import org.apache.felix.framework.util.Util;
+import org.apache.felix.framework.wiring.BundleRequirementImpl;
 import org.osgi.framework.Bundle;
 import org.osgi.framework.Constants;
 import org.osgi.framework.Version;
@@ -35,13 +36,13 @@ import org.osgi.service.packageadmin.RequiredBundle;
 
 public class PackageAdminImpl implements PackageAdmin
 {
-    private static final Comparator COMPARATOR = new Comparator() {
+    private static final Comparator<ExportedPackage> COMPARATOR = new Comparator<ExportedPackage>() {
         @Override
-		public int compare(Object o1, Object o2)
+		public int compare(ExportedPackage o1, ExportedPackage o2)
         {
             // Reverse arguments to sort in descending order.
-            return ((ExportedPackage) o2).getVersion().compareTo(
-                ((ExportedPackage) o1).getVersion());
+            return (o2).getVersion().compareTo(
+                (o1).getVersion());
         }
     };
 
@@ -60,7 +61,7 @@ public class PackageAdminImpl implements PackageAdmin
      * @return the bundle associated with the specified class, otherwise null.
     **/
     @Override
-	public Bundle getBundle(Class clazz)
+	public Bundle getBundle(Class<?> clazz)
     {
         return m_felix.getBundle(clazz);
     }
@@ -80,7 +81,7 @@ public class PackageAdminImpl implements PackageAdmin
     {
         VersionRange vr = (versionRange == null) ? null : new VersionRange(versionRange);
         Bundle[] bundles = m_felix.getBundles();
-        List list = new ArrayList();
+        List<Bundle> list = new ArrayList<>();
         for (int i = 0; (bundles != null) && (i < bundles.length); i++)
         {
             String sym = bundles[i].getSymbolicName();
@@ -98,12 +99,12 @@ public class PackageAdminImpl implements PackageAdmin
             return null;
         }
         bundles = (Bundle[]) list.toArray(new Bundle[list.size()]);
-        Arrays.sort(bundles,new Comparator() {
+        Arrays.sort(bundles,new Comparator<Bundle>() {
             @Override
-			public int compare(Object o1, Object o2)
+			public int compare(Bundle o1, Bundle o2)
             {
-                Version v1 = ((Bundle) o1).adapt(BundleRevision.class).getVersion();
-                Version v2 = ((Bundle) o2).adapt(BundleRevision.class).getVersion();
+                Version v1 = (o1).adapt(BundleRevision.class).getVersion();
+                Version v2 = (o2).adapt(BundleRevision.class).getVersion();
                 // Compare in reverse order to get descending sort.
                 return v2.compareTo(v1);
             }
@@ -239,7 +240,7 @@ public class PackageAdminImpl implements PackageAdmin
     @Override
 	public RequiredBundle[] getRequiredBundles(String symbolicName)
     {
-        List list = new ArrayList();
+        List<RequiredBundleImpl> list = new ArrayList<>();
         for (Bundle bundle : m_felix.getBundles())
         {
             if ((symbolicName == null)

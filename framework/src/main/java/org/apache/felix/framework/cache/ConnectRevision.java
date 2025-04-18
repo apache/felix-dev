@@ -34,7 +34,7 @@ public class ConnectRevision extends BundleArchiveRevision
     private final WeakZipFileFactory m_zipFactory;
     private final ConnectContent m_module;
 
-    public ConnectRevision(Logger logger, Map configMap, WeakZipFileFactory zipFactory,
+    public ConnectRevision(Logger logger, Map<?,?> configMap, WeakZipFileFactory zipFactory,
         File revisionRootDir, String location, ConnectModule module) throws Exception
     {
         super(logger, configMap, revisionRootDir, location);
@@ -60,14 +60,14 @@ public class ConnectRevision extends BundleArchiveRevision
     }
 
     @Override
-    public Map<String, Object> getManifestHeader() throws Exception
+    public Map<String, String> getManifestHeader() throws Exception
     {
-        return (Map) m_module.getHeaders().orElseGet(() -> m_module.getEntry("META-INF/MANIFEST.MF").flatMap(entry -> {
+        return (Map<String,String>) m_module.getHeaders().orElseGet(() -> m_module.getEntry("META-INF/MANIFEST.MF").flatMap(entry -> {
                 try
                 {
                     byte[] manifest = entry.getBytes();
 
-                    return Optional.of((Map<String, String>) (Map) BundleCache.getMainAttributes(new StringMap(), new java.io.ByteArrayInputStream(manifest), manifest.length));
+                    return Optional.of((Map<String, String>) BundleCache.getMainAttributes(new StringMap<>(), new java.io.ByteArrayInputStream(manifest), manifest.length));
                 }
                 catch (Exception e)
                 {
