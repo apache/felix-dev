@@ -45,12 +45,18 @@ final class OsgiManagerHttpContext extends ServletContextHelper {
         this.webManagerRoot = webManagerRoot;
     }
 
+    @Override
     public URL getResource(final String name) {
         URL url = this.bundle.getResource( name );
         if ( url == null && name.endsWith( "/" ) ) {
             url = this.bundle.getResource( name.substring( 0, name.length() - 1 ) );
         }
         return url;
+    }
+
+    @Override
+    public String getMimeType(final String name) {
+        return MimeTypes.getByFile(name);
     }
 
     @Override
@@ -103,7 +109,7 @@ final class OsgiManagerHttpContext extends ServletContextHelper {
 				public Object getUserObject() {
 					return result;
 				}
-                
+
             });
             request.setAttribute(org.apache.felix.webconsole.User.USER_ATTRIBUTE, request.getAttribute(User.USER_ATTRIBUTE));
         }
