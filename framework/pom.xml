@@ -44,11 +44,6 @@
       <plugin>
         <groupId>org.apache.maven.plugins</groupId>
         <artifactId>maven-surefire-plugin</artifactId>
-        <configuration>
-          <argLine>
-            -Djava.security.manager=allow
-          </argLine>
-        </configuration>
       </plugin>
       <plugin>
         <groupId>org.moditect</groupId>
