@@ -112,5 +112,7 @@ public class LazyLocalResourceImpl implements LocalResource
         return getResource().getRequirements();
     }
 
-    public boolean equals(Object o) { return getResource().equals(o); }
+    public boolean equals(Object o) {
+        return getResource().equals(o);
+    }
 }
