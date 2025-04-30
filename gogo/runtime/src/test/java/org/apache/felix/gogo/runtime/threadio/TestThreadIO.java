@@ -80,7 +80,7 @@ public class TestThreadIO
 
    /**
     * Simple test too see if the basics work.
-    * @throws IOException 
+    * @throws IOException
     */
    @SuppressWarnings("resource")
    @Test
@@ -112,7 +112,7 @@ public class TestThreadIO
          tio.close();
       }
    }
-   
+
    @Test
    @SuppressWarnings("resource")
    public void testNullInputStream() throws IOException {
@@ -129,7 +129,7 @@ public class TestThreadIO
          byte data[] = new byte[3];
          System.in.read(data);
          assertTrue(Arrays.equals(test, data));
-         
+
          tio.close();
       }
       finally
@@ -151,10 +151,19 @@ public class TestThreadIO
       tio.start();
       try
       {
-         byte data[] = new byte[3];
-         System.in.read(data);
-         assertTrue(Arrays.equals(test, data));
-         tio.close();
+         // Save the original System.in
+         InputStream originalIn = System.in;
+         // Set System.in to the ThreadInputStream
+         System.setIn(tio.getThreadInputStream());
+         try {
+            byte data[] = new byte[3];
+            System.in.read(data);
+            assertTrue(Arrays.equals(test, data));
+            tio.close();
+         } finally {
+            // Restore original System.in
+            System.setIn(originalIn);
+         }
       }
       finally
       {
@@ -163,9 +172,9 @@ public class TestThreadIO
          tio.stop();
       }
    }
-   
+
    @Test
    public void testWithFrameworkService() {
-      
+
    }
 }

@@ -33,12 +33,13 @@ import org.osgi.namespace.service.ServiceNamespace;
 
 @Capability(namespace = ServiceNamespace.SERVICE_NAMESPACE,
          attribute = "objectClass='org.apache.felix.service.threadio.ThreadIO'")
-public class ThreadIOImpl extends InputStream implements ThreadIO
+public class ThreadIOImpl implements ThreadIO
 {
    static final Logger log = Logger.getLogger(ThreadIOImpl.class.getName());
    final SystemIO systemio;
    final ThreadLocal<Streams> threadLocal = new ThreadLocal<>();
    Closeable system;
+   private ThreadInputStream threadInputStream;
 
    class Streams
    {
@@ -91,6 +92,16 @@ public class ThreadIOImpl extends InputStream implements ThreadIO
    public ThreadIOImpl(SystemIO systemio)
    {
       this.systemio = systemio;
+      this.threadInputStream = new ThreadInputStream();
+   }
+
+   /**
+    * Constructor for use in non-OSGi environments (like gogo/jline)
+    */
+   public ThreadIOImpl()
+   {
+      this.systemio = null;
+      this.threadInputStream = new ThreadInputStream();
    }
 
    public void start()
@@ -126,9 +137,9 @@ public class ThreadIOImpl extends InputStream implements ThreadIO
 
    private synchronized void init()
    {
-      if (system == null)
+      if (system == null && systemio != null)
       {
-         system = systemio.system(this, new ThreadOutStream()
+         system = systemio.system(threadInputStream, new ThreadOutStream()
          {
 
             @Override
@@ -149,19 +160,33 @@ public class ThreadIOImpl extends InputStream implements ThreadIO
       }
    }
 
-   @Override
-   public int read() throws IOException
-   {
-      Streams s = threadLocal.get();
-      while (s != null)
+   /**
+    * Get the thread input stream that can be used to replace System.in
+    *
+    * @return the thread input stream
+    */
+   public InputStream getThreadInputStream() {
+      return threadInputStream;
+   }
+
+   /**
+    * Inner class that handles the InputStream functionality
+    */
+   private class ThreadInputStream extends InputStream {
+      @Override
+      public int read() throws IOException
       {
-         if (s.in == null)
-            s = s.prev;
-         else
+         Streams s = threadLocal.get();
+         while (s != null)
          {
-            return s.in.read();
+            if (s.in == null)
+               s = s.prev;
+            else
+            {
+               return s.in.read();
+            }
          }
+         return SystemIO.NO_DATA;
       }
-      return SystemIO.NO_DATA;
    }
 }

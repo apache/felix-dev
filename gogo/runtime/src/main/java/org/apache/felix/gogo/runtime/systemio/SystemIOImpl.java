@@ -36,7 +36,7 @@ import org.osgi.namespace.service.ServiceNamespace;
  */
 @Capability(namespace = ServiceNamespace.SERVICE_NAMESPACE,
          attribute = "objectClass='org.apache.felix.service.systemio.SystemIO'")
-public class SystemIOImpl extends InputStream implements SystemIO
+public class SystemIOImpl implements SystemIO
 {
    static private final Logger log = Logger.getLogger(SystemIOImpl.class.getName());
 
@@ -50,6 +50,7 @@ public class SystemIOImpl extends InputStream implements SystemIO
 
    private PrintStream rout;
    private PrintStream rerr;
+   private SystemInputStream systemInputStream;
 
 
    public void start()
@@ -59,14 +60,15 @@ public class SystemIOImpl extends InputStream implements SystemIO
       stderrs.add(err);
       rout = new PrintStream(new DelegateStream(stdouts), true);
       rerr = new PrintStream(new DelegateStream(stderrs), true);
+      systemInputStream = new SystemInputStream();
       System.setOut(rout);
       System.setErr(rerr);
-      System.setIn(this);
+      System.setIn(systemInputStream);
    }
 
    public void stop()
    {
-      if (System.in == this)
+      if (System.in == systemInputStream)
       {
          System.setIn(in);
       }
@@ -123,16 +125,30 @@ public class SystemIOImpl extends InputStream implements SystemIO
       };
    }
 
-   @Override
-   public int read() throws IOException
-   {
-      assert stdins.size() > 0;
-      for ( InputStream in : stdins) {
-         int b = in.read();
-         if ( b != SystemIO.NO_DATA)
-            return b;
+   /**
+    * Get the system input stream that will be used to replace System.in
+    *
+    * @return the system input stream
+    */
+   public InputStream getSystemInputStream() {
+      return systemInputStream;
+   }
+
+   /**
+    * Inner class that handles the InputStream functionality
+    */
+   private class SystemInputStream extends InputStream {
+      @Override
+      public int read() throws IOException
+      {
+         assert stdins.size() > 0;
+         for ( InputStream in : stdins) {
+            int b = in.read();
+            if ( b != SystemIO.NO_DATA)
+               return b;
+         }
+         return -1; // unreachable because stdin is at the end
       }
-      return -1; // unreachable because stdin is at the end
    }
 
 }
