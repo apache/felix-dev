@@ -115,4 +115,8 @@ public class LazyLocalResourceImpl implements LocalResource
     public boolean equals(Object o) {
         return getResource().equals(o);
     }
+
+    public int hashCode() {
+        return getResource().hashCode();
+    }
 }
