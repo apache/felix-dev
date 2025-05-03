@@ -46,6 +46,7 @@ import java.util.concurrent.atomic.AtomicBoolean;
 import org.apache.felix.gogo.runtime.Closure;
 import org.apache.felix.gogo.runtime.CommandProxy;
 import org.apache.felix.gogo.runtime.CommandSessionImpl;
+import org.apache.felix.gogo.runtime.Pipe;
 import org.apache.felix.service.command.Job;
 import org.apache.felix.service.command.Job.Status;
 import org.apache.felix.gogo.runtime.Reflective;
@@ -440,6 +441,16 @@ public class Shell {
 
     private Object runShell(final CommandSession session, Terminal terminal,
                             LineReader reader) throws InterruptedException {
+        Pipe currentPipe = Pipe.setCurrentPipe(null);
+        try {
+            return doRunShell(session, terminal, reader);
+        } finally {
+            Pipe.setCurrentPipe(currentPipe);
+        }
+    }
+
+    private Object doRunShell(final CommandSession session, Terminal terminal,
+                            LineReader reader) throws InterruptedException {
         AtomicBoolean reading = new AtomicBoolean();
         session.setJobListener((job, previous, current) -> {
             if (previous == Status.Background || current == Status.Background
@@ -555,7 +566,15 @@ public class Shell {
 
     @Descriptor("start a new shell")
     public Object sh(final CommandSession session, String[] argv) throws Exception {
-        return gosh(session, argv);
+        // Save the current pipe and clear it before creating a child shell
+        // This ensures that interruption signals are properly propagated to the child shell
+        Pipe currentPipe = Pipe.setCurrentPipe(null);
+        try {
+            return gosh(session, argv);
+        } finally {
+            // Restore the previous pipe
+            Pipe.setCurrentPipe(currentPipe);
+        }
     }
 
     private void shutdown() throws Exception {
