@@ -203,10 +203,22 @@ class ConfigMetaTypeProvider implements MetaTypeProvider
                 bundle.getBundleContext().getProperty(JettyConfig.FELIX_JETTY_RESPONSE_BUFFER_SIZE)));
 
         adList.add(new AttributeDefinitionImpl(JettyConfig.FELIX_JETTY_MAX_FORM_SIZE,
-                "Maximum Form Size",
+                "Maximum Form Size in bytes",
                 "Size of Body for submitted form content. Default is 200KB.",
                 204800,
                 bundle.getBundleContext().getProperty(JettyConfig.FELIX_JETTY_MAX_FORM_SIZE)));
+
+        adList.add(new AttributeDefinitionImpl(JettyConfig.FELIX_JETTY_REQUEST_SIZE_LIMIT,
+                "Maximum request size in bytes",
+                "Maximum size of the request body in bytes. Default is unlimited.",
+                204800,
+                bundle.getBundleContext().getProperty(JettyConfig.FELIX_JETTY_REQUEST_SIZE_LIMIT)));
+
+        adList.add(new AttributeDefinitionImpl(JettyConfig.FELIX_JETTY_RESPONSE_SIZE_LIMIT,
+                "Maximum response size in bytes",
+                "Maximum size of the response body in bytes. Default is unlimited.",
+                204800,
+                bundle.getBundleContext().getProperty(JettyConfig.FELIX_JETTY_RESPONSE_SIZE_LIMIT)));
 
         adList.add(new AttributeDefinitionImpl(JettyConfig.FELIX_HTTP_PATH_EXCLUSIONS,
                 "Path Exclusions",
