@@ -106,7 +106,7 @@ public final class JettyConfig
     /** Felix specific property to configure the request buffer size. Default is 24KB */
     public static final String FELIX_JETTY_RESPONSE_BUFFER_SIZE = "org.apache.felix.http.jetty.responseBufferSize";
 
-    /** Felix specific property to configure the max form size. Default is 200KB. This is deprecated in favor of `org.apache.felix.http.jetty.requestSizeLimit` */
+    /** Felix specific property to configure the max form size. Default is 200KB. */
     public static final String FELIX_JETTY_MAX_FORM_SIZE = "org.apache.felix.http.jetty.maxFormSize";
 
     /** Felix specific property to configure the request size limit. Default is unlimited. See https://jetty.org/docs/jetty/12/programming-guide/server/http.html#handler-use-size-limit */

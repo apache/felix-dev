@@ -323,9 +323,6 @@ public final class JettyService
             final ServletHolder holder = new ServletHolder(this.controller.createDispatcherServlet());
             holder.setAsyncSupported(true);
             context.addServlet(holder, "/*");
-
-            // Not sure if this does anything still, since we're using async form API's
-            // see https://stackoverflow.com/a/78659566
             context.setMaxFormContentSize(this.config.getMaxFormSize());
 
             int requestSizeLimit = this.config.getRequestSizeLimit();
