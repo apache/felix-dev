@@ -39,7 +39,7 @@ class DirectoryRevision extends BundleArchiveRevision
     private final File m_refDir;
 
     public DirectoryRevision(
-        Logger logger, Map configMap, WeakZipFileFactory zipFactory,
+        Logger logger, Map<?,?> configMap, WeakZipFileFactory zipFactory,
         File revisionRootDir, String location) throws Exception
     {
         super(logger, configMap, revisionRootDir, location);
@@ -67,20 +67,23 @@ class DirectoryRevision extends BundleArchiveRevision
         }
     }
 
-    public Map<String, Object> getManifestHeader()
+    @Override
+	public Map<String, String> getManifestHeader()
         throws Exception
     {
         File manifest = new File(m_refDir, "META-INF/MANIFEST.MF");
-        return BundleCache.getSecureAction().isFile(manifest) ? BundleCache.getMainAttributes(new StringMap(), BundleCache.getSecureAction().getInputStream(manifest), manifest.length()) : null;
+        return BundleCache.getSecureAction().isFile(manifest) ? BundleCache.getMainAttributes(new StringMap<>(), BundleCache.getSecureAction().getInputStream(manifest), manifest.length()) : null;
     }
 
-    public Content getContent() throws Exception
+    @Override
+	public Content getContent() throws Exception
     {
         return new DirectoryContent(getLogger(), getConfig(), m_zipFactory,
             this, getRevisionRootDir(), m_refDir);
     }
 
-    protected void close() throws Exception
+    @Override
+	protected void close() throws Exception
     {
         // Nothing to close since we don't maintain any state outside
         // of the revision directory, which will be automatically deleted

@@ -7,9 +7,9 @@
     to you under the Apache License, Version 2.0 (the
     "License"); you may not use this file except in compliance
     with the License.  You may obtain a copy of the License at
-    
+
     http://www.apache.org/licenses/LICENSE-2.0
-    
+
     Unless required by applicable law or agreed to in writing,
     software distributed under the License is distributed on an
     "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
@@ -23,12 +23,12 @@
     <parent>
         <groupId>org.apache.felix</groupId>
         <artifactId>felix-parent</artifactId>
-        <version>7</version>
+        <version>9</version>
         <relativePath />
     </parent>
 
     <artifactId>org.apache.felix.healthcheck.core</artifactId>
-    <version>2.2.1-SNAPSHOT</version>
+    <version>2.3.1-SNAPSHOT</version>
 
     <name>Apache Felix Health Check Core</name>
     <inceptionYear>2013</inceptionYear>
@@ -38,13 +38,13 @@
     </description>
 
     <properties>
-        <felix.java.version>8</felix.java.version>
-        <pax-exam.version>4.13.4</pax-exam.version>
+        <felix.java.version>11</felix.java.version>
+        <pax-exam.version>4.14.0</pax-exam.version>
         <pax-link.version>2.6.7</pax-link.version>
         <org.ops4j.pax.logging.DefaultServiceLog.level>INFO</org.ops4j.pax.logging.DefaultServiceLog.level>
         <felix.shell>false</felix.shell>
         <project.bundle.file>${project.build.directory}/${project.build.finalName}.jar</project.bundle.file>
-        <project.build.outputTimestamp>1694408017</project.build.outputTimestamp>
+        <project.build.outputTimestamp>1744647913</project.build.outputTimestamp>
         <servlet.api>5.0.0</servlet.api>
     </properties>
 
@@ -52,7 +52,7 @@
         <connection>scm:git:https://github.com/apache/felix-dev.git</connection>
         <developerConnection>scm:git:https://github.com/apache/felix-dev.git</developerConnection>
         <url>https://gitbox.apache.org/repos/asf?p=felix-dev.git</url>
-      <tag>org.apache.felix.healthcheck.core-2.2.0</tag>
+      <tag>HEAD</tag>
   </scm>
 
     <build>
@@ -61,7 +61,7 @@
             <plugin>
                 <groupId>biz.aQute.bnd</groupId>
                 <artifactId>bnd-maven-plugin</artifactId>
-                <version>5.3.0</version>
+                <version>6.4.0</version>
                 <executions>
                     <execution>
                         <goals>
@@ -82,7 +82,7 @@
             <plugin>
                 <groupId>org.jacoco</groupId>
                 <artifactId>jacoco-maven-plugin</artifactId>
-                <version>0.8.2</version>
+                <version>0.8.13</version>
                 <executions>
                     <execution>
                         <id>prepare-agent-integration</id>
@@ -111,7 +111,7 @@
             <plugin>
                 <groupId>org.apache.maven.plugins</groupId>
                 <artifactId>maven-failsafe-plugin</artifactId>
-                <version>3.0.0-M5</version>
+                <version>3.5.3</version>
                 <executions>
                     <execution>
                         <goals>
@@ -136,7 +136,7 @@
         <dependency>
             <groupId>org.osgi</groupId>
             <artifactId>osgi.core</artifactId>
-            <version>6.0.0</version>
+            <version>8.0.0</version>
             <scope>provided</scope>
         </dependency>
         <dependency>
@@ -225,7 +225,7 @@
         <dependency>
             <groupId>org.mockito</groupId>
             <artifactId>mockito-core</artifactId>
-            <version>3.11.2</version>
+            <version>5.17.0</version>
             <scope>test</scope>
         </dependency>
         <dependency>

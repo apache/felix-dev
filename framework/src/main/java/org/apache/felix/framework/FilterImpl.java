@@ -24,7 +24,6 @@ import java.util.Dictionary;
 import java.util.Enumeration;
 import java.util.List;
 import java.util.Map;
-import java.util.Map.Entry;
 import java.util.Set;
 import org.apache.felix.framework.ServiceRegistrationImpl.ServiceReferenceImpl;
 import org.apache.felix.framework.capabilityset.CapabilitySet;
@@ -52,7 +51,8 @@ public class FilterImpl implements Filter
         }
     }
 
-    public boolean match(ServiceReference sr)
+    @Override
+	public boolean match(ServiceReference<?> sr)
     {
         if (sr instanceof ServiceReferenceImpl)
         {
@@ -64,60 +64,65 @@ public class FilterImpl implements Filter
         }
     }
 
-    public boolean match(Dictionary<String, ? > dctnr)
+    @Override
+	public boolean match(Dictionary<String, ? > dctnr)
     {
         return CapabilitySet.matches(new WrapperCapability(dctnr, false), m_filter);
     }
 
-    public boolean matchCase(Dictionary<String, ? > dctnr)
+    @Override
+	public boolean matchCase(Dictionary<String, ? > dctnr)
     {
         return CapabilitySet.matches(new WrapperCapability(dctnr, true), m_filter);
     }
 
-    public boolean matches(Map<String, ?> map)
+    @Override
+	public boolean matches(Map<String, ?> map)
     {
         return CapabilitySet.matches(new WrapperCapability(map), m_filter);
     }
 
-    public boolean equals(Object o)
+    @Override
+	public boolean equals(Object o)
     {
         return toString().equals(o.toString());
     }
 
-    public int hashCode()
+    @Override
+	public int hashCode()
     {
         return toString().hashCode();
     }
 
-    public String toString()
+    @Override
+	public String toString()
     {
         return m_filter.toString();
     }
 
     static class WrapperCapability extends BundleCapabilityImpl
     {
-        private final Map m_map;
+        private final Map<String, Object> m_map;
 
-        public WrapperCapability(Map map)
+        public WrapperCapability(Map<String, ?> map)
         {
-            super(null, null, Collections.EMPTY_MAP, Collections.EMPTY_MAP);
-            m_map = (map == null) ? Collections.EMPTY_MAP : map;
+            super(null, null, Collections.emptyMap(), Collections.emptyMap());
+                m_map = Collections.emptyMap();
+                if(map != null ) {
+            }
+            m_map.putAll(map);
         }
 
-        public WrapperCapability(Dictionary dict, boolean caseSensitive)
+        public WrapperCapability(Dictionary<String, ?> dict, boolean caseSensitive)
         {
-            super(null, null, Collections.EMPTY_MAP, Collections.EMPTY_MAP);
+            super(null, null, Collections.emptyMap(), Collections.emptyMap());
             m_map = new DictionaryToMap(dict, caseSensitive);
         }
 
-        public WrapperCapability(ServiceReference sr)
+        public WrapperCapability(ServiceReference<?> sr)
         {
-            super(null, null, Collections.EMPTY_MAP, Collections.EMPTY_MAP);
-            m_map = new StringMap();
-            for (String key : sr.getPropertyKeys())
-            {
-                m_map.put(key, sr.getProperty(key));
-            }
+            super(null, null, Collections.emptyMap(), Collections.emptyMap());
+            m_map = new DictionaryToMap(sr.getProperties(), false);
         }
 
         @Override
@@ -151,23 +156,23 @@ public class FilterImpl implements Filter
         }
     }
 
-    private static class DictionaryToMap implements Map
+    private static class DictionaryToMap implements Map<String,Object>
     {
-        private final Map m_map;
-        private final Dictionary m_dict;
+        private final Map<String,Object> m_map;
+        private final Dictionary<String,?> m_dict;
 
-        public DictionaryToMap(Dictionary dict, boolean caseSensitive)
+        public DictionaryToMap(Dictionary<String,?> dict, boolean caseSensitive)
         {
             if (!caseSensitive)
             {
                 m_dict = null;
-                m_map = new StringMap();
+                m_map = new StringMap<Object>();
                 if (dict != null)
                 {
-                    Enumeration keys = dict.keys();
+                    Enumeration<String> keys = dict.keys();
                     while (keys.hasMoreElements())
                     {
-                        Object key = keys.nextElement();
+                        String key = keys.nextElement();
                         if (m_map.get(key) == null)
                         {
                             m_map.put(key, dict.get(key));
@@ -187,27 +192,32 @@ public class FilterImpl implements Filter
             }
         }
 
-        public int size()
+        @Override
+		public int size()
         {
             throw new UnsupportedOperationException("Not supported yet.");
         }
 
-        public boolean isEmpty()
+        @Override
+		public boolean isEmpty()
         {
             throw new UnsupportedOperationException("Not supported yet.");
         }
 
-        public boolean containsKey(Object o)
+        @Override
+		public boolean containsKey(Object o)
         {
             throw new UnsupportedOperationException("Not supported yet.");
         }
 
-        public boolean containsValue(Object o)
+        @Override
+		public boolean containsValue(Object o)
         {
             throw new UnsupportedOperationException("Not supported yet.");
         }
 
-        public Object get(Object o)
+        @Override
+		public Object get(Object o)
         {
             if (m_dict != null)
             {
@@ -220,39 +230,46 @@ public class FilterImpl implements Filter
             return null;
         }
 
-        public Object put(Object k, Object v)
+        @Override
+		public Object put(String k, Object v)
         {
             throw new UnsupportedOperationException("Not supported yet.");
         }
 
-        public Object remove(Object o)
+        @Override
+		public Object remove(Object o)
         {
             throw new UnsupportedOperationException("Not supported yet.");
         }
 
-        public void putAll(Map map)
+        @Override
+		public void putAll(Map<? extends String, ? extends Object> map)
         {
             throw new UnsupportedOperationException("Not supported yet.");
         }
 
-        public void clear()
+        @Override
+		public void clear()
         {
             throw new UnsupportedOperationException("Not supported yet.");
         }
 
-        public Set<Object> keySet()
+        @Override
+		public Set<String> keySet()
         {
             throw new UnsupportedOperationException("Not supported yet.");
         }
 
-        public Collection<Object> values()
+        @Override
+		public Collection<Object> values()
         {
             throw new UnsupportedOperationException("Not supported yet.");
         }
 
-        public Set<Entry<Object, Object>> entrySet()
+        @Override
+		public Set<Entry<String, Object>> entrySet()
         {
-            return Collections.EMPTY_SET;
+            return Collections.emptySet();
         }
     }
 }

@@ -41,13 +41,9 @@ import org.ops4j.pax.exam.options.SystemPropertyOption;
 import org.ops4j.pax.exam.options.UrlProvisionOption;
 import org.ops4j.pax.exam.options.extra.VMOption;
 import org.ops4j.pax.exam.util.PathUtils;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 
 public abstract class AbstractJettyTestSupport {
     protected static final String JETTY_VERSION = "12.0.19";
-
-    protected final Logger logger = LoggerFactory.getLogger(getClass());
 
     private final String workingDirectory = String.format("%s/target/paxexam/%s/%s", PathUtils.getBaseDir(), getClass().getSimpleName(), UUID.randomUUID());
 
@@ -77,8 +73,10 @@ public abstract class AbstractJettyTestSupport {
                         keepCaches(),
                         localMavenRepo(),
                         CoreOptions.workingDirectory(workingDirectory()),
+                        // update pax logging for SLF4J 2
+                        mavenBundle().groupId("org.ops4j.pax.logging").artifactId("pax-logging-api").version("2.3.0"),
                         optionalRemoteDebug(),
-                        mavenBundle().groupId("org.apache.felix").artifactId("org.apache.felix.http.servlet-api").version("3.0.0"),
+                        mavenBundle().groupId("org.apache.felix").artifactId("org.apache.felix.http.servlet-api").version("6.1.0"),
                         testBundle("bundle.filename"),
                         junitBundles(),
                         awaitility(),

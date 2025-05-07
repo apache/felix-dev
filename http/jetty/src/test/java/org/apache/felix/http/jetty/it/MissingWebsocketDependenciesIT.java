@@ -65,17 +65,17 @@ public class MissingWebsocketDependenciesIT extends AbstractJettyTestSupport {
         Awaitility.await("waitForLogs")
             .atMost(Duration.ofSeconds(50))
             .pollDelay(Duration.ofMillis(200))
-            .until(() -> containsString(logFile, "org.apache.felix.http.jetty[org.apache.felix.http]"));
+            .until(() -> containsString(logFile, "org.apache.felix.http.jetty [org.apache.felix.http]"));
 
-        assertTrue(containsString(logFile, "org.apache.felix.http.jetty[org.apache.felix.http] : Failed to initialize jetty specific websocket "
+        assertTrue(containsString(logFile, "org.apache.felix.http.jetty [org.apache.felix.http] WARN : Failed to initialize jetty specific websocket "
                 + "support since the initializer class was not found. Check if the websocket-jetty-server bundle is deployed."));
-        assertTrue(containsString(logFile, "org.apache.felix.http.jetty[org.apache.felix.http] : Failed to initialize jakarta standard websocket"
+        assertTrue(containsString(logFile, "org.apache.felix.http.jetty [org.apache.felix.http] WARN : Failed to initialize jakarta standard websocket"
                 + " support since the initializer class was not found. Check if the websocket-jakarta-server bundle is deployed."));
     }
 
     /**
      * Checks if the text is present in the file
-     * 
+     *
      * @param file the file to check
      * @param expected the text to look for
      * @return true if the text was found, false otherwise

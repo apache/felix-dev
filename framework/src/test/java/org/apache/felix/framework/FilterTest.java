@@ -29,16 +29,19 @@ import java.util.LinkedList;
 import java.util.List;
 import java.util.Set;
 
-import junit.framework.TestCase;
+import org.junit.jupiter.api.Test;
+
+import static org.assertj.core.api.Assertions.assertThat;
 import org.osgi.framework.Filter;
 import org.osgi.framework.FrameworkUtil;
 import org.osgi.framework.InvalidSyntaxException;
 
-public class FilterTest extends TestCase
+class FilterTest
 {
-    public void testMissingAttribute()
+    @Test
+    void missingAttribute()
     {
-        Dictionary<String, Object> dict = new Hashtable<String, Object>();
+        Dictionary<String, Object> dict = new Hashtable<>();
         dict.put("one", "one-value");
         dict.put("two", "two-value");
         dict.put("three", "three-value");
@@ -49,52 +52,53 @@ public class FilterTest extends TestCase
         }
         catch (Exception ex)
         {
-            assertTrue("Filter should parse: " + ex, false);
+            assertThat(false).as("Filter should parse: " + ex).isTrue();
         }
-        assertFalse("Filter should not match: " + filter, filter.match(dict));
+        assertThat(filter.match(dict)).as("Filter should not match: " + filter).isFalse();
     }
 
-    public void testArray() throws InvalidSyntaxException
+    @Test
+    void array() throws InvalidSyntaxException
     {
         Filter filter = FrameworkUtil.createFilter(
             "(&(checkBool=true)(checkString=A)(checkString=B))");
 
         //Array
         String[] array = new String[] { "A", "B" };
-        assertTrue(filter.match(createTestDict(array)));
+        assertThat(filter.match(createTestDict(array))).isTrue();
 
         //ArrayList
-        ArrayList<String> arrayList = new ArrayList<String>();
+        ArrayList<String> arrayList = new ArrayList<>();
         arrayList.addAll(Arrays.asList(array));
-        assertTrue(filter.match(createTestDict(arrayList)));
+        assertThat(filter.match(createTestDict(arrayList))).isTrue();
 
         //unmodifiableList
         List<String> unmodifiableList = Collections.unmodifiableList(arrayList);
-        assertTrue(filter.match(createTestDict(unmodifiableList)));
+        assertThat(filter.match(createTestDict(unmodifiableList))).isTrue();
 
         //unmodCollection
         Collection<String> unmodCollection = Collections.unmodifiableCollection(
             arrayList);
-        assertTrue(filter.match(createTestDict(unmodCollection)));
+        assertThat(filter.match(createTestDict(unmodCollection))).isTrue();
 
         //hashSet
-        Set<String> hashSet = new HashSet<String>();
+        Set<String> hashSet = new HashSet<>();
         hashSet.addAll(arrayList);
-        assertTrue(filter.match(createTestDict(hashSet)));
+        assertThat(filter.match(createTestDict(hashSet))).isTrue();
 
         //synchronizedCollection
         Collection<String> synchronizedCollection = Collections.synchronizedCollection(
             arrayList);
-        assertTrue(filter.match(createTestDict(synchronizedCollection)));
+        assertThat(filter.match(createTestDict(synchronizedCollection))).isTrue();
 
         //linkedList
-        Collection<String> linkedList = new LinkedList<String>(arrayList);
-        assertTrue(filter.match(createTestDict(linkedList)));
+        Collection<String> linkedList = new LinkedList<>(arrayList);
+        assertThat(filter.match(createTestDict(linkedList))).isTrue();
     }
 
     private static Dictionary<String, Object> createTestDict(Object o)
     {
-        Hashtable<String, Object> dictionary = new Hashtable<String, Object>();
+        Hashtable<String, Object> dictionary = new Hashtable<>();
         dictionary.put("checkBool", true);
         dictionary.put("checkString", o);
         return dictionary;

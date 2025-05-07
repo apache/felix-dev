@@ -37,7 +37,7 @@ import org.osgi.framework.ServiceReference;
 public class HookRegistry
 {
     /** no need to use a sync'ed structure as this is read only. */
-    private final static Map<String, Class<?>> HOOK_CLASSES = new HashMap<String, Class<?>>();
+    private final static Map<String, Class<?>> HOOK_CLASSES = new HashMap<>();
 
     static
     {
@@ -53,17 +53,17 @@ public class HookRegistry
         addHookClass(org.osgi.framework.hooks.resolver.ResolverHookFactory.class);
         addHookClass(org.osgi.service.url.URLStreamHandlerService.class);
         addHookClass(java.net.ContentHandler.class);
-    };
+    }
 
     private static void addHookClass(final Class<?> c) {
         HOOK_CLASSES.put(c.getName(), c);
     }
 
     private final Map<String, SortedSet<ServiceReference<?>>> m_allHooks =
-        new ConcurrentHashMap<String, SortedSet<ServiceReference<?>>>();
+        new ConcurrentHashMap<>();
 
     private final WeakHashMap<ServiceReference<?>, ServiceReference<?>> m_blackList =
-            new WeakHashMap<ServiceReference<?>, ServiceReference<?>>();
+            new WeakHashMap<>();
 
 
     static boolean isHook(final String[] classNames, final Class<?> hookClass, final Object svcObj)
@@ -125,11 +125,11 @@ public class HookRegistry
                     SortedSet<ServiceReference<?>> hooks = m_allHooks.get(serviceName);
                     if (hooks == null)
                     {
-                        hooks = new TreeSet<ServiceReference<?>>(Collections.reverseOrder());
+                        hooks = new TreeSet<>(Collections.reverseOrder());
                     }
                     else
                     {
-                        hooks = new TreeSet<ServiceReference<?>>(hooks);
+                        hooks = new TreeSet<>(hooks);
                     }
                     hooks.add(ref);
                     m_allHooks.put(serviceName, hooks);
@@ -159,7 +159,7 @@ public class HookRegistry
                     SortedSet<ServiceReference<?>> hooks = m_allHooks.get(serviceName);
                     if (hooks != null)
                     {
-                        TreeSet<ServiceReference<?>> newHooks = new TreeSet<ServiceReference<?>>(Collections.reverseOrder());
+                        TreeSet<ServiceReference<?>> newHooks = new TreeSet<>(Collections.reverseOrder());
                         for (ServiceReference<?> hook : hooks) {
                             newHooks.add(hook); // copy constructor / addAll() does not re-sort
                         }
@@ -190,7 +190,7 @@ public class HookRegistry
                     SortedSet<ServiceReference<?>> hooks = m_allHooks.get(serviceName);
                     if (hooks != null)
                     {
-                        hooks = new TreeSet<ServiceReference<?>>(hooks);
+                        hooks = new TreeSet<>(hooks);
                         hooks.remove(ref);
                         m_allHooks.put(serviceName, hooks);
                     }

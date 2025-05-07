@@ -25,7 +25,8 @@ import org.osgi.framework.launch.Framework;
 
 public class FrameworkFactory implements org.osgi.framework.launch.FrameworkFactory, org.osgi.framework.connect.ConnectFrameworkFactory
 {
-    public Framework newFramework(Map configuration)
+    @Override
+	public Framework newFramework(Map<String,String> configuration)
     {
         return new Felix(configuration);
     }
