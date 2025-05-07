@@ -114,9 +114,8 @@ public class JettyMaxFormSizeIT extends AbstractJettyTestSupport {
         formFieldsLimitExceeded.add(new Fields.Field("key", "valueoverlimit")); // over limit of 10 bytes
         ContentResponse responseExceeded = httpClient.FORM(uri, formFieldsLimitExceeded);
 
-        // TODO why does this need yield a HTTP 413?
-        // Seems maxFormSize is not enforced?
-        assertEquals(413, responseExceeded.getStatus());
+        // HTTP 500 thrown, because req.getParameter("key") throws an IOEx
+        assertEquals(500, responseExceeded.getStatus());
 
         httpClient.close();
     }
@@ -124,6 +123,7 @@ public class JettyMaxFormSizeIT extends AbstractJettyTestSupport {
      static final class HelloWorldServlet extends HttpServlet {
          @Override
          protected void doPost(HttpServletRequest req, HttpServletResponse resp) throws ServletException, IOException {
+             req.getParameter("key"); // this triggers the maxFormSize check
              resp.setStatus(200);
              resp.getWriter().write("OK");
          }
