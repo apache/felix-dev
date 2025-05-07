@@ -56,6 +56,7 @@ import org.eclipse.jetty.server.Server;
 import org.eclipse.jetty.server.ServerConnector;
 import org.eclipse.jetty.server.SslConnectionFactory;
 import org.eclipse.jetty.server.handler.ContextHandlerCollection;
+import org.eclipse.jetty.server.handler.SizeLimitHandler;
 import org.eclipse.jetty.server.handler.StatisticsHandler;
 import org.eclipse.jetty.server.handler.gzip.GzipHandler;
 import org.eclipse.jetty.session.HouseKeeper;
@@ -322,7 +323,18 @@ public final class JettyService
             final ServletHolder holder = new ServletHolder(this.controller.createDispatcherServlet());
             holder.setAsyncSupported(true);
             context.addServlet(holder, "/*");
+
+            // Not sure if this does anything still, since we're using async form API's
+            // see https://stackoverflow.com/a/78659566
             context.setMaxFormContentSize(this.config.getMaxFormSize());
+
+            int requestSizeLimit = this.config.getRequestSizeLimit();
+            int responseSizeLimit = this.config.getResponseSizeLimit();
+            if (requestSizeLimit > -1 || responseSizeLimit > -1) {
+                // Use SizeLimitHandler to limit the size of the request body and response
+                // -1 is unlimited
+                context.setHandler(new SizeLimitHandler(requestSizeLimit, responseSizeLimit));
+            }
 
             if (this.config.isRegisterMBeans())
             {

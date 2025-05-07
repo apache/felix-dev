@@ -79,21 +79,25 @@ public class JettyMaxFormSizeIT extends AbstractJettyTestSupport {
     protected Option felixHttpConfig(int httpPort) {
         return newConfiguration("org.apache.felix.http")
                 .put("org.osgi.service.http.port", httpPort)
-                .put("org.apache.felix.http.jetty.maxFormSize", LIMIT_IN_BYTES) // 10 bytes limit
+                .put("org.apache.felix.http.jetty.requestSizeLimit", LIMIT_IN_BYTES) // 10 bytes limit for the request
+                .put("org.apache.felix.http.jetty.responseSizeLimit", LIMIT_IN_BYTES) // 10 bytes limit for the response
                 .asOption();
     }
 
     @Before
     public void setup(){
         assertNotNull(bundleContext);
-        bundleContext.registerService(Servlet.class, new HelloWorldServlet(), new Hashtable<>(Map.of(
-                HttpWhiteboardConstants.HTTP_WHITEBOARD_SERVLET_PATTERN, "/*"
+        bundleContext.registerService(Servlet.class, new HelloWorldServletWithinLimit(), new Hashtable<>(Map.of(
+                HttpWhiteboardConstants.HTTP_WHITEBOARD_SERVLET_PATTERN, "/withinlimit/*"
+        )));
+        bundleContext.registerService(Servlet.class, new HelloWorldServletExceedingLimit(), new Hashtable<>(Map.of(
+                HttpWhiteboardConstants.HTTP_WHITEBOARD_SERVLET_PATTERN, "/exceedinglimit/*"
         )));
     }
 
 
     @Test
-    public void testFormSizeLimit() throws Exception {
+    public void testRequestResponseLimits() throws Exception {
         HttpClientTransportOverHTTP transport = new HttpClientTransportOverHTTP();
         HttpClient httpClient = new HttpClient(transport);
         httpClient.start();
@@ -101,31 +105,42 @@ public class JettyMaxFormSizeIT extends AbstractJettyTestSupport {
         Object value = bundleContext.getServiceReference(HttpService.class).getProperty("org.osgi.service.http.port");
         int httpPort = Integer.parseInt((String) value);
 
-        URI uri = new URI(String.format("http://localhost:%d/endpoint", httpPort));
-
         Fields formFields = new Fields();
         formFields.add(new Fields.Field("key", "value")); // under 10 bytes
-        ContentResponse response = httpClient.FORM(uri, formFields);
+        ContentResponse responseWithinLimit = httpClient.FORM(new URI(String.format("http://localhost:%d/withinlimit/a", httpPort)), formFields);
 
-        assertEquals(200, response.getStatus());
-        assertEquals("OK", response.getContentAsString());
+        // Request limit ok, response limit ok
+        assertEquals(200, responseWithinLimit.getStatus());
+        assertEquals("OK", responseWithinLimit.getContentAsString());
+
+        // Request limit ok, response limit exceeded
+        // org.eclipse.jetty.http.HttpException$RuntimeException: 500: Response body is too large: 17>10
+        ContentResponse responseExceedingLimit = httpClient.FORM(new URI(String.format("http://localhost:%d/exceedinglimit/a", httpPort)), formFields);
+        assertEquals(500, responseExceedingLimit.getStatus());
 
         Fields formFieldsLimitExceeded = new Fields();
         formFieldsLimitExceeded.add(new Fields.Field("key", "valueoverlimit")); // over limit of 10 bytes
-        ContentResponse responseExceeded = httpClient.FORM(uri, formFieldsLimitExceeded);
+        ContentResponse responseExceeded = httpClient.FORM(new URI(String.format("http://localhost:%d/withinlimit/a", httpPort)), formFieldsLimitExceeded);
 
-        // TODO why does this need yield a HTTP 413?
-        // Seems maxFormSize is not enforced?
+        // Request limit exceeded, HTTP 413 directly from Jetty
         assertEquals(413, responseExceeded.getStatus());
 
         httpClient.close();
     }
 
-     static final class HelloWorldServlet extends HttpServlet {
+     static final class HelloWorldServletWithinLimit extends HttpServlet {
          @Override
          protected void doPost(HttpServletRequest req, HttpServletResponse resp) throws ServletException, IOException {
              resp.setStatus(200);
              resp.getWriter().write("OK");
          }
+    }
+
+    static final class HelloWorldServletExceedingLimit extends HttpServlet {
+        @Override
+        protected void doPost(HttpServletRequest req, HttpServletResponse resp) throws ServletException, IOException {
+            resp.setStatus(200);
+            resp.getWriter().write("responseoverlimit");
+        }
     }
 }
