@@ -79,5 +79,7 @@ public class JettyUriComplianceModeLegacyIT extends JettyUriComplianceModeDefaul
         ContentResponse response2 = httpClient.GET(destUriAmbigousPath);
         assertEquals(200, response2.getStatus());
         assertEquals("OK", response2.getContentAsString());
+
+        httpClient.close();
     }
 }

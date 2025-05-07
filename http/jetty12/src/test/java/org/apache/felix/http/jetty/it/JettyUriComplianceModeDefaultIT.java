@@ -103,6 +103,8 @@ public class JettyUriComplianceModeDefaultIT extends AbstractJettyTestSupport {
 
         // blocked with HTTP 400 by default
         assertEquals(400, httpClient.GET(destUriAmbigousPath).getStatus());
+
+        httpClient.close();
     }
 
      static final class UriComplianceEndpoint extends HttpServlet {

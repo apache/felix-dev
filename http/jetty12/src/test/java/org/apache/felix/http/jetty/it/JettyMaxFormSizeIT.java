@@ -28,6 +28,7 @@ import java.util.Map;
 
 import javax.inject.Inject;
 import jakarta.servlet.Servlet;
+import jakarta.servlet.ServletException;
 import jakarta.servlet.http.HttpServlet;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
@@ -35,6 +36,7 @@ import jakarta.servlet.http.HttpServletResponse;
 import org.eclipse.jetty.client.ContentResponse;
 import org.eclipse.jetty.client.HttpClient;
 import org.eclipse.jetty.client.transport.HttpClientTransportOverHTTP;
+import org.eclipse.jetty.util.Fields;
 import org.junit.Before;
 import org.junit.Test;
 import org.junit.runner.RunWith;
@@ -48,7 +50,9 @@ import org.osgi.service.servlet.whiteboard.HttpWhiteboardConstants;
 
 @RunWith(PaxExam.class)
 @ExamReactorStrategy(PerClass.class)
-public class JettyVirtualThreadsIT extends AbstractJettyTestSupport {
+public class JettyMaxFormSizeIT extends AbstractJettyTestSupport {
+    private static final int LIMIT_IN_BYTES = 10;
+
 
     @Inject
     protected BundleContext bundleContext;
@@ -75,24 +79,21 @@ public class JettyVirtualThreadsIT extends AbstractJettyTestSupport {
     protected Option felixHttpConfig(int httpPort) {
         return newConfiguration("org.apache.felix.http")
                 .put("org.osgi.service.http.port", httpPort)
-                .put("org.apache.felix.http.jetty.virtualthreads.enable", Boolean.TRUE.toString())
+                .put("org.apache.felix.http.jetty.maxFormSize", LIMIT_IN_BYTES) // 10 bytes limit
                 .asOption();
     }
 
     @Before
     public void setup(){
         assertNotNull(bundleContext);
-        bundleContext.registerService(Servlet.class, new ExampleEndpoint(), new Hashtable<>(Map.of(
+        bundleContext.registerService(Servlet.class, new HelloWorldServlet(), new Hashtable<>(Map.of(
                 HttpWhiteboardConstants.HTTP_WHITEBOARD_SERVLET_PATTERN, "/*"
         )));
     }
 
+
     @Test
-    public void testJettyRunningWithVirtualThreads() throws Exception {
-        if (!System.getProperty("java.version").startsWith("21")) {
-            // This test only works on Java 21 or newer
-            return;
-        }
+    public void testFormSizeLimit() throws Exception {
         HttpClientTransportOverHTTP transport = new HttpClientTransportOverHTTP();
         HttpClient httpClient = new HttpClient(transport);
         httpClient.start();
@@ -100,20 +101,31 @@ public class JettyVirtualThreadsIT extends AbstractJettyTestSupport {
         Object value = bundleContext.getServiceReference(HttpService.class).getProperty("org.osgi.service.http.port");
         int httpPort = Integer.parseInt((String) value);
 
-        URI destUri = new URI(String.format("http://localhost:%d/endpoint/working", httpPort));
+        URI uri = new URI(String.format("http://localhost:%d/endpoint", httpPort));
 
-        ContentResponse response = httpClient.GET(destUri);
+        Fields formFields = new Fields();
+        formFields.add(new Fields.Field("key", "value")); // under 10 bytes
+        ContentResponse response = httpClient.FORM(uri, formFields);
+
         assertEquals(200, response.getStatus());
         assertEquals("OK", response.getContentAsString());
+
+        Fields formFieldsLimitExceeded = new Fields();
+        formFieldsLimitExceeded.add(new Fields.Field("key", "valueoverlimit")); // over limit of 10 bytes
+        ContentResponse responseExceeded = httpClient.FORM(uri, formFieldsLimitExceeded);
+
+        // HTTP 500 thrown, because req.getParameter("key") throws an IOEx
+        assertEquals(500, responseExceeded.getStatus());
 
         httpClient.close();
     }
 
-     static final class ExampleEndpoint extends HttpServlet {
-        @Override
-        protected void doGet(HttpServletRequest req, HttpServletResponse resp) throws IOException {
-            resp.setStatus(200);
-            resp.getWriter().write("OK");
-        }
+     static final class HelloWorldServlet extends HttpServlet {
+         @Override
+         protected void doPost(HttpServletRequest req, HttpServletResponse resp) throws ServletException, IOException {
+             req.getParameter("key"); // this triggers the maxFormSize check
+             resp.setStatus(200);
+             resp.getWriter().write("OK");
+         }
     }
 }
