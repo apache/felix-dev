@@ -18,7 +18,12 @@
  */
 package org.apache.felix.framework;
 
-import junit.framework.TestCase;
+import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.Assertions.fail;
+
+import org.junit.jupiter.api.AfterEach;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
 import org.osgi.framework.Bundle;
 import org.osgi.framework.Constants;
 import org.osgi.framework.launch.Framework;
@@ -38,26 +43,25 @@ import java.util.Map;
 import java.util.jar.JarOutputStream;
 import java.util.jar.Manifest;
 
-public class ResolveTest extends TestCase
+class ResolveTest
 {
     private File tempDir;
     private Framework felix;
     private File cacheDir;
 
-    @Override
-    protected void setUp() throws Exception
+    @BeforeEach
+    void setUp() throws Exception
     {
-        super.setUp();
         tempDir = File.createTempFile("felix-temp", ".dir");
-        assertTrue("precondition", tempDir.delete());
-        assertTrue("precondition", tempDir.mkdirs());
+        assertThat(tempDir.delete()).as("precondition").isTrue();
+        assertThat(tempDir.mkdirs()).as("precondition").isTrue();
 
         cacheDir = new File(tempDir, "felix-cache");
-        assertTrue("precondition", cacheDir.mkdir());
+        assertThat(cacheDir.mkdir()).as("precondition").isTrue();
 
         String cache = cacheDir.getPath();
 
-        Map<String,String> params = new HashMap<String, String>();
+        Map<String,String> params = new HashMap<>();
         params.put("felix.cache.profiledir", cache);
         params.put("felix.cache.dir", cache);
         params.put(Constants.FRAMEWORK_STORAGE, cache);
@@ -67,10 +71,9 @@ public class ResolveTest extends TestCase
         felix.start();
     }
 
-    @Override
-    protected void tearDown() throws Exception
+    @AfterEach
+    void tearDown() throws Exception
     {
-        super.tearDown();
 
         felix.stop(); // Note that this method is async
         felix = null;
@@ -80,7 +83,8 @@ public class ResolveTest extends TestCase
         cacheDir = null;
     }
 
-    public void testResolveFragmentWithHost() throws Exception
+    @Test
+    void resolveFragmentWithHost() throws Exception
     {
         String bmf = "Bundle-SymbolicName: cap.bundle\n"
             + "Bundle-Version: 1.2.3.Blah\n"
@@ -99,16 +103,17 @@ public class ResolveTest extends TestCase
         Bundle h = felix.getBundleContext().installBundle(bundleFile.toURI().toASCIIString());
         Bundle f = felix.getBundleContext().installBundle(fragFile.toURI().toASCIIString());
 
-        assertEquals(Bundle.INSTALLED, h.getState());
-        assertEquals(Bundle.INSTALLED, f.getState());
+        assertThat(h.getState()).isEqualTo(Bundle.INSTALLED);
+        assertThat(f.getState()).isEqualTo(Bundle.INSTALLED);
 
         felix.adapt(FrameworkWiring.class).resolveBundles(Collections.singletonList(h));
 
-        assertEquals(Bundle.RESOLVED, h.getState());
-        assertEquals(Bundle.RESOLVED, f.getState());
+        assertThat(h.getState()).isEqualTo(Bundle.RESOLVED);
+        assertThat(f.getState()).isEqualTo(Bundle.RESOLVED);
     }
 
-    public void testResolveOnlyMatchingFragmentWithHost() throws Exception
+    @Test
+    void resolveOnlyMatchingFragmentWithHost() throws Exception
     {
         String bmf = "Bundle-SymbolicName: cap.bundle\n"
             + "Bundle-Version: 1.2.3.Blah\n"
@@ -144,20 +149,21 @@ public class ResolveTest extends TestCase
         Bundle ho = felix.getBundleContext().installBundle(bundleFileO.toURI().toASCIIString());
         Bundle fo = felix.getBundleContext().installBundle(fragFileO.toURI().toASCIIString());
 
-        assertEquals(Bundle.INSTALLED, h.getState());
-        assertEquals(Bundle.INSTALLED, f.getState());
-        assertEquals(Bundle.INSTALLED, ho.getState());
-        assertEquals(Bundle.INSTALLED, fo.getState());
+        assertThat(h.getState()).isEqualTo(Bundle.INSTALLED);
+        assertThat(f.getState()).isEqualTo(Bundle.INSTALLED);
+        assertThat(ho.getState()).isEqualTo(Bundle.INSTALLED);
+        assertThat(fo.getState()).isEqualTo(Bundle.INSTALLED);
 
         felix.adapt(FrameworkWiring.class).resolveBundles(Collections.singletonList(h));
 
-        assertEquals(Bundle.RESOLVED, h.getState());
-        assertEquals(Bundle.RESOLVED, f.getState());
-        assertEquals(Bundle.INSTALLED, ho.getState());
-        assertEquals(Bundle.INSTALLED, fo.getState());
+        assertThat(h.getState()).isEqualTo(Bundle.RESOLVED);
+        assertThat(f.getState()).isEqualTo(Bundle.RESOLVED);
+        assertThat(ho.getState()).isEqualTo(Bundle.INSTALLED);
+        assertThat(fo.getState()).isEqualTo(Bundle.INSTALLED);
     }
 
-    public void testResolveDynamicWithOnlyMatchingFragmentWithHost() throws Exception
+    @Test
+    void resolveDynamicWithOnlyMatchingFragmentWithHost() throws Exception
     {
         String bmf = "Bundle-SymbolicName: cap.bundle\n"
             + "Bundle-Version: 1.2.3.Blah\n"
@@ -215,64 +221,64 @@ public class ResolveTest extends TestCase
         Bundle req = felix.getBundleContext().installBundle(reqFile.toURI().toASCIIString());
         Bundle reqn = felix.getBundleContext().installBundle(reqnFile.toURI().toASCIIString());
 
-        assertEquals(Bundle.INSTALLED, h.getState());
-        assertEquals(Bundle.INSTALLED, f.getState());
-        assertEquals(Bundle.INSTALLED, ho.getState());
-        assertEquals(Bundle.INSTALLED, fo.getState());
-        assertEquals(Bundle.INSTALLED, dyn.getState());
-        assertEquals(Bundle.INSTALLED, req.getState());
-        assertEquals(Bundle.INSTALLED, reqn.getState());
+        assertThat(h.getState()).isEqualTo(Bundle.INSTALLED);
+        assertThat(f.getState()).isEqualTo(Bundle.INSTALLED);
+        assertThat(ho.getState()).isEqualTo(Bundle.INSTALLED);
+        assertThat(fo.getState()).isEqualTo(Bundle.INSTALLED);
+        assertThat(dyn.getState()).isEqualTo(Bundle.INSTALLED);
+        assertThat(req.getState()).isEqualTo(Bundle.INSTALLED);
+        assertThat(reqn.getState()).isEqualTo(Bundle.INSTALLED);
 
         felix.adapt(FrameworkWiring.class).resolveBundles(Collections.singletonList(dyn));
 
-        assertEquals(Bundle.INSTALLED, h.getState());
-        assertEquals(Bundle.INSTALLED, f.getState());
-        assertEquals(Bundle.INSTALLED, ho.getState());
-        assertEquals(Bundle.INSTALLED, fo.getState());
-        assertEquals(Bundle.RESOLVED, dyn.getState());
-        assertEquals(Bundle.INSTALLED, req.getState());
-        assertEquals(Bundle.INSTALLED, reqn.getState());
+        assertThat(h.getState()).isEqualTo(Bundle.INSTALLED);
+        assertThat(f.getState()).isEqualTo(Bundle.INSTALLED);
+        assertThat(ho.getState()).isEqualTo(Bundle.INSTALLED);
+        assertThat(fo.getState()).isEqualTo(Bundle.INSTALLED);
+        assertThat(dyn.getState()).isEqualTo(Bundle.RESOLVED);
+        assertThat(req.getState()).isEqualTo(Bundle.INSTALLED);
+        assertThat(reqn.getState()).isEqualTo(Bundle.INSTALLED);
 
         try
         {
             dyn.loadClass("org.foo.bar.Bar");
-            fail();
+            fail("");
         }
         catch (Exception ex)
         {
             // Expected
         }
-        assertEquals(Bundle.RESOLVED, h.getState());
-        assertEquals(Bundle.RESOLVED, f.getState());
-        assertEquals(Bundle.INSTALLED, ho.getState());
-        assertEquals(Bundle.INSTALLED, fo.getState());
-        assertEquals(Bundle.RESOLVED, dyn.getState());
-        assertEquals(Bundle.RESOLVED, req.getState());
-        assertEquals(Bundle.INSTALLED, reqn.getState());
+        assertThat(h.getState()).isEqualTo(Bundle.RESOLVED);
+        assertThat(f.getState()).isEqualTo(Bundle.RESOLVED);
+        assertThat(ho.getState()).isEqualTo(Bundle.INSTALLED);
+        assertThat(fo.getState()).isEqualTo(Bundle.INSTALLED);
+        assertThat(dyn.getState()).isEqualTo(Bundle.RESOLVED);
+        assertThat(req.getState()).isEqualTo(Bundle.RESOLVED);
+        assertThat(reqn.getState()).isEqualTo(Bundle.INSTALLED);
         List<BundleWire> requiredWires = dyn.adapt(BundleWiring.class).getRequiredWires(BundleRevision.PACKAGE_NAMESPACE);
-        assertEquals(1, requiredWires.size());
-        assertEquals(requiredWires.get(0).getProvider().getBundle(), h);
+        assertThat(requiredWires).hasSize(1);
+        assertThat(h).isEqualTo(requiredWires.get(0).getProvider().getBundle());
 
         try
         {
             dyn.loadClass("org.foo.baz.Bar");
-            fail();
+            fail("");
         }
         catch (Exception ex)
         {
             // Expected
         }
-        assertEquals(Bundle.RESOLVED, h.getState());
-        assertEquals(Bundle.RESOLVED, f.getState());
-        assertEquals(Bundle.RESOLVED, ho.getState());
-        assertEquals(Bundle.RESOLVED, fo.getState());
-        assertEquals(Bundle.RESOLVED, dyn.getState());
-        assertEquals(Bundle.RESOLVED, req.getState());
-        assertEquals(Bundle.INSTALLED, reqn.getState());
+        assertThat(h.getState()).isEqualTo(Bundle.RESOLVED);
+        assertThat(f.getState()).isEqualTo(Bundle.RESOLVED);
+        assertThat(ho.getState()).isEqualTo(Bundle.RESOLVED);
+        assertThat(fo.getState()).isEqualTo(Bundle.RESOLVED);
+        assertThat(dyn.getState()).isEqualTo(Bundle.RESOLVED);
+        assertThat(req.getState()).isEqualTo(Bundle.RESOLVED);
+        assertThat(reqn.getState()).isEqualTo(Bundle.INSTALLED);
         requiredWires = dyn.adapt(BundleWiring.class).getRequiredWires(BundleRevision.PACKAGE_NAMESPACE);
-        assertEquals(2, requiredWires.size());
-        assertEquals(requiredWires.get(0).getProvider().getBundle(), h);
-        assertEquals(requiredWires.get(1).getProvider().getBundle(), ho);
+        assertThat(requiredWires).hasSize(2);
+        assertThat(h).isEqualTo(requiredWires.get(0).getProvider().getBundle());
+        assertThat(ho).isEqualTo(requiredWires.get(1).getProvider().getBundle());
     }
 
     private File createBundle(String manifest) throws IOException
@@ -295,6 +301,6 @@ public class ResolveTest extends TestCase
                 deleteDir(file);
             }
         }
-        assertTrue(root.delete());
+        assertThat(root.delete()).isTrue();
     }
 }

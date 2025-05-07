@@ -156,14 +156,8 @@ public abstract class BaseIntegrationTest {
 
                 // scavenge sessions every 10 seconds (10 minutes is default in 9.4.x)
                 systemProperty("org.eclipse.jetty.servlet.SessionScavengingInterval").value("10"),
-                mavenBundle("org.slf4j", "slf4j-api", "1.7.32"),
-                mavenBundle("org.slf4j", "jcl-over-slf4j", "1.7.32"),
-                mavenBundle("org.slf4j", "log4j-over-slf4j", "1.7.32"),
-
-                mavenBundle("org.apache.felix", "org.apache.felix.log", "1.2.6"),
-                mavenBundle("org.apache.sling", "org.apache.sling.commons.log", "5.3.0"),
-                mavenBundle("org.apache.sling", "org.apache.sling.commons.logservice", "1.1.0"),
-
+                // update pax logging for SLF4J 2
+                mavenBundle().groupId("org.ops4j.pax.logging").artifactId("pax-logging-api").version("2.3.0"),                mavenBundle("org.slf4j", "slf4j-api", "2.0.17"),
                 mavenBundle("org.apache.sling", "org.apache.sling.commons.johnzon", "1.2.16").startLevel(START_LEVEL_SYSTEM_BUNDLES),
 
                 mavenBundle("org.apache.felix", "org.apache.felix.configadmin").version("1.9.22").startLevel(START_LEVEL_SYSTEM_BUNDLES),
@@ -246,7 +240,7 @@ public abstract class BaseIntegrationTest {
 
         for (final ServiceReference<ManagedService> serviceRef : serviceRefs) {
             ManagedService service = m_context.getService(serviceRef);
-            try {                
+            try {
                 service.updated(props);
             } catch (ConfigurationException ex) {
                 fail("Invalid configuration provisioned: " + ex.getMessage());

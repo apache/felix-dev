@@ -25,14 +25,14 @@ import java.util.*;
  * This is a simple class that implements a <tt>Dictionary</tt>
  * from a <tt>Map</tt>. The resulting dictionary is immutable.
 **/
-public class MapToDictionary extends Dictionary
+public class MapToDictionary<K,V> extends Dictionary<K,V>
 {
     /**
      * Map source.
     **/
-    private Map m_map = null;
+    private Map<K,V> m_map = null;
 
-    public MapToDictionary(Map map)
+    public MapToDictionary(Map<K,V> map)
     {
         if (map == null)
         {
@@ -41,42 +41,50 @@ public class MapToDictionary extends Dictionary
         m_map = map;
     }
 
-    public Enumeration elements()
+    @Override
+	public Enumeration<V> elements()
     {
         return Collections.enumeration(m_map.values());
     }
 
-    public Object get(Object key)
+    @Override
+	public V get(Object key)
     {
         return m_map.get(key);
     }
 
-    public boolean isEmpty()
+    @Override
+	public boolean isEmpty()
     {
         return m_map.isEmpty();
     }
 
-    public Enumeration keys()
+    @Override
+	public Enumeration<K> keys()
     {
         return Collections.enumeration(m_map.keySet());
     }
 
-    public Object put(Object key, Object value)
+    @Override
+	public V put(K key, V value)
     {
         throw new UnsupportedOperationException();
     }
 
-    public Object remove(Object key)
+    @Override
+	public V remove(Object key)
     {
         throw new UnsupportedOperationException();
     }
 
-    public int size()
+    @Override
+	public int size()
     {
         return m_map.size();
     }
 
-    public String toString()
+    @Override
+	public String toString()
     {
         return m_map.toString();
     }

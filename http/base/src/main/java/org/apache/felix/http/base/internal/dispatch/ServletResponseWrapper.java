@@ -150,4 +150,46 @@ final class ServletResponseWrapper extends HttpServletResponseWrapper
             super.sendError(code, message);
         }
     }
+
+
+    @Override
+    public void sendRedirect(String location, int sc) throws IOException {
+        this.sendRedirect(location, sc, true);
+    }
+
+    @Override
+    public void sendRedirect(String location, boolean clearBuffer) throws IOException {
+        this.sendRedirect(location, SC_FOUND, clearBuffer);
+    }
+
+    @Override
+    public void sendRedirect(final String location, final int sc, final boolean clearBuffer) throws IOException {
+        if (this.request.getServletContext().getMajorVersion() > 6
+            || (this.request.getServletContext().getMajorVersion() == 6 && this.request.getServletContext().getMinorVersion() >= 1)) {
+            // Servlet API 6.1
+            super.sendRedirect(location, sc, clearBuffer);
+        } else {
+            // Servlet API 6.0
+            if (sc == SC_FOUND && clearBuffer) {
+                this.sendRedirect(location);
+            } else {
+                if (isCommitted()) {
+                    throw new IllegalStateException("Response already committed");
+                }
+
+                // Ignore any call from an included servlet
+                if (request.getAttribute(RequestDispatcher.INCLUDE_REQUEST_URI) != null) {
+                    return;
+                }
+
+                if (clearBuffer) {
+                    this.resetBuffer();
+                }
+                this.setStatus(sc);
+                this.setHeader("Location", location);
+
+                this.flushBuffer();
+            }
+        }
+    }
 }

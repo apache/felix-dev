@@ -21,17 +21,18 @@ package org.apache.felix.framework.util;
 import java.util.Enumeration;
 import java.util.NoSuchElementException;
 
-public class CompoundEnumeration implements Enumeration
+public class CompoundEnumeration<T> implements Enumeration<T>
 {
-    private Enumeration[] m_enums = null;
+    private Enumeration<T>[] m_enums = null;
     private int index = 0;
 
-    public CompoundEnumeration(Enumeration[] enums)
+    public CompoundEnumeration(Enumeration<T>[] enums)
     {
         m_enums = enums;
     }
 
-    public boolean hasMoreElements()
+    @Override
+	public boolean hasMoreElements()
     {
         // if the current enum is null that means this enum is finished
         if (currentEnumeration() == null)
@@ -43,12 +44,12 @@ public class CompoundEnumeration implements Enumeration
         return currentEnumeration().hasMoreElements();
     }
 
-    private Enumeration findNextEnumeration(boolean moveCursor)
+    private Enumeration<T> findNextEnumeration(boolean moveCursor)
     {
         return findNextEnumeration(index, moveCursor);
     }
 
-    private Enumeration findNextEnumeration(int cursor, boolean moveCursor)
+    private Enumeration<T> findNextEnumeration(int cursor, boolean moveCursor)
     {
         // next place in the array
         int next = cursor + 1;
@@ -75,7 +76,8 @@ public class CompoundEnumeration implements Enumeration
         return null;
     }
 
-    public Object nextElement()
+    @Override
+	public T nextElement()
     {
         // ask for the next element of the current enum.
         if (currentEnumeration() != null)
@@ -88,13 +90,13 @@ public class CompoundEnumeration implements Enumeration
         throw new NoSuchElementException("No more elements");
     }
 
-    private Enumeration currentEnumeration()
+    private Enumeration<T> currentEnumeration()
     {
         if (m_enums != null)
         {
             if (index < m_enums.length)
             {
-                Enumeration e = m_enums[index];
+                Enumeration<T> e = m_enums[index];
                 if (e == null || !e.hasMoreElements())
                 {
                     // the current enum is null or empty

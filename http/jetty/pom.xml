@@ -77,7 +77,7 @@
                                             && !"org.eclipse.jetty.websocket".equals(artifact.getGroupId()) // skip the optional websocket artifacts
                                             && !"jetty-annotations".equals(artifact.getArtifactId()) // skip the transitive artifacts from the optional websocket artifacts
                                             && !"jetty-plus".equals(artifact.getArtifactId())
-                                            && !"jetty-webapp".equals(artifact.getArtifactId())) { 
+                                            && !"jetty-webapp".equals(artifact.getArtifactId())) {
                                         def jar;
                                         try {
                                             jar = new java.util.jar.JarFile(artifact.file)
@@ -209,7 +209,6 @@
                             org.osgi.service.http.context;version="[1.1,1.2)",
                             org.osgi.service.http.runtime;version="[1.1,1.2)",
                             org.osgi.service.http.runtime.dto;version="[1.1,1.2)",
-                            org.slf4j;version="[1.0,3.0)",
                             *
                         </Import-Package>
                         <DynamicImport-Package>
@@ -376,6 +375,12 @@
 
     <dependencies>
         <dependency>
+            <groupId>org.slf4j</groupId>
+            <artifactId>slf4j-api</artifactId>
+            <version>2.0.17</version>
+            <scope>provided</scope>
+        </dependency>
+        <dependency>
             <groupId>javax.servlet</groupId>
             <artifactId>javax.servlet-api</artifactId>
             <version>3.1.0</version>
@@ -494,7 +499,7 @@
         <dependency>
             <groupId>org.apache.felix</groupId>
             <artifactId>org.apache.felix.http.base</artifactId>
-            <version>5.1.11-SNAPSHOT</version>
+            <version>5.1.13-SNAPSHOT</version>
         </dependency>
         <dependency>
             <groupId>org.apache.felix</groupId>
@@ -509,7 +514,7 @@
         <dependency>
             <groupId>commons-io</groupId>
             <artifactId>commons-io</artifactId>
-            <version>2.14.0</version>
+            <version>2.19.0</version>
         </dependency>
     <!-- Testing -->
         <dependency>
@@ -598,7 +603,7 @@
         <dependency>
             <groupId>org.slf4j</groupId>
             <artifactId>slf4j-simple</artifactId>
-            <version>2.0.13</version>
+            <version>2.0.17</version>
             <scope>test</scope>
         </dependency>
 

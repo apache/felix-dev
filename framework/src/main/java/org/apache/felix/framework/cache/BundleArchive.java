@@ -78,7 +78,7 @@ public class BundleArchive
     private static final transient String DATA_DIRECTORY = "data";
 
     private final Logger m_logger;
-    private final Map m_configMap;
+    private final Map<?,?> m_configMap;
     private final WeakZipFileFactory m_zipFactory;
     private final File m_archiveRootDir;
 
@@ -106,7 +106,7 @@ public class BundleArchive
 
     // Maps a Long revision number to a BundleRevision.
     private final SortedMap<Long, BundleArchiveRevision> m_revisions
-        = new TreeMap<Long, BundleArchiveRevision>();
+        = new TreeMap<>();
 
     /**
      * <p>
@@ -125,7 +125,7 @@ public class BundleArchive
      * @param is input stream from which to read the bundle content.
      * @throws Exception if any error occurs.
     **/
-    public BundleArchive(Logger logger, Map configMap, WeakZipFileFactory zipFactory, ModuleConnector
+    public BundleArchive(Logger logger, Map<?,?> configMap, WeakZipFileFactory zipFactory, ModuleConnector
         connectFactory,
         File archiveRootDir, long id, int startLevel, String location, InputStream is)
         throws Exception
@@ -152,7 +152,7 @@ public class BundleArchive
         initialize();
 
         // Add a revision for the content.
-        reviseInternal(false, new Long(0), m_originalLocation, is);
+        reviseInternal(false, 0L, m_originalLocation, is);
     }
 
     /**
@@ -167,7 +167,7 @@ public class BundleArchive
      * @param configMap configMap for BundleArchive
      * @throws Exception if any error occurs.
     **/
-    public BundleArchive(Logger logger, Map configMap, WeakZipFileFactory zipFactory, ModuleConnector connectFactory,
+    public BundleArchive(Logger logger, Map<?,?> configMap, WeakZipFileFactory zipFactory, ModuleConnector connectFactory,
         File archiveRootDir)
         throws Exception
     {
@@ -457,8 +457,8 @@ public class BundleArchive
         throws Exception
     {
         Long revNum = (m_revisions.isEmpty())
-            ? new Long(0)
-            : new Long(m_revisions.lastKey().longValue() + 1);
+            ? 0L
+            : m_revisions.lastKey().longValue() + 1;
 
         reviseInternal(false, revNum, location, is);
     }
@@ -647,7 +647,7 @@ public class BundleArchive
 
         // Record whether the current revision has native libraries, which
         // we'll use later to determine if we need to rename its directory.
-        Map<String, Object> headers = getCurrentRevision().getManifestHeader();
+        Map<String, String> headers = getCurrentRevision().getManifestHeader();
 
         boolean hasNativeLibs = headers != null && getCurrentRevision().getManifestHeader()
             .containsKey(Constants.BUNDLE_NATIVECODE);
@@ -708,10 +708,8 @@ public class BundleArchive
     **/
     private void initialize() throws Exception
     {
-        OutputStream os = null;
-        BufferedWriter bw = null;
-
-        try
+        try (OutputStream os = null;
+			 BufferedWriter bw = null)
         {
             // If the archive directory exists, then we don't
             // need to initialize since it has already been done.
@@ -730,11 +728,6 @@ public class BundleArchive
             }
 
             writeBundleInfo();
-        }
-        finally
-        {
-            if (bw != null) bw.close();
-            if (os != null) os.close();
         }
     }
 

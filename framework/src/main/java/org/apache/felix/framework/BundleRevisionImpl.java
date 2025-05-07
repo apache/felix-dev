@@ -27,6 +27,7 @@ import java.util.Collections;
 import java.util.Enumeration;
 import java.util.List;
 import java.util.Map;
+import java.util.stream.Collectors;
 
 import org.apache.felix.framework.cache.Content;
 import org.apache.felix.framework.util.FelixConstants;
@@ -52,7 +53,7 @@ public class BundleRevisionImpl implements BundleRevision, Resource
     public final static int LAZY_ACTIVATION = 1;
 
     private final String m_id;
-    private final Map<String, Object> m_headerMap;
+    private final Map<String, String> m_headerMap;
 
     private final String m_manifestVersion;
     private final boolean m_isExtension;
@@ -104,7 +105,7 @@ public class BundleRevisionImpl implements BundleRevision, Resource
     }
 
     BundleRevisionImpl(
-        BundleImpl bundle, String id, Map<String, Object> headerMap, Content content)
+        BundleImpl bundle, String id, Map<String, String> headerMap, Content content)
         throws BundleException
     {
         m_bundle = bundle;
@@ -182,32 +183,36 @@ public class BundleRevisionImpl implements BundleRevision, Resource
     // BundleRevision methods.
     //
 
-    public String getSymbolicName()
+    @Override
+	public String getSymbolicName()
     {
         return m_symbolicName;
     }
 
-    public Version getVersion()
+    @Override
+	public Version getVersion()
     {
         return m_version;
     }
 
-    public List<Capability> getCapabilities(String namespace)
+    @Override
+	public List<Capability> getCapabilities(String namespace)
     {
         return asCapabilityList(getDeclaredCapabilities(namespace));
     }
 
-    static List<Capability> asCapabilityList(List reqs)
+    static List<Capability> asCapabilityList(List<BundleCapability> reqs)
     {
-        return reqs;
+        return reqs.stream().map(Capability.class::cast).collect(Collectors.toList());
     }
 
-    public List<BundleCapability> getDeclaredCapabilities(String namespace)
+    @Override
+	public List<BundleCapability> getDeclaredCapabilities(String namespace)
     {
         List<BundleCapability> result = m_declaredCaps;
         if (namespace != null)
         {
-            result = new ArrayList<BundleCapability>();
+            result = new ArrayList<>();
             for (BundleCapability cap : m_declaredCaps)
             {
                 if (cap.getNamespace().equals(namespace))
@@ -219,22 +224,24 @@ public class BundleRevisionImpl implements BundleRevision, Resource
         return result;
     }
 
-    public List<Requirement> getRequirements(String namespace)
+    @Override
+	public List<Requirement> getRequirements(String namespace)
     {
         return asRequirementList(getDeclaredRequirements(namespace));
     }
 
-    static List<Requirement> asRequirementList(List reqs)
+    static List<Requirement> asRequirementList(List<BundleRequirement> reqs)
     {
-        return reqs;
+        return reqs.stream().map(Requirement.class::cast).collect(Collectors.toList());
     }
 
-    public List<BundleRequirement> getDeclaredRequirements(String namespace)
+    @Override
+	public List<BundleRequirement> getDeclaredRequirements(String namespace)
     {
         List<BundleRequirement> result = m_declaredReqs;
         if (namespace != null)
         {
-            result = new ArrayList<BundleRequirement>();
+            result = new ArrayList<>();
             for (BundleRequirement req : m_declaredReqs)
             {
                 if (req.getNamespace().equals(namespace))
@@ -246,17 +253,20 @@ public class BundleRevisionImpl implements BundleRevision, Resource
         return result;
     }
 
-    public int getTypes()
+    @Override
+	public int getTypes()
     {
         return (getManifestVersion().equals("2") && m_isFragment) ? BundleRevision.TYPE_FRAGMENT : 0;
     }
 
-    public BundleWiring getWiring()
+    @Override
+	public BundleWiring getWiring()
     {
         return m_wiring;
     }
 
-    public BundleImpl getBundle()
+    @Override
+	public BundleImpl getBundle()
     {
         return m_bundle;
     }
@@ -265,7 +275,7 @@ public class BundleRevisionImpl implements BundleRevision, Resource
     // Implementating details.
     //
 
-    public Map<String, Object> getHeaders()
+    public Map<String, String> getHeaders()
     {
         return m_headerMap;
     }
@@ -376,7 +386,7 @@ public class BundleRevisionImpl implements BundleRevision, Resource
         {
             return m_contentPath;
         }
-        List<Content> contentList = new ArrayList();
+        List<Content> contentList = new ArrayList<>();
         calculateContentPath(this, getContent(), contentList, true);
 
         List<BundleRevision> fragments = null;
@@ -401,7 +411,7 @@ public class BundleRevisionImpl implements BundleRevision, Resource
         return m_contentPath = contentList;
     }
 
-    private List calculateContentPath(
+    private List<Content> calculateContentPath(
         BundleRevision revision, Content content, List<Content> contentList,
         boolean searchFragments)
     {
@@ -411,7 +421,7 @@ public class BundleRevisionImpl implements BundleRevision, Resource
         // objects for everything on the class path.
 
         // Create a list to contain the content path for the specified content.
-        List localContentList = new ArrayList();
+        List<Content> localContentList = new ArrayList<>();
 
         // Find class path meta-data.
         String classPath = (String) ((BundleRevisionImpl) revision)
@@ -422,7 +432,7 @@ public class BundleRevisionImpl implements BundleRevision, Resource
 
         if (classPathStrings == null)
         {
-            classPathStrings = new ArrayList<String>(0);
+            classPathStrings = new ArrayList<>(0);
         }
 
         // Create the bundles class path.
@@ -469,7 +479,7 @@ public class BundleRevisionImpl implements BundleRevision, Resource
                 {
 // TODO: FRAMEWORK - Per the spec, this should fire a FrameworkEvent.INFO event;
 //       need to create an "Eventer" class like "Logger" perhaps.
-                    ((BundleImpl) m_bundle).getFramework().getLogger().log(
+                    m_bundle.getFramework().getLogger().log(
                         getBundle(), Logger.LOG_INFO,
                         "Class path entry not found: "
                         + classPathStrings.get(i));
@@ -526,9 +536,9 @@ public class BundleRevisionImpl implements BundleRevision, Resource
         return url;
     }
 
-    Enumeration getResourcesLocal(String name)
+    Enumeration<URL> getResourcesLocal(String name)
     {
-        List l = new ArrayList();
+        List<URL> urls = new ArrayList<>();
 
         // Special case "/" so that it returns a root URLs for
         // each bundle class path entry...this isn't very
@@ -541,7 +551,7 @@ public class BundleRevisionImpl implements BundleRevision, Resource
         {
             for (int i = 0; i < contentPath.size(); i++)
             {
-                l.add(createURL(i + 1, name));
+                urls.add(createURL(i + 1, name));
             }
         }
         else
@@ -565,12 +575,12 @@ public class BundleRevisionImpl implements BundleRevision, Resource
                     // that we can differentiate between module content URLs
                     // (where the path will start with 0) and module class
                     // path URLs.
-                    l.add(createURL(i + 1, name));
+                    urls.add(createURL(i + 1, name));
                 }
             }
         }
 
-        return Collections.enumeration(l);
+        return Collections.enumeration(urls);
     }
 
     // TODO: API: Investigate how to handle this better, perhaps we need
@@ -706,7 +716,7 @@ public class BundleRevisionImpl implements BundleRevision, Resource
         }
         catch (Exception ex)
         {
-            ((BundleImpl) m_bundle).getFramework().getLogger().log(
+            m_bundle.getFramework().getLogger().log(
                 Logger.LOG_ERROR, "Error releasing revision: " + ex.getMessage(), ex);
         }
         m_content.close();
