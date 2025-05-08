@@ -38,17 +38,12 @@
     <url>https://gitbox.apache.org/repos/asf?p=felix-dev.git</url>
     <tag>org.apache.felix.framework-7.0.2</tag>
   </scm>
-
+ 
   <build>
     <plugins>
       <plugin>
         <groupId>org.apache.maven.plugins</groupId>
         <artifactId>maven-surefire-plugin</artifactId>
-        <configuration>
-          <argLine>
-            -Djava.security.manager=allow
-          </argLine>
-        </configuration>
       </plugin>
       <plugin>
         <groupId>org.moditect</groupId>
