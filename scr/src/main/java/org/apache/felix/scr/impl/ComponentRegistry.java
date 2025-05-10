@@ -28,10 +28,12 @@ import java.util.Hashtable;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
-import java.util.Timer;
-import java.util.TimerTask;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ConcurrentMap;
+import java.util.concurrent.ScheduledExecutorService;
+import java.util.concurrent.ScheduledThreadPoolExecutor;
+import java.util.concurrent.ThreadFactory;
+import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicLong;
 
 import org.apache.felix.scr.impl.inject.ComponentMethods;
@@ -130,6 +132,8 @@ public class ComponentRegistry
 
     private final ScrConfiguration m_configuration;
 
+    private final ScheduledExecutorService m_scheduledExecutorService;
+
     public ComponentRegistry( final ScrConfiguration scrConfiguration, final ScrLogger logger )
     {
         m_configuration = scrConfiguration;
@@ -138,6 +142,17 @@ public class ComponentRegistry
         m_componentHoldersByPid = new HashMap<>();
         m_componentsById = new HashMap<>();
 
+        ScheduledThreadPoolExecutor threadPoolExecutor = new ScheduledThreadPoolExecutor(1, new ThreadFactory()
+        {
+            @Override
+            public Thread newThread(Runnable r)
+            {
+                return new Thread(r, "SCR Component Registry");
+            }
+        });
+        threadPoolExecutor.setKeepAliveTime(10, TimeUnit.SECONDS);
+        threadPoolExecutor.allowCoreThreadTimeOut(true);
+        m_scheduledExecutorService = threadPoolExecutor;
     }
 
     //---------- ComponentManager registration by component Id
@@ -704,10 +719,6 @@ public class ComponentRegistry
 
     private final AtomicLong changeCount = new AtomicLong();
 
-    private volatile Timer changeCountTimer;
-
-    private final Object changeCountTimerLock = new Object();
-
     private volatile ServiceRegistration<ServiceComponentRuntime> registration;
 
     public Dictionary<String, Object> getServiceRegistrationProperties()
@@ -729,16 +740,9 @@ public class ComponentRegistry
         {
             final long count = this.changeCount.incrementAndGet();
 
-            final Timer timer;
-            synchronized ( this.changeCountTimerLock ) {
-                if ( this.changeCountTimer == null ) {
-                    this.changeCountTimer = new Timer("SCR Component Registry", true);
-                }
-                timer = this.changeCountTimer;
-            }
             try
             {
-                timer.schedule(new TimerTask()
+                m_scheduledExecutorService.schedule(new Runnable()
                     {
 
                         @Override
@@ -754,18 +758,9 @@ public class ComponentRegistry
                                 {
                                     // we ignore this as this might happen on shutdown
                                 }
-                                synchronized ( changeCountTimerLock )
-                                {
-                                    if ( changeCount.get() == count )
-                                    {
-                                        changeCountTimer.cancel();
-                                        changeCountTimer = null;
-                                    }
-                                }
-
                             }
                         }
-                    }, m_configuration.serviceChangecountTimeout());
+                    }, m_configuration.serviceChangecountTimeout(), TimeUnit.MILLISECONDS);
             }
             catch (Exception e) {
                 m_logger.log(Level.WARN,
@@ -776,9 +771,6 @@ public class ComponentRegistry
     }
 
     public void shutdown() {
-        final Timer timer = changeCountTimer;
-        if (timer != null) {
-            timer.cancel();
-        }
+        m_scheduledExecutorService.shutdownNow();
     }
 }
