@@ -1,0 +1,49 @@
+-resolve.effective: active
+-runee: JavaSE-17
+-runrequires: \
+	bnd.identity;id='org.apache.felix.scr',\
+	bnd.identity;id='org.osgi.test.cases.component',\
+	bnd.identity;id='net.bytebuddy.byte-buddy',\
+	bnd.identity;id='org.osgi.service.component',\
+	bnd.identity;id='org.apache.felix.configadmin',\
+	bnd.identity;id='org.apache.felix.coordinator',\
+	bnd.identity;id=junit-platform-engine,\
+	bnd.identity;id=junit-platform-launcher,\
+	bnd.identity;id=junit-platform-commons,\
+	bnd.identity;id=junit-jupiter-engine,\
+	bnd.identity;id=junit-vintage-engine,\
+	bnd.identity;id='org.apache.felix.log'
+
+
+#	bnd.identity;id='biz.aQute.junit',\
+#	bnd.identity;id=assertj-core,\
+
+-runfw: org.apache.felix.framework;version='[7.0.0,8)
+
+-tester: biz.aQute.tester.junit-platform;version=latest
+
+# resolved bundles
+-runbundles: \
+	org.apache.servicemix.bundles.junit;version='[4.13.2,4.13.3)',\
+	assertj-core;version='[3.27.3,3.27.4)',\
+	net.bytebuddy.byte-buddy;version='[1.17.5,1.17.6)',\
+	biz.aQute.bndlib;version='[5.1.1,5.1.2)',\
+	junit-jupiter-api;version='[5.8.2,5.8.3)',\
+	junit-jupiter-params;version='[5.8.2,5.8.3)',\
+	junit-platform-commons;version='[1.8.2,1.8.3)',\
+	org.opentest4j;version='[1.2.0,1.2.1)',\
+	org.osgi.service.component;version='[1.5.0,1.5.1)',\
+	org.osgi.test.assertj.framework;version='[1.2.0,1.2.1)',\
+	org.osgi.test.cases.component;version='[8.1.0,8.1.1)',\
+	org.osgi.test.common;version='[1.2.0,1.2.1)',\
+	org.osgi.test.junit5;version='[1.2.0,1.2.1)',\
+	slf4j.api;version='[1.7.36,1.7.37)',\
+	slf4j.simple;version='[1.7.36,1.7.37)',\
+	org.apache.felix.scr;version='[2.2.13,2.2.14)',\
+	org.apache.felix.configadmin;version='[1.9.26,1.9.27)',\
+	org.apache.felix.coordinator;version='[1.0.2,1.0.3)',\
+	org.apache.felix.log;version='[1.3.0,1.3.1)',\
+	junit-platform-engine;version='[1.8.2,1.8.3)',\
+	junit-platform-launcher;version='[1.8.2,1.8.3)',\
+	junit-jupiter-engine;version='[5.8.2,5.8.3)',\
+	junit-vintage-engine;version='[5.8.2,5.8.3)'
