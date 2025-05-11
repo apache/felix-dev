@@ -69,9 +69,6 @@
 
         <java.version>8</java.version>
         <felix.java.version>${java.version}</felix.java.version>
-        <maven.compiler.release>${java.version}</maven.compiler.release>
-        <maven.compiler.source>${java.version}</maven.compiler.source>
-        <maven.compiler.target>${java.version}</maven.compiler.target>
     </properties>
     
     
@@ -290,6 +287,11 @@
                         <exclude>**/instances/**</exclude>
                         <exclude>**/instances2/**</exclude>
                     </excludes>
+			        <systemPropertyVariables>
+			            <org.slf4j.simpleLogger.showDateTime>true</org.slf4j.simpleLogger.showDateTime>
+			            <org.slf4j.simpleLogger.defaultLogLevel>info</org.slf4j.simpleLogger.defaultLogLevel>
+			            <org.slf4j.simpleLogger.log.org.ops4j>info</org.slf4j.simpleLogger.log.org.ops4j>
+			        </systemPropertyVariables>
                 </configuration>
             </plugin>
             <!-- integration tests run with pax-exam -->
@@ -307,6 +309,9 @@
                     <systemPropertyVariables>
                         <project.bundle.file>${bundle.file.name}</project.bundle.file>
                         <felix.ca.version>${felix.ca.version}</felix.ca.version>    
+			            <org.slf4j.simpleLogger.showDateTime>true</org.slf4j.simpleLogger.showDateTime>
+			            <org.slf4j.simpleLogger.defaultLogLevel>info</org.slf4j.simpleLogger.defaultLogLevel>
+			            <org.slf4j.simpleLogger.log.org.ops4j>info</org.slf4j.simpleLogger.log.org.ops4j>
                     </systemPropertyVariables>
                     <excludes>
                         <exclude>**/components/**</exclude>

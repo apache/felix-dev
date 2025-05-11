@@ -195,8 +195,13 @@ public abstract class ComponentTestBase
                 junitBundles(), frameworkProperty( "org.osgi.framework.bsnversion" ).value( bsnVersionUniqueness ),
                 systemProperty( "ds.factory.enabled" ).value( Boolean.toString( NONSTANDARD_COMPONENT_FACTORY_BEHAVIOR ) ),
                 systemProperty( "ds.loglevel" ).value( DS_LOGLEVEL ),
+                systemProperty("org.slf4j.simpleLogger.defaultLogLevel").value("INFO"),
+                systemProperty("org.slf4j.simpleLogger.log.org.ops4j").value("INFO"),
+                systemProperty("org.slf4j.simpleLogger.log.shaded.org.apache.http.wire").value("WARN"),
+                systemProperty("org.slf4j.simpleLogger.log.org.apache.http.wire").value("WARN"),
+                systemProperty("org.ops4j.pax.logging.log.shaded.org.apache.http.wire").value("OFF"),
+                systemProperty("org.ops4j.pax.logging.log.org.apache.http.wire").value("OFF"),
                 systemProperty( "ds.cache.metadata" ).value( Boolean.toString(CACHE_META_DATA) )
-
                 );
         final Option vmOption = ( paxRunnerVmOption != null )? CoreOptions.vmOption( paxRunnerVmOption ): null;
         NONSTANDARD_COMPONENT_FACTORY_BEHAVIOR = false;
