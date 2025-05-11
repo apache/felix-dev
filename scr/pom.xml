@@ -357,6 +357,11 @@
                         <exclude>**/instances/**</exclude>
                         <exclude>**/instances2/**</exclude>
                     </excludes>
+			        <systemPropertyVariables>
+			            <org.slf4j.simpleLogger.defaultLogLevel>warn</org.slf4j.simpleLogger.defaultLogLevel>
+			            <org.slf4j.simpleLogger.showDateTime>true</org.slf4j.simpleLogger.showDateTime>
+			            <org.slf4j.simpleLogger.log.org.ops4j>warn</org.slf4j.simpleLogger.log.org.ops4j>
+			        </systemPropertyVariables>
                 </configuration>
             </plugin>
 			<!-- integration tests run with pax-exam -->
@@ -381,6 +386,11 @@
                     <includes>
                         <include>**/integration/**</include>
                     </includes>
+			        <systemPropertyVariables>
+			            <org.slf4j.simpleLogger.defaultLogLevel>warn</org.slf4j.simpleLogger.defaultLogLevel>
+			            <org.slf4j.simpleLogger.showDateTime>true</org.slf4j.simpleLogger.showDateTime>
+			            <org.slf4j.simpleLogger.log.org.ops4j>warn</org.slf4j.simpleLogger.log.org.ops4j>
+			        </systemPropertyVariables>
                 </configuration>
             </plugin>
             <plugin>
