@@ -18,6 +18,7 @@
  */
 package org.apache.felix.scr.integration;
 
+import static org.ops4j.pax.exam.Constants.EXAM_FAIL_ON_UNRESOLVED_KEY;
 import static org.ops4j.pax.exam.CoreOptions.frameworkProperty;
 import static org.ops4j.pax.exam.CoreOptions.junitBundles;
 import static org.ops4j.pax.exam.CoreOptions.mavenBundle;
@@ -199,7 +200,8 @@ public abstract class ComponentTestBase
                 systemProperty( "ds.factory.enabled" ).value( Boolean.toString( NONSTANDARD_COMPONENT_FACTORY_BEHAVIOR ) ),
                 systemProperty( "ds.loglevel" ).value( DS_LOGLEVEL ),
                 systemProperty( "ds.cache.metadata" ).value( Boolean.toString(CACHE_META_DATA) ),
-                systemProperty( "logback.configurationFile" ).value( "src/test/resources/logback-test.xml" )
+                systemProperty( "logback.configurationFile" ).value( "src/test/resources/logback-test.xml" ),
+                systemProperty( EXAM_FAIL_ON_UNRESOLVED_KEY ).value( "true" )
 
                 );
         final Option vmOption = ( paxRunnerVmOption != null )? CoreOptions.vmOption( paxRunnerVmOption ): null;
