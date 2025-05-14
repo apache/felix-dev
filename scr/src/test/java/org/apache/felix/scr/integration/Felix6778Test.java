@@ -44,7 +44,6 @@ public class Felix6778Test extends ComponentTestBase implements ServiceListener
     {
         descriptorFile = "/integration_test_simple_components.xml";
         DS_SERVICE_CHANGECOUNT_TIMEOUT = 1000;
-//        paxRunnerVmOption = "-agentlib:jdwp=transport=dt_socket,server=y,suspend=y,address=localhost:5005";
     }
 
     class RecordedScrChangeCount

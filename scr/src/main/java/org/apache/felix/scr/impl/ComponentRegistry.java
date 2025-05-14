@@ -562,7 +562,7 @@ public class ComponentRegistry
      * @param serviceReference
      * @param actor
      */
-    public synchronized <T> void missingServicePresent( final ServiceReference<T> serviceReference, ScheduledExecutorService actor )
+    public synchronized <T> void missingServicePresent( final ServiceReference<T> serviceReference )
     {
         final List<Entry<?, ?>> dependencyManagers = m_missingDependencies.remove( serviceReference );
         if ( dependencyManagers != null )
@@ -592,7 +592,7 @@ public class ComponentRegistry
             } ;
             m_logger.log(Level.DEBUG,
                 "Scheduling runnable {0} asynchronously", null, runnable);
-            actor.submit( runnable );
+            m_componentActor.submit( runnable );
         }
     }
 
@@ -755,9 +755,5 @@ public class ComponentRegistry
                     registration.getReference());
             }
         }
-    }
-
-    public void shutdown() {
-
     }
 }

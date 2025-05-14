@@ -55,6 +55,7 @@ import java.util.concurrent.LinkedBlockingQueue;
 import javax.inject.Inject;
 
 import org.apache.felix.scr.impl.ComponentCommands;
+import org.apache.felix.scr.impl.manager.ScrConfiguration;
 import org.apache.felix.scr.integration.components.SimpleComponent;
 import org.apache.felix.service.command.Converter;
 import org.junit.After;
@@ -141,7 +142,7 @@ public abstract class ComponentTestBase
 
     protected static final String PROP_NAME_FACTORY = ComponentTestBase.PROP_NAME + ".factory";
 
-    protected static long DS_SERVICE_CHANGECOUNT_TIMEOUT = 5000;
+    protected static long DS_SERVICE_CHANGECOUNT_TIMEOUT = ScrConfiguration.DEFAULT_SERVICE_CHANGECOUNT_TIMEOUT_MILLISECONDS;
 
     static
     {

@@ -763,7 +763,7 @@ public class BundleComponentActivator implements ComponentActivator
     @Override
     public <T> void missingServicePresent(ServiceReference<T> serviceReference)
     {
-        m_componentRegistry.missingServicePresent( serviceReference, m_componentActor );
+        m_componentRegistry.missingServicePresent( serviceReference );
     }
 
     @Override

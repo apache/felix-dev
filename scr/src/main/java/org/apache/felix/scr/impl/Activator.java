@@ -422,7 +422,6 @@ public class Activator extends AbstractExtender
         // dispose component registry
         if ( m_componentRegistry != null )
         {
-            m_componentRegistry.shutdown();
             m_componentRegistry = null;
         }
 
