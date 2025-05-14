@@ -31,8 +31,6 @@ import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ConcurrentMap;
 import java.util.concurrent.ScheduledExecutorService;
-import java.util.concurrent.ScheduledThreadPoolExecutor;
-import java.util.concurrent.ThreadFactory;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicLong;
 
@@ -132,27 +130,16 @@ public class ComponentRegistry
 
     private final ScrConfiguration m_configuration;
 
-    private final ScheduledExecutorService m_scheduledExecutorService;
+    private final ScheduledExecutorService m_componentActor;
 
-    public ComponentRegistry( final ScrConfiguration scrConfiguration, final ScrLogger logger )
+    public ComponentRegistry(final ScrConfiguration scrConfiguration, final ScrLogger logger, final ScheduledExecutorService componentActor )
     {
         m_configuration = scrConfiguration;
         m_logger = logger;
+        m_componentActor = componentActor;
         m_componentHoldersByName = new HashMap<>();
         m_componentHoldersByPid = new HashMap<>();
         m_componentsById = new HashMap<>();
-
-        ScheduledThreadPoolExecutor threadPoolExecutor = new ScheduledThreadPoolExecutor(1, new ThreadFactory()
-        {
-            @Override
-            public Thread newThread(Runnable r)
-            {
-                return new Thread(r, "SCR Component Registry");
-            }
-        });
-        threadPoolExecutor.setKeepAliveTime(10, TimeUnit.SECONDS);
-        threadPoolExecutor.allowCoreThreadTimeOut(true);
-        m_scheduledExecutorService = threadPoolExecutor;
     }
 
     //---------- ComponentManager registration by component Id
@@ -575,7 +562,7 @@ public class ComponentRegistry
      * @param serviceReference
      * @param actor
      */
-    public synchronized <T> void missingServicePresent( final ServiceReference<T> serviceReference, ComponentActorThread actor )
+    public synchronized <T> void missingServicePresent( final ServiceReference<T> serviceReference, ScheduledExecutorService actor )
     {
         final List<Entry<?, ?>> dependencyManagers = m_missingDependencies.remove( serviceReference );
         if ( dependencyManagers != null )
@@ -605,7 +592,7 @@ public class ComponentRegistry
             } ;
             m_logger.log(Level.DEBUG,
                 "Scheduling runnable {0} asynchronously", null, runnable);
-            actor.schedule( runnable );
+            actor.submit( runnable );
         }
     }
 
@@ -742,7 +729,7 @@ public class ComponentRegistry
 
             try
             {
-                m_scheduledExecutorService.schedule(new Runnable()
+                m_componentActor.schedule(new Runnable()
                     {
 
                         @Override
@@ -771,6 +758,6 @@ public class ComponentRegistry
     }
 
     public void shutdown() {
-        m_scheduledExecutorService.shutdownNow();
+
     }
 }

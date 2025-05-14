@@ -142,6 +142,8 @@ public abstract class ComponentTestBase
 
     protected static final String PROP_NAME_FACTORY = ComponentTestBase.PROP_NAME + ".factory";
 
+    protected static long DS_SERVICE_CHANGECOUNT_TIMEOUT = 5000;
+
     static
     {
         theConfig = new Hashtable<>();
@@ -195,7 +197,8 @@ public abstract class ComponentTestBase
                 junitBundles(), frameworkProperty( "org.osgi.framework.bsnversion" ).value( bsnVersionUniqueness ),
                 systemProperty( "ds.factory.enabled" ).value( Boolean.toString( NONSTANDARD_COMPONENT_FACTORY_BEHAVIOR ) ),
                 systemProperty( "ds.loglevel" ).value( DS_LOGLEVEL ),
-                systemProperty( "ds.cache.metadata" ).value( Boolean.toString(CACHE_META_DATA) )
+                systemProperty( "ds.cache.metadata" ).value( Boolean.toString(CACHE_META_DATA) ),
+                systemProperty( "ds.service.changecount.timeout" ).value( Long.toString(DS_SERVICE_CHANGECOUNT_TIMEOUT) )
 
                 );
         final Option vmOption = ( paxRunnerVmOption != null )? CoreOptions.vmOption( paxRunnerVmOption ): null;
