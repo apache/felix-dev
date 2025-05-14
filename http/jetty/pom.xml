@@ -30,7 +30,7 @@
     <description>This is an implementation of the R8.1 OSGi Servlet Service, the R7 OSGi Http Service and the R7 OSGi Http Whiteboard Specification</description>
 
     <artifactId>org.apache.felix.http.jetty</artifactId>
-    <version>5.1.33-SNAPSHOT</version>
+    <version>5.1.35-SNAPSHOT</version>
     <packaging>bundle</packaging>
 
     <scm>
@@ -499,7 +499,7 @@
         <dependency>
             <groupId>org.apache.felix</groupId>
             <artifactId>org.apache.felix.http.base</artifactId>
-            <version>5.1.13-SNAPSHOT</version>
+            <version>5.1.15-SNAPSHOT</version>
         </dependency>
         <dependency>
             <groupId>org.apache.felix</groupId>
@@ -516,7 +516,7 @@
             <artifactId>commons-io</artifactId>
             <version>2.19.0</version>
         </dependency>
-    <!-- Testing -->
+    	<!-- Testing -->
         <dependency>
             <groupId>junit</groupId>
             <artifactId>junit</artifactId>
@@ -526,7 +526,7 @@
         <dependency>
             <groupId>org.mockito</groupId>
             <artifactId>mockito-core</artifactId>
-            <version>5.7.0</version>
+            <version>5.17.0</version>
             <scope>test</scope>
         </dependency>
         <dependency>
