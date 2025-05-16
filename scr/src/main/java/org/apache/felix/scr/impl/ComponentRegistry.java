@@ -28,10 +28,10 @@ import java.util.Hashtable;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
-import java.util.Timer;
-import java.util.TimerTask;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ConcurrentMap;
+import java.util.concurrent.ScheduledExecutorService;
+import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicLong;
 
 import org.apache.felix.scr.impl.inject.ComponentMethods;
@@ -130,14 +130,16 @@ public class ComponentRegistry
 
     private final ScrConfiguration m_configuration;
 
-    public ComponentRegistry( final ScrConfiguration scrConfiguration, final ScrLogger logger )
+    private final ScheduledExecutorService m_componentActor;
+
+    public ComponentRegistry(final ScrConfiguration scrConfiguration, final ScrLogger logger, final ScheduledExecutorService componentActor )
     {
         m_configuration = scrConfiguration;
         m_logger = logger;
+        m_componentActor = componentActor;
         m_componentHoldersByName = new HashMap<>();
         m_componentHoldersByPid = new HashMap<>();
         m_componentsById = new HashMap<>();
-
     }
 
     //---------- ComponentManager registration by component Id
@@ -560,7 +562,7 @@ public class ComponentRegistry
      * @param serviceReference
      * @param actor
      */
-    public synchronized <T> void missingServicePresent( final ServiceReference<T> serviceReference, ComponentActorThread actor )
+    public synchronized <T> void missingServicePresent( final ServiceReference<T> serviceReference )
     {
         final List<Entry<?, ?>> dependencyManagers = m_missingDependencies.remove( serviceReference );
         if ( dependencyManagers != null )
@@ -590,7 +592,7 @@ public class ComponentRegistry
             } ;
             m_logger.log(Level.DEBUG,
                 "Scheduling runnable {0} asynchronously", null, runnable);
-            actor.schedule( runnable );
+            m_componentActor.submit( runnable );
         }
     }
 
@@ -704,10 +706,6 @@ public class ComponentRegistry
 
     private final AtomicLong changeCount = new AtomicLong();
 
-    private volatile Timer changeCountTimer;
-
-    private final Object changeCountTimerLock = new Object();
-
     private volatile ServiceRegistration<ServiceComponentRuntime> registration;
 
     public Dictionary<String, Object> getServiceRegistrationProperties()
@@ -729,16 +727,9 @@ public class ComponentRegistry
         {
             final long count = this.changeCount.incrementAndGet();
 
-            final Timer timer;
-            synchronized ( this.changeCountTimerLock ) {
-                if ( this.changeCountTimer == null ) {
-                    this.changeCountTimer = new Timer("SCR Component Registry", true);
-                }
-                timer = this.changeCountTimer;
-            }
             try
             {
-                timer.schedule(new TimerTask()
+                m_componentActor.schedule(new Runnable()
                     {
 
                         @Override
@@ -754,31 +745,15 @@ public class ComponentRegistry
                                 {
                                     // we ignore this as this might happen on shutdown
                                 }
-                                synchronized ( changeCountTimerLock )
-                                {
-                                    if ( changeCount.get() == count )
-                                    {
-                                        changeCountTimer.cancel();
-                                        changeCountTimer = null;
-                                    }
-                                }
-
                             }
                         }
-                    }, m_configuration.serviceChangecountTimeout());
+                    }, m_configuration.serviceChangecountTimeout(), TimeUnit.MILLISECONDS);
             }
             catch (Exception e) {
                 m_logger.log(Level.WARN,
                     "Service changecount Timer for {0} had a problem", e,
                     registration.getReference());
             }
-        }
-    }
-
-    public void shutdown() {
-        final Timer timer = changeCountTimer;
-        if (timer != null) {
-            timer.cancel();
         }
     }
 }
