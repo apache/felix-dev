@@ -142,8 +142,6 @@ public abstract class ComponentTestBase
 
     protected static final String PROP_NAME_FACTORY = ComponentTestBase.PROP_NAME + ".factory";
 
-    protected static long DS_SERVICE_CHANGECOUNT_TIMEOUT = ScrConfiguration.DEFAULT_SERVICE_CHANGECOUNT_TIMEOUT_MILLISECONDS;
-
     static
     {
         theConfig = new Hashtable<>();
@@ -202,8 +200,7 @@ public abstract class ComponentTestBase
                 systemProperty( "ds.loglevel" ).value( DS_LOGLEVEL ),
                 systemProperty( "ds.cache.metadata" ).value( Boolean.toString(CACHE_META_DATA) ),
                 systemProperty( "logback.configurationFile" ).value( "src/test/resources/logback-test.xml" ),
-                systemProperty( EXAM_FAIL_ON_UNRESOLVED_KEY ).value( "true" ),
-                systemProperty( "ds.service.changecount.timeout" ).value( Long.toString(DS_SERVICE_CHANGECOUNT_TIMEOUT) )
+                systemProperty( EXAM_FAIL_ON_UNRESOLVED_KEY ).value( "true" )
 
                 );
         final Option vmOption = ( paxRunnerVmOption != null )? CoreOptions.vmOption( paxRunnerVmOption ): null;

@@ -22,6 +22,9 @@ import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
 import org.junit.runner.RunWith;
+import org.ops4j.pax.exam.Configuration;
+import org.ops4j.pax.exam.Option;
+import org.ops4j.pax.exam.OptionUtils;
 import org.ops4j.pax.exam.junit.PaxExam;
 import org.osgi.framework.BundleException;
 import org.osgi.framework.Constants;
@@ -35,15 +38,17 @@ import java.util.concurrent.CopyOnWriteArrayList;
 
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertSame;
+import static org.ops4j.pax.exam.CoreOptions.systemProperty;
 
 @RunWith(PaxExam.class)
 public class Felix6778Test extends ComponentTestBase implements ServiceListener
 {
 
+    private static final long DS_SERVICE_CHANGECOUNT_TIMEOUT = 1000;
+
     static
     {
         descriptorFile = "/integration_test_simple_components.xml";
-        DS_SERVICE_CHANGECOUNT_TIMEOUT = 1000;
     }
 
     class RecordedScrChangeCount
@@ -56,6 +61,13 @@ public class Felix6778Test extends ComponentTestBase implements ServiceListener
             this.thread = Thread.currentThread();
             this.changecount = (long) event.getServiceReference().getProperty(Constants.SERVICE_CHANGECOUNT);
         }
+    }
+
+    @Configuration
+    public static Option[] configuration()
+    {
+        return OptionUtils.combine(ComponentTestBase.configuration(),
+                systemProperty( "ds.service.changecount.timeout" ).value( Long.toString(DS_SERVICE_CHANGECOUNT_TIMEOUT) ));
     }
 
     private List<RecordedScrChangeCount> recordedEvents = new CopyOnWriteArrayList<>();
