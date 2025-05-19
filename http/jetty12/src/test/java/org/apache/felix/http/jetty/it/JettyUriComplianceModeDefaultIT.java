@@ -74,6 +74,7 @@ public class JettyUriComplianceModeDefaultIT extends AbstractJettyTestSupport {
     protected Option felixHttpConfig(int httpPort) {
         return newConfiguration("org.apache.felix.http")
                 .put("org.osgi.service.http.port", httpPort)
+                .put("org.apache.felix.http.jetty.errorPageCustomHeaders", "Strict-Transport-Security=max-age=31536000##X-Custom-Header=123")
                 .asOption();
     }
 
@@ -102,7 +103,11 @@ public class JettyUriComplianceModeDefaultIT extends AbstractJettyTestSupport {
         assertEquals("OK", response.getContentAsString());
 
         // blocked with HTTP 400 by default
-        assertEquals(400, httpClient.GET(destUriAmbigousPath).getStatus());
+        // validate custom headers in case of error page
+        ContentResponse responseAmbigousPath = httpClient.GET(destUriAmbigousPath);
+        assertEquals(400, responseAmbigousPath.getStatus());
+        assertEquals("max-age=31536000", responseAmbigousPath.getHeaders().get("Strict-Transport-Security"));
+        assertEquals("123", responseAmbigousPath.getHeaders().get("X-Custom-Header"));
 
         httpClient.close();
     }

@@ -115,6 +115,9 @@ public final class JettyConfig
     /** Felix specific property to configure the response size limit. Default is unlimited. See https://jetty.org/docs/jetty/12/programming-guide/server/http.html#handler-use-size-limit */
     public static final String FELIX_JETTY_RESPONSE_SIZE_LIMIT = "org.apache.felix.http.jetty.responseSizeLimit";
 
+    /** Felix specific property to configure the custom headers to add to all error pages served by Jetty. Separate key-value pairs with ##. */
+    public static final String FELIX_JETTY_ERROR_PAGE_CUSTOM_HEADERS = "org.apache.felix.http.jetty.errorPageCustomHeaders";
+
     /** Felix specific property to enable Jetty MBeans. Valid values are "true", "false". Default is false */
     public static final String FELIX_HTTP_MBEANS = "org.apache.felix.http.mbeans";
 
@@ -507,6 +510,10 @@ public final class JettyConfig
     public int getResponseSizeLimit()
     {
         return getIntProperty(FELIX_JETTY_RESPONSE_SIZE_LIMIT, -1);
+    }
+
+    public String getFelixJettyErrorPageCustomHeaders() {
+        return getProperty(FELIX_JETTY_ERROR_PAGE_CUSTOM_HEADERS, null);
     }
 
     /**
