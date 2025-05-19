@@ -35,7 +35,7 @@ public class JettyErrorHandler extends ErrorHandler {
     public boolean handle(Request request, Response response, Callback callback) throws Exception {
         if (!customHeaders.isEmpty()) {
             Mutable headers = response.getHeaders();
-            customHeaders.forEach(headers::add);
+            customHeaders.forEach(headers::put);
         }
 
         return super.handle(request, response, callback);
