@@ -223,8 +223,8 @@ class ConfigMetaTypeProvider implements MetaTypeProvider
         adList.add(new AttributeDefinitionImpl(JettyConfig.FELIX_JETTY_ERROR_PAGE_CUSTOM_HEADERS,
                 "Custom headers to add to error pages",
                 "Felix specific property to configure the custom headers to add to all error pages served by Jetty. Separate key-value pairs with ##.",
-                204800,
-                bundle.getBundleContext().getProperty(JettyConfig.FELIX_JETTY_RESPONSE_SIZE_LIMIT)));
+                null,
+                bundle.getBundleContext().getProperty(JettyConfig.FELIX_JETTY_ERROR_PAGE_CUSTOM_HEADERS)));
 
         adList.add(new AttributeDefinitionImpl(JettyConfig.FELIX_HTTP_PATH_EXCLUSIONS,
                 "Path Exclusions",
