@@ -30,6 +30,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.StringTokenizer;
 import java.util.concurrent.CountDownLatch;
+import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicBoolean;
 
@@ -81,7 +82,7 @@ public class BundleComponentActivator implements ComponentActivator
     private final List<ComponentHolder<?>> m_holders = new ArrayList<>();
 
     // thread acting upon configurations
-    private final ComponentActorThread m_componentActor;
+    private final ScheduledExecutorService m_componentActor;
 
     // true as long as the dispose method is not called
     private final AtomicBoolean m_active = new AtomicBoolean( true );
@@ -196,7 +197,7 @@ public class BundleComponentActivator implements ComponentActivator
      */
     public BundleComponentActivator(final ScrLogger scrLogger,
             final ComponentRegistry componentRegistry,
-            final ComponentActorThread componentActor,
+            final ScheduledExecutorService componentActor,
             final BundleContext context,
             final ScrConfiguration configuration,
             final List<ComponentMetadata> cachedComponentMetadata,
@@ -712,10 +713,10 @@ public class BundleComponentActivator implements ComponentActivator
     {
         if ( isActive() )
         {
-            ComponentActorThread cat = m_componentActor;
+            ScheduledExecutorService cat = m_componentActor;
             if ( cat != null )
             {
-                cat.schedule( task );
+                cat.submit( task );
             }
             else
             {
@@ -762,7 +763,7 @@ public class BundleComponentActivator implements ComponentActivator
     @Override
     public <T> void missingServicePresent(ServiceReference<T> serviceReference)
     {
-        m_componentRegistry.missingServicePresent( serviceReference, m_componentActor );
+        m_componentRegistry.missingServicePresent( serviceReference );
     }
 
     @Override

@@ -55,6 +55,7 @@ import java.util.concurrent.LinkedBlockingQueue;
 import javax.inject.Inject;
 
 import org.apache.felix.scr.impl.ComponentCommands;
+import org.apache.felix.scr.impl.manager.ScrConfiguration;
 import org.apache.felix.scr.integration.components.SimpleComponent;
 import org.apache.felix.service.command.Converter;
 import org.junit.After;
