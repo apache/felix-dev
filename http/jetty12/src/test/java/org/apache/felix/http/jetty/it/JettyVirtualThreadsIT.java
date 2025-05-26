@@ -34,7 +34,6 @@ import jakarta.servlet.http.HttpServletResponse;
 
 import org.eclipse.jetty.client.ContentResponse;
 import org.eclipse.jetty.client.HttpClient;
-import org.eclipse.jetty.client.transport.HttpClientTransportOverHTTP;
 import org.junit.Before;
 import org.junit.Test;
 import org.junit.runner.RunWith;
