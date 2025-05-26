@@ -21,13 +21,8 @@
     <name>Apache Felix Servlet API</name>
     <description>Provides the Servlet API for use by applications</description>
     <artifactId>org.apache.felix.http.servlet-api</artifactId>
-    <version>3.1.0-SNAPSHOT</version>
+    <version>>6.1.1-SNAPSHOT</version>
     <packaging>bundle</packaging>
-
-    <properties>
-        <!-- Skip baselining -->
-        <baseline.skip>true</baseline.skip>
-    </properties>
 
     <scm>
         <connection>scm:git:https://github.com/apache/felix-dev.git</connection>
@@ -110,10 +105,6 @@
                             jakarta.servlet.annotation;version=5.0;uses:="jakarta.servlet",
                             jakarta.servlet.descriptor;version=5.0,
                             jakarta.servlet.http;version=5.0;uses:="jakarta.servlet",
-                            jakarta.servlet;version=6.0;uses:="jakarta.servlet.annotation,jakarta.servlet.descriptor",
-                            jakarta.servlet.annotation;version=6.0;uses:="jakarta.servlet",
-                            jakarta.servlet.descriptor;version=6.0,
-                            jakarta.servlet.http;version=6.0;uses:="jakarta.servlet",
                             jakarta.servlet;version=6.1;uses:="jakarta.servlet.annotation,jakarta.servlet.descriptor",
                             jakarta.servlet.annotation;version=6.1;uses:="jakarta.servlet",
                             jakarta.servlet.descriptor;version=6.1,
