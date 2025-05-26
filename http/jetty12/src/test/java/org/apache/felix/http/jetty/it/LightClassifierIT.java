@@ -53,12 +53,8 @@ public class LightClassifierIT extends AbstractJettyTestSupport {
     protected Option[] additionalOptions() throws IOException {
         String jettyVersion = System.getProperty("jetty.version", JETTY_VERSION);
         return new Option[] {
-                spifly(),
-
                 // Minimum additional jetty dependency bundles
-                mavenBundle().groupId("org.slf4j").artifactId("slf4j-api").version("2.0.13"),
-                mavenBundle().groupId("org.slf4j").artifactId("slf4j-simple").version("2.0.13"),
-                mavenBundle().groupId("commons-io").artifactId("commons-io").version("2.16.1"),
+                mavenBundle().groupId("commons-io").artifactId("commons-io").version("2.19.0"),
                 mavenBundle().groupId("commons-fileupload").artifactId("commons-fileupload").version("1.5"),
                 mavenBundle().groupId("org.eclipse.jetty").artifactId("jetty-alpn-java-server").version(jettyVersion),
                 mavenBundle().groupId("org.eclipse.jetty").artifactId("jetty-alpn-server").version(jettyVersion),
@@ -94,7 +90,7 @@ public class LightClassifierIT extends AbstractJettyTestSupport {
     }
 
     /**
-     * Verify FELIX-6700 by checking that the webconsole bundle was resolved and active 
+     * Verify FELIX-6700 by checking that the webconsole bundle was resolved and active
      */
     @Test
     public void testWebConsoleBundleIsActive() throws Exception {

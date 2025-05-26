@@ -20,6 +20,9 @@ package org.apache.felix.framework.ext;
 
 import java.security.Permission;
 import java.security.ProtectionDomain;
+import java.security.cert.X509Certificate;
+import java.util.List;
+import java.util.Map;
 
 import org.osgi.framework.Bundle;
 
@@ -27,7 +30,7 @@ public interface SecurityProvider
 {
     boolean hasBundlePermission(ProtectionDomain pd, Permission p, boolean direct);
 
-    Object getSignerMatcher(Bundle bundle, int signersType);
+    Map<X509Certificate, List<X509Certificate>> getSignerMatcher(Bundle bundle, int signersType);
     
     void checkBundle(Bundle bundle) throws Exception;
 }

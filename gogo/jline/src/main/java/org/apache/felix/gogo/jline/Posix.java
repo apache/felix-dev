@@ -71,6 +71,7 @@ import java.util.regex.Pattern;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
+import org.apache.felix.gogo.runtime.Pipe;
 import org.apache.felix.service.command.Process;
 import org.apache.felix.gogo.jline.Shell.Context;
 import org.apache.felix.service.command.CommandProcessor;
@@ -811,6 +812,10 @@ public class Posix {
     private void runShell(CommandSession session, Terminal terminal) {
         InputStream in = terminal.input();
         OutputStream out = terminal.output();
+        
+        // Save the current pipe and clear it before creating a child shell
+        Pipe currentPipe = Pipe.setCurrentPipe(null);
+
         CommandSession newSession = processor.createSession(in, out, out);
         newSession.put(Shell.VAR_TERMINAL, terminal);
         newSession.put(".tmux", session.get(".tmux"));
@@ -822,11 +827,26 @@ public class Posix {
                 terminal.close();
             }
         };
+
+        // Register a signal handler for INT signal to properly propagate interruption
+        Terminal.SignalHandler prevIntHandler = terminal.handle(Terminal.Signal.INT, signal -> {
+            // Propagate the interrupt to the current thread
+            Thread.currentThread().interrupt();
+        });
+        
         try {
-            new Shell(context, processor).gosh(newSession, new String[]{"--login"});
+            new Shell(context, processor).gosh(newSession, new String[] {"--login"});
         } catch (Exception e) {
             e.printStackTrace();
         } finally {
+            // Restore the previous signal handler
+            if (prevIntHandler != null) {
+                terminal.handle(Terminal.Signal.INT, prevIntHandler);
+            }
+            
+            // Restore the previous pipe
+            Pipe.setCurrentPipe(currentPipe);
+
             try {
                 terminal.close();
             } catch (IOException e) {

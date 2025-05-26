@@ -1,3 +1,9 @@
+Changes from 7.0.5 to 7.1.0
+---------------------------
+
+** Improvement
+    * [FELIX-6765] - Add a CI-job for Felix Framework
+
 Changes from 7.0.4 to 7.0.5
 ---------------------------
 

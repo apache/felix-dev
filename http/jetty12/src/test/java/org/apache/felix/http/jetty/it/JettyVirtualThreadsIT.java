@@ -107,6 +107,8 @@ public class JettyVirtualThreadsIT extends AbstractJettyTestSupport {
         ContentResponse response = httpClient.GET(destUri);
         assertEquals(200, response.getStatus());
         assertEquals("OK", response.getContentAsString());
+
+        httpClient.close();
     }
 
      static final class ExampleEndpoint extends HttpServlet {

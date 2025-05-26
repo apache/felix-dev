@@ -137,7 +137,7 @@ public final class Dispatcher
 		        final ExtServletContext servletContext = pr.handler.getContext();
 		        final RequestInfo requestInfo = new RequestInfo(pr.servletPath, pr.pathInfo, null, req.getRequestURI(),
 		                pr.handler.getName(), pr.matchedPattern, pr.matchValue, pr.match, false);
-		        
+
 		        MultipartConfig multipartConfig = pr.handler.getMultipartConfig();
 		        HttpServletRequest wrappedRequest;
 		        if(multipartConfig==null){
@@ -145,7 +145,7 @@ public final class Dispatcher
 		        			servletContext,
 		        			requestInfo,
 		        			null,
-		        			pr.handler.getServletInfo().isAsyncSupported());		        	
+		        			pr.handler.getServletInfo().isAsyncSupported());
 		        }else {
 		        	wrappedRequest = new ServletRequestMultipartWrapper(req,
 		        			servletContext,
@@ -174,7 +174,7 @@ public final class Dispatcher
                     }
 		            SystemLogger.LOGGER.error("Exception while processing request to " + requestURI, e);
 		            req.setAttribute(RequestDispatcher.ERROR_EXCEPTION, e);
-		            req.setAttribute(RequestDispatcher.ERROR_EXCEPTION_TYPE, e.getClass().getName());
+		            req.setAttribute(RequestDispatcher.ERROR_EXCEPTION_TYPE, e.getClass());
 
                     if ( !wrappedResponse.isCommitted() )
                     {

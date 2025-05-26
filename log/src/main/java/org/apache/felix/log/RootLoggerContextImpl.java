@@ -19,9 +19,6 @@
 
 package org.apache.felix.log;
 
-import java.util.Dictionary;
-import java.util.Map;
-
 import org.osgi.service.log.LogLevel;
 import org.osgi.service.log.Logger;
 
@@ -45,12 +42,13 @@ public class RootLoggerContextImpl extends LoggerContextImpl {
         _defaultLevel = defaultLogLevel;
     }
 
+    @Override
     public LogLevel getEffectiveLogLevel(String name) {
         _lock.lock();
         try {
             if (_levels != null && !_levels.isEmpty()) {
                 LogLevel level;
-                while (name.length() > 0) {
+                while (!name.isEmpty()) {
                     level = _levels.get(name);
                     if (level != null) {
                         return level;
@@ -65,16 +63,6 @@ public class RootLoggerContextImpl extends LoggerContextImpl {
         finally {
             _lock.unlock();
         }
-    }
-
-    @Override
-    public void setLogLevels(Map<String, LogLevel> logLevels) {
-        super.setLogLevels(logLevels);
-    }
-
-    @Override
-    void updateLoggerContext(Dictionary<String, Object> properties) {
-        super.updateLoggerContext(properties);
     }
 
     private LogLevel getEffectiveRootLogLevel() {

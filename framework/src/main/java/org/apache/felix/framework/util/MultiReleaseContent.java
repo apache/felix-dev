@@ -59,8 +59,8 @@ public class MultiReleaseContent implements Content
 
                 if (versionManifestInput != null)
                 {
-                    Map<String, Object> versionManifest = BundleCache.getMainAttributes(
-                            new StringMap(), new ByteArrayInputStream(versionManifestInput), versionManifestInput.length);
+                    Map<String, String> versionManifest = BundleCache.getMainAttributes(
+                            new StringMap<>(), new ByteArrayInputStream(versionManifestInput), versionManifestInput.length);
 
                     if ("true".equals(versionManifest.get("Multi-Release")))
                     {
@@ -99,7 +99,7 @@ public class MultiReleaseContent implements Content
         Enumeration<String> entries = m_content.getEntries();
         if (entries != null)
         {
-            Set<String> result = new LinkedHashSet<String>();
+            Set<String> result = new LinkedHashSet<>();
             while (entries.hasMoreElements())
             {
                 String path = entries.nextElement();

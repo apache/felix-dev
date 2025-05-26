@@ -47,17 +47,19 @@ public class LoggerContextImpl implements LoggerContext {
         _rootContext = rootLoggerContext;
     }
 
+    @Override
     public String getName() {
         return _name;
     }
 
+    @Override
     public LogLevel getEffectiveLogLevel(String name) {
         _lock.lock();
         try {
             if (_levels != null && !_levels.isEmpty()) {
                 String copy = name;
                 LogLevel level;
-                while (copy.length() > 0) {
+                while (!copy.isEmpty()) {
                     level = _levels.get(copy);
                     if (level != null) {
                         return level;
@@ -74,6 +76,7 @@ public class LoggerContextImpl implements LoggerContext {
         }
     }
 
+    @Override
     public Map<String, LogLevel> getLogLevels() {
         _lock.lock();
         try {
@@ -87,6 +90,7 @@ public class LoggerContextImpl implements LoggerContext {
         }
     }
 
+    @Override
     public void setLogLevels(Map<String, LogLevel> logLevels) {
         _lock.lock();
         try {
@@ -98,6 +102,7 @@ public class LoggerContextImpl implements LoggerContext {
         }
     }
 
+    @Override
     public void clear() {
         _lock.lock();
         try {
@@ -108,6 +113,7 @@ public class LoggerContextImpl implements LoggerContext {
         }
     }
 
+    @Override
     public boolean isEmpty() {
         _lock.lock();
         try {

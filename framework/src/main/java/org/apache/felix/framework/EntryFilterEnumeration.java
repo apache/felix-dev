@@ -25,18 +25,18 @@ import org.apache.felix.framework.capabilityset.SimpleFilter;
 import org.apache.felix.framework.util.Util;
 import org.osgi.framework.wiring.BundleRevision;
 
-class EntryFilterEnumeration implements Enumeration
+class EntryFilterEnumeration<S> implements Enumeration<S>
 {
     private final BundleRevision m_revision;
-    private final List<Enumeration> m_enumerations;
+    private final List<Enumeration<String>> m_enumerations;
     private final List<BundleRevision> m_revisions;
     private int m_revisionIndex = 0;
     private final String m_path;
     private final List<String> m_filePattern;
     private final boolean m_recurse;
     private final boolean m_isURLValues;
-    private final Set<String> m_dirEntries = new HashSet();
-    private final List<Object> m_nextEntries = new ArrayList(2);
+    private final Set<String> m_dirEntries = new HashSet<>();
+    private final List<Object> m_nextEntries = new ArrayList<>(2);
 
     public EntryFilterEnumeration(
         BundleRevision revision, boolean includeFragments, String path,
@@ -50,10 +50,10 @@ class EntryFilterEnumeration implements Enumeration
         }
         else
         {
-            m_revisions = new ArrayList(1);
+            m_revisions = new ArrayList<>(1);
         }
         m_revisions.add(0, m_revision);
-        m_enumerations = new ArrayList(m_revisions.size());
+        m_enumerations = new ArrayList<>(m_revisions.size());
         for (int i = 0; i < m_revisions.size(); i++)
         {
             m_enumerations.add(((BundleRevisionImpl) m_revisions.get(i)).getContent() != null ?
@@ -87,12 +87,14 @@ class EntryFilterEnumeration implements Enumeration
         findNext();
     }
 
-    public synchronized boolean hasMoreElements()
+    @Override
+	public synchronized boolean hasMoreElements()
     {
         return !m_nextEntries.isEmpty();
     }
 
-    public synchronized Object nextElement()
+    @Override
+	public synchronized S nextElement()
     {
         if (m_nextEntries.isEmpty())
         {
@@ -100,7 +102,7 @@ class EntryFilterEnumeration implements Enumeration
         }
         Object last = m_nextEntries.remove(0);
         findNext();
-        return last;
+        return (S) last;
     }
 
     private void findNext()

@@ -24,7 +24,7 @@
     <parent>
         <groupId>org.apache.felix</groupId>
         <artifactId>gogo-parent</artifactId>
-        <version>6</version>
+        <version>7-SNAPSHOT</version>
         <relativePath>../gogo-parent/pom.xml</relativePath>
     </parent>
 
@@ -101,6 +101,17 @@
                     <bndruns>
                         <bndrun>itest.bndrun</bndrun>
                     </bndruns>
+					<useMavenDependencies>true</useMavenDependencies>
+					<includeDependencyManagement>true</includeDependencyManagement>
+					<scopes>
+						<scope>compile</scope>
+						<scope>runtime</scope>
+						<scope>test</scope>
+					</scopes>
+					<bundles>
+						<bundle>
+							target/org.apache.felix.gogo.itest-jline-0.0.1-SNAPSHOT.jar</bundle>
+					</bundles>
                 </configuration>
                 <executions>
                     <execution>

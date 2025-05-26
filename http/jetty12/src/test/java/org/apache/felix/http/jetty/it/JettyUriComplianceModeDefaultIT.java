@@ -18,6 +18,7 @@ package org.apache.felix.http.jetty.it;
 
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotNull;
+import static org.junit.Assert.assertNull;
 import static org.ops4j.pax.exam.CoreOptions.mavenBundle;
 import static org.ops4j.pax.exam.cm.ConfigurationAdminOptions.newConfiguration;
 
@@ -76,6 +77,7 @@ public class JettyUriComplianceModeDefaultIT extends AbstractJettyTestSupport {
     protected Option felixHttpConfig(int httpPort) {
         return newConfiguration("org.apache.felix.http")
                 .put("org.osgi.service.http.port", httpPort)
+                .put("org.apache.felix.http.jetty.errorPageCustomHeaders", "Strict-Transport-Security=max-age=31536000##X-Custom-Header=123")
                 .asOption();
     }
 
@@ -103,8 +105,19 @@ public class JettyUriComplianceModeDefaultIT extends AbstractJettyTestSupport {
         assertEquals(200, response.getStatus());
         assertEquals("OK", response.getContentAsString());
 
+        // Validate custom headers in case of success page, should not be present
+        assertNull(response.getHeaders().get("Strict-Transport-Security"));
+        assertNull(response.getHeaders().get("X-Custom-Header"));
+
+
         // blocked with HTTP 400 by default
-        assertEquals(400, httpClient.GET(destUriAmbigousPath).getStatus());
+        // validate custom headers in case of error page
+        ContentResponse responseAmbiguousPath = httpClient.GET(destUriAmbigousPath);
+        assertEquals(400, responseAmbiguousPath.getStatus());
+        assertEquals("max-age=31536000", responseAmbiguousPath.getHeaders().get("Strict-Transport-Security"));
+        assertEquals("123", responseAmbiguousPath.getHeaders().get("X-Custom-Header"));
+
+        httpClient.close();
     }
 
      static final class UriComplianceEndpoint extends HttpServlet {

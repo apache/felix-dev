@@ -18,7 +18,10 @@
  */
 package org.apache.felix.framework;
 
-import junit.framework.TestCase;
+import static org.assertj.core.api.Assertions.assertThat;
+
+import org.junit.jupiter.api.AfterEach;
+import org.junit.jupiter.api.Test;
 import org.osgi.framework.Bundle;
 import org.osgi.framework.Constants;
 import org.osgi.framework.launch.Framework;
@@ -36,14 +39,15 @@ import java.util.concurrent.atomic.AtomicInteger;
 import java.util.jar.JarOutputStream;
 import java.util.jar.Manifest;
 
-public class ConcurrentClassLoaderTest extends TestCase
+class ConcurrentClassLoaderTest
 {
     private static final int CONCURRENCY_LEVEL = 1000;
 
     private File m_cacheDir;
     private Framework m_felix;
 
-    public void testCanResolveClassInParallel() throws Exception
+    @Test
+    void canResolveClassInParallel() throws Exception
     {
         m_cacheDir = createCacheDir();
         m_felix = createFramework(m_cacheDir);
@@ -52,7 +56,7 @@ public class ConcurrentClassLoaderTest extends TestCase
         m_felix.start();
 
         Bundle[] bundles = m_felix.getBundleContext().getBundles();
-        assertEquals("Two, system and mine: " + Arrays.toString(bundles), 2, bundles.length);
+        assertThat(bundles.length).as("Two, system and mine: " + Arrays.toString(bundles)).isEqualTo(2);
         final Bundle bundle = bundles[1];
 
         // This latch ensures that all threads start at the same time
@@ -61,7 +65,8 @@ public class ConcurrentClassLoaderTest extends TestCase
         for (int i = 0; i < CONCURRENCY_LEVEL; i++) {
             new Thread()
             {
-                public void run()
+                @Override
+				public void run()
                 {
                     try {
                         latch.countDown();
@@ -82,14 +87,13 @@ public class ConcurrentClassLoaderTest extends TestCase
             Thread.sleep(50);
         }
 
-        assertEquals("Class resolution all started", 0, latch.getCount());
-        assertEquals("Class resolution all finished", CONCURRENCY_LEVEL, doneCount.get());
+        assertThat(latch.getCount()).as("Class resolution all started").isEqualTo(0);
+        assertThat(doneCount.get()).as("Class resolution all finished").isEqualTo(CONCURRENCY_LEVEL);
     }
 
-    @Override
-    protected void tearDown() throws Exception
+    @AfterEach
+    void tearDown() throws Exception
     {
-        super.tearDown();
 
         m_felix.stop();
         m_felix.waitForStop(1000);
@@ -108,7 +112,7 @@ public class ConcurrentClassLoaderTest extends TestCase
 
     private static Framework createFramework(File cacheDir)
     {
-        Map<String, String> params = new HashMap<String, String>();
+        Map<String, String> params = new HashMap<>();
         params.put(Constants.FRAMEWORK_SYSTEMPACKAGES, "org.osgi.framework; version=1.4.0,"
                 + "org.osgi.service.packageadmin; version=1.2.0,"
                 + "org.osgi.service.startlevel; version=1.1.0,"

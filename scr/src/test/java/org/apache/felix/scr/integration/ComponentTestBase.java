@@ -18,6 +18,7 @@
  */
 package org.apache.felix.scr.integration;
 
+import static org.ops4j.pax.exam.Constants.EXAM_FAIL_ON_UNRESOLVED_KEY;
 import static org.ops4j.pax.exam.CoreOptions.frameworkProperty;
 import static org.ops4j.pax.exam.CoreOptions.junitBundles;
 import static org.ops4j.pax.exam.CoreOptions.mavenBundle;
@@ -54,6 +55,7 @@ import java.util.concurrent.LinkedBlockingQueue;
 import javax.inject.Inject;
 
 import org.apache.felix.scr.impl.ComponentCommands;
+import org.apache.felix.scr.impl.manager.ScrConfiguration;
 import org.apache.felix.scr.integration.components.SimpleComponent;
 import org.apache.felix.service.command.Converter;
 import org.junit.After;
@@ -138,8 +140,6 @@ public abstract class ComponentTestBase
     //set to true to only get last 1000 lines of log.
     protected static boolean restrictedLogging;
 
-    protected static String felixCaVersion = System.getProperty( "felix.ca.version" );
-
     protected static final String PROP_NAME_FACTORY = ComponentTestBase.PROP_NAME + ".factory";
 
     static
@@ -184,18 +184,23 @@ public abstract class ComponentTestBase
         final Option[] base = options(
                 provision(
                         CoreOptions.bundle( bundleFile.toURI().toString() ),
-                        mavenBundle( "org.ops4j.pax.tinybundles", "tinybundles", "1.0.0" ),
-                        mavenBundle( "org.osgi", "org.osgi.service.log", "1.4.0"),
-                        mavenBundle( "org.osgi", "org.osgi.util.pushstream", "1.0.0"),
-                        mavenBundle( "org.apache.felix", "org.apache.felix.configadmin", felixCaVersion ) ),
-                        mavenBundle( "org.osgi", "org.osgi.util.promise"),
-                        mavenBundle( "org.osgi", "org.osgi.util.function"),
-                        mavenBundle( "org.osgi", "org.osgi.service.component"),
-                        mavenBundle( "org.ops4j.pax.url", "pax-url-aether"),
+                        mavenBundle( "org.ops4j.pax.tinybundles", "tinybundles" ).versionAsInProject(),
+                        mavenBundle( "org.osgi", "org.osgi.service.log" ).versionAsInProject(),
+                        mavenBundle( "org.slf4j", "slf4j-api" ).versionAsInProject(),
+                        mavenBundle( "ch.qos.logback", "logback-core" ).versionAsInProject(),
+                        mavenBundle( "ch.qos.logback", "logback-classic" ).versionAsInProject(),
+                        mavenBundle( "org.osgi", "org.osgi.util.pushstream" ).versionAsInProject(),
+                        mavenBundle( "org.apache.felix", "org.apache.felix.configadmin" ).versionAsInProject() ),
+                        mavenBundle( "org.osgi", "org.osgi.util.promise" ).versionAsInProject(),
+                        mavenBundle( "org.osgi", "org.osgi.util.function" ).versionAsInProject(),
+                        mavenBundle( "org.osgi", "org.osgi.service.component" ).versionAsInProject(),
+                        mavenBundle( "org.ops4j.pax.url", "pax-url-aether" ).versionAsInProject(),
                 junitBundles(), frameworkProperty( "org.osgi.framework.bsnversion" ).value( bsnVersionUniqueness ),
                 systemProperty( "ds.factory.enabled" ).value( Boolean.toString( NONSTANDARD_COMPONENT_FACTORY_BEHAVIOR ) ),
                 systemProperty( "ds.loglevel" ).value( DS_LOGLEVEL ),
-                systemProperty( "ds.cache.metadata" ).value( Boolean.toString(CACHE_META_DATA) )
+                systemProperty( "ds.cache.metadata" ).value( Boolean.toString(CACHE_META_DATA) ),
+                systemProperty( "logback.configurationFile" ).value( "src/test/resources/logback-test.xml" ),
+                systemProperty( EXAM_FAIL_ON_UNRESOLVED_KEY ).value( "true" )
 
                 );
         final Option vmOption = ( paxRunnerVmOption != null )? CoreOptions.vmOption( paxRunnerVmOption ): null;

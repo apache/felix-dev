@@ -69,12 +69,12 @@ public class Logger extends org.apache.felix.resolver.Logger
         }
     }
 
-    public final void log(ServiceReference sr, int level, String msg)
+    public final void log(ServiceReference<?> sr, int level, String msg)
     {
         _log(null, sr, level, msg, null);
     }
 
-    public final void log(ServiceReference sr, int level, String msg, Throwable throwable)
+    public final void log(ServiceReference<?> sr, int level, String msg, Throwable throwable)
     {
         _log(null, sr, level, msg, throwable);
     }
@@ -90,7 +90,7 @@ public class Logger extends org.apache.felix.resolver.Logger
     }
 
     protected void _log(
-            Bundle bundle, ServiceReference sr, int level,
+            Bundle bundle, ServiceReference<?> sr, int level,
             String msg, Throwable throwable)
     {
         if (getLogLevel() >= level)
@@ -101,7 +101,7 @@ public class Logger extends org.apache.felix.resolver.Logger
     }
 
     protected void doLog(
-        Bundle bundle, ServiceReference sr, int level,
+        Bundle bundle, ServiceReference<?> sr, int level,
         String msg, Throwable throwable)
     {
         StringBuilder s = new StringBuilder();
@@ -124,7 +124,8 @@ public class Logger extends org.apache.felix.resolver.Logger
         doLog(level, s.toString(), throwable);
     }
 
-    protected void doLog(int level, String msg, Throwable throwable)
+    @Override
+	protected void doLog(int level, String msg, Throwable throwable)
     {
         if (m_logger != null)
         {
