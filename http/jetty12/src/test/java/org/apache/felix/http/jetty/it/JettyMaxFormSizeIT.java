@@ -94,6 +94,7 @@ public class JettyMaxFormSizeIT extends AbstractJettyTestSupport {
     @Test
     public void testFormSizeLimit() throws Exception {
         try (HttpClient httpClient = new HttpClient()) {
+            httpClient.start();
             Object value = bundleContext.getServiceReference(HttpService.class).getProperty("org.osgi.service.http.port");
             int httpPort = Integer.parseInt((String) value);
 
