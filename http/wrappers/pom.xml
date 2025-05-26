@@ -28,7 +28,7 @@
 
     <name>Apache Felix Http Wrappers</name>
     <artifactId>org.apache.felix.http.wrappers</artifactId>
-    <version>6.1.0</version>
+    <version>6.1.1-SNAPSHOT</version>
     <packaging>bundle</packaging>
 
     <scm>
