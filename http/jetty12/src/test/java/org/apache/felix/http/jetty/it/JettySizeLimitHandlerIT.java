@@ -25,6 +25,7 @@ import java.io.IOException;
 import java.net.URI;
 import java.util.Hashtable;
 import java.util.Map;
+import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ExecutionException;
 
 import javax.inject.Inject;
@@ -34,8 +35,11 @@ import jakarta.servlet.http.HttpServlet;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 
+import org.eclipse.jetty.client.CompletableResponseListener;
 import org.eclipse.jetty.client.ContentResponse;
+import org.eclipse.jetty.client.FormRequestContent;
 import org.eclipse.jetty.client.HttpClient;
+import org.eclipse.jetty.client.Request;
 import org.eclipse.jetty.util.Fields;
 import org.junit.Before;
 import org.junit.Test;
@@ -119,15 +123,12 @@ public class JettySizeLimitHandlerIT extends AbstractJettyTestSupport {
             Fields formFieldsLimitExceeded = new Fields();
             formFieldsLimitExceeded.add(new Fields.Field("key","valueoverlimit")); // over limit of 10 bytes
 
-            try {
-                ContentResponse responseExceeded = httpClient.FORM(new URI(String.format("http://localhost:%d/withinlimit/a", httpPort)), formFieldsLimitExceeded);
+            Request request = httpClient.newRequest(new URI(String.format("http://localhost:%d/withinlimit/a", httpPort)))
+                    .body(new FormRequestContent(formFieldsLimitExceeded));
 
-                // Request limit exceeded, HTTP 413 directly from Jetty
-                assertEquals(413, responseExceeded.getStatus());
-            } catch (ExecutionException e) {
-                // FIXME this shouldn't happen, but it does with Jetty 12.1.0.beta0
-                // java.nio.channels.AsynchronousCloseException
-            }
+            CompletableFuture<ContentResponse> completable = new CompletableResponseListener(request).send();
+            ContentResponse response = completable.get();
+            assertEquals(413, response.getStatus());
         }
     }
 
