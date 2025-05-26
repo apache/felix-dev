@@ -95,8 +95,7 @@ public class JettyVirtualThreadsIT extends AbstractJettyTestSupport {
             // This test only works on Java 21 or newer
             return;
         }
-        HttpClientTransportOverHTTP transport = new HttpClientTransportOverHTTP();
-        try (HttpClient httpClient = new HttpClient(transport)) {
+        try (HttpClient httpClient = new HttpClient()) {
             Object value = bundleContext.getServiceReference(HttpService.class).getProperty("org.osgi.service.http.port");
             int httpPort = Integer.parseInt((String) value);
 

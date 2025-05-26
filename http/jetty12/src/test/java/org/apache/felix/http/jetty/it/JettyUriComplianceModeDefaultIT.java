@@ -91,8 +91,7 @@ public class JettyUriComplianceModeDefaultIT extends AbstractJettyTestSupport {
 
     @Test
     public void testUriCompliance() throws Exception {
-        HttpClientTransportOverHTTP transport = new HttpClientTransportOverHTTP();
-        try (HttpClient httpClient = new HttpClient(transport)) {
+        try (HttpClient httpClient = new HttpClient()) {
             Object value = bundleContext.getServiceReference(HttpService.class).getProperty("org.osgi.service.http.port");
             int httpPort = Integer.parseInt((String) value);
 

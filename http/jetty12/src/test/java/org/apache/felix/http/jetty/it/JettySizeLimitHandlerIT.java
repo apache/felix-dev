@@ -63,9 +63,9 @@ public class JettySizeLimitHandlerIT extends AbstractJettyTestSupport {
                 spifly(),
 
                 // bundles for the server side
-                mavenBundle().groupId("org.eclipse.jetty.ee10").artifactId("jetty-ee10-webapp").version(jettyVersion),
+                mavenBundle().groupId("org.eclipse.jetty.ee11").artifactId("jetty-ee11-webapp").version(jettyVersion),
                 mavenBundle().groupId("org.eclipse.jetty").artifactId("jetty-ee").version(jettyVersion),
-                mavenBundle().groupId("org.eclipse.jetty.ee10").artifactId("jetty-ee10-servlet").version(jettyVersion),
+                mavenBundle().groupId("org.eclipse.jetty.ee11").artifactId("jetty-ee11-servlet").version(jettyVersion),
                 mavenBundle().groupId("org.eclipse.jetty").artifactId("jetty-xml").version(jettyVersion),
 
                 // additional bundles for the client side
@@ -97,8 +97,7 @@ public class JettySizeLimitHandlerIT extends AbstractJettyTestSupport {
 
     @Test
     public void testRequestResponseLimits() throws Exception {
-        HttpClientTransportOverHTTP transport = new HttpClientTransportOverHTTP();
-        try (HttpClient httpClient = new HttpClient(transport)) {
+        try (HttpClient httpClient = new HttpClient()) {
             Object value = bundleContext.getServiceReference(HttpService.class).getProperty("org.osgi.service.http.port");
             int httpPort = Integer.parseInt((String) value);
 
