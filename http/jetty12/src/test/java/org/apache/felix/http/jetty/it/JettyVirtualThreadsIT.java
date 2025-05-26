@@ -96,19 +96,16 @@ public class JettyVirtualThreadsIT extends AbstractJettyTestSupport {
             return;
         }
         HttpClientTransportOverHTTP transport = new HttpClientTransportOverHTTP();
-        HttpClient httpClient = new HttpClient(transport);
-        httpClient.start();
+        try (HttpClient httpClient = new HttpClient(transport)) {
+            Object value = bundleContext.getServiceReference(HttpService.class).getProperty("org.osgi.service.http.port");
+            int httpPort = Integer.parseInt((String) value);
 
-        Object value = bundleContext.getServiceReference(HttpService.class).getProperty("org.osgi.service.http.port");
-        int httpPort = Integer.parseInt((String) value);
+            URI destUri = new URI(String.format("http://localhost:%d/endpoint/working", httpPort));
 
-        URI destUri = new URI(String.format("http://localhost:%d/endpoint/working", httpPort));
-
-        ContentResponse response = httpClient.GET(destUri);
-        assertEquals(200, response.getStatus());
-        assertEquals("OK", response.getContentAsString());
-
-        httpClient.close();
+            ContentResponse response = httpClient.GET(destUri);
+            assertEquals(200, response.getStatus());
+            assertEquals("OK", response.getContentAsString());
+        }
     }
 
      static final class ExampleEndpoint extends HttpServlet {

@@ -98,33 +98,31 @@ public class JettySizeLimitHandlerIT extends AbstractJettyTestSupport {
     @Test
     public void testRequestResponseLimits() throws Exception {
         HttpClientTransportOverHTTP transport = new HttpClientTransportOverHTTP();
-        HttpClient httpClient = new HttpClient(transport);
-        httpClient.start();
+        try (HttpClient httpClient = new HttpClient(transport)) {
+            Object value = bundleContext.getServiceReference(HttpService.class).getProperty("org.osgi.service.http.port");
+            int httpPort = Integer.parseInt((String) value);
 
-        Object value = bundleContext.getServiceReference(HttpService.class).getProperty("org.osgi.service.http.port");
-        int httpPort = Integer.parseInt((String) value);
+            Fields formFields = new Fields();
+            formFields.add(new Fields.Field("key","value")); // under 10 bytes
+            ContentResponse responseWithinLimit = httpClient.FORM(new URI(String.format("http://localhost:%d/withinlimit/a", httpPort)), formFields);
 
-        Fields formFields = new Fields();
-        formFields.add(new Fields.Field("key", "value")); // under 10 bytes
-        ContentResponse responseWithinLimit = httpClient.FORM(new URI(String.format("http://localhost:%d/withinlimit/a", httpPort)), formFields);
+            // Request limit ok, response limit ok
+            assertEquals(200, responseWithinLimit.getStatus());
+            assertEquals("OK", responseWithinLimit.getContentAsString());
 
-        // Request limit ok, response limit ok
-        assertEquals(200, responseWithinLimit.getStatus());
-        assertEquals("OK", responseWithinLimit.getContentAsString());
+            // Request limit ok, response limit exceeded
+            // org.eclipse.jetty.http.HttpException$RuntimeException: 500: Response body is too large: 17>10
+            ContentResponse responseExceedingLimit = httpClient.FORM(new URI(String.format("http://localhost:%d/exceedinglimit/a", httpPort)), formFields);
 
-        // Request limit ok, response limit exceeded
-        // org.eclipse.jetty.http.HttpException$RuntimeException: 500: Response body is too large: 17>10
-        ContentResponse responseExceedingLimit = httpClient.FORM(new URI(String.format("http://localhost:%d/exceedinglimit/a", httpPort)), formFields);
-        assertEquals(500, responseExceedingLimit.getStatus());
+            assertEquals(500, responseExceedingLimit.getStatus());
 
-        Fields formFieldsLimitExceeded = new Fields();
-        formFieldsLimitExceeded.add(new Fields.Field("key", "valueoverlimit")); // over limit of 10 bytes
-        ContentResponse responseExceeded = httpClient.FORM(new URI(String.format("http://localhost:%d/withinlimit/a", httpPort)), formFieldsLimitExceeded);
+            Fields formFieldsLimitExceeded = new Fields();
+            formFieldsLimitExceeded.add(new Fields.Field("key","valueoverlimit")); // over limit of 10 bytes
+            ContentResponse responseExceeded = httpClient.FORM(new URI(String.format("http://localhost:%d/withinlimit/a", httpPort)), formFieldsLimitExceeded);
 
-        // Request limit exceeded, HTTP 413 directly from Jetty
-        assertEquals(413, responseExceeded.getStatus());
-
-        httpClient.close();
+            // Request limit exceeded, HTTP 413 directly from Jetty
+            assertEquals(413, responseExceeded.getStatus());
+        }
     }
 
     static final class HelloWorldServletWithinLimit extends HttpServlet {

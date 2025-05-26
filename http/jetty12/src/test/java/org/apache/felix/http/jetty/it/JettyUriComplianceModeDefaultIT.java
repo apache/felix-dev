@@ -92,32 +92,29 @@ public class JettyUriComplianceModeDefaultIT extends AbstractJettyTestSupport {
     @Test
     public void testUriCompliance() throws Exception {
         HttpClientTransportOverHTTP transport = new HttpClientTransportOverHTTP();
-        HttpClient httpClient = new HttpClient(transport);
-        httpClient.start();
+        try (HttpClient httpClient = new HttpClient(transport)) {
+            Object value = bundleContext.getServiceReference(HttpService.class).getProperty("org.osgi.service.http.port");
+            int httpPort = Integer.parseInt((String) value);
 
-        Object value = bundleContext.getServiceReference(HttpService.class).getProperty("org.osgi.service.http.port");
-        int httpPort = Integer.parseInt((String) value);
+            URI destUriWorking = new URI(String.format("http://localhost:%d/endpoint/working", httpPort));
+            URI destUriAmbigousPath = new URI("http://localhost:" + httpPort + "/endpoint/ambigousPathitem_0_http%3A%2F%2Fwww.test.com%2F0.html/abc");
 
-        URI destUriWorking = new URI(String.format("http://localhost:%d/endpoint/working", httpPort));
-        URI destUriAmbigousPath = new URI("http://localhost:" + httpPort + "/endpoint/ambigousPathitem_0_http%3A%2F%2Fwww.test.com%2F0.html/abc");
+            ContentResponse response = httpClient.GET(destUriWorking);
+            assertEquals(200, response.getStatus());
+            assertEquals("OK", response.getContentAsString());
 
-        ContentResponse response = httpClient.GET(destUriWorking);
-        assertEquals(200, response.getStatus());
-        assertEquals("OK", response.getContentAsString());
-
-        // Validate custom headers in case of success page, should not be present
-        assertNull(response.getHeaders().get("Strict-Transport-Security"));
-        assertNull(response.getHeaders().get("X-Custom-Header"));
+            // Validate custom headers in case of success page, should not be present
+            assertNull(response.getHeaders().get("Strict-Transport-Security"));
+            assertNull(response.getHeaders().get("X-Custom-Header"));
 
 
-        // blocked with HTTP 400 by default
-        // validate custom headers in case of error page
-        ContentResponse responseAmbiguousPath = httpClient.GET(destUriAmbigousPath);
-        assertEquals(400, responseAmbiguousPath.getStatus());
-        assertEquals("max-age=31536000", responseAmbiguousPath.getHeaders().get("Strict-Transport-Security"));
-        assertEquals("123", responseAmbiguousPath.getHeaders().get("X-Custom-Header"));
-
-        httpClient.close();
+            // blocked with HTTP 400 by default
+            // validate custom headers in case of error page
+            ContentResponse responseAmbiguousPath = httpClient.GET(destUriAmbigousPath);
+            assertEquals(400, responseAmbiguousPath.getStatus());
+            assertEquals("max-age=31536000", responseAmbiguousPath.getHeaders().get("Strict-Transport-Security"));
+            assertEquals("123", responseAmbiguousPath.getHeaders().get("X-Custom-Header"));
+        }
     }
 
      static final class UriComplianceEndpoint extends HttpServlet {

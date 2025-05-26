@@ -90,13 +90,6 @@ public class HttpServletResponseWrapper extends ServletResponseWrapper
     }
 
     @Override
-    public void sendRedirect(String location, int sc, boolean clearBuffer) throws IOException {
-        this.response.setStatus(sc);
-        this.response.sendRedirect(location);
-        this.response.flushBuffer();
-    }
-
-    @Override
     public void setDateHeader(final String name, final long date) {
         this.response.setDateHeader(name, date);
     }

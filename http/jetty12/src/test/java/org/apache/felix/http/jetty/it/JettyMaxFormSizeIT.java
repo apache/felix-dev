@@ -95,29 +95,26 @@ public class JettyMaxFormSizeIT extends AbstractJettyTestSupport {
     @Test
     public void testFormSizeLimit() throws Exception {
         HttpClientTransportOverHTTP transport = new HttpClientTransportOverHTTP();
-        HttpClient httpClient = new HttpClient(transport);
-        httpClient.start();
+        try (HttpClient httpClient = new HttpClient(transport)) {
+            Object value = bundleContext.getServiceReference(HttpService.class).getProperty("org.osgi.service.http.port");
+            int httpPort = Integer.parseInt((String) value);
 
-        Object value = bundleContext.getServiceReference(HttpService.class).getProperty("org.osgi.service.http.port");
-        int httpPort = Integer.parseInt((String) value);
+            URI uri = new URI(String.format("http://localhost:%d/endpoint", httpPort));
 
-        URI uri = new URI(String.format("http://localhost:%d/endpoint", httpPort));
+            Fields formFields = new Fields();
+            formFields.add(new Fields.Field("key", "value")); // under 10 bytes
+            ContentResponse response = httpClient.FORM(uri, formFields);
 
-        Fields formFields = new Fields();
-        formFields.add(new Fields.Field("key", "value")); // under 10 bytes
-        ContentResponse response = httpClient.FORM(uri, formFields);
+            assertEquals(200, response.getStatus());
+            assertEquals("OK", response.getContentAsString());
 
-        assertEquals(200, response.getStatus());
-        assertEquals("OK", response.getContentAsString());
+            Fields formFieldsLimitExceeded = new Fields();
+            formFieldsLimitExceeded.add(new Fields.Field("key", "valueoverlimit")); // over limit of 10 bytes
+            ContentResponse responseExceeded = httpClient.FORM(uri, formFieldsLimitExceeded);
 
-        Fields formFieldsLimitExceeded = new Fields();
-        formFieldsLimitExceeded.add(new Fields.Field("key", "valueoverlimit")); // over limit of 10 bytes
-        ContentResponse responseExceeded = httpClient.FORM(uri, formFieldsLimitExceeded);
-
-        // HTTP 500 thrown, because req.getParameter("key") throws an IOException
-        assertEquals(500, responseExceeded.getStatus());
-
-        httpClient.close();
+            // HTTP 500 thrown, because req.getParameter("key") throws an IOException
+            assertEquals(500, responseExceeded.getStatus());
+        }
     }
 
     static final class HelloWorldServlet extends HttpServlet {

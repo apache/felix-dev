@@ -62,24 +62,21 @@ public class JettyUriComplianceModeLegacyIT extends JettyUriComplianceModeDefaul
     @Test
     public void testUriCompliance() throws Exception {
         HttpClientTransportOverHTTP transport = new HttpClientTransportOverHTTP();
-        HttpClient httpClient = new HttpClient(transport);
-        httpClient.start();
+        try (HttpClient httpClient = new HttpClient(transport)) {
+            Object value = bundleContext.getServiceReference(HttpService.class).getProperty("org.osgi.service.http.port");
+            int httpPort = Integer.parseInt((String) value);
 
-        Object value = bundleContext.getServiceReference(HttpService.class).getProperty("org.osgi.service.http.port");
-        int httpPort = Integer.parseInt((String) value);
+            URI destUriWorking = new URI(String.format("http://localhost:%d/endpoint/working", httpPort));
+            URI destUriAmbigousPath = new URI("http://localhost:" + httpPort + "/endpoint/ambigousPathitem_0_http%3A%2F%2Fwww.test.com%2F0.html/abc");
 
-        URI destUriWorking = new URI(String.format("http://localhost:%d/endpoint/working", httpPort));
-        URI destUriAmbigousPath = new URI("http://localhost:" + httpPort + "/endpoint/ambigousPathitem_0_http%3A%2F%2Fwww.test.com%2F0.html/abc");
+            ContentResponse response = httpClient.GET(destUriWorking);
+            assertEquals(200, response.getStatus());
+            assertEquals("OK", response.getContentAsString());
 
-        ContentResponse response = httpClient.GET(destUriWorking);
-        assertEquals(200, response.getStatus());
-        assertEquals("OK", response.getContentAsString());
-
-        // no longer blocked due to LEGACY compliance mode
-        ContentResponse response2 = httpClient.GET(destUriAmbigousPath);
-        assertEquals(200, response2.getStatus());
-        assertEquals("OK", response2.getContentAsString());
-
-        httpClient.close();
+            // no longer blocked due to LEGACY compliance mode
+            ContentResponse response2 = httpClient.GET(destUriAmbigousPath);
+            assertEquals(200, response2.getStatus());
+            assertEquals("OK", response2.getContentAsString());
+        }
     }
 }
