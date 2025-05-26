@@ -158,9 +158,9 @@
             <scope>test</scope>
         </dependency>
         <dependency>
-            <groupId>org.eclipse.jetty.ee10.websocket</groupId>
-            <artifactId>jetty-ee10-websocket-jetty-server</artifactId>
-            <version>12.0.21</version>
+            <groupId>org.eclipse.jetty.ee11.websocket</groupId>
+            <artifactId>jetty-ee11-websocket-jetty-server</artifactId>
+            <version>12.1.0.beta0</version>
             <scope>test</scope>
         </dependency>
     </dependencies>
