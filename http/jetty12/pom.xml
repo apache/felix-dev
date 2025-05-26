@@ -740,12 +740,12 @@
         <dependency>
             <groupId>org.apache.felix</groupId>
             <artifactId>org.apache.felix.http.base</artifactId>
-            <version>6.0.0-SNAPSHOT</version>
+            <version>5.1.15-SNAPSHOT</version>
         </dependency>
         <dependency>
             <groupId>org.apache.felix</groupId>
             <artifactId>org.apache.felix.http.wrappers</artifactId>
-            <version>1.2.0-SNAPSHOT</version>
+            <version>6.1.0</version>
         </dependency>
         <dependency>
             <groupId>commons-fileupload</groupId>
