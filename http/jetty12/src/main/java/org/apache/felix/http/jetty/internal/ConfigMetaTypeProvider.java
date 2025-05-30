@@ -524,6 +524,12 @@ class ConfigMetaTypeProvider implements MetaTypeProvider
                 "Whether to enable jetty specific WebSocket support. Default is false.",
                 false,
                 bundle.getBundleContext().getProperty(JettyConfig.FELIX_JETTY_WEBSOCKET_ENABLE)));
+        adList.add(new AttributeDefinitionImpl(JettyConfig.FELIX_JETTY_ALLOW_RELATIVE_REDIRECTS,
+                "Allow Relative Redirects",
+                "Whether or not relative redirects are allowed. Defaults to true thus relative redirects are allowed.",
+                true,
+                bundle.getBundleContext().getProperty(JettyConfig.FELIX_JETTY_ALLOW_RELATIVE_REDIRECTS)));
+
         return new ObjectClassDefinition()
         {
 

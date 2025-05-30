@@ -292,6 +292,9 @@ public final class JettyConfig
     /** Felix specific property to control whether an OSGi configuration is required */
     private static final String FELIX_REQUIRE_OSGI_CONFIG = "org.apache.felix.http.require.config";
 
+    /** Jetty specific property to control relative redirect handling (defaults to true) */
+    public static final String FELIX_JETTY_ALLOW_RELATIVE_REDIRECTS = "org.apache.felix.jetty.relativeredirectallowed";
+
     private static String validateContextPath(String ctxPath)
     {
         // undefined, empty, or root context path
