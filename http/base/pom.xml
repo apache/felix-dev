@@ -68,6 +68,7 @@
                     <instructions>
                         <Bundle-SymbolicName>${project.artifactId}</Bundle-SymbolicName>
                         <Bundle-Version>${project.version}</Bundle-Version>
+                        <Import-Package>jakarta.servlet.*;version="[6.0,7)", *</Import-Package>
                     </instructions>
                 </configuration>
             </plugin>
