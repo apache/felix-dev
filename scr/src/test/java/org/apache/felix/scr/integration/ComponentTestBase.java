@@ -777,7 +777,7 @@ public abstract class ComponentTestBase
 
         protected InfoWriter(ServiceComponentRuntime scrService)
         {
-            super( null, scrService, null );
+            super( null, null, scrService, null );
         }
 
     }
