@@ -28,7 +28,7 @@
 
     <name>Apache Felix Http Base</name>
     <artifactId>org.apache.felix.http.base</artifactId>
-    <version>5.1.15-SNAPSHOT</version>
+    <version>5.1.17-SNAPSHOT</version>
     <packaging>jar</packaging>
 
     <scm>
@@ -68,6 +68,7 @@
                     <instructions>
                         <Bundle-SymbolicName>${project.artifactId}</Bundle-SymbolicName>
                         <Bundle-Version>${project.version}</Bundle-Version>
+                        <Import-Package>jakarta.servlet.*;version="[6.0,7)", *</Import-Package>
                     </instructions>
                 </configuration>
             </plugin>

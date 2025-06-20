@@ -319,7 +319,7 @@ public final class JettyService
                 addErrorHandler(errorPageCustomHeaders);
             }
 
-            ServletContextHandler context = new ServletContextHandler(this.config.getContextPath(),                    
+            ServletContextHandler context = new ServletContextHandler(this.config.getContextPath(),
                     ServletContextHandler.SESSIONS);
 
             this.parent = new ContextHandlerCollection(context);
@@ -742,7 +742,8 @@ public final class JettyService
         config.setRequestHeaderSize(this.config.getHeaderSize());
         config.setResponseHeaderSize(this.config.getHeaderSize());
         config.setOutputBufferSize(this.config.getResponseBufferSize());
- 
+        config.setRelativeRedirectAllowed(this.config.getBooleanProperty(JettyConfig.FELIX_JETTY_ALLOW_RELATIVE_REDIRECTS, true));
+
         String uriComplianceMode = this.config.getProperty(JettyConfig.FELIX_JETTY_URI_COMPLIANCE_MODE, null);
         if (uriComplianceMode != null) {
             try {
