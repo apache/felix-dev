@@ -131,7 +131,7 @@ public class JettySizeLimitHandlerIT extends AbstractJettyTestSupport {
                 ContentResponse response = completable.get();
                 assertEquals(413, response.getStatus());
             } catch (ExecutionException e) {
-                // FIXME this shouldn't happen, but it does with Jetty 12.1.0.beta0
+                // FIXME this shouldn't happen, but it does with Jetty 12.1.0.beta1
                 // java.nio.channels.AsynchronousCloseException
             }
         }
