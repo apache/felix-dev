@@ -20,6 +20,7 @@ package org.apache.felix.hc.core.impl.servlet;
 import static org.osgi.service.servlet.whiteboard.HttpWhiteboardConstants.HTTP_WHITEBOARD_CONTEXT_SELECT;
 import static org.osgi.service.servlet.whiteboard.HttpWhiteboardConstants.HTTP_WHITEBOARD_CONTEXT_NAME;
 import static org.osgi.service.servlet.whiteboard.HttpWhiteboardConstants.HTTP_WHITEBOARD_SERVLET_PATTERN;
+import static org.osgi.service.servlet.whiteboard.HttpWhiteboardConstants.HTTP_WHITEBOARD_SERVLET_NAME;
 
 import java.io.IOException;
 import java.io.PrintWriter;
@@ -253,6 +254,8 @@ public class HealthCheckExecutorServlet extends HttpServlet {
     private void registerServlet(final ServletInfoDTO servletInfo) {
     	final Dictionary<String, Object> properties = new Hashtable<>();
 
+        // FELIX-6791 Add unique servlet name
+        properties.put(HTTP_WHITEBOARD_SERVLET_NAME, servletInfo.contextName + "." + servletInfo.servletPath + "." + servletInfo.servlet.getClass().getSimpleName());
         if (servletInfo.contextName != null && !servletInfo.contextName.isEmpty()) {
     	    properties.put(HTTP_WHITEBOARD_CONTEXT_SELECT, "(".concat(HTTP_WHITEBOARD_CONTEXT_NAME).concat("=").concat(servletInfo.contextName).concat(")"));
         }
