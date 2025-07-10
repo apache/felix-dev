@@ -55,7 +55,7 @@ public class LightClassifierIT extends AbstractJettyTestSupport {
         return new Option[] {
                 // Minimum additional jetty dependency bundles
                 mavenBundle().groupId("commons-io").artifactId("commons-io").version("2.19.0"),
-                mavenBundle().groupId("commons-fileupload").artifactId("commons-fileupload").version("1.5"),
+                mavenBundle().groupId("commons-fileupload").artifactId("commons-fileupload").version("1.6.0"),
                 mavenBundle().groupId("org.eclipse.jetty").artifactId("jetty-alpn-java-server").version(jettyVersion),
                 mavenBundle().groupId("org.eclipse.jetty").artifactId("jetty-alpn-server").version(jettyVersion),
                 mavenBundle().groupId("org.eclipse.jetty").artifactId("jetty-http").version(jettyVersion),
