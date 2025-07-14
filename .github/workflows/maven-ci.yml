@@ -31,7 +31,7 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        java: [17,21,23,25]
+        java: [17,21,23,25-ea]
     steps:
     - uses: actions/checkout@v4
     - name: Set up JDK ${{ matrix.java }}
