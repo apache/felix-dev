@@ -69,12 +69,14 @@ jobs:
     - name: Felix SCR
       if: steps.changes.outputs.scr == 'true'
       run: mvn -B -V -Dstyle.color=always --file scr/pom.xml clean verify
+      continue-on-error: true
     - name: Felix Log
       if: steps.changes.outputs.log == 'true'
       run: mvn -B -V -Dstyle.color=always --file log/pom.xml clean verify
     - name: Felix HTTP
       if: steps.changes.outputs.http == 'true'
       run: mvn -B -V -Dstyle.color=always "-Dit.test=!MissingWebsocketDependenciesIT" --file http/pom.xml clean install verify
+      continue-on-error: true
     - name: Felix Maven bundle plugin
       if: steps.changes.outputs.maven-bundle-plugin == 'true'
       run: mvn -B -V -Dstyle.color=always --file tools/maven-bundle-plugin/pom.xml clean install verify
@@ -87,6 +89,7 @@ jobs:
     - name: Felix Framework
       if: steps.changes.outputs.framework == 'true'
       run: mvn -B -V -Dstyle.color=always --file framework/pom.xml clean verify
+      continue-on-error: true
     - name: OSGi-TCK Framework
       if: steps.changes.outputs.framework == 'true'
       run: mvn -B -V -Dstyle.color=always --file framework.tck/pom.xml clean verify

@@ -25,7 +25,7 @@
     </parent>
     <modelVersion>4.0.0</modelVersion>
     <packaging>bundle</packaging>
-    <name>Apache Felix Declarative Services</name>
+    <name>Apache Felix Declarative Services TODO remove this change</name>
     <description>
         Implementation of the Declarative Services specification 1.5
     </description>
