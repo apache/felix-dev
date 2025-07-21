@@ -89,7 +89,6 @@ public class JettySpecificWebsocketIT extends AbstractJettyTestSupport {
                 mavenBundle().groupId("org.eclipse.jetty.ee11.websocket").artifactId("jetty-ee11-websocket-servlet").version(jettyVersion),
                 mavenBundle().groupId("org.eclipse.jetty.ee11.websocket").artifactId("jetty-ee11-websocket-jetty-server").version(jettyVersion),
                 mavenBundle().groupId("org.eclipse.jetty").artifactId("jetty-xml").version(jettyVersion),
-                mavenBundle().groupId("org.eclipse.jetty").artifactId("jetty-ee").version(jettyVersion),
                 mavenBundle().groupId("org.eclipse.jetty.compression").artifactId("jetty-compression-common").version(jettyVersion),
 
                 // additional bundles for the client side
