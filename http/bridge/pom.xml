@@ -74,9 +74,6 @@
                             org.apache.felix.http.base.*,
                             org.apache.felix.http.bridge.internal.*
                         </Private-Package>
-                        <Conditional-Package>
-                            org.apache.commons.*
-                        </Conditional-Package>
                         <Import-Package>
                             jakarta.servlet,
                             jakarta.servlet.http,

@@ -191,9 +191,6 @@
                             org.eclipse.jetty,
                             org.eclipse.jetty.version
                         </Private-Package>
-                        <Conditional-Package>
-                            org.apache.commons.*
-                        </Conditional-Package>
                         <Import-Package>
                             sun.misc;resolution:=optional,
                             sun.nio.ch;resolution:=optional,
