@@ -30,7 +30,7 @@
     <description>This is an implementation of the R8.1 OSGi Servlet Service, the R7 OSGi Http Service and the R7 OSGi Http Whiteboard Specification</description>
 
     <artifactId>org.apache.felix.http.jetty12</artifactId>
-    <version>1.0.37-SNAPSHOT</version>
+    <version>1.1.0-SNAPSHOT</version>
     <packaging>bundle</packaging>
 
     <scm>
@@ -271,10 +271,6 @@
                             <instructions>
                                <Bundle-Name>${project.name} Light</Bundle-Name>
                                <Bundle-SymbolicName>${project.artifactId}.light</Bundle-SymbolicName>
-                               <!-- We need to override this from the base configuration -->
-                               <Conditional-Package>
-                                   foo
-                               </Conditional-Package>
                                <Export-Package>
                                     org.osgi.service.http,
                                     org.osgi.service.http.context,
@@ -382,9 +378,6 @@
                                     org.apache.felix.http.jetty.*,
                                     org.eclipse.jetty.version
                                 </Private-Package>
-                                <Conditional-Package>
-                                    org.apache.commons.*
-                                </Conditional-Package>
                                 <Import-Package>
                                     org.eclipse.jetty.client;resolution:=optional,
                                     sun.misc;resolution:=optional,
@@ -489,9 +482,6 @@
                                     org.apache.felix.http.jetty.*,
                                     org.eclipse.jetty.version
                                 </Private-Package>
-                                <Conditional-Package>
-                                    org.apache.commons.*
-                                </Conditional-Package>
                                 <Import-Package>
                                     org.eclipse.jetty.client;resolution:=optional,
                                     sun.misc;resolution:=optional,
@@ -735,12 +725,6 @@
             <groupId>commons-fileupload</groupId>
             <artifactId>commons-fileupload</artifactId>
             <version>1.6.0</version>
-            <optional>true</optional>
-        </dependency>
-        <dependency>
-            <groupId>commons-io</groupId>
-            <artifactId>commons-io</artifactId>
-            <version>2.19.0</version>
         </dependency>
     	<!-- Testing -->
         <dependency>

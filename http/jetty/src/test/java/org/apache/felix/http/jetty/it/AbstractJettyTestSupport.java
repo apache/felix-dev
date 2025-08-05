@@ -76,6 +76,8 @@ public abstract class AbstractJettyTestSupport {
                 // update pax logging for SLF4J 2
                 mavenBundle().groupId("org.ops4j.pax.logging").artifactId("pax-logging-api").version("2.3.0"),
                 optionalRemoteDebug(),
+                mavenBundle().groupId("commons-fileupload").artifactId("commons-fileupload").version("1.6.0"),
+                mavenBundle().groupId("commons-io").artifactId("commons-io").version("2.19.0"),
                 mavenBundle().groupId("org.apache.felix").artifactId("org.apache.felix.http.servlet-api").version("6.1.0"),
                 testBundle("bundle.filename"),
                 junitBundles(),

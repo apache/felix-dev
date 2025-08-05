@@ -30,7 +30,7 @@
     <description>This is an implementation of the R8.1 OSGi Servlet Service, the R7 OSGi Http Service and the R7 OSGi Http Whiteboard Specification</description>
 
     <artifactId>org.apache.felix.http.jetty</artifactId>
-    <version>5.1.35-SNAPSHOT</version>
+    <version>5.2.0-SNAPSHOT</version>
     <packaging>bundle</packaging>
 
     <scm>
@@ -267,10 +267,6 @@
                             <instructions>
                                <Bundle-Name>${project.name} Light</Bundle-Name>
                                <Bundle-SymbolicName>${project.artifactId}.light</Bundle-SymbolicName>
-                               <!-- We need to override this from the base configuration -->
-                               <Conditional-Package>
-                                   foo
-                               </Conditional-Package>
                                <Export-Package>
                                     org.osgi.service.http,
                                     org.osgi.service.http.context,
@@ -507,11 +503,6 @@
             <groupId>commons-fileupload</groupId>
             <artifactId>commons-fileupload</artifactId>
             <version>1.6.0</version>
-        </dependency>
-        <dependency>
-            <groupId>commons-io</groupId>
-            <artifactId>commons-io</artifactId>
-            <version>2.19.0</version>
         </dependency>
     	<!-- Testing -->
         <dependency>
