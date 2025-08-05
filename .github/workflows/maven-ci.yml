@@ -2,7 +2,7 @@ name: Github CI Build
 
 on:
   push:
-    branches: [ "master" ]
+    branches: [ "masterdisabled" ]
     paths:
       - 'scr/**'
       - 'http/**'
@@ -12,7 +12,7 @@ on:
       - 'webconsole/**'
       - 'framework/**'
   pull_request:
-    branches: [ "master" ]
+    branches: [ "masterdisabled" ]
     paths:
       - 'scr/**'
       - 'http/**'
