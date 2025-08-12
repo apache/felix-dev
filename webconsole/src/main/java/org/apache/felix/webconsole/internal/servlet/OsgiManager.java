@@ -38,6 +38,7 @@ import java.util.ResourceBundle;
 import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ConcurrentSkipListSet;
+import java.util.concurrent.atomic.AtomicReference;
 
 import org.apache.felix.webconsole.servlet.User;
 import org.apache.felix.webconsole.internal.OsgiManagerPlugin;
@@ -187,7 +188,7 @@ public class OsgiManager extends HttpServlet {
 
     private ServiceTracker<BrandingPlugin, BrandingPlugin> brandingTracker;
 
-    private ServiceTracker<SecurityProvider, SecurityProvider> securityProviderTracker;
+    private final AtomicReference<ServiceTracker<SecurityProvider, SecurityProvider>> securityProviderTracker = new AtomicReference<>();
 
     @SuppressWarnings("rawtypes")
     private ServiceRegistration configurationListener;
@@ -267,14 +268,14 @@ public class OsgiManager extends HttpServlet {
         this.defaultConfiguration.put( PROP_RELOAD_TIMEOUT,
             ConfigurationUtil.getProperty( bundleContext, FRAMEWORK_RELOAD_TIMEOUT, DEFAULT_RELOAD_TIMEOUT ) );
 
+        this.requiredSecurityProviders = splitCommaSeparatedString(bundleContext.getProperty(FRAMEWORK_PROP_SECURITY_PROVIDERS));
+
         // configure and start listening for configuration
         updateConfiguration(null);
 
-        this.requiredSecurityProviders = splitCommaSeparatedString(bundleContext.getProperty(FRAMEWORK_PROP_SECURITY_PROVIDERS));
-
         // add support for pluggable security
-        securityProviderTracker = new ServiceTracker<>(bundleContext, SecurityProvider.class, new UpdateDependenciesStateCustomizer());
-        securityProviderTracker.open();
+        securityProviderTracker.set(new ServiceTracker<>(bundleContext, SecurityProvider.class, new UpdateDependenciesStateCustomizer()));
+        securityProviderTracker.get().open();
 
         // register managed service as a service factory
         this.configurationListener = bundleContext.registerService( "org.osgi.service.cm.ManagedService",
@@ -389,10 +390,11 @@ public class OsgiManager extends HttpServlet {
         }
 
         // stop tracking security provider
-        if (securityProviderTracker != null) {
-            securityProviderTracker.close();
-            securityProviderTracker = null;
+        final ServiceTracker<SecurityProvider, SecurityProvider> tracker = securityProviderTracker.get();
+        if (tracker != null) {
+            tracker.close();
         }
+        securityProviderTracker.set(null);
 
         this.bundleContext = null;
     }
@@ -539,8 +541,10 @@ public class OsgiManager extends HttpServlet {
 
     @SuppressWarnings("deprecation")
     private final void logout(final HttpServletRequest request, final HttpServletResponse response) throws IOException {
-        final SecurityProvider securityProvider = securityProviderTracker.getService();
-        securityProvider.logout(request, response);
+        final SecurityProvider securityProvider = securityProviderTracker.get().getService();
+        if (securityProvider != null) {
+            securityProvider.logout(request, response);
+        }
         if (!response.isCommitted()) {
             // check if special logout cookie is set, this is used to prevent
             // from an endless loop with basic auth
@@ -915,7 +919,7 @@ public class OsgiManager extends HttpServlet {
         this.unregisterHttpWhiteboardServices();
         // switch location
         this.webManagerRoot = newWebManagerRoot;
-        this.registerHttpWhiteboardServices();
+        this.updateRegistrationState();
     }
 
     static Set<String> splitCommaSeparatedString(final String str) {
