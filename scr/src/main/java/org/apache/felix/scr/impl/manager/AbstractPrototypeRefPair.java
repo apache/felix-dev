@@ -98,13 +98,16 @@ public abstract class AbstractPrototypeRefPair<S, T> extends RefPair<S, T>
     }
 
     private void doUngetService(ScrComponentContext key, final T service) {
-		try
-		{
-			key.getComponentServiceObjectsHelper().getServiceObjects(getRef()).ungetService( service );
-		}
-		catch ( final IllegalStateException ise )
-		{
-			// ignore
-		}
+        try
+        {
+            key.getComponentServiceObjectsHelper().getServiceObjects(getRef()).ungetService( service );
+        }
+        catch ( final IllegalStateException ise )
+        {
+            // ignore
+        }
+        catch (IllegalArgumentException e) {
+            // ignore
+        }
 	}
 }
