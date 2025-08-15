@@ -68,8 +68,9 @@ public interface ScrConfiguration extends LogConfiguration
     String PROP_SERVICE_CHANGECOUNT_TIMEOUT = "ds.service.changecount.timeout";
 
     String PROP_CACHE_METADATA = "ds.cache.metadata";
-    
 
+    String PROP_COMMANDS_ENABLED = "ds.commands.enabled";
+    
     boolean isFactoryEnabled();
 
 
@@ -93,5 +94,7 @@ public interface ScrConfiguration extends LogConfiguration
     long serviceChangecountTimeout();
 
     boolean cacheMetadata();
+
+	boolean isCommandsEnabled();
 
 }
