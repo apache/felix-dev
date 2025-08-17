@@ -2,7 +2,7 @@ name: Github CI Build
 
 on:
   push:
-    branches: [ "masterdisabled" ]
+    branches: [ "master" ]
     paths:
       - 'scr/**'
       - 'http/**'
@@ -12,7 +12,7 @@ on:
       - 'webconsole/**'
       - 'framework/**'
   pull_request:
-    branches: [ "masterdisabled" ]
+    branches: [ "master" ]
     paths:
       - 'scr/**'
       - 'http/**'
@@ -45,7 +45,7 @@ jobs:
       with:
         maven-version: 3.9.9
     - name: Check which subproject changed and build affected ones
-      uses: dorny/paths-filter@v3.0.2
+      uses: dorny/paths-filter@de90cc6fb38fc0963ad72b210f1f284cd68cea36
       id: changes
       with:
         filters: |
