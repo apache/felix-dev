@@ -42,7 +42,7 @@
 
     <properties>
         <felix.java.version>11</felix.java.version>
-        <jetty.version>11.0.25</jetty.version>
+        <jetty.version>11.0.26</jetty.version>
         <baseline.skip>true</baseline.skip>
         <org.ops4j.pax.exam.version>4.13.3</org.ops4j.pax.exam.version>
         <!-- To debug the pax process, override this with -D -->
