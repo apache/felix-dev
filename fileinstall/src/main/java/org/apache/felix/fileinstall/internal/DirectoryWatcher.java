@@ -27,6 +27,7 @@ import java.net.MalformedURLException;
 import java.net.URI;
 import java.net.URISyntaxException;
 import java.net.URL;
+import java.nio.file.Files;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
@@ -37,7 +38,6 @@ import java.util.LinkedHashSet;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
-import java.util.Random;
 import java.util.Set;
 import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.jar.JarInputStream;
@@ -607,19 +607,11 @@ public class DirectoryWatcher extends Thread implements BundleListener
     {
         if (tmpDir == null)
         {
-            File javaIoTmpdir = new File(System.getProperty("java.io.tmpdir"));
-            if (!javaIoTmpdir.exists() && !javaIoTmpdir.mkdirs()) {
-                throw new IllegalStateException("Unable to create temporary directory " + javaIoTmpdir);
-            }
-            Random random = new Random();
-            while (tmpDir == null)
-            {
-                File f = new File(javaIoTmpdir, "fileinstall-" + Long.toString(random.nextLong()));
-                if (!f.exists() && f.mkdirs())
-                {
-                    tmpDir = f;
-                    tmpDir.deleteOnExit();
-                }
+            try {
+                tmpDir = Files.createTempDirectory("fileinstall-").toFile();
+                tmpDir.deleteOnExit();
+            } catch (IOException ex) {
+                throw new IllegalStateException("Cannot create temp directory", ex);
             }
         }
         else

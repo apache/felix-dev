@@ -87,7 +87,7 @@ public class OsgiManagerTest {
 
         ServiceReference sref = Mockito.mock(ServiceReference.class);
         stc.addingService(sref);
-        assertEquals(0, updateCalled.size());
+        assertEquals(1, updateCalled.size());
 
         ServiceReference sref2 = Mockito.mock(ServiceReference.class);
         Mockito.when(sref2.getProperty(SecurityProvider.PROPERTY_ID)).thenReturn("xyz");
@@ -95,7 +95,7 @@ public class OsgiManagerTest {
         Mockito.when(bc.getService(sref2)).thenReturn(Mockito.mock(SecurityProvider.class));
         stc.addingService(sref2);
         assertEquals(Collections.singleton("xyz"), mgr.registeredSecurityProviders);
-        assertEquals(1, updateCalled.size());
+        assertEquals(2, updateCalled.size());
     }
 
     @SuppressWarnings({ "unchecked", "rawtypes" })
@@ -128,15 +128,14 @@ public class OsgiManagerTest {
         Mockito.when(sref.getProperty(Constants.SERVICE_ID)).thenReturn(3L);
         stc.removedService(sref, null);
 
-        assertEquals(2, updateCalled.size());
+        assertEquals(3, updateCalled.size());
         assertEquals(2, mgr.registeredSecurityProviders.size());
         assertTrue(mgr.registeredSecurityProviders.contains("abc"));
         assertTrue(mgr.registeredSecurityProviders.contains("xyz"));
 
-
         stc.removedService(sref2, null);
         assertEquals(Collections.singleton("abc"), mgr.registeredSecurityProviders);
-        assertEquals(3, updateCalled.size());
+        assertEquals(4, updateCalled.size());
     }
 
     @SuppressWarnings({ "unchecked", "rawtypes" })

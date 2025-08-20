@@ -164,6 +164,7 @@ public abstract class ComponentTestBase
                         + "org.apache.felix.scr.integration.components.felix4984,"
                         + "org.apache.felix.scr.integration.components.felix5248,"
                         + "org.apache.felix.scr.integration.components.felix5276,"
+                        + "org.apache.felix.scr.integration.components.felix6726,"
                         + "org.apache.felix.scr.integration.components.metadata.cache" );
         builder.setHeader( "Import-Package", "org.apache.felix.scr.component" );
         builder.setHeader( "Bundle-ManifestVersion", "2" );
@@ -755,12 +756,12 @@ public abstract class ComponentTestBase
         final InputStream bundleStream = bundle().add("OSGI-INF/components.xml",
                 getClass().getResource( descriptorFile ) )
 
-                .set( Constants.BUNDLE_SYMBOLICNAME, symbolicName ).set( Constants.BUNDLE_VERSION, version ).set(
-                        Constants.IMPORT_PACKAGE, componentPackage ).set( "Service-Component", "OSGI-INF/components.xml" ).set(
-                                Constants.REQUIRE_CAPABILITY,
-                                ExtenderNamespace.EXTENDER_NAMESPACE
-                                + ";filter:=\"(&(osgi.extender=osgi.component)(version>=1.3)(!(version>=2.0)))\"" ).build(
-                                        withBnd() );
+                .set( Constants.BUNDLE_SYMBOLICNAME, symbolicName )
+                .set( Constants.BUNDLE_VERSION, version )
+                .set( Constants.IMPORT_PACKAGE, componentPackage )
+                .set( "Service-Component", "OSGI-INF/components.xml" )
+                .set( Constants.REQUIRE_CAPABILITY, ExtenderNamespace.EXTENDER_NAMESPACE + ";filter:=\"(&(osgi.extender=osgi.component)(version>=1.3)(!(version>=2.0)))\"" )
+                .build( withBnd() );
         return bundleStream;
     }
 
@@ -776,7 +777,7 @@ public abstract class ComponentTestBase
 
         protected InfoWriter(ServiceComponentRuntime scrService)
         {
-            super( null, scrService, null );
+            super( null, null, scrService, null );
         }
 
     }

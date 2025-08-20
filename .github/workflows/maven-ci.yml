@@ -33,7 +33,7 @@ jobs:
       matrix:
         java: [17,21,23]
     steps:
-    - uses: actions/checkout@v4
+    - uses: actions/checkout@v5
     - name: Set up JDK ${{ matrix.java }}
       uses: actions/setup-java@v4
       with:
@@ -45,7 +45,7 @@ jobs:
       with:
         maven-version: 3.9.9
     - name: Check which subproject changed and build affected ones
-      uses: dorny/paths-filter@v3.0.2
+      uses: dorny/paths-filter@de90cc6fb38fc0963ad72b210f1f284cd68cea36
       id: changes
       with:
         filters: |

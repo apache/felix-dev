@@ -86,6 +86,8 @@ public class ScrConfigurationImpl implements ScrConfiguration
     private boolean isLogEnabled;
 
     private boolean isLogExtensionEnabled;
+    
+    private boolean commandsEnabled;
 
     private long lockTimeout = DEFAULT_LOCK_TIMEOUT_MILLISECONDS;
 
@@ -184,6 +186,7 @@ public class ScrConfigurationImpl implements ScrConfiguration
                         cacheMetadata = false;
                         isLogEnabled = true;
                         isLogExtensionEnabled = false;
+                        commandsEnabled = true;
                     }
                     else
                     {
@@ -198,6 +201,7 @@ public class ScrConfigurationImpl implements ScrConfiguration
                         cacheMetadata = getDefaultCacheMetadata();
                         isLogEnabled = getDefaultLogEnabled();
                         isLogExtensionEnabled = getDefaultLogExtension();
+                        commandsEnabled = getDefaultCommandsEnabled();
                     }
                 }
                 else
@@ -220,6 +224,8 @@ public class ScrConfigurationImpl implements ScrConfiguration
                     String.valueOf(config.get(PROP_CACHE_METADATA)));
                 isLogEnabled = checkIfLogEnabled(config);
                 isLogExtensionEnabled = VALUE_TRUE.equalsIgnoreCase(String.valueOf(config.get(PROP_LOG_EXTENSION)));
+                Object cmdEnabled =  config.get( PROP_COMMANDS_ENABLED );
+                commandsEnabled=cmdEnabled == null ? true : VALUE_TRUE.equalsIgnoreCase(cmdEnabled.toString());
             }
             if ( scrCommand != null )
             {
@@ -446,6 +452,16 @@ public class ScrConfigurationImpl implements ScrConfiguration
         }
         return isLogEnabled == null ? true : Boolean.parseBoolean(isLogEnabled.toString());
     }
-    
 
+    private boolean getDefaultCommandsEnabled()
+    {
+    	String commandsEnabled = bundleContext.getProperty(PROP_COMMANDS_ENABLED);
+        return commandsEnabled == null ? true : VALUE_TRUE.equalsIgnoreCase(commandsEnabled);
+    }
+    
+    @Override
+    public boolean isCommandsEnabled() 
+	{
+		return commandsEnabled;
+	}
 }

@@ -17,6 +17,7 @@
 package org.apache.felix.webconsole.internal.servlet;
 
 import java.net.URL;
+import java.util.concurrent.atomic.AtomicReference;
 
 import org.apache.felix.webconsole.servlet.User;
 import org.apache.felix.webconsole.spi.SecurityProvider;
@@ -31,16 +32,17 @@ import jakarta.servlet.http.HttpServletResponse;
 
 final class OsgiManagerHttpContext extends ServletContextHelper {
 
-    private final ServiceTracker<SecurityProvider, SecurityProvider> tracker;
+    private final AtomicReference<ServiceTracker<SecurityProvider, SecurityProvider>> holder;
 
     private final Bundle bundle;
 
     private final String webManagerRoot;
 
     OsgiManagerHttpContext(final Bundle webConsoleBundle,
-            final ServiceTracker<SecurityProvider, SecurityProvider> tracker, final String webManagerRoot) {
+            final AtomicReference<ServiceTracker<SecurityProvider, SecurityProvider>> holder,
+            final String webManagerRoot) {
         super(webConsoleBundle);
-        this.tracker = tracker;
+        this.holder = holder;
         this.bundle = webConsoleBundle;
         this.webManagerRoot = webManagerRoot;
     }
@@ -62,7 +64,8 @@ final class OsgiManagerHttpContext extends ServletContextHelper {
     @Override
     @SuppressWarnings("deprecation")
     public boolean handleSecurity( final HttpServletRequest r, final HttpServletResponse response ) {
-        final SecurityProvider provider = tracker.getService();
+        final ServiceTracker<SecurityProvider, SecurityProvider> tracker = holder.get();
+        final SecurityProvider provider = tracker != null ? tracker.getService() : null;
 
         // for compatibility we have to adjust a few methods on the request
         final HttpServletRequest request = new HttpServletRequestWrapper(r) {

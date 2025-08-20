@@ -42,7 +42,7 @@
 
     <properties>
         <felix.java.version>17</felix.java.version>
-        <jetty.version>12.1.0.beta2</jetty.version>
+        <jetty.version>12.1.0</jetty.version>
         <baseline.skip>true</baseline.skip>
         <org.ops4j.pax.exam.version>4.13.3</org.ops4j.pax.exam.version>
         <!-- To debug the pax process, override this with -D -->
@@ -196,9 +196,6 @@
                             org.apache.felix.http.jetty.*,
                             org.eclipse.jetty.version
                         </Private-Package>
-                        <Conditional-Package>
-                            org.apache.commons.*
-                        </Conditional-Package>
                         <Import-Package>
                             sun.misc;resolution:=optional,
                             sun.nio.ch;resolution:=optional,
@@ -275,10 +272,6 @@
                             <instructions>
                                <Bundle-Name>${project.name} Light</Bundle-Name>
                                <Bundle-SymbolicName>${project.artifactId}.light</Bundle-SymbolicName>
-                               <!-- We need to override this from the base configuration -->
-                               <Conditional-Package>
-                                   foo
-                               </Conditional-Package>
                                <Export-Package>
                                     org.osgi.service.http,
                                     org.osgi.service.http.context,
@@ -387,9 +380,6 @@
                                     org.apache.felix.http.jetty.*,
                                     org.eclipse.jetty.version
                                 </Private-Package>
-                                <Conditional-Package>
-                                    org.apache.commons.*
-                                </Conditional-Package>
                                 <Import-Package>
                                     org.eclipse.jetty.client;resolution:=optional,
                                     sun.misc;resolution:=optional,
@@ -495,9 +485,6 @@
                                     org.apache.felix.http.jetty.*,
                                     org.eclipse.jetty.version
                                 </Private-Package>
-                                <Conditional-Package>
-                                    org.apache.commons.*
-                                </Conditional-Package>
                                 <Import-Package>
                                     org.eclipse.jetty.client;resolution:=optional,
                                     sun.misc;resolution:=optional,
@@ -751,12 +738,6 @@
             <groupId>commons-fileupload</groupId>
             <artifactId>commons-fileupload</artifactId>
             <version>1.6.0</version>
-            <optional>true</optional>
-        </dependency>
-        <dependency>
-            <groupId>commons-io</groupId>
-            <artifactId>commons-io</artifactId>
-            <version>2.19.0</version>
         </dependency>
     	<!-- Testing -->
         <dependency>

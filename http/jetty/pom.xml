@@ -30,7 +30,7 @@
     <description>This is an implementation of the R8.1 OSGi Servlet Service, the R7 OSGi Http Service and the R7 OSGi Http Whiteboard Specification</description>
 
     <artifactId>org.apache.felix.http.jetty</artifactId>
-    <version>5.1.35-SNAPSHOT</version>
+    <version>5.2.0-SNAPSHOT</version>
     <packaging>bundle</packaging>
 
     <scm>
@@ -42,7 +42,7 @@
 
     <properties>
         <felix.java.version>11</felix.java.version>
-        <jetty.version>11.0.25</jetty.version>
+        <jetty.version>11.0.26</jetty.version>
         <baseline.skip>true</baseline.skip>
         <org.ops4j.pax.exam.version>4.13.3</org.ops4j.pax.exam.version>
         <!-- To debug the pax process, override this with -D -->
@@ -191,9 +191,6 @@
                             org.eclipse.jetty,
                             org.eclipse.jetty.version
                         </Private-Package>
-                        <Conditional-Package>
-                            org.apache.commons.*
-                        </Conditional-Package>
                         <Import-Package>
                             sun.misc;resolution:=optional,
                             sun.nio.ch;resolution:=optional,
@@ -270,10 +267,6 @@
                             <instructions>
                                <Bundle-Name>${project.name} Light</Bundle-Name>
                                <Bundle-SymbolicName>${project.artifactId}.light</Bundle-SymbolicName>
-                               <!-- We need to override this from the base configuration -->
-                               <Conditional-Package>
-                                   foo
-                               </Conditional-Package>
                                <Export-Package>
                                     org.osgi.service.http,
                                     org.osgi.service.http.context,
@@ -510,11 +503,6 @@
             <groupId>commons-fileupload</groupId>
             <artifactId>commons-fileupload</artifactId>
             <version>1.6.0</version>
-        </dependency>
-        <dependency>
-            <groupId>commons-io</groupId>
-            <artifactId>commons-io</artifactId>
-            <version>2.19.0</version>
         </dependency>
     	<!-- Testing -->
         <dependency>
