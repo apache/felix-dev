@@ -43,7 +43,7 @@ import jakarta.websocket.server.ServerContainer;
 import jakarta.websocket.server.ServerEndpoint;
 
 import org.awaitility.Awaitility;
-import org.eclipse.jetty.ee10.websocket.jakarta.client.JakartaWebSocketClientContainerProvider;
+import org.eclipse.jetty.ee11.websocket.jakarta.client.JakartaWebSocketClientContainerProvider;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.ops4j.pax.exam.Option;
@@ -71,19 +71,20 @@ public class JakartaSpecificWebsocketIT extends AbstractJettyTestSupport {
                 spifly(),
 
                 // bundles for the server side
-                mavenBundle().groupId("jakarta.websocket").artifactId("jakarta.websocket-api").version("2.1.1"),
-                mavenBundle().groupId("jakarta.websocket").artifactId("jakarta.websocket-client-api").version("2.1.1"),
+                mavenBundle().groupId("jakarta.websocket").artifactId("jakarta.websocket-api").version("2.2.0"),
+                mavenBundle().groupId("jakarta.websocket").artifactId("jakarta.websocket-client-api").version("2.2.0"),
                 mavenBundle().groupId("org.eclipse.jetty").artifactId("jetty-alpn-client").version(jettyVersion),
                 mavenBundle().groupId("org.eclipse.jetty").artifactId("jetty-client").version(jettyVersion),
-                mavenBundle().groupId("org.eclipse.jetty.ee10").artifactId("jetty-ee10-webapp").version(jettyVersion),
-                mavenBundle().groupId("org.eclipse.jetty").artifactId("jetty-ee").version(jettyVersion),
+                mavenBundle().groupId("org.eclipse.jetty.ee11").artifactId("jetty-ee11-webapp").version(jettyVersion),
+                mavenBundle().groupId("org.eclipse.jetty.compression").artifactId("jetty-compression-gzip").version(jettyVersion),
+                mavenBundle().groupId("org.eclipse.jetty.compression").artifactId("jetty-compression-common").version(jettyVersion),
                 mavenBundle().groupId("org.eclipse.jetty.websocket").artifactId("jetty-websocket-core-client").version(jettyVersion),
                 mavenBundle().groupId("org.eclipse.jetty.websocket").artifactId("jetty-websocket-core-common").version(jettyVersion),
                 mavenBundle().groupId("org.eclipse.jetty.websocket").artifactId("jetty-websocket-core-server").version(jettyVersion),
-                mavenBundle().groupId("org.eclipse.jetty.ee10.websocket").artifactId("jetty-ee10-websocket-jakarta-client").version(jettyVersion),
-                mavenBundle().groupId("org.eclipse.jetty.ee10.websocket").artifactId("jetty-ee10-websocket-jakarta-common").version(jettyVersion),
-                mavenBundle().groupId("org.eclipse.jetty.ee10.websocket").artifactId("jetty-ee10-websocket-jakarta-server").version(jettyVersion),
-                mavenBundle().groupId("org.eclipse.jetty.ee10.websocket").artifactId("jetty-ee10-websocket-servlet").version(jettyVersion),
+                mavenBundle().groupId("org.eclipse.jetty.ee11.websocket").artifactId("jetty-ee11-websocket-jakarta-client").version(jettyVersion),
+                mavenBundle().groupId("org.eclipse.jetty.ee11.websocket").artifactId("jetty-ee11-websocket-jakarta-common").version(jettyVersion),
+                mavenBundle().groupId("org.eclipse.jetty.ee11.websocket").artifactId("jetty-ee11-websocket-jakarta-server").version(jettyVersion),
+                mavenBundle().groupId("org.eclipse.jetty.ee11.websocket").artifactId("jetty-ee11-websocket-servlet").version(jettyVersion),
                 mavenBundle().groupId("org.eclipse.jetty").artifactId("jetty-xml").version(jettyVersion)
         };
     }

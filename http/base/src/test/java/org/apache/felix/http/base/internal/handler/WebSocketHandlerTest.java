@@ -21,7 +21,7 @@ import static org.junit.Assert.assertTrue;
 import static org.mockito.Mockito.mock;
 
 import org.apache.felix.http.javaxwrappers.ServletWrapper;
-import org.eclipse.jetty.ee10.websocket.server.JettyWebSocketServlet;
+import org.eclipse.jetty.ee11.websocket.server.JettyWebSocketServlet;
 import org.junit.Before;
 import org.junit.Test;
 

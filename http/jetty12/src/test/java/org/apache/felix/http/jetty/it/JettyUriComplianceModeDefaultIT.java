@@ -35,7 +35,6 @@ import jakarta.servlet.http.HttpServletResponse;
 
 import org.eclipse.jetty.client.ContentResponse;
 import org.eclipse.jetty.client.HttpClient;
-import org.eclipse.jetty.client.transport.HttpClientTransportOverHTTP;
 import org.junit.Before;
 import org.junit.Test;
 import org.junit.runner.RunWith;
@@ -60,14 +59,15 @@ public class JettyUriComplianceModeDefaultIT extends AbstractJettyTestSupport {
                 spifly(),
 
                 // bundles for the server side
-                mavenBundle().groupId("org.eclipse.jetty.ee10").artifactId("jetty-ee10-webapp").version(jettyVersion),
-                mavenBundle().groupId("org.eclipse.jetty").artifactId("jetty-ee").version(jettyVersion),
-                mavenBundle().groupId("org.eclipse.jetty.ee10").artifactId("jetty-ee10-servlet").version(jettyVersion),
+                mavenBundle().groupId("org.eclipse.jetty.ee11").artifactId("jetty-ee11-webapp").version(jettyVersion),
+                mavenBundle().groupId("org.eclipse.jetty.ee11").artifactId("jetty-ee11-servlet").version(jettyVersion),
                 mavenBundle().groupId("org.eclipse.jetty").artifactId("jetty-xml").version(jettyVersion),
+                mavenBundle().groupId("org.eclipse.jetty.compression").artifactId("jetty-compression-common").version(jettyVersion),
 
                 // additional bundles for the client side
                 mavenBundle().groupId("org.eclipse.jetty").artifactId("jetty-alpn-client").version(jettyVersion),
-                mavenBundle().groupId("org.eclipse.jetty").artifactId("jetty-client").version(jettyVersion)
+                mavenBundle().groupId("org.eclipse.jetty").artifactId("jetty-client").version(jettyVersion),
+                mavenBundle().groupId("org.eclipse.jetty.compression").artifactId("jetty-compression-gzip").version(jettyVersion)
         };
     }
 
@@ -89,33 +89,30 @@ public class JettyUriComplianceModeDefaultIT extends AbstractJettyTestSupport {
 
     @Test
     public void testUriCompliance() throws Exception {
-        HttpClientTransportOverHTTP transport = new HttpClientTransportOverHTTP();
-        HttpClient httpClient = new HttpClient(transport);
-        httpClient.start();
+        try (HttpClient httpClient = new HttpClient()) {
+            httpClient.start();
+            Object value = bundleContext.getServiceReference(HttpService.class).getProperty("org.osgi.service.http.port");
+            int httpPort = Integer.parseInt((String) value);
 
-        Object value = bundleContext.getServiceReference(HttpService.class).getProperty("org.osgi.service.http.port");
-        int httpPort = Integer.parseInt((String) value);
+            URI destUriWorking = new URI(String.format("http://localhost:%d/endpoint/working", httpPort));
+            URI destUriAmbigousPath = new URI("http://localhost:" + httpPort + "/endpoint/ambigousPathitem_0_http%3A%2F%2Fwww.test.com%2F0.html/abc");
 
-        URI destUriWorking = new URI(String.format("http://localhost:%d/endpoint/working", httpPort));
-        URI destUriAmbigousPath = new URI("http://localhost:" + httpPort + "/endpoint/ambigousPathitem_0_http%3A%2F%2Fwww.test.com%2F0.html/abc");
+            ContentResponse response = httpClient.GET(destUriWorking);
+            assertEquals(200, response.getStatus());
+            assertEquals("OK", response.getContentAsString());
 
-        ContentResponse response = httpClient.GET(destUriWorking);
-        assertEquals(200, response.getStatus());
-        assertEquals("OK", response.getContentAsString());
-
-        // Validate custom headers in case of success page, should not be present
-        assertNull(response.getHeaders().get("Strict-Transport-Security"));
-        assertNull(response.getHeaders().get("X-Custom-Header"));
+            // Validate custom headers in case of success page, should not be present
+            assertNull(response.getHeaders().get("Strict-Transport-Security"));
+            assertNull(response.getHeaders().get("X-Custom-Header"));
 
 
-        // blocked with HTTP 400 by default
-        // validate custom headers in case of error page
-        ContentResponse responseAmbiguousPath = httpClient.GET(destUriAmbigousPath);
-        assertEquals(400, responseAmbiguousPath.getStatus());
-        assertEquals("max-age=31536000", responseAmbiguousPath.getHeaders().get("Strict-Transport-Security"));
-        assertEquals("123", responseAmbiguousPath.getHeaders().get("X-Custom-Header"));
-
-        httpClient.close();
+            // blocked with HTTP 400 by default
+            // validate custom headers in case of error page
+            ContentResponse responseAmbiguousPath = httpClient.GET(destUriAmbigousPath);
+            assertEquals(400, responseAmbiguousPath.getStatus());
+            assertEquals("max-age=31536000", responseAmbiguousPath.getHeaders().get("Strict-Transport-Security"));
+            assertEquals("123", responseAmbiguousPath.getHeaders().get("X-Custom-Header"));
+        }
     }
 
      static final class UriComplianceEndpoint extends HttpServlet {
