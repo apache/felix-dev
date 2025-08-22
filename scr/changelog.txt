@@ -1,3 +1,15 @@
+Changes in 2.2.14
+-----------------
+** PRs
+    * #383 Do not print an error when a wildcard is used in component header
+    * #359 felix.scr - Fix printing of array of primitive types.
+    * #438 Enable conditional command registration.
+    * #437 Use globalContext for commands if configured
+
+** Bug
+    * [FELIX-6726] One reference can be unset more then once and will cause IllegalArgumentExceptionin Framework
+    * [FELIX-6778] Reduce number of re-creation(s) of SCR Component Registry thread
+
 Changes in 2.2.12
 -----------------
 ** Bug
