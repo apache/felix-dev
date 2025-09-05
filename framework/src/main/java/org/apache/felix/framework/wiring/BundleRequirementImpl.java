@@ -21,6 +21,7 @@ package org.apache.felix.framework.wiring;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.Map;
+import java.util.Objects;
 import java.util.function.Function;
 
 import org.apache.felix.framework.capabilityset.CapabilitySet;
@@ -30,6 +31,7 @@ import org.osgi.framework.Constants;
 import org.osgi.framework.wiring.BundleCapability;
 import org.osgi.framework.wiring.BundleRequirement;
 import org.osgi.framework.wiring.BundleRevision;
+import org.osgi.resource.Requirement;
 
 public class BundleRequirementImpl implements BundleRequirement
 {
@@ -39,6 +41,7 @@ public class BundleRequirementImpl implements BundleRequirement
     private final boolean m_optional;
     private final Map<String, String> m_dirs;
     private final Map<String, Object> m_attrs;
+	private transient int hashCode;
 
     public static BundleRequirementImpl createFrom(BundleRequirementImpl requirement, Function<Object, Object> cache)
     {
@@ -138,4 +141,26 @@ public class BundleRequirementImpl implements BundleRequirement
     {
         return "[" + m_revision + "] " + m_namespace + "; " + getFilter().toString();
     }
+
+	@Override
+	public int hashCode() {
+		if (hashCode != 0) {
+			return hashCode;
+		}
+		return hashCode = Objects.hash(m_namespace, m_dirs, m_attrs, m_revision);
+	}
+
+	@Override
+	public boolean equals(Object obj) {
+		if (this == obj) {
+			return true;
+		}
+		if (obj instanceof Requirement) {
+			Requirement other = (Requirement) obj;
+			return Objects.equals(m_namespace, other.getNamespace()) && Objects.equals(m_dirs, other.getDirectives())
+					&& Objects.equals(m_attrs, other.getAttributes())
+					&& Objects.equals(m_revision, other.getResource());
+		}
+		return false;
+	}
 }
