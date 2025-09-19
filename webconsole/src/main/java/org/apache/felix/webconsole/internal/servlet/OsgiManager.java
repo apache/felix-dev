@@ -919,6 +919,7 @@ public class OsgiManager extends HttpServlet {
         final Set<String> enabledPlugins = null == plugins ? null : new HashSet<String>(Arrays.asList(plugins));
         this.holder.initInternalPlugins(enabledPlugins, bundleContext);
 
+        this.unregisterHttpWhiteboardServices();
         // update http service registrations.
         this.updateRegistrationState();
     }
