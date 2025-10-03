@@ -211,14 +211,20 @@ class ConfigMetaTypeProvider implements MetaTypeProvider
         adList.add(new AttributeDefinitionImpl(JettyConfig.FELIX_JETTY_REQUEST_SIZE_LIMIT,
                 "Maximum request size in bytes",
                 "Maximum size of the request body in bytes. Default is unlimited.",
-                204800,
+                -1,
                 bundle.getBundleContext().getProperty(JettyConfig.FELIX_JETTY_REQUEST_SIZE_LIMIT)));
 
         adList.add(new AttributeDefinitionImpl(JettyConfig.FELIX_JETTY_RESPONSE_SIZE_LIMIT,
                 "Maximum response size in bytes",
                 "Maximum size of the response body in bytes. Default is unlimited.",
-                204800,
+                -1,
                 bundle.getBundleContext().getProperty(JettyConfig.FELIX_JETTY_RESPONSE_SIZE_LIMIT)));
+
+        adList.add(new AttributeDefinitionImpl(JettyConfig.FELIX_JETTY_ACCEPT_QUEUE_SIZE,
+                "Jetty accept queue size",
+                "Felix specific property to configure the accept queue size.",
+                -1,
+                bundle.getBundleContext().getProperty(JettyConfig.FELIX_JETTY_ACCEPT_QUEUE_SIZE)));
 
         adList.add(new AttributeDefinitionImpl(JettyConfig.FELIX_JETTY_ERROR_PAGE_CUSTOM_HEADERS,
                 "Custom headers to add to error pages",

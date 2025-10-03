@@ -730,6 +730,12 @@ public final class JettyService
         connector.setHost(this.config.getHost());
         connector.setIdleTimeout(this.config.getHttpTimeout());
 
+        if (this.config.getAcceptQueueSize() > -1) {
+            // Set the accept queue size only if explicitly configured
+            // otherwise leave the default to Jetty to decide
+            connector.setAcceptQueueSize(this.config.getAcceptQueueSize());
+        }
+
         if (this.config.isRegisterMBeans())
         {
             connector.addBean(new ConnectionStatistics());
