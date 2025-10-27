@@ -18,34 +18,19 @@ package org.apache.felix.http.jetty.it;
 
 import static org.eclipse.jetty.http.UriCompliance.LEGACY;
 import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertNotNull;
-import static org.ops4j.pax.exam.CoreOptions.mavenBundle;
 import static org.ops4j.pax.exam.cm.ConfigurationAdminOptions.newConfiguration;
 
-import java.io.IOException;
 import java.net.URI;
-import java.util.Hashtable;
-import java.util.Map;
-
-import javax.inject.Inject;
-import jakarta.servlet.Servlet;
-import jakarta.servlet.http.HttpServlet;
-import jakarta.servlet.http.HttpServletRequest;
-import jakarta.servlet.http.HttpServletResponse;
 
 import org.eclipse.jetty.client.ContentResponse;
 import org.eclipse.jetty.client.HttpClient;
-import org.eclipse.jetty.client.transport.HttpClientTransportOverHTTP;
-import org.eclipse.jetty.http.UriCompliance;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.ops4j.pax.exam.Option;
 import org.ops4j.pax.exam.junit.PaxExam;
 import org.ops4j.pax.exam.spi.reactors.ExamReactorStrategy;
 import org.ops4j.pax.exam.spi.reactors.PerClass;
-import org.osgi.framework.BundleContext;
 import org.osgi.service.http.HttpService;
-import org.osgi.service.servlet.whiteboard.HttpWhiteboardConstants;
 
 @RunWith(PaxExam.class)
 @ExamReactorStrategy(PerClass.class)
@@ -61,25 +46,22 @@ public class JettyUriComplianceModeLegacyIT extends JettyUriComplianceModeDefaul
 
     @Test
     public void testUriCompliance() throws Exception {
-        HttpClientTransportOverHTTP transport = new HttpClientTransportOverHTTP();
-        HttpClient httpClient = new HttpClient(transport);
-        httpClient.start();
+        try (HttpClient httpClient = new HttpClient()) {
+            httpClient.start();
+            Object value = bundleContext.getServiceReference(HttpService.class).getProperty("org.osgi.service.http.port");
+            int httpPort = Integer.parseInt((String) value);
 
-        Object value = bundleContext.getServiceReference(HttpService.class).getProperty("org.osgi.service.http.port");
-        int httpPort = Integer.parseInt((String) value);
+            URI destUriWorking = new URI(String.format("http://localhost:%d/endpoint/working", httpPort));
+            URI destUriAmbigousPath = new URI("http://localhost:" + httpPort + "/endpoint/ambigousPathitem_0_http%3A%2F%2Fwww.test.com%2F0.html/abc");
 
-        URI destUriWorking = new URI(String.format("http://localhost:%d/endpoint/working", httpPort));
-        URI destUriAmbigousPath = new URI("http://localhost:" + httpPort + "/endpoint/ambigousPathitem_0_http%3A%2F%2Fwww.test.com%2F0.html/abc");
+            ContentResponse response = httpClient.GET(destUriWorking);
+            assertEquals(200, response.getStatus());
+            assertEquals("OK", response.getContentAsString());
 
-        ContentResponse response = httpClient.GET(destUriWorking);
-        assertEquals(200, response.getStatus());
-        assertEquals("OK", response.getContentAsString());
-
-        // no longer blocked due to LEGACY compliance mode
-        ContentResponse response2 = httpClient.GET(destUriAmbigousPath);
-        assertEquals(200, response2.getStatus());
-        assertEquals("OK", response2.getContentAsString());
-
-        httpClient.close();
+            // no longer blocked due to LEGACY compliance mode
+            ContentResponse response2 = httpClient.GET(destUriAmbigousPath);
+            assertEquals(200, response2.getStatus());
+            assertEquals("OK", response2.getContentAsString());
+        }
     }
 }

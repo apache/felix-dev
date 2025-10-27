@@ -5,7 +5,7 @@ This is an implementation of the [R8.1 Whiteboard Specification for Jakarta Serv
   * Standard OSGi Http Service implementation
   * Standard OSGi Http Whiteboard implementation
   * Run either with Jetty (version 11 or 12) bundle or inside your own application server using the servlet bridge
-    * [Felix HTTP Jetty 12](https://mvnrepository.com/artifact/org.apache.felix/org.apache.felix.http.jetty12) is the preferred bundle of choice as it supports JakartaEE10 with the `jakarta` namespace.
+    * [Felix HTTP Jetty 12](https://mvnrepository.com/artifact/org.apache.felix/org.apache.felix.http.jetty12) is the preferred bundle of choice as it supports JakartaEE10 (1.0.x range) and JakartaEE11 (1.1.x range).
       * [Jetty WebSocket support](https://github.com/apache/felix-dev/pull/310), see example code [here](https://github.com/apache/felix-dev/blob/master/http/samples/whiteboard/src/main/java/org/apache/felix/http/samples/whiteboard/TestWebSocketServlet.java).
     * [Felix HTTP Jetty 11](https://mvnrepository.com/artifact/org.apache.felix/org.apache.felix.http.jetty) is the predecessor of the Jetty 12 bundle, which shipped with [Jetty 9.4.x](https://mvnrepository.com/artifact/org.apache.felix/org.apache.felix.http.jetty/4.2.26) in the 4.x range (JavaEE8), [Jetty 11.x](https://mvnrepository.com/artifact/org.apache.felix/org.apache.felix.http.jetty/5.1.10) in the 5.x range (JakartaEE9).
       * [Jetty WebSocket support](https://github.com/apache/felix-dev/pull/309), see example code [here](https://github.com/apache/felix-dev/blob/master/http/samples/whiteboard/src/main/java/org/apache/felix/http/samples/whiteboard/TestWebSocketServlet.java).
@@ -15,9 +15,9 @@ This is an implementation of the [R8.1 Whiteboard Specification for Jakarta Serv
 
 The Apache Felix HTTP Service project includes several bundles.
 
-  * [`org.apache.felix.http.servlet-api`](https://mvnrepository.com/artifact/org.apache.felix/org.apache.felix.http.servlet-api) - Provides the Servlet API (versions 2.6, 3.0, 3.1, 4.0, 5.0 and 6.0 of the Servlet specification)
+  * [`org.apache.felix.http.servlet-api`](https://mvnrepository.com/artifact/org.apache.felix/org.apache.felix.http.servlet-api) - Provides the Servlet API (versions 2.6, 3.0, 3.1, 4.0, 5.0, 6.0 and 6.1 of the Servlet specification)
   * [`org.apache.felix.http.api`](https://mvnrepository.com/artifact/org.apache.felix/org.apache.felix.http.api) - Provides the OSGi APIs for the Http Whiteboard and Http Service.
-  * [`org.apache.felix.http.jetty12`](https://mvnrepository.com/artifact/org.apache.felix/org.apache.felix.http.jetty12) - Implementation that is embedding Jetty server (currently Jetty 12.x, requiring Java 17). This bundle includes the http.api bundle. It's the the preferred Felix Jetty bundle to use, as Jetty 11 will be [EoL in 2025](https://github.com/jetty/jetty.project/issues/10485).
+  * [`org.apache.felix.http.jetty12`](https://mvnrepository.com/artifact/org.apache.felix/org.apache.felix.http.jetty12) - Implementation that is embedding Jetty server (currently Jetty 12.1.x, requiring Java 17). This bundle includes the http.api bundle. It's the the preferred Felix Jetty bundle to use, as Jetty 11 will be [EoL in 2025](https://github.com/jetty/jetty.project/issues/10485).
   * [`org.apache.felix.http.jetty`](https://mvnrepository.com/artifact/org.apache.felix/org.apache.felix.http.jetty) - Predecessor implementation that is embedding Jetty server (currently Jetty 11.x, requiring Java 11). This bundle includes the http.api bundle. 
   * [`org.apache.felix.http.sslfilter`](https://mvnrepository.com/artifact/org.apache.felix/org.apache.felix.http.sslfilter) - Servlet filter for handling SSL termination.
   * [`org.apache.felix.http.bridge`](https://mvnrepository.com/artifact/org.apache.felix/org.apache.felix.http.bridge) - Implementation that uses the host application server (bridged mode). Must be used with the proxy (see below)
@@ -31,8 +31,8 @@ classpath and deployment!
 ### Using classifiers: `light`, `with-jetty-websockets` and `with-jakarta-websockets` bundle
 If you would like to use your own Jetty jars instead of the one packaged with the Felix Jetty bundles, you can use the variants with the following classifiers:
 * `light` - A light version of the bundle that does not include the Jetty classes. This is useful when you want to use your own Jetty jars. Available for both Jetty bundles.
-* `with-jetty-websockets` - A bundle that includes the classes required for Jetty WebSocket support for Jakarta EE10. Jetty12 bundle only.
-* `with-jakarta-websockets` - A bundle that includes the classes required for Jakarta WebSocket support for Jakarta EE10. Jetty12 bundle only.
+* `with-jetty-websockets` - A bundle that includes the classes required for Jetty WebSocket support for Jakarta EE10 (1.0.x) and Jakarta EE11 (1.1.x). Jetty12 bundle only.
+* `with-jakarta-websockets` - A bundle that includes the classes required for Jakarta WebSocket support for Jakarta EE10 (1.0.x) and Jakarta EE11 (1.1.x). Jetty12 bundle only.
 
 When building the Felix Jetty bundle with Maven (`mvn clean install`), the additional bundles will be created in the `target` directory, postfixed with classifier.
 This jar can be deployed to your Felix OSGi environment, along with a compatible Jetty jars.

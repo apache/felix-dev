@@ -53,6 +53,8 @@ public class LightClassifierIT extends AbstractJettyTestSupport {
     protected Option[] additionalOptions() throws IOException {
         String jettyVersion = System.getProperty("jetty.version", JETTY_VERSION);
         return new Option[] {
+                spifly(),
+
                 // Minimum additional jetty dependency bundles
                 mavenBundle().groupId("commons-io").artifactId("commons-io").version("2.19.0"),
                 mavenBundle().groupId("commons-fileupload").artifactId("commons-fileupload").version("1.6.0"),
@@ -67,9 +69,11 @@ public class LightClassifierIT extends AbstractJettyTestSupport {
                 mavenBundle().groupId("org.eclipse.jetty").artifactId("jetty-security").version(jettyVersion),
                 mavenBundle().groupId("org.eclipse.jetty").artifactId("jetty-server").version(jettyVersion),
                 mavenBundle().groupId("org.eclipse.jetty").artifactId("jetty-session").version(jettyVersion),
-                mavenBundle().groupId("org.eclipse.jetty.ee10").artifactId("jetty-ee10-servlet").version(jettyVersion),
+                mavenBundle().groupId("org.eclipse.jetty.ee11").artifactId("jetty-ee11-servlet").version(jettyVersion),
+                mavenBundle().groupId("org.eclipse.jetty.ee11").artifactId("jetty-ee11-webapp").version(jettyVersion),
+                mavenBundle().groupId("org.eclipse.jetty.ee").artifactId("jetty-ee-webapp").version(jettyVersion),
                 mavenBundle().groupId("org.eclipse.jetty").artifactId("jetty-util").version(jettyVersion),
-                mavenBundle().groupId("org.eclipse.jetty").artifactId("jetty-ee").version(jettyVersion),
+                mavenBundle().groupId("org.eclipse.jetty").artifactId("jetty-xml").version(jettyVersion),
 
                 // additional dependencies to verify FELIX-6700
                 mavenBundle().groupId("org.owasp.encoder").artifactId("encoder").version("1.2.3"),
