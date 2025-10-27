@@ -118,6 +118,29 @@ In this case the Configuration Manager displays the name "myRealm, myClass" as d
 
 ## Releases
 
+### Changes in 5.0.18 (22/Sep/25)
+
+#### Bug
+
+- [FELIX-6804](https://issues.apache.org/jira/browse/FELIX-6804) : Unable to change default password in webconsole
+
+
+### Changes in 5.0.14 (25/Aug/25)
+
+#### Bug
+
+- [FELIX-6796](https://issues.apache.org/jira/browse/FELIX-6796) : Potential NPE when logging into webconsole
+
+
+### Changes in 5.0.12 (13/May/25)
+
+#### Bug
+
+- [FELIX-6752](https://issues.apache.org/jira/browse/FELIX-6752) : System information throws java.lang.ClassCastException
+- [FELIX-6757](https://issues.apache.org/jira/browse/FELIX-6757) : Properly encode bundle information 
+- [FELIX-6772](https://issues.apache.org/jira/browse/FELIX-6772) : Content type of resources is never set
+
+
 ### Changes in 5.0.10 (5/Feb/25)
 
 #### Bug
