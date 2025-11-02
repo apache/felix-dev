@@ -2516,7 +2516,7 @@ public class DependencyManager<S, T> implements ReferenceManager<S, T>
         {
             return null;
         }
-        if (ReferenceMetadata.REFERENCE_NAME_SATISFYING_CONDITION.equals(
+        if (ComponentConstants.REFERENCE_NAME_SATISFYING_CONDITION.equals(
             m_dependencyMetadata.getName()) == false)
         {
             return null;
