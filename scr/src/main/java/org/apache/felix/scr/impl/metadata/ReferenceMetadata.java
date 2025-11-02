@@ -101,7 +101,11 @@ public class ReferenceMetadata
 
     public static final String CONDITION_TRUE_FILTER = "(osgi.condition.id=true)";
 
-    // TODO this constant will be defined in the R8 Declarative Services spec
+    /**
+     * The reference name for the implicit satisfying condition as defined in the
+     * OSGi R8 Declarative Services specification (see https://github.com/osgi/osgi/pull/875).
+     * This reference is automatically added to components when a true condition service is available.
+     */
     public static final String REFERENCE_NAME_SATISFYING_CONDITION = "osgi.ds.satisfying.condition";
 
     // Name for the reference (required)
