@@ -1,3 +1,13 @@
+Changes in 2.2.15
+-----------------
+** Improvement
+    * Document Satisfying Condition feature as OSGi R8 specification-compliant
+      - The existing satisfying condition implementation is now documented as compliant 
+        with the preliminary OSGi R8 Declarative Services specification changes
+      - See https://docs.osgi.org/specification/osgi.cmpn/8.0.0/service.component.html#service.component-satisfying.condition
+      - Added comprehensive documentation in README.md
+      - Updated code comments to reflect specification compliance
+
 Changes in 2.2.14
 -----------------
 ** PRs
