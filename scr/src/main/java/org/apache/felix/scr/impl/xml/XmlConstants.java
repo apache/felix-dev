@@ -68,6 +68,7 @@ public abstract class XmlConstants
     public static final String EL_PROPERTIES = "properties";
     public static final String EL_PROVIDE = "provide";
     public static final String EL_REF = "reference";
+    public static final String EL_RETENTION_POLICY = "retention-policy";
     public static final String EL_SERVICE = "service";
 
     // Attributes
@@ -100,6 +101,10 @@ public abstract class XmlConstants
     public static final String ATTR_CONFIGURE_WITH_INTERFACES = "configureWithInterfaces";
 
     public static final String ATTR_DELAYED_KEEP_INSTANCES = "delayedKeepInstances";
+
+    // Retention policy values (OSGi R8)
+    public static final String RETENTION_POLICY_RETAIN = "retain";
+    public static final String RETENTION_POLICY_DISCARD = "discard";
 
     // mapping of namespace URI to namespace code
     public static final Map<String, DSVersion> NAMESPACE_CODE_MAP;
