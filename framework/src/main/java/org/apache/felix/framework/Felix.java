@@ -2199,12 +2199,19 @@ public class Felix extends BundleImpl implements Framework
             int bundleLevel = bundle.getStartLevel(getInitialBundleStartLevel());
             if (isTransient && (bundleLevel > m_activeStartLevel))
             {
-                // Throw an exception for transient starts.
-                throw new BundleException(
-                    "Cannot start bundle " + bundle + " because its start level is "
-                    + bundleLevel
-                    + ", which is greater than the framework's start level of "
-                    + m_activeStartLevel + ".", BundleException.START_TRANSIENT_ERROR);
+                // This can happen if a bundle's start level has been changed when framework is 
+                // starting to framework start level. 
+                // When framework start level has been reached, the start order will be recalculated
+                // and meanwhile changed start order will be updated.
+                // This is NOT an ERROR, we simply log an INFO messages as maybe the way start levels
+                // will be changed needs to be verified
+                m_logger.log(
+                    Logger.LOG_INFO, 
+                        "Will not start bundle " + bundle + " because its start level is "
+                        + bundleLevel
+                        + ", which is greater than the framework's start level of "
+                        + m_activeStartLevel + ".");
+                return;
             }
             else if (bundleLevel > m_targetStartLevel)
             {
