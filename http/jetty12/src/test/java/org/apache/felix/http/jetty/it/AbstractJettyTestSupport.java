@@ -43,7 +43,7 @@ import org.ops4j.pax.exam.options.extra.VMOption;
 import org.ops4j.pax.exam.util.PathUtils;
 
 public abstract class AbstractJettyTestSupport {
-    protected static final String JETTY_VERSION = "12.0.29";
+    protected static final String JETTY_VERSION = "12.0.30";
 
     private final String workingDirectory = String.format("%s/target/paxexam/%s/%s", PathUtils.getBaseDir(), getClass().getSimpleName(), UUID.randomUUID());
 

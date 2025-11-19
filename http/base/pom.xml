@@ -161,7 +161,7 @@
         <dependency>
             <groupId>org.eclipse.jetty.ee10.websocket</groupId>
             <artifactId>jetty-ee10-websocket-jetty-server</artifactId>
-            <version>12.0.29</version>
+            <version>12.0.30</version>
             <scope>test</scope>
         </dependency>
     </dependencies>
