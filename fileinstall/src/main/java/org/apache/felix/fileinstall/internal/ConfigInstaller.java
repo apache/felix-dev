@@ -237,9 +237,15 @@ public class ConfigInstaller implements ArtifactInstaller, ConfigurationListener
         {
             try
             {
-                Configuration config = getConfigurationAdmin().getConfiguration(
-                                            configurationEvent.getPid(),
-                                            "?");
+                Configuration[] configurations = getConfigurationAdmin().listConfigurations("(service.pid=" + configurationEvent.getPid() + ")");
+                if (null == configurations) {
+                    return;
+                }
+                if (configurations.length < 1) {
+                    return;
+                }
+                Configuration config = configurations[0];
+
                 Dictionary<?,?> dict = config.getProperties();
                 String fileName = dict != null ? (String) dict.get( DirectoryWatcher.FILENAME ) : null;
                 File file = fileName != null ? fromConfigKey(fileName) : null;
