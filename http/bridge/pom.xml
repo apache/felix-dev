@@ -21,22 +21,22 @@
     <modelVersion>4.0.0</modelVersion>
     <parent>
         <groupId>org.apache.felix</groupId>
-        <artifactId>org.apache.felix.http.parent</artifactId>
-        <version>13</version>
-        <relativePath>../parent/pom.xml</relativePath>
+        <artifactId>felix-parent</artifactId>
+        <version>9</version>
+        <relativePath>../../pom/pom.xml</relativePath>
     </parent>
 
     <name>Apache Felix Http Bridge</name>
     <description>This is an implementation of the OSGi Servlet Service, the OSGi Http Service and the OSGi Http Whiteboard Specification used when run as a web application</description>
     <artifactId>org.apache.felix.http.bridge</artifactId>
-    <version>5.1.1-SNAPSHOT</version>
+    <version>6.1.1-SNAPSHOT</version>
     <packaging>bundle</packaging>
 
     <scm>
         <connection>scm:git:https://github.com/apache/felix-dev.git</connection>
         <developerConnection>scm:git:https://github.com/apache/felix-dev.git</developerConnection>
         <url>https://gitbox.apache.org/repos/asf?p=felix-dev.git</url>
-      <tag>HEAD</tag>
+      <tag>org.apache.felix.http.bridge-6.1.0</tag>
   </scm>
 
     <properties>
@@ -48,10 +48,12 @@
             <plugin>
                 <groupId>org.apache.felix</groupId>
                 <artifactId>maven-bundle-plugin</artifactId>
-                <version>5.1.4</version>
+                <version>5.1.9</version>
                 <extensions>true</extensions>
                 <configuration>
                     <instructions>
+                        <Bundle-SymbolicName>${project.artifactId}</Bundle-SymbolicName>
+                        <Bundle-Version>${project.version}</Bundle-Version>
                         <Bundle-Activator>
                             org.apache.felix.http.bridge.internal.BridgeActivator
                         </Bundle-Activator>
@@ -64,19 +66,20 @@
                             org.osgi.service.http.context,
                             org.osgi.service.http.runtime,
                             org.osgi.service.http.runtime.dto,
-			    org.osgi.service.http.whiteboard,
-			    org.apache.felix.http.jakartawrappers,
-			    org.apache.felix.http.javaxwrappers
+                            org.osgi.service.http.whiteboard,
+                            org.apache.felix.http.jakartawrappers,
+                            org.apache.felix.http.javaxwrappers
                         </Export-Package>
                         <Private-Package>
                             org.apache.felix.http.base.*,
                             org.apache.felix.http.bridge.internal.*
                         </Private-Package>
-                        <Conditional-Package>
-                            org.apache.commons.*
-                        </Conditional-Package>
                         <Import-Package>
+                            jakarta.servlet,
+                            jakarta.servlet.http,
                        	    org.osgi.service.useradmin;resolution:=optional;version="[1.1,2)",
+                            sun.misc;resolution:=optional,
+                            sun.nio.ch;resolution:=optional,
                             *
                         </Import-Package>
                         <Provide-Capability>
@@ -96,6 +99,21 @@
                 </configuration>
                 <executions>
                     <execution>
+                        <id>bundle</id>
+                        <phase>package</phase>
+                        <goals>
+                            <goal>bundle</goal>
+                        </goals>
+                    </execution>
+<!--
+                    <execution>
+                        <id>baseline</id>
+                        <goals>
+                          <goal>baseline</goal>
+                        </goals>
+                    </execution>
+-->
+                    <execution>
                         <id>light-bundle</id>
                         <goals>
                             <goal>bundle</goal>
@@ -105,10 +123,6 @@
                             <instructions>
                                 <Bundle-Name>${project.name} Light</Bundle-Name>
                                 <Bundle-SymbolicName>${project.artifactId}.light</Bundle-SymbolicName>
-                                <!-- We need to override this from the base configuration -->
-                                <Conditional-Package>
-                                    foo
-                                </Conditional-Package>
                             </instructions>
                         </configuration>
                     </execution>
@@ -121,13 +135,13 @@
         <dependency>
             <groupId>org.slf4j</groupId>
             <artifactId>slf4j-api</artifactId>
-            <version>1.7.36</version>
+            <version>2.0.17</version>
             <scope>provided</scope>
         </dependency>
         <dependency>
             <groupId>jakarta.servlet</groupId>
             <artifactId>jakarta.servlet-api</artifactId>
-            <version>5.0.0</version>
+            <version>6.1.0</version>
         </dependency>
         <dependency>
             <groupId>org.osgi</groupId>
@@ -155,22 +169,17 @@
         <dependency>
             <groupId>commons-fileupload</groupId>
             <artifactId>commons-fileupload</artifactId>
-            <version>1.5</version>
-        </dependency>
-        <dependency>
-            <groupId>commons-io</groupId>
-            <artifactId>commons-io</artifactId>
-            <version>2.11.0</version>
+            <version>1.6.0</version>
         </dependency>
         <dependency>
             <groupId>org.apache.felix</groupId>
             <artifactId>org.apache.felix.http.base</artifactId>
-            <version>5.1.1-SNAPSHOT</version>
+            <version>5.1.14</version>
         </dependency>
-	<dependency>
+        <dependency>
             <groupId>org.apache.felix</groupId>
-	    <artifactId>org.apache.felix.http.wrappers</artifactId>
-	    <version>1.0.0</version>
-	</dependency>
+            <artifactId>org.apache.felix.http.wrappers</artifactId>
+            <version>6.1.0</version>
+	    </dependency>
     </dependencies>
 </project>

@@ -150,6 +150,7 @@ public class ConfigurationUtil
      * @param name The name of the property to return
      * @return the property value as string array - no matter if originally it was other kind of array, collection or comma-separated string. Returns <code>null</code> if the property is not set.
      */
+    @SuppressWarnings("rawtypes")
     public static final String[] getStringArrayProperty(Map<String, Object> config, String name)
     {
         Object value = config.get(name);

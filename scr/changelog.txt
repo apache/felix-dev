@@ -1,3 +1,40 @@
+Changes in 2.2.15
+-----------------
+** Improvement
+    * Document Satisfying Condition feature as OSGi R8 specification-compliant
+      - The existing satisfying condition implementation is now documented as compliant 
+        with the preliminary OSGi R8 Declarative Services specification changes
+      - See https://docs.osgi.org/specification/osgi.cmpn/8.0.0/service.component.html#service.component-satisfying.condition
+      - Added comprehensive documentation in README.md
+      - Updated code comments to reflect specification compliance
+
+Changes in 2.2.14
+-----------------
+** PRs
+    * #383 Do not print an error when a wildcard is used in component header
+    * #359 felix.scr - Fix printing of array of primitive types.
+    * #438 Enable conditional command registration.
+    * #437 Use globalContext for commands if configured
+
+** Bug
+    * [FELIX-6726] One reference can be unset more then once and will cause IllegalArgumentExceptionin Framework
+    * [FELIX-6778] Reduce number of re-creation(s) of SCR Component Registry thread
+
+Changes in 2.2.12
+-----------------
+** Bug
+    * [FELIX-6699] Skip parsing of repeated Service-Component entries
+
+Changes in 2.2.8
+-----------------
+** Improvement
+    * [FELIX-6463] Changing log levels for DS component getState and registration
+
+** Bug
+    * [FELIX-6616] Dynamic greedy 1..1 references may activate with no reference service bound
+    * [FELIX-6633] Dynamic references may miss events while causing deactivation
+    * [FELIX-6682] Felix SCR - 3 TestCases fail in OSGi TCK
+
 Changes in 2.2.6
 -----------------
 ** Bug
@@ -104,7 +141,7 @@ Changes in 2.1.14
 ** Bug
     * [FELIX-5950] - NPE in MultiplePrototypeRefPair.unsetServiceObject
     * [FELIX-5974] - Prototype scope references are not released on deactivation
-    
+
 Changes in 2.1.12
 -----------------
 ** Bug
@@ -348,7 +385,7 @@ Changes from 1.6.2 to 1.8
     * [FELIX-3915] - [DS] Timing hole between ComponentHolder initial config and registration
     * [FELIX-3952] - [DS] service events can go missing resulting in hang
     * [FELIX-3967] - [DS] NPE in DependencyManager$AbstractCustomizer.isSatisfied
-    * [FELIX-3971] - [DS] SingleDynamicCustomizer doesn't respond correctly to configuration update events. 
+    * [FELIX-3971] - [DS] SingleDynamicCustomizer doesn't respond correctly to configuration update events.
     * [FELIX-3975] - [DS] Give ParseException cause to move out of the stone age
     * [FELIX-3991] - [DS] component deactivation may not complete properly with enough threads
     * [FELIX-4000] - [DS] ConcurrentModificationException in AbstractComponentManager iterating through m_dependencyManagers
@@ -436,7 +473,7 @@ Changes from 1.6.0 to 1.6.2
     * [FELIX-3717] - [DS] unbind method might not have correct parameters
     * [FELIX-3718] - [DS] deactivate might not move component state to unsatisfied
     * [FELIX-3719] - [DS]  disabling a dependency manager should not reset the service count
-    * [FELIX-3723] - ClassCastException on ConfigurationAdmin service creating components 
+    * [FELIX-3723] - ClassCastException on ConfigurationAdmin service creating components
     * [FELIX-3724] - [DS] concurrent getService calls may return null
     * [FELIX-3725] - [DS] hidden dependency on spring junit wrapper from pax exam
     * [FELIX-3726] - Reference target filters defined as component properties are ignored
@@ -638,7 +675,7 @@ Changes from 1.0.0 to 1.0.2
 
 ** Bug
     * [FELIX-490] - Deadlocks may be caused by Declarative Services
-    * [FELIX-539] - Intermittent IllegalArgumentException while using declarative services   
+    * [FELIX-539] - Intermittent IllegalArgumentException while using declarative services
     * [FELIX-550] - SCR registers service component twice after stopping/starting a bundle
     * [FELIX-578] - ComponentFactoryImpl.newInstance() must create the component synchronously
     * [FELIX-579] - NPE in AbstractComponentManager
@@ -671,7 +708,7 @@ Initial Release 1.0.0
     * [FELIX-387] - Fix support for reference service target properties
     * [FELIX-425] - DependencyManager does not correctly handle service counting
     * [FELIX-464] - Cannot retrieve service to be unbound in unbind method taking ServiceReference
-    * [FELIX-489] - Intermittent deadlock while using declarative services in Tuscany   
+    * [FELIX-489] - Intermittent deadlock while using declarative services in Tuscany
 
 ** Improvement
     * [FELIX-128] - Implementing missing ComponentContext methods

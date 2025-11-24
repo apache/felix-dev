@@ -88,7 +88,7 @@ class ConfigJsonSupport {
                 this.configForm( result, pid, config, pidFilter, locale );
                 result.endObject();
             } catch ( final Exception e ) {
-                this.servletSupport.log( "Error reading configuration PID " + pid, e );
+                Util.LOGGER.error("Error reading configuration PID {}", pid, e );
             }
         }
 
@@ -285,7 +285,7 @@ class ConfigJsonSupport {
                 serviceLocation = refs[0].getBundle().getLocation();
             }
         } catch (final Throwable t) {
-            this.servletSupport.log( "Error getting service associated with configuration " + pid, t );
+            Util.LOGGER.error("Error getting service associated with configuration {}", pid, t );
         }
         json.key( "bundle_location" );
         json.value ( bundleLocation );
@@ -390,7 +390,7 @@ class ConfigJsonSupport {
             }
             jw.endArray();
         } catch (final Exception e) {
-            this.servletSupport.log("listConfigurations: Unexpected problem encountered", e);
+            Util.LOGGER.error("listConfigurations: Unexpected problem encountered", e);
         }
         return hasConfigurations;
     }
@@ -522,7 +522,7 @@ class ConfigJsonSupport {
             }
             jw.endArray();
         } catch (final Exception e) {
-            this.servletSupport.log("listFactoryConfigurations: Unexpected problem encountered", e);
+            Util.LOGGER.error("listFactoryConfigurations: Unexpected problem encountered", e);
         }
     }
 

@@ -23,11 +23,11 @@ import java.io.IOException;
 import java.io.PrintWriter;
 import java.util.ResourceBundle;
 
-import javax.servlet.ServletRequest;
-import javax.servlet.http.HttpServletResponse;
-import javax.servlet.http.HttpServletResponseWrapper;
-
 import org.apache.felix.webconsole.servlet.RequestVariableResolver;
+
+import jakarta.servlet.ServletRequest;
+import jakarta.servlet.http.HttpServletResponse;
+import jakarta.servlet.http.HttpServletResponseWrapper;
 
 
 /**
@@ -73,8 +73,6 @@ public class FilteringResponseWrapper extends HttpServletResponseWrapper {
      * is being generated a filtering writer is returned which translates
      * strings enclosed in <code>${}</code> according to the resource bundle
      * configured for this response.
-     *
-     * @see javax.servlet.ServletResponseWrapper#getWriter()
      */
     public PrintWriter getWriter() throws IOException {
         if ( writer == null ) {

@@ -206,14 +206,11 @@ public class ComponentServiceObjectsHelper
             final ServiceObjects<T> so = this.serviceObjects;
             if ( so != null )
             {
-                boolean remove;
                 synchronized ( instances )
                 {
-                    remove = instances.remove(service);
+                    instances.remove(service);
                 }
-                if ( remove ) {
-                    so.ungetService(service);
-                }
+                so.ungetService(service);
             }
         }
 

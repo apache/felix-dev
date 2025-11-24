@@ -23,10 +23,10 @@ import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
-import java.io.StringWriter;
 import java.net.URL;
 import java.net.URLConnection;
-import java.nio.charset.StandardCharsets;
+
+import org.apache.felix.webconsole.internal.Util;
 
 import jakarta.servlet.ServletException;
 import jakarta.servlet.http.HttpServlet;
@@ -44,11 +44,24 @@ import jakarta.servlet.http.HttpServletResponse;
  * requests to resources with a path of "LABEL/res/*" are automatically
  * handled.
  * <p>
- * For html (content) requests, the web console automatically draws the header,
+ * For html (content) requests, the web console automatically renders the header,
  * footer and navigation.
  * <p>
  * Support for Jakarta servlets requires that the Jakarta Servlet API and the
  * Apache Felix Http Wrappers are available in the runtime.
+ * <p>
+ * If you are upgrading from {@link org.apache.felix.webconsole.AbstractWebConsolePlugin}
+ * there are some changes to be aware of:
+ * <ul>
+ * <li>Resources are detected via the {@link #getResource(String)} method.</li>
+ * <li>Regardless of the http method, if the corresponding doXXX method does not create
+ *    a response, the {@link #renderContent(HttpServletRequest, HttpServletResponse)}
+ *    method is invoked.</li>
+ * <li>If a doXXX method other than doGet wants to create a response, it must not call
+ *    doGet or renderContent directly. It rather just does not create any response and
+ *    returns. In this case the web console will invoke the renderContent method
+ *    afterwards.</li>
+ * </ul>
  *
  * @see ServletConstants#PLUGIN_LABEL
  * @see ServletConstants#PLUGIN_TITLE
@@ -111,7 +124,7 @@ public abstract class AbstractServlet extends HttpServlet {
      *
      * @throws IOException If an error occurs accessing or spooling the resource.
      */
-    protected final void spoolResource(final HttpServletRequest request, final HttpServletResponse response) 
+    protected final void spoolResource(final HttpServletRequest request, final HttpServletResponse response)
     throws IOException {
         // check for a resource, fail if none
         final URL url = this.getResource(request.getPathInfo());
@@ -149,7 +162,10 @@ public abstract class AbstractServlet extends HttpServlet {
             }
 
             // describe the contents
-            response.setContentType( getServletContext().getMimeType( request.getPathInfo() ) );
+            final String contentType = getServletContext().getMimeType( request.getPathInfo());
+            if ( contentType != null ) {
+                response.setContentType( contentType );
+            }
             if (connection.getContentLength() != -1) {
                 response.setContentLength( connection.getContentLength() );
             }
@@ -171,7 +187,7 @@ public abstract class AbstractServlet extends HttpServlet {
      * UTF-8 encoding.
      *
      * @param templateFile The absolute path to the template file to read.
-     * @return The contents of the template file as a string 
+     * @return The contents of the template file as a string
      *
      * @throws NullPointerException if <code>templateFile</code> is
      *      <code>null</code>
@@ -179,31 +195,7 @@ public abstract class AbstractServlet extends HttpServlet {
      * @throws IOException On any other error reading the template file
      */
     protected final String readTemplateFile( final String templateFile ) throws IOException {
-        return readTemplateFile( getClass(), templateFile );
-    }
-
-    private final String readTemplateFile( final Class<?> clazz, final String templateFile) throws IOException {
-        try(final InputStream templateStream = clazz.getResourceAsStream( templateFile )) {
-            if ( templateStream != null ) {
-                try ( final StringWriter w = new StringWriter()) {
-                    final byte[] buf = new byte[2048];
-                    int l;
-                    while ( ( l = templateStream.read(buf)) > 0 ) {
-                        w.write(new String(buf, 0, l, StandardCharsets.UTF_8));
-                    }
-                    String str = w.toString();
-                    switch ( str.charAt(0) ) { // skip BOM
-                        case 0xFEFF: // UTF-16/UTF-32, big-endian
-                        case 0xFFFE: // UTF-16, little-endian
-                        case 0xEFBB: // UTF-8
-                            return str.substring(1);
-                    }
-                    return str;
-                }
-            }
-        }
-
-        throw new FileNotFoundException("Template " + templateFile + " not found");
+        return Util.readTemplateFile( getClass(), templateFile );
     }
 
     protected RequestVariableResolver getVariableResolver(final HttpServletRequest request) {

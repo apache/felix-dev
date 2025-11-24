@@ -33,16 +33,9 @@ public class SystemPropertiesPrinter extends AbstractConfigurationPrinter {
 
     private static final String TITLE = "System Properties";
 
-    private static final String LABEL = "_systemproperties";
-
     @Override
     protected String getTitle() {
         return TITLE;
-    }
-
-    @Override
-    protected String getLabel() {
-        return LABEL;
     }
 
     @Override

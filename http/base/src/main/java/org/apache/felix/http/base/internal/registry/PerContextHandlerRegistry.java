@@ -65,6 +65,7 @@ public final class PerContextHandlerRegistry implements Comparable<PerContextHan
 
     /**
      * Default http service registry
+     * @param config The configuration
      */
     public PerContextHandlerRegistry(@NotNull final HttpConfig config)
     {
@@ -78,6 +79,7 @@ public final class PerContextHandlerRegistry implements Comparable<PerContextHan
     /**
      * Registry for a servlet context helper (whiteboard support)
      * @param info The servlet context helper info
+     * @param config The configuration
      */
     public PerContextHandlerRegistry(@NotNull final ServletContextHelperInfo info, @NotNull final HttpConfig config)
     {
@@ -250,7 +252,7 @@ public final class PerContextHandlerRegistry implements Comparable<PerContextHan
 
     /**
      * Register listeners
-     * @param listenerHandler
+     * @param listenerHandler The listener handler
      */
     public void registerListeners(@NotNull final ListenerHandler listenerHandler)
     {

@@ -74,6 +74,9 @@
                         <Provide-Capability>
                             osgi.extender;osgi.extender="osgi.configurator";version:Version="1.0"
                         </Provide-Capability>
+                        <Require-Capability>
+                            osgi.implementation;filter:='(&amp;(osgi.implementation=osgi.cm)(version&gt;=1.6.0)(!(version&gt;=2.0.0)))'
+                        </Require-Capability>    
                     </instructions>
                 </configuration>
             </plugin>

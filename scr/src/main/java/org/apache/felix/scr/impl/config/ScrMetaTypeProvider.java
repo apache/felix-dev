@@ -123,6 +123,12 @@ class ScrMetaTypeProvider implements MetaTypeProvider
                 "Whether to extend all bundles whether or not visible to this bundle.",
                 false ) );
 
+        adList.add( new AttributeDefinitionImpl(
+                ScrConfiguration.PROP_COMMANDS_ENABLED,
+                "Commands Enabled",
+                "Whether to enable the Felix SCR commands. If set to false, the commands will not be registered and thus not available.",
+                true ) );
+
         return new ObjectClassDefinition()
         {
 

@@ -51,6 +51,7 @@ public final class FilterDTOBuilder
     /**
      * Build a filter DTO from a filter handler
      * @param handler The filter handler
+     * @param reason The reason for the failure
      * @return A filter DTO
      */
     public static @NotNull FilterDTO build(@NotNull final FilterHandler handler, final int reason)
@@ -66,6 +67,7 @@ public final class FilterDTOBuilder
     /**
      * Build a filter DTO from a filter info
      * @param info The filter info
+     * @param reason The reason for the failure
      * @return A filter DTO
      */
     public static @NotNull FilterDTO build(@NotNull final FilterInfo info, final int reason)

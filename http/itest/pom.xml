@@ -1,12 +1,12 @@
-<!-- Licensed to the Apache Software Foundation (ASF) under one or more contributor 
-	license agreements. See the NOTICE file distributed with this work for additional 
-	information regarding copyright ownership. The ASF licenses this file to 
-	you under the Apache License, Version 2.0 (the "License"); you may not use 
-	this file except in compliance with the License. You may obtain a copy of 
-	the License at http://www.apache.org/licenses/LICENSE-2.0 Unless required 
-	by applicable law or agreed to in writing, software distributed under the 
-	License is distributed on an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS 
-	OF ANY KIND, either express or implied. See the License for the specific 
+<!-- Licensed to the Apache Software Foundation (ASF) under one or more contributor
+	license agreements. See the NOTICE file distributed with this work for additional
+	information regarding copyright ownership. The ASF licenses this file to
+	you under the Apache License, Version 2.0 (the "License"); you may not use
+	this file except in compliance with the License. You may obtain a copy of
+	the License at http://www.apache.org/licenses/LICENSE-2.0 Unless required
+	by applicable law or agreed to in writing, software distributed under the
+	License is distributed on an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS
+	OF ANY KIND, either express or implied. See the License for the specific
 	language governing permissions and limitations under the License. -->
 <project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
 	xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/maven-v4_0_0.xsd">
@@ -14,9 +14,9 @@
     <modelVersion>4.0.0</modelVersion>
     <parent>
         <groupId>org.apache.felix</groupId>
-        <artifactId>org.apache.felix.http.parent</artifactId>
-        <version>13</version>
-        <relativePath>../parent/pom.xml</relativePath>
+        <artifactId>felix-parent</artifactId>
+        <version>9</version>
+        <relativePath>../../pom/pom.xml</relativePath>
     </parent>
 
     <name>Apache Felix Http Integration Tests</name>
@@ -32,30 +32,45 @@
 
     <properties>
         <felix.java.version>11</felix.java.version>
-        <pax.exam.version>4.13.1</pax.exam.version>
-        <pax.url.aether.version>2.6.2</pax.url.aether.version>
-        <http.servlet.api.version>2.1.0</http.servlet.api.version>
-        <http.jetty.version>5.1.1-SNAPSHOT</http.jetty.version>
+        <http.servlet.api.version>6.1.0</http.servlet.api.version>
+        <http.jetty.version>5.2.1-SNAPSHOT</http.jetty.version>
+        <http.jetty.id>org.apache.felix.http.jetty</http.jetty.id>
+        <pax.exam.version>4.13.3</pax.exam.version>
+        <pax.url.aether.version>2.6.14</pax.url.aether.version>
     </properties>
 
+    <profiles>
+        <profile>
+            <id>jetty12</id>
+            <properties>
+                <felix.java.version>17</felix.java.version>
+                <http.servlet.api.version>6.1.0</http.servlet.api.version>
+                <http.jetty.version>1.1.0-SNAPSHOT</http.jetty.version>
+                <http.jetty.id>org.apache.felix.http.jetty12</http.jetty.id>
+            </properties>
+        </profile>
+    </profiles>
     <build>
         <plugins>
             <plugin>
                 <groupId>org.apache.maven.plugins</groupId>
                 <artifactId>maven-surefire-plugin</artifactId>
                 <configuration>
-                    <systemPropertyVariables>                    
+                    <systemPropertyVariables>
                         <http.servlet.api.version>${http.servlet.api.version}</http.servlet.api.version>
                         <http.jetty.version>${http.jetty.version}</http.jetty.version>
+                        <http.jetty.id>${http.jetty.id}</http.jetty.id>
                     </systemPropertyVariables>
                 </configuration>
-            </plugin>  
+            </plugin>
         </plugins>
     </build>
     <dependencies>
         <dependency>
             <groupId>org.osgi</groupId>
             <artifactId>osgi.core</artifactId>
+            <version>8.0.0</version>
+            <scope>provided</scope>
         </dependency>
         <dependency>
             <groupId>org.osgi</groupId>
@@ -68,7 +83,7 @@
             <artifactId>httpcore-osgi</artifactId>
             <version>4.4.6</version>
             <scope>provided</scope>
-        </dependency>        
+        </dependency>
         <dependency>
             <groupId>org.apache.httpcomponents</groupId>
             <artifactId>httpclient-osgi</artifactId>
@@ -77,14 +92,14 @@
         </dependency>
         <dependency>
             <groupId>org.apache.geronimo.specs</groupId>
-            <artifactId>geronimo-json_1.0_spec</artifactId>
-            <version>1.0-alpha-1</version>
-            <scope>provided</scope> 
+            <artifactId>geronimo-json_1.1_spec</artifactId>
+            <version>1.3</version>
+            <scope>provided</scope>
         </dependency>
         <dependency>
             <groupId>org.apache.johnzon</groupId>
             <artifactId>johnzon-core</artifactId>
-            <version>1.0.0</version>
+            <version>1.2.21</version>
             <scope>provided</scope>
         </dependency>
         <dependency>
@@ -106,7 +121,7 @@
         </dependency>
         <dependency>
             <groupId>org.apache.felix</groupId>
-            <artifactId>org.apache.felix.http.jetty</artifactId>
+            <artifactId>${http.jetty.id}</artifactId>
             <version>${http.jetty.version}</version>
         </dependency>
         <dependency>
@@ -128,16 +143,15 @@
             <scope>test</scope>
         </dependency>
         <dependency>
-            <groupId>org.objenesis</groupId>
-            <artifactId>objenesis</artifactId>
-            <version>2.6</version>
-            <scope>test</scope>
-        </dependency>
-
-        <dependency>
             <groupId>org.ops4j.pax.url</groupId>
             <artifactId>pax-url-aether</artifactId>
             <version>${pax.url.aether.version}</version>
+            <scope>test</scope>
+        </dependency>
+        <dependency>
+            <groupId>junit</groupId>
+            <artifactId>junit</artifactId>
+            <version>4.13.2</version>
             <scope>test</scope>
         </dependency>
         <dependency>
@@ -149,7 +163,7 @@
         <dependency>
             <groupId>org.apache.felix</groupId>
             <artifactId>org.apache.felix.framework</artifactId>
-            <version>7.0.3</version>
+            <version>7.0.5</version>
             <scope>test</scope>
         </dependency>
     </dependencies>

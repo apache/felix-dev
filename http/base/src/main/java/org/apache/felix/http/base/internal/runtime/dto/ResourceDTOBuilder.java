@@ -49,6 +49,7 @@ public final class ResourceDTOBuilder
     /**
      * Build a servlet DTO from a servlet info
      * @param info The servlet info
+     * @param failed Whether the registration failed
      * @return A servlet DTO
      */
     public static ResourceDTO build(final ServletInfo info, final boolean failed)
@@ -65,6 +66,7 @@ public final class ResourceDTOBuilder
     /**
      * Build a servlet DTO from a servlet info
      * @param info The servlet info
+     * @param failed Whether the registration failed
      * @return A servlet DTO
      */
     public static ResourceDTO build(final ResourceInfo info, final boolean failed)

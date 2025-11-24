@@ -1,0 +1,106 @@
+name: Github CI Build
+
+on:
+  push:
+    branches: [ "master" ]
+    paths:
+      - 'scr/**'
+      - 'http/**'
+      - 'tools/maven-bundle-plugin/**'
+      - 'tools/osgicheck-maven-plugin/**'
+      - 'log/**'
+      - 'webconsole/**'
+      - 'framework/**'
+  pull_request:
+    branches: [ "master" ]
+    paths:
+      - 'scr/**'
+      - 'http/**'
+      - 'tools/maven-bundle-plugin/**'
+      - 'tools/osgicheck-maven-plugin/**'
+      - 'webconsole/**'
+      - 'log/**'
+      - 'framework/**'
+      - 'gogo/**'
+
+permissions: {}
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        java: [17,21,23]
+    steps:
+    - uses: actions/checkout@v5
+    - name: Set up JDK ${{ matrix.java }}
+      uses: actions/setup-java@v5
+      with:
+        java-version: ${{ matrix.java }}
+        distribution: 'temurin'
+        cache: maven
+    - name: Set up Maven
+      uses: stCarolas/setup-maven@d6af6abeda15e98926a57b5aa970a96bb37f97d1 # v5
+      with:
+        maven-version: 3.9.9
+    - name: Check which subproject changed and build affected ones
+      uses: dorny/paths-filter@de90cc6fb38fc0963ad72b210f1f284cd68cea36
+      id: changes
+      with:
+        filters: |
+          scr:
+            - 'scr/**'
+          http:
+            - 'http/**'
+          maven-bundle-plugin:
+            - 'tools/maven-bundle-plugin/**'
+          maven-osgicheck-plugin:
+            - 'tools/osgicheck-maven-plugin/**'
+          webconsole:
+            - 'webconsole/**'
+          log:
+            - 'log/**'
+          framework:
+            - 'framework/**'
+          gogo:
+            - 'gogo/**'
+
+    - name: Felix SCR
+      if: steps.changes.outputs.scr == 'true'
+      run: mvn -B -V -Dstyle.color=always --file scr/pom.xml clean verify
+    - name: Felix Log
+      if: steps.changes.outputs.log == 'true'
+      run: mvn -B -V -Dstyle.color=always --file log/pom.xml clean verify
+    - name: Felix HTTP
+      if: steps.changes.outputs.http == 'true'
+      run: mvn -B -V -Dstyle.color=always "-Dit.test=!MissingWebsocketDependenciesIT" --file http/pom.xml clean install verify
+    - name: Felix Maven bundle plugin
+      if: steps.changes.outputs.maven-bundle-plugin == 'true'
+      run: mvn -B -V -Dstyle.color=always --file tools/maven-bundle-plugin/pom.xml clean install verify
+    - name: Felix Maven OSGi check plugin
+      if: steps.changes.outputs.maven-osgicheck-plugin == 'true'
+      run: mvn -B -V -Dstyle.color=always --file tools/osgicheck-maven-plugin/pom.xml clean install verify
+    - name: Felix Webconsole
+      if: steps.changes.outputs.webconsole == 'true'
+      run: mvn -B -V -Dstyle.color=always --file webconsole/pom.xml clean install verify
+    - name: Felix Framework
+      if: steps.changes.outputs.framework == 'true'
+      run: mvn -B -V -Dstyle.color=always --file framework/pom.xml clean verify
+    - name: OSGi-TCK Framework
+      if: steps.changes.outputs.framework == 'true'
+      run: mvn -B -V -Dstyle.color=always --file framework.tck/pom.xml clean verify
+    - name: Felix Gogo Shell
+      if: steps.changes.outputs.gogo == 'true'
+      run: mvn -B -V -Dstyle.color=always --file gogo/pom.xml clean verify
+    - name: Upload Test Results
+      if: always()
+      uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4.6.2
+      with:
+        name: test-results-jdk${{ matrix.java }}
+        if-no-files-found: warn
+        path: |
+          ${{ github.workspace }}/**/target/surefire-reports/*.xml
+          ${{ github.workspace }}/**/target/failsafe-reports/*.xml
+          ${{ github.workspace }}/**/target/test-reports/tck/*.xml
+

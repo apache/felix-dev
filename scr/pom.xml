@@ -20,7 +20,7 @@
     <parent>
         <groupId>org.apache.felix</groupId>
         <artifactId>felix-parent</artifactId>
-        <version>6</version>
+        <version>8</version>
         <relativePath />
     </parent>
     <modelVersion>4.0.0</modelVersion>
@@ -30,10 +30,10 @@
         Implementation of the Declarative Services specification 1.5
     </description>
     <artifactId>org.apache.felix.scr</artifactId>
-    <version>2.2.7-SNAPSHOT</version>
+    <version>2.2.15-SNAPSHOT</version>
     <scm>
-        <connection>scm:git:https://github.com/apache/felix-dev.git</connection>
-        <developerConnection>scm:git:https://github.com/apache/felix-dev.git</developerConnection>
+        <connection>scm:git:ssh://git@github.com/apache/felix-dev.git</connection>
+        <developerConnection>scm:git:ssh://git@github.com/apache/felix-dev.git</developerConnection>
         <url>https://gitbox.apache.org/repos/asf?p=felix-dev.git</url>
       <tag>HEAD</tag>
   </scm>
@@ -65,7 +65,6 @@
         <bundle.file.name>
             ${bundle.build.name}/${project.build.finalName}.jar
         </bundle.file.name>
-        <felix.ca.version>1.9.0</felix.ca.version>
 
         <java.version>8</java.version>
         <felix.java.version>${java.version}</felix.java.version>
@@ -121,13 +120,13 @@
         <dependency>
             <groupId>org.osgi</groupId>
             <artifactId>org.osgi.util.promise</artifactId>
-            <version>1.0.0</version>
+            <version>1.1.0</version>
             <scope>provided</scope>
         </dependency>
         <dependency>
             <groupId>org.osgi</groupId>
             <artifactId>org.osgi.util.function</artifactId>
-            <version>1.0.0</version>
+            <version>1.1.0</version>
             <scope>provided</scope>
         </dependency>
         <dependency>
@@ -197,29 +196,16 @@
             <scope>test</scope>
         </dependency>
         <dependency>
-            <groupId>org.ops4j.pax.logging</groupId>
-            <artifactId>pax-logging-api</artifactId>
-            <version>1.6.3</version>
-            <scope>test</scope>
-        </dependency>
-        <dependency>
-            <groupId>org.ops4j.pax.logging</groupId>
-            <artifactId>pax-logging-service</artifactId>
-            <version>1.6.3</version>
-            <scope>test</scope>
-        </dependency>
-    
-        <dependency>
             <groupId>ch.qos.logback</groupId>
             <artifactId>logback-core</artifactId>
-            <version>1.2.9</version>
+            <version>1.2.12</version>
             <scope>test</scope>
         </dependency>
-    
+
         <dependency>
             <groupId>ch.qos.logback</groupId>
             <artifactId>logback-classic</artifactId>
-            <version>1.2.0</version>
+            <version>1.2.13</version>
             <scope>test</scope>
         </dependency>
         <dependency>
@@ -262,6 +248,18 @@
             <groupId>org.ow2.asm</groupId>
             <artifactId>asm-debug-all</artifactId>
             <version>5.0.4</version>
+            <scope>test</scope>
+        </dependency>
+        <dependency>
+            <groupId>org.osgi</groupId>
+            <artifactId>org.osgi.util.pushstream</artifactId>
+            <version>1.0.0</version>
+            <scope>test</scope>
+        </dependency>
+        <dependency>
+            <groupId>org.apache.felix</groupId>
+            <artifactId>org.apache.felix.configadmin</artifactId>
+            <version>1.9.0</version>
             <scope>test</scope>
         </dependency>
     </dependencies>
@@ -325,9 +323,25 @@
                 <artifactId>maven-javadoc-plugin</artifactId>
                 <configuration>
                     <encoding>${project.build.sourceEncoding}</encoding>
-                    <excludePackageNames>*.impl</excludePackageNames>
+                    <excludePackageNames>org.apache.felix.scr.impl:org.apache.felix.scr.impl.*</excludePackageNames>
                     <source>${java.version}</source>
                 </configuration>
+            </plugin>
+            <plugin>
+                <groupId>org.apache.servicemix.tooling</groupId>
+                <artifactId>depends-maven-plugin</artifactId>
+                <version>1.5.0</version>
+                <executions>
+                    <execution>
+                        <goals>
+                            <goal>generate-depends-file</goal>
+                        </goals>
+                        <phase>pre-integration-test</phase>
+                        <configuration>
+                            <outputFile>${project.build.testOutputDirectory}/META-INF/maven/dependencies.properties</outputFile>
+                        </configuration>
+                    </execution>
+                </executions>
             </plugin>
         </plugins>
     </build>
@@ -396,7 +410,7 @@
                 <dependency>
                     <groupId>org.eclipse.platform</groupId>
                     <artifactId>org.eclipse.osgi</artifactId>
-                    <version>3.16.200</version>
+                    <version>3.23.100</version>
                     <scope>test</scope>
                 </dependency>
             </dependencies>

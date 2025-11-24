@@ -37,7 +37,8 @@ public class ContentDirectoryContent implements Content
             ? path + "/" : path;
     }
 
-    public void close()
+    @Override
+	public void close()
     {
         // We do not actually close the associated content
         // from which we are filtering our directory because
@@ -45,7 +46,8 @@ public class ContentDirectoryContent implements Content
         // the owner of that content.
     }
 
-    public boolean hasEntry(String name) throws IllegalStateException
+    @Override
+	public boolean hasEntry(String name) throws IllegalStateException
     {
         name = getName(name);
 
@@ -60,20 +62,23 @@ public class ContentDirectoryContent implements Content
         return m_content.isDirectory(m_rootPath + name);
     }
 
-    public Enumeration<String> getEntries()
+    @Override
+	public Enumeration<String> getEntries()
     {
         Enumeration<String> result = new EntriesEnumeration(m_content.getEntries(), m_rootPath);
         return result.hasMoreElements() ? result : null;
     }
 
-    public byte[] getEntryAsBytes(String name) throws IllegalStateException
+    @Override
+	public byte[] getEntryAsBytes(String name) throws IllegalStateException
     {
         name = getName(name);
 
         return m_content.getEntryAsBytes(m_rootPath + name);
     }
 
-    public InputStream getEntryAsStream(String name)
+    @Override
+	public InputStream getEntryAsStream(String name)
         throws IllegalStateException, IOException
     {
         name = getName(name);
@@ -89,7 +94,8 @@ public class ContentDirectoryContent implements Content
         return name;
     }
 
-    public URL getEntryAsURL(String name)
+    @Override
+	public URL getEntryAsURL(String name)
     {
         return m_content.getEntryAsURL(m_rootPath + name);
     }
@@ -102,44 +108,49 @@ public class ContentDirectoryContent implements Content
         return m_content.getContentTime(m_rootPath + name);
     }
 
-    public Content getEntryAsContent(String name)
+    @Override
+	public Content getEntryAsContent(String name)
     {
         name = getName(name);
 
         return m_content.getEntryAsContent(m_rootPath + name);
     }
 
-    public String getEntryAsNativeLibrary(String name)
+    @Override
+	public String getEntryAsNativeLibrary(String name)
     {
         name = getName(name);
 
         return m_content.getEntryAsNativeLibrary(m_rootPath + name);
     }
 
-    public String toString()
+    @Override
+	public String toString()
     {
         return "CONTENT DIR " + m_rootPath + " (" + m_content + ")";
     }
 
-    private static class EntriesEnumeration implements Enumeration
+    private static class EntriesEnumeration implements Enumeration<String>
     {
-        private final Enumeration m_enumeration;
+        private final Enumeration<String> m_enumeration;
         private final String m_rootPath;
         private String m_nextEntry = null;
 
-        public EntriesEnumeration(Enumeration enumeration, String rootPath)
+        public EntriesEnumeration(Enumeration<String> enumeration, String rootPath)
         {
             m_enumeration = enumeration;
             m_rootPath = rootPath;
             m_nextEntry = findNextEntry();
         }
 
-        public synchronized boolean hasMoreElements()
+        @Override
+		public synchronized boolean hasMoreElements()
         {
             return (m_nextEntry != null);
         }
 
-        public synchronized Object nextElement()
+        @Override
+		public synchronized String nextElement()
         {
             if (m_nextEntry == null)
             {
@@ -157,7 +168,7 @@ public class ContentDirectoryContent implements Content
                 // Find next entry that is inside the root directory.
                 while (m_enumeration.hasMoreElements())
                 {
-                    String next = (String) m_enumeration.nextElement();
+                    String next = m_enumeration.nextElement();
                     if (next.startsWith(m_rootPath) && !next.equals(m_rootPath))
                     {
                         // Strip off the root directory.

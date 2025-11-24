@@ -20,8 +20,11 @@ import java.io.File;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
+import java.net.URISyntaxException;
 import java.net.URL;
 import java.net.URLConnection;
+
+import org.apache.felix.http.base.internal.util.MimeTypes;
 
 import jakarta.servlet.ServletException;
 import jakarta.servlet.http.HttpServlet;
@@ -50,7 +53,7 @@ public class ResourceServlet extends HttpServlet {
     protected void doGet(final HttpServletRequest req, final HttpServletResponse res)
             throws ServletException, IOException {
         final String target = req.getPathInfo();
-        final String resName = (target == null ? this.prefix : this.prefix + target);
+        final String resName = (target == null ? this.prefix : this.prefix.concat(target));
 
         final URL url = getServletContext().getResource(resName);
 
@@ -61,15 +64,19 @@ public class ResourceServlet extends HttpServlet {
         }
     }
 
-    private void handle(final HttpServletRequest req,
-            final HttpServletResponse res, final URL url, final String resName)
+    private void handle(final HttpServletRequest req, final HttpServletResponse res, final URL url, final String resName)
     throws IOException {
-        final String contentType = getServletContext().getMimeType(resName);
+        String contentType = getServletContext().getMimeType(resName);
+        if (contentType == null) {
+            contentType = MimeTypes.get().getByFile(resName);
+        }
         if (contentType != null) {
             res.setContentType(contentType);
         }
 
-        final long lastModified = getLastModified(url);
+        final URLConnection conn = url.openConnection();
+
+        final long lastModified = getLastModified(conn);
         if (lastModified != 0) {
             res.setDateHeader("Last-Modified", lastModified);
         }
@@ -77,27 +84,28 @@ public class ResourceServlet extends HttpServlet {
         if (!resourceModified(lastModified, req.getDateHeader("If-Modified-Since"))) {
             res.setStatus(HttpServletResponse.SC_NOT_MODIFIED);
         } else {
-            copyResource(url, res);
+            copyResource(conn, res);
         }
     }
 
-    private long getLastModified(final URL url) {
-        long lastModified = 0;
-
-        try {
-            final URLConnection conn = url.openConnection();
-            lastModified = conn.getLastModified();
-        } catch (final Exception e) {
-            // Do nothing
+    private File getFile(final URL url) {
+        if (url.getProtocol().equals("file")) {
+            try {
+                return new File(url.toURI());
+            } catch (URISyntaxException e) {
+                return new File(url.getPath());
+            }
         }
+        return null;
+    }
+
+    private long getLastModified(final URLConnection conn) {
+        long lastModified = conn.getLastModified();
 
         if (lastModified == 0) {
-            final String filepath = url.getPath();
-            if (filepath != null) {
-                final File f = new File(filepath);
-                if (f.exists()) {
-                    lastModified = f.lastModified();
-                }
+            final File f = getFile(conn.getURL());
+            if ( f != null && f.exists()) {
+                lastModified = f.lastModified();
             }
         }
 
@@ -111,58 +119,35 @@ public class ResourceServlet extends HttpServlet {
         return resTimestamp == 0 || modSince == -1 || resTimestamp > modSince;
     }
 
-    private void copyResource(final URL url, final HttpServletResponse res) throws IOException {
-        URLConnection conn = null;
-        OutputStream os = null;
-        InputStream is = null;
-
-        try {
-            conn = url.openConnection();
-
-            is = conn.getInputStream();
-            os = res.getOutputStream();
+    private void copyResource(final URLConnection conn, final HttpServletResponse res) throws IOException {
+        try(final InputStream is = conn.getInputStream()) {
             // FELIX-3987 content length should be set *before* any streaming is done
             // as headers should be written before the content is actually written...
-            int len = getContentLength(conn);
+            final long len = getContentLength(conn);
             if (len >= 0) {
-                res.setContentLength(len);
+                res.setContentLengthLong(len);
             }
 
             byte[] buf = new byte[1024];
             int n;
 
-            while ((n = is.read(buf, 0, buf.length)) >= 0) {
+            // no need to close output stream as this is done by the servlet container
+            final OutputStream os = res.getOutputStream();
+            while ((n = is.read(buf, 0, buf.length)) > 0) {
                 os.write(buf, 0, n);
             }
-        } finally {
-            if (is != null) {
-                is.close();
-            }
-
-            if (os != null) {
-                os.close();
-            }
+            os.flush();
         }
     }
 
-    private int getContentLength(final URLConnection conn)
-    {
-        int length = -1;
-
-        length = conn.getContentLength();
-        if (length < 0)
-        {
+    private long getContentLength(final URLConnection conn) {
+        long length = conn.getContentLengthLong();
+        if (length < 0) {
             // Unknown, try whether it is a file, and if so, use the file
             // API to get the length of the content...
-            String path = conn.getURL().getPath();
-            if (path != null)
-            {
-                File f = new File(path);
-                // In case more than 2GB is streamed
-                if (f.length() < Integer.MAX_VALUE)
-                {
-                    length = (int) f.length();
-                }
+            final File f = getFile(conn.getURL());
+            if ( f != null && f.exists()) {
+                length = f.length();
             }
         }
         return length;

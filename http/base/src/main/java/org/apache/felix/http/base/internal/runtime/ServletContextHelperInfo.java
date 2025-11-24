@@ -102,7 +102,7 @@ public class ServletContextHelperInfo extends AbstractInfo<ServletContextHelper>
 
     /**
      * Returns an unmodifiable map of the parameters.
-     * @return
+     * @return The init parameters
      */
     public Map<String, String> getInitParameters()
     {

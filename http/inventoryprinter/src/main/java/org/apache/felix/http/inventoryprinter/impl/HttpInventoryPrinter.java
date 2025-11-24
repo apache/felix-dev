@@ -38,11 +38,13 @@ import org.osgi.service.servlet.runtime.dto.ErrorPageDTO;
 import org.osgi.service.servlet.runtime.dto.FailedErrorPageDTO;
 import org.osgi.service.servlet.runtime.dto.FailedFilterDTO;
 import org.osgi.service.servlet.runtime.dto.FailedListenerDTO;
+import org.osgi.service.servlet.runtime.dto.FailedPreprocessorDTO;
 import org.osgi.service.servlet.runtime.dto.FailedResourceDTO;
 import org.osgi.service.servlet.runtime.dto.FailedServletContextDTO;
 import org.osgi.service.servlet.runtime.dto.FailedServletDTO;
 import org.osgi.service.servlet.runtime.dto.FilterDTO;
 import org.osgi.service.servlet.runtime.dto.ListenerDTO;
+import org.osgi.service.servlet.runtime.dto.PreprocessorDTO;
 import org.osgi.service.servlet.runtime.dto.ResourceDTO;
 import org.osgi.service.servlet.runtime.dto.RuntimeDTO;
 import org.osgi.service.servlet.runtime.dto.ServletContextDTO;
@@ -168,6 +170,15 @@ public class HttpInventoryPrinter implements InventoryPrinter {
             pw.println(getValueAsString(prop.getValue()));
         }
         pw.println();
+        if (dto.preprocessorDTOs.length > 0) {
+            pw.println("Preprocessors");
+            pw.println("-------------");
+            for(final PreprocessorDTO pp : dto.preprocessorDTOs) {
+                printServiceIdAndRanking(pw, this.getServiceReference(pp.serviceId), pp.serviceId);
+                pw.println();
+            }
+            pw.println();
+        }
         for(final ServletContextDTO ctxDto : dto.servletContextDTOs ) {
             pw.print("Servlet Context ");
             pw.println(ctxDto.name);
@@ -259,6 +270,18 @@ public class HttpInventoryPrinter implements InventoryPrinter {
                     printServiceIdAndRanking(pw, this.getServiceReference(ep.serviceId), ep.serviceId);
                     pw.println();
                 }
+                pw.println();
+            }
+            pw.println();
+        }
+
+        if (dto.failedPreprocessorDTOs.length > 0) {
+            pw.println("Failed Preprocessors");
+            pw.println("--------------------");
+            for(final FailedPreprocessorDTO pp : dto.failedPreprocessorDTOs) {
+                printServiceIdAndRanking(pw, this.getServiceReference(pp.serviceId), pp.serviceId);
+                pw.print("Reason : ");
+                pw.println(getErrorText(pp.failureReason));
                 pw.println();
             }
             pw.println();

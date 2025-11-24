@@ -29,7 +29,7 @@ import java.util.TreeMap;
  * <tt>toString()</tt> method, since it is only intended to
  * compare strings.
  **/
-public class StringMap extends TreeMap<String, Object>
+public class StringMap<V> extends TreeMap<String, V>
 {
 
     public StringMap()
@@ -37,10 +37,10 @@ public class StringMap extends TreeMap<String, Object>
         super(StringComparator.COMPARATOR);
     }
 
-    public StringMap(Map<?, ?> map)
+    public StringMap(Map<?, V> map)
     {
         this();
-        for (Map.Entry<?, ?> e : map.entrySet())
+        for (Map.Entry<?, V> e : map.entrySet())
         {
             put(e.getKey().toString(), e.getValue());
         }

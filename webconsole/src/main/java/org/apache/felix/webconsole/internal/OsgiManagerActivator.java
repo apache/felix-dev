@@ -22,7 +22,7 @@ package org.apache.felix.webconsole.internal;
 import org.apache.felix.webconsole.internal.servlet.OsgiManager;
 import org.osgi.framework.BundleActivator;
 import org.osgi.framework.BundleContext;
-import org.osgi.service.http.whiteboard.annotations.RequireHttpWhiteboard;
+import org.osgi.service.servlet.whiteboard.annotations.RequireHttpWhiteboard;
 
 
 /**

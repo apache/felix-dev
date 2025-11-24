@@ -16,13 +16,9 @@
  */
 package org.apache.felix.maven.osgicheck.impl.checks;
 
-import java.io.BufferedReader;
 import java.io.File;
-import java.io.FileInputStream;
 import java.io.IOException;
 import java.io.InputStream;
-import java.io.InputStreamReader;
-import java.io.Reader;
 import java.lang.reflect.Field;
 import java.net.MalformedURLException;
 import java.net.URL;
@@ -32,12 +28,15 @@ import java.util.Enumeration;
 import java.util.List;
 import java.util.Map;
 
+import javax.xml.parsers.SAXParser;
+import javax.xml.parsers.SAXParserFactory;
+
 import org.apache.felix.maven.osgicheck.impl.Check;
 import org.apache.felix.maven.osgicheck.impl.CheckContext;
-import org.apache.felix.scr.impl.helper.Logger;
+import org.apache.felix.scr.impl.logger.BundleLogger;
+import org.apache.felix.scr.impl.logger.ComponentLogger;
 import org.apache.felix.scr.impl.metadata.ComponentMetadata;
 import org.apache.felix.scr.impl.metadata.ReferenceMetadata;
-import org.apache.felix.scr.impl.parser.KXml2SAXParser;
 import org.apache.felix.scr.impl.xml.XmlHandler;
 import org.apache.maven.plugin.MojoExecutionException;
 import org.osgi.framework.Bundle;
@@ -163,197 +162,205 @@ public class SCRCheck implements Check {
     }
 
     private List<ComponentMetadata> loadDescriptor(final CheckContext ctx, final File file) throws IOException, MojoExecutionException {
-        try(final Reader in = new BufferedReader(new InputStreamReader(new FileInputStream(file), "UTF-8"))) {
-            XmlHandler handler = new XmlHandler( new Bundle() {
+        XmlHandler handler = new XmlHandler( new Bundle() {
 
-                @Override
-                public int compareTo(Bundle o) {
-                    return 0;
-                }
-
-                @Override
-                public void update(InputStream input) throws BundleException {
-                    // nothing to do
-                }
-
-                @Override
-                public void update() throws BundleException {
-                    // nothing to do
-                }
-
-                @Override
-                public void uninstall() throws BundleException {
-                    // nothing to do
-                }
-
-                @Override
-                public void stop(int options) throws BundleException {
-                    // nothing to do
-                }
-
-                @Override
-                public void stop() throws BundleException {
-                    // nothing to do
-                }
-
-                @Override
-                public void start(int options) throws BundleException {
-                    // nothing to do
-                }
-
-                @Override
-                public void start() throws BundleException {
-                    // nothing to do
-                }
-
-                @Override
-                public Class<?> loadClass(String name) throws ClassNotFoundException {
-                    return null;
-                }
-
-                @Override
-                public boolean hasPermission(Object permission) {
-                    return false;
-                }
-
-                @Override
-                public Version getVersion() {
-                    return null;
-                }
-
-                @Override
-                public String getSymbolicName() {
-                    return null;
-                }
-
-                @Override
-                public int getState() {
-                    return 0;
-                }
-
-                @Override
-                public Map<X509Certificate, List<X509Certificate>> getSignerCertificates(int signersType) {
-                    return null;
-                }
-
-                @Override
-                public ServiceReference<?>[] getServicesInUse() {
-                    return null;
-                }
-
-                @Override
-                public Enumeration<URL> getResources(String name) throws IOException {
-                    return null;
-                }
-
-                @Override
-                public URL getResource(String name) {
-                    return null;
-                }
-
-                @Override
-                public ServiceReference<?>[] getRegisteredServices() {
-                    return null;
-                }
-
-                @Override
-                public String getLocation() {
-                    return file.getAbsolutePath();
-                }
-
-                @Override
-                public long getLastModified() {
-                    return 0;
-                }
-
-                @Override
-                public Dictionary<String, String> getHeaders(String locale) {
-                    return null;
-                }
-
-                @Override
-                public Dictionary<String, String> getHeaders() {
-                    return null;
-                }
-
-                @Override
-                public Enumeration<String> getEntryPaths(String path) {
-                    return null;
-                }
-
-                @Override
-                public URL getEntry(final String path) {
-                    try {
-                        return new File(ctx.getRootDir(), path).toURI().toURL();
-                    } catch (final MalformedURLException e) {
-                        return null;
-                    }
-                }
-
-                @Override
-                public File getDataFile(String filename) {
-                    return null;
-                }
-
-                @Override
-                public long getBundleId() {
-                    return 0;
-                }
-
-                @Override
-                public BundleContext getBundleContext() {
-                    return null;
-                }
-
-                @Override
-                public Enumeration<URL> findEntries(String path, String filePattern, boolean recurse) {
-                    return null;
-                }
-
-                @Override
-                public <A> A adapt(Class<A> type) {
-                    return null;
-                }
-            }, new Logger() {
-
-                @Override
-                public void log(int level, String pattern, Object[] arguments, ComponentMetadata metadata, Long componentId,
-                        Throwable ex) {
-                    // nothing to do
-                }
-
-                @Override
-                public void log(int level, String message, ComponentMetadata metadata, Long componentId, Throwable ex) {
-                    // nothing to do
-                }
-
-                @Override
-                public boolean isLogEnabled(int level) {
-                    return false;
-                }
-            }, false, false );
-            try {
-                new KXml2SAXParser( in ).parseXML(handler);
-
-                for ( final ComponentMetadata metadata : handler.getComponentMetadataList() ) {
-                    try {
-                        // validate the component metadata
-                        metadata.validate( null ); // logger argument is not used and removed in R7
-
-
-                    } catch ( final ComponentException t ) {
-                        ctx.reportError("Invalid component descriptor " + file.getAbsolutePath() + " for " + metadata.getName() + " : "
-                                 + t.getMessage());
-                    }
-                }
-
-                return handler.getComponentMetadataList();
-            } catch ( final Exception e) {
-                if ( e instanceof MojoExecutionException ) {
-                    throw (MojoExecutionException)e;
-                }
-                throw new MojoExecutionException(e.getMessage(), e);
+            @Override
+            public int compareTo(Bundle o) {
+                return 0;
             }
+
+            @Override
+            public void update(InputStream input) throws BundleException {
+                // nothing to do
+            }
+
+            @Override
+            public void update() throws BundleException {
+                // nothing to do
+            }
+
+            @Override
+            public void uninstall() throws BundleException {
+                // nothing to do
+            }
+
+            @Override
+            public void stop(int options) throws BundleException {
+                // nothing to do
+            }
+
+            @Override
+            public void stop() throws BundleException {
+                // nothing to do
+            }
+
+            @Override
+            public void start(int options) throws BundleException {
+                // nothing to do
+            }
+
+            @Override
+            public void start() throws BundleException {
+                // nothing to do
+            }
+
+            @Override
+            public Class<?> loadClass(String name) throws ClassNotFoundException {
+                return null;
+            }
+
+            @Override
+            public boolean hasPermission(Object permission) {
+                return false;
+            }
+
+            @Override
+            public Version getVersion() {
+                return null;
+            }
+
+            @Override
+            public String getSymbolicName() {
+                return null;
+            }
+
+            @Override
+            public int getState() {
+                return 0;
+            }
+
+            @Override
+            public Map<X509Certificate, List<X509Certificate>> getSignerCertificates(int signersType) {
+                return null;
+            }
+
+            @Override
+            public ServiceReference<?>[] getServicesInUse() {
+                return null;
+            }
+
+            @Override
+            public Enumeration<URL> getResources(String name) throws IOException {
+                return null;
+            }
+
+            @Override
+            public URL getResource(String name) {
+                return null;
+            }
+
+            @Override
+            public ServiceReference<?>[] getRegisteredServices() {
+                return null;
+            }
+
+            @Override
+            public String getLocation() {
+                return file.getAbsolutePath();
+            }
+
+            @Override
+            public long getLastModified() {
+                return 0;
+            }
+
+            @Override
+            public Dictionary<String, String> getHeaders(String locale) {
+                return null;
+            }
+
+            @Override
+            public Dictionary<String, String> getHeaders() {
+                return null;
+            }
+
+            @Override
+            public Enumeration<String> getEntryPaths(String path) {
+                return null;
+            }
+
+            @Override
+            public URL getEntry(final String path) {
+                try {
+                    return new File(ctx.getRootDir(), path).toURI().toURL();
+                } catch (final MalformedURLException e) {
+                    return null;
+                }
+            }
+
+            @Override
+            public File getDataFile(String filename) {
+                return null;
+            }
+
+            @Override
+            public long getBundleId() {
+                return 0;
+            }
+
+            @Override
+            public BundleContext getBundleContext() {
+                return null;
+            }
+
+            @Override
+            public Enumeration<URL> findEntries(String path, String filePattern, boolean recurse) {
+                return null;
+            }
+
+            @Override
+            public <A> A adapt(Class<A> type) {
+                return null;
+            }
+        }, new BundleLogger() {
+
+            @Override
+            public void log(Level level, String message, Throwable ex) {
+               // nothing to do
+                
+            }
+
+            @Override
+            public void log(Level level, String message, Throwable ex, Object... args) {
+               // nothing to do
+                
+            }
+
+            @Override
+            public boolean isLogEnabled(Level level) {
+                return false;
+            }
+
+            @Override
+            public ComponentLogger component(Bundle m_bundle, String implementationClassName, String name) {
+                // nothing to do
+                return null;
+            }
+        }, false, false, null );
+        try {
+            final SAXParserFactory factory = SAXParserFactory.newInstance();
+            factory.setNamespaceAware(true);
+            final SAXParser parser = factory.newSAXParser();
+            parser.parse(file, handler);
+
+            for ( final ComponentMetadata metadata : handler.getComponentMetadataList() ) {
+                try {
+                    // validate the component metadata
+                    metadata.validate();
+
+
+                } catch ( final ComponentException t ) {
+                    ctx.reportError("Invalid component descriptor " + file.getAbsolutePath() + " for " + metadata.getName() + " : "
+                             + t.getMessage());
+                }
+            }
+
+            return handler.getComponentMetadataList();
+        } catch ( final Exception e) {
+            if ( e instanceof MojoExecutionException ) {
+                throw (MojoExecutionException)e;
+            }
+            throw new MojoExecutionException(e.getMessage(), e);
         }
     }
 }

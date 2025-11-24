@@ -20,6 +20,7 @@ package org.apache.felix.cm.json.io.impl;
 
 import java.io.FilterReader;
 import java.io.IOException;
+import java.io.BufferedReader;
 import java.io.Reader;
 import java.io.StringReader;
 import java.io.StringWriter;
@@ -231,80 +232,150 @@ public class JsonSupport {
      * @throws IOException If something fails
      */
     public static Reader createCommentRemovingReader(final Reader reader) throws IOException {
-        final String contents;
-        try (final StringWriter writer = new StringWriter() ){
-            final char[] buf = new char[2048];
-            int l;
-            while ( (l = reader.read(buf)) > 0 ) {
-                writer.write(buf, 0, l);
-            }
-            writer.flush();
-            contents = writer.toString();
-        }
-        final StringReader stringReader = new StringReader(removeComments(contents));
-        return new FilterReader(stringReader) {
-
-            boolean closed = false;
-            @Override
-            public void close() throws IOException {
-                if (!closed) {
-                    closed = true;
-                    reader.close();
-                    super.close();
-                }
-            }
-        };
+        return new CommentRemovingReader(reader);
     }
 
-    /**
-     * Helper method to remove comments from JSON
-     * @param comments The JSON with comments
-     * @return The JSON without comments
+     /**
+     * Helper class to create a BufferedReader that implicitly removes inline and blockcomments from the input
      */
-    private static String removeComments(final String comments) {
-        final StringBuilder sb = new StringBuilder(comments);
-        int index = 0;
-        boolean insideQuote = false;
-        while ( index < sb.length()) {
-            switch ( sb.charAt(index) ) {
-            case '"' : if ( index == 0 || sb.charAt(index - 1) != '\\') {
-                           insideQuote = !insideQuote;
-                       }
-                       index++;
-                       break;
-            case '/' : if ( !insideQuote && index + 1 < sb.length()) {
-                           if ( sb.charAt(index + 1) == '/') {
-                               // line comment
-                               int m = index + 2;
-                               while ( m < sb.length() && sb.charAt(m) != '\n' ) {
-                                   m++;
-                               }
-                               sb.delete(index, m);
-                           } else if ( sb.charAt(index + 1 ) == '*') {
-                               // block comment
-                               int m = index + 2;
-                               int newlines = 0;
-                               while ( m < sb.length() && (sb.charAt(m) != '/' || sb.charAt(m - 1) != '*')) {
-                                   if ( sb.charAt(m) == '\n') {
-                                       newlines++;
-                                   }
-                                   m++;
-                               }
-                               if ( m == sb.length() ) {
-                                   index = m; // invalid - just go to the end
-                               } else {
-                                   sb.delete(index,  m+1);
-                                   for(int x = 0; x<newlines; x++) {
-                                       sb.insert(index, '\n');
-                                   }
-                               }
-                           }
-                       }
-                       index++;
-                       break;
-            default: index++;
+    private static class CommentRemovingReader extends FilterReader {
+
+        private boolean closed = false;
+        private boolean insideComment = false;
+        private boolean insideLineComment = false;
+        private boolean insideString = false;
+        private boolean isSkippedSlash = false;
+        private char oldChar = 0; // priming with 0 as it is not part of comment or string escaping chars
+            
+        public CommentRemovingReader(Reader reader) {
+            super(new BufferedReader(reader));
+        }
+
+        @Override
+        public int read() throws IOException {
+            return 0;
+        }
+
+        @Override
+        public int read(char[] cbuf, int off, int len) throws IOException {
+            int charsRead = super.read(cbuf, off, len);
+                if (charsRead > 0) {
+                    StringBuilder filteredContent = new StringBuilder();
+                    StringBuilder currentLine = new StringBuilder();
+                    
+                    for (int i = off; i < off + charsRead; i++) {
+                        char c = cbuf[i];
+                        
+
+                        // Detect String start/end if not inside a comment
+                        if (!insideComment && !insideLineComment) {
+                            if (c == '"') {
+                                // only flip if not escaped quotes
+                                if (oldChar != '\\') {
+                                    insideString = !insideString;
+                                }
+                                currentLine.append(c);
+                                oldChar = c;
+                                continue;
+                            }
+                        }
+
+
+                        // Handle comments only if not inside a string
+                        if (!insideString) {
+                            // Detect potential start of a comment by detecting a slash
+                            if(!insideComment && !insideLineComment && c == '/') {
+                                // If the previous character was also a slash, we are inside a single-line comment
+                                if (oldChar == '/') {
+                                    insideLineComment = true;
+                                    isSkippedSlash = false;
+                                } else {
+                                    // skipping slash for verification if this is comment - will be ammended on next char if non-comment
+                                    isSkippedSlash = true;
+                                }
+                                oldChar = c;
+                                continue;
+                            }
+                            // Detect potential start of a multiline comment by detecting a star
+                            if(!insideComment && !insideLineComment && c == '*') {
+                                // If the previous character was also a slash, we are inside a multi-line comment
+                                if (oldChar == '/') {
+                                    insideComment = true;
+                                    isSkippedSlash = false;
+                                } else {
+                                    // otherwise this is not a comment, just a star
+                                    currentLine.append(c);
+                                }
+                                oldChar = c;
+                                continue;
+                            }
+
+                            // if if we skipped over a / above and we're not within a comment, we need to append the oldChar to the currentLine
+                            if (!insideComment && !insideLineComment  && isSkippedSlash) {
+                                currentLine.append('/');
+                                isSkippedSlash = false;
+                            }
+
+                            // Detect potential end of a linecomment by detecting a newline
+                            if (insideLineComment && c == '\n') {
+                                insideLineComment = false;
+                                currentLine.append(c);
+                                oldChar = c;
+                                continue;
+                            }
+                            
+                            // Skip over characters inside single-line comments
+                            if (insideLineComment) {
+                                oldChar = c;
+                                continue;
+                            }
+
+                         // Detect potential end of a multiline comment by detecting a slash that is preceded by a star
+                            if (insideComment && c == '/' && oldChar == '*') {
+                                insideComment = false;
+                                oldChar = c;
+                                continue;
+                            }
+
+                            // Skip over characters inside multi-line comments but preserve newlines
+                            if (insideComment) {
+                                if(c == '\n') {
+                                    currentLine.append(c);
+                                }
+                                oldChar = c;
+                                continue;
+                            }
+                        }
+                    // Preserve characters outside comments
+                    if (!insideComment && !insideLineComment) {
+                        currentLine.append(c);
+                    }
+                    oldChar = c;
+                }
+
+                filteredContent.append(currentLine.toString());
+
+                char[] filteredChars = filteredContent.toString().toCharArray();
+                int filteredLen = Math.min(filteredChars.length, len);
+                System.arraycopy(filteredChars, 0, cbuf, off, filteredLen);
+                return filteredLen;
+                
+            }
+            return charsRead;
+        }
+
+        @Override
+        public void close() throws IOException {
+            if (!closed) {
+                closed = true;
+                closed = false;
+                insideComment = false;
+                insideLineComment = false;
+                insideString = false;
+                isSkippedSlash = false;
+                in.close();
+                super.close();
             }
         }
-        return sb.toString();
     }
 }

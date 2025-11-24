@@ -17,6 +17,7 @@
 package org.apache.felix.http.base.internal.handler;
 
 import java.io.FilePermission;
+import java.io.IOException;
 
 import org.apache.felix.http.base.internal.context.ExtServletContext;
 import org.apache.felix.http.base.internal.runtime.ServletInfo;
@@ -25,17 +26,22 @@ import org.osgi.framework.BundleContext;
 import org.osgi.service.servlet.runtime.dto.DTOConstants;
 
 import jakarta.servlet.Servlet;
+import jakarta.servlet.ServletException;
+import jakarta.servlet.ServletRequest;
+import jakarta.servlet.ServletResponse;
 
 /**
  * Servlet handler for servlets registered through the http whiteboard.
  */
-public final class WhiteboardServletHandler extends ServletHandler
+public class WhiteboardServletHandler extends ServletHandler
 {
     private final BundleContext bundleContext;
 
     private final int multipartErrorCode;
 
     private final Bundle multipartSecurityContext;
+
+    private volatile WebSocketHandler webSocketHandler;
 
     public WhiteboardServletHandler(final long contextServiceId,
             final ExtServletContext context,
@@ -105,6 +111,16 @@ public final class WhiteboardServletHandler extends ServletHandler
 
         this.setServlet(this.getServletInfo().getService(this.bundleContext));
 
+        if (WebSocketHandler.isJettyWebSocketServlet(this.getServlet())) {
+            if (this.webSocketHandler == null) {
+                this.webSocketHandler = new WebSocketHandler(this);
+            }
+            if (!webSocketHandler.shouldInit()) {
+                // do nothing, delay init until first service call
+                return -1;
+            }
+        }
+
         final int reason = super.init();
         if ( reason != -1 )
         {
@@ -120,6 +136,10 @@ public final class WhiteboardServletHandler extends ServletHandler
         final Servlet s = this.getServlet();
         if ( s != null )
         {
+            if ( this.webSocketHandler != null && !this.webSocketHandler.shouldDestroy() ) {
+                return false;
+            }
+            this.webSocketHandler = null;
             if ( super.destroy() )
             {
                 this.getServletInfo().ungetService(this.bundleContext, this.getServlet());
@@ -134,5 +154,13 @@ public final class WhiteboardServletHandler extends ServletHandler
     public Bundle getMultipartSecurityContext()
     {
         return multipartSecurityContext;
+    }
+
+    @Override
+    public void handle(ServletRequest req, ServletResponse res) throws ServletException, IOException {
+        if ( this.webSocketHandler != null ) {
+            this.webSocketHandler.lazyInit();
+        }
+        super.handle(req, res);
     }
 }

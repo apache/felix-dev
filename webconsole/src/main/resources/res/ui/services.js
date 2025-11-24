@@ -136,7 +136,7 @@ function renderUsingBundlesAsTable(/* Object[] */ bundles) {
 
 	for (var idx in bundles) {
 		var bundle = bundles[idx];
-		txt += '<a href="' + bundlePath + '/' + bundle.bundleId + '">'
+		txt += '<a href="' + bundlePath + bundle.bundleId + '">'
 		    + bundle.bundleSymbolicName + ' (' + bundle.bundleId + ')' 
 		    + '</a><br/>';
 	}

@@ -166,6 +166,9 @@ public final class JettyConfig
     /**  Felix specific property to configure session max age */
     public static final String FELIX_JETTY_SERVLET_SESSION_MAX_AGE = "org.eclipse.jetty.servlet.MaxAge";
 
+    /**  Felix specific property to configure the uri compliance mode (https://jetty.org/docs/jetty/11/programming-guide/server/compliance.html#uri) */
+    public static final String FELIX_JETTY_URI_COMPLIANCE_MODE = "org.eclipse.jetty.UriComplianceMode";
+
     /** Felix specific property to configure session scavenging interval in Seconds */
     public static final String FELIX_JETTY_SESSION_SCAVENGING_INTERVAL = "org.eclipse.jetty.servlet.SessionScavengingInterval";
 
@@ -267,6 +270,15 @@ public final class JettyConfig
 
     /** Felix specific property to specify the default protocol when negotiation fails  */
     public static final String FELIX_JETTY_ALPN_DEFAULT_PROTOCOL = "org.apache.felix.jetty.alpn.defaultProtocol";
+
+    /** Felix specific property to control whether to enable the standard jakarta.websocket APIs provided by Jakarta WebSocket 2.0 */
+    public static final String FELIX_JAKARTA_WEBSOCKET_ENABLE = "org.apache.felix.jakarta.websocket.enable";
+
+    /** Felix specific property to control whether to enable they Jetty-specific WebSocket APIs */
+    public static final String FELIX_JETTY_WEBSOCKET_ENABLE = "org.apache.felix.jetty.websocket.enable";
+
+    /** Felix specific property to control whether an OSGi configuration is required */
+    private static final String FELIX_REQUIRE_OSGI_CONFIG = "org.apache.felix.http.require.config";
 
     private static String validateContextPath(String ctxPath)
     {
@@ -674,6 +686,22 @@ public final class JettyConfig
         return getLongProperty(FELIX_JETTY_STOP_TIMEOUT, -1l);
     }
 
+    /**
+     * Returns <code>true</code> if jakarta EE9 websocket is configured to be used (
+     * {@link #FELIX_JAKARTA_WEBSOCKET_ENABLE})
+     */
+    public boolean isUseJakartaWebsocket() {
+        return getBooleanProperty(FELIX_JAKARTA_WEBSOCKET_ENABLE, false);
+    }
+
+    /**
+     * Returns <code>true</code> if jetty websocket is configured to be used (
+     * {@link #FELIX_JETTY_WEBSOCKET_ENABLE})
+     */
+    public boolean isUseJettyWebsocket() {
+        return getBooleanProperty(FELIX_JETTY_WEBSOCKET_ENABLE, false);
+    }
+
     public void reset()
     {
         update(null);
@@ -940,5 +968,9 @@ public final class JettyConfig
         {
             return dflt;
         }
+    }
+
+    public boolean isRequireConfiguration() {
+        return this.getBooleanProperty(FELIX_REQUIRE_OSGI_CONFIG, false);
     }
 }

@@ -17,18 +17,27 @@
 package org.apache.felix.webconsole.internal;
 
 
+import java.io.FileNotFoundException;
 import java.io.IOException;
+import java.io.InputStream;
+import java.io.StringWriter;
+import java.lang.reflect.Array;
+import java.nio.charset.StandardCharsets;
 import java.util.Arrays;
+import java.util.Collection;
 import java.util.Comparator;
+import java.util.Iterator;
 import java.util.Locale;
-
-import javax.servlet.http.HttpServletRequest;
-import javax.servlet.http.HttpServletResponse;
 
 import org.osgi.framework.Bundle;
 import org.osgi.framework.Constants;
 import org.osgi.framework.ServiceReference;
 import org.osgi.framework.Version;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
+import jakarta.servlet.http.HttpServletRequest;
+import jakarta.servlet.http.HttpServletResponse;
 
 
 /**
@@ -195,23 +204,30 @@ public class Util {
         }
     }
 
-    public static void sendJsonOk(final HttpServletResponse response) throws IOException
-    {
+    public static void sendJsonOk(final HttpServletResponse response) throws IOException {
         response.setContentType( "application/json" );
         response.setCharacterEncoding( "UTF-8" );
         response.getWriter().print( "{ \"status\": true }" );
     }
 
-    public static final Locale getLocale( final HttpServletRequest request ) {
-        try {
-            return request.getLocale();
-        } catch ( Throwable t ) {
-            // expected in standard OSGi Servlet 2.1 environments
-            // fallback to using the default locale
-            return Locale.getDefault();
-        }
+   /**
+     * Sets response headers to force the client to not cache the response
+     * sent back. This method must be called before the response is committed
+     * otherwise it will have no effect.
+     * <p>
+     * This method sets the <code>Cache-Control</code>, <code>Expires</code>,
+     * and <code>Pragma</code> headers.
+     *
+     * @param response The response for which to set the cache prevention
+     */
+    public static void setNoCache(final HttpServletResponse response) {
+        response.setHeader("Cache-Control", "no-cache");
+        response.addHeader("Cache-Control", "no-store");
+        response.addHeader("Cache-Control", "must-revalidate");
+        response.addHeader("Cache-Control", "max-age=0");
+        response.setHeader("Expires", "Thu, 01 Jan 1970 01:00:00 GMT");
+        response.setHeader("Pragma", "no-cache");
     }
-
 
     public static String getStringProperty( final ServiceReference<?> service, final String propertyName ) {
         final Object property = service.getProperty( propertyName );
@@ -220,4 +236,139 @@ public class Util {
         }
         return null;
     }
+
+    /**
+     * Utility method to handle relative redirects.
+     * Some application servers like Web Sphere handle relative redirects differently
+     * therefore we should make an absolute URL before invoking send redirect.
+     *
+     * @param request the HTTP request coming from the user
+     * @param response the HTTP response, where data is rendered
+     * @param redirectUrl the redirect URI.
+     * @throws IOException If an input or output exception occurs
+     * @throws IllegalStateException   If the response was committed or if a partial
+     *  URL is given and cannot be converted into a valid URL
+     */
+    public static void sendRedirect(final HttpServletRequest request, final HttpServletResponse response, String redirectUrl) 
+    throws IOException {
+        // check for relative URL
+        if ( !redirectUrl.startsWith("/") ) {
+            String base = request.getContextPath() + request.getServletPath() + request.getPathInfo();
+            int i = base.lastIndexOf('/');
+            if (i > -1) {
+                base = base.substring(0, i);
+            } else {
+                i = base.indexOf(':');
+                base = (i > -1) ? base.substring(i + 1, base.length()) : "";
+            }
+            if (!base.startsWith("/")) {
+                base = '/' + base;
+            }
+            redirectUrl = base + '/' + redirectUrl;
+
+        }
+        response.sendRedirect(redirectUrl);
+    }
+
+    @SuppressWarnings("rawtypes")
+    public static String[] toStringArray( final Object value ) {
+        if ( value instanceof String ) {
+            return new String[] { ( String ) value };
+        } else if ( value != null ) {
+            final Collection col;
+            if ( value.getClass().isArray() ) {
+                col = Arrays.asList( ( Object[] ) value );
+            } else if ( value instanceof Collection ) {
+                col = ( Collection ) value;
+            } else {
+                col = null;
+            }
+
+            if ( col != null && !col.isEmpty() ) {
+                final String[] entries = new String[col.size()];
+                int i = 0;
+                for (final Iterator cli = col.iterator(); cli.hasNext(); i++ )  {
+                    entries[i] = String.valueOf( cli.next() );
+                }
+                return entries;
+            }
+        }
+
+        return null;
+    }
+
+    /**
+     * This method will stringify a Java object. It is mostly used to print the values
+     * of unknown properties. This method will correctly handle if the passed object
+     * is array and will property display it.
+     *
+     * If the value is byte[] the elements are shown as Hex
+     *
+     * @param value the value to convert
+     * @return the string representation of the value
+     */
+    public static final String toString(Object value) {
+        if (value == null) {
+            return "n/a";
+        } else if (value.getClass().isArray()) {
+            final StringBuilder sb = new StringBuilder();
+            int len = Array.getLength(value);
+            sb.append('[');
+
+            for(int i = 0; i < len; ++i) {
+                final Object element = Array.get(value, i);
+                if (element instanceof Byte) {
+                    sb.append("0x");
+                    final String x = Integer.toHexString(((Byte)element).intValue() & 255);
+                    if (1 == x.length()) {
+                        sb.append('0');
+                    }
+
+                    sb.append(x);
+                } else {
+                    sb.append(toString(element));
+                }
+
+                if (i < len - 1) {
+                    sb.append(", ");
+                }
+            }
+
+            return sb.append(']').toString();
+        } else {
+            return value.toString();
+        }
+    }
+
+    public static String toString(final ServiceReference<?> ref) {
+        return "Service " + ref.getProperty(Constants.SERVICE_ID) + "(" + ref + ") from bundle " +
+            ref.getBundle().getSymbolicName() + ":" + ref.getBundle().getVersion() + "(" + ref.getBundle().getBundleId() + ")";
+    }
+
+    public static final String readTemplateFile( final Class<?> clazz, final String templateFile) throws IOException {
+        try(final InputStream templateStream = clazz.getResourceAsStream( templateFile )) {
+            if ( templateStream != null ) {
+                try ( final StringWriter w = new StringWriter()) {
+                    final byte[] buf = new byte[2048];
+                    int l;
+                    while ( ( l = templateStream.read(buf)) > 0 ) {
+                        w.write(new String(buf, 0, l, StandardCharsets.UTF_8));
+                    }
+                    String str = w.toString();
+                    switch ( str.charAt(0) ) { // skip BOM
+                        case 0xFEFF: // UTF-16/UTF-32, big-endian
+                        case 0xFFFE: // UTF-16, little-endian
+                        case 0xEFBB: // UTF-8
+                            return str.substring(1);
+                    }
+                    return str;
+                }
+            }
+        }
+
+        throw new FileNotFoundException("Template " + templateFile + " not found");
+    }
+
+    /** Logger for the webconsole */
+    public static final Logger LOGGER = LoggerFactory.getLogger("org.apache.felix.webconsole");    
 }

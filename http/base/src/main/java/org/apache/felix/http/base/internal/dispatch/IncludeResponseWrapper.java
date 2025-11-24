@@ -122,7 +122,6 @@ public class IncludeResponseWrapper extends HttpServletResponseWrapper {
         // ignore
     }
 
-    @Override
     public void setStatus(final int sc, final String msg) {
         // ignore
     }

@@ -42,6 +42,7 @@ import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletRequestWrapper;
 import jakarta.servlet.http.HttpServletResponse;
 
+import org.apache.felix.http.proxy.impl.DispatcherTracker;
 import org.osgi.framework.BundleContext;
 
 public abstract class AbstractProxyServlet
@@ -89,7 +90,7 @@ public abstract class AbstractProxyServlet
                 }
             };
         }
-        this.tracker = new DispatcherTracker(getBundleContext(), null, config);
+        this.tracker = new DispatcherTracker(getBundleContext(), config);
         this.tracker.open();
     }
 
@@ -243,28 +244,8 @@ public abstract class AbstractProxyServlet
         }
 
         @Override
-        public Servlet getServlet(String name) throws ServletException {
-            return delegatee.getServlet(name);
-        }
-
-        @Override
-        public Enumeration<Servlet> getServlets() {
-            return delegatee.getServlets();
-        }
-
-        @Override
-        public Enumeration<String> getServletNames() {
-            return delegatee.getServletNames();
-        }
-
-        @Override
         public void log(String msg) {
             delegatee.log(msg);
-        }
-
-        @Override
-        public void log(Exception exception, String msg) {
-            delegatee.log(exception, msg);
         }
 
         @Override
@@ -477,7 +458,7 @@ public abstract class AbstractProxyServlet
 
         @Override
         public void setResponseCharacterEncoding(String encoding) {
-            delegatee.setResponseCharacterEncoding(encoding);            
-        }        
+            delegatee.setResponseCharacterEncoding(encoding);
+        }
     }
 }

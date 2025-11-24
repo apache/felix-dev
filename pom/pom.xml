@@ -22,7 +22,7 @@
     <parent>
         <groupId>org.apache</groupId>
         <artifactId>apache</artifactId>
-        <version>23</version>
+        <version>33</version>
         <relativePath />
     </parent>
 
@@ -31,7 +31,7 @@
     <packaging>pom</packaging>
 
     <name>Apache Felix</name>
-    <version>8-SNAPSHOT</version>
+    <version>10-SNAPSHOT</version>
     <url>https://felix.apache.org/</url>
     <inceptionYear>2006</inceptionYear>
     <description>Apache Felix is a community effort to implement the OSGi Framework and Service platform and other interesting OSGi-related technologies.</description>
@@ -46,12 +46,12 @@
         <site.javadoc.exclude>*.impl:*.internal:</site.javadoc.exclude>
         <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
         <project.reporting.outputEncoding>UTF-8</project.reporting.outputEncoding>
-        <project.build.outputTimestamp>10</project.build.outputTimestamp>
+        <project.build.outputTimestamp>1714579897</project.build.outputTimestamp>
     </properties>
 
     <issueManagement>
         <system>Jira</system>
-        <url>http://issues.apache.org/jira/browse/FELIX</url>
+        <url>https://issues.apache.org/jira/browse/FELIX</url>
     </issueManagement>
 
     <mailingLists>
@@ -75,7 +75,7 @@
         <connection>scm:git:https://github.com/apache/felix-dev.git</connection>
         <developerConnection>scm:git:https://github.com/apache/felix-dev.git</developerConnection>
         <url>https://gitbox.apache.org/repos/asf?p=felix-dev.git;f=pom</url>
-    <tag>felix-parent-7</tag>
+      <tag>HEAD</tag>
   </scm>
 
     <distributionManagement>
@@ -104,61 +104,14 @@
             <plugins>
                 <plugin>
                     <groupId>org.apache.maven.plugins</groupId>
-                    <artifactId>maven-enforcer-plugin</artifactId>
-                    <version>3.0.0-M3</version>
-                </plugin>
-                <plugin>
-                    <groupId>org.apache.maven.plugins</groupId>
-                    <artifactId>maven-project-info-reports-plugin</artifactId>
-                    <version>3.0.0</version>
-                </plugin>
-                <plugin>
-                    <groupId>org.apache.maven.plugins</groupId>
                     <artifactId>maven-jxr-plugin</artifactId>
-                    <version>3.0.0</version>
+                    <version>3.6.0</version>
                 </plugin>
                 <plugin>
-                    <groupId>org.codehaus.mojo</groupId>
-                    <artifactId>ianal-maven-plugin</artifactId>
-                    <version>1.0-alpha-1</version>
+                    <groupId>org.apache.geronimo.genesis.plugins</groupId>
+                    <artifactId>tools-maven-plugin</artifactId>
+                    <version>1.4</version>
                 </plugin>
-                <plugin>
-                    <groupId>org.apache.rat</groupId>
-                    <artifactId>apache-rat-plugin</artifactId>
-                    <version>0.13</version>
-                </plugin>
-                <plugin>
-                    <groupId>org.apache.maven.plugins</groupId>
-                    <artifactId>maven-compiler-plugin</artifactId>
-                    <version>3.8.1</version>
-                </plugin>
-                <plugin>
-                    <groupId>org.apache.maven.plugins</groupId>
-                    <artifactId>maven-javadoc-plugin</artifactId>
-                    <version>3.2.0</version>
-                </plugin>
-                <plugin>
-                    <groupId>org.codehaus.mojo</groupId>
-                    <artifactId>animal-sniffer-maven-plugin</artifactId>
-                    <version>1.18</version>
-                    <configuration>
-                        <signature>
-                            <groupId>org.codehaus.mojo.signature</groupId>
-                            <artifactId>java1${felix.java.version}</artifactId>
-                            <version>1.0</version>
-                        </signature>
-                    </configuration>
-                </plugin>
-                <plugin>
-                    <groupId>org.apache.maven.plugins</groupId>
-                    <artifactId>maven-site-plugin</artifactId>
-                    <version>3.9.0</version>
-                </plugin>
-                <plugin>
-                    <groupId>org.apache.maven.plugins</groupId>
-                    <artifactId>maven-surefire-report-plugin</artifactId>
-                    <version>2.19.1</version>
-               </plugin>
             </plugins>
         </pluginManagement>
         <plugins>
@@ -181,7 +134,7 @@
                                     <version>1.8.0</version>
                                 </requireJavaVersion>
                                 <requireMavenVersion>
-                                    <version>3.5.0</version>
+                                    <version>3.6.3</version>
                                 </requireMavenVersion>
                             </rules>
                         </configuration>
@@ -222,12 +175,16 @@
             <plugin>
                 <groupId>org.apache.maven.plugins</groupId>
                 <artifactId>maven-release-plugin</artifactId>
+                <configuration>
+                    <projectVersionPolicyId>OddEvenVersionPolicy</projectVersionPolicyId>
+                </configuration>
             </plugin>
             <plugin>
-                <groupId>org.codehaus.mojo</groupId>
-                <artifactId>ianal-maven-plugin</artifactId>
+                <groupId>org.apache.geronimo.genesis.plugins</groupId>
+                <artifactId>tools-maven-plugin</artifactId>
                 <executions>
                     <execution>
+                        <id>verify-legal-files</id>
                         <goals>
                             <goal>verify-legal-files</goal>
                         </goals>
@@ -251,11 +208,11 @@
             </resource>
         </resources>
         <extensions>
-		   <extension>
-		     <groupId>org.apache.maven.wagon</groupId>
-		     <artifactId>wagon-ssh</artifactId>
-		     <version>2.9</version>
-		   </extension>
+            <extension>
+                <groupId>org.apache.maven.wagon</groupId>
+                <artifactId>wagon-ssh</artifactId>
+                <version>2.9</version>
+            </extension>
         </extensions>
     </build>
 
@@ -267,6 +224,22 @@
                 <jdk>(,9)</jdk>
             </activation>
             <build>
+                <pluginManagement>
+                    <plugins>
+                        <plugin>
+                            <groupId>org.codehaus.mojo</groupId>
+                            <artifactId>animal-sniffer-maven-plugin</artifactId>
+                            <version>1.23</version>
+                            <configuration>
+                                <signature>
+                                    <groupId>org.codehaus.mojo.signature</groupId>
+                                    <artifactId>java1${felix.java.version}</artifactId>
+                                    <version>1.0</version>
+                                </signature>
+                            </configuration>
+                        </plugin>
+                    </plugins>
+                </pluginManagement>
                 <plugins>
                     <plugin>
                         <groupId>org.apache.maven.plugins</groupId>
@@ -274,6 +247,13 @@
                         <configuration>
                             <source>1.${felix.java.version}</source>
                             <target>1.${felix.java.version}</target>
+                        </configuration>
+                    </plugin>
+                    <plugin>
+                        <groupId>org.apache.maven.plugins</groupId>
+                        <artifactId>maven-javadoc-plugin</artifactId>
+                        <configuration>
+                            <source>1.${felix.java.version}</source>
                         </configuration>
                     </plugin>
                     <plugin>
@@ -306,6 +286,13 @@
                             release sets API classpath, source and target, see 
                             https://docs.oracle.com/javase/9/tools/javac.htm#GUID-AEEC9F07-CB49-4E96-8BC7-BCC2C7F725C9__GUID-D343F6B4-3FDD-43A8-AD24-43DD70214471 
                             and http://openjdk.java.net/jeps/247 -->
+                            <release>${felix.java.version}</release>
+                        </configuration>
+                    </plugin>
+                    <plugin>
+                        <groupId>org.apache.maven.plugins</groupId>
+                        <artifactId>maven-javadoc-plugin</artifactId>
+                        <configuration>
                             <release>${felix.java.version}</release>
                         </configuration>
                     </plugin>

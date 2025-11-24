@@ -30,33 +30,18 @@ import static jakarta.servlet.RequestDispatcher.INCLUDE_REQUEST_URI;
 import static jakarta.servlet.RequestDispatcher.INCLUDE_SERVLET_PATH;
 import static org.apache.felix.http.base.internal.util.UriUtils.concat;
 
-import java.io.File;
 import java.io.IOException;
-import java.io.InputStream;
-import java.security.AccessControlContext;
-import java.security.AccessController;
-import java.security.PrivilegedAction;
-import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.Enumeration;
-import java.util.HashMap;
 import java.util.HashSet;
-import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
-import org.apache.commons.fileupload.FileItem;
-import org.apache.commons.fileupload.FileUpload;
-import org.apache.commons.fileupload.FileUploadBase;
-import org.apache.commons.fileupload.FileUploadException;
-import org.apache.commons.fileupload.RequestContext;
-import org.apache.commons.fileupload.disk.DiskFileItemFactory;
 import org.apache.felix.http.base.internal.context.ExtServletContext;
 import org.apache.felix.http.base.internal.handler.HttpSessionWrapper;
-import org.osgi.framework.Bundle;
 import org.osgi.service.servlet.context.ServletContextHelper;
 import org.osgi.service.useradmin.Authorization;
 
@@ -74,46 +59,31 @@ import jakarta.servlet.http.HttpServletRequestWrapper;
 import jakarta.servlet.http.HttpSession;
 import jakarta.servlet.http.Part;
 
-final class ServletRequestWrapper extends HttpServletRequestWrapper
+class ServletRequestWrapper extends HttpServletRequestWrapper
 {
-    private static final List<String> FORWARD_ATTRIBUTES = Arrays.asList(FORWARD_CONTEXT_PATH,
+	private static final List<String> FORWARD_ATTRIBUTES = Arrays.asList(FORWARD_CONTEXT_PATH,
         FORWARD_MAPPING, FORWARD_PATH_INFO, FORWARD_QUERY_STRING, FORWARD_REQUEST_URI, FORWARD_SERVLET_PATH);
 
-    private static final List<String> INCLUDE_ATTRIBUTES = Arrays.asList(INCLUDE_CONTEXT_PATH, 
+	private static final List<String> INCLUDE_ATTRIBUTES = Arrays.asList(INCLUDE_CONTEXT_PATH,
         INCLUDE_MAPPING, INCLUDE_PATH_INFO, INCLUDE_QUERY_STRING, INCLUDE_REQUEST_URI, INCLUDE_SERVLET_PATH);
 
-    /**
-     * Constant for HTTP POST method.
-     */
-    private static final String POST_METHOD = "POST";
-
-    private final DispatcherType type;
-    private final RequestInfo requestInfo;
+	private final DispatcherType type;
+	private final RequestInfo requestInfo;
     private final ExtServletContext servletContext;
     private final boolean asyncSupported;
-    private final MultipartConfig multipartConfig;
-    private final Bundle bundleForSecurityCheck;
-
-    private Collection<PartImpl> parts;
-
-    private Map<String, String[]> partsParameterMap;
 
     public ServletRequestWrapper(final HttpServletRequest req,
             final ExtServletContext servletContext,
             final RequestInfo requestInfo,
             final DispatcherType type,
-            final boolean asyncSupported,
-            final MultipartConfig multipartConfig,
-            final Bundle bundleForSecurityCheck)
+            final boolean asyncSupported)
     {
         super(req);
 
         this.asyncSupported = asyncSupported;
-        this.multipartConfig = multipartConfig;
         this.servletContext = servletContext;
         this.requestInfo = requestInfo;
         this.type = type;
-        this.bundleForSecurityCheck = bundleForSecurityCheck;
     }
 
     @Override
@@ -152,7 +122,7 @@ final class ServletRequestWrapper extends HttpServletRequestWrapper
             else if (FORWARD_ATTRIBUTES.contains(name) ) {
                 return super.getAttribute(name);
             }
-        } 
+        }
         else if (isForwardingDispatcher() && !this.requestInfo.nameMatch)
         {
             // The jakarta.servlet.forward.* attributes refer to the information of the *original* request,
@@ -238,11 +208,10 @@ final class ServletRequestWrapper extends HttpServletRequestWrapper
     }
 
     @Override
-    @SuppressWarnings("deprecation")
     public String getPathTranslated()
     {
         final String info = getPathInfo();
-        return (null == info) ? null : getRealPath(info);
+        return (null == info) ? null : getServletContext().getRealPath(info);
     }
 
     @Override
@@ -412,141 +381,14 @@ final class ServletRequestWrapper extends HttpServletRequestWrapper
         return this.asyncSupported;
     }
 
-    private RequestContext getMultipartContext() {
-        final RequestContext multipartContext;
-        if (!POST_METHOD.equalsIgnoreCase(this.getMethod())) {
-            multipartContext = null;
-        } else {
-            multipartContext = new RequestContext() {
-
-                @Override
-                public InputStream getInputStream() throws IOException {
-                    return ServletRequestWrapper.this.getInputStream();
-                }
-
-                @Override
-                public String getContentType() {
-                    return ServletRequestWrapper.this.getContentType();
-                }
-
-                @Override
-                public int getContentLength() {
-                    return ServletRequestWrapper.this.getContentLength();
-                }
-
-                @Override
-                public String getCharacterEncoding() {
-                    return ServletRequestWrapper.this.getCharacterEncoding();
-                }
-            };
-        }
-        return multipartContext;
-    }
-
-    private Collection<PartImpl> checkMultipart() throws IOException, ServletException {
-        if ( parts == null ) {
-            final RequestContext multipartContext = getMultipartContext();
-            if ( multipartContext != null && FileUploadBase.isMultipartContent(multipartContext) ) {
-                if ( this.multipartConfig == null) {
-                    throw new IllegalStateException("Multipart not enabled for servlet.");
-                }
-
-                if ( System.getSecurityManager() == null ) {
-                    handleMultipart(multipartContext);
-                } else {
-                    final AccessControlContext ctx = bundleForSecurityCheck.adapt(AccessControlContext.class);
-                    final IOException ioe = AccessController.doPrivileged(new PrivilegedAction<IOException>() {
-
-                        @Override
-                        public IOException run() {
-                            try {
-                                handleMultipart(multipartContext);
-                            } catch ( final IOException ioe) {
-                                return ioe;
-                            }
-                            return null;
-                        }
-                    }, ctx);
-                    if ( ioe != null ) {
-                        throw ioe;
-                    }
-                }
-
-            } else {
-                throw new ServletException("Not a multipart request");
-            }
-        }
-        return parts;
-    }
-
-    private void handleMultipart(final RequestContext multipartContext) throws IOException {
-        // Create a new file upload handler
-        final FileUpload upload = new FileUpload();
-        upload.setSizeMax(this.multipartConfig.multipartMaxRequestSize);
-        upload.setFileSizeMax(this.multipartConfig.multipartMaxFileSize);
-        upload.setFileItemFactory(new DiskFileItemFactory(this.multipartConfig.multipartThreshold,
-                new File(this.multipartConfig.multipartLocation)));
-        upload.setFileCountMax(this.multipartConfig.multipartMaxFileCount);
-        // Parse the request
-        List<FileItem> items = null;
-        try {
-            items = upload.parseRequest(multipartContext);
-        } catch (final FileUploadException fue) {
-            throw new IOException("Error parsing multipart request", fue);
-        }
-        this.parts = new ArrayList<>();
-        for(final FileItem item : items) {
-            this.parts.add(new PartImpl(item));
-        }
-    }
-
     @Override
-    @SuppressWarnings({ "unchecked", "rawtypes" })
     public Collection<Part> getParts() throws IOException, ServletException {
-        return (Collection)checkMultipart();
-
+        throw new ServletException("No Multipart-Support available");
     }
 
     @Override
     public Part getPart(String name) throws IOException, ServletException {
-        Collection<PartImpl> parts = this.checkMultipart();
-        for(final Part p : parts) {
-            if ( p.getName().equals(name) ) {
-                return p;
-            }
-        }
-        return null;
-    }
-
-    private Map<String, String[]> getPartsParameterMap() {
-        if ( this.partsParameterMap == null ) {
-            try {
-                final Collection<PartImpl> parts = this.checkMultipart();
-                final Map<String, String[]> params = new HashMap<>();
-                for(final PartImpl p : parts) {
-                    if (p.getFileItem().isFormField()) {
-                        String[] current = params.get(p.getName());
-                        if (current == null) {
-                            current = new String[] {p.getFileItem().getString()};
-                        } else {
-                            String[] newCurrent = new String[current.length + 1];
-                            System.arraycopy( current, 0, newCurrent, 0, current.length );
-                            newCurrent[current.length] = p.getFileItem().getString();
-                            current = newCurrent;
-                        }
-                        params.put(p.getName(), current);
-                    }
-                }
-                this.partsParameterMap = params;
-            } catch (final IOException | ServletException ignore) {
-                // ignore all exceptions and use default
-            }
-            if ( this.partsParameterMap == null ) {
-                // use map from container implementation as default
-                this.partsParameterMap = super.getParameterMap();
-            }
-        }
-        return this.partsParameterMap;
+        throw new ServletException("No Multipart-Support available");
     }
 
     @Override
@@ -560,11 +402,7 @@ final class ServletRequestWrapper extends HttpServletRequestWrapper
 
     @Override
     public Map<String, String[]> getParameterMap() {
-        final RequestContext multipartContext = getMultipartContext();
-        if ( multipartContext != null && FileUploadBase.isMultipartContent(multipartContext) && this.multipartConfig != null) {
-            return this.getPartsParameterMap();
-        }
-        return super.getParameterMap();
+         return super.getParameterMap();
     }
 
     @Override
@@ -584,82 +422,4 @@ final class ServletRequestWrapper extends HttpServletRequestWrapper
         return this.requestInfo;
     }
 
-    private static final class PartImpl implements Part {
-
-        private final FileItem item;
-
-        public PartImpl(final FileItem item) {
-            this.item = item;
-        }
-
-        @Override
-        public InputStream getInputStream() throws IOException {
-            return item.getInputStream();
-        }
-
-        @Override
-        public String getContentType() {
-            return item.getContentType();
-        }
-
-        @Override
-        public String getName() {
-            return item.getFieldName();
-        }
-
-        @Override
-        public String getSubmittedFileName() {
-            return item.getName();
-        }
-
-        @Override
-        public long getSize() {
-            return item.getSize();
-        }
-
-        @Override
-        public void write(final String fileName) throws IOException {
-            try {
-                item.write(new File(fileName));
-            } catch (final IOException e) {
-                throw e;
-            } catch (final Exception e) {
-                throw new IOException(e);
-            }
-        }
-
-        @Override
-        public void delete() throws IOException {
-            item.delete();
-        }
-
-        @Override
-        public String getHeader(final String name) {
-            return item.getHeaders().getHeader(name);
-        }
-
-        @Override
-        public Collection<String> getHeaders(final String name) {
-            final List<String> values = new ArrayList<>();
-            final Iterator<String> iter = item.getHeaders().getHeaders(name);
-            while ( iter.hasNext() ) {
-                values.add(iter.next());
-            }
-            return values;
-        }
-
-        @Override
-        public Collection<String> getHeaderNames() {
-            final List<String> names = new ArrayList<>();
-            final Iterator<String> iter = item.getHeaders().getHeaderNames();
-            while ( iter.hasNext() ) {
-                names.add(iter.next());
-            }
-            return names;
-        }
-
-        public FileItem getFileItem() {
-            return this.item;
-        }
-    }
 }

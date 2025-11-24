@@ -22,7 +22,7 @@
     <parent>
         <groupId>org.apache.felix</groupId>
         <artifactId>felix-parent</artifactId>
-        <version>7</version>
+        <version>8</version>
         <relativePath>../pom/pom.xml</relativePath>
     </parent>
 
@@ -39,16 +39,17 @@
     </scm>
     
     <modules>
-        <module>servlet-api</module>
         <module>base</module>
         <module>bridge</module>
-        <module>jetty</module>
-        <module>parent</module>
-        <module>proxy</module>
-        <module>itest</module>
-        <module>webconsoleplugin</module>
         <module>inventoryprinter</module>
-        <module>sslfilter</module>
+        <module>itest</module>
+        <module>wrappers</module>
+        <module>jetty</module>
+        <module>jetty12</module>
+        <module>proxy</module>
         <module>samples/whiteboard</module>
+        <module>servlet-api</module>
+        <module>sslfilter</module>
+        <module>webconsoleplugin</module>
     </modules>
 </project>

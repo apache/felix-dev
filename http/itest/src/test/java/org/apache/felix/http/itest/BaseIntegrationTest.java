@@ -156,26 +156,19 @@ public abstract class BaseIntegrationTest {
 
                 // scavenge sessions every 10 seconds (10 minutes is default in 9.4.x)
                 systemProperty("org.eclipse.jetty.servlet.SessionScavengingInterval").value("10"),
-                mavenBundle("org.slf4j", "slf4j-api", "1.7.32"),
-                mavenBundle("org.slf4j", "jcl-over-slf4j", "1.7.32"),
-                mavenBundle("org.slf4j", "log4j-over-slf4j", "1.7.32"),
-
-                mavenBundle("org.apache.felix", "org.apache.felix.log", "1.2.6"),
-                mavenBundle("org.apache.sling", "org.apache.sling.commons.log", "5.3.0"),
-                mavenBundle("org.apache.sling", "org.apache.sling.commons.logservice", "1.1.0"),
-
-                mavenBundle("org.apache.geronimo.specs", "geronimo-json_1.0_spec", "1.0-alpha-1").startLevel(START_LEVEL_SYSTEM_BUNDLES),
-                mavenBundle("org.apache.johnzon", "johnzon-core", "1.0.0").startLevel(START_LEVEL_SYSTEM_BUNDLES),
+                // update pax logging for SLF4J 2
+                mavenBundle().groupId("org.ops4j.pax.logging").artifactId("pax-logging-api").version("2.3.0"),                mavenBundle("org.slf4j", "slf4j-api", "2.0.17"),
+                mavenBundle("org.apache.sling", "org.apache.sling.commons.johnzon", "1.2.16").startLevel(START_LEVEL_SYSTEM_BUNDLES),
+                mavenBundle("commons-io", "commons-io", "2.19.0").startLevel(START_LEVEL_SYSTEM_BUNDLES),
+                mavenBundle("commons-fileupload", "commons-fileupload", "1.6.0").startLevel(START_LEVEL_SYSTEM_BUNDLES),
 
                 mavenBundle("org.apache.felix", "org.apache.felix.configadmin").version("1.9.22").startLevel(START_LEVEL_SYSTEM_BUNDLES),
                 mavenBundle("org.apache.felix", "org.apache.felix.http.servlet-api", System.getProperty("http.servlet.api.version")).startLevel(START_LEVEL_SYSTEM_BUNDLES),
-                mavenBundle("org.apache.felix", ORG_APACHE_FELIX_HTTP_JETTY, System.getProperty("http.jetty.version")).startLevel(START_LEVEL_SYSTEM_BUNDLES),
+                mavenBundle("org.apache.felix", System.getProperty("http.jetty.id"), System.getProperty("http.jetty.version")).startLevel(START_LEVEL_SYSTEM_BUNDLES),
                 mavenBundle("org.apache.felix", "org.apache.felix.http.whiteboard", "4.0.0").startLevel(START_LEVEL_SYSTEM_BUNDLES),
 
                 mavenBundle("org.apache.httpcomponents", "httpcore-osgi", "4.4.6").startLevel(START_LEVEL_SYSTEM_BUNDLES),
                 mavenBundle("org.apache.httpcomponents", "httpclient-osgi", "4.5.3").startLevel(START_LEVEL_SYSTEM_BUNDLES),
-                mavenBundle("org.mockito", "mockito-all", "1.10.19").startLevel(START_LEVEL_SYSTEM_BUNDLES),
-                mavenBundle("org.objenesis", "objenesis", "2.6").startLevel(START_LEVEL_SYSTEM_BUNDLES),
 
                 junitBundles(),
                 frameworkStartLevel(START_LEVEL_TEST_BUNDLE));
@@ -249,7 +242,7 @@ public abstract class BaseIntegrationTest {
 
         for (final ServiceReference<ManagedService> serviceRef : serviceRefs) {
             ManagedService service = m_context.getService(serviceRef);
-            try {                
+            try {
                 service.updated(props);
             } catch (ConfigurationException ex) {
                 fail("Invalid configuration provisioned: " + ex.getMessage());
@@ -265,7 +258,7 @@ public abstract class BaseIntegrationTest {
      */
     protected Bundle findBundle(String bsn) {
         for (Bundle bundle : m_context.getBundles()) {
-            if (bsn.equals(bundle.getSymbolicName())) {
+            if (bsn.equals(bundle.getSymbolicName()) || (bundle.getSymbolicName() != null && bundle.getSymbolicName().startsWith(bsn))) {
                 return bundle;
             }
         }
@@ -274,7 +267,7 @@ public abstract class BaseIntegrationTest {
 
     protected Bundle getHttpJettyBundle() {
         Bundle b = findBundle(ORG_APACHE_FELIX_HTTP_JETTY);
-        assertNotNull("Apache Felix Jetty bundle not found?!", b);
+        assertNotNull("Apache Felix Jetty bundle not found. Looking for symbolic name equal to/starting with " + ORG_APACHE_FELIX_HTTP_JETTY, b);
         return b;
     }
 

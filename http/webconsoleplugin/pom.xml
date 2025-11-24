@@ -21,25 +21,26 @@
     <modelVersion>4.0.0</modelVersion>
     <parent>
         <groupId>org.apache.felix</groupId>
-        <artifactId>org.apache.felix.http.parent</artifactId>
-        <version>13</version>
-        <relativePath>../parent/pom.xml</relativePath>
+        <artifactId>felix-parent</artifactId>
+        <version>9</version>
+        <relativePath>../pom/pom.xml</relativePath>
     </parent>
 
     <name>Apache Felix Http Webconsole Plugin</name>
     <artifactId>org.apache.felix.http.webconsoleplugin</artifactId>
-    <version>1.0.1-SNAPSHOT</version>
+    <version>1.2.3-SNAPSHOT</version>
     <packaging>bundle</packaging>
 
     <scm>
         <connection>scm:git:https://github.com/apache/felix-dev.git</connection>
         <developerConnection>scm:git:https://github.com/apache/felix-dev.git</developerConnection>
         <url>https://gitbox.apache.org/repos/asf?p=felix-dev.git</url>
-      <tag>HEAD</tag>
+      <tag>org.apache.felix.http.webconsoleplugin-1.2.2</tag>
    </scm>
 
     <properties>
         <servlet.api>5.0.0</servlet.api>
+        <felix.java.version>11</felix.java.version>
     </properties>
 
     <build>
@@ -49,15 +50,32 @@
                 <artifactId>maven-bundle-plugin</artifactId>
                 <version>5.1.9</version>
                 <extensions>true</extensions>
+                <executions>
+                    <execution>
+                        <id>bundle</id>
+                        <phase>package</phase>
+                        <goals>
+                            <goal>bundle</goal>
+                        </goals>
+                    </execution>
+                    <execution>
+                        <id>baseline</id>
+                        <goals>
+                          <goal>baseline</goal>
+                        </goals>
+                    </execution>
+                </executions>
                 <configuration>
                     <instructions>
+                        <Bundle-SymbolicName>${project.artifactId}</Bundle-SymbolicName>
+                        <Bundle-Version>${project.version}</Bundle-Version>
                         <Import-Package>
                             jakarta.servlet;version="[5.0,7)",
                             jakarta.servlet.http;version="[5.0,7)",
                             *
-			</Import-Package>
+                        </Import-Package>
                     </instructions>
-		</configuration>
+                </configuration>
             </plugin>
         </plugins>
     </build>
@@ -66,6 +84,8 @@
         <dependency>
             <groupId>org.osgi</groupId>
             <artifactId>osgi.core</artifactId>
+            <version>6.0.0</version>
+            <scope>provided</scope>
         </dependency>
         <dependency>
             <groupId>org.osgi</groupId>

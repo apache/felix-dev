@@ -381,11 +381,9 @@ public class SharedServletContextImpl implements ServletContext
         return this.context.getServerInfo();
     }
 
-    @SuppressWarnings("deprecation")
-    @Override
     public Servlet getServlet(final String name) throws ServletException
     {
-        return this.context.getServlet(name);
+		throw new UnsupportedOperationException("Deprecated method not supported");
     }
 
     @Override
@@ -394,11 +392,9 @@ public class SharedServletContextImpl implements ServletContext
         return this.name;
     }
 
-    @SuppressWarnings("deprecation")
-    @Override
     public Enumeration<String> getServletNames()
     {
-        return this.context.getServletNames();
+		throw new UnsupportedOperationException("Deprecated method not supported");
     }
 
     @Override
@@ -413,20 +409,17 @@ public class SharedServletContextImpl implements ServletContext
         return this.context.getServletRegistrations();
     }
 
-    @SuppressWarnings("deprecation")
-    @Override
     public Enumeration<Servlet> getServlets()
     {
-        return this.context.getServlets();
+		throw new UnsupportedOperationException("Deprecated method not supported");
     }
 
     @Override
     public SessionCookieConfig getSessionCookieConfig()
     {
-        return this.context.getSessionCookieConfig();
+        return new ImmutableSessionCookieConfig(this.context.getSessionCookieConfig());
     }
 
-    @Override
     public void log(final Exception cause, final String message)
     {
         SystemLogger.LOGGER.error(message, cause);
@@ -522,5 +515,99 @@ public class SharedServletContextImpl implements ServletContext
     @Override
     public void setResponseCharacterEncoding(final String encoding) {
         throw new IllegalStateException();
+    }
+
+    private static class ImmutableSessionCookieConfig implements SessionCookieConfig {
+
+        private final SessionCookieConfig delegate;
+
+        public ImmutableSessionCookieConfig(final SessionCookieConfig delegate) {
+            this.delegate = delegate;
+        }
+
+        @Override
+        public String getComment() {
+            return delegate.getComment();
+        }
+
+        @Override
+        public String getDomain() {
+            return delegate.getDomain();
+        }
+
+        @Override
+        public int getMaxAge() {
+            return delegate.getMaxAge();
+        }
+
+        @Override
+        public String getName() {
+            return delegate.getName();
+        }
+
+        @Override
+        public String getPath() {
+            return delegate.getPath();
+        }
+
+        @Override
+        public boolean isHttpOnly() {
+            return delegate.isHttpOnly();
+        }
+
+        @Override
+        public boolean isSecure() {
+            return delegate.isSecure();
+        }
+
+        @Override
+        public void setComment(final String comment) {
+            throw new IllegalStateException();
+        }
+
+        @Override
+        public void setDomain(final String domain) {
+            throw new IllegalStateException();
+        }
+
+        @Override
+        public void setHttpOnly(final boolean httpOnly) {
+            throw new IllegalStateException();
+        }
+
+        @Override
+        public void setMaxAge(final int maxAge) {
+            throw new IllegalStateException();
+        }
+
+        @Override
+        public void setName(final String name) {
+            throw new IllegalStateException();
+        }
+
+        @Override
+        public void setPath(final String path) {
+            throw new IllegalStateException();
+        }
+
+        @Override
+        public void setSecure(final boolean secure) {
+            throw new IllegalStateException();
+        }
+
+        @Override
+        public String getAttribute(String name) {
+            return delegate.getAttribute(name);
+        }
+
+        @Override
+        public Map<String, String> getAttributes() {
+            return delegate.getAttributes();
+        }
+
+        @Override
+        public void setAttribute(String name, String value) {
+            throw new IllegalStateException();
+        }
     }
 }

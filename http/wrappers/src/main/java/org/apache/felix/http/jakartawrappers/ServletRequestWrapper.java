@@ -40,11 +40,16 @@ import static jakarta.servlet.RequestDispatcher.INCLUDE_PATH_INFO;
 import static jakarta.servlet.RequestDispatcher.INCLUDE_QUERY_STRING;
 import static jakarta.servlet.RequestDispatcher.INCLUDE_REQUEST_URI;
 import static jakarta.servlet.RequestDispatcher.INCLUDE_SERVLET_PATH;
+import static jakarta.servlet.RequestDispatcher.ERROR_QUERY_STRING;
+import static jakarta.servlet.RequestDispatcher.ERROR_METHOD;
 
 import java.io.BufferedReader;
 import java.io.IOException;
 import java.io.UnsupportedEncodingException;
+import java.util.ArrayList;
+import java.util.Collections;
 import java.util.Enumeration;
+import java.util.List;
 import java.util.Locale;
 import java.util.Map;
 
@@ -53,6 +58,7 @@ import org.jetbrains.annotations.NotNull;
 import jakarta.servlet.AsyncContext;
 import jakarta.servlet.DispatcherType;
 import jakarta.servlet.RequestDispatcher;
+import jakarta.servlet.ServletConnection;
 import jakarta.servlet.ServletContext;
 import jakarta.servlet.ServletInputStream;
 import jakarta.servlet.ServletRequest;
@@ -62,6 +68,9 @@ import jakarta.servlet.ServletResponse;
  * Servlet request wrapper
  */
 public class ServletRequestWrapper implements ServletRequest {
+
+    private static final String JAVAX_ERROR_METHOD = ERROR_METHOD.replace("jakarta", "javax");
+    private static final String JAVAX_ERROR_QUERY_STRING = ERROR_QUERY_STRING.replace("jakarta", "javax");
 
     private final javax.servlet.ServletRequest request;
 
@@ -107,86 +116,120 @@ public class ServletRequestWrapper implements ServletRequest {
         return value;
     }
 
-    @Override
-    public Object getAttribute(final String name) {
+    public static String getTranslatedAttributeName(final String name) {
         if ( FORWARD_CONTEXT_PATH.equals(name) ) {
-            return this.request.getAttribute(javax.servlet.RequestDispatcher.FORWARD_CONTEXT_PATH);
+            return javax.servlet.RequestDispatcher.FORWARD_CONTEXT_PATH;
 
         } else if ( FORWARD_MAPPING.equals(name) ) {
-            return wrapHttpServletMapping(this.request.getAttribute(javax.servlet.RequestDispatcher.FORWARD_MAPPING));
+            return javax.servlet.RequestDispatcher.FORWARD_MAPPING;
 
         } else if ( FORWARD_PATH_INFO.equals(name) ) {
-            return this.request.getAttribute(javax.servlet.RequestDispatcher.FORWARD_PATH_INFO);
+            return javax.servlet.RequestDispatcher.FORWARD_PATH_INFO;
 
         } else if ( FORWARD_QUERY_STRING.equals(name) ) {
-            return this.request.getAttribute(javax.servlet.RequestDispatcher.FORWARD_QUERY_STRING);
+            return javax.servlet.RequestDispatcher.FORWARD_QUERY_STRING;
 
         } else if ( FORWARD_REQUEST_URI.equals(name) ) {
-            return this.request.getAttribute(javax.servlet.RequestDispatcher.FORWARD_REQUEST_URI);
+            return javax.servlet.RequestDispatcher.FORWARD_REQUEST_URI;
 
         } else if ( FORWARD_SERVLET_PATH.equals(name) ) {
-            return this.request.getAttribute(javax.servlet.RequestDispatcher.FORWARD_SERVLET_PATH);
+            return javax.servlet.RequestDispatcher.FORWARD_SERVLET_PATH;
 
         } else if ( INCLUDE_CONTEXT_PATH.equals(name) ) {
-            return this.request.getAttribute(javax.servlet.RequestDispatcher.INCLUDE_CONTEXT_PATH);
+            return javax.servlet.RequestDispatcher.INCLUDE_CONTEXT_PATH;
 
         } else if ( INCLUDE_MAPPING.equals(name) ) {
-            return wrapHttpServletMapping(this.request.getAttribute(javax.servlet.RequestDispatcher.INCLUDE_MAPPING));
+            return javax.servlet.RequestDispatcher.INCLUDE_MAPPING;
 
         } else if ( INCLUDE_PATH_INFO.equals(name) ) {
-            return this.request.getAttribute(javax.servlet.RequestDispatcher.INCLUDE_PATH_INFO);
+            return javax.servlet.RequestDispatcher.INCLUDE_PATH_INFO;
 
         } else if ( INCLUDE_QUERY_STRING.equals(name) ) {
-            return this.request.getAttribute(javax.servlet.RequestDispatcher.INCLUDE_QUERY_STRING);
+            return javax.servlet.RequestDispatcher.INCLUDE_QUERY_STRING;
 
         } else if ( INCLUDE_REQUEST_URI.equals(name) ) {
-            return this.request.getAttribute(javax.servlet.RequestDispatcher.INCLUDE_REQUEST_URI);
+            return javax.servlet.RequestDispatcher.INCLUDE_REQUEST_URI;
 
         } else if ( INCLUDE_SERVLET_PATH.equals(name) ) {
-            return this.request.getAttribute(javax.servlet.RequestDispatcher.INCLUDE_SERVLET_PATH);
+            return javax.servlet.RequestDispatcher.INCLUDE_SERVLET_PATH;
 
         } else if ( ERROR_EXCEPTION.equals(name) ) {
-            return this.request.getAttribute(javax.servlet.RequestDispatcher.ERROR_EXCEPTION);
+            return javax.servlet.RequestDispatcher.ERROR_EXCEPTION;
 
         } else if ( ERROR_EXCEPTION_TYPE.equals(name) ) {
-            return this.request.getAttribute(javax.servlet.RequestDispatcher.ERROR_EXCEPTION_TYPE);
+            return javax.servlet.RequestDispatcher.ERROR_EXCEPTION_TYPE;
 
         } else if ( ERROR_MESSAGE.equals(name) ) {
-            return this.request.getAttribute(javax.servlet.RequestDispatcher.ERROR_MESSAGE);
+            return javax.servlet.RequestDispatcher.ERROR_MESSAGE;
 
         } else if ( ERROR_REQUEST_URI.equals(name) ) {
-            return this.request.getAttribute(javax.servlet.RequestDispatcher.ERROR_REQUEST_URI);
+            return javax.servlet.RequestDispatcher.ERROR_REQUEST_URI;
 
         } else if ( ERROR_SERVLET_NAME.equals(name) ) {
-            return this.request.getAttribute(javax.servlet.RequestDispatcher.ERROR_SERVLET_NAME);
+            return javax.servlet.RequestDispatcher.ERROR_SERVLET_NAME;
 
         } else if ( ERROR_STATUS_CODE.equals(name) ) {
-            return this.request.getAttribute(javax.servlet.RequestDispatcher.ERROR_STATUS_CODE);
+            return javax.servlet.RequestDispatcher.ERROR_STATUS_CODE;
+
+        // new in 6.1
+        } else if ( ERROR_METHOD.equals(name) ) {
+            return JAVAX_ERROR_METHOD;
+
+        // new in 6.1
+        } else if ( ERROR_QUERY_STRING.equals(name) ) {
+            return JAVAX_ERROR_QUERY_STRING;
 
         } else if ( ASYNC_CONTEXT_PATH.equals(name) ) {
-            return this.request.getAttribute(javax.servlet.AsyncContext.ASYNC_CONTEXT_PATH);
+            return javax.servlet.AsyncContext.ASYNC_CONTEXT_PATH;
 
         } else if ( ASYNC_MAPPING.equals(name) ) {
-            return wrapHttpServletMapping(this.request.getAttribute(javax.servlet.AsyncContext.ASYNC_MAPPING));
+            return javax.servlet.AsyncContext.ASYNC_MAPPING;
 
         } else if ( ASYNC_PATH_INFO.equals(name) ) {
-            return this.request.getAttribute(javax.servlet.AsyncContext.ASYNC_PATH_INFO);
+            return javax.servlet.AsyncContext.ASYNC_PATH_INFO;
 
         } else if ( ASYNC_QUERY_STRING.equals(name) ) {
-            return this.request.getAttribute(javax.servlet.AsyncContext.ASYNC_QUERY_STRING);
+            return javax.servlet.AsyncContext.ASYNC_QUERY_STRING;
 
         } else if ( ASYNC_REQUEST_URI.equals(name) ) {
-            return this.request.getAttribute(javax.servlet.AsyncContext.ASYNC_REQUEST_URI);
+            return javax.servlet.AsyncContext.ASYNC_REQUEST_URI;
 
         } else if ( ASYNC_SERVLET_PATH.equals(name) ) {
-            return this.request.getAttribute(javax.servlet.AsyncContext.ASYNC_SERVLET_PATH);
+            return javax.servlet.AsyncContext.ASYNC_SERVLET_PATH;
+        }
+        return null;
+    }
+
+    @Override
+    public Object getAttribute(final String name) {
+        final String translatedName = getTranslatedAttributeName(name);
+        if ( translatedName != null ) {
+            final Object value = this.request.getAttribute(translatedName);
+            if ( FORWARD_MAPPING.equals(name) ) {
+                return wrapHttpServletMapping(value);
+            } else if ( INCLUDE_MAPPING.equals(name) ) {
+                return wrapHttpServletMapping(value);
+            } else if ( ASYNC_MAPPING.equals(name) ) {
+                return wrapHttpServletMapping(value);
+            }
+            return value;
         }
         return this.request.getAttribute(name);
     }
 
     @Override
     public Enumeration<String> getAttributeNames() {
-        return this.request.getAttributeNames();
+        final List<String> names = Collections.list(this.request.getAttributeNames());
+        final List<String> translatedNames = new ArrayList<>();
+        for(final String name : names) {
+            final String translatedName = org.apache.felix.http.javaxwrappers.ServletRequestWrapper.getTranslatedAttributeName(name);
+            if ( translatedName != null ) {
+                translatedNames.add(translatedName);
+            } else {
+                translatedNames.add(name);
+            }
+        }
+        return Collections.enumeration(translatedNames);
     }
 
     @Override
@@ -276,12 +319,22 @@ public class ServletRequestWrapper implements ServletRequest {
 
     @Override
     public void setAttribute(final String name, final Object o) {
-        this.request.setAttribute(name, o);
+        final String translatedName = getTranslatedAttributeName(name);
+        if (translatedName != null) {
+            this.request.removeAttribute(name);
+            this.request.setAttribute(translatedName, o);
+        } else {
+            this.request.setAttribute(name, o);
+        }
     }
 
     @Override
     public void removeAttribute(final String name) {
+        final String translatedName = getTranslatedAttributeName(name);
         this.request.removeAttribute(name);
+        if (translatedName != null) {
+            this.request.removeAttribute(translatedName);
+        }
     }
 
     @Override
@@ -306,12 +359,6 @@ public class ServletRequestWrapper implements ServletRequest {
             return new RequestDispatcherWrapper(dispatcher);
         }
         return null;
-    }
-
-    @SuppressWarnings("deprecation")
-    @Override
-    public String getRealPath(final String path) {
-        return this.request.getRealPath(path);
     }
 
     @Override
@@ -377,5 +424,20 @@ public class ServletRequestWrapper implements ServletRequest {
         case REQUEST : return DispatcherType.REQUEST;
         }
         return null;
+    }
+
+    @Override
+    public String getProtocolRequestId() {
+        throw new UnsupportedOperationException();
+    }
+
+    @Override
+    public String getRequestId() {
+        throw new UnsupportedOperationException();
+    }
+
+    @Override
+    public ServletConnection getServletConnection() {
+        throw new UnsupportedOperationException();
     }
 }

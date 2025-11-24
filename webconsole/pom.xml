@@ -6,9 +6,9 @@
     to you under the Apache License, Version 2.0 (the
     "License"); you may not use this file except in compliance
     with the License.  You may obtain a copy of the License at
-    
+
     http://www.apache.org/licenses/LICENSE-2.0
-    
+
     Unless required by applicable law or agreed to in writing,
     software distributed under the License is distributed on an
     "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
@@ -22,30 +22,24 @@
     <parent>
         <groupId>org.apache.felix</groupId>
         <artifactId>felix-parent</artifactId>
-        <version>7</version>
+        <version>8</version>
         <relativePath>../pom/pom.xml</relativePath>
     </parent>
 
     <artifactId>org.apache.felix.webconsole</artifactId>
     <packaging>bundle</packaging>
-    <version>4.9.1-SNAPSHOT</version>
+    <version>5.0.19-SNAPSHOT</version>
 
     <name>Apache Felix Web Management Console</name>
     <description>
         Web Based Management Console for OSGi Frameworks. See
-        http://felix.apache.org/site/apache-felix-web-console.html for more
-        information on this bundle.
+        https://github.com/apache/felix-dev/tree/master/webconsole
+        for more information on this bundle.
     </description>
-    
+
     <properties>
-        <webconsole.exports>
-            org.apache.felix.webconsole;provide:=true,
-            org.apache.felix.webconsole.bundleinfo;provide:=true,
-            org.apache.felix.webconsole.i18n;provide:=true,
-            org.apache.felix.webconsole.servlet,
-            org.apache.felix.webconsole.spi
-	</webconsole.exports>
-	<servlet.api>5.0.0</servlet.api>
+        <servlet.api>5.0.0</servlet.api>
+        <felix.java.version>11</felix.java.version>
     </properties>
 
     <scm>
@@ -107,20 +101,15 @@
                             The Apache Software Foundation
                         </Bundle-Vendor>
                         <Bundle-DocURL>
-                            http://felix.apache.org/site/apache-felix-web-console.html
+                            https://github.com/apache/felix-dev/tree/master/webconsole
                         </Bundle-DocURL>
                         <Bundle-Activator>
                             org.apache.felix.webconsole.internal.OsgiManagerActivator
                         </Bundle-Activator>
-                        <Export-Package>
-                            ${webconsole.exports}
-                        </Export-Package>
-                        <!-- Import-Package header is also used for the all bundle -->
                         <Import-Package>
-                            javax.servlet.*;version="[3,5)",
-                            !javax.portlet,
-                            !jakarta.servlet,
-                            !jakarta.servlet.http,
+                            jakarta.servlet.*;version="[5,7)",
+                            !javax.servlet,
+                            !javax.servlet.http,
                             !org.apache.felix.http.javaxwrappers,
                             !org.apache.felix.http.jakartawrappers,
                             !org.apache.felix.bundlerepository,
@@ -134,7 +123,6 @@
                             !org.osgi.service.wireadmin,
                             *
                         </Import-Package>
-                        <!-- DynamicImport-Package header is also used for the all bundle -->
                         <DynamicImport-Package>
                             org.apache.felix.bundlerepository;version="[2.0,3)",
                             org.osgi.service.obr;version="[1.0,2)",
@@ -145,8 +133,8 @@
                             org.osgi.service.permissionadmin;version="[1.2,2)",
                             org.osgi.service.prefs;version="[1.1,2)",
                             org.osgi.service.wireadmin;version="[1.0,2)",
-                            jakarta.servlet;version="[5,7)",
-                            jakarta.servlet.http;version="[5,7)",
+                            javax.servlet;version="[3.1,5)",
+                            javax.servlet.http;version="[3.1,5)",
                             org.apache.felix.http.javaxwrappers;version="[1,2)",
                             org.apache.felix.http.jakartawrappers;version="[1,2)"
                         </DynamicImport-Package>
@@ -171,6 +159,7 @@
             <plugin>
                 <artifactId>maven-javadoc-plugin</artifactId>
                 <configuration>
+                    <release>${felix.java.version}</release>
                     <excludePackageNames>
                         *.internal.*:*.internal
                     </excludePackageNames>
@@ -197,160 +186,19 @@
                         <exclude>src/main/resources/res/lib/themes/**</exclude>
                         <exclude>src/main/resources/res/ui/ui.tabs.paging.js</exclude>
                         <exclude>src/main/resources/templates/*.html</exclude>
-                        <exclude>src/main/debug-resources/res/lib/**</exclude>
                     </excludes>
                 </configuration>
             </plugin>
         </plugins>
     </build>
 
-   <profiles>
-       <!--
-           The "all-in-one-bundle" profile builds a bundle including certain
-           3rd party libraries and classes, namely: Commons IO (needed by 
-           Commons FileUpload), Commons FileUpload.
-           The "all-in-one-bundle" can be used in deployments where these
-           dependencies need not be deployed separately.
-       -->
-       <profile>
-           <id>all-in-one-bundle</id>
-           <activation><activeByDefault>true</activeByDefault></activation>
-           <build>
-               <plugins>
-                   <plugin>
-                       <groupId>org.apache.felix</groupId>
-                       <artifactId>maven-bundle-plugin</artifactId>
-                       <executions>
-                           <execution>
-                               <id>all-in-one-bundle</id>
-                               <goals>
-                                   <goal>bundle</goal>
-                               </goals>
-                               <configuration>
-                                   <classifier>all</classifier>
-                                   <instructions>
-                                       <Bundle-Name>
-                                           ${project.name} (All In One)
-                                       </Bundle-Name>
-                                       <Bundle-Version>
-                                           ${project.version}-all
-                                       </Bundle-Version>
-                                       <Export-Package>
-                                           org.apache.commons.fileupload,
-                                           org.apache.commons.fileupload.disk,
-                                           org.apache.commons.fileupload.servlet,
-                                           org.apache.commons.fileupload.util,
-                                           org.apache.commons.io.*,
-                                           org.apache.felix.inventory,
-                                           ${webconsole.exports}
-                                       </Export-Package>
-                                       <Embed-Dependency>
-                                           <!-- Import/Export-Package parsing -->
-                                           org.apache.felix.utils;inline=org/apache/felix/utils/manifest/**,
-                                           org.apache.felix.utils;inline=org/apache/felix/utils/json/**,
-                                           org.apache.felix.inventory;inline=true,
-                                           commons-fileupload;inline=true,
-                                           commons-io;inline=true
-                                       </Embed-Dependency>
-                                       <_removeheaders>
-                                           Embed-Dependency,Private-Package,Include-Resource
-                                       </_removeheaders>
-                                   </instructions>
-                               </configuration>
-                           </execution>
-                       </executions>
-                   </plugin>
-                   <!--
-                  <plugin>
-                    <groupId>org.apache.maven.plugins</groupId>
-                    <artifactId>maven-remote-resources-plugin</artifactId>
-                    <executions>
-                      <execution>
-                        <goals>
-                          <goal>process</goal>
-                        </goals>
-                        <configuration>
-                          <resourceBundles>
-                            <resourceBundle>org.apache:apache-jar-resource-bundle:1.4</resourceBundle>
-                          </resourceBundles>
-                        </configuration>
-                      </execution>
-                    </executions>
-                  </plugin>
-                  -->
-               </plugins>
-            </build>
-            <dependencies>
-                <dependency>
-                    <groupId>org.apache.felix</groupId>
-                    <artifactId>org.apache.felix.inventory</artifactId>
-                    <version>1.1.0</version>
-                    <scope>provided</scope>
-                </dependency>
-            </dependencies>
-        </profile>
-        
-       <!--
-           The "debug" profile builds a bundle using the non-minified
-           JQuery libraries and CSS files instead to make debugging
-           JQuery related issues easier.
-       -->
-       <profile>
-           <id>debug-bundle</id>
-           <activation><activeByDefault>true</activeByDefault></activation>
-           <build>
-               <plugins>
-                   <plugin>
-                       <groupId>org.apache.felix</groupId>
-                       <artifactId>maven-bundle-plugin</artifactId>
-                       <executions>
-                           <execution>
-                               <id>debug-bundle</id>
-                               <goals>
-                                   <goal>bundle</goal>
-                               </goals>
-                               <configuration>
-                                   <classifier>debug</classifier>
-                                   <instructions>
-                                       <Bundle-Name>
-                                           ${project.name} (JQuery Debug)
-                                       </Bundle-Name>
-                                       <Bundle-Version>
-                                           ${project.version}-debug
-                                       </Bundle-Version>
-                                       <Include-Resource>
-                                           {maven-resources},
-                                           res=src/main/debug-resources/res
-                                       </Include-Resource>
-                                   </instructions>
-                               </configuration>
-                           </execution>
-                       </executions>
-                   </plugin>
-                   <!--
-                  <plugin>
-                    <groupId>org.apache.maven.plugins</groupId>
-                    <artifactId>maven-remote-resources-plugin</artifactId>
-                    <executions>
-                      <execution>
-                        <goals>
-                          <goal>process</goal>
-                        </goals>
-                        <configuration>
-                          <resourceBundles>
-                            <resourceBundle>org.apache:apache-jar-resource-bundle:1.4</resourceBundle>
-                          </resourceBundles>
-                        </configuration>
-                      </execution>
-                    </executions>
-                  </plugin>
-                  -->
-               </plugins>
-            </build>
-        </profile>
-    </profiles>
-
     <dependencies>
+        <dependency>
+            <groupId>org.slf4j</groupId>
+            <artifactId>slf4j-api</artifactId>
+            <version>1.7.36</version>
+            <scope>provided</scope>
+        </dependency>
         <dependency>
             <groupId>org.osgi</groupId>
             <artifactId>org.osgi.annotation.versioning</artifactId>
@@ -361,13 +209,13 @@
         <dependency>
             <groupId>javax.servlet</groupId>
             <artifactId>javax.servlet-api</artifactId>
-            <version>3.0.1</version>
+            <version>3.1.0</version>
             <scope>provided</scope>
         </dependency>
         <dependency>
             <groupId>jakarta.servlet</groupId>
             <artifactId>jakarta.servlet-api</artifactId>
-	    <version>${servlet.api}</version>
+            <version>${servlet.api}</version>
             <scope>provided</scope>
         </dependency>
         <dependency>
@@ -377,26 +225,17 @@
             <scope>provided</scope>
         </dependency>
         <dependency>
-            <groupId>commons-fileupload</groupId>
-            <artifactId>commons-fileupload</artifactId>
-            <version>1.5</version>
+            <groupId>org.apache.felix</groupId>
+            <artifactId>org.apache.felix.inventory</artifactId>
+            <version>2.0.0</version>
             <scope>provided</scope>
         </dependency>
-
-        <dependency>
-            <groupId>commons-io</groupId>
-            <artifactId>commons-io</artifactId>
-            <version>2.11.0</version>
-            <scope>provided</scope>
-        </dependency>
-
         <dependency>
             <groupId>org.owasp.encoder</groupId>
             <artifactId>encoder</artifactId>
             <version>1.2.3</version>
             <scope>provided</scope>
         </dependency>
-
         <dependency>
             <groupId>org.osgi</groupId>
             <artifactId>org.osgi.service.log</artifactId>
@@ -411,8 +250,8 @@
         </dependency>
         <dependency>
             <groupId>org.osgi</groupId>
-            <artifactId>org.osgi.service.http.whiteboard</artifactId>
-            <version>1.1.1</version>
+            <artifactId>org.osgi.service.servlet</artifactId>
+            <version>2.0.0</version>
             <scope>provided</scope>
         </dependency>
         <dependency>
@@ -455,7 +294,7 @@
             <scope>provided</scope>
             <optional>true</optional>
         </dependency>
-        
+
         <!-- OSGi and Apache Felix OBR API -->
         <dependency>
             <groupId>org.apache.felix</groupId>
@@ -479,7 +318,7 @@
         <dependency>
             <groupId>org.mockito</groupId>
             <artifactId>mockito-core</artifactId>
-            <version>5.4.0</version>
+            <version>5.17.0</version>
             <scope>test</scope>
         </dependency>
     </dependencies>

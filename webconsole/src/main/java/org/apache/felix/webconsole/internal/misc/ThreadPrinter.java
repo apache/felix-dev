@@ -30,18 +30,11 @@ public class ThreadPrinter extends AbstractConfigurationPrinter {
 
     private static final String TITLE = "Threads";
 
-    private static final String LABEL = "_threads";
-
     private final ThreadDumper dumper = new ThreadDumper();
 
     @Override
     protected String getTitle() {
         return TITLE;
-    }
-
-    @Override
-    protected String getLabel() {
-        return LABEL;
     }
 
     @Override

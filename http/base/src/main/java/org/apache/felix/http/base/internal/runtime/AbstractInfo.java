@@ -101,6 +101,8 @@ public abstract class AbstractInfo<T> implements Comparable<AbstractInfo<T>>
 
     /**
      * Compare two info objects 
+     * @param other The other info object
+     * @return {@code true} if the objects are the same
      */
     public boolean isSame(final AbstractInfo<T> other) {
         if (this.serviceId != other.serviceId) {
@@ -183,6 +185,9 @@ public abstract class AbstractInfo<T> implements Comparable<AbstractInfo<T>>
 
     /**
      * Get the init parameters.
+     * @param ref The service reference
+     * @param prefix The prefix
+     * @return The map of init parameters
      */
     protected Map<String, String> getInitParams(final ServiceReference<T> ref, final String prefix)
     {

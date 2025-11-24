@@ -18,18 +18,29 @@
  */
 package org.apache.felix.scr.integration;
 
+import static org.junit.Assert.assertNotNull;
+
+import java.util.Arrays;
+import java.util.Dictionary;
 import java.util.Hashtable;
+import java.util.concurrent.CountDownLatch;
+import java.util.concurrent.atomic.AtomicBoolean;
+import java.util.concurrent.atomic.AtomicReference;
 
 import org.apache.felix.scr.integration.components.SimpleComponent;
 import org.apache.felix.scr.integration.components.SimpleServiceImpl;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.ops4j.pax.exam.junit.PaxExam;
+import org.osgi.framework.Constants;
+import org.osgi.framework.ServiceEvent;
+import org.osgi.framework.ServiceListener;
 import org.osgi.framework.ServiceReference;
 import org.osgi.service.component.ComponentConstants;
 import org.osgi.service.component.ComponentFactory;
 import org.osgi.service.component.ComponentInstance;
 import org.osgi.service.component.runtime.dto.ComponentConfigurationDTO;
+import org.osgi.util.tracker.ServiceTracker;
 
 import junit.framework.TestCase;
 
@@ -41,7 +52,7 @@ public class ConfigurationChangeTest extends ComponentTestBase
     static
     {
         // uncomment to enable debugging of this test class
-        //         paxRunnerVmOption = DEBUG_VM_OPTION;
+        //paxRunnerVmOption = DEBUG_VM_OPTION;
 
         descriptorFile = "/integration_test_simple_components_configuration_change.xml";
     }
@@ -155,6 +166,19 @@ public class ConfigurationChangeTest extends ComponentTestBase
         multipleTest( pid, true );
     }
 
+    @Test
+    public void test_optional_multiple_dynamic_config_cardinality() throws Exception
+    {
+        String pid = "test_optional_multiple_dynamic";
+        multipleTestCardinalityDynamic( pid );
+    }
+
+    @Test
+    public void test_optional_multiple_dynamic_config_cardinality_threads() throws Exception
+    {
+        String pid = "test_optional_multiple_dynamic";
+        multipleTestCardinalityDynamicThreads( pid );
+    }
 
     @Test
     public void test_required_multiple_dynamic() throws Exception
@@ -203,6 +227,112 @@ public class ConfigurationChangeTest extends ComponentTestBase
     {
         String pid = "test_required_multiple_static_greedy";
         multipleTest( pid, false );
+    }
+
+    private void multipleTestCardinalityDynamic(String pid) throws Exception
+    {
+        // only register 2 services
+        final SimpleServiceImpl srv1 = SimpleServiceImpl.create( bundleContext, "srv1" );
+        final SimpleServiceImpl srv2 = SimpleServiceImpl.create( bundleContext, "srv2" );
+
+        // require 3 services
+        theConfig.put("ref.cardinality.minimum", 3);
+        configure( pid );
+        delay();//let cm thread finish before enabling.
+
+        getDisabledConfigurationAndEnable(pid, ComponentConfigurationDTO.UNSATISFIED_REFERENCE);
+
+        final SimpleComponent comp10 = SimpleComponent.INSTANCE;
+        TestCase.assertNull( comp10 );
+
+        // create the 3rd service
+        final SimpleServiceImpl srv3 = SimpleServiceImpl.create( bundleContext, "srv3" );
+        ServiceTracker<SimpleComponent, SimpleComponent> testTracker = new ServiceTracker<>(bundleContext, SimpleComponent.class,  null);
+        testTracker.open();
+
+        // should bind to all 3 services
+        assertNotNull("service is null", testTracker.getService());
+        SimpleComponent comp20 = SimpleComponent.INSTANCE;
+        TestCase.assertEquals( 3, comp20.m_multiRef.size() );
+        TestCase.assertTrue( comp20.m_multiRef.containsAll(Arrays.asList(srv1, srv2, srv3)));
+        TestCase.assertEquals( 3, comp20.m_multiRefBind );
+
+        // unregister srv1 to cause deactivation
+        srv1.getRegistration().unregister();
+        
+        TestCase.assertEquals(1, comp20.m_multiRefUnbind);
+        TestCase.assertNull(comp20.m_activateContext);
+
+        // create 4th service to cause reactivation
+        final SimpleServiceImpl srv4 = SimpleServiceImpl.create( bundleContext, "srv4" );
+        assertNotNull("service is null", testTracker.getService());
+        // should bind to all 3 services
+        SimpleComponent comp30 = SimpleComponent.INSTANCE;
+        TestCase.assertNotSame( comp20, comp30 );
+        TestCase.assertEquals( 3, comp30.m_multiRef.size() );
+        TestCase.assertTrue( comp30.m_multiRef.containsAll(Arrays.asList(srv2, srv3, srv4)));
+        TestCase.assertEquals( 3, comp30.m_multiRefBind );
+    }
+
+    private void multipleTestCardinalityDynamicThreads(String pid) throws Exception
+    {
+        // only register 2 services
+        final SimpleServiceImpl srv1 = SimpleServiceImpl.create( bundleContext, "srv1" );
+        final SimpleServiceImpl srv2 = SimpleServiceImpl.create( bundleContext, "srv2" );
+
+        // require 3 services
+        theConfig.put("ref.cardinality.minimum", 3);
+        configure( pid );
+        delay();//let cm thread finish before enabling.
+
+        getDisabledConfigurationAndEnable(pid, ComponentConfigurationDTO.UNSATISFIED_REFERENCE);
+
+        final SimpleComponent comp10 = SimpleComponent.INSTANCE;
+        TestCase.assertNull( comp10 );
+
+        final AtomicReference<SimpleServiceImpl> srv4 = new AtomicReference<>();
+        CountDownLatch joiner = new CountDownLatch(2);
+        final AtomicBoolean keepGoing = new AtomicBoolean(true);
+        final ServiceListener listener = new ServiceListener()
+        {
+            @Override
+            public void serviceChanged(ServiceEvent event)
+            {
+                Dictionary<String, Object> props = event.getServiceReference().getProperties();
+                if (event.getType() == ServiceEvent.REGISTERED && SimpleComponent.class.getName().equals(((Object[])props.get(Constants.OBJECTCLASS))[0])) {
+                    if (!keepGoing.compareAndSet(true, false)) {
+                        return;
+                    }
+                    bundleContext.getService(event.getServiceReference());
+
+                    new Thread(() -> {
+                        srv1.getRegistration().unregister();
+                        joiner.countDown();
+                    }, "service unregister").start();
+                    new Thread(() -> {
+                        srv4.set(SimpleServiceImpl.create( bundleContext, "srv4" ));
+                        joiner.countDown();
+                    }, "service unregister").start();
+                }
+            }
+        };
+        bundleContext.addServiceListener(listener);
+
+        // create the 3rd service
+        final SimpleServiceImpl srv3 = SimpleServiceImpl.create( bundleContext, "srv3" );
+
+        joiner.await();
+        ServiceTracker<SimpleComponent, SimpleComponent> testTracker = new ServiceTracker<>(bundleContext, SimpleComponent.class,  null);
+        testTracker.open();
+        assertNotNull("service is null", testTracker.getService());
+        // should bind to 3 services
+        SimpleComponent comp20 = SimpleComponent.INSTANCE;
+        TestCase.assertNotNull(comp20);
+        TestCase.assertNotSame(comp10, comp20);
+        TestCase.assertEquals( 3, comp20.m_multiRef.size() );
+        TestCase.assertTrue("Wrong set of services: " + comp20.m_multiRef, comp20.m_multiRef.containsAll(Arrays.asList(srv2, srv3, srv4.get())));
+        TestCase.assertEquals( 3, comp20.m_multiRefBind );
+
     }
 
     private void multipleTest(String pid, boolean dynamic) throws Exception

@@ -48,6 +48,7 @@ public final class ErrorPageDTOBuilder extends BaseServletDTOBuilder
     /**
      * Build a servlet DTO from a servlet info
      * @param info The servlet info
+     * @param failed Whether the servlet registration failed
      * @return A servlet DTO
      */
     public static ErrorPageDTO build(final ServletInfo info, final boolean failed)

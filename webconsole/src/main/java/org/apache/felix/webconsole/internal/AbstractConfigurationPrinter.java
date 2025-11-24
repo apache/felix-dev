@@ -41,7 +41,7 @@ public abstract class AbstractConfigurationPrinter implements InventoryPrinter, 
         this.bundleContext = bundleContext;
         final Dictionary<String, Object> props = new Hashtable<>();
         props.put(InventoryPrinter.TITLE, this.getTitle());
-        props.put(InventoryPrinter.NAME, this.getLabel());
+        props.put(InventoryPrinter.NAME, this.getTitle());
 
         this.registration = bundleContext.registerService( InventoryPrinter.class, this, props );
     }
@@ -78,12 +78,4 @@ public abstract class AbstractConfigurationPrinter implements InventoryPrinter, 
      * @return The title
      */
     protected abstract String getTitle();
-
-    /**
-     * Get the label
-     * @return The label
-     */
-    protected String getLabel() {
-        return this.getTitle();
-    }
 }

@@ -26,8 +26,10 @@ import java.io.File;
 import java.io.IOException;
 import java.net.MalformedURLException;
 import java.net.URL;
+import java.nio.file.Files;
 import java.util.Dictionary;
 import java.util.Hashtable;
+import java.util.concurrent.CountDownLatch;
 
 import org.junit.Test;
 import org.junit.runner.RunWith;
@@ -38,6 +40,7 @@ import org.osgi.framework.ServiceRegistration;
 import org.osgi.service.servlet.context.ServletContextHelper;
 import org.osgi.service.servlet.whiteboard.HttpWhiteboardConstants;
 
+import jakarta.servlet.Servlet;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 
@@ -47,6 +50,7 @@ public class ResourceTest extends Servlet5BaseIntegrationTest {
 
     @Test
     public void testHandleResourceRegistrationOk() throws Exception {
+        this.setupLatches(1);
         long counter = this.getRuntimeCounter();
         ServletContextHelper context = new ServletContextHelper() {
             @Override
@@ -57,7 +61,7 @@ public class ResourceTest extends Servlet5BaseIntegrationTest {
             @Override
             public URL getResource(String name) {
                 try {
-                    File f = new File("src/test/resources/" + name);
+                    File f = new File("src/test/resources" + name);
                     if (f.exists()) {
                         return f.toURI().toURL();
                     }
@@ -75,18 +79,33 @@ public class ResourceTest extends Servlet5BaseIntegrationTest {
         counter = this.waitForRuntime(counter);
 
         final Dictionary<String, Object> resourcesProps = new Hashtable<>();
-        resourcesProps.put(HttpWhiteboardConstants.HTTP_WHITEBOARD_RESOURCE_PATTERN, "/");
+        resourcesProps.put(HttpWhiteboardConstants.HTTP_WHITEBOARD_RESOURCE_PATTERN, "/files/*");
         resourcesProps.put(HttpWhiteboardConstants.HTTP_WHITEBOARD_RESOURCE_PREFIX, "/resource");
         resourcesProps.put(HttpWhiteboardConstants.HTTP_WHITEBOARD_CONTEXT_SELECT, "(" + HttpWhiteboardConstants.HTTP_WHITEBOARD_CONTEXT_NAME + "=test)");
         final ServiceRegistration<Object> reg = this.m_context.registerService(Object.class, new Object(), resourcesProps);
-        
+    
         counter = this.waitForRuntime(counter);
 
-        URL testHtmlURL = createURL("/test.html");
-        URL testURL = createURL("/test");
+        final TestServlet servlet = new TestServlet();
 
-        assertResponseCode(SC_OK, testHtmlURL);
-        assertResponseCode(SC_OK, testURL);
+        final Dictionary<String, Object> servletProps = new Hashtable<>();
+        servletProps.put(HttpWhiteboardConstants.HTTP_WHITEBOARD_SERVLET_PATTERN, "/files/test");
+        servletProps.put(HttpWhiteboardConstants.HTTP_WHITEBOARD_CONTEXT_SELECT, "(" + HttpWhiteboardConstants.HTTP_WHITEBOARD_CONTEXT_NAME + "=test)");
+        final ServiceRegistration<Servlet> servletReg = this.m_context.registerService(Servlet.class, servlet, servletProps);
+
+        this.waitForInit();
+
+        URL testHtmlURL = createURL("/files/test.html");
+        URL testURL = createURL("/files/test");
+
+        assertContent(SC_OK, Files.readString(new File("src/test/resources/resource/test.html").toPath()), testHtmlURL);
+        assertContent(SC_OK, null, testURL);
+
+        servletReg.unregister();
+        this.waitForDestroy();
+
+        assertContent(SC_OK, Files.readString(new File("src/test/resources/resource/test.html").toPath()), testHtmlURL);
+        assertResponseCode(SC_NOT_FOUND, testURL);
 
         reg.unregister();
         counter = this.waitForRuntime(counter);

@@ -22,7 +22,6 @@ import org.jetbrains.annotations.NotNull;
 
 import jakarta.servlet.ServletContext;
 import jakarta.servlet.http.HttpSession;
-import jakarta.servlet.http.HttpSessionContext;
 
 /**
  * Http session wrapper
@@ -70,21 +69,9 @@ public class HttpSessionWrapper implements HttpSession {
         return session.getMaxInactiveInterval();
     }
 
-    @SuppressWarnings("deprecation")
-    @Override
-    public HttpSessionContext getSessionContext() {
-        return new HttpSessionContextWrapper(session.getSessionContext());
-    }
-
     @Override
     public Object getAttribute(String name) {
         return session.getAttribute(name);
-    }
-
-    @SuppressWarnings("deprecation")
-    @Override
-    public Object getValue(String name) {
-        return session.getValue(name);
     }
 
     @Override
@@ -92,32 +79,14 @@ public class HttpSessionWrapper implements HttpSession {
         return session.getAttributeNames();
     }
 
-    @SuppressWarnings("deprecation")
-    @Override
-    public String[] getValueNames() {
-        return session.getValueNames();
-    }
-
     @Override
     public void setAttribute(String name, Object value) {
         session.setAttribute(name, value);
     }
 
-    @SuppressWarnings("deprecation")
-    @Override
-    public void putValue(String name, Object value) {
-        session.putValue(name, value);
-    }
-
     @Override
     public void removeAttribute(String name) {
         session.removeAttribute(name);
-    }
-
-    @SuppressWarnings("deprecation")
-    @Override
-    public void removeValue(String name) {
-        session.removeValue(name);
     }
 
     @Override

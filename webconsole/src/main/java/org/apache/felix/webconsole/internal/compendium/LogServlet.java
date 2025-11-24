@@ -23,14 +23,8 @@ import java.io.PrintStream;
 import java.io.PrintWriter;
 import java.util.Enumeration;
 
-import javax.servlet.ServletException;
-import javax.servlet.http.HttpServletRequest;
-import javax.servlet.http.HttpServletResponse;
-
 import org.apache.felix.utils.json.JSONWriter;
-import org.apache.felix.webconsole.SimpleWebConsolePlugin;
-import org.apache.felix.webconsole.WebConsoleUtil;
-import org.apache.felix.webconsole.internal.OsgiManagerPlugin;
+import org.apache.felix.webconsole.internal.servlet.AbstractOsgiManagerPlugin;
 import org.osgi.framework.Bundle;
 import org.osgi.framework.Constants;
 import org.osgi.framework.ServiceReference;
@@ -38,12 +32,15 @@ import org.osgi.service.log.LogEntry;
 import org.osgi.service.log.LogReaderService;
 import org.osgi.service.log.LogService;
 
+import jakarta.servlet.ServletException;
+import jakarta.servlet.http.HttpServletRequest;
+import jakarta.servlet.http.HttpServletResponse;
 
 /**
  * LogServlet provides support for reading the log messages.
  */
-public class LogServlet extends SimpleWebConsolePlugin implements OsgiManagerPlugin
-{
+public class LogServlet extends AbstractOsgiManagerPlugin {
+
     private static final String LABEL = "logs";
     private static final String TITLE = "%logs.pluginTitle";
     private static final String CSS[] = { "/res/ui/logs.css" };
@@ -53,22 +50,38 @@ public class LogServlet extends SimpleWebConsolePlugin implements OsgiManagerPlu
     // templates
     private final String TEMPLATE;
 
-    /** Default constructor */
-    public LogServlet()
-    {
-        super(LABEL, TITLE, CATEGORY_OSGI, CSS);
-
+    /**
+     * Default constructor
+     * @throws IOException If template can't be read
+     */
+    public LogServlet() throws IOException {
         // load templates
         TEMPLATE = readTemplateFile( "/templates/logs.html" );
     }
 
+    @Override
+    protected String getCategory() {
+        return CATEGORY_OSGI;
+    }
 
-    /**
-     * @see javax.servlet.http.HttpServlet#doPost(javax.servlet.http.HttpServletRequest, javax.servlet.http.HttpServletResponse)
-     */
-    protected void doPost( HttpServletRequest req, HttpServletResponse resp ) throws IOException
-    {
-        final int minLevel = WebConsoleUtil.getParameterInt( req, "minLevel", LogService.LOG_DEBUG);
+    @Override
+    protected String getLabel() {
+        return LABEL;
+    }
+
+    @Override
+    protected String getTitle() {
+        return TITLE;
+    }
+
+    @Override
+    protected String[] getCssReferences() {
+        return CSS;
+    }
+
+    @Override
+    protected void doPost(final HttpServletRequest req, final HttpServletResponse resp ) throws IOException {
+        final int minLevel = getParameterInt( req, "minLevel", LogService.LOG_DEBUG);
 
         resp.setContentType( "application/json" );
         resp.setCharacterEncoding( "utf-8" );
@@ -76,18 +89,15 @@ public class LogServlet extends SimpleWebConsolePlugin implements OsgiManagerPlu
         renderJSON( resp.getWriter(), minLevel, trasesEnabled(req) );
     }
 
-    private static boolean trasesEnabled( final HttpServletRequest req )
-    {
+    private boolean trasesEnabled( final HttpServletRequest req ) {
         String traces = req.getParameter("traces");
         return null == traces ? false : Boolean.valueOf( traces ).booleanValue();
     }
 
     @SuppressWarnings("rawtypes")
-    private final void renderJSON( final PrintWriter pw, int minLogLevel, boolean traces ) throws IOException
-    {
+    private final void renderJSON( final PrintWriter pw, int minLogLevel, boolean traces ) throws IOException {
         // create status line
-        final LogReaderService logReaderService = ( LogReaderService ) this.getService( LogReaderService.class
-                .getName() );
+        final LogReaderService logReaderService = ( LogReaderService ) this.getService( LogReaderService.class.getName() );
 
         JSONWriter jw = new JSONWriter( pw );
         jw.object();
@@ -98,15 +108,12 @@ public class LogServlet extends SimpleWebConsolePlugin implements OsgiManagerPlu
         jw.key( "data" );
         jw.array();
 
-        if ( logReaderService != null )
-        {
+        if ( logReaderService != null ) {
             int index = 0;
             for ( Enumeration logEntries = logReaderService.getLog(); logEntries.hasMoreElements()
-                    && index < MAX_LOGS; )
-            {
+                    && index < MAX_LOGS; ) {
                 LogEntry nextLog = ( LogEntry ) logEntries.nextElement();
-                if ( nextLog.getLevel() <= minLogLevel )
-                {
+                if ( nextLog.getLevel() <= minLogLevel ) {
                     logJson( jw, nextLog, index++, traces );
                 }
             }
@@ -118,17 +125,11 @@ public class LogServlet extends SimpleWebConsolePlugin implements OsgiManagerPlu
 
     }
 
-
-    /**
-     * @see org.apache.felix.webconsole.AbstractWebConsolePlugin#doGet(javax.servlet.http.HttpServletRequest, javax.servlet.http.HttpServletResponse)
-     */
-    protected void doGet( HttpServletRequest request, HttpServletResponse response ) throws ServletException,
-    IOException
-    {
-        final int minLevel = WebConsoleUtil.getParameterInt( request, "minLevel", LogService.LOG_DEBUG );
+    @Override
+    protected void doGet(final HttpServletRequest request, final HttpServletResponse response ) throws ServletException, IOException {
+        final int minLevel = getParameterInt( request, "minLevel", LogService.LOG_DEBUG );
         final String info = request.getPathInfo();
-        if ( info.endsWith( ".json" ) )
-        {
+        if ( info.endsWith( ".json" ) ) {
             response.setContentType( "application/json" );
             response.setCharacterEncoding( "UTF-8" );
 
@@ -139,18 +140,12 @@ public class LogServlet extends SimpleWebConsolePlugin implements OsgiManagerPlu
         super.doGet( request, response );
     }
 
-
-    /**
-     * @see org.apache.felix.webconsole.AbstractWebConsolePlugin#renderContent(javax.servlet.http.HttpServletRequest, javax.servlet.http.HttpServletResponse)
-     */
-    protected void renderContent( HttpServletRequest request, HttpServletResponse response ) throws IOException
-    {
+    @Override
+    public void renderContent(final HttpServletRequest request, final HttpServletResponse response ) throws IOException  {
         response.getWriter().print(TEMPLATE);
     }
 
-
-    private static final void logJson( JSONWriter jw, LogEntry info, int index, boolean traces ) throws IOException
-    {
+    private final void logJson( JSONWriter jw, LogEntry info, int index, boolean traces ) throws IOException {
         jw.object();
         jw.key( "id" );
         jw.value( String.valueOf( index ) );
@@ -167,17 +162,14 @@ public class LogServlet extends SimpleWebConsolePlugin implements OsgiManagerPlu
         jw.key( "exception" );
         jw.value( exceptionMessage( info.getException(), traces ) );
         Bundle bundle = info.getBundle();
-        if (null != bundle)
-        {
+        if (null != bundle) {
             jw.key("bundleId");
             jw.value(bundle.getBundleId());
             String name = (String) bundle.getHeaders().get(Constants.BUNDLE_NAME);
-            if (null == name)
-            {
+            if (null == name) {
                 name = bundle.getSymbolicName();
             }
-            if (null == name)
-            {
+            if (null == name) {
                 name = bundle.getLocation();
             }
             jw.key("bundleName");
@@ -186,56 +178,37 @@ public class LogServlet extends SimpleWebConsolePlugin implements OsgiManagerPlu
         jw.endObject();
     }
 
-    @SuppressWarnings("rawtypes")
-    private static final String serviceDescription( ServiceReference serviceReference )
-    {
-        if ( serviceReference == null )
-        {
+    private final String serviceDescription(final ServiceReference<?> serviceReference ) {
+        if ( serviceReference == null ) {
             return "";
         }
         return serviceReference.toString();
     }
 
-
-    private static final String logLevel( int level )
-    {
-        switch ( level )
-        {
-        case LogService.LOG_INFO:
-            return "INFO";
-        case LogService.LOG_WARNING:
-            return "WARNING";
-        case LogService.LOG_ERROR:
-            return "ERROR";
-        case LogService.LOG_DEBUG:
-        default:
-            return "DEBUG";
+    private final String logLevel(final int level ) {
+        switch ( level ) {
+            case LogService.LOG_INFO:
+                return "INFO";
+            case LogService.LOG_WARNING:
+                return "WARNING";
+            case LogService.LOG_ERROR:
+                return "ERROR";
+            case LogService.LOG_DEBUG:
+            default:
+                return "DEBUG";
         }
     }
 
-    private static final ByteArrayOutputStream baos = new ByteArrayOutputStream();
-    private static final PrintStream printStream = new PrintStream(baos);
-
-    private static final String exceptionMessage( Throwable e, boolean traces )
-    {
-        if ( e == null )
-        {
+    private final String exceptionMessage( final Throwable e, final boolean traces ) {
+        if ( e == null ) {
             return "";
         }
         if (traces) {
-            String ret = null;
-            synchronized (printStream)
-            {
-                try {
-                    e.printStackTrace(printStream);
-                    ret = baos.toString();
-                } finally {
-                    baos.reset();
-                }
-            }
-            return ret;
+            final ByteArrayOutputStream baos = new ByteArrayOutputStream();
+            final PrintStream printStream = new PrintStream(baos);
+            e.printStackTrace(printStream);
+            return baos.toString();
         }
         return e.getClass().getName() + ": " + e.getMessage();
     }
-
 }

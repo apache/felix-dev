@@ -18,9 +18,7 @@
  */
 package org.apache.felix.webconsole;
 
-import java.io.IOException;
-import java.io.InputStream;
-import java.util.Properties;
+import org.apache.felix.webconsole.internal.servlet.BrandingPluginImpl;
 
 /**
  * The <code>DefaultBrandingPlugin</code> class is the default implementation
@@ -90,59 +88,17 @@ import java.util.Properties;
 @Deprecated
 public class DefaultBrandingPlugin implements BrandingPlugin {
 
-    /**
-     * The name of the bundle entry providing branding properties for this
-     * default branding plugin (value is "/META-INF/webconsole.properties").
-     */
-    private static final String BRANDING_PROPERTIES = "/META-INF/webconsole.properties";
+    private static volatile DefaultBrandingPlugin instance;
 
-    private static DefaultBrandingPlugin instance;
-
-    private final String brandName;
-
-    private final String productName;
-
-    private final String productURL;
-
-    private final String productImage;
-
-    private final String vendorName;
-
-    private final String vendorURL;
-
-    private final String vendorImage;
-
-    private final String favIcon;
-
-    private final String mainStyleSheet;
+    private final BrandingPluginImpl delegate;
 
     private DefaultBrandingPlugin() {
-        Properties props = new Properties();
-
-        // try to load the branding properties
-        try (InputStream ins = getClass().getResourceAsStream( BRANDING_PROPERTIES )) {
-            if ( ins != null ) {
-                props.load( ins );
-            }
-        } catch ( IOException ignore ) {
-            // ignore - will use defaults
-        }
-
-        // set the fields from the properties now
-        brandName = props.getProperty( "webconsole.brand.name", "Apache Felix Web Console" );
-        productName = props.getProperty( "webconsole.product.name", "Apache Felix" );
-        productURL = props.getProperty( "webconsole.product.url", "https://felix.apache.org" );
-        productImage = props.getProperty( "webconsole.product.image", "/res/imgs/logo.png" );
-        vendorName = props.getProperty( "webconsole.vendor.name", "The Apache Software Foundation" );
-        vendorURL = props.getProperty( "webconsole.vendor.url", "https://www.apache.org" );
-        vendorImage = props.getProperty( "webconsole.vendor.image", "/res/imgs/logo.png" );
-        favIcon = props.getProperty( "webconsole.favicon", "/res/imgs/favicon.ico" );
-        mainStyleSheet = props.getProperty( "webconsole.stylesheet", "/res/ui/webconsole.css" );
+        this.delegate = new BrandingPluginImpl();
     }
 
     /**
      * Retrieves the shared instance
-     * 
+     *
      * @return the singleton instance of the object
      */
     public static DefaultBrandingPlugin getInstance() {
@@ -154,46 +110,46 @@ public class DefaultBrandingPlugin implements BrandingPlugin {
 
     @Override
     public String getBrandName() {
-        return brandName;
-    }
-
-    @Override
-    public String getProductName() {
-        return productName;
-    }
-
-    @Override
-    public String getProductURL() {
-        return productURL;
-    }
-
-    @Override
-    public String getProductImage() {
-        return productImage;
-    }
-
-    @Override
-    public String getVendorName() {
-        return vendorName;
-    }
-
-    @Override
-    public String getVendorURL() {
-        return vendorURL;
-    }
-
-    @Override
-    public String getVendorImage() {
-        return vendorImage;
+        return delegate.getBrandName();
     }
 
     @Override
     public String getFavIcon() {
-        return favIcon;
+        return delegate.getFavIcon();
     }
 
     @Override
     public String getMainStyleSheet() {
-        return mainStyleSheet;
+        return delegate.getMainStyleSheet();
+    }
+
+    @Override
+    public String getProductImage() {
+        return delegate.getProductImage();
+    }
+
+    @Override
+    public String getProductName() {
+        return delegate.getProductName();
+    }
+
+    @Override
+    public String getProductURL() {
+        return delegate.getProductURL();
+    }
+
+    @Override
+    public String getVendorImage() {
+        return delegate.getVendorImage();
+    }
+
+    @Override
+    public String getVendorName() {
+        return delegate.getVendorName();
+    }
+
+    @Override
+    public String getVendorURL() {
+        return delegate.getVendorURL();
     }
 }

@@ -203,16 +203,17 @@ public class HealthCheckExecutorImpl implements ExtendedHealthCheckExecutor, Ser
     @Override
     public List<HealthCheckExecutionResult> execute(final ServiceReference<HealthCheck>[] healthCheckReferences,
             HealthCheckExecutionOptions options) {
+        
+        long effectiveTimeout = getEffectiveTimeout(options);
         final long startTime = System.currentTimeMillis();
 
-        final List<HealthCheckExecutionResult> results = new ArrayList<HealthCheckExecutionResult>();
+        final List<HealthCheckExecutionResult> results = new ArrayList<>();
         final List<HealthCheckMetadata> healthCheckDescriptors = getHealthCheckMetadata(healthCheckReferences);
 
+        final long intermediateTiming = System.currentTimeMillis();
+        
         createResultsForDescriptors(healthCheckDescriptors, results, options);
-
-        if (logger.isDebugEnabled()) {
-            logger.debug("Time consumed for all checks: {}", msHumanReadable(System.currentTimeMillis() - startTime));
-        }
+        
 
         // sort result
         Collections.sort(results, new Comparator<HealthCheckExecutionResult>() {
@@ -224,6 +225,20 @@ public class HealthCheckExecutorImpl implements ExtendedHealthCheckExecutor, Ser
             }
 
         });
+
+        final long completionTime = System.currentTimeMillis();
+
+        if (logger.isDebugEnabled()) {
+            logger.debug("Time consumed for all checks: {}", msHumanReadable(completionTime - startTime));
+        }
+
+        // the completion of this request exceeds the provided timeout configuration, we should warn about it
+        if (completionTime - startTime > effectiveTimeout) {
+            logger.warn("execution of healthchecks exceeded the timeout value of {}ms. "
+                    + "(Creation of descriptors={}ms, execution of the checks={}ms, total={}ms)", effectiveTimeout,
+                    intermediateTiming-startTime, completionTime - intermediateTiming, completionTime - startTime);
+        }
+
         return results;
     }
 
@@ -368,10 +383,7 @@ public class HealthCheckExecutorImpl implements ExtendedHealthCheckExecutor, Ser
         final long callExcutionStartTime = System.currentTimeMillis();
         boolean allFuturesDone;
 
-        long effectiveTimeout = this.timeoutInMs;
-        if (options != null && options.getOverrideGlobalTimeout() > 0) {
-            effectiveTimeout = options.getOverrideGlobalTimeout();
-        }
+        long effectiveTimeout = getEffectiveTimeout(options);
 
         if (futuresForResultOfThisCall.isEmpty()) {
             return; // nothing to wait for (usually because of cached results)
@@ -480,4 +492,13 @@ public class HealthCheckExecutorImpl implements ExtendedHealthCheckExecutor, Ser
         this.longRunningFutureThresholdForRedMs = longRunningFutureThresholdForRedMs;
     }
 
+    // Calculates the effective timeout based on global configuration and the provided options
+    private long getEffectiveTimeout(HealthCheckExecutionOptions options) {
+        long effectiveTimeout = this.timeoutInMs;
+        if (options != null && options.getOverrideGlobalTimeout() > 0) {
+            effectiveTimeout = options.getOverrideGlobalTimeout();
+        }
+        return effectiveTimeout;
+    }
+    
 }

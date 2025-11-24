@@ -79,7 +79,7 @@ public class IncludeResponseWrapperTest {
     @Deprecated
     @Test public void testSetStatus() {
         final HttpServletResponse orig = Mockito.mock(HttpServletResponse.class);
-        final HttpServletResponse include = new IncludeResponseWrapper(orig);
+        final IncludeResponseWrapper include = new IncludeResponseWrapper(orig);
 
         include.setStatus(500);
         include.setStatus(500, "Error");

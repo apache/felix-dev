@@ -26,7 +26,7 @@ import jakarta.servlet.Servlet;
 /**
  * Servlet handler for servlets registered through the http service.
  */
-public final class HttpServiceServletHandler extends ServletHandler
+public class HttpServiceServletHandler extends ServletHandler
 {
     /**
      * New handler
@@ -38,7 +38,7 @@ public final class HttpServiceServletHandler extends ServletHandler
             final ServletInfo servletInfo,
             final javax.servlet.Servlet servlet)
     {
-        this(HttpServiceFactory.HTTP_SERVICE_CONTEXT_SERVICE_ID, context, servletInfo, ServletWrapper.getRegisteredServlet(servlet));
+        this(HttpServiceFactory.HTTP_SERVICE_CONTEXT_SERVICE_ID, context, servletInfo, new ServletWrapper(servlet));
     }
 
     /**

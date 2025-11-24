@@ -204,7 +204,7 @@ public class JSONParser {
                 values.put(pair.key, pair.value);
                 lastParsedObject = jsonObject;
             } catch (Throwable t) {
-                throw new IllegalArgumentException("An error occured after: " + lastParsedObject, t);
+                throw new IllegalArgumentException("An error occurred after: " + lastParsedObject, t);
             }
         }
 

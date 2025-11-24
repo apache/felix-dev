@@ -30,19 +30,23 @@ import java.util.Map;
 import java.util.jar.JarOutputStream;
 import java.util.jar.Manifest;
 
-import junit.framework.TestCase;
+import org.junit.jupiter.api.Test;
+
+import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.Assertions.fail;
 
 import org.osgi.framework.Bundle;
 import org.osgi.framework.Constants;
 import org.osgi.framework.FrameworkListener;
 import org.osgi.service.packageadmin.ExportedPackage;
 
-public class UninstallBundleTest extends TestCase
+class UninstallBundleTest
 {
     private static final int DELAY = 1000;
 
-    public void testUninstallBundleCleansUpRevision() throws Exception {
-        Map<String, String> params = new HashMap<String, String>();
+    @Test
+    void uninstallBundleCleansUpRevision() throws Exception {
+        Map<String, String> params = new HashMap<>();
         params.put(Constants.FRAMEWORK_SYSTEMPACKAGES,
             "org.osgi.framework; version=1.4.0,"
             + "org.osgi.service.packageadmin; version=1.2.0,"
@@ -72,7 +76,7 @@ public class UninstallBundleTest extends TestCase
                 + "Import-Package: org.foo.bar, org.foo.bbr\n";
         File bundleCFile = createBundle(mfC, cacheDir);
 
-        final List<Bundle> shouldNotBeRefreshed = new ArrayList<Bundle>();
+        final List<Bundle> shouldNotBeRefreshed = new ArrayList<>();
         Felix felix = new Felix(params) {
             @Override
             void refreshPackages(Collection<Bundle> targets, FrameworkListener[] listeners)
@@ -113,7 +117,7 @@ public class UninstallBundleTest extends TestCase
                 if ("org.foo.bar".equals(ep.getName()))
                     foundBar = true;
             }
-            assertTrue("The system should still export org.foo.bar as C is importing it.", foundBar);
+            assertThat(foundBar).as("The system should still export org.foo.bar as C is importing it.").isTrue();
 
             bundleC.uninstall();
 
@@ -129,7 +133,7 @@ public class UninstallBundleTest extends TestCase
                 if ("org.foo.bbr".equals(ep.getName()))
                     foundBbr = true;
             }
-            assertTrue("The system should still export org.foo.bbr as it was not uninstalled.", foundBbr);
+            assertThat(foundBbr).as("The system should still export org.foo.bbr as it was not uninstalled.").isTrue();
         }
         finally
         {
@@ -160,7 +164,7 @@ public class UninstallBundleTest extends TestCase
                 deleteDir(file);
             }
         }
-        assertTrue(root.delete());
+        assertThat(root.delete()).isTrue();
     }
 
 }

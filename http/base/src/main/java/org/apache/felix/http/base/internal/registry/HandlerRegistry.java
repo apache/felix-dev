@@ -120,6 +120,7 @@ public final class HandlerRegistry
 
     /**
      * Add a new context registration.
+     * @param registry The registry
      */
     public void add(@NotNull PerContextHandlerRegistry registry)
     {

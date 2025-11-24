@@ -61,18 +61,6 @@ public class HttpServletResponseWrapper extends ServletResponseWrapper
         return this.response.encodeRedirectURL(url);
     }
 
-    @SuppressWarnings("deprecation")
-    @Override
-    public String encodeUrl(final String url) {
-        return this.response.encodeUrl(url);
-    }
-
-    @SuppressWarnings("deprecation")
-    @Override
-    public String encodeRedirectUrl(final String url) {
-        return this.response.encodeRedirectUrl(url);
-    }
-
     @Override
     public void sendError(final int sc, final String msg) throws IOException {
         this.response.sendError(sc, msg);
@@ -123,12 +111,6 @@ public class HttpServletResponseWrapper extends ServletResponseWrapper
         this.response.setStatus(sc);
     }
 
-    @SuppressWarnings("deprecation")
-    @Override
-    public void setStatus(final int sc, final String sm) {
-        this.response.setStatus(sc, sm);
-    }
-
     @Override
     public int getStatus() {
         return this.response.getStatus();
@@ -147,5 +129,16 @@ public class HttpServletResponseWrapper extends ServletResponseWrapper
     @Override
     public Collection<String> getHeaderNames() {
         return this.response.getHeaderNames();
+    }
+
+    @Override
+    public void sendRedirect(final String location, final int sc, final boolean clearBuffer) throws IOException {
+        if (!clearBuffer) {
+            throw new IOException("javax.servlet API does not support sendRedirect(String, int, false)");
+        }
+        if (sc != 302) {
+            throw new IOException("javax.servlet API does not support sendRedirect(String, int, boolean) with sc != 302");
+        }
+        this.response.sendRedirect(location);
     }
 }

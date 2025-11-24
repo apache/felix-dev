@@ -32,6 +32,7 @@ import org.apache.felix.http.base.internal.HttpServiceController;
 import org.apache.felix.http.base.internal.logger.SystemLogger;
 import org.eclipse.jetty.alpn.server.ALPNServerConnectionFactory;
 import org.eclipse.jetty.http.HttpVersion;
+import org.eclipse.jetty.http.UriCompliance;
 import org.eclipse.jetty.http2.server.HTTP2ServerConnectionFactory;
 import org.eclipse.jetty.io.ConnectionStatistics;
 import org.eclipse.jetty.security.HashLoginService;
@@ -49,6 +50,7 @@ import org.eclipse.jetty.server.handler.gzip.GzipHandler;
 import org.eclipse.jetty.server.session.HouseKeeper;
 import org.eclipse.jetty.server.session.SessionHandler;
 import org.eclipse.jetty.servlet.ServletContextHandler;
+import org.eclipse.jetty.servlet.ServletHandler;
 import org.eclipse.jetty.servlet.ServletHolder;
 import org.eclipse.jetty.util.ssl.SslContextFactory;
 import org.eclipse.jetty.util.thread.QueuedThreadPool;
@@ -83,32 +85,57 @@ public final class JettyService
     private volatile FileRequestLog fileRequestLog;
     private volatile LoadBalancerCustomizerFactoryTracker loadBalancerCustomizerTracker;
     private volatile CustomizerWrapper customizerWrapper;
-    private boolean registerManagedService = true;
-    private final String jettyVersion;
 
-    public JettyService(final BundleContext context,
-            final HttpServiceController controller)
-    {
+    private final boolean registerManagedService;
+    private final String jettyVersion;
+    private final boolean immediatelyStartJetty;
+
+    /**
+     * Shared constructor for JettyService instances.
+     * @param context The bundle context
+     * @param controller The HTTP service controller
+     * @param registerManagedService Whether to register the managed service
+     */
+    private JettyService(final BundleContext context,
+            final HttpServiceController controller,
+            final boolean registerManagedService) {
         this.jettyVersion = fixJettyVersion(context);
 
         this.context = context;
         this.config = new JettyConfig(this.context);
         this.controller = controller;
+        this.registerManagedService = registerManagedService;
+        this.immediatelyStartJetty = !registerManagedService || !this.config.isRequireConfiguration();
     }
 
+    /**
+     * Constructor for the managed service jetty service.
+     * @param context The bundle context
+     * @param controller The HTTP service controller
+     */
+    public JettyService(final BundleContext context,
+            final HttpServiceController controller) {
+        this(context, controller, true);
+    }
+
+    /**
+     * Constructor for the managed service factory jetty service.
+     * @param context The bundle context
+     * @param controller The HTTP service controller
+     * @param props The configuration properties
+     */
     public JettyService(final BundleContext context,
             final HttpServiceController controller,
-            final Dictionary<String,?> props)
-    {
-        this(context, controller);
+            final Dictionary<String,?> props) {
+        this(context, controller, false);
    	    this.config.update(props);
-   	    this.registerManagedService = false;
     }
 
-    public void start() throws Exception
-    {
-        // FELIX-4422: start Jetty synchronously...
-        startJetty();
+    public void start() throws Exception {
+        if ( this.immediatelyStartJetty) {
+            // FELIX-4422: start Jetty synchronously...
+            startJetty();
+        }
 
         if (this.registerManagedService) {
 			final Dictionary<String, Object> props = new Hashtable<>();
@@ -134,11 +161,14 @@ public final class JettyService
         }
     }
 
-    public void stop() throws Exception
-    {
-        if (this.configServiceReg != null)
-        {
-            this.configServiceReg.unregister();
+    public void stop() throws Exception {
+        if (this.configServiceReg != null) {
+            try {
+                // ignore potential exception on shutdown
+                this.configServiceReg.unregister();
+            } catch (final IllegalStateException e) {
+                // ignore
+            }
             this.configServiceReg = null;
         }
 
@@ -157,10 +187,11 @@ public final class JettyService
         return props;
     }
 
-    public void updated(final Dictionary<String, ?> props)
-    {
-        if (this.config.update(props))
-        {
+    public void updated(final Dictionary<String, ?> props) {
+        final boolean changed = this.config.update(props);
+        if (props == null && !this.immediatelyStartJetty) { // null is only passed for the managed service
+            stopJetty();
+        } else if (changed) {
             // Something changed in our configuration, restart Jetty...
             stopJetty();
             startJetty();
@@ -308,7 +339,17 @@ public final class JettyService
                 this.server.setStopTimeout(this.config.getStopTimeout());
             }
 
+            if (this.config.isUseJettyWebsocket()) {
+                maybeInitializeJettyWebsocket(context);
+            }
+
+            if (this.config.isUseJakartaWebsocket()) {
+                maybeInitializeJakartaWebsocket(context);
+            }
+
             this.server.start();
+
+            maybeStoreWebSocketContainerAttributes(context);
 
             // session id manager is only available after server is started
             context.getSessionHandler().getSessionIdManager().getSessionHouseKeeper().setIntervalSec(
@@ -477,6 +518,78 @@ public final class JettyService
         return startConnector(connector);
     }
 
+    /**
+     * Initialize the jakarta websocket support for the servlet context handler.
+     * If the optional initializer class is not present then a warning will be logged.
+     *
+     * @param handler the sevlet context handler to initialize
+     */
+    private void maybeInitializeJakartaWebsocket(ServletContextHandler handler) {
+        if (isClassNameVisible("org.eclipse.jetty.websocket.jakarta.server.config.JakartaWebSocketServletContainerInitializer")) {
+            // Ensure that JavaxWebSocketServletContainerInitializer is initialized,
+            // to setup the ServerContainer for this web application context.
+            org.eclipse.jetty.websocket.jakarta.server.config.JakartaWebSocketServletContainerInitializer.configure(handler, null);
+        } else {
+            SystemLogger.LOGGER.warn("Failed to initialize jakarta standard websocket support since the initializer class was not found. "
+                    + "Check if the websocket-jakarta-server bundle is deployed.");
+        }
+    }
+
+    /**
+     * Initialize the jetty websocket support for the servlet context handler.
+     * If the optional initializer class is not present then a warning will be logged.
+     *
+     * @param handler the sevlet context handler to initialize
+     */
+    private void maybeInitializeJettyWebsocket(ServletContextHandler handler) {
+        if (isClassNameVisible("org.eclipse.jetty.websocket.server.config.JettyWebSocketServletContainerInitializer")) {
+            // Ensure that JettyWebSocketServletContainerInitializer is initialized,
+            // to setup the JettyWebSocketServerContainer for this web application context.
+            org.eclipse.jetty.websocket.server.config.JettyWebSocketServletContainerInitializer.configure(handler, null);
+        } else {
+            SystemLogger.LOGGER.warn("Failed to initialize jetty specific websocket support since the initializer class was not found. "
+                    + "Check if the websocket-jetty-server bundle is deployed.");
+        }
+    }
+
+    /**
+     * Based on the configuration, store the WebSocket container attributes for the shared servlet context.
+     *
+     * @param context the context
+     */
+    private void maybeStoreWebSocketContainerAttributes(ServletContextHandler context) {
+        // when the server is started, retrieve the container attribute and
+        // set it on the shared servlet context once available
+        if (this.config.isUseJettyWebsocket() &&
+                isClassNameVisible("org.eclipse.jetty.websocket.server.config.JettyWebSocketServletContainerInitializer")) {
+            String attribute = org.eclipse.jetty.websocket.server.JettyWebSocketServerContainer.JETTY_WEBSOCKET_CONTAINER_ATTRIBUTE;
+            this.controller.setAttributeSharedServletContext(attribute, context.getServletContext().getAttribute(attribute));
+        }
+        if (this.config.isUseJakartaWebsocket() &&
+                isClassNameVisible("org.eclipse.jetty.websocket.jakarta.server.config.JakartaWebSocketServletContainerInitializer")) {
+            String attribute = org.eclipse.jetty.websocket.jakarta.server.config.JakartaWebSocketServletContainerInitializer.ATTR_JAKARTA_SERVER_CONTAINER;
+            this.controller.setAttributeSharedServletContext(attribute, context.getServletContext().getAttribute(attribute));
+        }
+    }
+
+    /**
+     * Checks if an optional class name is visible to the bundle classloader
+     *
+     * @param className the class name to check
+     * @return true if the class is visible, false otherwise
+     */
+    private boolean isClassNameVisible(String className) {
+        boolean visible;
+        try {
+            // check if the class is visible to our classloader
+            getClass().getClassLoader().loadClass(className);
+            visible = true;
+        } catch (ClassNotFoundException e) {
+            visible = false;
+        }
+        return visible;
+    }
+
     private void configureSslContextFactory(final SslContextFactory.Server connector)
     {
         if (this.config.getKeystoreType() != null)
@@ -560,10 +673,19 @@ public final class JettyService
 
     private void configureHttpConnectionFactory(HttpConnectionFactory connFactory)
     {
-        HttpConfiguration config = connFactory.getHttpConfiguration();
+        final HttpConfiguration config = connFactory.getHttpConfiguration();
         config.setRequestHeaderSize(this.config.getHeaderSize());
         config.setResponseHeaderSize(this.config.getHeaderSize());
         config.setOutputBufferSize(this.config.getResponseBufferSize());
+
+        final String uriComplianceMode = this.config.getProperty(JettyConfig.FELIX_JETTY_URI_COMPLIANCE_MODE, null);
+        if (uriComplianceMode != null) {
+            try {
+                config.setUriCompliance(UriCompliance.valueOf(uriComplianceMode));
+            } catch (IllegalArgumentException e) {
+                SystemLogger.LOGGER.warn("Invalid URI compliance mode: {}", uriComplianceMode);
+            }
+        }
 
         // HTTP/1.1 requires Date header if possible (it is)
         config.setSendDateHeader(true);

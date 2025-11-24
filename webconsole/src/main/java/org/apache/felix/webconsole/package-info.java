@@ -16,6 +16,6 @@
  * specific language governing permissions and limitations
  * under the License.
  */
-@org.osgi.annotation.versioning.Version("3.5.0")
+@org.osgi.annotation.versioning.Version("3.5.1")
 package org.apache.felix.webconsole;
 

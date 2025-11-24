@@ -27,31 +27,42 @@ import java.util.List;
 import java.util.Locale;
 import java.util.Map;
 import java.util.ResourceBundle;
+import java.util.Set;
 
-import javax.servlet.Servlet;
-import javax.servlet.ServletContext;
-
-import org.apache.felix.webconsole.AbstractWebConsolePlugin;
-import org.apache.felix.webconsole.WebConsoleConstants;
+import org.apache.felix.webconsole.internal.OsgiManagerPlugin;
 import org.apache.felix.webconsole.internal.Util;
 import org.apache.felix.webconsole.internal.i18n.ResourceBundleManager;
-import org.apache.felix.webconsole.internal.servlet.Plugin.InternalPlugin;
-import org.apache.felix.webconsole.internal.servlet.Plugin.ServletPlugin;
+import org.apache.felix.webconsole.internal.legacy.LegacyServicesTracker;
+import org.apache.felix.webconsole.servlet.ServletConstants;
 import org.osgi.framework.BundleContext;
 import org.osgi.framework.Constants;
 import org.osgi.framework.Filter;
 import org.osgi.framework.InvalidSyntaxException;
 import org.osgi.framework.ServiceReference;
-import org.osgi.service.log.LogService;
 import org.osgi.util.tracker.ServiceTracker;
 import org.osgi.util.tracker.ServiceTrackerCustomizer;
+
+import jakarta.servlet.Servlet;
+import jakarta.servlet.ServletContext;
 
 
 /**
  * The <code>PluginHolder</code> class implements the maintenance and lazy
  * access to web console plugin services.
  */
-class PluginHolder implements ServiceTrackerCustomizer<Servlet, Plugin> {
+public class PluginHolder implements ServiceTrackerCustomizer<Servlet, Plugin> {
+
+    private static final String OLD_CONFIG_MANAGER_CLASS = "org.apache.felix.webconsole.internal.compendium.ConfigManager";
+    private static final String NEW_CONFIG_MANAGER_CLASS = "org.apache.felix.webconsole.internal.configuration.ConfigManager";
+
+    static final String[] PLUGIN_MAP = {
+        NEW_CONFIG_MANAGER_CLASS, "configMgr",
+        "org.apache.felix.webconsole.internal.compendium.LogServlet", "logs",
+        "org.apache.felix.webconsole.internal.core.BundlesServlet", "bundles",
+        "org.apache.felix.webconsole.internal.core.ServicesServlet", "services",
+        "org.apache.felix.webconsole.internal.misc.LicenseServlet", "licenses",
+        "org.apache.felix.webconsole.internal.system.VMStatPlugin", "vmstat"
+    };
 
     public static final String ATTR_FLAT_LABEL_MAP = PluginHolder.class.getName() + ".flatLabelMap";
 
@@ -71,15 +82,17 @@ class PluginHolder implements ServiceTrackerCustomizer<Servlet, Plugin> {
 
     private final ServiceTracker<Servlet, Plugin> servletTracker;
 
-    private volatile Closeable jakartaTracker;
+    private volatile Closeable legacyTracker;
+
+    private final Map<String, OsgiManagerPlugin> internalPlugins = new HashMap<>();
 
     PluginHolder( final OsgiManager osgiManager, final BundleContext context ) {
         this.osgiManager = osgiManager;
         this.bundleContext = context;
         Filter filter = null;
         try {
-            filter = context.createFilter("(&(" + Constants.OBJECTCLASS + "=" + WebConsoleConstants.SERVICE_NAME + 
-                ")(" + WebConsoleConstants.PLUGIN_LABEL + "=*))");
+            filter = context.createFilter("(&(" + Constants.OBJECTCLASS + "=" + Servlet.class.getName() + 
+                ")(" + ServletConstants.PLUGIN_LABEL + "=*)(" + ServletConstants.PLUGIN_TITLE + "=*))");
         } catch (final InvalidSyntaxException e) {
             // not expected, thus fail hard
             throw new InternalError( "Failed creating filter: " + e.getMessage() );
@@ -87,8 +100,30 @@ class PluginHolder implements ServiceTrackerCustomizer<Servlet, Plugin> {
         this.servletTracker = new ServiceTracker<>(context, filter, this);
     }
 
-
     //---------- OsgiManager support API
+
+    public void initInternalPlugins(final Set<String> enabledPlugins, final BundleContext context) {
+        if (enabledPlugins != null) {
+            if (enabledPlugins.contains(OLD_CONFIG_MANAGER_CLASS)) {
+                enabledPlugins.add(NEW_CONFIG_MANAGER_CLASS);
+            }
+        }
+        for (int i = 0; i < PLUGIN_MAP.length; i+=2) {
+           final String pluginClassName = PLUGIN_MAP[i];
+
+           final boolean enable = enabledPlugins == null || enabledPlugins.contains(pluginClassName);
+           if ( enable && !internalPlugins.containsKey(pluginClassName) ) {
+                final OsgiManagerPlugin plugin = this.osgiManager.createInternalPlugin(pluginClassName);
+                if ( plugin != null ) {
+                    internalPlugins.put(pluginClassName, plugin);
+                    plugin.activate(context);
+                }
+           } else if ( !enable && internalPlugins.containsKey(pluginClassName) ) {
+               final OsgiManagerPlugin plugin = internalPlugins.remove(pluginClassName);
+               plugin.deactivate();
+           }
+        }
+    }
 
     /**
      * Start using the plugin manager with registration as a service listener
@@ -98,11 +133,11 @@ class PluginHolder implements ServiceTrackerCustomizer<Servlet, Plugin> {
     void open() {
         this.servletTracker.open();
         try {
-            this.jakartaTracker = new JakartaServiceTracker(this, this.getBundleContext());
-            this.osgiManager.log(LogService.LOG_INFO, "Jakarta Servlet bridge enabled");
+            this.legacyTracker = new LegacyServicesTracker(this, this.getBundleContext());
+            Util.LOGGER.info("Servlet 3 bridge enabled");
         } catch ( final Throwable t) {
             // ignore
-            this.osgiManager.log(LogService.LOG_INFO, "Jakarta Servlet bridge not enabled");
+            Util.LOGGER.info("Servlet 3 bridge not enabled");
         }
     }
 
@@ -112,19 +147,27 @@ class PluginHolder implements ServiceTrackerCustomizer<Servlet, Plugin> {
      * held plugin services.
      */
     void close() {
-        if (this.jakartaTracker != null) {
+        if (this.legacyTracker != null) {
             try {
-                this.jakartaTracker.close();
+                this.legacyTracker.close();
             } catch (final IOException e) {
                 // ignore
             }
-            this.jakartaTracker = null;
+            this.legacyTracker = null;
         }
         this.servletTracker.close();
 
+        for(final OsgiManagerPlugin plugin : internalPlugins.values()) {
+            plugin.deactivate();
+        }
+        this.internalPlugins.clear();
         this.plugins.clear();
         this.servletContext = null;
         this.defaultPluginLabel = null;
+    }
+
+    public OsgiManager getOsgiManager() {
+        return this.osgiManager;
     }
 
     /**
@@ -144,38 +187,6 @@ class PluginHolder implements ServiceTrackerCustomizer<Servlet, Plugin> {
     }
 
     /**
-     * Add the internal Web Console plugin registered under the given label
-     * @param pluginClassName The class name of the Web Console internal plugin to add
-     * @param label The label of the Web Console internal plugin to add
-     */
-    void addInternalPlugin( final String pluginClassName, final String label) {
-        final Plugin plugin = new InternalPlugin(this, osgiManager, pluginClassName, label);
-        this.addPlugin( plugin );
-    }
-
-    /**
-     * Remove the internal Web Console plugin registered under the given label
-     * @param pluginClassName The class name of the Web Console internal plugin to remove
-     * @param label The label of the Web Console internal plugin to remove
-     */
-    void removeInternalPlugin( final String pluginClassName, final String label ) {
-        synchronized ( plugins ) {
-            final List<Plugin> list = plugins.get( label );
-            if ( list != null ) {
-                for(final Plugin plugin : list) {
-                    if ( plugin instanceof InternalPlugin ) {
-                        final InternalPlugin internalPlugin = (InternalPlugin)plugin;
-                        if ( internalPlugin.getId().equals(pluginClassName) ) {
-                            this.removePlugin( plugin );
-                            break;
-                        }
-                    }
-                }
-            }
-        }
-    }
-
-    /**
      * Returns the plugin registered under the given label or <code>null</code>
      * if none is registered under that label. If the label is <code>null</code>
      * or empty, any registered plugin is returned or <code>null</code> if
@@ -185,23 +196,18 @@ class PluginHolder implements ServiceTrackerCustomizer<Servlet, Plugin> {
      * @return The plugin or <code>null</code> if no plugin is registered with
      *      the given label.
      */
-    AbstractWebConsolePlugin getPlugin( final String label ) {
-        AbstractWebConsolePlugin consolePlugin = null;
+    Plugin getPlugin( final String label ) {
+        Plugin consolePlugin = null;
 
         if ( label != null && label.length() > 0 ) {
-            final Plugin plugin;
             synchronized ( plugins ) {
                 final List<Plugin> list = plugins.get( label );
-                plugin = list != null && !list.isEmpty() ? list.get(0) : null;
-            }
-
-            if ( plugin != null ) {
-                consolePlugin = plugin.getConsolePlugin();
+                consolePlugin = list != null && !list.isEmpty() ? list.get(0) : null;
             }
         } else{
             final List<Plugin> plugins = getPlugins();
             for(final Plugin p : plugins) {
-                consolePlugin = p.getConsolePlugin();
+                consolePlugin = p;
                 if ( consolePlugin != null ) {
                     break;
                 }
@@ -304,7 +310,7 @@ class PluginHolder implements ServiceTrackerCustomizer<Servlet, Plugin> {
      * Returns the bundle context of the Web Console itself.
      * @return the bundle context of the Web Console itself.
      */
-    BundleContext getBundleContext() {
+    public BundleContext getBundleContext() {
         return bundleContext;
     }
 
@@ -342,9 +348,9 @@ class PluginHolder implements ServiceTrackerCustomizer<Servlet, Plugin> {
     @Override
     public Plugin addingService(final ServiceReference<Servlet> reference) {
         Plugin plugin = null;
-        final String label = Util.getStringProperty( reference, WebConsoleConstants.PLUGIN_LABEL );
+        final String label = Util.getStringProperty( reference, ServletConstants.PLUGIN_LABEL );
         if ( label != null ) {
-            plugin = new ServletPlugin( this, reference, label );
+            plugin = new Plugin( this, reference, label );
             addPlugin( plugin );
         }
         return plugin;
@@ -363,7 +369,7 @@ class PluginHolder implements ServiceTrackerCustomizer<Servlet, Plugin> {
         removePlugin( plugin );
     }
 
-    void addPlugin( final Plugin plugin ) {
+    public void addPlugin( final Plugin plugin ) {
         synchronized ( plugins ) {
             final List<Plugin> list = plugins.computeIfAbsent(plugin.getLabel(), k -> new ArrayList<>());
             final Plugin oldPlugin = list.isEmpty() ? null : list.get(0);
@@ -375,20 +381,19 @@ class PluginHolder implements ServiceTrackerCustomizer<Servlet, Plugin> {
                 if (!first.init()) {
                     list.remove(plugin);
                 } else if (oldPlugin != null) {
-                    osgiManager.log(LogService.LOG_WARNING, "Overwriting existing plugin " + oldPlugin.getId() 
-                            + " having label " + plugin.getLabel() + " with new plugin " + plugin.getId()
-                            + " due to higher ranking " );
+                    Util.LOGGER.warn("Overwriting existing plugin {} having label {} with new plugin {} due to higher ranking ", 
+                        oldPlugin.getId(), plugin.getLabel(), plugin.getId() );
                     oldPlugin.dispose();
                 }
             }
             if (first == oldPlugin) {
-                osgiManager.log(LogService.LOG_WARNING, "Ignoring new plugin " + plugin.getId()
-                        + " having existing label " + plugin.getLabel() + " due to lower ranking than old plugin " + oldPlugin.getId() );
+                Util.LOGGER.warn("Ignoring new plugin {} having existing label {} due to lower ranking than old plugin {}", 
+                        plugin.getId(), plugin.getLabel(), oldPlugin.getId() );
             }
         }
     }
 
-    void removePlugin( final Plugin plugin ) {
+    public void removePlugin( final Plugin plugin ) {
         synchronized ( plugins ) {
             final List<Plugin> list = plugins.get( plugin.getLabel() );
             if ( list != null ) {

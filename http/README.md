@@ -1,44 +1,80 @@
 # Apache Felix HTTP Service
 
-This is an implementation of the [HTTP Whiteboard Service as described in chapter 140](https://osgi.org/specification/osgi.cmpn/7.0.0/service.http.whiteboard.html) of the OSGi Compendium (R7) in combination with an implementation of the [HTTP Service Specification as described in chapter 102](https://osgi.org/specification/osgi.cmpn/7.0.0/service.http.html) of the OSGi Compendium. The goal is to provide a standard and simplified way to register servlets, listeners, filters, and resources in a servlet container, to managed them in servlet contexts, and to associate them with URIs. Complete set of features:
+This is an implementation of the [R8.1 Whiteboard Specification for Jakarta Servlet](https://docs.osgi.org/specification/osgi.cmpn/8.1.0/service.servlet.html), [HTTP Whiteboard Service as described in chapter 140](https://osgi.org/specification/osgi.cmpn/7.0.0/service.http.whiteboard.html) of the OSGi Compendium (R7) in combination with an implementation of the [HTTP Service Specification as described in chapter 102](https://osgi.org/specification/osgi.cmpn/7.0.0/service.http.html) of the OSGi Compendium. The goal is to provide a standard and simplified way to register servlets, listeners, filters, and resources in a servlet container, to managed them in servlet contexts, and to associate them with URIs. Complete set of features:
 
   * Standard OSGi Http Service implementation
   * Standard OSGi Http Whiteboard implementation
-  * Run either with Jetty or inside your own application server using the servlet bridge
+  * Run either with Jetty (version 11 or 12) bundle or inside your own application server using the servlet bridge
+    * [Felix HTTP Jetty 12](https://mvnrepository.com/artifact/org.apache.felix/org.apache.felix.http.jetty12) is the preferred bundle of choice as it supports JakartaEE10 with the `jakarta` namespace.
+      * [Jetty WebSocket support](https://github.com/apache/felix-dev/pull/310), see example code [here](https://github.com/apache/felix-dev/blob/master/http/samples/whiteboard/src/main/java/org/apache/felix/http/samples/whiteboard/TestWebSocketServlet.java).
+    * [Felix HTTP Jetty 11](https://mvnrepository.com/artifact/org.apache.felix/org.apache.felix.http.jetty) is the predecessor of the Jetty 12 bundle, which shipped with [Jetty 9.4.x](https://mvnrepository.com/artifact/org.apache.felix/org.apache.felix.http.jetty/4.2.26) in the 4.x range (JavaEE8), [Jetty 11.x](https://mvnrepository.com/artifact/org.apache.felix/org.apache.felix.http.jetty/5.1.10) in the 5.x range (JakartaEE9).
+      * [Jetty WebSocket support](https://github.com/apache/felix-dev/pull/309), see example code [here](https://github.com/apache/felix-dev/blob/master/http/samples/whiteboard/src/main/java/org/apache/felix/http/samples/whiteboard/TestWebSocketServlet.java).
   * Correctly versioned Servlet API.
 
-## Installing
+## Installing 
 
 The Apache Felix HTTP Service project includes several bundles.
 
-  * `org.apache.felix.http.servlet-api` - Provides the Servlet API (versions 2.6, 3.0, and 3.1 of the Servlet specification)
-  * `org.apache.felix.http.api` - Provides the OSGi APIs for the Http Whiteboard and Http Service.
-  * `org.apache.felix.http.jetty` - Implementation that is embedding Jetty server (currently Jetty 9, requiring Java 8). This bundle includes the http.api bundle.
-  * `org.apache.felix.http.sslfilter` - Servlet filter for handling SSL termination.
-  * `org.apache.felix.http.bridge` - Implementation that uses the host application server (bridged mode). Must be used with the proxy (see below)
-  * `org.apache.felix.http.cometd` - Adds Comet/Ajax Push functionality to the HTTP Service implementation.
-  * `org.apache.felix.http.proxy` - Proxy that is needed inside WAR when deployed inside an application server.
+  * [`org.apache.felix.http.servlet-api`](https://mvnrepository.com/artifact/org.apache.felix/org.apache.felix.http.servlet-api) - Provides the Servlet API (versions 2.6, 3.0, 3.1, 4.0, 5.0 and 6.0 of the Servlet specification)
+  * [`org.apache.felix.http.api`](https://mvnrepository.com/artifact/org.apache.felix/org.apache.felix.http.api) - Provides the OSGi APIs for the Http Whiteboard and Http Service.
+  * [`org.apache.felix.http.jetty12`](https://mvnrepository.com/artifact/org.apache.felix/org.apache.felix.http.jetty12) - Implementation that is embedding Jetty server (currently Jetty 12.x, requiring Java 17). This bundle includes the http.api bundle. It's the the preferred Felix Jetty bundle to use, as Jetty 11 will be [EoL in 2025](https://github.com/jetty/jetty.project/issues/10485).
+  * [`org.apache.felix.http.jetty`](https://mvnrepository.com/artifact/org.apache.felix/org.apache.felix.http.jetty) - Predecessor implementation that is embedding Jetty server (currently Jetty 11.x, requiring Java 11). This bundle includes the http.api bundle. 
+  * [`org.apache.felix.http.sslfilter`](https://mvnrepository.com/artifact/org.apache.felix/org.apache.felix.http.sslfilter) - Servlet filter for handling SSL termination.
+  * [`org.apache.felix.http.bridge`](https://mvnrepository.com/artifact/org.apache.felix/org.apache.felix.http.bridge) - Implementation that uses the host application server (bridged mode). Must be used with the proxy (see below)
+  * [`org.apache.felix.http.proxy`](https://mvnrepository.com/artifact/org.apache.felix/org.apache.felix.http.proxy) - Proxy that is needed inside WAR when deployed inside an application server.
+  * [`org.apache.felix.http.wrappers`](https://mvnrepository.com/artifact/org.apache.felix/org.apache.felix.http.wrappers) offers wrapper classes that can be used when transitioning to the `jakarta` namespace, while having libraries that don't offer a jakartified version yet. 
 
 Note that as of version **3.x**, the Servlet APIs are **no longer** packaged with the implementation bundles! If you are migrating from lower versions, be sure to add the
 `org.apache.felix.http.servlet-api` (or any other compatible Serlvet API bundle) to your
 classpath and deployment!
 
+### Using classifiers: `light`, `with-jetty-websockets` and `with-jakarta-websockets` bundle
+If you would like to use your own Jetty jars instead of the one packaged with the Felix Jetty bundles, you can use the variants with the following classifiers:
+* `light` - A light version of the bundle that does not include the Jetty classes. This is useful when you want to use your own Jetty jars. Available for both Jetty bundles.
+* `with-jetty-websockets` - A bundle that includes the classes required for Jetty WebSocket support for Jakarta EE10. Jetty12 bundle only.
+* `with-jakarta-websockets` - A bundle that includes the classes required for Jakarta WebSocket support for Jakarta EE10. Jetty12 bundle only.
+
+When building the Felix Jetty bundle with Maven (`mvn clean install`), the additional bundles will be created in the `target` directory, postfixed with classifier.
+This jar can be deployed to your Felix OSGi environment, along with a compatible Jetty jars.
+See the unit tests for the required bundles and versions that need to be deployed.
+
+Or just use maven to include the dependency with the proper classifier. 
+```
+<dependency>
+   <groupId>org.apache.felix</groupId>
+   <artifactId>org.apache.felix.http.jetty12</artifactId>
+   <version>1.0.2</version>
+   <classifier>light</classifier>
+   <scope>runtime</scope>
+</dependency>
+```
+
 ## Installing additional bundles for the optional HTTP/2 support with jetty
 
-The jetty implementation uses the OSGi ServiceLoader mediator technique to find certain pluggable components that are required for HTTP/2 support.  Your OSGi runtime must first have the bundles needed for OSGi ServiceLoader support deployed. Background information about the OSGi ServiceLoader integration is discussed [here](https://blog.osgi.org/2013/02/javautilserviceloader-in-osgi.html)
+Configure `org.apache.felix.http2.enable=true` to enable HTTP/2 in Jetty.
+
+The Jetty implementation uses the OSGi ServiceLoader mediator technique to find certain pluggable components that are required for HTTP/2 support. Your OSGi runtime must first have the bundles needed for OSGi ServiceLoader support deployed. Background information about the OSGi ServiceLoader integration is discussed [here](https://blog.osgi.org/2013/02/javautilserviceloader-in-osgi.html)
 
 Deploying the following set of bundles would be one way to enable the ServiceLoader mediator support:
 
-  * `org.apache.aries.spifly:org.apache.aries.spifly.dynamic.bundle:1.3.0`
-  * `org.apache.aries:org.apache.aries.util:1.1.3`
-  * `org.ow2.asm:asm:8.0.1`
-  * `org.ow2.asm:asm-analysis:8.0.1`
-  * `org.ow2.asm:asm-commons:8.0.1`
-  * `org.ow2.asm:asm-tree:8.0.1`
-  * `org.ow2.asm:asm-util:8.0.1`
+  * [`org.apache.aries.spifly:org.apache.aries.spifly.dynamic.bundle:1.3.7`](https://mvnrepository.com/artifact/org.apache.aries.spifly/org.apache.aries.spifly.dynamic.bundle)
+  * [`org.ow2.asm:asm:9.7`](https://mvnrepository.com/artifact/org.ow2.asm/asm)
+  * [`org.ow2.asm:asm-analysis:9.7`](https://mvnrepository.com/artifact/org.ow2.asm/asm-analysis)
+  * [`org.ow2.asm:asm-commons:9.7`](https://mvnrepository.com/artifact/org.ow2.asm/asm-commons)
+  * [`org.ow2.asm:asm-tree:9.7`](https://mvnrepository.com/artifact/org.ow2.asm/asm-tree)
+  * [`org.ow2.asm:asm-util:9.7`](https://mvnrepository.com/artifact/org.ow2.asm/asm-util)
 
-Next, depending on your server environment you must choose only one of the following sets
-of additional bundles to deploy [as described in the jetty documentation](https://www.eclipse.org/jetty/documentation/current/alpn-chapter.html)
+### Jetty 12 bundle
+For the Jetty 12 bundle, start the following set of bundles _before_ the Jetty 12 bundle, but after the beforementioned ServiceLoader bundles (the order is important and can be configured in `felix.auto.start.1`). 
+The Jetty version should correspond with the version used in the [Jetty 12 bundle](https://github.com/apache/felix-dev/blob/master/http/jetty12/pom.xml#L44).
+
+* [`jetty-alpn-server-${jetty.version}`](https://mvnrepository.com/artifact/org.eclipse.jetty/jetty-alpn-server)
+* [`jetty-alpn-java-server-${jetty.version}`](https://mvnrepository.com/artifact/org.eclipse.jetty/jetty-alpn-java-server)
+
+### Jetty 11 bundle
+
+For the predecessor Jetty 11 bundle, depending on your server environment, you must choose only one of the following sets
+of additional bundles to deploy [as described in the jetty documentation](https://eclipse.dev/jetty/documentation/jetty-9/index.html#alpn)
 
 1. For java 9 or later:
     * `org.eclipse.jetty.alpn:alpn-api:1.1.3.v20160715`
@@ -58,26 +94,37 @@ of additional bundles to deploy [as described in the jetty documentation](https:
 
 The OSGi whiteboard implementation simplifies the task of registering servlets, filters, resources, listeners, and servlet contexts. For a complete introduction, please refer to the OSGi R7 Compendium or Enterprise specification.
 
-For a short introduction: Such a whiteboard service can be registered by exporting it as a service, making it no longer necessary to track and use the `HttpService` directly. The
-whiteboard implementation detects all `javax.servlet.Servlet` and `javax.servlet.Filter` services with the right service properties. Let us illustrate the usage by registering a servlet:
+For a short introduction: Such a whiteboard service can be registered by exporting it as a service, making it no longer necessary to track and use the `HttpService` directly (or the `ExtHttpService` in legacy implementations, for registering filters). The
+whiteboard implementation detects all `jakarta.servlet.Servlet` and `jakarta.servlet.Filter` services with the right service properties. Let us illustrate the usage by registering a servlet and a filter:
 
 ```java
 public class Activator implements BundleActivator {
-    private ServiceRegistration registration;
+    private ServiceRegistration<Servlet> servletRegistration;
+    private ServiceRegistration<Filter> filterRegistration;
 
     public void start(BundleContext context) throws Exception {
-        Hashtable props = new Hashtable();
-        props.put("osgi.http.whiteboard.servlet.pattern", "/hello");
-        props.put("servlet.init.message", "Hello World!");
+        Hashtable propsServlet = new Hashtable();
+        propsServlet.put(HttpWhiteboardConstants.HTTP_WHITEBOARD_SERVLET_PATTERN, "/hello");
+        propsServlet.put(HttpWhiteboardConstants.HTTP_WHITEBOARD_SERVLET_ASYNC_SUPPORTED, true);
+        propsServlet.put(HttpWhiteboardConstants.HTTP_WHITEBOARD_SERVLET_INIT_PARAM_PREFIX + "message", "Hello World servlet!");
 
-        this.registration = context.registerService(Servlet.class.getName(), new HelloWorldServlet(), props);
+        this.servletRegistration = context.registerService(Servlet.class.getName(), new HelloWorldServlet(), propsServlet);
+
+        Hashtable propsFilter = new Hashtable();
+        propsFilter.put(HttpWhiteboardConstants.HTTP_WHITEBOARD_FILTER_REGEX, ".*");
+        propsFilter.put(HttpWhiteboardConstants.HTTP_WHITEBOARD_FILTER_ASYNC_SUPPORTED, true);
+        propsFilter.put(HttpWhiteboardConstants.HTTP_WHITEBOARD_FILTER_INIT_PARAM_PREFIX + "message", "Hello World filter!");
+
+        this.filterRegistration = context.registerService(Filter.class.getName(), new HelloWorldFilter(), propsFilter);
     }
 
     public void stop(BundleContext context) throws Exception {
-        this.registration.unregister();
+        this.servletRegistration.unregister();
+        this.filterRegistration.unregister();
     }
 }
 ```
+An implementation note for when using the Felix HTTP Jetty 12 bundle: only registering a filter without a servlet, will not work. Make sure that there is a servlet registered (on the same path as the filter) when registering a filter, even when that servlet is not hit eventually.
 
 To ensure the HTTP whiteboard service picks up your servlet and filter correctly, your service
 registration *must* provide several service properties.
@@ -85,21 +132,37 @@ registration *must* provide several service properties.
 
 ### Servlet service properties
 
+See full reference in the [OSGi specification](https://docs.osgi.org/specification/osgi.cmpn/8.1.0/service.servlet.html#service.servlet-i21223311).
+The most important properties are:
+
   * `osgi.http.whiteboard.servlet.pattern` - defines the servlet pattern to register the servlet under, should be a path as defined in the Servlet specification.
   * `osgi.http.whiteboard.context.select` - Filter expression to select the servlet context (optional).
+  * `osgi.http.whiteboard.servlet.asyncSupported` - Declares whether the servlet supports the asynchronous operation mode. Allowed values are true and false independent of case. Defaults to false. (optional)
+  * `osgi.http.whiteboard.servlet.multipart.enable` - Enables support for multipart configuration on the servlet. Allowed values are true and false independent of case. Defaults to false. (optional)
   * `servlet.init.*` - these properties (sans the `servlet.init.` prefix) are made available throught the `ServletConfig` object of your servlet. This allows you to supply your servlet initialization parameters as you would normally do in the web descriptor (web.xml).
 
 ### Filter service properties
 
+See full reference in the [OSGi specification](https://docs.osgi.org/specification/osgi.cmpn/8.1.0/service.servlet.html#d0e87922) .
+The most important properties are:
+
   * `osgi.http.whiteboard.filter.regex` - The regular expression pattern to register filter with.
   * `osgi.http.whiteboard.context.select` - Filter expression to select the servlet context (optional).
-  * `service.ranking` - an integer value that allows you to specify where in the filter chain the filter should be registered. Higher rankings will be placed first in the chain, that is, filter chains are sorted in descending order. If omitted, a ranking of zero (0) is used.
+  * `osgi.http.whiteboard.filter.pattern` - Apply this servlet filter to the specified URL path patterns. The format of the patterns is specified in the servlet specification.
+  * `osgi.http.whiteboard.filter.asyncSupported` - Declares whether the servlet filter supports asynchronous operation mode. Allowed values are true and false independent of case. Defaults to false. (optional)
   * `filter.init.*` - these properties (sans the `filter.init.` prefix) are made available throught the `FilterConfig` object of your filter. This allows you to supply your filter initialization parameters as you would normally do in the web descriptor (web.xml).
+
+The order of filters is no longer managed by the `service.ranking` property, but by implementing the `compareTo` method. 
+Multiple servlet filters can process the same servlet request/response. If more than one Filter matches, they are processed in ranking order, as specified in `ServiceReference.compareTo`. The servlet filter with the highest ranking is processed first in the filter chain, while the servlet filter with the lowest ranking is processed last, before the Servlet.service method is called. After the servlet completes its service method the filter chain is unwound in reverse order.
 
 ### ServletContextHelper service properties
 
+See full reference in the [OSGi specification](https://docs.osgi.org/specification/osgi.cmpn/8.1.0/service.servlet.html#service.http.whiteboard.servletcontext). 
+The most important properties are:
+
   * `osgi.http.whiteboard.context.name` - the identifier of the registered HTTP context to be referenced by a servlet or filter service
   * `osgi.http.whiteboard.context.path` - The path of the servlet context.
+  * `context.init.*` - Properties starting with this prefix are provided as init parameters through the ServletContext.getInitParameter and ServletContext.getInitParameterNames methods. The context.init. prefix is removed from the parameter name.
 
 ## Using the HttpService
 
@@ -322,89 +385,73 @@ non-standard request headers are used for this:
 
 The service can both be configured using OSGi environment properties and using Configuration Admin. The service PID for
 this service is `"org.apache.felix.http"`. If you use both methods, Configuration Admin takes precedence. The following
-properties can be used (some legacy property names still exist but are not documented here on purpose):
+properties can be used (some legacy property names still exist but are not documented here on purpose). As properties might change over time, the actual list of properties can be found [here for the Jetty 12 bundle](https://github.com/apache/felix-dev/blob/master/http/jetty12/src/main/java/org/apache/felix/http/jetty/internal/JettyConfig.java) and [here for the Jetty 11 bundle](https://github.com/apache/felix-dev/blob/master/http/jetty/src/main/java/org/apache/felix/http/jetty/internal/JettyConfig.java).
 
-| Property | Description |
-|--|--|
-| `org.apache.felix.http.debug` | Flag to enable debugging for this service implementation. The default is `false`. |
-| `org.apache.felix.http.host` | Host name or IP Address of the interface to listen on. The default is `null` causing Jetty to listen on all interfaces. |
-| `org.osgi.service.http.port` | The port used for servlets and resources available via HTTP. The default is `8080`. See [port settings below](#http-port-settings) for additional information. A negative port number has the same effect as setting `org.apache.felix.http.enable` to `false`. |
-| `org.osgi.service.http.port.secure` | The port used for servlets and resources available via HTTPS. The default is `8443`. See [port settings below](#http-port-settings) for additional information. A negative port number has the same effect as setting `org.apache.felix.https.enable` to `false`. |
-| `org.apache.felix.http.context_path` | The servlet Context Path to use for the Http Service. If this property is not configured it  defaults to "/". This must be a valid path starting with a slash and not  ending with a slash (unless it is the root context). |
-| `org.apache.felix.http.timeout` | Connection timeout in milliseconds. The default is `60000` (60 seconds). |
-| `org.apache.felix.http.session.timeout` | Allows for the specification of the Session life time as a number of minutes. This property serves the same purpose as the `session-timeout` element in a Web Application descriptor. The default is "0" (zero) for no timeout at all. |
-| `org.apache.felix.http.nio` | Flag to enable the use of NIO instead of traditional IO for HTTP. One consequence of using NIO with HTTP is that the bundle needs at least a Java 5 runtime. The default is `true`. |
-| `org.apache.felix.https.nio` | Flag to enable the use of NIO instead of traditional IO for HTTPS. One consequence of using NIO with HTTPS is that the bundle needs at least a Java 5 runtime. If this property is not set the (default) value of the `org.apache.felix.http.nio` property is used. |
-| `org.apache.felix.http.enable` | Flag to enable the use of HTTP. The default is `true`. |
-| `org.apache.felix.https.enable` | Flag to enable the user of HTTPS. The default is `false`. |
-| `org.apache.felix.https.keystore` | The name of the file containing the keystore. |
-| `org.apache.felix.https.keystore.password` | The password for the keystore. |
-| `org.apache.felix.https.keystore.key.password` | The password for the key in the keystore. |
-| `org.apache.felix.https.truststore` | The name of the file containing the truststore. |
-| `org.apache.felix.https.truststore.type` | The type of truststore to use. The default is `JKS`. |
-| `org.apache.felix.https.truststore.password` | The password for the truststore. |
-| `org.apache.felix.https.jetty.ciphersuites.excluded` | Configures comma-separated list of SSL cipher suites to *exclude*. Default is `null`, meaning that no cipher suite is excluded. |
-| `org.apache.felix.https.jetty.ciphersuites.included` | Configures comma-separated list of SSL cipher suites to *include*. Default is `null`, meaning that the default cipher suites are used. |
-| `org.apache.felix.https.jetty.protocols.excluded` | Configures comma-separated list of SSL protocols (e.g. SSLv3, TLSv1.0, TLSv1.1, TLSv1.2) to *exclude*. Default is `null`, meaning that no protocol is excluded. |
-| `org.apache.felix.https.jetty.protocols.included` | Configures comma-separated list of SSL protocols to *include*. Default is `null`, meaning that the default protocols are used. |
-| `org.apache.felix.https.clientcertificate` | Flag to determine if the HTTPS protocol requires, wants or does not use client certificates. Legal values are `needs`, `wants` and `none`. The default is `none`. |
-| `org.apache.felix.http.jetty.headerBufferSize` | Size of the buffer for request and response headers, in bytes. Default is 16 KB. |
-| `org.apache.felix.http.jetty.requestBufferSize` | Size of the buffer for requests not fitting the header buffer, in bytes. Default is 8 KB. |
-| `org.apache.felix.http.jetty.responseBufferSize` | Size of the buffer for responses, in bytes. Default is 24 KB. |
-| `org.apache.felix.http.jetty.maxFormSize` | The maximum size accepted for a form post, in bytes. Defaults to 200 KB. |
-| `org.apache.felix.http.mbeans` | If `true`, enables the MBean server functionality. The default is `false`. |
-| `org.apache.felix.http.jetty.sendServerHeader` | If `false`, the `Server` HTTP header is no longer included in responses. The default is `false`. |
-| `org.eclipse.jetty.servlet.SessionCookie` | Name of the cookie used to transport the Session ID. The default is `JSESSIONID`. |
-| `org.eclipse.jetty.servlet.SessionURL` | Name of the request parameter to transport the Session ID. The default is `jsessionid`. |
-| `org.eclipse.jetty.servlet.SessionDomain` | Domain to set on the session cookie. The default is `null`. |
-| `org.eclipse.jetty.servlet.SessionPath` | The path to set on the session cookie. The default is the configured session context path ("/"). |
-| `org.eclipse.jetty.servlet.MaxAge` | The maximum age value to set on the cookie. The default is "-1". |
-| `org.apache.felix.proxy.load.balancer.connection.enable` | Set this to `true` when running Felix HTTP behind a (offloading) proxy or load balancer which rewrites the requests. The default is `false`. |
-| `org.apache.felix.http.runtime.init.` | Properties starting with this prefix are added as service registration properties to the HttpServiceRuntime service. The prefix is removed for the property name. |
-| `org.apache.felix.jetty.gziphandler.enable` | Whether the server should use a server-wide gzip handler. Default is false. |
-| `org.apache.felix.jetty.gzip.minGzipSize` | The minimum response size to trigger dynamic compression. Default is GzipHandler.DEFAULT_MIN_GZIP_SIZE. |
-| `org.apache.felix.jetty.gzip.compressionLevel` | The compression level to use. Default is Deflater.DEFAULT_COMPRESSION. |
-| `org.apache.felix.jetty.gzip.inflateBufferSize` | The size in bytes of the buffer to inflate compressed request, or <= 0 for no inflation. Default is -1. |
-| `org.apache.felix.jetty.gzip.syncFlush` | True if Deflater#SYNC_FLUSH should be used, else Deflater#NO_FLUSH will be used. Default is false. |
-| `org.apache.felix.jetty.gzip.excludedUserAgents` | The regular expressions matching additional user agents to exclude. Default is none. |
-| `org.apache.felix.jetty.gzip.includedMethods` | The additional http methods to include in compression. Default is none. |
-| `org.apache.felix.jetty.gzip.excludedMethods` | The additional http methods to exclude in compression. Default is none. |
-| `org.apache.felix.jetty.gzip.includedPaths` | The additional path specs to include. Inclusion takes precedence over exclusion. Default is none. |
-| `org.apache.felix.jetty.gzip.excludedPaths` | The additional path specs to exclude. Inclusion takes precedence over exclusion. Default is none. |
-| `org.apache.felix.jetty.gzip.includedMimeTypes` | The included mime types. Inclusion takes precedence over exclusion. Default is none. |
-| `org.apache.felix.jetty.gzip.excludedMimeTypes` | The excluded mime types. Inclusion takes precedence over exclusion. Default is none. |
-| `org.apache.felix.http2.enable` | Whether to enable HTTP/2. Default is false.  |
-| `org.apache.felix.jetty.http2.maxConcurrentStreams` | The max number of concurrent streams per connection. Default is 128. |
-| `org.apache.felix.jetty.http2.initialStreamRecvWindow` | The initial stream receive window (client to server). Default is 524288. |
-| `org.apache.felix.jetty.http2.initialSessionRecvWindow` | The initial session receive window (client to server). Default is 1048576. |
-| `org.apache.felix.jetty.alpn.protocols` | The ALPN protocols to consider. Default is h2, http/1.1. |
-| `org.apache.felix.jetty.alpn.defaultProtocol` | The default protocol when negotiation fails. Default is http/1.1. |
-
-### All-in-one-bundle configuration properties
-
-Additionally, the all-in-one bundle uses the following environment properties (no support for Configuration Admin):
-
-| Property | Description |
-|--|--|
-| `org.apache.felix.http.jettyEnabled` | If `true`, the embedded Jetty server is used as HTTP container. The default is `false`. |
-| `org.apache.felix.http.whiteboardEnabled` | If `true`, the whiteboard-style registration of servlets and filters is enabled. The default is `false`. |
-| `org.apache.felix.http.cometdEnabled` | If `true` the CometD/Ajax Push feature is enabled. The default is `false`. |
+| Property                                                  | Description                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                          |
+|-----------------------------------------------------------|------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|
+| `org.apache.felix.http.host`                              | Host name or IP Address of the interface to listen on. The default is `null` causing Jetty to listen on all interfaces.                                                                                                                                                                                                                                                                                                                                                                                                                                                                              |
+| `org.osgi.service.http.port`                              | The port used for servlets and resources available via HTTP. The default is `8080`. See [port settings below](#http-port-settings) for additional information. A negative port number has the same effect as setting `org.apache.felix.http.enable` to `false`.                                                                                                                                                                                                                                                                                                                                      |
+| `org.osgi.service.http.port.secure`                       | The port used for servlets and resources available via HTTPS. The default is `8443`. See [port settings below](#http-port-settings) for additional information. A negative port number has the same effect as setting `org.apache.felix.https.enable` to `false`.                                                                                                                                                                                                                                                                                                                                    |
+| `org.apache.felix.http.context_path`                      | The servlet Context Path to use for the Http Service. If this property is not configured it  defaults to "/". This must be a valid path starting with a slash and not  ending with a slash (unless it is the root context).                                                                                                                                                                                                                                                                                                                                                                          |
+| `org.apache.felix.http.timeout`                           | Connection timeout in milliseconds. The default is `60000` (60 seconds).                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                             |
+| `org.apache.felix.http.session.timeout`                   | Allows for the specification of the Session life time as a number of minutes. This property serves the same purpose as the `session-timeout` element in a Web Application descriptor. The default is "0" (zero) for no timeout at all.                                                                                                                                                                                                                                                                                                                                                               |
+| `org.apache.felix.http.enable`                            | Flag to enable the use of HTTP. The default is `true`.                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                               |
+| `org.apache.felix.https.enable`                           | Flag to enable the user of HTTPS. The default is `false`.                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                            |
+| `org.apache.felix.https.keystore`                         | The name of the file containing the keystore.                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                        |
+| `org.apache.felix.https.keystore.password`                | The password for the keystore.                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                       |
+| `org.apache.felix.https.keystore.key.password`            | The password for the key in the keystore.                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                            |
+| `org.apache.felix.https.truststore`                       | The name of the file containing the truststore.                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                      |
+| `org.apache.felix.https.truststore.type`                  | The type of truststore to use. The default is `JKS`.                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                 |
+| `org.apache.felix.https.truststore.password`              | The password for the truststore.                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                     |
+| `org.apache.felix.https.jetty.ciphersuites.excluded`      | Configures comma-separated list of SSL cipher suites to *exclude*. Default is `null`, meaning that no cipher suite is excluded.                                                                                                                                                                                                                                                                                                                                                                                                                                                                      |
+| `org.apache.felix.https.jetty.ciphersuites.included`      | Configures comma-separated list of SSL cipher suites to *include*. Default is `null`, meaning that the default cipher suites are used.                                                                                                                                                                                                                                                                                                                                                                                                                                                               |
+| `org.apache.felix.https.jetty.protocols.excluded`         | Configures comma-separated list of SSL protocols (e.g. SSLv3, TLSv1.0, TLSv1.1, TLSv1.2) to *exclude*. Default is `null`, meaning that no protocol is excluded.                                                                                                                                                                                                                                                                                                                                                                                                                                      |
+| `org.apache.felix.https.jetty.protocols.included`         | Configures comma-separated list of SSL protocols to *include*. Default is `null`, meaning that the default protocols are used.                                                                                                                                                                                                                                                                                                                                                                                                                                                                       |
+| `org.apache.felix.https.clientcertificate`                | Flag to determine if the HTTPS protocol requires, wants or does not use client certificates. Legal values are `needs`, `wants` and `none`. The default is `none`.                                                                                                                                                                                                                                                                                                                                                                                                                                    |
+| `org.apache.felix.http.jetty.headerBufferSize`            | Size of the buffer for request and response headers, in bytes. Default is 16 KB.                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                     |
+| `org.apache.felix.http.jetty.requestBufferSize`           | Size of the buffer for requests not fitting the header buffer, in bytes. Default is 8 KB.                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                            |
+| `org.apache.felix.http.jetty.responseBufferSize`          | Size of the buffer for responses, in bytes. Default is 24 KB.                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                        |
+| `org.apache.felix.http.jetty.maxFormSize`                 | The maximum size accepted for a form post, in bytes (ony applies to form parameters). Defaults to 200 KB.                                                                                                                                                                                                                                                                                                                                                                                                                                                                                            |
+| `org.apache.felix.http.jetty.requestSizeLimit`            | Maximum size of the request body in bytes. Default is unlimited. Added in Jetty12 1.0.30.                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                            |
+| `org.apache.felix.http.jetty.responseSizeLimit`           | Maximum size of the response body in bytes. Default is unlimited. Default is unlimited. Added in Jetty12 1.0.30.                                                                                                                                                                                                                                                                                                                                                                                                                                                                                     |
+| `org.apache.felix.http.jetty.acceptQueueSize`             | Configures the Jetty12 accept queue size. Defaults to whatever Jetty configures when not specified.                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                  |
+| `org.apache.felix.http.jetty.errorPageCustomHeaders`      | Configures the custom headers to add to all error pages served by Jetty. Separate key-value pairs with `##`, e.g. `X-Custom-Header=Value##X-Custom-Header2=Value2`. Added in Jetty12 1.0.32.                                                                                                                                                                                                                                                                                                                                                                                                         |
+| `org.apache.felix.http.mbeans`                            | If `true`, enables the MBean server functionality. The default is `false`.                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                           |
+| `org.apache.felix.http.jetty.sendServerHeader`            | If `false`, the `Server` HTTP header is no longer included in responses. The default is `false`.                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                     |
+| `org.eclipse.jetty.servlet.SessionCookie`                 | Name of the cookie used to transport the Session ID. The default is `JSESSIONID`.                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                    |
+| `org.eclipse.jetty.servlet.SessionURL`                    | Name of the request parameter to transport the Session ID. The default is `jsessionid`.                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                              |
+| `org.eclipse.jetty.servlet.SessionDomain`                 | Domain to set on the session cookie. The default is `null`.                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                          |
+| `org.eclipse.jetty.servlet.SessionPath`                   | The path to set on the session cookie. The default is the configured session context path ("/").                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                     |
+| `org.eclipse.jetty.servlet.MaxAge`                        | The maximum age value to set on the cookie. The default is "-1".                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                     |
+| `org.eclipse.jetty.UriComplianceMode`                     | The URI compliance mode to set. The default is [DEFAULT](https://eclipse.dev/jetty/javadoc/jetty-12/org/eclipse/jetty/http/UriCompliance.html#DEFAULT). See [documentation](https://eclipse.dev/jetty/documentation/jetty-12/programming-guide/index.html#pg-server-compliance-uri.) and [possible modes](https://github.com/jetty/jetty.project/blob/jetty-12.0.x/jetty-core/jetty-http/src/main/java/org/eclipse/jetty/http/UriCompliance.java#L186C107-L186C113). Use with caution, as it may have [security implications](https://github.com/apache/felix-dev/pull/308#issuecomment-2438913766). |
+| `org.apache.felix.proxy.load.balancer.connection.enable`  | Set this to `true` when running Felix HTTP behind a (offloading) proxy or load balancer which rewrites the requests. The default is `false`.                                                                                                                                                                                                                                                                                                                                                                                                                                                         |
+| `org.apache.felix.http.runtime.init.`                     | Properties starting with this prefix are added as service registration properties to the HttpServiceRuntime service. The prefix is removed for the property name.                                                                                                                                                                                                                                                                                                                                                                                                                                    |
+| `org.apache.felix.jetty.gziphandler.enable`               | Whether the server should use a server-wide gzip handler. Default is false.                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                          |
+| `org.apache.felix.jetty.gzip.minGzipSize`                 | The minimum response size to trigger dynamic compression. Default is GzipHandler.DEFAULT_MIN_GZIP_SIZE.                                                                                                                                                                                                                                                                                                                                                                                                                                                                                              |
+| `org.apache.felix.jetty.gzip.inflateBufferSize`           | The size in bytes of the buffer to inflate compressed request, or <= 0 for no inflation. Default is -1.                                                                                                                                                                                                                                                                                                                                                                                                                                                                                              |
+| `org.apache.felix.jetty.gzip.syncFlush`                   | True if Deflater#SYNC_FLUSH should be used, else Deflater#NO_FLUSH will be used. Default is false.                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                   |
+| `org.apache.felix.jetty.gzip.includedMethods`             | The additional http methods to include in compression. Default is none.                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                              |
+| `org.apache.felix.jetty.gzip.excludedMethods`             | The additional http methods to exclude in compression. Default is none.                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                              |
+| `org.apache.felix.jetty.gzip.includedPaths`               | The additional path specs to include. Inclusion takes precedence over exclusion. Default is none.                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                    |
+| `org.apache.felix.jetty.gzip.excludedPaths`               | The additional path specs to exclude. Inclusion takes precedence over exclusion. Default is none.                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                    |
+| `org.apache.felix.jetty.gzip.includedMimeTypes`           | The included mime types. Inclusion takes precedence over exclusion. Default is none.                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                 |
+| `org.apache.felix.jetty.gzip.excludedMimeTypes`           | The excluded mime types. Inclusion takes precedence over exclusion. Default is none.                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                 |
+| `org.apache.felix.http2.enable`                           | Whether to enable HTTP/2. Default is false.                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                          |
+| `org.apache.felix.jetty.http2.maxConcurrentStreams`       | The max number of concurrent streams per connection. Default is 128.                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                 |
+| `org.apache.felix.jetty.http2.initialStreamRecvWindow`    | The initial stream receive window (client to server). Default is 524288.                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                             |
+| `org.apache.felix.jetty.http2.initialSessionRecvWindow`   | The initial session receive window (client to server). Default is 1048576.                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                           |
+| `org.apache.felix.jetty.alpn.protocols`                   | The ALPN protocols to consider. Default is h2, http/1.1.                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                             |
+| `org.apache.felix.jetty.alpn.defaultProtocol`             | The default protocol when negotiation fails. Default is http/1.1.                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                    |
+| `org.apache.felix.jakarta.websocket.enable`               | Enables Jakarta websocket support. Default is false.                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                 |
+| `org.apache.felix.jetty.websocket.enable`                 | Enables Jetty websocket support. Default is false.                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                   |
+| `org.apache.felix.http.jetty.threadpool.max`              | The maximum number of threads in the Jetty thread pool. Default is unlimited. Works for both platform threads and virtual threads (Jetty 12 only).                                                                                                                                                                                                                                                                                                                                                                                                                                                   |
+| `org.apache.felix.http.jetty.virtualthreads.enable`       | Enables using virtual threads in Jetty 12 (JDK 21 required). Default is false. When enabled, `org.apache.felix.http.jetty.threadpool.max` is used for a bounded virtual thread pool.                                                                                                                                                                                                                                                                                                                                                                                                                 |
 
 ### Multiple Servers
 
 It is possible to configure several Http Services, each running on a different port. The first service can be configured as outlined above using the service PID for `"org.apache.felix.http"`. Additional servers can be configured through OSGi factory configurations using `"org.apache.felix.http"` as the factory PID. The properties for the configuration are outlined as above.
 
 The default server using the PID `"org.apache.felix.http"` can be disabled by specifying a negative port and then all servers can be used through factory configurations.
-
-
-### CometD configuration properties
-
-The CometD bundle supports the following configuration options, using the PID `org.apache.felix.http.cometd` or through
-environment properties:
-
-| Property | Description |
-|--|--|
-| `org.apache.felix.http.cometd.path` | Defines the path for the CometD endpoint. Default is `/system/cometd`. |
 
 ### SSL filter configuration properties
 
@@ -482,42 +529,40 @@ A set of simple examples illustrating the various features are available.
 
   * Whiteboard sample: <https://github.com/apache/felix-dev/tree/master/http/samples/whiteboard>
   * Servlet bridge sample: <https://github.com/apache/felix-dev/tree/master/http/samples/bridge/>
-  * CometD sample: <https://github.com/apache/felix-dev/tree/master/http/samples/cometd/>
-
 
 ## Maven Artifacts
 
-This is a list of the most recent artifacts at the time of writing this document. There might already be never versions available:
+This is a list of the most recent artifacts at the time of writing this document. There might already be newer versions available:
 
 ```xml
 <dependency>
     <groupId>org.apache.felix</groupId>
     <artifactId>org.apache.felix.http.servlet-api</artifactId>
-    <version>1.1.2</version>
+    <version>3.0.0</version>
 </dependency>
 <dependency>
     <groupId>org.apache.felix</groupId>
-    <artifactId>org.apache.felix.http.jetty</artifactId>
-    <version>4.0.14</version>
+    <artifactId>org.apache.felix.http.jetty12</artifactId>
+    <version>1.0.2</version>
 </dependency>
 <dependency>
     <groupId>org.apache.felix</groupId>
     <artifactId>org.apache.felix.http.bridge</artifactId>
-    <version>4.0.8</version>
-</dependency>
-<dependency>
-    <groupId>org.apache.felix</groupId>
-    <artifactId>org.apache.felix.http.cometd</artifactId>
-    <version>2.3.2</version>
+    <version>5.1.6</version>
 </dependency>
 <dependency>
     <groupId>org.apache.felix</groupId>
     <artifactId>org.apache.felix.http.proxy</artifactId>
-    <version>3.0.6</version>
+    <version>4.0.0</version>
+</dependency>
+<dependency>
+    <groupId>org.apache.felix</groupId>
+    <artifactId>org.apache.felix.http.wrappers</artifactId>
+    <version>1.1.2</version>
 </dependency>
 <dependency>
     <groupId>org.apache.felix</groupId>
     <artifactId>org.apache.felix.http.sslfilter</artifactId>
-    <version>1.2.6</version>
+    <version>2.0.2</version>
 </dependency>
 ```

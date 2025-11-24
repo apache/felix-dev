@@ -30,6 +30,7 @@ public final class PreprocessorDTOBuilder
     /**
      * Build a preprocessor DTO from a filter info
      * @param info The preprocessor info
+     * @param reason The reason for the failure or -1 if the preprocessor was registered successfully
      * @return A preprocessor DTO
      */
     public static @NotNull PreprocessorDTO build(@NotNull final PreprocessorInfo info, final int reason)

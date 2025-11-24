@@ -25,10 +25,12 @@ import java.util.ArrayList;
 import java.util.Collections;
 import java.util.Enumeration;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.StringTokenizer;
 import java.util.concurrent.CountDownLatch;
+import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicBoolean;
 
@@ -80,7 +82,7 @@ public class BundleComponentActivator implements ComponentActivator
     private final List<ComponentHolder<?>> m_holders = new ArrayList<>();
 
     // thread acting upon configurations
-    private final ComponentActorThread m_componentActor;
+    private final ScheduledExecutorService m_componentActor;
 
     // true as long as the dispose method is not called
     private final AtomicBoolean m_active = new AtomicBoolean( true );
@@ -189,16 +191,16 @@ public class BundleComponentActivator implements ComponentActivator
      *      register components with to ensure uniqueness of component names
      *      and to ensure configuration updates.
      * @param   context  The bundle context owning the components
-     * @param serviceReference 
+     * @param serviceReference
      *
      * @throws ComponentException if any error occurrs initializing this class
      */
     public BundleComponentActivator(final ScrLogger scrLogger,
             final ComponentRegistry componentRegistry,
-            final ComponentActorThread componentActor,
+            final ScheduledExecutorService componentActor,
             final BundleContext context,
             final ScrConfiguration configuration,
-            final List<ComponentMetadata> cachedComponentMetadata, 
+            final List<ComponentMetadata> cachedComponentMetadata,
             final ServiceReference<?> trueConditiion)
     throws ComponentException
     {
@@ -260,19 +262,38 @@ public class BundleComponentActivator implements ComponentActivator
 
             // 112.4.1: The value of the the header is a comma separated list of XML entries within the Bundle
             StringTokenizer st = new StringTokenizer(descriptorLocations, ", ");
-
+            // Tolerate wildcard overlap with explicit entries in list by remembering the URLs that have been loaded so
+            // that duplicates can be skipped before attempting to re-parse the descriptors they resolve to.
+            HashSet<String> haveBeenLoaded = new HashSet<>();
             while (st.hasMoreTokens())
             {
                 String descriptorLocation = st.nextToken();
-
                 URL[] descriptorURLs = findDescriptors(m_bundle, descriptorLocation);
                 if (descriptorURLs.length == 0)
                 {
-                    // 112.4.1 If an XML document specified by the header cannot be located in the bundle and its attached
-                    // fragments, SCR must log an error message with the Log Service, if present, and continue.
-                    logger.log(Level.ERROR,
-                        "Component descriptor entry ''{0}'' not found", null,
-                        descriptorLocation);
+                    if (descriptorLocation.contains("*")) {
+                        // 112.4.1 The last component of each path in the Service-Component header may
+                        // use wildcards so that Bundle.findEntries can be used to locate the XML
+                        // document within the bundle and its fragments. For example:
+                        //
+                        // Service-Component: OSGI-INF/*.xml
+                        //
+                        // A Service-Component manifest header specified in a fragment is ignored by
+                        // SCR. However, XML documents referenced by a bundle's Service-Component
+                        // manifest header may be contained in attached fragments.
+
+                        // in case of such wildcard, finding nothing does not mean an error (because it
+                        // *might* be found in a fragment that is attached later.
+                        logger.log(Level.TRACE,
+                                "Component descriptor entry ''{0}'' with wildcard has no matches", null,
+                                descriptorLocation);
+                    } else {
+                        // 112.4.1 If an XML document specified by the header cannot be located in the bundle and its attached
+                        // fragments, SCR must log an error message with the Log Service, if present, and continue.
+                        logger.log(Level.ERROR,
+                            "Component descriptor entry ''{0}'' not found", null,
+                            descriptorLocation);
+                    }
                     continue;
                 }
 
@@ -280,7 +301,18 @@ public class BundleComponentActivator implements ComponentActivator
                 // load from the descriptors
                 for (URL descriptorURL : descriptorURLs)
                 {
-                    loadDescriptor(descriptorURL);
+                    String externalForm = descriptorURL.toExternalForm();
+                    if (!haveBeenLoaded.contains(externalForm))
+                    {
+                        loadDescriptor(descriptorURL);
+                        haveBeenLoaded.add(externalForm);
+                    }
+                    else
+                    {
+                        logger.log(Level.DEBUG,
+                                "Component descriptor entry ''{0}'' (matched by ''{1}'') has already been loaded",
+                                null, descriptorURL.getPath(), descriptorLocation);
+                    }
                 }
             }
         }
@@ -681,10 +713,10 @@ public class BundleComponentActivator implements ComponentActivator
     {
         if ( isActive() )
         {
-            ComponentActorThread cat = m_componentActor;
+            ScheduledExecutorService cat = m_componentActor;
             if ( cat != null )
             {
-                cat.schedule( task );
+                cat.submit( task );
             }
             else
             {
@@ -731,7 +763,7 @@ public class BundleComponentActivator implements ComponentActivator
     @Override
     public <T> void missingServicePresent(ServiceReference<T> serviceReference)
     {
-        m_componentRegistry.missingServicePresent( serviceReference, m_componentActor );
+        m_componentRegistry.missingServicePresent( serviceReference );
     }
 
     @Override

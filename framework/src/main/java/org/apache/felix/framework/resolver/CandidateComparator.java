@@ -29,7 +29,8 @@ import org.osgi.resource.Capability;
 
 public class CandidateComparator implements Comparator<Capability>
 {
-    public int compare(Capability cap1, Capability cap2)
+    @Override
+	public int compare(Capability cap1, Capability cap2)
     {
         // First check resolved state, since resolved capabilities have priority
         // over unresolved ones. Compare in reverse order since we want to sort

@@ -19,7 +19,6 @@ package org.apache.felix.http.jakartawrappers;
 import java.io.InputStream;
 import java.net.MalformedURLException;
 import java.net.URL;
-import java.util.Collections;
 import java.util.Enumeration;
 import java.util.EventListener;
 import java.util.HashMap;
@@ -129,30 +128,8 @@ public class ServletContextWrapper implements ServletContext {
     }
 
     @Override
-    public Servlet getServlet(final String name) throws ServletException {
-        return null;
-    }
-
-    @Override
-    public Enumeration<Servlet> getServlets() {
-        return Collections.emptyEnumeration();
-    }
-
-    @SuppressWarnings("deprecation")
-    @Override
-    public Enumeration<String> getServletNames() {
-        return this.context.getServletNames();
-    }
-
-    @Override
     public void log(final String msg) {
         this.context.log(msg);
-    }
-
-    @SuppressWarnings("deprecation")
-    @Override
-    public void log(final Exception exception, final String msg) {
-        this.context.log(exception, msg);
     }
 
     @Override

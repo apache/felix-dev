@@ -241,6 +241,7 @@ public final class ErrorPageRegistry
     /**
      * Remove the servlet from error handling
      * @param info The servlet info.
+     * @param destroy Unused
      */
     public synchronized void removeServlet(@NotNull final ServletInfo info, final boolean destroy)
     {

@@ -124,7 +124,7 @@ public final class HttpServiceRuntimeImpl implements HttpServiceRuntime
         {
             replacement.put(key, newAttributes.get(key));
         }
-        replacement.put(PROP_CHANGECOUNT, this.changeCount);
+        replacement.put(PROP_CHANGECOUNT, this.changeCount.get());
         attributes = replacement;
     }
 

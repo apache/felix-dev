@@ -21,16 +21,16 @@
     <modelVersion>4.0.0</modelVersion>
     <parent>
         <groupId>org.apache.felix</groupId>
-        <artifactId>org.apache.felix.http.parent</artifactId>
-        <version>13</version>
-        <relativePath>../parent/pom.xml</relativePath>
+        <artifactId>felix-parent</artifactId>
+        <version>9</version>
+        <relativePath>../../pom/pom.xml</relativePath>
     </parent>
 
-    <name>Apache Felix Http Jetty</name>
+    <name>Apache Felix Http Jetty 11.x</name>
     <description>This is an implementation of the R8.1 OSGi Servlet Service, the R7 OSGi Http Service and the R7 OSGi Http Whiteboard Specification</description>
 
     <artifactId>org.apache.felix.http.jetty</artifactId>
-    <version>5.1.1-SNAPSHOT</version>
+    <version>5.2.1-SNAPSHOT</version>
     <packaging>bundle</packaging>
 
     <scm>
@@ -38,11 +38,15 @@
         <developerConnection>scm:git:https://github.com/apache/felix-dev.git</developerConnection>
         <url>https://gitbox.apache.org/repos/asf?p=felix-dev.git</url>
       <tag>HEAD</tag>
-  </scm>
+    </scm>
 
     <properties>
         <felix.java.version>11</felix.java.version>
-	<jetty.version>11.0.15</jetty.version>
+        <jetty.version>11.0.26</jetty.version>
+        <baseline.skip>true</baseline.skip>
+        <org.ops4j.pax.exam.version>4.13.3</org.ops4j.pax.exam.version>
+        <!-- To debug the pax process, override this with -D -->
+        <pax.vm.options>-Xmx512M</pax.vm.options>
     </properties>
 
     <build>
@@ -69,7 +73,11 @@
                                 // scan each of the artifacts to preserve the information found in any META-INF/services/* files
                                 project.artifacts.each() { artifact ->
 
-                                    if (artifact.getArtifactHandler().isAddedToClasspath() && !org.apache.maven.artifact.Artifact.SCOPE_TEST.equals( artifact.getScope() )) {
+                                    if (artifact.getArtifactHandler().isAddedToClasspath() && !org.apache.maven.artifact.Artifact.SCOPE_TEST.equals( artifact.getScope() )
+                                            && !"org.eclipse.jetty.websocket".equals(artifact.getGroupId()) // skip the optional websocket artifacts
+                                            && !"jetty-annotations".equals(artifact.getArtifactId()) // skip the transitive artifacts from the optional websocket artifacts
+                                            && !"jetty-plus".equals(artifact.getArtifactId())
+                                            && !"jetty-webapp".equals(artifact.getArtifactId())) {
                                         def jar;
                                         try {
                                             jar = new java.util.jar.JarFile(artifact.file)
@@ -142,10 +150,12 @@
             <plugin>
                 <groupId>org.apache.felix</groupId>
                 <artifactId>maven-bundle-plugin</artifactId>
-                <version>5.1.4</version>
+                <version>5.1.9</version>
                 <extensions>true</extensions>
                 <configuration>
                     <instructions>
+                        <Bundle-SymbolicName>${project.artifactId}</Bundle-SymbolicName>
+                        <Bundle-Version>${project.version}</Bundle-Version>
                         <X-Jetty-Version>
                             ${jetty.version}
                         </X-Jetty-Version>
@@ -162,12 +172,18 @@
                             org.osgi.service.servlet.runtime,
                             org.osgi.service.servlet.runtime.dto,
                             org.osgi.service.servlet.whiteboard,
-                            !org.eclipse.jetty,
-                            !org.eclipse.jetty.version,
-                            org.eclipse.jetty.*,
-			    org.apache.felix.http.jetty,
+                            org.eclipse.jetty.alpn.server,
+                            org.eclipse.jetty.http.*,
+                            org.eclipse.jetty.http2.*,
+                            org.eclipse.jetty.io.*,
+                            org.eclipse.jetty.jmx.*,
+                            org.eclipse.jetty.security.*,
+                            org.eclipse.jetty.server.*,
+                            org.eclipse.jetty.servlet.*,
+                            org.eclipse.jetty.util.*,
+                            org.apache.felix.http.jetty,
                             org.apache.felix.http.jakartawrappers,
-			    org.apache.felix.http.javaxwrappers
+                            org.apache.felix.http.javaxwrappers
                         </Export-Package>
                         <Private-Package>
                             org.apache.felix.http.base.*,
@@ -175,9 +191,6 @@
                             org.eclipse.jetty,
                             org.eclipse.jetty.version
                         </Private-Package>
-                        <Conditional-Package>
-                            org.apache.commons.*
-                        </Conditional-Package>
                         <Import-Package>
                             sun.misc;resolution:=optional,
                             sun.nio.ch;resolution:=optional,
@@ -193,7 +206,6 @@
                             org.osgi.service.http.context;version="[1.1,1.2)",
                             org.osgi.service.http.runtime;version="[1.1,1.2)",
                             org.osgi.service.http.runtime.dto;version="[1.1,1.2)",
-                            org.slf4j;version="[1.0,3.0)",
                             *
                         </Import-Package>
                         <DynamicImport-Package>
@@ -230,10 +242,21 @@
                             Private-Package,Conditional-Package
                         </_removeheaders>
                     </instructions>
-                    <!-- Skip Baselining due to Jetty API -->
-                    <skip>true</skip>
                 </configuration>
                 <executions>
+                    <execution>
+                        <id>bundle</id>
+                        <phase>package</phase>
+                        <goals>
+                            <goal>bundle</goal>
+                        </goals>
+                    </execution>
+                    <execution>
+                        <id>baseline</id>
+                        <goals>
+                          <goal>baseline</goal>
+                        </goals>
+                    </execution>
                     <execution>
                         <id>light-bundle</id>
                         <goals>
@@ -244,25 +267,23 @@
                             <instructions>
                                <Bundle-Name>${project.name} Light</Bundle-Name>
                                <Bundle-SymbolicName>${project.artifactId}.light</Bundle-SymbolicName>
-                               <!-- We need to override this from the base configuration -->
-                               <Conditional-Package>
-                                   foo
-                               </Conditional-Package>
                                <Export-Package>
                                     org.osgi.service.http,
                                     org.osgi.service.http.context,
                                     org.osgi.service.http.runtime,
                                     org.osgi.service.http.runtime.dto,
                                     org.osgi.service.http.whiteboard,
-                                    !org.osgi.service.servlet.*,
-				    org.apache.felix.http.jetty,
-				    org.apache.felix.http.javaxwrappers,
-				    org.apache.felix.http.jakartawrappers
+                                    org.osgi.service.servlet.context,
+                                    org.osgi.service.servlet.runtime,
+                                    org.osgi.service.servlet.runtime.dto,
+                                    org.osgi.service.servlet.whiteboard,
+                                    org.apache.felix.http.jetty,
+                                    org.apache.felix.http.javaxwrappers,
+                                    org.apache.felix.http.jakartawrappers
                                 </Export-Package>
                                 <Private-Package>
                                     org.apache.felix.http.base.*,
                                     org.apache.felix.http.jetty.*,
-                                    org.osgi.service.servlet.*
                                 </Private-Package>
                                 <Import-Package>
                                     org.osgi.service.cm;resolution:=optional;version="[1.3,2)",
@@ -306,17 +327,63 @@
                     </execution>
                 </executions>
             </plugin>
+
+            <plugin>
+                <artifactId>maven-surefire-plugin</artifactId>
+                <configuration>
+                    <redirectTestOutputToFile>true</redirectTestOutputToFile>
+                </configuration>
+            </plugin>
+            <!-- plugins for paxexam integration tests -->
+            <plugin>
+                <groupId>org.apache.maven.plugins</groupId>
+                <artifactId>maven-failsafe-plugin</artifactId>
+                <executions>
+                    <execution>
+                        <id>integration-test</id>
+                        <phase>integration-test</phase>
+                        <goals>
+                            <goal>integration-test</goal>
+                        </goals>
+                    </execution>
+                    <execution>
+                        <id>verify</id>
+                        <phase>integration-test</phase>
+                        <goals>
+                            <goal>verify</goal>
+                        </goals>
+                    </execution>
+                </executions>
+                <configuration>
+                    <redirectTestOutputToFile>true</redirectTestOutputToFile>
+                    <systemPropertyVariables>
+                        <jetty.version>${jetty.version}</jetty.version>
+                        <bundle.filename>${basedir}/target/${project.build.finalName}.jar</bundle.filename>
+                        <pax.vm.options>${pax.vm.options}</pax.vm.options>
+                    </systemPropertyVariables>
+                </configuration>
+            </plugin>
         </plugins>
     </build>
 
     <dependencies>
         <dependency>
+            <groupId>org.slf4j</groupId>
+            <artifactId>slf4j-api</artifactId>
+            <version>2.0.17</version>
+            <scope>provided</scope>
+        </dependency>
+        <dependency>
             <groupId>javax.servlet</groupId>
             <artifactId>javax.servlet-api</artifactId>
+            <version>3.1.0</version>
+            <scope>provided</scope>
         </dependency>
         <dependency>
             <groupId>org.osgi</groupId>
             <artifactId>osgi.core</artifactId>
+            <version>6.0.0</version>
+            <scope>provided</scope>
         </dependency>
         <dependency>
             <groupId>org.osgi</groupId>
@@ -392,7 +459,19 @@
             <artifactId>jetty-alpn-server</artifactId>
             <version>${jetty.version}</version>
         </dependency>
-       <dependency>
+        <dependency>
+            <groupId>org.eclipse.jetty.websocket</groupId>
+            <artifactId>websocket-jakarta-server</artifactId>
+            <version>${jetty.version}</version>
+            <optional>true</optional>
+        </dependency>
+        <dependency>
+            <groupId>org.eclipse.jetty.websocket</groupId>
+            <artifactId>websocket-jetty-server</artifactId>
+            <version>${jetty.version}</version>
+            <optional>true</optional>
+        </dependency>
+        <dependency>
             <groupId>org.osgi</groupId>
             <artifactId>org.osgi.service.servlet</artifactId>
             <version>2.0.0</version>
@@ -407,35 +486,114 @@
         <dependency>
             <groupId>org.osgi</groupId>
             <artifactId>org.osgi.service.http.whiteboard</artifactId>
-            <version>1.1.0</version>
+            <version>1.1.1</version>
             <scope>provided</scope>
         </dependency>
         <dependency>
             <groupId>org.apache.felix</groupId>
             <artifactId>org.apache.felix.http.base</artifactId>
-            <version>5.1.1-SNAPSHOT</version>
+            <version>5.1.16</version>
         </dependency>
-	<dependency>
+        <dependency>
             <groupId>org.apache.felix</groupId>
-	    <artifactId>org.apache.felix.http.wrappers</artifactId>
-	    <version>1.0.0</version>
-	</dependency>
+            <artifactId>org.apache.felix.http.wrappers</artifactId>
+            <version>1.0.8</version>
+        </dependency>
         <dependency>
             <groupId>commons-fileupload</groupId>
             <artifactId>commons-fileupload</artifactId>
-            <version>1.5</version>
+            <version>1.6.0</version>
+        </dependency>
+    	<!-- Testing -->
+        <dependency>
+            <groupId>junit</groupId>
+            <artifactId>junit</artifactId>
+            <version>4.13.2</version>
+            <scope>test</scope>
         </dependency>
         <dependency>
-            <groupId>commons-io</groupId>
-            <artifactId>commons-io</artifactId>
-            <version>2.11.0</version>
+            <groupId>org.mockito</groupId>
+            <artifactId>mockito-core</artifactId>
+            <version>5.17.0</version>
+            <scope>test</scope>
         </dependency>
-  <!-- Testing -->
         <dependency>
             <groupId>org.osgi</groupId>
             <artifactId>org.osgi.service.log</artifactId>
             <version>1.3.0</version>
             <scope>test</scope>
         </dependency>
+
+        <!-- an OSGi framework -->
+        <dependency>
+            <groupId>org.apache.felix</groupId>
+            <artifactId>org.apache.felix.framework</artifactId>
+            <version>7.0.5</version>
+            <scope>test</scope>
+        </dependency>
+        <dependency>
+            <groupId>javax.inject</groupId>
+            <artifactId>javax.inject</artifactId>
+            <version>1</version>
+            <scope>test</scope>
+        </dependency>
+
+        <!-- Pax Exam -->
+        <dependency>
+            <groupId>org.ops4j.pax.exam</groupId>
+            <artifactId>pax-exam</artifactId>
+            <version>${org.ops4j.pax.exam.version}</version>
+            <scope>test</scope>
+        </dependency>
+        <dependency>
+            <groupId>org.ops4j.pax.exam</groupId>
+            <artifactId>pax-exam-cm</artifactId>
+            <version>${org.ops4j.pax.exam.version}</version>
+            <scope>test</scope>
+        </dependency>
+        <dependency>
+            <groupId>org.ops4j.pax.exam</groupId>
+            <artifactId>pax-exam-container-forked</artifactId>
+            <version>${org.ops4j.pax.exam.version}</version>
+            <scope>test</scope>
+        </dependency>
+        <dependency>
+            <groupId>org.ops4j.pax.exam</groupId>
+            <artifactId>pax-exam-junit4</artifactId>
+            <version>${org.ops4j.pax.exam.version}</version>
+            <scope>test</scope>
+        </dependency>
+        <dependency>
+            <groupId>org.ops4j.pax.exam</groupId>
+            <artifactId>pax-exam-link-mvn</artifactId>
+            <version>${org.ops4j.pax.exam.version}</version>
+            <scope>test</scope>
+        </dependency>
+
+        <dependency>
+            <groupId>org.eclipse.jetty</groupId>
+            <artifactId>jetty-client</artifactId>
+            <version>${jetty.version}</version>
+            <scope>test</scope>
+        </dependency>
+        <dependency>
+            <groupId>org.eclipse.jetty.websocket</groupId>
+            <artifactId>websocket-jetty-client</artifactId>
+            <version>${jetty.version}</version>
+            <scope>test</scope>
+        </dependency>
+        <dependency>
+            <groupId>org.awaitility</groupId>
+            <artifactId>awaitility</artifactId>
+            <version>4.2.1</version>
+            <scope>test</scope>
+        </dependency>
+        <dependency>
+            <groupId>org.slf4j</groupId>
+            <artifactId>slf4j-simple</artifactId>
+            <version>2.0.17</version>
+            <scope>test</scope>
+        </dependency>
+
     </dependencies>
 </project>

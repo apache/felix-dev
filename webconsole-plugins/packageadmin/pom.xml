@@ -29,7 +29,7 @@
 
     <artifactId>org.apache.felix.webconsole.plugins.packageadmin</artifactId>
     <packaging>bundle</packaging>
-    <version>1.0.5-SNAPSHOT</version>
+    <version>1.1.1-SNAPSHOT</version>
 
     <name>Apache Felix Web Console Package Admin Service Plugin</name>
     <description>
@@ -39,16 +39,11 @@
     </description>
 
     <scm>
-        <connection>
-            scm:svn:http://svn.apache.org/repos/asf/felix/trunk/webconsole-plugins/packageadmin
-        </connection>
-        <developerConnection>
-            scm:svn:https://svn.apache.org/repos/asf/felix/trunk/webconsole-plugins/packageadmin
-        </developerConnection>
-        <url>
-            http://svn.apache.org/viewvc/felix/trunk/webconsole-plugins/packageadmin
-        </url>
-    </scm>
+        <connection>scm:git:https://github.com/apache/felix-dev.git</connection>
+        <developerConnection>scm:git:https://github.com/apache/felix-dev.git</developerConnection>
+	<url>https://gitbox.apache.org/repos/asf?p=felix-dev.git</url>
+      <tag>HEAD</tag>
+  </scm>
 
     <build>
 
@@ -138,13 +133,13 @@
         <dependency>
             <groupId>commons-io</groupId>
             <artifactId>commons-io</artifactId>
-            <version>2.13.0</version>
+            <version>2.14.0</version>
             <scope>provided</scope>
         </dependency>
         <dependency>
             <groupId>org.apache.felix</groupId>
             <artifactId>org.apache.felix.webconsole</artifactId>
-            <version>4.8.13-SNAPSHOT</version>
+            <version>4.9.10</version>
             <scope>provided</scope>
         </dependency>
         <dependency>

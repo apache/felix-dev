@@ -20,8 +20,8 @@ package org.apache.felix.http.webconsoleplugin.impl;
 
 import java.io.IOException;
 import java.io.PrintWriter;
-import java.io.UnsupportedEncodingException;
 import java.net.URLEncoder;
+import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
@@ -44,11 +44,13 @@ import org.osgi.service.servlet.runtime.dto.ErrorPageDTO;
 import org.osgi.service.servlet.runtime.dto.FailedErrorPageDTO;
 import org.osgi.service.servlet.runtime.dto.FailedFilterDTO;
 import org.osgi.service.servlet.runtime.dto.FailedListenerDTO;
+import org.osgi.service.servlet.runtime.dto.FailedPreprocessorDTO;
 import org.osgi.service.servlet.runtime.dto.FailedResourceDTO;
 import org.osgi.service.servlet.runtime.dto.FailedServletContextDTO;
 import org.osgi.service.servlet.runtime.dto.FailedServletDTO;
 import org.osgi.service.servlet.runtime.dto.FilterDTO;
 import org.osgi.service.servlet.runtime.dto.ListenerDTO;
+import org.osgi.service.servlet.runtime.dto.PreprocessorDTO;
 import org.osgi.service.servlet.runtime.dto.RequestInfoDTO;
 import org.osgi.service.servlet.runtime.dto.ResourceDTO;
 import org.osgi.service.servlet.runtime.dto.RuntimeDTO;
@@ -60,9 +62,12 @@ import org.owasp.encoder.Encode;
  * This is a web console plugin.
  */
 public class HttpServicePlugin extends HttpServlet {
+
     private static final String ATTR_TEST = "test";
-    private static final String ATTR_MSG = "msg";
     private static final String ATTR_SUBMIT = "resolve";
+
+    private static final String LINK_MARKER_START = "${#link:";
+    private static final String LINK_MARKER_END = "${link#}";
 
     private final BundleContext context;
 
@@ -73,77 +78,30 @@ public class HttpServicePlugin extends HttpServlet {
         this.runtime = runtime;
     }
 
-    @Override
-    protected void doPost(HttpServletRequest request,
-            HttpServletResponse response) throws ServletException, IOException {
-
-        final String test = request.getParameter(ATTR_TEST);
-        String msg = null;
-        if (test != null && test.length() > 0) {
-
-            final RequestInfoDTO dto = this.runtime.calculateRequestInfoDTO(test);
-
-            final StringBuilder sb = new StringBuilder();
-            if ( dto.servletDTO != null ) {
-                sb.append("Servlet: ");
-                sb.append(getValueAsString(dto.servletDTO.patterns));
-                sb.append(" (");
-                sb.append("service.id=");
-                sb.append(String.valueOf(dto.servletDTO.serviceId));
-                sb.append("), Filters: [");
-                boolean first = true;
-                for(final FilterDTO f : dto.filterDTOs) {
-                    if ( first ) {
-                        first = false;
-                    } else {
-                        sb.append(", ");
-                    }
-                    sb.append(f.serviceId);
-                }
-                sb.append("]");
-            } else if ( dto.resourceDTO != null ) {
-                sb.append("Resource: ");
-                sb.append(getValueAsString(dto.resourceDTO.patterns));
-                sb.append(" (");
-                sb.append("service.id=");
-                sb.append(String.valueOf(dto.resourceDTO.serviceId));
-                sb.append("), Filters: [");
-                boolean first = true;
-                for(final FilterDTO f : dto.filterDTOs) {
-                    if ( first ) {
-                        first = false;
-                    } else {
-                        sb.append(", ");
-                    }
-                    sb.append(f.serviceId);
-                }
-                sb.append("]");
-            } else {
-                sb.append("<404>");
-            }
-            msg = sb.toString();
-        }
-
-        // finally redirect
-        final String path = request.getContextPath() + request.getServletPath()
-                + request.getPathInfo();
-        final String redirectTo;
-        if (msg == null) {
-            redirectTo = path;
+    private String getTestPath(final HttpServletRequest request) {
+        String test = request.getParameter(ATTR_TEST);
+        if (test != null && !test.isEmpty()) {
+            test = test.trim();
         } else {
-            redirectTo = path + '?' + ATTR_MSG + '=' + encodeParam(msg) + '&'
-                    + ATTR_TEST + '=' + encodeParam(test);
+            test = null;
         }
-        response.sendRedirect(redirectTo);
+        return test;
     }
 
-    private String encodeParam(final String value) {
-        try {
-            return URLEncoder.encode(value, "UTF-8");
-        } catch (UnsupportedEncodingException e) {
-            // should never happen
-            return value;
-        }
+    private String getRequestPath(final HttpServletRequest request) {
+        final int pos = request.getPathInfo().indexOf("/", 1);
+        return request.getContextPath()
+            .concat(request.getServletPath())
+            .concat(pos == -1 ? request.getPathInfo() : request.getPathInfo().substring(0, pos));
+    }
+
+    @Override
+    protected void doPost(final HttpServletRequest request, final HttpServletResponse response) throws ServletException, IOException {
+        final String test = this.getTestPath(request);
+        final String path = this.getRequestPath(request);
+        final String redirectTo = test == null ? path : path.concat("?").concat(ATTR_TEST).concat("=").concat(URLEncoder.encode(test, StandardCharsets.UTF_8));
+
+        response.sendRedirect(redirectTo);
     }
 
     @Override
@@ -152,17 +110,17 @@ public class HttpServicePlugin extends HttpServlet {
 
         final PrintWriter pw = resp.getWriter();
 
-        String path = req.getContextPath() + req.getServletPath();
-        if ( req.getPathInfo() != null ) {
-            path = path + req.getPathInfo();
-        }
-        printForm(pw, req.getParameter(ATTR_TEST), req.getParameter(ATTR_MSG), path);
+        final String path = this.getRequestPath(req);
+        printForm(pw, this.getTestPath(req), path);
 
         printRuntimeDetails(pw, dto.serviceDTO);
+
+        printPreprocessorDetails(pw, dto.preprocessorDTOs);
 
         for(final ServletContextDTO ctxDto : dto.servletContextDTOs ) {
             printContextDetails(pw, ctxDto);
         }
+        printFailedPreprocessorDetails(pw, dto);
         for(final FailedServletContextDTO ctxDto : dto.failedServletContextDTOs ) {
             printFailedContextDetails(pw, ctxDto);
         }
@@ -175,7 +133,7 @@ public class HttpServicePlugin extends HttpServlet {
         pw.println("<br/>");
     }
 
-    private void printForm(final PrintWriter pw, final String value, final String msg, final String path) {
+    private void printForm(final PrintWriter pw, final String value, final String path) {
         pw.println("<table class='content' cellpadding='0' cellspacing='0' width='100%'>");
 
         separatorHtml(pw);
@@ -203,13 +161,78 @@ public class HttpServicePlugin extends HttpServlet {
         pw.print("</td>");
         pw.println("</tr>");
 
-        if (msg != null) {
-            pw.println("<tr class='content'>");
-            pw.println("<td class='content'>&nbsp;</td>");
-            pw.print("<td class='content' colspan='2'>");
-            pw.print(Encode.forHtmlContent(msg));
-            pw.println("</td>");
-            pw.println("</tr>");
+        if (value != null) {
+            final RequestInfoDTO dto = this.runtime.calculateRequestInfoDTO(value);
+            if (dto.resourceDTO == null && dto.servletDTO == null) {
+                pw.println("<tr class='content'>");
+                pw.println("<td class='content'>Result</td>");
+                pw.print("<td class='content' colspan='2'>");
+                pw.print("<404>");
+                pw.println("</td>");
+                pw.println("</tr>");
+            } else {
+                boolean odd = false;
+                odd = this.printRow(pw, odd, "", "", "");
+
+                final StringBuilder sbc = new StringBuilder();
+                final ServiceReference<?> refc = this.getServiceReference(dto.servletContextId);
+                sbc.append("${service.id} : ");
+                appendServiceLink(sbc, dto.servletContextId);
+                sbc.append("\n");
+                appendServiceRanking(sbc, refc);
+                if ( refc != null ) {
+                    sbc.append("${bundle} : ");
+                    appendBundleLink(sbc, refc.getBundle().getBundleId(), refc.getBundle().getSymbolicName());
+                    sbc.append("\n");
+                }
+
+                odd = this.printRow(pw, odd, "${Servlet Context}", sbc.toString(), "");
+
+                for(final FilterDTO f : dto.filterDTOs) {
+                    final StringBuilder sb = new StringBuilder();
+                    final ServiceReference<?> ref = this.getServiceReference(f.serviceId);
+                    sb.append("${service.id} : ");
+                    appendServiceLink(sb, f.serviceId);
+                    sb.append("\n");
+                    appendServiceRanking(sb, ref);
+                    if ( ref != null ) {
+                        sb.append("${bundle} : ");
+                        appendBundleLink(sb, ref.getBundle().getBundleId(), ref.getBundle().getSymbolicName());
+                        sb.append("\n");
+                    }
+
+                    odd = this.printRow(pw, odd, "${Filter}", sb.toString(), "");
+                }
+                if ( dto.servletDTO != null ) {
+                    final StringBuilder sb = new StringBuilder();
+                    final ServiceReference<?> ref = this.getServiceReference(dto.servletDTO.serviceId);
+                    sb.append("${service.id} : ");
+                    appendServiceLink(sb, dto.servletDTO.serviceId);
+                    sb.append("\n");
+                    appendServiceRanking(sb, ref);
+                    if ( ref != null ) {
+                        sb.append("${bundle} : ");
+                        appendBundleLink(sb, ref.getBundle().getBundleId(), ref.getBundle().getSymbolicName());
+                        sb.append("\n");
+                    }
+
+                    odd = this.printRow(pw, odd, "${Servlet}", sb.toString(), "");
+                } else {
+                    final StringBuilder sb = new StringBuilder();
+                    final ServiceReference<?> ref = this.getServiceReference(dto.resourceDTO.serviceId);
+                    sb.append("${service.id} : ");
+                    appendServiceLink(sb, dto.resourceDTO.serviceId);
+                    sb.append("\n");
+                    appendServiceRanking(sb, ref);
+                    if ( ref != null ) {
+                        sb.append("${bundle} : ");
+                        appendBundleLink(sb, ref.getBundle().getBundleId(), ref.getBundle().getSymbolicName());
+                        sb.append("\n");
+                    }
+
+                    odd = this.printRow(pw, odd, "${Resource}", sb.toString(), "");
+                }
+            }
         }
         pw.println("</table>");
     }
@@ -274,6 +297,64 @@ public class HttpServicePlugin extends HttpServlet {
         pw.println("<br/>");
     }
 
+    private void appendServiceLink(final StringBuilder sb, final long serviceId) {
+        final String val = String.valueOf(serviceId);
+        if (serviceId < 0) {
+            sb.append(val);
+            return;
+        }
+        sb.append(LINK_MARKER_START);
+        sb.append('S');
+        sb.append(val);
+        sb.append('}');
+        sb.append(val);
+        sb.append(LINK_MARKER_END);
+    }
+
+    private String getServiceLink(final long serviceId) {
+        final StringBuilder sb = new StringBuilder();
+        appendServiceLink(sb, serviceId);
+        return sb.toString();
+    }
+
+    private void appendBundleLink(final StringBuilder sb, final long bundleId, final String text) {
+        final String val = String.valueOf(bundleId);
+        sb.append(LINK_MARKER_START);
+        sb.append('B');
+        sb.append(val);
+        sb.append('}');
+        sb.append(text);
+        sb.append(LINK_MARKER_END);
+    }
+
+    private void printPreprocessorDetails(final PrintWriter pw, final PreprocessorDTO[] dtos) {
+        if (dtos.length == 0) {
+            return;
+        }
+        pw.println("<p class=\"statline ui-state-highlight\">${Preprocessor Services}</p>");
+        pw.println("<table class=\"nicetable\">");
+        pw.println("<thead><tr>");
+        pw.println("<th class=\"header\">${Preprocessor}</th>");
+        pw.println("</tr></thead>");
+        boolean odd = true;
+        for(final PreprocessorDTO pp : dtos) {
+            final StringBuilder sb = new StringBuilder();
+            final ServiceReference<?> ref = this.getServiceReference(pp.serviceId);
+            sb.append("${service.id} : ");
+            appendServiceLink(sb, pp.serviceId);
+            sb.append("\n");
+            appendServiceRanking(sb, ref);
+            if ( ref != null ) {
+                sb.append("${bundle} : ");
+                appendBundleLink(sb, ref.getBundle().getBundleId(), ref.getBundle().getSymbolicName());
+                sb.append("\n");
+            }
+            odd = printRow(pw, odd, sb.toString());
+        }
+        pw.println("</table>");
+        pw.println("<br/>");
+    }
+
     private boolean printRow(final PrintWriter pw, final boolean odd, final String...columns) {
         pw.print("<tr class=\"");
         if ( odd ) pw.print("odd"); else pw.print("even");
@@ -284,13 +365,20 @@ public class HttpServicePlugin extends HttpServlet {
             if ( val != null ) {
                 String text = Encode.forHtmlContent(val).replace("\n", "<br/>");
                 int pos;
-                while ( (pos = text.indexOf("${#link:")) != -1) {
+                while ( (pos = text.indexOf(LINK_MARKER_START)) != -1) {
                     final int endPos = text.indexOf("}", pos);
-                    final int bundleId = Integer.valueOf(text.substring(pos + 8, endPos));
-                    final int tokenEndPos = text.indexOf("${link#}", pos);
-
-                    text = text.substring(0, pos) + "<a href=\"${appRoot}/bundles/" + String.valueOf(bundleId) + "\">" +
-                           text.substring(endPos + 1, tokenEndPos) + "</a>" + text.substring(tokenEndPos + 8);
+                    final char type = text.charAt(pos + LINK_MARKER_START.length());
+                    final int id = Integer.valueOf(text.substring(pos + LINK_MARKER_START.length() + 1, endPos));
+                    final int tokenEndPos = text.indexOf(LINK_MARKER_END, pos);
+                    final String linkTest = text.substring(endPos + 1, tokenEndPos);
+                    text = text.substring(0, pos)
+                               .concat("<a href=\"${appRoot}/")
+                               .concat(type == 'S' ? "services/" : "bundles/")
+                               .concat(String.valueOf(id))
+                               .concat("\">")
+                               .concat(linkTest)
+                               .concat("</a>")
+                               .concat(text.substring(tokenEndPos + LINK_MARKER_END.length()));
                 }
                 pw.print(text);
             }
@@ -334,7 +422,7 @@ public class HttpServicePlugin extends HttpServlet {
         pw.println("<th class=\"header\">${Value)}</th>");
         pw.println("</tr></thead>");
         odd = printRow(pw, odd, "${Path}", getContextPath(dto.contextPath));
-        odd = printRow(pw, odd, "${service.id}", String.valueOf(dto.serviceId));
+        odd = printRow(pw, odd, "${service.id}", getServiceLink(dto.serviceId));
         odd = printServiceRankingRow(pw, dto.serviceId, odd);
         pw.println("</table>");
 
@@ -362,7 +450,7 @@ public class HttpServicePlugin extends HttpServlet {
         odd = printRow(pw, odd, "${Path}",
                 dto.contextPath == null ? dto.contextPath : getContextPath(dto.contextPath));
         odd = printRow(pw, odd, "${reason}", getErrorText(dto.failureReason));
-        odd = printRow(pw, odd, "${service.id}", String.valueOf(dto.serviceId));
+        odd = printRow(pw, odd, "${service.id}", getServiceLink(dto.serviceId));
         pw.println("</table>");
     }
 
@@ -396,17 +484,16 @@ public class HttpServicePlugin extends HttpServlet {
         for (final FilterDTO filter : dto.filterDTOs) {
             final ServiceReference<?> ref = this.getServiceReference(filter.serviceId);
             final StringBuilder sb = new StringBuilder();
-            sb.append("${service.id} : ").append(String.valueOf(filter.serviceId)).append("\n");
+            sb.append("${service.id} : ");
+            appendServiceLink(sb, filter.serviceId);
+            sb.append("\n");
             appendServiceRanking(sb, ref);
             sb.append("${async} : ").append(String.valueOf(filter.asyncSupported)).append("\n");
             sb.append("${dispatcher} : ").append(getValueAsString(filter.dispatcher)).append("\n");
             if ( ref != null ) {
                 sb.append("${bundle} : ");
-                sb.append("${#link:");
-                sb.append(ref.getBundle().getBundleId());
-                sb.append("}");
-                sb.append(ref.getBundle().getSymbolicName());
-                sb.append("${link#}\n");
+                appendBundleLink(sb, ref.getBundle().getBundleId(), ref.getBundle().getSymbolicName());
+                sb.append("\n");
             }
 
             final List<String> patterns = new ArrayList<>();
@@ -437,6 +524,38 @@ public class HttpServicePlugin extends HttpServlet {
         default: return "unknown";
         }
     }
+
+    private void printFailedPreprocessorDetails(final PrintWriter pw, final RuntimeDTO dto) {
+        if ( dto.failedPreprocessorDTOs.length == 0 ) {
+            return;
+        }
+        pw.print("<p class=\"statline ui-state-highlight\">${Failed Preprocessor Services}</p>");
+
+        pw.println("<table class=\"nicetable\">");
+        pw.println("<thead><tr>");
+        pw.println("<th class=\"header\">${Preprocessor}</th>");
+        pw.println("<th class=\"header\">${Info}</th>");
+        pw.println("</tr></thead>");
+
+        boolean odd = true;
+        for (final FailedPreprocessorDTO pp : dto.failedPreprocessorDTOs) {
+            final String reason = getErrorText(pp.failureReason);
+            final StringBuilder sb = new StringBuilder();
+            final ServiceReference<?> ref = this.getServiceReference(pp.serviceId);
+            sb.append("${service.id} : ");
+            appendServiceLink(sb, pp.serviceId);
+            sb.append("\n");
+            appendServiceRanking(sb, ref);
+            if ( ref != null ) {
+                sb.append("${bundle} : ");
+                appendBundleLink(sb, ref.getBundle().getBundleId(), ref.getBundle().getSymbolicName());
+                sb.append("\n");
+            }
+            odd = printRow(pw, odd, sb.toString(), reason);
+        }
+        pw.println("</table>");
+    }
+
     private void printFailedFilterDetails(final PrintWriter pw, final RuntimeDTO dto) {
         if ( dto.failedFilterDTOs.length == 0 ) {
             return;
@@ -455,17 +574,16 @@ public class HttpServicePlugin extends HttpServlet {
             final StringBuilder sb = new StringBuilder();
             sb.append("${reason} : ").append(getErrorText(filter.failureReason)).append("\n");
             final ServiceReference<?> ref = this.getServiceReference(filter.serviceId);
-            sb.append("${service.id} : ").append(String.valueOf(filter.serviceId)).append("\n");
+            sb.append("${service.id} : ");
+            appendServiceLink(sb, filter.serviceId);
+            sb.append("\n");
             appendServiceRanking(sb, ref);
             sb.append("${async} : ").append(String.valueOf(filter.asyncSupported)).append("\n");
             sb.append("${dispatcher} : ").append(getValueAsString(filter.dispatcher)).append("\n");
             if ( ref != null ) {
                 sb.append("${bundle} : ");
-                sb.append("${#link:");
-                sb.append(ref.getBundle().getBundleId());
-                sb.append("}");
-                sb.append(ref.getBundle().getSymbolicName());
-                sb.append("${link#}\n");
+                appendBundleLink(sb, ref.getBundle().getBundleId(), ref.getBundle().getSymbolicName());
+                sb.append("\n");
             }
 
             final List<String> patterns = new ArrayList<>();
@@ -517,16 +635,15 @@ public class HttpServicePlugin extends HttpServlet {
         for (final ServletDTO servlet : dto.servletDTOs) {
             final StringBuilder sb = new StringBuilder();
             final ServiceReference<?> ref = this.getServiceReference(servlet.serviceId);
-            sb.append("${service.id} : ").append(String.valueOf(servlet.serviceId)).append("\n");
+            sb.append("${service.id} : ");
+            appendServiceLink(sb, servlet.serviceId);
+            sb.append("\n");
             appendServiceRanking(sb, ref);
             sb.append("${async} : ").append(String.valueOf(servlet.asyncSupported)).append("\n");
             if ( ref != null ) {
                 sb.append("${bundle} : ");
-                sb.append("${#link:");
-                sb.append(ref.getBundle().getBundleId());
-                sb.append("}");
-                sb.append(ref.getBundle().getSymbolicName());
-                sb.append("${link#}\n");
+                appendBundleLink(sb, ref.getBundle().getBundleId(), ref.getBundle().getSymbolicName());
+                sb.append("\n");
             }
 
             final StringBuilder psb = new StringBuilder();
@@ -556,16 +673,15 @@ public class HttpServicePlugin extends HttpServlet {
             final StringBuilder sb = new StringBuilder();
             sb.append("${reason} : ").append(getErrorText(servlet.failureReason)).append("\n");
             final ServiceReference<?> ref = this.getServiceReference(servlet.serviceId);
-            sb.append("${service.id} : ").append(String.valueOf(servlet.serviceId)).append("\n");
+            sb.append("${service.id} : ");
+            appendServiceLink(sb, servlet.serviceId);
+            sb.append("\n");
             appendServiceRanking(sb, ref);
             sb.append("${async} : ").append(String.valueOf(servlet.asyncSupported)).append("\n");
             if ( ref != null ) {
                 sb.append("${bundle} : ");
-                sb.append("${#link:");
-                sb.append(ref.getBundle().getBundleId());
-                sb.append("}");
-                sb.append(ref.getBundle().getSymbolicName());
-                sb.append("${link#}\n");
+                appendBundleLink(sb, ref.getBundle().getBundleId(), ref.getBundle().getSymbolicName());
+                sb.append("\n");
             }
 
             final StringBuilder psb = new StringBuilder();
@@ -596,15 +712,14 @@ public class HttpServicePlugin extends HttpServlet {
         for (final ResourceDTO rsrc : dto.resourceDTOs) {
             final StringBuilder sb = new StringBuilder();
             final ServiceReference<?> ref = this.getServiceReference(rsrc.serviceId);
-            sb.append("${service.id} : ").append(String.valueOf(rsrc.serviceId)).append("\n");
+            sb.append("${service.id} : ");
+            appendServiceLink(sb, rsrc.serviceId);
+            sb.append("\n");
             appendServiceRanking(sb, ref);
             if ( ref != null ) {
                 sb.append("${bundle} : ");
-                sb.append("${#link:");
-                sb.append(ref.getBundle().getBundleId());
-                sb.append("}");
-                sb.append(ref.getBundle().getSymbolicName());
-                sb.append("${link#}\n");
+                appendBundleLink(sb, ref.getBundle().getBundleId(), ref.getBundle().getSymbolicName());
+                sb.append("\n");
             }
 
             final StringBuilder psb = new StringBuilder();
@@ -634,15 +749,14 @@ public class HttpServicePlugin extends HttpServlet {
             final StringBuilder sb = new StringBuilder();
             sb.append("${reason} : ").append(getErrorText(rsrc.failureReason)).append("\n");
             final ServiceReference<?> ref = this.getServiceReference(rsrc.serviceId);
-            sb.append("${service.id} : ").append(String.valueOf(rsrc.serviceId)).append("\n");
+            sb.append("${service.id} : ");
+            appendServiceLink(sb, rsrc.serviceId);
+            sb.append("\n");
             appendServiceRanking(sb, ref);
             if ( ref != null ) {
                 sb.append("${bundle} : ");
-                sb.append("${#link:");
-                sb.append(ref.getBundle().getBundleId());
-                sb.append("}");
-                sb.append(ref.getBundle().getSymbolicName());
-                sb.append("${link#}\n");
+                appendBundleLink(sb, ref.getBundle().getBundleId(), ref.getBundle().getSymbolicName());
+                sb.append("\n");
             }
 
             final StringBuilder psb = new StringBuilder();
@@ -673,16 +787,15 @@ public class HttpServicePlugin extends HttpServlet {
         for (final ErrorPageDTO ep : dto.errorPageDTOs) {
             final StringBuilder sb = new StringBuilder();
             final ServiceReference<?> ref = this.getServiceReference(ep.serviceId);
-            sb.append("${service.id} : ").append(String.valueOf(ep.serviceId)).append("\n");
+            sb.append("${service.id} : ");
+            appendServiceLink(sb, ep.serviceId);
+            sb.append("\n");
             appendServiceRanking(sb, ref);
             sb.append("${async} : ").append(String.valueOf(ep.asyncSupported)).append("\n");
             if ( ref != null ) {
                 sb.append("${bundle} : ");
-                sb.append("${#link:");
-                sb.append(ref.getBundle().getBundleId());
-                sb.append("}");
-                sb.append(ref.getBundle().getSymbolicName());
-                sb.append("${link#}\n");
+                appendBundleLink(sb, ref.getBundle().getBundleId(), ref.getBundle().getSymbolicName());
+                sb.append("\n");
             }
 
             final StringBuilder psb = new StringBuilder();
@@ -715,16 +828,15 @@ public class HttpServicePlugin extends HttpServlet {
             final StringBuilder sb = new StringBuilder();
             sb.append("${reason} : ").append(getErrorText(ep.failureReason)).append("\n");
             final ServiceReference<?> ref = this.getServiceReference(ep.serviceId);
-            sb.append("${service.id} : ").append(String.valueOf(ep.serviceId)).append("\n");
+            sb.append("${service.id} : ");
+            appendServiceLink(sb, ep.serviceId);
+            sb.append("\n");
             appendServiceRanking(sb, ref);
             sb.append("${async} : ").append(String.valueOf(ep.asyncSupported)).append("\n");
             if ( ref != null ) {
                 sb.append("${bundle} : ");
-                sb.append("${#link:");
-                sb.append(ref.getBundle().getBundleId());
-                sb.append("}");
-                sb.append(ref.getBundle().getSymbolicName());
-                sb.append("${link#}\n");
+                appendBundleLink(sb, ref.getBundle().getBundleId(), ref.getBundle().getSymbolicName());
+                sb.append("\n");
             }
 
             final StringBuilder psb = new StringBuilder();
@@ -757,15 +869,14 @@ public class HttpServicePlugin extends HttpServlet {
         for (final ListenerDTO ep : dto.listenerDTOs) {
             final StringBuilder sb = new StringBuilder();
             final ServiceReference<?> ref = this.getServiceReference(ep.serviceId);
-            sb.append("${service.id} : ").append(String.valueOf(ep.serviceId)).append("\n");
+            sb.append("${service.id} : ");
+            appendServiceLink(sb, ep.serviceId);
+            sb.append("\n");
             appendServiceRanking(sb, ref);
             if ( ref != null ) {
                 sb.append("${bundle} : ");
-                sb.append("${#link:");
-                sb.append(ref.getBundle().getBundleId());
-                sb.append("}");
-                sb.append(ref.getBundle().getSymbolicName());
-                sb.append("${link#}\n");
+                appendBundleLink(sb, ref.getBundle().getBundleId(), ref.getBundle().getSymbolicName());
+                sb.append("\n");
             }
             final StringBuilder tsb = new StringBuilder();
             for(final String t : ep.types) {
@@ -793,15 +904,14 @@ public class HttpServicePlugin extends HttpServlet {
             final StringBuilder sb = new StringBuilder();
             sb.append("${reason} : ").append(getErrorText(ep.failureReason)).append("\n");
             final ServiceReference<?> ref = this.getServiceReference(ep.serviceId);
-            sb.append("${service.id} : ").append(String.valueOf(ep.serviceId)).append("\n");
+            sb.append("${service.id} : ");
+            appendServiceLink(sb, ep.serviceId);
+            sb.append("\n");
             appendServiceRanking(sb, ref);
             if ( ref != null ) {
                 sb.append("${bundle} : ");
-                sb.append("${#link:");
-                sb.append(ref.getBundle().getBundleId());
-                sb.append("}");
-                sb.append(ref.getBundle().getSymbolicName());
-                sb.append("${link#}\n");
+                appendBundleLink(sb, ref.getBundle().getBundleId(), ref.getBundle().getSymbolicName());
+                sb.append("\n");
             }
             final StringBuilder tsb = new StringBuilder();
             for(final String t : ep.types) {
