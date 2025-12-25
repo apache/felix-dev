@@ -7,6 +7,12 @@ Changes in 2.2.15
       - See https://docs.osgi.org/specification/osgi.cmpn/8.0.0/service.component.html#service.component-satisfying.condition
       - Added comprehensive documentation in README.md
       - Updated code comments to reflect specification compliance
+    * Implement Retention Policy element (OSGi R8)
+      - Added support for the <retention-policy> element from OSGi R8 specification
+      - Controls whether component instances are retained when use count drops to zero
+      - Values: "retain" (keep instances) or "discard" (dispose instances, default)
+      - Maps to existing delayedKeepInstances functionality for backward compatibility
+      - See https://docs.osgi.org/specification/osgi.cmpn/8.0.0/service.component.html#service.component-retention.policy
 
 Changes in 2.2.14
 -----------------

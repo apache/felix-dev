@@ -73,6 +73,12 @@ public class XmlHandler extends DefaultHandler
 
     private StringBuilder propertyBuilder;
 
+    // Flag to indicate we're parsing retention-policy element
+    private boolean m_parsingRetentionPolicy = false;
+
+    // StringBuilder for retention-policy element content
+    private StringBuilder m_retentionPolicyBuilder;
+
     /** Flag for detecting the first element. */
     protected boolean firstElement = true;
 
@@ -419,6 +425,14 @@ public class XmlHandler extends DefaultHandler
                     m_currentComponent.addDependency( ref );
                 }
 
+                // 112.4.x Retention Policy element (OSGi R8)
+                // Controls whether component instances are kept when use count drops to zero
+                else if ( localName.equals( XmlConstants.EL_RETENTION_POLICY ) )
+                {
+                    m_parsingRetentionPolicy = true;
+                    m_retentionPolicyBuilder = new StringBuilder();
+                }
+
                 // unexpected element (except the root element "components"
                 // used by the Maven SCR Plugin, which is just silently ignored)
                 else if ( !localName.equals( XmlConstants.EL_COMPONENTS ) )
@@ -482,6 +496,32 @@ public class XmlHandler extends DefaultHandler
                 }
                 m_pendingFactoryProperty = null;
             }
+            else if ( localName.equals( XmlConstants.EL_RETENTION_POLICY ) && m_parsingRetentionPolicy )
+            {
+                if (m_retentionPolicyBuilder != null)
+                {
+                    String retentionPolicy = m_retentionPolicyBuilder.toString().trim();
+                    // Map OSGi R8 retention-policy values to the existing delayedKeepInstances field
+                    // "retain" means keep instances when use count drops to zero
+                    // "discard" means dispose instances when use count drops to zero (default)
+                    if (XmlConstants.RETENTION_POLICY_RETAIN.equals(retentionPolicy))
+                    {
+                        m_currentComponent.setDelayedKeepInstances(true);
+                    }
+                    else if (XmlConstants.RETENTION_POLICY_DISCARD.equals(retentionPolicy))
+                    {
+                        m_currentComponent.setDelayedKeepInstances(false);
+                    }
+                    else
+                    {
+                        m_logger.log(Level.WARN,
+                            "Invalid retention-policy value ''{0}'' (bundle {1}). Expected ''retain'' or ''discard''.", null,
+                                retentionPolicy, m_bundle.getLocation());
+                    }
+                    m_retentionPolicyBuilder = null;
+                }
+                m_parsingRetentionPolicy = false;
+            }
         }
         // Add implicit satisfying condition reference as per OSGi R8 Declarative Services specification
         // (see https://github.com/osgi/osgi/pull/875 and https://github.com/osgi/osgi/issues/720).
@@ -533,6 +573,14 @@ public class XmlHandler extends DefaultHandler
                 propertyBuilder = new StringBuilder();
             }
             propertyBuilder.append(String.valueOf( ch, start, length));
+        }
+        // Capture retention-policy element content
+        else if ( m_parsingRetentionPolicy )
+        {
+            if (m_retentionPolicyBuilder == null) {
+                m_retentionPolicyBuilder = new StringBuilder();
+            }
+            m_retentionPolicyBuilder.append(String.valueOf( ch, start, length));
         }
     }
 
