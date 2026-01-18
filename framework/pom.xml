@@ -45,8 +45,13 @@
         <groupId>org.apache.maven.plugins</groupId>
         <artifactId>maven-surefire-plugin</artifactId>
         <configuration>
+          <!-- assumes a new-ish JDK, 17 or newer should work - see profiles at the bottom -->
           <argLine>
             -Djava.security.manager=allow
+            -XX:+EnableDynamicAgentLoading
+            --add-opens java.base/java.net=ALL-UNNAMED
+            --add-opens java.base/jdk.internal.loader=ALL-UNNAMED
+            --add-opens java.base/java.security=ALL-UNNAMED
           </argLine>
         </configuration>
       </plugin>
@@ -119,7 +124,7 @@
             <Export-Package>
                 org.osgi.framework.*;-split-package:=first,
                 org.osgi.resource;-split-package:=first,
-                org.osgi.resource.dto;-split-package:=first,                
+                org.osgi.resource.dto;-split-package:=first,
                 org.osgi.service.packageadmin;-split-package:=first,
                 org.osgi.service.startlevel;-split-package:=first,
                 org.osgi.service.url;-split-package:=first,
@@ -221,8 +226,14 @@
     </dependency>
     <dependency>
         <groupId>org.ow2.asm</groupId>
-        <artifactId>asm-all</artifactId>
-        <version>5.2</version>
+        <artifactId>asm</artifactId>
+        <version>9.9</version>
+        <scope>test</scope>
+    </dependency>
+    <dependency>
+        <groupId>org.ow2.asm</groupId>
+        <artifactId>asm-tree</artifactId>
+        <version>9.9</version>
         <scope>test</scope>
     </dependency>
     <dependency>
@@ -249,4 +260,77 @@
           <version>1.9</version>
       </dependency>
   </dependencies>
+
+  <profiles>
+    <!--
+        if your JDK is ancient, the unit tests won't even compile,
+        and javac won't have the "release" option.
+    -->
+    <profile>
+      <id>ancient-jdk</id>
+      <activation>
+        <jdk>[8,11)</jdk>
+      </activation>
+      <build>
+        <plugins>
+          <plugin>
+            <groupId>org.apache.maven.plugins</groupId>
+            <artifactId>maven-surefire-plugin</artifactId>
+            <configuration>
+              <skipTests>true</skipTests>
+            </configuration>
+          </plugin>
+          <plugin>
+            <groupId>org.apache.maven.plugins</groupId>
+            <artifactId>maven-compiler-plugin</artifactId>
+            <executions>
+              <execution>
+                <id>default-testCompile</id>
+                <phase>test-compile</phase>
+                <goals>
+                  <goal>testCompile</goal>
+                </goals>
+                <configuration>
+                  <skip>true</skip>
+                </configuration>
+              </execution>
+            </executions>
+            <configuration>
+              <source>${felix.java.version}</source>
+              <target>${felix.java.version}</target>
+              <release combine.self="override"/>
+            </configuration>
+          </plugin>
+        </plugins>
+      </build>
+    </profile>
+
+    <profile>
+      <!--
+	 if your JDK is old, using -Djava.security.manager=allow
+         will assume "allow" is the name of a security manager class
+      -->
+      <id>old-jdk</id>
+      <activation>
+        <jdk>[11,17)</jdk>
+      </activation>
+      <build>
+        <plugins>
+          <plugin>
+            <groupId>org.apache.maven.plugins</groupId>
+            <artifactId>maven-surefire-plugin</artifactId>
+            <configuration>
+              <argLine>
+                -XX:+EnableDynamicAgentLoading
+                --add-opens java.base/java.net=ALL-UNNAMED
+                --add-opens java.base/jdk.internal.loader=ALL-UNNAMED
+                --add-opens java.base/java.security=ALL-UNNAMED
+              </argLine>
+            </configuration>
+          </plugin>
+        </plugins>
+      </build>
+    </profile>
+  </profiles>
+
 </project>
