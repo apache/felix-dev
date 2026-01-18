@@ -331,6 +331,34 @@
         </plugins>
       </build>
     </profile>
+
+    <profile>
+      <!--
+          if your JDK is too new, using -Djava.security.manager=allow
+          is not possible
+      -->
+      <id>newer-jdk</id>
+      <activation>
+        <jdk>[25,)</jdk>
+      </activation>
+      <build>
+        <plugins>
+          <plugin>
+            <groupId>org.apache.maven.plugins</groupId>
+            <artifactId>maven-surefire-plugin</artifactId>
+            <configuration>
+              <argLine>
+                -XX:+EnableDynamicAgentLoading
+                --add-opens java.base/java.net=ALL-UNNAMED
+                --add-opens java.base/jdk.internal.loader=ALL-UNNAMED
+                --add-opens java.base/java.security=ALL-UNNAMED
+              </argLine>
+            </configuration>
+          </plugin>
+        </plugins>
+      </build>
+    </profile>
+
   </profiles>
 
 </project>
