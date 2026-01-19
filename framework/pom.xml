@@ -269,7 +269,7 @@
     <profile>
       <id>ancient-jdk</id>
       <activation>
-        <jdk>[8,11)</jdk>
+        <jdk>[1,11)</jdk>
       </activation>
       <build>
         <plugins>
