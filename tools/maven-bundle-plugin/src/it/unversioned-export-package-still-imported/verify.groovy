@@ -20,11 +20,15 @@ String manifest = new File( basedir, "target/classes/META-INF/MANIFEST.MF" ).tex
 assert !manifest.isEmpty()
 
 manifest.eachLine() { line ->
-    if (line.contains("Tool") && !line.contains("7.1.0")) {
-        throw new Exception("Wrong bnd version used");
+    if (line.contains("Import-Package") && !line.contains("org.apache.felix.test1")) {
+        // See https://github.com/bndtools/bnd/pull/6270
+        // bnd 7.1.0 by default would not add this to the Import-Package, as the version range is not specified
+        // the maven-bundle-plugin doesn't have this issue, as a default version is added to the Export-Package statement
+        // automatically if missing
+        throw new Exception("Unversioned Export-Package statements should also be added to Import-Package statements, as maven-bundle-plugin adds a default version (1.0.0)");
     }
-    if (line.contains("Embedded-Artifacts") && !line.contains("jersey-server-3.1.7.jar")) {
-        throw new Exception("The multi release jar is not properly embedded");
+    if (line.contains("Import-Package") && !line.contains("org.apache.felix.test2;version=")) {
+        throw new Exception("Versioned Export-Package should be part of the Import-Package, as it contains an explicit version range");
     }
 }
 

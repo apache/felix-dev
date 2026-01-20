@@ -1,3 +1,8 @@
+Changes from 6.0.0 to 6.1.0
+---------------------------
+* Improvement
+    * FELIX-6741 Upgrade dependencies for maven-bundle-plugin (bnd 7.1.0 among other updates). See https://github.com/bndtools/bnd/wiki/Changes-in-7.1.0
+
 Changes from 5.1.9 to 6.0.0
 ---------------------------
 * Improvement
