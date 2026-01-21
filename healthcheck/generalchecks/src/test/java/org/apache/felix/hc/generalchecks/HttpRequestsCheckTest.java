@@ -36,7 +36,12 @@ import org.apache.felix.hc.api.ResultLog.Entry;
 import org.apache.felix.hc.generalchecks.HttpRequestsCheck.RequestSpec;
 import org.apache.felix.hc.generalchecks.HttpRequestsCheck.ResponseCheck.ResponseCheckResult;
 import org.junit.Test;
+import org.mockito.ArgumentCaptor;
 import org.mockito.Mockito;
+import org.osgi.framework.BundleContext;
+import org.osgi.framework.ServiceEvent;
+import org.osgi.framework.ServiceListener;
+import org.osgi.framework.ServiceReference;
 
 public class HttpRequestsCheckTest {
 
@@ -173,6 +178,94 @@ public class HttpRequestsCheckTest {
         HttpRequestsCheck.RequestSpec requestSpec = new HttpRequestsCheck.RequestSpec("/page.html");
         String[] args = requestSpec.splitArgsRespectingQuotes("normal1 \"one two three\" normal2 'one two three' -p --words \"w1 w2 w3\"");
         assertArrayEquals(new String[] {"normal1", "\"one two three\"", "normal2", "'one two three'", "-p", "--words", "\"w1 w2 w3\""}, args);
+    }
+
+    @Test
+    public void testDefaultBaseUrlUpdatesOnServiceEvent() throws Exception {
+        BundleContext bundleContext = Mockito.mock(BundleContext.class);
+        ServiceReference httpRef = Mockito.mock(ServiceReference.class);
+
+        Mockito.when(bundleContext.getServiceReference("org.osgi.service.http.HttpService"))
+            .thenReturn((ServiceReference) null, httpRef);
+        Mockito.when(bundleContext.getServiceReference("org.osgi.service.http.runtime.HttpServiceRuntime")).thenReturn(null);
+        Mockito.when(bundleContext.getServiceReference("org.osgi.service.servlet.runtime.HttpServiceRuntime")).thenReturn(null);
+        Mockito.when(httpRef.getProperty("org.apache.felix.http.enable")).thenReturn(true);
+        Mockito.when(httpRef.getProperty("org.osgi.service.http.port")).thenReturn("9090");
+
+        ArgumentCaptor<ServiceListener> listenerCaptor = ArgumentCaptor.forClass(ServiceListener.class);
+        Mockito.doNothing().when(bundleContext).addServiceListener(listenerCaptor.capture(), anyString());
+
+        HttpRequestsCheck httpRequestsCheck = new HttpRequestsCheck(createConfig(), bundleContext);
+
+        assertNull(httpRequestsCheck.getDefaultBaseUrl());
+
+        listenerCaptor.getValue().serviceChanged(new ServiceEvent(ServiceEvent.REGISTERED, httpRef));
+
+        assertEquals("http://localhost:9090", httpRequestsCheck.getDefaultBaseUrl());
+    }
+
+    @Test
+    public void testRelativeUrlWithoutHttpServiceReturnsUnavailableLog() throws Exception {
+        HttpRequestsCheck.RequestSpec requestSpec = new HttpRequestsCheck.RequestSpec("/path/to/page.html");
+        FormattingResultLog resultLog = requestSpec.check(null, 1000, 1000, Result.Status.WARN, false);
+
+        Iterator<Entry> entryIt = resultLog.iterator();
+        Entry lastEntry = null;
+        while(entryIt.hasNext()) {
+            lastEntry = entryIt.next();
+        }
+
+        assertEquals(Result.Status.TEMPORARILY_UNAVAILABLE, lastEntry.getStatus());
+        assertThat(lastEntry.getMessage(), containsString("HttpService is not available"));
+    }
+
+    private HttpRequestsCheck.Config createConfig() {
+        return new HttpRequestsCheck.Config() {
+            @Override
+            public String hc_name() {
+                return HttpRequestsCheck.HC_NAME;
+            }
+
+            @Override
+            public String[] hc_tags() {
+                return new String[0];
+            }
+
+            @Override
+            public String[] requests() {
+                return new String[] { "/path/to/page.html" };
+            }
+
+            @Override
+            public int connectTimeoutInMs() {
+                return 7000;
+            }
+
+            @Override
+            public int readTimeoutInMs() {
+                return 7000;
+            }
+
+            @Override
+            public Result.Status statusForFailedContraint() {
+                return Result.Status.WARN;
+            }
+
+            @Override
+            public boolean runInParallel() {
+                return false;
+            }
+
+            @Override
+            public String webconsole_configurationFactory_nameHint() {
+                return "{hc.name}: {requests}";
+            }
+
+            @Override
+            public Class<? extends java.lang.annotation.Annotation> annotationType() {
+                return HttpRequestsCheck.Config.class;
+            }
+        };
     }
 
 

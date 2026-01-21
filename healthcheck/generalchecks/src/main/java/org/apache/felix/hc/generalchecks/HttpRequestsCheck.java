@@ -35,6 +35,7 @@ import java.net.URL;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Base64;
+import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -58,10 +59,15 @@ import org.apache.felix.hc.core.impl.util.lang.StringUtils;
 import org.apache.felix.hc.generalchecks.util.SimpleConstraintChecker;
 import org.apache.felix.utils.json.JSONParser;
 import org.osgi.framework.BundleContext;
+import org.osgi.framework.Constants;
+import org.osgi.framework.InvalidSyntaxException;
 import org.osgi.framework.ServiceReference;
+import org.osgi.framework.ServiceEvent;
+import org.osgi.framework.ServiceListener;
 import org.osgi.service.component.annotations.Activate;
 import org.osgi.service.component.annotations.Component;
 import org.osgi.service.component.annotations.ConfigurationPolicy;
+import org.osgi.service.component.annotations.Deactivate;
 import org.osgi.service.metatype.annotations.AttributeDefinition;
 import org.osgi.service.metatype.annotations.Designate;
 import org.osgi.service.metatype.annotations.ObjectClassDefinition;
@@ -77,6 +83,12 @@ public class HttpRequestsCheck implements HealthCheck {
 
     public static final String HC_NAME = "Http Requests";
     public static final String HC_LABEL = "Health Check: " + HC_NAME;
+    private static final String[] HTTP_SERVICES = { 
+        "org.osgi.service.http.HttpService",
+        "org.osgi.service.http.runtime.HttpServiceRuntime",
+        "org.osgi.service.servlet.runtime.HttpServiceRuntime" };
+    private static final String HTTP_SERVICE_FILTER = "(|(" + Constants.OBJECTCLASS + "=" + String.join(")(" + Constants.OBJECTCLASS + "=", HTTP_SERVICES) + "))";
+
 
     @ObjectClassDefinition(name = HC_LABEL, description = "Performs http(s) request(s) and checks the response for return code and optionally checks the response entity")
     public @interface Config {
@@ -132,6 +144,7 @@ public class HttpRequestsCheck implements HealthCheck {
     private final boolean runInParallel;
 
     private volatile String defaultBaseUrl;
+    private volatile ServiceListener serviceListener;
 
     private FormattingResultLog configErrors = new FormattingResultLog();
 
@@ -144,42 +157,59 @@ public class HttpRequestsCheck implements HealthCheck {
         this.statusForFailedContraint = config.statusForFailedContraint();
         this.runInParallel = config.runInParallel() && requestSpecs.size() > 1;
 
-        LOG.debug("Activated Requests HC: {}", requestSpecs);
+        this.registerServiceListener();
         this.setupDefaultBaseUrl();
+        LOG.debug("Activated Requests HC: {}, defaultBaseUrl: {}, runInParallel: {}, statusForFailedContraint: {}", requestSpecs, defaultBaseUrl, runInParallel, statusForFailedContraint);
+    }
+
+    @Deactivate
+    public void deactivate() {
+        if (this.serviceListener != null) {
+            this.bundleContext.removeServiceListener(this.serviceListener);
+        }
+    }
+
+    String getDefaultBaseUrl() {
+        return defaultBaseUrl;
+    }
+
+    private void registerServiceListener() {
+        try {
+            this.serviceListener = new ServiceListener() {
+                @Override
+                public void serviceChanged(ServiceEvent event) {
+                    setupDefaultBaseUrl();
+                    LOG.debug("Updated defaultBaseUrl: {}", defaultBaseUrl);
+                }
+            };
+            this.bundleContext.addServiceListener(this.serviceListener, HTTP_SERVICE_FILTER);
+        } catch (InvalidSyntaxException e) {
+            LOG.warn("Invalid service filter {}", HTTP_SERVICE_FILTER, e);
+        }
     }
 
     private void setupDefaultBaseUrl() {
-        // no need to synchronize
-        if ( this.defaultBaseUrl == null ) {
-            // check the properties for these services
-            final String[] services = {"org.osgi.service.http.HttpService", 
-                "org.osgi.service.http.runtime.HttpServiceRuntime",
-                "org.osgi.service.servlet.runtime.HttpServiceRuntime"};
-            for(final String service : services) {
-                final ServiceReference<?> ref = this.bundleContext.getServiceReference(service);
-                if ( ref != null ) {
-                    boolean isHttp = Boolean.parseBoolean(String.valueOf(ref.getProperty("org.apache.felix.http.enable")));
-                    boolean isHttps = Boolean.parseBoolean(String.valueOf(ref.getProperty("org.apache.felix.https.enable")));
-                    if (isHttps) {
-                        defaultBaseUrl = "http://localhost:"+ref.getProperty("org.osgi.service.https.port");
-                    } else if (isHttp) {
-                        defaultBaseUrl = "http://localhost:"+ref.getProperty("org.osgi.service.http.port");
-                    }
-                    if ( this.defaultBaseUrl != null ) {
-                        break;
-                    }
+        String resolvedBaseUrl = null;
+        for (final String service : HTTP_SERVICES) {
+            final ServiceReference<?> ref = this.bundleContext.getServiceReference(service);
+            if (ref != null) {
+                boolean isHttp = Boolean.parseBoolean(String.valueOf(ref.getProperty("org.apache.felix.http.enable")));
+                boolean isHttps = Boolean.parseBoolean(String.valueOf(ref.getProperty("org.apache.felix.https.enable")));
+                if (isHttps) {
+                    resolvedBaseUrl = "http://localhost:" + ref.getProperty("org.osgi.service.https.port");
+                } else if (isHttp) {
+                    resolvedBaseUrl = "http://localhost:" + ref.getProperty("org.osgi.service.http.port");
+                }
+                if (resolvedBaseUrl != null) {
+                    break;
                 }
             }
-            if ( this.defaultBaseUrl == null ) {
-                this.defaultBaseUrl = "http://localhost:8080";
-                LOG.debug("Default BaseURL: {}", defaultBaseUrl);
-            }
         }
+        this.defaultBaseUrl = resolvedBaseUrl;
     }
 
     @Override
     public Result execute() {
-        this.setupDefaultBaseUrl();
 
         FormattingResultLog overallLog = new FormattingResultLog();
 
@@ -363,6 +393,11 @@ public class HttpRequestsCheck implements HealthCheck {
         public FormattingResultLog check(String defaultBaseUrl, int connectTimeoutInMs, int readTimeoutInMs, Result.Status statusForFailedContraint, boolean showTiming) {
 
             FormattingResultLog log = new FormattingResultLog();
+            if(url.startsWith("/") && (defaultBaseUrl == null || defaultBaseUrl.isEmpty())) {
+                log.temporarilyUnavailable("Skipping local path {} (HttpService is not available)", url);
+                return log;
+            }
+
             String urlWithUser = user!=null ? user + " @ " + url: url;
             log.debug("Checking {}", urlWithUser);
             log.debug(" configured headers {}", headers.keySet());
@@ -399,6 +434,7 @@ public class HttpRequestsCheck implements HealthCheck {
                 URL effectiveUrl;
                 if(url.startsWith("/")) {
                     effectiveUrl = new URL(defaultBaseUrl + url);
+                    log.debug("Effective URL: {}", effectiveUrl);
                 } else {
                     effectiveUrl = new URL(url);
                 }
