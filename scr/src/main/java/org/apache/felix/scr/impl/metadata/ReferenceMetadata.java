@@ -28,6 +28,7 @@ import java.util.TreeSet;
 
 import org.apache.felix.scr.impl.metadata.MetadataStoreHelper.MetaDataReader;
 import org.apache.felix.scr.impl.metadata.MetadataStoreHelper.MetaDataWriter;
+import org.osgi.service.component.ComponentConstants;
 
 /**
  * Information associated to a dependency
@@ -100,13 +101,6 @@ public class ReferenceMetadata
     public static final String CONDITION_SERVICE_CLASS = "org.osgi.service.condition.Condition";
 
     public static final String CONDITION_TRUE_FILTER = "(osgi.condition.id=true)";
-
-    /**
-     * The reference name for the implicit satisfying condition as defined in the
-     * OSGi R8 Declarative Services specification (see https://github.com/osgi/osgi/pull/875).
-     * This reference is automatically added to components when a true condition service is available.
-     */
-    public static final String REFERENCE_NAME_SATISFYING_CONDITION = "osgi.ds.satisfying.condition";
 
     // Name for the reference (required)
     private String m_name;
