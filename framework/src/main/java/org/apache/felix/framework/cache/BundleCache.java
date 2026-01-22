@@ -31,6 +31,9 @@ import java.io.OutputStream;
 import java.lang.ref.SoftReference;
 import java.nio.channels.FileChannel;
 import java.nio.channels.FileLock;
+import java.nio.file.Files;
+import java.nio.file.Path;
+import java.nio.file.Paths;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
@@ -589,6 +592,15 @@ public class BundleCache
         // Check to see if the cache directory is specified in the storage
         // configuration property.
         String cacheDirStr = (String) configMap.get(Constants.FRAMEWORK_STORAGE);
+
+        Path cacheDirPath = Paths.get("cacheDirStr");
+        try {
+            Path realCacheDirPath = cacheDirPath.toRealPath();
+            cacheDirStr = realCacheDirPath.toString();
+        } catch (IOException e) {
+            throw new RuntimeException(e);
+        }
+
         // Get the cache root directory for relative paths; the default is ".".
         String rootDirStr = (String) configMap.get(CACHE_ROOTDIR_PROP);
         rootDirStr = (rootDirStr == null) ? CACHE_ROOTDIR_DEFAULT : rootDirStr;
