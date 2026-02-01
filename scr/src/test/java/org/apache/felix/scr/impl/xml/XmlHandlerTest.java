@@ -140,4 +140,30 @@ public class XmlHandlerTest {
         }
 
     }
+
+    @Test
+    public void testRetentionPolicyRetain() throws Exception
+    {
+        final URL url = getClass().getResource("/retention-policy-retain.xml");
+        final List<ComponentMetadata> components = parse(url, null);
+        assertEquals(1, components.size());
+
+        final ComponentMetadata cm = components.get(0);
+        cm.validate();
+        assertEquals("Component should have delayedKeepInstances set to true for retention-policy=retain",
+                     true, cm.isDelayedKeepInstances());
+    }
+
+    @Test
+    public void testRetentionPolicyDiscard() throws Exception
+    {
+        final URL url = getClass().getResource("/retention-policy-discard.xml");
+        final List<ComponentMetadata> components = parse(url, null);
+        assertEquals(1, components.size());
+
+        final ComponentMetadata cm = components.get(0);
+        cm.validate();
+        assertEquals("Component should have delayedKeepInstances set to false for retention-policy=discard",
+                     false, cm.isDelayedKeepInstances());
+    }
 }
