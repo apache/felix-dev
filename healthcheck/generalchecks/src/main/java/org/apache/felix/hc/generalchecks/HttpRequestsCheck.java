@@ -35,11 +35,11 @@ import java.net.URL;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Base64;
-import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
+import java.util.Objects;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 import java.util.stream.Collectors;
@@ -61,9 +61,9 @@ import org.apache.felix.utils.json.JSONParser;
 import org.osgi.framework.BundleContext;
 import org.osgi.framework.Constants;
 import org.osgi.framework.InvalidSyntaxException;
-import org.osgi.framework.ServiceReference;
 import org.osgi.framework.ServiceEvent;
 import org.osgi.framework.ServiceListener;
+import org.osgi.framework.ServiceReference;
 import org.osgi.service.component.annotations.Activate;
 import org.osgi.service.component.annotations.Component;
 import org.osgi.service.component.annotations.ConfigurationPolicy;
@@ -117,6 +117,9 @@ public class HttpRequestsCheck implements HealthCheck {
             "--proxy proxyhost:2000 /path/example-timing-important.html => 200 && TIME < 2000"
         };
 
+        @AttributeDefinition(name = "Default Request Options", description = "Curl-like options that are applied to every request spec, e.g. '-X HEAD --proxy proxyhost:2000'")
+        String defaultRequestOptions() default "";
+
         @AttributeDefinition(name = "Connect Timeout", description = "Default connect timeout in ms. Can be overwritten per request with option --connect-timeout (in sec)")
         int connectTimeoutInMs() default 7000;
 
@@ -151,7 +154,7 @@ public class HttpRequestsCheck implements HealthCheck {
     @Activate
     public  HttpRequestsCheck(Config config, BundleContext bundleContext) {
         this.bundleContext = bundleContext;
-        this.requestSpecs = getRequestSpecs(config.requests());
+        this.requestSpecs = getRequestSpecs(config.requests(), config.defaultRequestOptions());
         this.connectTimeoutInMs = config.connectTimeoutInMs();
         this.readTimeoutInMs = config.readTimeoutInMs();
         this.statusForFailedContraint = config.statusForFailedContraint();
@@ -173,6 +176,10 @@ public class HttpRequestsCheck implements HealthCheck {
         return defaultBaseUrl;
     }
 
+    List<RequestSpec> getRequstSpecs() {
+        return requestSpecs;
+    }
+    
     private void registerServiceListener() {
         try {
             this.serviceListener = new ServiceListener() {
@@ -231,11 +238,11 @@ public class HttpRequestsCheck implements HealthCheck {
 
     }
 
-    private List<RequestSpec> getRequestSpecs(String[] requestSpecStrArr) {
-        List<RequestSpec> requestSpecs = new ArrayList<RequestSpec>();
+    private List<RequestSpec> getRequestSpecs(String[] requestSpecStrArr, String defaultRequestOptions) {
+        List<RequestSpec> requestSpecs = new ArrayList<>();
         for(String requestSpecStr: requestSpecStrArr) {
             try {
-                RequestSpec requestSpec = new RequestSpec(requestSpecStr);
+                RequestSpec requestSpec = new RequestSpec(defaultRequestOptions + " " + requestSpecStr);
                 requestSpecs.add(requestSpec);
             } catch(Exception e) {
                 configErrors.critical("Invalid config: {}", requestSpecStr);
@@ -252,7 +259,7 @@ public class HttpRequestsCheck implements HealthCheck {
 
         String method = "GET";
         String url;
-        Map<String,String> headers = new HashMap<String,String>();
+        Map<String,String> headers = new HashMap<>();
         String data = null;
 
         String user;
@@ -260,9 +267,9 @@ public class HttpRequestsCheck implements HealthCheck {
         Integer connectTimeoutInMs;
         Integer readTimeoutInMs;
 
-        Proxy proxy;
+        Proxy proxy = null;
 
-        List<ResponseCheck> responseChecks = new ArrayList<ResponseCheck>();
+        List<ResponseCheck> responseChecks = new ArrayList<>();
 
         RequestSpec(String requestSpecStr) throws ParseException, URISyntaxException {
 
@@ -399,8 +406,13 @@ public class HttpRequestsCheck implements HealthCheck {
             }
 
             String urlWithUser = user!=null ? user + " @ " + url: url;
-            log.debug("Checking {}", urlWithUser);
-            log.debug(" configured headers {}", headers.keySet());
+            log.debug("{} {}", method, urlWithUser);
+            if(!headers.isEmpty()) {
+                log.debug("- configured headers {}", headers.keySet());
+            }
+            if (proxy != null) {
+                log.debug("- using proxy {}", proxy);
+            }
 
             Response response = null;
             try {
@@ -434,7 +446,7 @@ public class HttpRequestsCheck implements HealthCheck {
                 URL effectiveUrl;
                 if(url.startsWith("/")) {
                     effectiveUrl = new URL(defaultBaseUrl + url);
-                    log.debug("Effective URL: {}", effectiveUrl);
+                    log.debug("- effective URL: {}", effectiveUrl);
                 } else {
                     effectiveUrl = new URL(url);
                 }
@@ -459,7 +471,7 @@ public class HttpRequestsCheck implements HealthCheck {
 
             int effectiveConnectTimeout = this.connectTimeoutInMs !=null ? this.connectTimeoutInMs : defaultConnectTimeoutInMs;
             int effectiveReadTimeout = this.readTimeoutInMs !=null ? this.readTimeoutInMs : defaultReadTimeoutInMs;
-            log.debug("connectTimeout={}ms readTimeout={}ms", effectiveConnectTimeout, effectiveReadTimeout);
+            log.debug("- connectTimeout={}ms readTimeout={}ms", effectiveConnectTimeout, effectiveReadTimeout);
             conn.setConnectTimeout(effectiveConnectTimeout);
             conn.setReadTimeout(effectiveReadTimeout);
 
@@ -486,6 +498,7 @@ public class HttpRequestsCheck implements HealthCheck {
             String actualResponseMessage = conn.getResponseMessage();
             log.debug("Result: {} {}", actualResponseCode, actualResponseMessage);
             Map<String, List<String>> responseHeaders = conn.getHeaderFields();
+            log.debug(" - response headers: {}", responseHeaders.keySet().stream().filter(Objects::nonNull).sorted().collect(Collectors.joining(", ")));
 
             StringWriter responseEntityWriter = new StringWriter();
             try (BufferedReader in = new BufferedReader(new InputStreamReader(conn.getInputStream()))) {
