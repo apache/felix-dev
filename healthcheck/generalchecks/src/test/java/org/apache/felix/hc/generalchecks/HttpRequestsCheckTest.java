@@ -22,6 +22,9 @@ import static org.junit.Assert.assertArrayEquals;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNull;
 import static org.junit.Assert.assertThat;
+import static org.junit.Assert.assertTrue;
+import static org.junit.Assert.assertFalse;
+import static org.junit.Assert.fail;
 import static org.mockito.Matchers.any;
 import static org.mockito.Matchers.anyInt;
 import static org.mockito.Matchers.anyString;
@@ -115,8 +118,8 @@ public class HttpRequestsCheckTest {
 
     private Entry fakeRequestForSpecAndReturnResponse(HttpRequestsCheck.RequestSpec requestSpecOrig, HttpRequestsCheck.Response response) throws Exception {
         RequestSpec requestSpec = Mockito.spy(requestSpecOrig);
-        doReturn(response).when(requestSpec).performRequest(anyString(), anyString(), anyInt(), anyInt(), any(FormattingResultLog.class));
-        FormattingResultLog resultLog = requestSpec.check("http://localhost:8080", 10000, 10000, Result.Status.WARN, true);
+        doReturn(response).when(requestSpec).performRequest(anyString(), anyString(), anyInt(), anyInt(), any(FormattingResultLog.class), any(HttpRequestsCheckTrustedCerts.class));
+        FormattingResultLog resultLog = requestSpec.check("http://localhost:8080", 10000, 10000, Result.Status.WARN, true, null);
         Iterator<Entry> entryIt = resultLog.iterator();
         Entry lastEntry = null;
         while(entryIt.hasNext()) {
@@ -207,7 +210,7 @@ public class HttpRequestsCheckTest {
     @Test
     public void testRelativeUrlWithoutHttpServiceReturnsUnavailableLog() throws Exception {
         HttpRequestsCheck.RequestSpec requestSpec = new HttpRequestsCheck.RequestSpec("/path/to/page.html");
-        FormattingResultLog resultLog = requestSpec.check(null, 1000, 1000, Result.Status.WARN, false);
+        FormattingResultLog resultLog = requestSpec.check(null, 1000, 1000, Result.Status.WARN, false, null);
 
         Iterator<Entry> entryIt = resultLog.iterator();
         Entry lastEntry = null;
@@ -217,6 +220,33 @@ public class HttpRequestsCheckTest {
 
         assertEquals(Result.Status.TEMPORARILY_UNAVAILABLE, lastEntry.getStatus());
         assertThat(lastEntry.getMessage(), containsString("HttpService is not available"));
+    }
+
+    @Test
+    public void testCreateSslContextWithoutCertificates() {
+        FormattingResultLog configErrors = new FormattingResultLog();
+        HttpRequestsCheckTrustedCerts trustedCerts = new HttpRequestsCheckTrustedCerts(new String[0], configErrors);
+        assertFalse("No config error expected", configErrors.iterator().hasNext());
+        try {
+            trustedCerts.createSslContext();
+            fail("Expected IllegalStateException for empty trusted certificates");
+        } catch (IllegalStateException e) {
+            assertThat(e.getMessage(), containsString("No valid trusted certificates configured"));
+        }
+    }
+
+    @Test
+    public void testCreateSslContextWithInvalidCertificate() {
+        FormattingResultLog configErrors = new FormattingResultLog();
+        HttpRequestsCheckTrustedCerts trustedCerts = new HttpRequestsCheckTrustedCerts(new String[] { "not-a-cert" }, configErrors);
+        assertTrue("Config error expected", configErrors.iterator().hasNext());
+
+        try {
+            trustedCerts.createSslContext();
+            fail("Expected IllegalStateException for invalid trusted certificates");
+        } catch (IllegalStateException e) {
+            assertThat(e.getMessage(), containsString("No valid trusted certificates configured"));
+        }
     }
 
     private HttpRequestsCheck.Config createConfig() {
@@ -254,6 +284,11 @@ public class HttpRequestsCheckTest {
             @Override
             public boolean runInParallel() {
                 return false;
+            }
+
+            @Override
+            public String[] trustedCertificates() {
+                return new String[0];
             }
 
             @Override

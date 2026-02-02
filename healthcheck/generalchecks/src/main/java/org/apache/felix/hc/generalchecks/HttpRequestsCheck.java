@@ -32,10 +32,10 @@ import java.net.Proxy;
 import java.net.URI;
 import java.net.URISyntaxException;
 import java.net.URL;
+import java.security.cert.X509Certificate;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Base64;
-import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -44,6 +44,8 @@ import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
+
+import javax.net.ssl.HttpsURLConnection;
 
 import org.apache.commons.cli.CommandLine;
 import org.apache.commons.cli.CommandLineParser;
@@ -129,6 +131,8 @@ public class HttpRequestsCheck implements HealthCheck {
         @AttributeDefinition(name = "Run in parallel", description = "Run requests in parallel (only active if more than one request spec is configured)")
         boolean runInParallel() default true;
 
+        @AttributeDefinition(name = "Trusted certificates", description = "List of PEM-encoded X.509 certificates to trust for HTTPS requests in addition to the JVM defaults")
+        String[] trustedCertificates() default {};
 
         @AttributeDefinition
         String webconsole_configurationFactory_nameHint() default "{hc.name}: {requests}";
@@ -142,6 +146,7 @@ public class HttpRequestsCheck implements HealthCheck {
     private final int readTimeoutInMs;
     private final Result.Status statusForFailedContraint;
     private final boolean runInParallel;
+    private final HttpRequestsCheckTrustedCerts trustedCerts;
 
     private volatile String defaultBaseUrl;
     private volatile ServiceListener serviceListener;
@@ -156,6 +161,9 @@ public class HttpRequestsCheck implements HealthCheck {
         this.readTimeoutInMs = config.readTimeoutInMs();
         this.statusForFailedContraint = config.statusForFailedContraint();
         this.runInParallel = config.runInParallel() && requestSpecs.size() > 1;
+        this.trustedCerts = config.trustedCertificates().length > 0
+                ? new HttpRequestsCheckTrustedCerts(config.trustedCertificates(), configErrors)
+                : null;
 
         this.registerServiceListener();
         this.setupDefaultBaseUrl();
@@ -218,10 +226,17 @@ public class HttpRequestsCheck implements HealthCheck {
             overallLog.add(entry);
         }
 
+        if (trustedCerts != null) {
+            overallLog.debug("Trusted certificates: ");
+            for(X509Certificate cert: trustedCerts.getTrustedCertificates()) {
+                overallLog.debug("Cert:  " + cert.getSubjectX500Principal().toString());
+            }
+        }
+
         // execute requests
         Stream<RequestSpec> requestSpecsStream = runInParallel ? requestSpecs.parallelStream() : requestSpecs.stream();
         List<FormattingResultLog> logsForEachRequest = requestSpecsStream
-            .map(requestSpec -> requestSpec.check(defaultBaseUrl, connectTimeoutInMs, readTimeoutInMs, statusForFailedContraint, requestSpecs.size()>1))
+            .map(requestSpec -> requestSpec.check(defaultBaseUrl, connectTimeoutInMs, readTimeoutInMs, statusForFailedContraint, requestSpecs.size()>1, trustedCerts))
             .collect(Collectors.toList());
 
         // aggregate logs never in parallel
@@ -238,10 +253,9 @@ public class HttpRequestsCheck implements HealthCheck {
                 RequestSpec requestSpec = new RequestSpec(requestSpecStr);
                 requestSpecs.add(requestSpec);
             } catch(Exception e) {
-                configErrors.critical("Invalid config: {}", requestSpecStr);
-                configErrors.add(new ResultLog.Entry(Result.Status.CRITICAL, " "+e.getMessage(), e));
-            }
-
+                configErrors.healthCheckError("Invalid config: {}", requestSpecStr);
+                LOG.warn("Invalid config: "+e.getMessage(), e);
+           }
         }
         return requestSpecs;
     }
@@ -390,7 +404,8 @@ public class HttpRequestsCheck implements HealthCheck {
             return "RequestSpec [method=" + method + ", url=" + url + ", headers=" + headers + ", responseChecks=" + responseChecks + "]";
         }
 
-        public FormattingResultLog check(String defaultBaseUrl, int connectTimeoutInMs, int readTimeoutInMs, Result.Status statusForFailedContraint, boolean showTiming) {
+        public FormattingResultLog check(String defaultBaseUrl, int connectTimeoutInMs, int readTimeoutInMs, Result.Status statusForFailedContraint, boolean showTiming,
+                HttpRequestsCheckTrustedCerts trustedCerts) {
 
             FormattingResultLog log = new FormattingResultLog();
             if(url.startsWith("/") && (defaultBaseUrl == null || defaultBaseUrl.isEmpty())) {
@@ -404,7 +419,7 @@ public class HttpRequestsCheck implements HealthCheck {
 
             Response response = null;
             try {
-                response = performRequest(defaultBaseUrl, urlWithUser, connectTimeoutInMs, readTimeoutInMs, log);
+                response = performRequest(defaultBaseUrl, urlWithUser, connectTimeoutInMs, readTimeoutInMs, log, trustedCerts);
             } catch (IOException e) {
                 // request generally failed
                 log.add(new ResultLog.Entry(statusForFailedContraint, urlWithUser+": "+ e.getMessage(), e));
@@ -427,7 +442,8 @@ public class HttpRequestsCheck implements HealthCheck {
             return log;
         }
 
-        public Response performRequest(String defaultBaseUrl, String urlWithUser, int connectTimeoutInMs, int readTimeoutInMs, FormattingResultLog log) throws IOException {
+        public Response performRequest(String defaultBaseUrl, String urlWithUser, int connectTimeoutInMs, int readTimeoutInMs, FormattingResultLog log,
+                HttpRequestsCheckTrustedCerts trustedCerts) throws IOException {
             Response response = null;
             HttpURLConnection conn = null;
             try {
@@ -439,7 +455,7 @@ public class HttpRequestsCheck implements HealthCheck {
                     effectiveUrl = new URL(url);
                 }
 
-                conn = openConnection(connectTimeoutInMs, readTimeoutInMs, effectiveUrl, log);
+                conn = openConnection(connectTimeoutInMs, readTimeoutInMs, effectiveUrl, log, trustedCerts);
                 response = readResponse(conn, log);
 
             } finally {
@@ -450,12 +466,16 @@ public class HttpRequestsCheck implements HealthCheck {
             return response;
         }
 
-        private HttpURLConnection openConnection(int defaultConnectTimeoutInMs, int defaultReadTimeoutInMs, URL effectiveUrl, FormattingResultLog log)
+        private HttpURLConnection openConnection(int defaultConnectTimeoutInMs, int defaultReadTimeoutInMs, URL effectiveUrl, FormattingResultLog log,
+                HttpRequestsCheckTrustedCerts trustedCerts)
                 throws IOException, ProtocolException {
             HttpURLConnection conn;
             conn = (HttpURLConnection) (proxy==null ? effectiveUrl.openConnection() : effectiveUrl.openConnection(proxy));
             conn.setInstanceFollowRedirects(false);
             conn.setUseCaches(false);
+            if (conn instanceof HttpsURLConnection && trustedCerts != null) {
+                ((HttpsURLConnection) conn).setSSLSocketFactory(trustedCerts.createSslContext().getSocketFactory());
+            }
 
             int effectiveConnectTimeout = this.connectTimeoutInMs !=null ? this.connectTimeoutInMs : defaultConnectTimeoutInMs;
             int effectiveReadTimeout = this.readTimeoutInMs !=null ? this.readTimeoutInMs : defaultReadTimeoutInMs;
