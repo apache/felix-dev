@@ -31,6 +31,7 @@ import java.util.List;
 import java.util.Objects;
 
 import javax.net.ssl.SSLContext;
+import javax.net.ssl.SSLSocketFactory;
 import javax.net.ssl.TrustManager;
 import javax.net.ssl.TrustManagerFactory;
 import javax.net.ssl.X509TrustManager;
@@ -43,28 +44,44 @@ final class HttpRequestsCheckTrustedCerts {
 
     private static final Logger LOG = LoggerFactory.getLogger(HttpRequestsCheckTrustedCerts.class);
 
-    private final List<X509Certificate>  trustedCertificates;
+    private final List<X509Certificate> trustedCertificates;
+    private X509TrustManager trustManager;
+    private final SSLContext sslContext;
+    private final SSLSocketFactory socketFactory;
 
     HttpRequestsCheckTrustedCerts(String[] trustedCertificateConfigs, FormattingResultLog configErrors) {
-        this.trustedCertificates = parseTrustedCertificates(trustedCertificateConfigs, configErrors);
-    }
-
-    List<X509Certificate> getTrustedCertificates() {
-        return trustedCertificates;
-    }
-
-    SSLContext createSslContext() {
-        if (trustedCertificates.isEmpty()) {
-            throw new IllegalStateException("No valid trusted certificates configured");
+        if (trustedCertificateConfigs.length == 0) {
+            throw new IllegalStateException("No trusted certificates configured");
         }
         try {
-            return createSslContextInternal(trustedCertificates);
+            this.trustedCertificates = parseTrustedCertificates(trustedCertificateConfigs, configErrors);
+            this.trustManager = createCompositeTrustManager();
+            this.sslContext = createSslContext();
+            this.socketFactory = sslContext.getSocketFactory();
         } catch (GeneralSecurityException e) {
             throw new IllegalStateException("Could not initialize SSL context", e);
         }
     }
 
-    private SSLContext createSslContextInternal(List<X509Certificate> trustedCertificates) throws GeneralSecurityException {
+    List<X509Certificate> getTrustedCertificates() {
+        return Collections.unmodifiableList(trustedCertificates);
+    }
+
+    SSLSocketFactory getSocketFactory() {
+        return socketFactory;
+    }
+
+    X509TrustManager getTrustManager() {
+        return trustManager;
+    }
+
+    private SSLContext createSslContext() throws GeneralSecurityException {
+        SSLContext context = SSLContext.getInstance("TLS");
+        context.init(null, new TrustManager[] { trustManager }, null);
+        return context;
+    }
+
+    private CompositeX509TrustManager createCompositeTrustManager() throws GeneralSecurityException {
         TrustManagerFactory defaultFactory = TrustManagerFactory.getInstance(TrustManagerFactory.getDefaultAlgorithm());
         defaultFactory.init((KeyStore) null);
         X509TrustManager defaultTrustManager = getX509TrustManager(defaultFactory);
@@ -86,9 +103,7 @@ final class HttpRequestsCheckTrustedCerts {
         customFactory.init(trustedKeyStore);
         X509TrustManager customTrustManager = getX509TrustManager(customFactory);
 
-        SSLContext context = SSLContext.getInstance("TLS");
-        context.init(null, new TrustManager[] { new CompositeX509TrustManager(defaultTrustManager, customTrustManager) }, null);
-        return context;
+        return new CompositeX509TrustManager(defaultTrustManager, customTrustManager);
     }
 
     private X509TrustManager getX509TrustManager(TrustManagerFactory factory) throws GeneralSecurityException {

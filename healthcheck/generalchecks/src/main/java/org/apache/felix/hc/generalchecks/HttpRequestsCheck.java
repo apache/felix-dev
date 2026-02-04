@@ -295,7 +295,7 @@ public class HttpRequestsCheck implements HealthCheck {
 
         private void parseResponseAssertion(String responseAssertions) {
 
-            String[] responseAssertionArr = responseAssertions.split(" +&& +");
+            String[] responseAssertionArr = responseAssertions.trim().split(" +&& +");
             for(String clause: responseAssertionArr) {
                 if(isNumeric(clause)) {
                     responseChecks.add(new ResponseCodeCheck(Integer.parseInt(clause)));
@@ -474,7 +474,7 @@ public class HttpRequestsCheck implements HealthCheck {
             conn.setInstanceFollowRedirects(false);
             conn.setUseCaches(false);
             if (conn instanceof HttpsURLConnection && trustedCerts != null) {
-                ((HttpsURLConnection) conn).setSSLSocketFactory(trustedCerts.createSslContext().getSocketFactory());
+                ((HttpsURLConnection) conn).setSSLSocketFactory(trustedCerts.getSocketFactory());
             }
 
             int effectiveConnectTimeout = this.connectTimeoutInMs !=null ? this.connectTimeoutInMs : defaultConnectTimeoutInMs;

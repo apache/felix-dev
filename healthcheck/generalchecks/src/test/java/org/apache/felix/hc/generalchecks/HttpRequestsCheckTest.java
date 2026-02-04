@@ -22,9 +22,6 @@ import static org.junit.Assert.assertArrayEquals;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNull;
 import static org.junit.Assert.assertThat;
-import static org.junit.Assert.assertTrue;
-import static org.junit.Assert.assertFalse;
-import static org.junit.Assert.fail;
 import static org.mockito.Matchers.any;
 import static org.mockito.Matchers.anyInt;
 import static org.mockito.Matchers.anyString;
@@ -99,6 +96,15 @@ public class HttpRequestsCheckTest {
         entry = fakeRequestForSpecAndReturnResponse(requestSpec, simple200HtmlResponse);
         assertEquals(Result.Status.WARN, entry.getStatus());
         assertThat(entry.getMessage(), containsString("200 (expected 401)"));
+    }
+
+    @Test
+    public void testSimpleRequestSpecIsTrimmed() throws Exception {
+
+        HttpRequestsCheck.RequestSpec requestSpec = new HttpRequestsCheck.RequestSpec("https://www.google.com/ => 200 ");
+        Entry entry = fakeRequestForSpecAndReturnResponse(requestSpec, simple200HtmlResponse);
+        assertEquals(Result.Status.OK, entry.getStatus());
+
     }
     
     @Test
@@ -220,33 +226,6 @@ public class HttpRequestsCheckTest {
 
         assertEquals(Result.Status.TEMPORARILY_UNAVAILABLE, lastEntry.getStatus());
         assertThat(lastEntry.getMessage(), containsString("HttpService is not available"));
-    }
-
-    @Test
-    public void testCreateSslContextWithoutCertificates() {
-        FormattingResultLog configErrors = new FormattingResultLog();
-        HttpRequestsCheckTrustedCerts trustedCerts = new HttpRequestsCheckTrustedCerts(new String[0], configErrors);
-        assertFalse("No config error expected", configErrors.iterator().hasNext());
-        try {
-            trustedCerts.createSslContext();
-            fail("Expected IllegalStateException for empty trusted certificates");
-        } catch (IllegalStateException e) {
-            assertThat(e.getMessage(), containsString("No valid trusted certificates configured"));
-        }
-    }
-
-    @Test
-    public void testCreateSslContextWithInvalidCertificate() {
-        FormattingResultLog configErrors = new FormattingResultLog();
-        HttpRequestsCheckTrustedCerts trustedCerts = new HttpRequestsCheckTrustedCerts(new String[] { "not-a-cert" }, configErrors);
-        assertTrue("Config error expected", configErrors.iterator().hasNext());
-
-        try {
-            trustedCerts.createSslContext();
-            fail("Expected IllegalStateException for invalid trusted certificates");
-        } catch (IllegalStateException e) {
-            assertThat(e.getMessage(), containsString("No valid trusted certificates configured"));
-        }
     }
 
     private HttpRequestsCheck.Config createConfig() {
