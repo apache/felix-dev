@@ -97,6 +97,15 @@ public class HttpRequestsCheckTest {
         assertEquals(Result.Status.WARN, entry.getStatus());
         assertThat(entry.getMessage(), containsString("200 (expected 401)"));
     }
+
+    @Test
+    public void testSimpleRequestSpecIsTrimmed() throws Exception {
+
+        HttpRequestsCheck.RequestSpec requestSpec = new HttpRequestsCheck.RequestSpec("https://www.google.com/ => 200 ");
+        Entry entry = fakeRequestForSpecAndReturnResponse(requestSpec, simple200HtmlResponse);
+        assertEquals(Result.Status.OK, entry.getStatus());
+
+    }
     
     @Test
     public void testSimpleRequestSpecWithContentCheck() throws Exception {
@@ -115,8 +124,8 @@ public class HttpRequestsCheckTest {
 
     private Entry fakeRequestForSpecAndReturnResponse(HttpRequestsCheck.RequestSpec requestSpecOrig, HttpRequestsCheck.Response response) throws Exception {
         RequestSpec requestSpec = Mockito.spy(requestSpecOrig);
-        doReturn(response).when(requestSpec).performRequest(anyString(), anyString(), anyInt(), anyInt(), any(FormattingResultLog.class));
-        FormattingResultLog resultLog = requestSpec.check("http://localhost:8080", 10000, 10000, Result.Status.WARN, true);
+        doReturn(response).when(requestSpec).performRequest(anyString(), anyString(), anyInt(), anyInt(), any(FormattingResultLog.class), any(HttpRequestsCheckTrustedCerts.class));
+        FormattingResultLog resultLog = requestSpec.check("http://localhost:8080", 10000, 10000, Result.Status.WARN, true, null);
         Iterator<Entry> entryIt = resultLog.iterator();
         Entry lastEntry = null;
         while(entryIt.hasNext()) {
@@ -207,7 +216,7 @@ public class HttpRequestsCheckTest {
     @Test
     public void testRelativeUrlWithoutHttpServiceReturnsUnavailableLog() throws Exception {
         HttpRequestsCheck.RequestSpec requestSpec = new HttpRequestsCheck.RequestSpec("/path/to/page.html");
-        FormattingResultLog resultLog = requestSpec.check(null, 1000, 1000, Result.Status.WARN, false);
+        FormattingResultLog resultLog = requestSpec.check(null, 1000, 1000, Result.Status.WARN, false, null);
 
         Iterator<Entry> entryIt = resultLog.iterator();
         Entry lastEntry = null;
@@ -254,6 +263,11 @@ public class HttpRequestsCheckTest {
             @Override
             public boolean runInParallel() {
                 return false;
+            }
+
+            @Override
+            public String[] trustedCertificates() {
+                return new String[0];
             }
 
             @Override
