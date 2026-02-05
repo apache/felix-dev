@@ -80,7 +80,36 @@ public class HttpRequestsCheckTest {
         assertThat(proxyAddress, containsString("proxy"));
         assertThat(proxyAddress, containsString(":2000"));
     }
-    
+
+    @Test
+    public void testDefaultRequestOptionsAppliedToSpecs() throws Exception {
+        HttpRequestsCheck httpRequestsCheck = new HttpRequestsCheck(
+                createConfigWithDefaults("/path/to/page.html", "-X HEAD -H \"X-Test: Default\" -H \"Accept: text/plain\""),
+                Mockito.mock(BundleContext.class));
+
+        RequestSpec requestSpec = httpRequestsCheck.getRequstSpecs().get(0);
+        assertEquals("/path/to/page.html", requestSpec.url);
+        assertEquals("HEAD", requestSpec.method);
+        HashMap<String, String> expectedHeaders = new HashMap<String,String>();
+        expectedHeaders.put("X-Test", "Default");
+        expectedHeaders.put("Accept", "text/plain");
+        assertEquals(expectedHeaders, requestSpec.headers);
+    }
+
+    @Test
+    public void testDefaultRequestOptionsOverriddenByRequestSpec() throws Exception {
+        HttpRequestsCheck httpRequestsCheck = new HttpRequestsCheck(
+                createConfigWithDefaults("-X POST -H \"X-Test: Specific\" /path/to/page.html", "-H \"X-Test: Default\""),
+                Mockito.mock(BundleContext.class));
+
+        RequestSpec requestSpec = httpRequestsCheck.getRequstSpecs().get(0);
+        assertEquals("/path/to/page.html", requestSpec.url);
+        assertEquals("POST", requestSpec.method);
+        HashMap<String, String> expectedHeaders = new HashMap<String,String>();
+        expectedHeaders.put("X-Test", "Specific");
+        assertEquals(expectedHeaders, requestSpec.headers);
+    }
+
     @Test
     public void testSimpleRequestSpec() throws Exception {
 
@@ -229,6 +258,10 @@ public class HttpRequestsCheckTest {
     }
 
     private HttpRequestsCheck.Config createConfig() {
+        return createConfigWithDefaults("/path/to/page.html", "");
+    }
+
+    private HttpRequestsCheck.Config createConfigWithDefaults(String requestSpec, String defaultRequestOptions) {
         return new HttpRequestsCheck.Config() {
             @Override
             public String hc_name() {
@@ -242,7 +275,12 @@ public class HttpRequestsCheckTest {
 
             @Override
             public String[] requests() {
-                return new String[] { "/path/to/page.html" };
+                return new String[] { requestSpec };
+            }
+
+            @Override
+            public String defaultRequestOptions() {
+                return defaultRequestOptions;
             }
 
             @Override
@@ -281,6 +319,5 @@ public class HttpRequestsCheckTest {
             }
         };
     }
-
 
 }
