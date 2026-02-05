@@ -270,9 +270,10 @@ public class HttpRequestsCheck implements HealthCheck {
 
     static class RequestSpec {
 
+        private static final String DEFAULT_METHOD_GET = "GET";
         private static final String HEADER_AUTHORIZATION = "Authorization";
 
-        String method = "GET";
+        String method = DEFAULT_METHOD_GET;
         String url;
         Map<String,String> headers = new HashMap<>();
         String data = null;
@@ -449,7 +450,7 @@ public class HttpRequestsCheck implements HealthCheck {
                 Result.Status status = hasFailed ? statusForFailedContraint : Result.Status.OK;
                 String timing = showTiming ? " " + msHumanReadable(response.requestDurationInMs) : "";
                 // result of response assertion(s)
-                log.add(new ResultLog.Entry(status, urlWithUser+timing+": "+ String.join(", ", resultBits)));
+                log.add(new ResultLog.Entry(status, (!DEFAULT_METHOD_GET.equals(method) ? method + " ":"") +  urlWithUser+timing+": "+ String.join(", ", resultBits)));
             }
 
             return log;
