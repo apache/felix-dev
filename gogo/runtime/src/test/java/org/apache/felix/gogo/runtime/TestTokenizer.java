@@ -31,6 +31,7 @@ import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 
+import org.apache.felix.gogo.runtime.systemio.SystemIOImpl;
 import org.apache.felix.gogo.runtime.threadio.ThreadIOImpl;
 import org.junit.Before;
 import org.junit.Test;
@@ -501,7 +502,9 @@ public class TestTokenizer
             public void close() {
             }
         };
-        ThreadIOImpl tio = new ThreadIOImpl();
+        SystemIOImpl sio = new SystemIOImpl();
+        sio.start();
+        ThreadIOImpl tio = new ThreadIOImpl(sio);
         tio.start();
 
         try
@@ -520,6 +523,7 @@ public class TestTokenizer
         finally
         {
             tio.stop();
+            sio.stop();
         }
     }
 

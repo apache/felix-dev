@@ -18,6 +18,7 @@
  */
 package org.apache.felix.gogo.runtime.activator;
 
+import java.io.IOException;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
@@ -27,10 +28,12 @@ import java.util.concurrent.ConcurrentMap;
 
 import org.apache.felix.gogo.runtime.CommandProcessorImpl;
 import org.apache.felix.gogo.runtime.CommandProxy;
+import org.apache.felix.gogo.runtime.systemio.SystemIOImpl;
 import org.apache.felix.gogo.runtime.threadio.ThreadIOImpl;
 import org.apache.felix.service.command.CommandSessionListener;
 import org.apache.felix.service.command.CommandProcessor;
 import org.apache.felix.service.command.Converter;
+import org.apache.felix.service.systemio.SystemIO;
 import org.apache.felix.service.threadio.ThreadIO;
 import org.osgi.annotation.bundle.Header;
 import org.osgi.framework.BundleActivator;
@@ -46,16 +49,19 @@ import org.osgi.util.tracker.ServiceTracker;
 public class Activator implements BundleActivator
 {
     protected CommandProcessorImpl processor;
+    private SystemIOImpl systemio;
     private ThreadIOImpl threadio;
     private ServiceTracker<?,?> commandTracker;
     private ServiceTracker<?,?> converterTracker;
     private ServiceTracker<?,?> listenerTracker;
     private ServiceRegistration<?> processorRegistration;
     private ServiceRegistration<?> threadioRegistration;
+    private ServiceRegistration<?> systemioRegistration;
+    private ServiceFacade<SystemIO> systemioFacade;
 
     public static final String CONTEXT = ".context";
 
-    protected ServiceRegistration<?> newProcessor(ThreadIO tio, BundleContext context)
+    protected ServiceRegistration<?> newProcessor(ThreadIO tio, SystemIO sio, BundleContext context)
     {
         processor = new CommandProcessorImpl(tio);
         try
@@ -78,11 +84,22 @@ public class Activator implements BundleActivator
 
     public void start(final BundleContext context) throws Exception
     {
-        threadio = new ThreadIOImpl();
+        long timeout = toLong(context.getProperty(SystemIO.TIMEOUT));
+        if (  timeout <= 0 ) {
+           systemio = new SystemIOImpl();
+           systemio.start();
+           systemioRegistration = context.registerService(SystemIO.class.getName(), systemio, null);
+           threadio = new ThreadIOImpl(systemio);
+        } else {
+           systemioFacade = new ServiceFacade<>(SystemIO.class, context, timeout);
+           SystemIO systemio = systemioFacade.get();
+           threadio = new ThreadIOImpl(systemio);
+        }
         threadio.start();
         threadioRegistration = context.registerService(ThreadIO.class.getName(), threadio, null);
 
-        processorRegistration = newProcessor(threadio, context);
+
+        processorRegistration = newProcessor(threadio, systemio, context);
 
         commandTracker = trackOSGiCommands(context);
         commandTracker.open();
@@ -134,6 +151,19 @@ public class Activator implements BundleActivator
         listenerTracker.close();
         threadio.stop();
         processor.stop();
+        if( systemioRegistration != null) {
+           systemioRegistration.unregister();
+           systemio.stop();
+        } else {
+           try
+           {
+               systemioFacade.close();
+           }
+           catch (IOException e)
+           {
+               throw new RuntimeException(e);
+           }
+        }
     }
 
     private ServiceTracker<?,?> trackOSGiCommands(final BundleContext context)
@@ -211,6 +241,17 @@ public class Activator implements BundleActivator
                 super.removedService(reference, service);
             }
         };
+    }
+    
+    private long toLong(String v) {
+       if ( v != null) {   
+          try {
+             return Long.parseLong(v);
+          } catch( NumberFormatException nfe) {
+             // ignore
+          }
+       }       
+       return Long.MIN_VALUE;
     }
 
 }
