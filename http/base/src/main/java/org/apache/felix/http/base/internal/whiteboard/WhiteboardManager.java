@@ -199,7 +199,14 @@ public final class WhiteboardManager
         this.serviceRuntime.unregister();
         for(final ServiceTracker<?, ?> t : this.trackers)
         {
-            t.close();
+            try
+            {
+                t.close();
+            }
+            catch (final Exception e)
+            {
+                SystemLogger.LOGGER.error("Exception while closing service tracker", e);
+            }
         }
         this.trackers.clear();
         this.preprocessorHandlers = Collections.emptyList();
@@ -328,7 +335,10 @@ public final class WhiteboardManager
             }
         }
         // context listeners last
-        handler.getRegistry().getEventListenerRegistry().contextDestroyed();
+        if ( handler.getRegistry() != null )
+        {
+            handler.getRegistry().getEventListenerRegistry().contextDestroyed();
+        }
         for(final WhiteboardServiceInfo<?> info : listeners)
         {
             this.unregisterWhiteboardService(handler, info);
@@ -480,6 +490,10 @@ public final class WhiteboardManager
                                 this.failureStateHandler.addFailure(newHead.getContextInfo(), DTOConstants.FAILURE_REASON_SERVICE_NOT_GETTABLE);
                             }
                         }
+                        if ( handlerList.isEmpty() )
+                        {
+                            this.contextMap.remove(info.getName());
+                        }
                     }
                 }
             }
@@ -494,6 +508,10 @@ public final class WhiteboardManager
     private List<WhiteboardContextHandler> getMatchingContexts(final WhiteboardServiceInfo<?> info) {
         final List<WhiteboardContextHandler> result = new ArrayList<>();
         for(final List<WhiteboardContextHandler> handlerList : this.contextMap.values()) {
+            if ( handlerList.isEmpty() )
+            {
+                continue;
+            }
             final WhiteboardContextHandler h = handlerList.get(0);
 
             // check if the context matches
@@ -881,6 +899,10 @@ public final class WhiteboardManager
         {
             for(final List<WhiteboardContextHandler> handlerList : this.contextMap.values())
             {
+                if ( handlerList.isEmpty() )
+                {
+                    continue;
+                }
                 final WhiteboardContextHandler h = handlerList.get(0);
                 if ( h.getContextInfo().getName().equals(name) )
                 {

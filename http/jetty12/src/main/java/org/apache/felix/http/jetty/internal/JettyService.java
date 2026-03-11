@@ -225,7 +225,14 @@ public final class JettyService
         if (this.server != null)
         {
             this.controller.getEventDispatcher().setActive(false);
-            this.controller.unregister();
+            try
+            {
+                this.controller.unregister();
+            }
+            catch (final Exception e)
+            {
+                SystemLogger.LOGGER.error("Exception during controller unregister", e);
+            }
 
             if (this.fileRequestLog != null)
             {
