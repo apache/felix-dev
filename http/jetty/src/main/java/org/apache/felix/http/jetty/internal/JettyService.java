@@ -245,6 +245,12 @@ public final class JettyService
                 this.loadBalancerCustomizerTracker = null;
             }
 
+            if (this.mbeanServerTracker != null)
+            {
+                this.mbeanServerTracker.close();
+                this.mbeanServerTracker = null;
+            }
+
             try
             {
                 this.server.stop();
@@ -254,12 +260,6 @@ public final class JettyService
             catch (Exception e)
             {
                 SystemLogger.LOGGER.error("Exception while stopping Jetty", e);
-            }
-
-            if (this.mbeanServerTracker != null)
-            {
-                this.mbeanServerTracker.close();
-                this.mbeanServerTracker = null;
             }
         }
     }
