@@ -706,8 +706,6 @@ public class ComponentRegistry
 
     private final AtomicLong changeCount = new AtomicLong();
 
-    private volatile ServiceRegistration<ServiceComponentRuntime> registration;
-
     public Dictionary<String, Object> getServiceRegistrationProperties()
     {
         final Dictionary<String, Object> props = new Hashtable<>();
@@ -718,42 +716,44 @@ public class ComponentRegistry
 
     public void setRegistration(final ServiceRegistration<ServiceComponentRuntime> reg)
     {
-        this.registration = reg;
+        long delay = m_configuration.serviceChangecountTimeout();
+        m_componentActor.scheduleWithFixedDelay(new UpdateChangeCountProperty(reg), delay, delay, TimeUnit.MILLISECONDS);
+    }
+
+    class UpdateChangeCountProperty implements Runnable {
+        private final ServiceRegistration<ServiceComponentRuntime> registration;
+
+        public UpdateChangeCountProperty(ServiceRegistration<ServiceComponentRuntime> registration)
+        {
+            this.registration = registration;
+        }
+
+        @Override
+        public void run()
+        {
+            try {
+                Long registeredChangeCount = (Long) registration.getReference().getProperty(PROP_CHANGECOUNT);
+                if (registeredChangeCount == null || registeredChangeCount.longValue() != changeCount.get()) {
+                    try
+                    {
+                        registration.setProperties(getServiceRegistrationProperties());
+                    }
+                    catch ( final IllegalStateException ise)
+                    {
+                        // we ignore this as this might happen on shutdown
+                    }
+                }
+            } catch (Exception e) {
+                m_logger.log(Level.WARN,
+                    "Service changecount update for {0} had a problem", e,
+                    registration.getReference());
+            }
+        }
+
     }
 
     public void updateChangeCount()
     {
-        if ( registration != null )
-        {
-            final long count = this.changeCount.incrementAndGet();
-
-            try
-            {
-                m_componentActor.schedule(new Runnable()
-                    {
-
-                        @Override
-                        public void run()
-                        {
-                            if ( changeCount.get() == count )
-                            {
-                                try
-                                {
-                                    registration.setProperties(getServiceRegistrationProperties());
-                                }
-                                catch ( final IllegalStateException ise)
-                                {
-                                    // we ignore this as this might happen on shutdown
-                                }
-                            }
-                        }
-                    }, m_configuration.serviceChangecountTimeout(), TimeUnit.MILLISECONDS);
-            }
-            catch (Exception e) {
-                m_logger.log(Level.WARN,
-                    "Service changecount Timer for {0} had a problem", e,
-                    registration.getReference());
-            }
-        }
+        this.changeCount.incrementAndGet();
     }
 }

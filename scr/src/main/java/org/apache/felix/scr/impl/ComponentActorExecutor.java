@@ -56,7 +56,7 @@ class ComponentActorExecutor extends ScheduledThreadPoolExecutor
     @Override
     protected void beforeExecute(Thread t, Runnable r)
     {
-        logger.log(Level.DEBUG, "Running task: " + r, null);
+        logger.log(Level.DEBUG, "Running task: {0}", null, r);
     }
 
     @Override
@@ -64,7 +64,7 @@ class ComponentActorExecutor extends ScheduledThreadPoolExecutor
     {
         if (t != null)
         {
-            logger.log(Level.ERROR, "Unexpected problem executing task " + r, t);
+            logger.log(Level.ERROR, "Unexpected problem executing task {0}", t, r);
         }
     }
 }
