@@ -31,6 +31,7 @@ import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ConcurrentMap;
 import java.util.concurrent.ScheduledExecutorService;
+import java.util.concurrent.ScheduledFuture;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicLong;
 
@@ -706,6 +707,10 @@ public class ComponentRegistry
 
     private final AtomicLong changeCount = new AtomicLong();
 
+    private final Object changeCountUpdateTaskLock = new Object();
+
+    private ScheduledFuture<?> changeCountUpdateTaskFuture;
+
     private volatile ServiceRegistration<ServiceComponentRuntime> registration;
 
     public Dictionary<String, Object> getServiceRegistrationProperties()
@@ -727,32 +732,43 @@ public class ComponentRegistry
         {
             final long count = this.changeCount.incrementAndGet();
 
-            try
+            synchronized ( changeCountUpdateTaskLock )
             {
-                m_componentActor.schedule(new Runnable()
-                    {
+                if ( changeCountUpdateTaskFuture != null && !changeCountUpdateTaskFuture.isDone() )
+                {
+                    // If there is an uncompleted changcount update task already scheduled, cancel it to avoid
+                    // unnecessary processing on the component actor thread
+                    changeCountUpdateTaskFuture.cancel(false);
+                }
 
-                        @Override
-                        public void run()
+                try
+                {
+                    changeCountUpdateTaskFuture = m_componentActor.schedule(new Runnable()
                         {
-                            if ( changeCount.get() == count )
+
+                            @Override
+                            public void run()
                             {
-                                try
+                                if ( changeCount.get() == count )
                                 {
-                                    registration.setProperties(getServiceRegistrationProperties());
-                                }
-                                catch ( final IllegalStateException ise)
-                                {
-                                    // we ignore this as this might happen on shutdown
+                                    try
+                                    {
+                                        registration.setProperties(getServiceRegistrationProperties());
+                                    }
+                                    catch ( final IllegalStateException ise)
+                                    {
+                                        // we ignore this as this might happen on shutdown
+                                    }
                                 }
                             }
-                        }
-                    }, m_configuration.serviceChangecountTimeout(), TimeUnit.MILLISECONDS);
-            }
-            catch (Exception e) {
-                m_logger.log(Level.WARN,
-                    "Service changecount Timer for {0} had a problem", e,
-                    registration.getReference());
+                        }, m_configuration.serviceChangecountTimeout(), TimeUnit.MILLISECONDS);
+                }
+                catch (Exception e) {
+                    m_logger.log(Level.WARN,
+                        "Service changecount task for {0} had a problem", e,
+                        registration.getReference());
+                }
+
             }
         }
     }
