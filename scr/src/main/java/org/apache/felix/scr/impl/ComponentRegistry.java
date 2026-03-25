@@ -725,6 +725,8 @@ public class ComponentRegistry
     }
 
     class UpdateChangeCountProperty implements Runnable {
+        // TODO Is 100 ms an appropriate minimum?  
+        private static final long MIN_ALLOWED_DELAY = 100;
         private volatile ServiceRegistration<ServiceComponentRuntime> registration;
         private final long maxNumberOfNoChanges;
         private final long delay;
@@ -736,8 +738,15 @@ public class ComponentRegistry
 
         public UpdateChangeCountProperty(long delay)
         {
+            if (delay < MIN_ALLOWED_DELAY) {
+                m_logger.log(Level.INFO,
+                        "The service change count timeout {0} is less than the allowable minimum {1}.  Using the allowable minimum instead.", null,
+                        delay, MIN_ALLOWED_DELAY);
+                delay = MIN_ALLOWED_DELAY;
+            }
             this.delay = delay;
-            // calculate the max number of no changes; must be at least 1 to avoid missing events
+            // Calculate the max number of no changes; must be at least 1 to avoid missing events
+            // The calculation is intended to let at least 10 seconds pass before canceling the scheduledFuture
             maxNumberOfNoChanges = Long.max(10000 / delay, 1);
         }
 
@@ -764,7 +773,12 @@ public class ComponentRegistry
                 return;
             }
             try {
-                Long registeredChangeCount = (Long) currentReg.getReference().getProperty(PROP_CHANGECOUNT);
+                Long registeredChangeCount = null;
+                try {
+                    registeredChangeCount = (Long) currentReg.getReference().getProperty(PROP_CHANGECOUNT);
+                } catch ( final IllegalStateException ise) {
+                    // we ignore this as this might happen on shutdown
+                }
                 if (registeredChangeCount == null || registeredChangeCount.longValue() != changeCount.get()) {
                     try
                     {
