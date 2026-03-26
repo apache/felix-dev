@@ -138,7 +138,7 @@ public class ComponentRegistry
     public ComponentRegistry(final ScrConfiguration scrConfiguration, final ScrLogger logger, final ScheduledExecutorService componentActor )
     {
         m_configuration = scrConfiguration;
-        m_updateChangeCountPropertyTask = new UpdateChangeCountProperty(m_configuration.serviceChangecountTimeout());
+        m_updateChangeCountPropertyTask = new UpdateChangeCountProperty(m_configuration.serviceChangecountTimeout(), logger, componentActor);
         m_logger = logger;
         m_componentActor = componentActor;
         m_componentHoldersByName = new HashMap<>();
@@ -708,38 +708,43 @@ public class ComponentRegistry
 
 	}
 
-    private final AtomicLong changeCount = new AtomicLong();
-
-    public Dictionary<String, Object> getServiceRegistrationProperties()
+	Dictionary<String, Object> getServiceRegistrationProperties()
     {
-        final Dictionary<String, Object> props = new Hashtable<>();
-        props.put(PROP_CHANGECOUNT, this.changeCount.get());
-
-        return props;
+        return m_updateChangeCountPropertyTask.getServiceRegistrationProperties();
     }
 
-    public void setRegistration(final ServiceRegistration<ServiceComponentRuntime> reg)
+	public void setRegistration(final ServiceRegistration<ServiceComponentRuntime> reg)
     {
         m_updateChangeCountPropertyTask.setRegistration(reg);
         m_updateChangeCountPropertyTask.schedule();
     }
 
-    class UpdateChangeCountProperty implements Runnable {
-        // TODO Is 100 ms an appropriate minimum?  
-        private static final long MIN_ALLOWED_DELAY = 100;
+    public void updateChangeCount()
+    {
+        m_updateChangeCountPropertyTask.updateChangeCount();
+    }
+
+    static class UpdateChangeCountProperty implements Runnable {
+        // TODO 1 seems really low?  
+        private static final long MIN_ALLOWED_DELAY = 1;
+        private final AtomicLong changeCount = new AtomicLong();
         private volatile ServiceRegistration<ServiceComponentRuntime> registration;
         private final long maxNumberOfNoChanges;
         private final long delay;
+        private final ScrLogger logger;
+        private final ScheduledExecutorService executor;
 
         // guarded by this
         private int noChangesCount = 0;
         // guarded by this
         private ScheduledFuture<?> scheduledFuture = null;
 
-        public UpdateChangeCountProperty(long delay)
+        UpdateChangeCountProperty(long delay, ScrLogger logger, ScheduledExecutorService executor)
         {
+            this.logger = logger;
+            this.executor = executor;
             if (delay < MIN_ALLOWED_DELAY) {
-                m_logger.log(Level.INFO,
+                logger.log(Level.INFO,
                         "The service change count timeout {0} is less than the allowable minimum {1}.  Using the allowable minimum instead.", null,
                         delay, MIN_ALLOWED_DELAY);
                 delay = MIN_ALLOWED_DELAY;
@@ -750,19 +755,31 @@ public class ComponentRegistry
             maxNumberOfNoChanges = Long.max(10000 / delay, 1);
         }
 
-        public void setRegistration(ServiceRegistration<ServiceComponentRuntime> reg)
+        void setRegistration(ServiceRegistration<ServiceComponentRuntime> reg)
         {
             this.registration = reg;
         }
 
-        public synchronized void schedule()
+        Dictionary<String, Object> getServiceRegistrationProperties()
+        {
+            final Dictionary<String, Object> props = new Hashtable<>();
+            props.put(PROP_CHANGECOUNT, this.changeCount.get());
+
+            return props;
+        }
+
+        public void updateChangeCount() {
+            this.changeCount.incrementAndGet();
+            schedule();
+        }
+        synchronized void schedule()
         {
             // reset noChangesCount to ensure task runs at least once more if it exists
             noChangesCount = 0;
             if (scheduledFuture != null) {
                 return;
             }
-            scheduledFuture = m_componentActor.scheduleWithFixedDelay(this , delay, delay, TimeUnit.MILLISECONDS);
+            scheduledFuture = executor.scheduleWithFixedDelay(this , delay, delay, TimeUnit.MILLISECONDS);
         }
 
         @Override
@@ -802,16 +819,10 @@ public class ComponentRegistry
                     }
                 }
             } catch (Exception e) {
-                m_logger.log(Level.WARN,
+                logger.log(Level.WARN,
                     "Service changecount update for {0} had a problem", e,
                     registration.getReference());
             }
         }
-    }
-
-    public void updateChangeCount()
-    {
-        this.changeCount.incrementAndGet();
-        m_updateChangeCountPropertyTask.schedule();
     }
 }
