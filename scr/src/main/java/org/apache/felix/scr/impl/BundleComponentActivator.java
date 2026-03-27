@@ -145,8 +145,7 @@ public class BundleComponentActivator implements ComponentActivator
         ListenerInfo listenerInfo;
         synchronized ( listenerMap )
         {
-            logger.log(Level.DEBUG, "serviceFilterString: " + serviceFilterString,
-                null);
+            logger.log(Level.DEBUG, "serviceFilterString: {0}", null, serviceFilterString);
             listenerInfo = listenerMap.get( serviceFilterString );
             if ( listenerInfo == null )
             {
