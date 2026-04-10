@@ -928,6 +928,10 @@ public class SingleComponentManager<S> extends AbstractComponentManager<S> imple
                     return null;
                 }
 
+            } catch (Throwable error){
+                getLogger().log(Level.ERROR,
+                    "Failed to create service from bundle",
+                    error);
             }
             finally
             {
