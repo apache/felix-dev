@@ -1718,7 +1718,8 @@ public class SecureAction
         }
         else
         {
-            return dataFile.getCanonicalPath();
+			// Sanitize the file path. Use an absolute path to be able to resolve special names (e.g. "..")
+            return dataFile.toPath().toAbsolutePath().normalize().toString();
         }
     }
 
