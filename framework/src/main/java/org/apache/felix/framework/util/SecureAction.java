@@ -2092,7 +2092,7 @@ public class SecureAction
                         (org.osgi.framework.hooks.weaving.WovenClass) arg2);
                     return null;
                 case GET_CANONICAL_PATH:
-                    return ((File) arg1).getCanonicalPath();
+                    return ((File) arg1).toPath().toAbsolutePath().normalize().toString();
                 case CREATE_PROXY:
                     return Proxy.newProxyInstance((ClassLoader)arg1, (Class<?>[])arg2,
                             (InvocationHandler) arg3);
