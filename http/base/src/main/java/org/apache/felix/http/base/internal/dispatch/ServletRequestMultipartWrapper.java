@@ -58,7 +58,7 @@ final class ServletRequestMultipartWrapper extends ServletRequestWrapper
     }
 
     /**
-     * Enforces the non-standard "maxFileSize" configuration
+     * Enforces the non-standard "maxFileCount" configuration
      * 
      * @return the parts the collection that was checked
      */
