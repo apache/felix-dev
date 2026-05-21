@@ -20,7 +20,6 @@ import java.io.IOException;
 import java.util.Collection;
 
 import org.apache.felix.http.base.internal.context.ExtServletContext;
-import org.osgi.framework.Bundle;
 
 import jakarta.servlet.DispatcherType;
 import jakarta.servlet.MultipartConfigElement;
@@ -38,8 +37,7 @@ final class ServletRequestMultipartWrapper extends ServletRequestWrapper
             final RequestInfo requestInfo,
             final DispatcherType type,
             final boolean asyncSupported,
-            final MultipartConfig multipartConfig,
-            final Bundle bundleForSecurityCheck)
+            final MultipartConfig multipartConfig)
     {
         super(req, servletContext, requestInfo, type, asyncSupported);
 
