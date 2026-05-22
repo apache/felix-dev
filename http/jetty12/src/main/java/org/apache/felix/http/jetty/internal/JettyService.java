@@ -225,7 +225,14 @@ public final class JettyService
         if (this.server != null)
         {
             this.controller.getEventDispatcher().setActive(false);
-            this.controller.unregister();
+            try
+            {
+                this.controller.unregister();
+            }
+            catch (final Exception e)
+            {
+                SystemLogger.LOGGER.error("Exception during controller unregister", e);
+            }
 
             if (this.fileRequestLog != null)
             {
@@ -255,6 +262,12 @@ public final class JettyService
                 this.loadBalancerCustomizerTracker = null;
             }
 
+            if (this.mbeanServerTracker != null)
+            {
+                this.mbeanServerTracker.close();
+                this.mbeanServerTracker = null;
+            }
+
             try
             {
                 this.server.stop();
@@ -264,12 +277,6 @@ public final class JettyService
             catch (Exception e)
             {
                 SystemLogger.LOGGER.error("Exception while stopping Jetty", e);
-            }
-
-            if (this.mbeanServerTracker != null)
-            {
-                this.mbeanServerTracker.close();
-                this.mbeanServerTracker = null;
             }
         }
     }

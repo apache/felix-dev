@@ -483,6 +483,11 @@ public class XmlHandler extends DefaultHandler
                 m_pendingFactoryProperty = null;
             }
         }
+        // Add implicit satisfying condition reference as per OSGi R8 Declarative Services specification
+        // (see https://github.com/osgi/osgi/pull/875 and https://github.com/osgi/osgi/issues/720).
+        // When a true condition service is available from the framework, an implicit satisfying condition
+        // reference is automatically added to all components unless they already explicitly declare one.
+        // This allows components to be activated only when certain runtime conditions are met.
         if (m_trueCondition != null && localName.equals(XmlConstants.EL_COMPONENT))
         {
             boolean missingSatisfyingConditionRef = true;
@@ -504,9 +509,10 @@ public class XmlHandler extends DefaultHandler
                 trueReference.setInterface(ReferenceMetadata.CONDITION_SERVICE_CLASS);
                 trueReference.setPolicy(ReferenceMetadata.POLICY_DYNAMIC);
                 m_currentComponent.addDependency(trueReference);
-                // Here we add the target property for the implicit satisfying condition
-                // first such that any properties that are specified explicitly can
-                // be used to override this implicit property
+                // Add the target property for the implicit satisfying condition.
+                // This is added first so that any explicitly specified properties can
+                // override this implicit property, allowing components to specify custom
+                // condition targets via the osgi.ds.satisfying.condition.target property.
                 PropertyMetadata prop = new PropertyMetadata(true);
                 prop.setName(
                     ReferenceMetadata.REFERENCE_NAME_SATISFYING_CONDITION + ".target");

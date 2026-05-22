@@ -553,7 +553,7 @@ public class BundlePlugin extends AbstractMojo
 
         if ( new MavenArchiver().parseOutputTimestamp( outputTimestamp ) != null )
         {
-          properties.put( Constants.REPRODUCIBLE, "true" );
+          properties.put( Constants.REPRODUCIBLE, outputTimestamp );
         }
 
         // process overrides from project

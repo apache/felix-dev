@@ -292,9 +292,8 @@ public class SingleComponentManager<S> extends AbstractComponentManager<S> imple
             {
                 // we don't need to log the stack trace
                 getLogger().log(Level.ERROR,
-                    "Error during instantiation of the implementation object: "
-                        + ie.getMessage(),
-                    null);
+                    "Error during instantiation of the implementation object: {0}",
+                    null, ie.getMessage());
                 this.setFailureReason(ie);
                 return null;
             }
