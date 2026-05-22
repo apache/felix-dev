@@ -39,7 +39,7 @@
     </scm>
 
     <properties>
-        <jetty.version>12.1.4</jetty.version>
+        <jetty.version>12.1.9</jetty.version>
     </properties>
 
     <build>
