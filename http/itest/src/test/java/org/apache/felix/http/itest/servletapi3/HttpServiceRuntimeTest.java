@@ -260,6 +260,7 @@ public class HttpServiceRuntimeTest extends Servlet3BaseIntegrationTest {
         assertTrue(serviceDTO.properties.containsKey(HTTP_SERVICE_ENDPOINT));
 
         assertTrue(serviceDTO.properties.get(HTTP_SERVICE_ID) instanceof Collection);
+        @SuppressWarnings("unchecked")
         final Collection<Long> ids = (Collection<Long>)serviceDTO.properties.get(HTTP_SERVICE_ID);
         assertTrue(ids.size() == 1);
         assertTrue(ids.iterator().next() instanceof Long);
@@ -1212,6 +1213,7 @@ public class HttpServiceRuntimeTest extends Servlet3BaseIntegrationTest {
         ServiceReference<?> httpServiceRuntimeRef = m_context.getServiceReference(HttpServiceRuntime.class.getName());
 
         Long expectedId = (Long) httpServiceRef.getProperty(Constants.SERVICE_ID);
+        @SuppressWarnings("unchecked")
         Collection<Long> col = (Collection<Long>)httpServiceRuntimeRef.getProperty(HTTP_SERVICE_ID);
         Long actualId = (Long) col.iterator().next();
 
