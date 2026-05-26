@@ -5,7 +5,7 @@ This is an implementation of the [R8.1 Whiteboard Specification for Jakarta Serv
   * Standard OSGi Http Service implementation
   * Standard OSGi Http Whiteboard implementation
   * Run either with Jetty (version 11 or 12) bundle or inside your own application server using the servlet bridge
-    * [Felix HTTP Jetty 12](https://mvnrepository.com/artifact/org.apache.felix/org.apache.felix.http.jetty12) is the preferred bundle of choice as it supports JakartaEE10 (1.1.x range) and JakartaEE11 (1.2.x range).
+    * [Felix HTTP Jetty 12](https://mvnrepository.com/artifact/org.apache.felix/org.apache.felix.http.jetty12) is the preferred bundle of choice as it supports JakartaEE10 (1.1.x range) and JakartaEE11 (2.x range).
       * [Jetty WebSocket support](https://github.com/apache/felix-dev/pull/310), see example code [here](https://github.com/apache/felix-dev/blob/master/http/samples/whiteboard/src/main/java/org/apache/felix/http/samples/whiteboard/TestWebSocketServlet.java).
     * [Felix HTTP Jetty 11](https://mvnrepository.com/artifact/org.apache.felix/org.apache.felix.http.jetty) is the predecessor of the Jetty 12 bundle, which shipped with [Jetty 9.4.x](https://mvnrepository.com/artifact/org.apache.felix/org.apache.felix.http.jetty/4.2.26) in the 4.x range (JavaEE8), [Jetty 11.x](https://mvnrepository.com/artifact/org.apache.felix/org.apache.felix.http.jetty/5.1.10) in the 5.x range (JakartaEE9).
       * [Jetty WebSocket support](https://github.com/apache/felix-dev/pull/309), see example code [here](https://github.com/apache/felix-dev/blob/master/http/samples/whiteboard/src/main/java/org/apache/felix/http/samples/whiteboard/TestWebSocketServlet.java).
