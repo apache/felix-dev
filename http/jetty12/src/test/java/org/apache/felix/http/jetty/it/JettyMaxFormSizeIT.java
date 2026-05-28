@@ -63,8 +63,8 @@ public class JettyMaxFormSizeIT extends AbstractJettyTestSupport {
                 spifly(),
 
                 // bundles for the server side
-                mavenBundle().groupId("org.eclipse.jetty.ee11").artifactId("jetty-ee11-webapp").version(jettyVersion),
-                mavenBundle().groupId("org.eclipse.jetty.ee11").artifactId("jetty-ee11-servlet").version(jettyVersion),
+                mavenBundle().groupId("org.eclipse.jetty.ee10").artifactId("jetty-ee10-webapp").version(jettyVersion),
+                mavenBundle().groupId("org.eclipse.jetty.ee10").artifactId("jetty-ee10-servlet").version(jettyVersion),
                 mavenBundle().groupId("org.eclipse.jetty").artifactId("jetty-xml").version(jettyVersion),
 
                 // additional bundles for the client side
