@@ -240,9 +240,6 @@ public final class JettyConfig
     /** Felix specific property to specify the minimum response size to trigger dynamic compression */
     public static final String FELIX_JETTY_GZIP_MIN_GZIP_SIZE = "org.apache.felix.jetty.gzip.minGzipSize";
 
-    /** Felix specific property to specify the size in bytes of the buffer to inflate compressed request, or 0 for no inflation. */
-    public static final String FELIX_JETTY_GZIP_INFLATE_BUFFER_SIZE = "org.apache.felix.jetty.gzip.inflateBufferSize";
-
     /** Felix specific property to specify the {@link Deflater} flush mode to use. */
     public static final String FELIX_JETTY_GZIP_SYNC_FLUSH = "org.apache.felix.jetty.gzip.syncFlush";
 
@@ -691,10 +688,6 @@ public final class JettyConfig
 
     public int getGzipMinGzipSize() {
         return getIntProperty(FELIX_JETTY_GZIP_MIN_GZIP_SIZE, DEFAULT_GZIP_MIN_SIZE);
-    }
-
-    public int getGzipInflateBufferSize() {
-        return getIntProperty(FELIX_JETTY_GZIP_INFLATE_BUFFER_SIZE, -1);
     }
 
     public boolean isGzipSyncFlush() {
