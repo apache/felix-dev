@@ -31,7 +31,6 @@ import java.util.zip.Deflater;
 import org.apache.felix.http.base.internal.HttpConfig;
 import org.apache.felix.http.base.internal.logger.SystemLogger;
 import org.eclipse.jetty.server.CustomRequestLog;
-import org.eclipse.jetty.server.handler.gzip.GzipHandler;
 import org.osgi.framework.BundleContext;
 
 public final class JettyConfig
@@ -687,8 +686,11 @@ public final class JettyConfig
         return getBooleanProperty(FELIX_JETTY_GZIP_HANDLER_ENABLE, false);
     }
 
+    /** Default minimum size of a response before it is compressed (in bytes). */
+    public static final int DEFAULT_GZIP_MIN_SIZE = 32;
+
     public int getGzipMinGzipSize() {
-        return getIntProperty(FELIX_JETTY_GZIP_MIN_GZIP_SIZE, GzipHandler.DEFAULT_MIN_GZIP_SIZE);
+        return getIntProperty(FELIX_JETTY_GZIP_MIN_GZIP_SIZE, DEFAULT_GZIP_MIN_SIZE);
     }
 
     public int getGzipInflateBufferSize() {
