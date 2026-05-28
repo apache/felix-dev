@@ -69,6 +69,12 @@ public class EventDispatcher
     private final static String m_threadLock = "thread lock";
     private static int m_references = 0;
     private static volatile boolean m_stopping = false;
+    private static int m_totalRestarts = 0;
+    private static final int MAX_RESTARTS = 3;
+    private static long m_lastRestartTime = 0;
+    private static final long RESTART_COOLDOWN_MS = 10000; // 10 seconds
+    private static final long RESTART_BACKOFF_MS = 1000;   // 1 second backoff
+    private static boolean m_limitLogged = false;
 
     // List of requests.
     private static final List<Request> m_requestList = new ArrayList<>();
@@ -763,16 +769,107 @@ public class EventDispatcher
         return whitelist;
     }
 
+    private static void triggerRecovery(EventDispatcher dispatcher)
+    {
+        synchronized (m_threadLock)
+        {
+            // Recheck state inside lock
+            if (m_stopping || (m_thread != null && m_thread.isAlive()))
+            {
+                return;
+            }
+
+            long now = System.currentTimeMillis();
+            if (m_totalRestarts >= MAX_RESTARTS)
+            {
+                if (!m_limitLogged)
+                {
+                    dispatcher.m_logger.log((org.osgi.framework.Bundle) null, Logger.LOG_ERROR,
+                        "EventDispatcher: FelixDispatchQueue thread has crashed repeatedly. Maximum restart limit (" + MAX_RESTARTS + ") reached. Auto-recovery disabled.");
+                    m_limitLogged = true;
+                }
+                return;
+            }
+
+            if (now - m_lastRestartTime < RESTART_COOLDOWN_MS)
+            {
+                // Within cooldown period, do not trigger restart to prevent loops
+                return;
+            }
+
+            // Update state immediately to prevent other threads from triggering a restart
+            m_totalRestarts++;
+            m_lastRestartTime = now;
+        }
+
+        // Perform backoff sleep OUTSIDE the lock to avoid holding m_threadLock
+        try
+        {
+            Thread.sleep(RESTART_BACKOFF_MS);
+        }
+        catch (InterruptedException ex)
+        {
+            Thread.currentThread().interrupt();
+        }
+
+        synchronized (m_threadLock)
+        {
+            // Re-verify after sleep
+            if (!m_stopping && (m_thread == null || !m_thread.isAlive()))
+            {
+                dispatcher.m_logger.log((org.osgi.framework.Bundle) null, Logger.LOG_WARNING,
+                    "EventDispatcher: FelixDispatchQueue thread died unexpectedly. Restarting (Attempt " + m_totalRestarts + "/" + MAX_RESTARTS + ")...");
+
+                m_stopping = false;
+                m_thread = new Thread(new Runnable() {
+                    @Override
+                    public void run()
+                    {
+                        try
+                        {
+                            EventDispatcher.run();
+                        }
+                        finally
+                        {
+                            synchronized (m_threadLock)
+                            {
+                                m_thread = null;
+                                m_stopping = false;
+                                m_references = 0;
+                                m_threadLock.notifyAll();
+                            }
+                        }
+                    }
+                }, "FelixDispatchQueue");
+                m_thread.start();
+
+                // Ensure reference count is at least 1 since we are actively dispatching events
+                if (m_references <= 0)
+                {
+                    m_references = 1;
+                }
+            }
+        }
+    }
+
     private static void fireEventAsynchronously(
         EventDispatcher dispatcher, int type,
         Map<BundleContext, List<ListenerInfo>> listeners,
         EventObject event)
     {
-        //TODO: should possibly check this within thread lock, seems to be ok though without
-        // If dispatch thread is stopped, then ignore dispatch request.
-        if (m_stopping || m_thread == null)
+        // Check if the thread is dead unexpectedly
+        if (!m_stopping && (m_thread == null || !m_thread.isAlive()))
         {
-            return;
+            triggerRecovery(dispatcher);
+        }
+
+        synchronized (m_threadLock)
+        {
+            // If the dispatch thread is legitimately stopped/stopping, ignore the request.
+            if (m_stopping || m_thread == null)
+            {
+                return;
+            }
         }
 
         // First get a request from the pool or create one if necessary.

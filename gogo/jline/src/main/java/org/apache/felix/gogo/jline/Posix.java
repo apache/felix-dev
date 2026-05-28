@@ -1635,7 +1635,14 @@ public class Posix {
                     if (line.length() == 1 && line.charAt(0) == '\n') {
                         break;
                     }
-                    boolean matches = p.matcher(line).matches();
+                    boolean matches;
+                    try {
+                        matches = p.matcher(new TimeoutCharSequence(line, REGEX_TIMEOUT_MS)).matches();
+                    } catch (RegexTimeoutException e) {
+                        process.err().println("grep: pattern matching timed out (possible ReDoS attack)");
+                        process.error(1);
+                        return;
+                    }
                     AttributedStringBuilder sbl = new AttributedStringBuilder();
                     if (!count) {
                         if (sources.size() > 1) {
@@ -1664,21 +1671,27 @@ public class Posix {
                             applyStyle(sbl, colors, style);
                         }
                         AttributedString aLine = AttributedString.fromAnsi(line);
-                        Matcher matcher2 = p2.matcher(aLine.toString());
+                        Matcher matcher2 = p2.matcher(new TimeoutCharSequence(aLine.toString(), REGEX_TIMEOUT_MS));
                         int cur = 0;
-                        while (matcher2.find()) {
-                            int index = matcher2.start(0);
-                            AttributedString prefix = aLine.subSequence(cur, index);
-                            sbl.append(prefix);
-                            cur = matcher2.end();
-                            if (colored) {
-                                applyStyle(sbl, colors, invertMatch ? "mc" : "ms", "mt");
+                        try {
+                            while (matcher2.find()) {
+                                int index = matcher2.start(0);
+                                AttributedString prefix = aLine.subSequence(cur, index);
+                                sbl.append(prefix);
+                                cur = matcher2.end();
+                                if (colored) {
+                                    applyStyle(sbl, colors, invertMatch ? "mc" : "ms", "mt");
+                                }
+                                sbl.append(aLine.subSequence(index, cur));
+                                if (colored) {
+                                    applyStyle(sbl, colors, style);
+                                }
+                                nb++;
                             }
-                            sbl.append(aLine.subSequence(index, cur));
-                            if (colored) {
-                                applyStyle(sbl, colors, style);
-                            }
-                            nb++;
+                        } catch (RegexTimeoutException e) {
+                            process.err().println("grep: pattern matching timed out (possible ReDoS attack)");
+                            process.error(1);
+                            return;
                         }
                         sbl.append(aLine.subSequence(cur, aLine.length()));
                     }
@@ -2146,6 +2159,57 @@ public class Posix {
         @Override
         public Long lines() {
             return null;
+        }
+    }
+
+    private static final long REGEX_TIMEOUT_MS = 1000;
+
+    private static class RegexTimeoutException extends RuntimeException {
+        public RegexTimeoutException(String message) {
+            super(message);
+        }
+    }
+
+    private static class TimeoutCharSequence implements CharSequence {
+        private final CharSequence seq;
+        private final long timeoutTime;
+        private int count = 0;
+        private static final int CHECK_INTERVAL = 1000;
+
+        public TimeoutCharSequence(CharSequence seq, long timeoutMs) {
+            this.seq = seq;
+            this.timeoutTime = System.currentTimeMillis() + timeoutMs;
+        }
+
+        @Override
+        public int length() {
+            checkTimeout();
+            return seq.length();
+        }
+
+        @Override
+        public char charAt(int index) {
+            checkTimeout();
+            return seq.charAt(index);
+        }
+
+        @Override
+        public CharSequence subSequence(int start, int end) {
+            return new TimeoutCharSequence(seq.subSequence(start, end), timeoutTime - System.currentTimeMillis());
+        }
+
+        @Override
+        public String toString() {
+            return seq.toString();
+        }
+
+        private void checkTimeout() {
+            if (++count >= CHECK_INTERVAL) {
+                count = 0;
+                if (System.currentTimeMillis() > timeoutTime) {
+                    throw new RegexTimeoutException("Regular expression matching timed out");
+                }
+            }
         }
     }
 }

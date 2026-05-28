@@ -101,6 +101,24 @@ public class PosixTest extends AbstractParserTest {
         assertEquals("       1       5       5", res);
     }
 
+    @Test
+    public void testGrepReDosTimeout() throws Exception {
+        Context context = new Context();
+        context.addCommand("echo", new Posix(context));
+        context.addCommand("grep", new Posix(context));
+        context.addCommand("tac", this);
+
+        // This pattern (a+)+ with input aaaa...b causes catastrophic backtracking.
+        // It will trigger our ReDoS protection timeout (1 second).
+        long start = System.currentTimeMillis();
+        Object res = context.execute("echo \"aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaab\" | grep -x \"(a+)+\" | tac");
+        long duration = System.currentTimeMillis() - start;
+
+        // Assert that matching was aborted and didn't hang indefinitely (timeout is 1 second)
+        assertTrue("Matching should time out within 4 seconds", duration < 4000);
+        assertEquals("", res);
+    }
+
     public String tac() throws IOException {
         StringWriter sw = new StringWriter();
         Reader rdr = new InputStreamReader(System.in);
