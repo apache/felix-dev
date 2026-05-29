@@ -43,6 +43,10 @@ import jakarta.servlet.SessionTrackingMode;
 import org.apache.felix.http.base.internal.HttpServiceController;
 import org.apache.felix.http.base.internal.logger.SystemLogger;
 import org.eclipse.jetty.alpn.server.ALPNServerConnectionFactory;
+import org.eclipse.jetty.compression.gzip.GzipCompression;
+import org.eclipse.jetty.compression.gzip.GzipEncoderConfig;
+import org.eclipse.jetty.compression.server.CompressionConfig;
+import org.eclipse.jetty.compression.server.CompressionHandler;
 import org.eclipse.jetty.ee11.servlet.ServletContextHandler;
 import org.eclipse.jetty.ee11.servlet.ServletHolder;
 import org.eclipse.jetty.ee11.servlet.SessionHandler;
@@ -63,7 +67,6 @@ import org.eclipse.jetty.server.SslConnectionFactory;
 import org.eclipse.jetty.server.handler.ContextHandlerCollection;
 import org.eclipse.jetty.server.handler.SizeLimitHandler;
 import org.eclipse.jetty.server.handler.StatisticsHandler;
-import org.eclipse.jetty.server.handler.gzip.GzipHandler;
 import org.eclipse.jetty.session.HouseKeeper;
 import org.eclipse.jetty.util.ssl.SslContextFactory;
 import org.eclipse.jetty.util.thread.QueuedThreadPool;
@@ -300,7 +303,7 @@ public final class JettyService
                 if (threadPoolMax >= 0) {
                     // Configurable, bounded, virtual thread executor
                     VirtualThreadPool threadPool = new VirtualThreadPool();
-                    threadPool.setMaxThreads(threadPoolMax);
+                    threadPool.setMaxConcurrentTasks(threadPoolMax);
                     this.server = new Server(threadPool);
                 } else {
                     // Simple, unlimited, virtual thread Executor
@@ -371,18 +374,37 @@ public final class JettyService
 
             if (this.config.isGzipHandlerEnabled())
             {
-            	GzipHandler gzipHandler = new GzipHandler();
-            	gzipHandler.setMinGzipSize(this.config.getGzipMinGzipSize());
-            	gzipHandler.setInflateBufferSize(this.config.getGzipInflateBufferSize());
-            	gzipHandler.setSyncFlush(this.config.isGzipSyncFlush());
-            	gzipHandler.addIncludedMethods(this.config.getGzipIncludedMethods());
-            	gzipHandler.addExcludedMethods(this.config.getGzipExcludedMethods());
-            	gzipHandler.addIncludedPaths(this.config.getGzipIncludedPaths());
-            	gzipHandler.addExcludedPaths(this.config.getGzipExcludedPaths());
-            	gzipHandler.addIncludedMimeTypes(this.config.getGzipIncludedMimeTypes());
-            	gzipHandler.addExcludedMimeTypes(this.config.getGzipExcludedMimeTypes());
+            	GzipCompression gzipCompression = new GzipCompression();
+            	gzipCompression.setMinCompressSize(this.config.getGzipMinGzipSize());
+            	GzipEncoderConfig encoderConfig = new GzipEncoderConfig();
+            	encoderConfig.setSyncFlush(this.config.isGzipSyncFlush());
+            	gzipCompression.setDefaultEncoderConfig(encoderConfig);
 
-            	this.server.insertHandler(gzipHandler);
+            	CompressionConfig.Builder configBuilder = CompressionConfig.builder();
+            	for (String method : this.config.getGzipIncludedMethods()) {
+            	    configBuilder.compressIncludeMethod(method);
+            	}
+            	for (String method : this.config.getGzipExcludedMethods()) {
+            	    configBuilder.compressExcludeMethod(method);
+            	}
+            	for (String path : this.config.getGzipIncludedPaths()) {
+            	    configBuilder.compressIncludePath(path);
+            	}
+            	for (String path : this.config.getGzipExcludedPaths()) {
+            	    configBuilder.compressExcludePath(path);
+            	}
+            	for (String mimeType : this.config.getGzipIncludedMimeTypes()) {
+            	    configBuilder.compressIncludeMimeType(mimeType);
+            	}
+            	for (String mimeType : this.config.getGzipExcludedMimeTypes()) {
+            	    configBuilder.compressExcludeMimeType(mimeType);
+            	}
+
+            	CompressionHandler compressionHandler = new CompressionHandler();
+            	compressionHandler.putCompression(gzipCompression);
+            	compressionHandler.putConfiguration("/*", configBuilder.build());
+
+            	this.server.insertHandler(compressionHandler);
             }
 
             if(this.config.getStopTimeout() != -1)
@@ -440,7 +462,7 @@ public final class JettyService
                     message.append("maxThreads=").append(sizedThreadPool.getMaxThreads()).append(",");
                 } else if (threadPool instanceof VirtualThreadPool) {
                     VirtualThreadPool sizedThreadPool = (VirtualThreadPool) threadPool;
-                    message.append("maxVirtualThreads=").append(sizedThreadPool.getMaxThreads()).append(",");
+                    message.append("maxVirtualThreads=").append(sizedThreadPool.getMaxConcurrentTasks()).append(",");
                 }
                 Connector connector = this.server.getConnectors()[0];
                 if (connector instanceof ServerConnector) {
