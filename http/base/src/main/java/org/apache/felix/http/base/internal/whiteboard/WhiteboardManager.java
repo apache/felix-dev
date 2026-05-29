@@ -873,9 +873,7 @@ public final class WhiteboardManager
                 handler.getContextInfo().getServiceId(),
                 servletContext,
                 (ServletInfo) info,
-                handler.getBundleContext(),
-                info.getServiceReference().getBundle(),
-                this.httpBundleContext.getBundle());
+                handler.getBundleContext());
     }
 
     /**

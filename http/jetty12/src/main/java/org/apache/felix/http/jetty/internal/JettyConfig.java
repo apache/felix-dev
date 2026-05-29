@@ -31,7 +31,6 @@ import java.util.zip.Deflater;
 import org.apache.felix.http.base.internal.HttpConfig;
 import org.apache.felix.http.base.internal.logger.SystemLogger;
 import org.eclipse.jetty.server.CustomRequestLog;
-import org.eclipse.jetty.server.handler.gzip.GzipHandler;
 import org.osgi.framework.BundleContext;
 
 public final class JettyConfig
@@ -240,9 +239,6 @@ public final class JettyConfig
 
     /** Felix specific property to specify the minimum response size to trigger dynamic compression */
     public static final String FELIX_JETTY_GZIP_MIN_GZIP_SIZE = "org.apache.felix.jetty.gzip.minGzipSize";
-
-    /** Felix specific property to specify the size in bytes of the buffer to inflate compressed request, or 0 for no inflation. */
-    public static final String FELIX_JETTY_GZIP_INFLATE_BUFFER_SIZE = "org.apache.felix.jetty.gzip.inflateBufferSize";
 
     /** Felix specific property to specify the {@link Deflater} flush mode to use. */
     public static final String FELIX_JETTY_GZIP_SYNC_FLUSH = "org.apache.felix.jetty.gzip.syncFlush";
@@ -687,12 +683,11 @@ public final class JettyConfig
         return getBooleanProperty(FELIX_JETTY_GZIP_HANDLER_ENABLE, false);
     }
 
-    public int getGzipMinGzipSize() {
-        return getIntProperty(FELIX_JETTY_GZIP_MIN_GZIP_SIZE, GzipHandler.DEFAULT_MIN_GZIP_SIZE);
-    }
+    /** Default minimum size of a response before it is compressed (in bytes). */
+    public static final int DEFAULT_GZIP_MIN_SIZE = 32;
 
-    public int getGzipInflateBufferSize() {
-        return getIntProperty(FELIX_JETTY_GZIP_INFLATE_BUFFER_SIZE, -1);
+    public int getGzipMinGzipSize() {
+        return getIntProperty(FELIX_JETTY_GZIP_MIN_GZIP_SIZE, DEFAULT_GZIP_MIN_SIZE);
     }
 
     public boolean isGzipSyncFlush() {

@@ -24,7 +24,6 @@ import java.util.ArrayList;
 import org.apache.felix.http.base.internal.HttpConfig;
 import org.apache.felix.http.base.internal.logger.SystemLogger;
 import org.eclipse.jetty.server.CustomRequestLog;
-import org.eclipse.jetty.server.handler.gzip.GzipHandler;
 import org.eclipse.jetty.session.HouseKeeper;
 import org.osgi.framework.Bundle;
 import org.osgi.service.metatype.AttributeDefinition;
@@ -375,14 +374,9 @@ class ConfigMetaTypeProvider implements MetaTypeProvider
                 bundle.getBundleContext().getProperty(JettyConfig.FELIX_JETTY_GZIP_HANDLER_ENABLE)));
         adList.add(new AttributeDefinitionImpl(JettyConfig.FELIX_JETTY_GZIP_MIN_GZIP_SIZE,
                 "Gzip Min Size",
-                String.format("The minimum response size to trigger dynamic compression. Default is %d.", GzipHandler.DEFAULT_MIN_GZIP_SIZE),
-                GzipHandler.DEFAULT_MIN_GZIP_SIZE,
+                String.format("The minimum response size to trigger dynamic compression. Default is %d.", JettyConfig.DEFAULT_GZIP_MIN_SIZE),
+                JettyConfig.DEFAULT_GZIP_MIN_SIZE,
                 bundle.getBundleContext().getProperty(JettyConfig.FELIX_JETTY_GZIP_MIN_GZIP_SIZE)));
-        adList.add(new AttributeDefinitionImpl(JettyConfig.FELIX_JETTY_GZIP_INFLATE_BUFFER_SIZE,
-                "Gzip Inflate Buffer Size",
-                "The size in bytes of the buffer to inflate compressed request, or <= 0 for no inflation. Default is -1.",
-                -1,
-                bundle.getBundleContext().getProperty(JettyConfig.FELIX_JETTY_GZIP_INFLATE_BUFFER_SIZE)));
         adList.add(new AttributeDefinitionImpl(JettyConfig.FELIX_JETTY_GZIP_SYNC_FLUSH,
                 "Gzip Sync Flush",
                 "True if Deflater#SYNC_FLUSH should be used, else Deflater#NO_FLUSH will be used. Default is false.",
