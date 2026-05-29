@@ -19,9 +19,6 @@ package org.apache.felix.http.base.internal.dispatch;
 import java.io.File;
 import java.io.IOException;
 import java.io.InputStream;
-import java.security.AccessControlContext;
-import java.security.AccessController;
-import java.security.PrivilegedAction;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
@@ -38,7 +35,6 @@ import org.apache.commons.fileupload.FileUploadException;
 import org.apache.commons.fileupload.RequestContext;
 import org.apache.commons.fileupload.disk.DiskFileItemFactory;
 import org.apache.felix.http.base.internal.context.ExtServletContext;
-import org.osgi.framework.Bundle;
 
 import jakarta.servlet.DispatcherType;
 import jakarta.servlet.ServletException;
@@ -51,27 +47,23 @@ final class ServletRequestMultipartWrapper extends ServletRequestWrapper
      * Constant for HTTP POST method.
      */
     private static final String POST_METHOD = "POST";
-	
+
     private final MultipartConfig multipartConfig;
 
     private Collection<PartImpl> parts;
 
     private Map<String, String[]> partsParameterMap;
-	private Bundle bundleForSecurityCheck;
 
     public ServletRequestMultipartWrapper(final HttpServletRequest req,
             final ExtServletContext servletContext,
             final RequestInfo requestInfo,
             final DispatcherType type,
             final boolean asyncSupported,
-            final MultipartConfig multipartConfig,
-            final Bundle bundleForSecurityCheck)
+            final MultipartConfig multipartConfig)
     {
 		super(req, servletContext, requestInfo, type, asyncSupported);
 
         this.multipartConfig = multipartConfig;
-        this.bundleForSecurityCheck = bundleForSecurityCheck;
-
     }
 
     private RequestContext getMultipartContext() {
@@ -113,26 +105,7 @@ final class ServletRequestMultipartWrapper extends ServletRequestWrapper
                     throw new IllegalStateException("Multipart not enabled for servlet.");
                 }
 
-                if ( System.getSecurityManager() == null ) {
-                    handleMultipart(multipartContext);
-                } else {
-                    final AccessControlContext ctx = bundleForSecurityCheck.adapt(AccessControlContext.class);
-                    final IOException ioe = AccessController.doPrivileged(new PrivilegedAction<IOException>() {
-
-                        @Override
-                        public IOException run() {
-                            try {
-                                handleMultipart(multipartContext);
-                            } catch ( final IOException ioe) {
-                                return ioe;
-                            }
-                            return null;
-                        }
-                    }, ctx);
-                    if ( ioe != null ) {
-                        throw ioe;
-                    }
-                }
+                handleMultipart(multipartContext);
 
             } else {
                 throw new ServletException("Not a multipart request");
