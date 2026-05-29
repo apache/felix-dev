@@ -41,7 +41,7 @@
 
     <profiles>
         <profile>
-            <id>jetty12</id>
+            <id>jetty11</id>
             <properties>
                 <felix.java.version>11</felix.java.version>
                 <http.servlet.api.version>6.1.0</http.servlet.api.version>
