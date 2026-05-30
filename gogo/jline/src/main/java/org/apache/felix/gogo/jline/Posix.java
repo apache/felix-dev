@@ -2172,13 +2172,21 @@ public class Posix {
 
     private static class TimeoutCharSequence implements CharSequence {
         private final CharSequence seq;
-        private final long timeoutTime;
+        private final long startTime;
+        private final long timeoutNanos;
         private int count = 0;
         private static final int CHECK_INTERVAL = 1000;
 
         public TimeoutCharSequence(CharSequence seq, long timeoutMs) {
             this.seq = seq;
-            this.timeoutTime = System.currentTimeMillis() + timeoutMs;
+            this.startTime = System.nanoTime();
+            this.timeoutNanos = (timeoutMs >= Long.MAX_VALUE / 1000000) ? Long.MAX_VALUE : timeoutMs * 1000000;
+        }
+
+        private TimeoutCharSequence(CharSequence seq, long startTime, long timeoutNanos) {
+            this.seq = seq;
+            this.startTime = startTime;
+            this.timeoutNanos = timeoutNanos;
         }
 
         @Override
@@ -2195,7 +2203,7 @@ public class Posix {
 
         @Override
         public CharSequence subSequence(int start, int end) {
-            return new TimeoutCharSequence(seq.subSequence(start, end), timeoutTime - System.currentTimeMillis());
+            return new TimeoutCharSequence(seq.subSequence(start, end), startTime, timeoutNanos);
         }
 
         @Override
@@ -2206,7 +2214,7 @@ public class Posix {
         private void checkTimeout() {
             if (++count >= CHECK_INTERVAL) {
                 count = 0;
-                if (System.currentTimeMillis() > timeoutTime) {
+                if (System.nanoTime() - startTime > timeoutNanos) {
                     throw new RegexTimeoutException("Regular expression matching timed out");
                 }
             }

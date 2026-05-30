@@ -119,6 +119,39 @@ public class PosixTest extends AbstractParserTest {
         assertEquals("", res);
     }
 
+    @Test
+    public void testTimeoutCharSequenceLargeTimeout() throws Exception {
+        Class<?> clazz = Class.forName("org.apache.felix.gogo.jline.Posix$TimeoutCharSequence");
+        java.lang.reflect.Constructor<?> constructor = clazz.getDeclaredConstructor(CharSequence.class, long.class);
+        constructor.setAccessible(true);
+
+        CharSequence seq = (CharSequence) constructor.newInstance("hello", Long.MAX_VALUE);
+        assertEquals(5, seq.length());
+        assertEquals('h', seq.charAt(0));
+
+        CharSequence sub = seq.subSequence(1, 4);
+        assertEquals(3, sub.length());
+        assertEquals('e', sub.charAt(0));
+    }
+
+    @Test
+    public void testTimeoutCharSequenceTriggersTimeout() throws Exception {
+        Class<?> clazz = Class.forName("org.apache.felix.gogo.jline.Posix$TimeoutCharSequence");
+        java.lang.reflect.Constructor<?> constructor = clazz.getDeclaredConstructor(CharSequence.class, long.class);
+        constructor.setAccessible(true);
+
+        CharSequence seq = (CharSequence) constructor.newInstance("hello", 0L);
+        try {
+            for (int i = 0; i < 2000; i++) {
+                seq.length();
+            }
+            fail("Expected RegexTimeoutException to be thrown");
+        } catch (Exception e) {
+            assertEquals("org.apache.felix.gogo.jline.Posix$RegexTimeoutException", e.getClass().getName());
+            assertEquals("Regular expression matching timed out", e.getMessage());
+        }
+    }
+
     public String tac() throws IOException {
         StringWriter sw = new StringWriter();
         Reader rdr = new InputStreamReader(System.in);
