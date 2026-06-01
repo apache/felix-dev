@@ -436,6 +436,8 @@ public final class StaxParser {
         if (StaxParser.inputFactory == null) {
             XMLInputFactory factory = XMLInputFactory.newInstance();
             factory.setProperty(XMLInputFactory.IS_NAMESPACE_AWARE, true);
+            factory.setProperty(XMLInputFactory.SUPPORT_DTD, false);
+            factory.setProperty(XMLInputFactory.IS_SUPPORTING_EXTERNAL_ENTITIES, false);
             StaxParser.inputFactory = factory;
         }
         return StaxParser.inputFactory;
