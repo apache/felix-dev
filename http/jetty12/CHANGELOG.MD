@@ -10,6 +10,7 @@ All notable changes to the `org.apache.felix.http.jetty12` bundle are documented
 
 ### Changed
 
+- Updated embedded Jetty to **12.1.10** (was 12.1.9). ([FELIX-6834](https://issues.apache.org/jira/browse/FELIX-6834))
 - Migrated from the deprecated `org.eclipse.jetty.server.handler.gzip.GzipHandler` to `CompressionHandler` + `GzipCompression` + `CompressionConfig` (Jetty 12.1 compression API). All include/exclude lists (methods, paths, mime types), min compress size, and sync flush are preserved. ([FELIX-6832](https://issues.apache.org/jira/browse/FELIX-6832))
 - Replaced deprecated `VirtualThreadPool.setMaxThreads` / `getMaxThreads` with `setMaxConcurrentTasks` / `getMaxConcurrentTasks`. ([FELIX-6832](https://issues.apache.org/jira/browse/FELIX-6832))
 
