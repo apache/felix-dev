@@ -2,44 +2,47 @@
 
 This is an implementation of the [R8.1 Whiteboard Specification for Jakarta Servlet](https://docs.osgi.org/specification/osgi.cmpn/8.1.0/service.servlet.html), [HTTP Whiteboard Service as described in chapter 140](https://osgi.org/specification/osgi.cmpn/7.0.0/service.http.whiteboard.html) of the OSGi Compendium (R7) in combination with an implementation of the [HTTP Service Specification as described in chapter 102](https://osgi.org/specification/osgi.cmpn/7.0.0/service.http.html) of the OSGi Compendium. The goal is to provide a standard and simplified way to register servlets, listeners, filters, and resources in a servlet container, to managed them in servlet contexts, and to associate them with URIs. Complete set of features:
 
-  * Standard OSGi Http Service implementation
-  * Standard OSGi Http Whiteboard implementation
-  * Run either with Jetty (version 11 or 12) bundle or inside your own application server using the servlet bridge
-    * [Felix HTTP Jetty 12](https://mvnrepository.com/artifact/org.apache.felix/org.apache.felix.http.jetty12) is the preferred bundle of choice as it supports JakartaEE10 with the `jakarta` namespace.
-      * [Jetty WebSocket support](https://github.com/apache/felix-dev/pull/310), see example code [here](https://github.com/apache/felix-dev/blob/master/http/samples/whiteboard/src/main/java/org/apache/felix/http/samples/whiteboard/TestWebSocketServlet.java).
-    * [Felix HTTP Jetty 11](https://mvnrepository.com/artifact/org.apache.felix/org.apache.felix.http.jetty) is the predecessor of the Jetty 12 bundle, which shipped with [Jetty 9.4.x](https://mvnrepository.com/artifact/org.apache.felix/org.apache.felix.http.jetty/4.2.26) in the 4.x range (JavaEE8), [Jetty 11.x](https://mvnrepository.com/artifact/org.apache.felix/org.apache.felix.http.jetty/5.1.10) in the 5.x range (JakartaEE9).
-      * [Jetty WebSocket support](https://github.com/apache/felix-dev/pull/309), see example code [here](https://github.com/apache/felix-dev/blob/master/http/samples/whiteboard/src/main/java/org/apache/felix/http/samples/whiteboard/TestWebSocketServlet.java).
-  * Correctly versioned Servlet API.
+* Standard OSGi Http Service implementation
+* Standard OSGi Http Whiteboard implementation
+* Run either with Jetty (version 11 or 12) bundle or inside your own application server using the servlet bridge
+  * [Felix HTTP Jetty 12](https://mvnrepository.com/artifact/org.apache.felix/org.apache.felix.http.jetty12) is the preferred bundle of choice as it supports JakartaEE10 (1.1.x range) and JakartaEE11 (2.x range).
+    * [Jetty WebSocket support](https://github.com/apache/felix-dev/pull/310), see example code [here](https://github.com/apache/felix-dev/blob/master/http/samples/whiteboard/src/main/java/org/apache/felix/http/samples/whiteboard/TestWebSocketServlet.java).
+  * [Felix HTTP Jetty 11](https://mvnrepository.com/artifact/org.apache.felix/org.apache.felix.http.jetty) is the predecessor of the Jetty 12 bundle, which shipped with [Jetty 9.4.x](https://mvnrepository.com/artifact/org.apache.felix/org.apache.felix.http.jetty/4.2.26) in the 4.x range (JavaEE8), [Jetty 11.x](https://mvnrepository.com/artifact/org.apache.felix/org.apache.felix.http.jetty/5.1.10) in the 5.x range (JakartaEE9).
+    * [Jetty WebSocket support](https://github.com/apache/felix-dev/pull/309), see example code [here](https://github.com/apache/felix-dev/blob/master/http/samples/whiteboard/src/main/java/org/apache/felix/http/samples/whiteboard/TestWebSocketServlet.java).
+* Correctly versioned Servlet API.
 
-## Installing 
+## Installing
 
 The Apache Felix HTTP Service project includes several bundles.
 
-  * [`org.apache.felix.http.servlet-api`](https://mvnrepository.com/artifact/org.apache.felix/org.apache.felix.http.servlet-api) - Provides the Servlet API (versions 2.6, 3.0, 3.1, 4.0, 5.0 and 6.0 of the Servlet specification)
-  * [`org.apache.felix.http.api`](https://mvnrepository.com/artifact/org.apache.felix/org.apache.felix.http.api) - Provides the OSGi APIs for the Http Whiteboard and Http Service.
-  * [`org.apache.felix.http.jetty12`](https://mvnrepository.com/artifact/org.apache.felix/org.apache.felix.http.jetty12) - Implementation that is embedding Jetty server (currently Jetty 12.x, requiring Java 17). This bundle includes the http.api bundle. It's the the preferred Felix Jetty bundle to use, as Jetty 11 will be [EoL in 2025](https://github.com/jetty/jetty.project/issues/10485).
-  * [`org.apache.felix.http.jetty`](https://mvnrepository.com/artifact/org.apache.felix/org.apache.felix.http.jetty) - Predecessor implementation that is embedding Jetty server (currently Jetty 11.x, requiring Java 11). This bundle includes the http.api bundle. 
-  * [`org.apache.felix.http.sslfilter`](https://mvnrepository.com/artifact/org.apache.felix/org.apache.felix.http.sslfilter) - Servlet filter for handling SSL termination.
-  * [`org.apache.felix.http.bridge`](https://mvnrepository.com/artifact/org.apache.felix/org.apache.felix.http.bridge) - Implementation that uses the host application server (bridged mode). Must be used with the proxy (see below)
-  * [`org.apache.felix.http.proxy`](https://mvnrepository.com/artifact/org.apache.felix/org.apache.felix.http.proxy) - Proxy that is needed inside WAR when deployed inside an application server.
-  * [`org.apache.felix.http.wrappers`](https://mvnrepository.com/artifact/org.apache.felix/org.apache.felix.http.wrappers) offers wrapper classes that can be used when transitioning to the `jakarta` namespace, while having libraries that don't offer a jakartified version yet. 
+* [`org.apache.felix.http.servlet-api`](https://mvnrepository.com/artifact/org.apache.felix/org.apache.felix.http.servlet-api) - Provides the Servlet API (versions 2.6, 3.0, 3.1, 4.0, 5.0, 6.0 and 6.1 of the Servlet specification)
+* [`org.apache.felix.http.api`](https://mvnrepository.com/artifact/org.apache.felix/org.apache.felix.http.api) - Provides the OSGi APIs for the Http Whiteboard and Http Service.
+* [`org.apache.felix.http.jetty12`](https://mvnrepository.com/artifact/org.apache.felix/org.apache.felix.http.jetty12) - Implementation that is embedding Jetty server (currently Jetty 12.1.x, requiring Java 17). This bundle includes the http.api bundle. It's the preferred Felix Jetty bundle to use, as Jetty 11 has been [EoL since January 2025](https://github.com/jetty/jetty.project/issues/10485).
+* [`org.apache.felix.http.jetty`](https://mvnrepository.com/artifact/org.apache.felix/org.apache.felix.http.jetty) - Predecessor implementation that is embedding Jetty server (currently Jetty 11.x, requiring Java 11). This bundle includes the http.api bundle.
+* [`org.apache.felix.http.sslfilter`](https://mvnrepository.com/artifact/org.apache.felix/org.apache.felix.http.sslfilter) - Servlet filter for handling SSL termination.
+* [`org.apache.felix.http.bridge`](https://mvnrepository.com/artifact/org.apache.felix/org.apache.felix.http.bridge) - Implementation that uses the host application server (bridged mode). Must be used with the proxy (see below)
+* [`org.apache.felix.http.proxy`](https://mvnrepository.com/artifact/org.apache.felix/org.apache.felix.http.proxy) - Proxy that is needed inside WAR when deployed inside an application server.
+* [`org.apache.felix.http.wrappers`](https://mvnrepository.com/artifact/org.apache.felix/org.apache.felix.http.wrappers) offers wrapper classes that can be used when transitioning to the `jakarta` namespace, while having libraries that don't offer a jakartified version yet.
 
 Note that as of version **3.x**, the Servlet APIs are **no longer** packaged with the implementation bundles! If you are migrating from lower versions, be sure to add the
 `org.apache.felix.http.servlet-api` (or any other compatible Serlvet API bundle) to your
 classpath and deployment!
 
 ### Using classifiers: `light`, `with-jetty-websockets` and `with-jakarta-websockets` bundle
+
 If you would like to use your own Jetty jars instead of the one packaged with the Felix Jetty bundles, you can use the variants with the following classifiers:
+
 * `light` - A light version of the bundle that does not include the Jetty classes. This is useful when you want to use your own Jetty jars. Available for both Jetty bundles.
-* `with-jetty-websockets` - A bundle that includes the classes required for Jetty WebSocket support for Jakarta EE10. Jetty12 bundle only.
-* `with-jakarta-websockets` - A bundle that includes the classes required for Jakarta WebSocket support for Jakarta EE10. Jetty12 bundle only.
+* `with-jetty-websockets` - A bundle that includes the classes required for Jetty WebSocket support for Jakarta EE10 (1.1.x) and Jakarta EE11 (2.x). Jetty12 bundle only.
+* `with-jakarta-websockets` - A bundle that includes the classes required for Jakarta WebSocket support for Jakarta EE10 (1.1.x) and Jakarta EE11 (2.x). Jetty12 bundle only.
 
 When building the Felix Jetty bundle with Maven (`mvn clean install`), the additional bundles will be created in the `target` directory, postfixed with classifier.
 This jar can be deployed to your Felix OSGi environment, along with a compatible Jetty jars.
 See the unit tests for the required bundles and versions that need to be deployed.
 
-Or just use maven to include the dependency with the proper classifier. 
-```
+Or just use maven to include the dependency with the proper classifier.
+
+```xml
 <dependency>
    <groupId>org.apache.felix</groupId>
    <artifactId>org.apache.felix.http.jetty12</artifactId>
@@ -57,15 +60,16 @@ The Jetty implementation uses the OSGi ServiceLoader mediator technique to find 
 
 Deploying the following set of bundles would be one way to enable the ServiceLoader mediator support:
 
-  * [`org.apache.aries.spifly:org.apache.aries.spifly.dynamic.bundle:1.3.7`](https://mvnrepository.com/artifact/org.apache.aries.spifly/org.apache.aries.spifly.dynamic.bundle)
-  * [`org.ow2.asm:asm:9.7`](https://mvnrepository.com/artifact/org.ow2.asm/asm)
-  * [`org.ow2.asm:asm-analysis:9.7`](https://mvnrepository.com/artifact/org.ow2.asm/asm-analysis)
-  * [`org.ow2.asm:asm-commons:9.7`](https://mvnrepository.com/artifact/org.ow2.asm/asm-commons)
-  * [`org.ow2.asm:asm-tree:9.7`](https://mvnrepository.com/artifact/org.ow2.asm/asm-tree)
-  * [`org.ow2.asm:asm-util:9.7`](https://mvnrepository.com/artifact/org.ow2.asm/asm-util)
+* [`org.apache.aries.spifly:org.apache.aries.spifly.dynamic.bundle:1.3.7`](https://mvnrepository.com/artifact/org.apache.aries.spifly/org.apache.aries.spifly.dynamic.bundle)
+* [`org.ow2.asm:asm:9.7`](https://mvnrepository.com/artifact/org.ow2.asm/asm)
+* [`org.ow2.asm:asm-analysis:9.7`](https://mvnrepository.com/artifact/org.ow2.asm/asm-analysis)
+* [`org.ow2.asm:asm-commons:9.7`](https://mvnrepository.com/artifact/org.ow2.asm/asm-commons)
+* [`org.ow2.asm:asm-tree:9.7`](https://mvnrepository.com/artifact/org.ow2.asm/asm-tree)
+* [`org.ow2.asm:asm-util:9.7`](https://mvnrepository.com/artifact/org.ow2.asm/asm-util)
 
 ### Jetty 12 bundle
-For the Jetty 12 bundle, start the following set of bundles _before_ the Jetty 12 bundle, but after the beforementioned ServiceLoader bundles (the order is important and can be configured in `felix.auto.start.1`). 
+
+For the Jetty 12 bundle, start the following set of bundles _before_ the Jetty 12 bundle, but after the beforementioned ServiceLoader bundles (the order is important and can be configured in `felix.auto.start.1`).
 The Jetty version should correspond with the version used in the [Jetty 12 bundle](https://github.com/apache/felix-dev/blob/master/http/jetty12/pom.xml#L44).
 
 * [`jetty-alpn-server-${jetty.version}`](https://mvnrepository.com/artifact/org.eclipse.jetty/jetty-alpn-server)
@@ -88,7 +92,6 @@ of additional bundles to deploy [as described in the jetty documentation](https:
 
     * For java 8 version 1.8.0_252 or later skip the bootclasspath argument and deploy the following bundle instead:
         * `org.eclipse.jetty.alpn:alpn-api:1.1.3.v20160715`
-
 
 ## Using the OSGi Http Whiteboard
 
@@ -124,52 +127,52 @@ public class Activator implements BundleActivator {
     }
 }
 ```
+
 An implementation note for when using the Felix HTTP Jetty 12 bundle: only registering a filter without a servlet, will not work. Make sure that there is a servlet registered (on the same path as the filter) when registering a filter, even when that servlet is not hit eventually.
 
 To ensure the HTTP whiteboard service picks up your servlet and filter correctly, your service
-registration *must* provide several service properties.
-
+registration _must_ provide several service properties.
 
 ### Servlet service properties
 
 See full reference in the [OSGi specification](https://docs.osgi.org/specification/osgi.cmpn/8.1.0/service.servlet.html#service.servlet-i21223311).
 The most important properties are:
 
-  * `osgi.http.whiteboard.servlet.pattern` - defines the servlet pattern to register the servlet under, should be a path as defined in the Servlet specification.
-  * `osgi.http.whiteboard.context.select` - Filter expression to select the servlet context (optional).
-  * `osgi.http.whiteboard.servlet.asyncSupported` - Declares whether the servlet supports the asynchronous operation mode. Allowed values are true and false independent of case. Defaults to false. (optional)
-  * `osgi.http.whiteboard.servlet.multipart.enable` - Enables support for multipart configuration on the servlet. Allowed values are true and false independent of case. Defaults to false. (optional)
-  * `servlet.init.*` - these properties (sans the `servlet.init.` prefix) are made available throught the `ServletConfig` object of your servlet. This allows you to supply your servlet initialization parameters as you would normally do in the web descriptor (web.xml).
+* `osgi.http.whiteboard.servlet.pattern` - defines the servlet pattern to register the servlet under, should be a path as defined in the Servlet specification.
+* `osgi.http.whiteboard.context.select` - Filter expression to select the servlet context (optional).
+* `osgi.http.whiteboard.servlet.asyncSupported` - Declares whether the servlet supports the asynchronous operation mode. Allowed values are true and false independent of case. Defaults to false. (optional)
+* `osgi.http.whiteboard.servlet.multipart.enable` - Enables support for multipart configuration on the servlet. Allowed values are true and false independent of case. Defaults to false. (optional)
+* `servlet.init.*` - these properties (sans the `servlet.init.` prefix) are made available throught the `ServletConfig` object of your servlet. This allows you to supply your servlet initialization parameters as you would normally do in the web descriptor (web.xml).
 
 ### Filter service properties
 
 See full reference in the [OSGi specification](https://docs.osgi.org/specification/osgi.cmpn/8.1.0/service.servlet.html#d0e87922) .
 The most important properties are:
 
-  * `osgi.http.whiteboard.filter.regex` - The regular expression pattern to register filter with.
-  * `osgi.http.whiteboard.context.select` - Filter expression to select the servlet context (optional).
-  * `osgi.http.whiteboard.filter.pattern` - Apply this servlet filter to the specified URL path patterns. The format of the patterns is specified in the servlet specification.
-  * `osgi.http.whiteboard.filter.asyncSupported` - Declares whether the servlet filter supports asynchronous operation mode. Allowed values are true and false independent of case. Defaults to false. (optional)
-  * `filter.init.*` - these properties (sans the `filter.init.` prefix) are made available throught the `FilterConfig` object of your filter. This allows you to supply your filter initialization parameters as you would normally do in the web descriptor (web.xml).
+* `osgi.http.whiteboard.filter.regex` - The regular expression pattern to register filter with.
+* `osgi.http.whiteboard.context.select` - Filter expression to select the servlet context (optional).
+* `osgi.http.whiteboard.filter.pattern` - Apply this servlet filter to the specified URL path patterns. The format of the patterns is specified in the servlet specification.
+* `osgi.http.whiteboard.filter.asyncSupported` - Declares whether the servlet filter supports asynchronous operation mode. Allowed values are true and false independent of case. Defaults to false. (optional)
+* `filter.init.*` - these properties (sans the `filter.init.` prefix) are made available throught the `FilterConfig` object of your filter. This allows you to supply your filter initialization parameters as you would normally do in the web descriptor (web.xml).
 
-The order of filters is no longer managed by the `service.ranking` property, but by implementing the `compareTo` method. 
+The order of filters is no longer managed by the `service.ranking` property, but by implementing the `compareTo` method.
 Multiple servlet filters can process the same servlet request/response. If more than one Filter matches, they are processed in ranking order, as specified in `ServiceReference.compareTo`. The servlet filter with the highest ranking is processed first in the filter chain, while the servlet filter with the lowest ranking is processed last, before the Servlet.service method is called. After the servlet completes its service method the filter chain is unwound in reverse order.
 
 ### ServletContextHelper service properties
 
-See full reference in the [OSGi specification](https://docs.osgi.org/specification/osgi.cmpn/8.1.0/service.servlet.html#service.http.whiteboard.servletcontext). 
+See full reference in the [OSGi specification](https://docs.osgi.org/specification/osgi.cmpn/8.1.0/service.servlet.html#service.http.whiteboard.servletcontext).
 The most important properties are:
 
-  * `osgi.http.whiteboard.context.name` - the identifier of the registered HTTP context to be referenced by a servlet or filter service
-  * `osgi.http.whiteboard.context.path` - The path of the servlet context.
-  * `context.init.*` - Properties starting with this prefix are provided as init parameters through the ServletContext.getInitParameter and ServletContext.getInitParameterNames methods. The context.init. prefix is removed from the parameter name.
+* `osgi.http.whiteboard.context.name` - the identifier of the registered HTTP context to be referenced by a servlet or filter service
+* `osgi.http.whiteboard.context.path` - The path of the servlet context.
+* `context.init.*` - Properties starting with this prefix are provided as init parameters through the ServletContext.getInitParameter and ServletContext.getInitParameterNames methods. The context.init. prefix is removed from the parameter name.
 
 ## Using the HttpService
 
 In general the Http Service is regarded legacy and the OSGi Http Whiteboard should be used instead. If you still want to use the Http Service, this is a brief introduction. The main components provided by the Apache Felix HTTP Service bundle are:
 
- * `HttpService` - Service used to dynamically register resources and servlets;
- * `HttpContext` - Additional (optional) component to handle authentication, resource and mime type mappings.
+* `HttpService` - Service used to dynamically register resources and servlets;
+* `HttpContext` - Additional (optional) component to handle authentication, resource and mime type mappings.
 
 Servlets created for the OSGi HTTP service don't need to have any reference to the OSGi specification (they only need to
 conform to the Servlet specification), like in the example:
@@ -178,7 +181,7 @@ conform to the Servlet specification), like in the example:
 public class HelloWorld extends HttpServlet {
     @Override
     protected void doGet(HttpServletRequest req, HttpServletResponse resp) throws ServletException, IOException {
-        resp.getWriter().write("Hello World");		
+        resp.getWriter().write("Hello World");
     }
 }
 ```
@@ -231,10 +234,10 @@ calling the `HttpService.unregister` method.
 
 As you notice in the example above, the `registerServlet` method accepts four parameters:
 
- * the servlet alias;
- * the `Servlet` instance;
- * an additional configuration `Dictionary`;
- * a `HttpContext`.
+* the servlet alias;
+* the `Servlet` instance;
+* an additional configuration `Dictionary`;
+* a `HttpContext`.
 
 The servlet alias must begin with a slash and must not end with a slash. When a request is processed, the HTTP Service
 will try to exact match the requested URI with a registered servlet. If not existent, it will remove the last '/' in the
@@ -311,11 +314,11 @@ or the correct MIME type implementing the method `HttpContext.getMimeType` like 
 //....
 public String getMimeType(String file) {
     if (file.endsWith(".jpg") {
-        return "image/jpeg";  
+        return "image/jpeg";
     } else if (file.endsWith(".png")) {
-        return "image/png";  
-    } else {  
-        return "text/html";  
+        return "image/png";
+    } else {
+        return "text/html";
     }
 }
 //....
@@ -353,11 +356,10 @@ little setup is needed for this to work:
 
 A detailed example can be found [here](https://github.com/apache/felix-dev/blob/master/http/samples/bridge).
 
-
 ## Using the SSL filter
 
 This filter provides you means to transparently handle [SSL termination proxies](https://en.wikipedia.org/wiki/SSL_termination_proxy),
-allowing your servlets and filters to work *like they were accessed directly through HTTPS*. This filter is useful when
+allowing your servlets and filters to work _like they were accessed directly through HTTPS_. This filter is useful when
 deploying applications in large datacenters where frontend load-balancers distribute the load among several servers in
 the same datacenter by stripping the SSL encryption.
 
@@ -428,7 +430,6 @@ properties can be used (some legacy property names still exist but are not docum
 | `org.apache.felix.http.runtime.init.`                     | Properties starting with this prefix are added as service registration properties to the HttpServiceRuntime service. The prefix is removed for the property name.                                                                                                                                                                                                                                                                                                                                                                                                                                    |
 | `org.apache.felix.jetty.gziphandler.enable`               | Whether the server should use a server-wide gzip handler. Default is false.                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                          |
 | `org.apache.felix.jetty.gzip.minGzipSize`                 | The minimum response size to trigger dynamic compression. Default is GzipHandler.DEFAULT_MIN_GZIP_SIZE.                                                                                                                                                                                                                                                                                                                                                                                                                                                                                              |
-| `org.apache.felix.jetty.gzip.inflateBufferSize`           | The size in bytes of the buffer to inflate compressed request, or <= 0 for no inflation. Default is -1.                                                                                                                                                                                                                                                                                                                                                                                                                                                                                              |
 | `org.apache.felix.jetty.gzip.syncFlush`                   | True if Deflater#SYNC_FLUSH should be used, else Deflater#NO_FLUSH will be used. Default is false.                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                   |
 | `org.apache.felix.jetty.gzip.includedMethods`             | The additional http methods to include in compression. Default is none.                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                              |
 | `org.apache.felix.jetty.gzip.excludedMethods`             | The additional http methods to exclude in compression. Default is none.                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                              |
@@ -464,21 +465,20 @@ The SSL-filter bundle supports the following configuration options, using the PI
 | `ssl-forward.value` | Defines what HTTP header value to look for in a request to determine whether a request is a forwarded SSL request in a request. The default is `on`. |
 | `ssl-forward-cert.header` | Defines what HTTP header to look for in a request to obtain the forwarded client certificate. The default is `X-Forwarded-SSL-Certificate`. |
 
-
 ### HTTP port settings
 
 As of HTTP Jetty version 2.2.2, it is possible to assign a free port for HTTP or HTTPS automatically, based on certain
 rules, for example, a range between 8000 and 9000. The syntax is based on the version ranges, as described in the OSGi
 specification. The following forms are supported:
 
-  * `*` or `0`: binds to the first available port;
-  * `8000`: binds to port `8000`, failing if this port is already taken;
-  * `[8000,9000]`: binds to a free port in the range 8000 (inclusive) and 9000 (inclusive);
-  * `[8000,9000)`: binds to a free port in the range 8000 (inclusive) and 9000 (exclusive);
-  * `(8000,9000]`: binds to a free port in the range 8000 (exclusive) and 9000 (inclusive);
-  * `(8000,9000)`: binds to a free port in the range 8000 (exclusive) and 9000 (exclusive);
-  * `[,9000)`: binds to a free port in the range 1 (inclusive) and 9000 (exclusive);
-  * `[8000,)`: binds to a free port in the range 8000 (inclusive) and 65535 (exclusive).
+* `*` or `0`: binds to the first available port;
+* `8000`: binds to port `8000`, failing if this port is already taken;
+* `[8000,9000]`: binds to a free port in the range 8000 (inclusive) and 9000 (inclusive);
+* `[8000,9000)`: binds to a free port in the range 8000 (inclusive) and 9000 (exclusive);
+* `(8000,9000]`: binds to a free port in the range 8000 (exclusive) and 9000 (inclusive);
+* `(8000,9000)`: binds to a free port in the range 8000 (exclusive) and 9000 (exclusive);
+* `[,9000)`: binds to a free port in the range 1 (inclusive) and 9000 (exclusive);
+* `[8000,)`: binds to a free port in the range 8000 (inclusive) and 65535 (exclusive).
 
 Note that picking a port is *not* performed atomically and multiple instances can try to bind to the same port at the
 same time.
@@ -503,7 +503,6 @@ environment. On the other hand they are hard to capture and propagate. For examp
 `contextInitialized` event may be sent before the framework and any of the contained bundles are actually ready to act.
 Likewise the `contextDestroyed` event may come to late.
 
-
 ## Servlet Context Notes
 
 `ServletContext` instances are managed internally by the Http Service implementation. For each `HttpContext` instance
@@ -522,13 +521,12 @@ the provided `HttpContext` instance:
 | `getInitParameterNames`, `getServlets`, `getServletNames` | Always returns empty `Enumeration` |
 | `getAttribute`, `getAttributeNames`, `setAttribute`, `removeAttribute` | By default maintained for each `ServletContext` managed by the Http Service. If the `org.apache.felix.http.shared*servlet*context_attributes` framework property is set to `true` these methods are actually based on the `ServletContext` provided by the servlet container and thus attributes are shared amongst all `ServlectContext` instances, incl. the `ServletContext` provided by the servlet container |
 
-
 ## Examples
 
 A set of simple examples illustrating the various features are available.
 
-  * Whiteboard sample: <https://github.com/apache/felix-dev/tree/master/http/samples/whiteboard>
-  * Servlet bridge sample: <https://github.com/apache/felix-dev/tree/master/http/samples/bridge/>
+* Whiteboard sample: <https://github.com/apache/felix-dev/tree/master/http/samples/whiteboard>
+* Servlet bridge sample: <https://github.com/apache/felix-dev/tree/master/http/samples/bridge/>
 
 ## Maven Artifacts
 
@@ -565,4 +563,268 @@ This is a list of the most recent artifacts at the time of writing this document
     <artifactId>org.apache.felix.http.sslfilter</artifactId>
     <version>2.0.2</version>
 </dependency>
+```
+
+## The OSGi TCK
+
+The implementation passes all updated tests for these specifications:
+
+* [OSGi Http Service R8](https://github.com/osgi/osgi/tree/r8-cmpn-final/org.osgi.test.cases.http)
+* [OSGi Http Whiteboard R8](https://github.com/osgi/osgi/tree/r8-cmpn-final/org.osgi.test.cases.http.whiteboard)
+* [OSGi Http Servlet Whiteboard R8.1](https://github.com/osgi/osgi/tree/8.1.0.cmpn/org.osgi.test.cases.servlet)
+
+However, as there were clarifications and fixes of those tests afterwards for running the tests, it needs:
+
+* [This fix for the servlet whiteboard](https://github.com/osgi/osgi/commit/f38f8b32a720ab9a513a20d67240d7f4c8b863ed)
+* The below patch to the http whiteboard tests:
+
+```txt
+diff --git a/org.osgi.test.cases.http.whiteboard/src/org/osgi/test/cases/http/whiteboard/junit/HttpServiceRuntimeTestCase.java b/org.osgi.test.cases.http.whiteboard/src/org/osgi/test/cases/http/whiteboard/junit/HttpServiceRuntimeTestCase.java
+index 469d7c1f70..4b8a07e1ce 100644
+--- a/org.osgi.test.cases.http.whiteboard/src/org/osgi/test/cases/http/whiteboard/junit/HttpServiceRuntimeTestCase.java
++++ b/org.osgi.test.cases.http.whiteboard/src/org/osgi/test/cases/http/whiteboard/junit/HttpServiceRuntimeTestCase.java
+@@ -552,26 +552,26 @@ public class HttpServiceRuntimeTestCase extends BaseHttpWhiteboardTestCase {
+
+ 					String name = (String) attributes.get(ContractNamespace.CONTRACT_NAMESPACE);
+
+-					if (name != null) {
++					if ("JavaServlet".equals(name)) {
+ 						Collection<Version> versions = Versions.plus(attributes
+ 								.get(ContractNamespace.CAPABILITY_VERSION_ATTRIBUTE));
+
+-						if (name.equals("JavaServlet") && !versions.isEmpty()
+-								&& versions.iterator()
+-										.next()
+-										.equals(new Version("3.1.0"))) {
+-							Map<String, String> directives = capability.getDirectives();
++						for (Version v : versions) {
++							if (v.equals(new Version("3.1.0"))) {
++								Map<String,String> directives = capability
++										.getDirectives();
+
+-							String uses = directives.get(Namespace.CAPABILITY_USES_DIRECTIVE);
++								String uses = directives.get(Namespace.CAPABILITY_USES_DIRECTIVE);
+
+-							List<String> packages = Arrays.asList(uses.split("\\s*,\\s*"));
++								List<String> packages = Arrays.asList(uses.split("\\s*,\\s*"));
+
+-							assertTrue(packages.contains("javax.servlet"));
+-							assertTrue(packages.contains("javax.servlet.annotation"));
+-							assertTrue(packages.contains("javax.servlet.descriptor"));
+-							assertTrue(packages.contains("javax.servlet.http"));
++								assertTrue(packages.contains("javax.servlet"));
++								assertTrue(packages.contains("javax.servlet.annotation"));
++								assertTrue(packages.contains("javax.servlet.descriptor"));
++								assertTrue(packages.contains("javax.servlet.http"));
+
+-							foundContract = true;
++								foundContract = true;
++							}
+ 						}
+ 					}
+ 				}
+diff --git a/org.osgi.test.cases.http.whiteboard/src/org/osgi/test/cases/http/whiteboard/junit/ServletContextHelperTestCase.java b/org.osgi.test.cases.http.whiteboard/src/org/osgi/test/cases/http/whiteboard/junit/ServletContextHelperTestCase.java
+index ab1ed531e1..fb70551cc0 100644
+--- a/org.osgi.test.cases.http.whiteboard/src/org/osgi/test/cases/http/whiteboard/junit/ServletContextHelperTestCase.java
++++ b/org.osgi.test.cases.http.whiteboard/src/org/osgi/test/cases/http/whiteboard/junit/ServletContextHelperTestCase.java
+@@ -154,17 +154,6 @@ public class ServletContextHelperTestCase extends BaseHttpWhiteboardTestCase {
+ 		}
+ 	}
+
+-	public void test_140_2_13to14() throws Exception {
+-		BundleContext context = getContext();
+-		ServiceReference<ServletContextHelper> serviceReference = context.getServiceReference(ServletContextHelper.class);
+-
+-		assertNotNull(serviceReference);
+-		assertEquals(Constants.SCOPE_BUNDLE, serviceReference.getProperty(Constants.SERVICE_SCOPE));
+-		assertEquals(
+-				DEFAULT,
+-				serviceReference.getProperty(HttpWhiteboardConstants.HTTP_WHITEBOARD_CONTEXT_NAME));
+-	}
+-
+ 	public void test_140_2_15to16() throws Exception {
+ 		BundleContext context = getContext();
+
+@@ -179,6 +168,12 @@ public class ServletContextHelperTestCase extends BaseHttpWhiteboardTestCase {
+ 	public void test_140_2_17to22() throws Exception {
+ 		final BundleContext context = getContext();
+
++		Dictionary<String, Object> contextProperties = new Hashtable<String, Object>();
++	  	contextProperties.put(HttpWhiteboardConstants.HTTP_WHITEBOARD_CONTEXT_NAME, "mycontext");
++		contextProperties.put(HttpWhiteboardConstants.HTTP_WHITEBOARD_CONTEXT_PATH, "/");
++
++		serviceRegistrations.add(context.registerService(ServletContextHelper.class, new ServletContextHelper(context.getBundle()) {}, contextProperties));
++
+ 		FindHook findHook = new FindHook() {
+
+ 			@Override
+@@ -190,11 +185,11 @@ public class ServletContextHelperTestCase extends BaseHttpWhiteboardTestCase {
+ 					return;
+ 				}
+
+-				// don't show default ServletContextHelper
++				// don't show custom context
+ 				for (Iterator<ServiceReference<?>> iterator = references.iterator(); iterator.hasNext();) {
+ 					ServiceReference<?> sr = iterator.next();
+
+-					if (DEFAULT.equals(sr.getProperty(HttpWhiteboardConstants.HTTP_WHITEBOARD_CONTEXT_NAME))) {
++					if ("mycontext".equals(sr.getProperty(HttpWhiteboardConstants.HTTP_WHITEBOARD_CONTEXT_NAME))) {
+ 						iterator.remove();
+ 					}
+ 				}
+@@ -205,13 +200,22 @@ public class ServletContextHelperTestCase extends BaseHttpWhiteboardTestCase {
+ 		serviceRegistrations.add(context.registerService(FindHook.class, findHook, null));
+
+ 		AtomicReference<ServletContext> sc1 = new AtomicReference<ServletContext>();
++		AtomicReference<ServletContext> sc2 = new AtomicReference<ServletContext>();
+
+ 		Dictionary<String, Object> properties = new Hashtable<String, Object>();
+ 		properties.put(HttpWhiteboardConstants.HTTP_WHITEBOARD_LISTENER, "true");
++		properties.put(HttpWhiteboardConstants.HTTP_WHITEBOARD_CONTEXT_SELECT,
++            		"(" + HttpWhiteboardConstants.HTTP_WHITEBOARD_CONTEXT_NAME + "=mycontext)");
+ 		ServiceRegistration<ServletContextListener> serviceRegistration = context.registerService(ServletContextListener.class, new MockSCL(sc1), properties);
+ 		serviceRegistrations.add(serviceRegistration);
+
+ 		assertNull(sc1.get());
++
++		properties = new Hashtable<String, Object>();
++		properties.put(HttpWhiteboardConstants.HTTP_WHITEBOARD_LISTENER, "true");
++		serviceRegistrations.add(context.registerService(ServletContextListener.class, new MockSCL(sc2), properties));
++
++		assertNotNull(sc2.get());
+ 	}
+
+ 	public void test_table_140_1_HTTP_WHITEBOARD_CONTEXT_NAME_type() throws Exception {
+@@ -295,17 +299,6 @@ public class ServletContextHelperTestCase extends BaseHttpWhiteboardTestCase {
+ 		assertEquals(contextName, sc1.get().getServletContextName());
+ 	}
+
+-	public void test_table_140_1_HTTP_WHITEBOARD_CONTEXT_NAME_default() throws Exception {
+-		BundleContext context = getContext();
+-		ServiceReference<ServletContextHelper> serviceReference = context.getServiceReference(ServletContextHelper.class);
+-
+-		assertNotNull(serviceReference);
+-		assertEquals(Constants.SCOPE_BUNDLE, serviceReference.getProperty(Constants.SERVICE_SCOPE));
+-		assertEquals(
+-				DEFAULT,
+-				serviceReference.getProperty(HttpWhiteboardConstants.HTTP_WHITEBOARD_CONTEXT_NAME));
+-	}
+-
+ 	public void test_table_140_1_HTTP_WHITEBOARD_CONTEXT_NAME_overrideDefault() throws Exception {
+ 		BundleContext context = getContext();
+ 		String contextPath = "/context1";
+@@ -740,67 +733,61 @@ public class ServletContextHelperTestCase extends BaseHttpWhiteboardTestCase {
+
+ 	public void test_140_2_1() throws Exception {
+ 		BundleContext context = getContext();
+-		ServiceReference<ServletContextHelper> serviceReference = context.getServiceReference(ServletContextHelper.class);
++		AtomicReference<ServletContext> sc1 = new AtomicReference<ServletContext>();
+
+-		assertNotNull(serviceReference);
++		Dictionary<String, Object> properties = new Hashtable<String, Object>();
++		properties.put(HttpWhiteboardConstants.HTTP_WHITEBOARD_LISTENER, "true");
++		serviceRegistrations.add(context.registerService(ServletContextListener.class, new MockSCL(sc1), properties));
+
+-		ServletContextHelper servletContextHelper = context.getService(serviceReference);
++		ServletContext servletContext = sc1.get();
+
+-		assertNotNull(servletContextHelper);
++		assertNotNull(servletContext);
+
+-		assertNull(servletContextHelper.getMimeType("index.html"));
++		assertNull(servletContext.getMimeType("index.html"));
+ 	}
+
+ 	public void test_140_2_2() throws Exception {
+ 		BundleContext context = getContext();
+-		ServiceReference<ServletContextHelper> serviceReference = context.getServiceReference(ServletContextHelper.class);
+-
+-		assertNotNull(serviceReference);
+-
+-		ServletContextHelper servletContextHelper = context.getService(serviceReference);
+-
+-		assertNotNull(servletContextHelper);
++		AtomicReference<ServletContext> sc1 = new AtomicReference<ServletContext>();
+
+-		assertNull(servletContextHelper.getRealPath("META-INF/MANIFEST.MF"));
++		Dictionary<String, Object> properties = new Hashtable<String, Object>();
++		properties.put(HttpWhiteboardConstants.HTTP_WHITEBOARD_LISTENER, "true");
++		serviceRegistrations.add(context.registerService(ServletContextListener.class, new MockSCL(sc1), properties));
++		ServletContext servletContext = sc1.get();
++
++		assertNotNull(servletContext);
++
++		assertNull(servletContext.getRealPath("META-INF/MANIFEST.MF"));
+ 	}
+
+ 	public void test_140_2_3() throws Exception {
+ 		BundleContext context = getContext();
+-		ServiceReference<ServletContextHelper> serviceReference = context.getServiceReference(ServletContextHelper.class);
+-
+-		assertNotNull(serviceReference);
++		AtomicReference<ServletContext> sc1 = new AtomicReference<ServletContext>();
+
+-		ServletContextHelper servletContextHelper = context.getService(serviceReference);
++		Dictionary<String, Object> properties = new Hashtable<String, Object>();
++		properties.put(HttpWhiteboardConstants.HTTP_WHITEBOARD_LISTENER, "true");
++		serviceRegistrations.add(context.registerService(ServletContextListener.class, new MockSCL(sc1), properties));
++
++                ServletContext servletContext = sc1.get();
+
+-		assertNotNull(servletContextHelper);
++		assertNotNull(servletContext);
+
+-		assertNotNull(servletContextHelper.getResource("META-INF/MANIFEST.MF"));
++		assertNotNull(servletContext.getResource("META-INF/MANIFEST.MF"));
+ 	}
+
+ 	public void test_140_2_4() throws Exception {
+ 		BundleContext context = getContext();
+-		ServiceReference<ServletContextHelper> serviceReference = context.getServiceReference(ServletContextHelper.class);
+-
+-		assertNotNull(serviceReference);
+-
+-		ServletContextHelper servletContextHelper = context.getService(serviceReference);
+-
+-		assertNotNull(servletContextHelper);
+-
+-		assertNotNull(servletContextHelper.getResourcePaths("META-INF/"));
+-	}
+-
+-	public void test_140_2_5() throws Exception {
+-		BundleContext context = getContext();
+-		ServiceReference<ServletContextHelper> serviceReference = context.getServiceReference(ServletContextHelper.class);
++		AtomicReference<ServletContext> sc1 = new AtomicReference<ServletContext>();
+
+-		assertNotNull(serviceReference);
++		Dictionary<String, Object> properties = new Hashtable<String, Object>();
++		properties.put(HttpWhiteboardConstants.HTTP_WHITEBOARD_LISTENER, "true");
++		serviceRegistrations.add(context.registerService(ServletContextListener.class, new MockSCL(sc1), properties));
+
+-		ServletContextHelper servletContextHelper = context.getService(serviceReference);
++		ServletContext servletContext = sc1.get();
+
+-		assertNotNull(servletContextHelper);
++		assertNotNull(servletContext);
+
+-		assertTrue(servletContextHelper.handleSecurity(null, null));
++		assertNotNull(servletContext.getResourcePaths("META-INF/"));
+ 	}
+
+ 	public void test_140_2_6_addFilter() throws Exception {
+diff --git a/org.osgi.test.cases.http.whiteboard/src/org/osgi/test/cases/http/whiteboard/junit/ServletTestCase.java b/org.osgi.test.cases.http.whiteboard/src/org/osgi/test/cases/http/whiteboard/junit/ServletTestCase.java
+index 14d0bf7ac6..b72a406030 100644
+--- a/org.osgi.test.cases.http.whiteboard/src/org/osgi/test/cases/http/whiteboard/junit/ServletTestCase.java
++++ b/org.osgi.test.cases.http.whiteboard/src/org/osgi/test/cases/http/whiteboard/junit/ServletTestCase.java
+@@ -910,8 +910,8 @@ public class ServletTestCase extends BaseHttpWhiteboardTestCase {
+ 			@Override
+ 			protected void service(HttpServletRequest request, HttpServletResponse response) throws ServletException, IOException {
+ 				invoked.set(true);
+-				String exception = (String) request.getAttribute(RequestDispatcher.ERROR_EXCEPTION_TYPE);
+-				response.getWriter().write((exception == null) ? "" : exception);
++				Class<?> exception = (Class<?>) request.getAttribute(RequestDispatcher.ERROR_EXCEPTION_TYPE);
++				response.getWriter().write((exception == null) ? "" : exception.getName());
+ 			}
+
+ 		}
 ```
