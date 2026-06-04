@@ -739,11 +739,6 @@
             <artifactId>org.apache.felix.http.wrappers</artifactId>
             <version>6.1.0</version>
         </dependency>
-        <dependency>
-            <groupId>commons-fileupload</groupId>
-            <artifactId>commons-fileupload</artifactId>
-            <version>1.6.0</version>
-        </dependency>
     	<!-- Testing -->
         <dependency>
             <groupId>junit</groupId>
