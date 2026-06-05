@@ -245,6 +245,7 @@ public class JsonSupport {
         private boolean insideLineComment = false;
         private boolean insideString = false;
         private boolean isSkippedSlash = false;
+        private int trailingBackslashCount = 0;
         private char oldChar = 0; // priming with 0 as it is not part of comment or string escaping chars
             
         public CommentRemovingReader(Reader reader) {
@@ -258,7 +259,9 @@ public class JsonSupport {
 
         @Override
         public int read(char[] cbuf, int off, int len) throws IOException {
-            int charsRead = super.read(cbuf, off, len);
+            // When a slash is pending from a prior read, reserve one slot so that the
+            // recovered '/' plus the new chars never exceeds len and no char is truncated.
+            int charsRead = super.read(cbuf, off, isSkippedSlash ? Math.max(1, len - 1) : len);
                 if (charsRead > 0) {
                     StringBuilder filteredContent = new StringBuilder();
                     StringBuilder currentLine = new StringBuilder();
@@ -270,11 +273,12 @@ public class JsonSupport {
                         // Detect String start/end if not inside a comment
                         if (!insideComment && !insideLineComment) {
                             if (c == '"') {
-                                // only flip if not escaped quotes
-                                if (oldChar != '\\') {
+                                // Quotes are escaped only when preceded by an odd number of backslashes.
+                                if (trailingBackslashCount % 2 == 0) {
                                     insideString = !insideString;
                                 }
                                 currentLine.append(c);
+                                trailingBackslashCount = 0;
                                 oldChar = c;
                                 continue;
                             }
@@ -350,6 +354,12 @@ public class JsonSupport {
                     if (!insideComment && !insideLineComment) {
                         currentLine.append(c);
                     }
+
+                    if (insideString && c == '\\') {
+                        trailingBackslashCount++;
+                    } else {
+                        trailingBackslashCount = 0;
+                    }
                     oldChar = c;
                 }
 
@@ -373,6 +383,7 @@ public class JsonSupport {
                 insideLineComment = false;
                 insideString = false;
                 isSkippedSlash = false;
+                trailingBackslashCount = 0;
                 in.close();
                 super.close();
             }
