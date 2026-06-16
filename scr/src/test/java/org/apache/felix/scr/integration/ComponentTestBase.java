@@ -904,8 +904,8 @@ public abstract class ComponentTestBase
         {
             m_realOut = System.out;
             m_realErr = System.err;
-            System.setOut( new NullStdout() );
-            System.setErr( new NullStdout() );
+//            System.setOut( new NullStdout() );
+//            System.setErr( new NullStdout() );
             m_logThread = new Thread( this );
             m_logThread.start();
         }
