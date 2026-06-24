@@ -35,6 +35,7 @@ import jakarta.servlet.http.HttpServletResponse;
 import org.eclipse.jetty.client.ContentResponse;
 import org.eclipse.jetty.client.HttpClient;
 import org.eclipse.jetty.client.transport.HttpClientTransportOverHTTP;
+import org.eclipse.jetty.http.HttpHeader;
 import org.eclipse.jetty.io.ClientConnector;
 import org.eclipse.jetty.util.ssl.SslContextFactory;
 import org.junit.Before;
@@ -50,15 +51,17 @@ import org.osgi.service.http.HttpService;
 import org.osgi.service.servlet.whiteboard.HttpWhiteboardConstants;
 
 /**
- * Integration test for SNI configuration (FELIX-6846).
+ * Integration test for org.apache.felix.https.ssl.sniHostCheck (FELIX-6846).
  *
- * With org.apache.felix.https.ssl.sniRequired=true:
- * - Connections with a hostname send SNI and are accepted (200 OK).
- * - Connections using an IP address do not send SNI and are rejected (400 Bad Request).
+ * With sniHostCheck=true (the default), Jetty checks that the certificate
+ * presented to the client matches the Host header. A Host header that does not
+ * match the certificate CN/SAN results in a 400 Bad Request.
+ *
+ * With sniHostCheck=false that check is skipped and every request is accepted.
  */
 @RunWith(PaxExam.class)
 @ExamReactorStrategy(PerClass.class)
-public class JettySniIT extends AbstractJettyTestSupport {
+public class JettySniHostCheckIT extends AbstractJettyTestSupport {
 
     @Inject
     protected BundleContext bundleContext;
@@ -92,8 +95,7 @@ public class JettySniIT extends AbstractJettyTestSupport {
                 .put("org.apache.felix.https.keystore", keystorePath)
                 .put("org.apache.felix.https.keystore.password", "testpassword")
                 .put("org.apache.felix.https.keystore.key.password", "testpassword")
-                .put("org.apache.felix.https.ssl.sniRequired", "true")
-                .put("org.apache.felix.https.ssl.sniHostCheck", "false")
+                // sniHostCheck defaults to true — no explicit property needed
                 .asOption();
     }
 
@@ -106,20 +108,23 @@ public class JettySniIT extends AbstractJettyTestSupport {
     }
 
     @Test
-    public void testRequestWithHostnameSendsSniAndIsAccepted() throws Exception {
+    public void testMatchingHostHeaderIsAccepted() throws Exception {
         try (HttpClient httpClient = newTrustAllHttpsClient()) {
             httpClient.start();
+            // Host header matches the certificate CN/SAN — should be accepted
             ContentResponse response = httpClient.GET(new URI(String.format("https://localhost:%d/test", getHttpsPort())));
             assertEquals(200, response.getStatus());
         }
     }
 
     @Test
-    public void testRequestWithIpAddressHasNoSniAndIsRejected() throws Exception {
+    public void testMismatchedHostHeaderIsRejected() throws Exception {
         try (HttpClient httpClient = newTrustAllHttpsClient()) {
             httpClient.start();
-            // IP addresses do not trigger SNI in the TLS handshake (RFC 6066)
-            ContentResponse response = httpClient.GET(new URI(String.format("https://127.0.0.1:%d/test", getHttpsPort())));
+            // Override Host header so it does not match the certificate (CN=localhost)
+            ContentResponse response = httpClient.newRequest(new URI(String.format("https://localhost:%d/test", getHttpsPort())))
+                    .headers(h -> h.put(HttpHeader.HOST, "wrong.example.org"))
+                    .send();
             assertEquals(400, response.getStatus());
         }
     }
