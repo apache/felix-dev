@@ -2,3 +2,15 @@ This directory contains an implementation of the Apache Felix Http Service.
 
 It is based on Servlet API 6.1, Eclipse Jetty 12 and requires Java 17.
 
+## SNI Configuration (FELIX-6846)
+
+Jetty 12 supports Server Name Indication (SNI) at two levels. See the
+[Jetty SNI documentation](https://jetty.org/docs/jetty/12/operations-guide/protocols/index.html#ssl-sni)
+for details.
+
+| Property | Default | Description |
+|---|---|---|
+| `org.apache.felix.https.sslContext.sniRequired` | `false` | Require SNI at the TLS level. Clients without a valid SNI receive a TLS handshake failure. |
+| `org.apache.felix.https.ssl.sniRequired` | `false` | Require SNI at the HTTP level. Clients without a valid SNI receive a `400 Bad Request`. |
+| `org.apache.felix.https.ssl.sniHostCheck` | `true` | Check that the SNI hostname matches the `Host` header. Mismatches receive a `400 Bad Request`. |
+
