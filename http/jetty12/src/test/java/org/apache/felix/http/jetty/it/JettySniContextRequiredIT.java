@@ -18,6 +18,7 @@ package org.apache.felix.http.jetty.it;
 
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotNull;
+import static org.junit.Assert.fail;
 import static org.ops4j.pax.exam.CoreOptions.mavenBundle;
 import static org.ops4j.pax.exam.cm.ConfigurationAdminOptions.newConfiguration;
 
@@ -25,6 +26,7 @@ import java.io.IOException;
 import java.net.URI;
 import java.util.Hashtable;
 import java.util.Map;
+import java.util.concurrent.ExecutionException;
 
 import javax.inject.Inject;
 import jakarta.servlet.Servlet;
@@ -50,15 +52,18 @@ import org.osgi.service.http.HttpService;
 import org.osgi.service.servlet.whiteboard.HttpWhiteboardConstants;
 
 /**
- * Integration test for org.apache.felix.https.ssl.sniRequired (FELIX-6846).
+ * Integration test for org.apache.felix.https.sslContext.sniRequired (FELIX-6846).
  *
- * With sniRequired=true (sniHostCheck disabled so it does not interfere):
- * - A client that sends SNI matching the certificate is accepted (200 OK).
- * - A client that sends no SNI is rejected (400 Bad Request).
+ * This property requires SNI at the TLS level. Unlike the HTTP-level sniRequired
+ * (which returns a 400 Bad Request), a missing SNI here causes the TLS handshake
+ * itself to fail.
+ *
+ * - A client that sends SNI matching the certificate completes the handshake (200 OK).
+ * - A client that sends no SNI fails the TLS handshake (an exception is thrown).
  */
 @RunWith(PaxExam.class)
 @ExamReactorStrategy(PerClass.class)
-public class JettySniIT extends AbstractJettyTestSupport {
+public class JettySniContextRequiredIT extends AbstractJettyTestSupport {
 
     @Inject
     protected BundleContext bundleContext;
@@ -92,8 +97,7 @@ public class JettySniIT extends AbstractJettyTestSupport {
                 .put("org.apache.felix.https.keystore", keystorePath)
                 .put("org.apache.felix.https.keystore.password", "testpassword")
                 .put("org.apache.felix.https.keystore.key.password", "testpassword")
-                .put("org.apache.felix.https.ssl.sniRequired", "true")
-                .put("org.apache.felix.https.ssl.sniHostCheck", "false")
+                .put("org.apache.felix.https.sslContext.sniRequired", "true")
                 .asOption();
     }
 
@@ -106,9 +110,8 @@ public class JettySniIT extends AbstractJettyTestSupport {
     }
 
     @Test
-    public void testRequestWithSniIsAccepted() throws Exception {
-        // Force the client to send SNI for "localhost". By default the JDK does not send
-        // SNI for non-domain names, so an explicit non-domain SNI provider is required.
+    public void testHandshakeWithSniSucceeds() throws Exception {
+        // Force the client to send SNI for "localhost" so the TLS handshake can complete.
         try (HttpClient httpClient = newTrustAllHttpsClient(true)) {
             httpClient.start();
             ContentResponse response = httpClient.GET(new URI(String.format("https://localhost:%d/test", getHttpsPort())));
@@ -117,13 +120,14 @@ public class JettySniIT extends AbstractJettyTestSupport {
     }
 
     @Test
-    public void testRequestWithoutSniIsRejected() throws Exception {
-        // Default JDK behaviour: no SNI is sent for the non-domain name "localhost",
-        // so with sniRequired=true the request is rejected with 400 Bad Request.
+    public void testHandshakeWithoutSniFails() throws Exception {
+        // No SNI is sent, so the TLS handshake fails (rather than returning an HTTP 400).
         try (HttpClient httpClient = newTrustAllHttpsClient(false)) {
             httpClient.start();
-            ContentResponse response = httpClient.GET(new URI(String.format("https://localhost:%d/test", getHttpsPort())));
-            assertEquals(400, response.getStatus());
+            httpClient.GET(new URI(String.format("https://localhost:%d/test", getHttpsPort())));
+            fail("Expected the TLS handshake to fail when no SNI is sent and sslContext.sniRequired=true");
+        } catch (ExecutionException expected) {
+            // Expected: the handshake is aborted by the server.
         }
     }
 
