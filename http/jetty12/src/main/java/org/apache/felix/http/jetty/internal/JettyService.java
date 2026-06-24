@@ -578,7 +578,10 @@ public final class JettyService
         );
 
         HttpConfiguration httpConfiguration = connFactory.getHttpConfiguration();
-        httpConfiguration.addCustomizer(new SecureRequestCustomizer());
+        SecureRequestCustomizer secureRequestCustomizer = new SecureRequestCustomizer();
+        secureRequestCustomizer.setSniRequired(this.config.isSniRequired());
+        secureRequestCustomizer.setSniHostCheck(this.config.isSniHostCheck());
+        httpConfiguration.addCustomizer(secureRequestCustomizer);
 
         if (this.config.isProxyLoadBalancerConnection())
         {
@@ -751,6 +754,7 @@ public final class JettyService
         }
 
         connector.setRenegotiationAllowed(this.config.isRenegotiationAllowed());
+        connector.setSniRequired(this.config.isSniContextRequired());
     }
 
     private void configureConnector(final ServerConnector connector, int port)
