@@ -23,6 +23,7 @@ import static org.ops4j.pax.exam.cm.ConfigurationAdminOptions.newConfiguration;
 
 import java.io.IOException;
 import java.net.URI;
+import java.time.Duration;
 import java.util.Hashtable;
 import java.util.Map;
 
@@ -38,6 +39,7 @@ import org.eclipse.jetty.client.transport.HttpClientTransportOverHTTP;
 import org.eclipse.jetty.http.HttpHeader;
 import org.eclipse.jetty.io.ClientConnector;
 import org.eclipse.jetty.util.ssl.SslContextFactory;
+import org.awaitility.Awaitility;
 import org.junit.Before;
 import org.junit.Test;
 import org.junit.runner.RunWith;
@@ -138,6 +140,11 @@ public class JettySniHostCheckIT extends AbstractJettyTestSupport {
     }
 
     private int getHttpsPort() {
+        // HTTPS is enabled via ConfigAdmin after initial startup, which restarts Jetty
+        // and briefly unregisters the HttpService. Wait for it to come back.
+        Awaitility.await("httpServiceRegistered")
+                .atMost(Duration.ofSeconds(30))
+                .until(() -> bundleContext.getServiceReference(HttpService.class) != null);
         Object value = bundleContext.getServiceReference(HttpService.class).getProperty("org.osgi.service.http.port.secure");
         return Integer.parseInt((String) value);
     }
