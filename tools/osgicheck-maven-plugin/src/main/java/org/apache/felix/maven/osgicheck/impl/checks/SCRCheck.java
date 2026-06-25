@@ -340,6 +340,15 @@ public class SCRCheck implements Check {
         try {
             final SAXParserFactory factory = SAXParserFactory.newInstance();
             factory.setNamespaceAware(true);
+            try {
+                factory.setFeature("http://xml.org/sax/features/external-general-entities", false);
+                factory.setFeature("http://xml.org/sax/features/external-parameter-entities", false);
+                factory.setFeature("http://apache.org/xml/features/nonvalidating/load-external-dtd", false);
+                factory.setFeature("http://apache.org/xml/features/disallow-doctype-decl", true);
+                factory.setXIncludeAware(false);
+            } catch (final Exception e) {
+                // Ignore or log
+            }
             final SAXParser parser = factory.newSAXParser();
             parser.parse(file, handler);
 

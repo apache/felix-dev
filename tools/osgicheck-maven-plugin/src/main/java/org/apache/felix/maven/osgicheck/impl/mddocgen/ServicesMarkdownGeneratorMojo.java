@@ -147,6 +147,15 @@ public final class ServicesMarkdownGeneratorMojo extends AbstractMarkdownMojo {
             XmlHandler xmlHandler = new XmlHandler(new SyntheticBundle(servicesDirectory, serviceFile), mavenScrLogger, false, true, null);
             final SAXParserFactory factory = SAXParserFactory.newInstance();
             factory.setNamespaceAware(true);
+            try {
+                factory.setFeature("http://xml.org/sax/features/external-general-entities", false);
+                factory.setFeature("http://xml.org/sax/features/external-parameter-entities", false);
+                factory.setFeature("http://apache.org/xml/features/nonvalidating/load-external-dtd", false);
+                factory.setFeature("http://apache.org/xml/features/disallow-doctype-decl", true);
+                factory.setXIncludeAware(false);
+            } catch (Exception e) {
+                // Ignore or log
+            }
             final SAXParser parser = factory.newSAXParser();
             parser.parse(serviceFile, xmlHandler);
 
