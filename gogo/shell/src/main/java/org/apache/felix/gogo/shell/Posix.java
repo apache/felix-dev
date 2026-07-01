@@ -148,14 +148,24 @@ public class Posix
                 while ((s = rdr.readLine()) != null)
                 {
                     line++;
-                    Matcher matcher = pattern.matcher(s);
-                    if (matcher.find() == !opt.isSet("invert-match"))
+                    try
                     {
-                        match = true;
-                        if (opt.isSet("quiet"))
-                            break;
+                        TimeoutCharSequence timeoutSeq = new TimeoutCharSequence(s, REGEX_TIMEOUT_MS);
+                        Matcher matcher = pattern.matcher(timeoutSeq);
+                        if (matcher.find() == !opt.isSet("invert-match"))
+                        {
+                            match = true;
+                            if (opt.isSet("quiet"))
+                                break;
 
-                        System.out.println(String.format(format, arg, line, s));
+                            System.out.println(String.format(format, arg, line, s));
+                        }
+                    }
+                    catch (RegexTimeoutException e)
+                    {
+                        System.err.println("grep: pattern matching timed out (possible ReDoS attack)");
+                        status = false;
+                        break;
                     }
                 }
 
@@ -200,4 +210,74 @@ public class Posix
         out.flush();
     }
 
+    private static final long REGEX_TIMEOUT_MS = 1000;
+
+    private static class RegexTimeoutException extends RuntimeException
+    {
+        public RegexTimeoutException(String message)
+        {
+            super(message);
+        }
+    }
+
+    private static class TimeoutCharSequence implements CharSequence
+    {
+        private final CharSequence seq;
+        private final long startTime;
+        private final long timeoutNanos;
+        private int count = 0;
+        private static final int CHECK_INTERVAL = 1000;
+
+        public TimeoutCharSequence(CharSequence seq, long timeoutMs)
+        {
+            this.seq = seq;
+            this.startTime = System.nanoTime();
+            this.timeoutNanos = (timeoutMs >= Long.MAX_VALUE / 1000000) ? Long.MAX_VALUE : timeoutMs * 1000000;
+        }
+
+        private TimeoutCharSequence(CharSequence seq, long startTime, long timeoutNanos)
+        {
+            this.seq = seq;
+            this.startTime = startTime;
+            this.timeoutNanos = timeoutNanos;
+        }
+
+        @Override
+        public int length()
+        {
+            checkTimeout();
+            return seq.length();
+        }
+
+        @Override
+        public char charAt(int index)
+        {
+            checkTimeout();
+            return seq.charAt(index);
+        }
+
+        @Override
+        public CharSequence subSequence(int start, int end)
+        {
+            return new TimeoutCharSequence(seq.subSequence(start, end), startTime, timeoutNanos);
+        }
+
+        @Override
+        public String toString()
+        {
+            return seq.toString();
+        }
+
+        private void checkTimeout()
+        {
+            if (++count >= CHECK_INTERVAL)
+            {
+                count = 0;
+                if (System.nanoTime() - startTime > timeoutNanos)
+                {
+                    throw new RegexTimeoutException("Regular expression matching timed out");
+                }
+            }
+        }
+    }
 }
