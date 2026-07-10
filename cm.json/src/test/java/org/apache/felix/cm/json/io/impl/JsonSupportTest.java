@@ -308,6 +308,44 @@ public class JsonSupportTest {
     }
 
     @Test
+    public void testMultiLineStartTokenAfterSingleBackslashString() throws IOException {
+        final String input = "{\n"
+                             + "  \"illegal.characters\" : [\n"
+                             + "    \"\\\\\"\n"
+                             + "  ],\n"
+                             + "  \"filter.safe.user.agents\" : [\n"
+                             + "    \"Apache-HttpClient/*\"\n"
+                             + "  ]\n"
+                             + "}\n";
+
+        assertEquals(input, parse(input));
+    }
+
+    @Test
+    public void testQuoteAfterEvenNumberOfBackslashesEndsString() throws IOException {
+        final String input = "{\n"
+                             + "  \"a\" : \"\\\\\\\\\",\n"
+                             + "  \"b\" : \"value/*\"\n"
+                             + "}\n";
+
+        assertEquals(input, parse(input));
+    }
+
+    @Test
+    public void testSkippedSlashAtBufferBoundaryDoesNotDropLastChar() throws Exception {
+        String input = "abc/xyz";
+        Reader reader = JsonSupport.createCommentRemovingReader(new StringReader(input));
+
+        char[] buffer = new char[4];
+        int numRead = reader.read(buffer, 0, 4);
+        assertEquals("abc", new String(buffer, 0, numRead));
+
+        buffer = new char[4];
+        numRead = reader.read(buffer, 0, 4);
+        assertEquals("/xyz", new String(buffer, 0, numRead));
+    }
+
+    @Test
     public void testSlashAtEndOfRead() throws Exception {
         String input = "This is a test string // Next string \n"
                 + "next line" ;

@@ -26,7 +26,7 @@ under the License.
   <!-- default packaging: jar -->
 
   <properties>
-    <project.build.outputTimestamp>1</project.build.outputTimestamp>
+    <project.build.outputTimestamp>2000-01-01T00:00:00Z</project.build.outputTimestamp>
   </properties>
 
   <dependencies>

@@ -25,6 +25,8 @@ import java.io.IOException;
 import java.net.URI;
 import java.util.Hashtable;
 import java.util.Map;
+import java.util.concurrent.CompletableFuture;
+import java.util.concurrent.ExecutionException;
 
 import javax.inject.Inject;
 import jakarta.servlet.Servlet;
@@ -33,9 +35,11 @@ import jakarta.servlet.http.HttpServlet;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 
+import org.eclipse.jetty.client.CompletableResponseListener;
 import org.eclipse.jetty.client.ContentResponse;
+import org.eclipse.jetty.client.FormRequestContent;
 import org.eclipse.jetty.client.HttpClient;
-import org.eclipse.jetty.client.transport.HttpClientTransportOverHTTP;
+import org.eclipse.jetty.client.Request;
 import org.eclipse.jetty.util.Fields;
 import org.junit.Before;
 import org.junit.Test;
@@ -63,9 +67,8 @@ public class JettySizeLimitHandlerIT extends AbstractJettyTestSupport {
                 spifly(),
 
                 // bundles for the server side
-                mavenBundle().groupId("org.eclipse.jetty.ee10").artifactId("jetty-ee10-webapp").version(jettyVersion),
-                mavenBundle().groupId("org.eclipse.jetty").artifactId("jetty-ee").version(jettyVersion),
-                mavenBundle().groupId("org.eclipse.jetty.ee10").artifactId("jetty-ee10-servlet").version(jettyVersion),
+                mavenBundle().groupId("org.eclipse.jetty.ee11").artifactId("jetty-ee11-webapp").version(jettyVersion),
+                mavenBundle().groupId("org.eclipse.jetty.ee11").artifactId("jetty-ee11-servlet").version(jettyVersion),
                 mavenBundle().groupId("org.eclipse.jetty").artifactId("jetty-xml").version(jettyVersion),
 
                 // additional bundles for the client side
@@ -97,34 +100,35 @@ public class JettySizeLimitHandlerIT extends AbstractJettyTestSupport {
 
     @Test
     public void testRequestResponseLimits() throws Exception {
-        HttpClientTransportOverHTTP transport = new HttpClientTransportOverHTTP();
-        HttpClient httpClient = new HttpClient(transport);
-        httpClient.start();
+        try (HttpClient httpClient = new HttpClient()) {
+            httpClient.start();
+            Object value = bundleContext.getServiceReference(HttpService.class).getProperty("org.osgi.service.http.port");
+            int httpPort = Integer.parseInt((String) value);
 
-        Object value = bundleContext.getServiceReference(HttpService.class).getProperty("org.osgi.service.http.port");
-        int httpPort = Integer.parseInt((String) value);
+            Fields formFields = new Fields();
+            formFields.add(new Fields.Field("key","value")); // under 10 bytes
+            ContentResponse responseWithinLimit = httpClient.FORM(new URI(String.format("http://localhost:%d/withinlimit/a", httpPort)), formFields);
 
-        Fields formFields = new Fields();
-        formFields.add(new Fields.Field("key", "value")); // under 10 bytes
-        ContentResponse responseWithinLimit = httpClient.FORM(new URI(String.format("http://localhost:%d/withinlimit/a", httpPort)), formFields);
+            // Request limit ok, response limit ok
+            assertEquals(200, responseWithinLimit.getStatus());
+            assertEquals("OK", responseWithinLimit.getContentAsString());
 
-        // Request limit ok, response limit ok
-        assertEquals(200, responseWithinLimit.getStatus());
-        assertEquals("OK", responseWithinLimit.getContentAsString());
+            // Request limit ok, response limit exceeded
+            // org.eclipse.jetty.http.HttpException$RuntimeException: 500: Response body is too large: 17>10
+            ContentResponse responseExceedingLimit = httpClient.FORM(new URI(String.format("http://localhost:%d/exceedinglimit/a", httpPort)), formFields);
 
-        // Request limit ok, response limit exceeded
-        // org.eclipse.jetty.http.HttpException$RuntimeException: 500: Response body is too large: 17>10
-        ContentResponse responseExceedingLimit = httpClient.FORM(new URI(String.format("http://localhost:%d/exceedinglimit/a", httpPort)), formFields);
-        assertEquals(500, responseExceedingLimit.getStatus());
+            assertEquals(500, responseExceedingLimit.getStatus());
 
-        Fields formFieldsLimitExceeded = new Fields();
-        formFieldsLimitExceeded.add(new Fields.Field("key", "valueoverlimit")); // over limit of 10 bytes
-        ContentResponse responseExceeded = httpClient.FORM(new URI(String.format("http://localhost:%d/withinlimit/a", httpPort)), formFieldsLimitExceeded);
+            Fields formFieldsLimitExceeded = new Fields();
+            formFieldsLimitExceeded.add(new Fields.Field("key","valueoverlimit")); // over limit of 10 bytes
 
-        // Request limit exceeded, HTTP 413 directly from Jetty
-        assertEquals(413, responseExceeded.getStatus());
+            Request request = httpClient.newRequest(new URI(String.format("http://localhost:%d/withinlimit/a", httpPort)))
+                    .body(new FormRequestContent(formFieldsLimitExceeded));
 
-        httpClient.close();
+            CompletableFuture<ContentResponse> completable = new CompletableResponseListener(request).send();
+            ContentResponse response = completable.get();
+            assertEquals(413, response.getStatus());
+        }
     }
 
     static final class HelloWorldServletWithinLimit extends HttpServlet {

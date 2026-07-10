@@ -28,7 +28,7 @@
 
     <name>Apache Felix Http Base</name>
     <artifactId>org.apache.felix.http.base</artifactId>
-    <version>5.1.17-SNAPSHOT</version>
+    <version>6.0.1-SNAPSHOT</version>
     <packaging>jar</packaging>
 
     <scm>
@@ -134,12 +134,6 @@
             <scope>provided</scope>
         </dependency>
         <dependency>
-            <groupId>commons-fileupload</groupId>
-            <artifactId>commons-fileupload</artifactId>
-            <version>1.6.0</version>
-            <scope>provided</scope>
-        </dependency>
-        <dependency>
             <groupId>org.apache.felix</groupId>
             <artifactId>org.apache.felix.http.wrappers</artifactId>
             <version>1.0.0</version>
@@ -159,9 +153,9 @@
             <scope>test</scope>
         </dependency>
         <dependency>
-            <groupId>org.eclipse.jetty.ee10.websocket</groupId>
-            <artifactId>jetty-ee10-websocket-jetty-server</artifactId>
-            <version>12.0.30</version>
+            <groupId>org.eclipse.jetty.ee11.websocket</groupId>
+            <artifactId>jetty-ee11-websocket-jetty-server</artifactId>
+            <version>12.1.11</version>
             <scope>test</scope>
         </dependency>
     </dependencies>

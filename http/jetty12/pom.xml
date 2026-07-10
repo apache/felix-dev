@@ -30,7 +30,7 @@
     <description>This is an implementation of the R8.1 OSGi Servlet Service, the R7 OSGi Http Service and the R7 OSGi Http Whiteboard Specification</description>
 
     <artifactId>org.apache.felix.http.jetty12</artifactId>
-    <version>1.1.7-SNAPSHOT</version>
+    <version>2.0.3-SNAPSHOT</version>
     <packaging>bundle</packaging>
 
     <scm>
@@ -42,7 +42,7 @@
 
     <properties>
         <felix.java.version>17</felix.java.version>
-        <jetty.version>12.0.30</jetty.version>
+        <jetty.version>12.1.11</jetty.version>
         <baseline.skip>true</baseline.skip>
         <org.ops4j.pax.exam.version>4.13.3</org.ops4j.pax.exam.version>
         <!-- To debug the pax process, override this with -D -->
@@ -75,9 +75,9 @@
 
                                     if (artifact.getArtifactHandler().isAddedToClasspath() && !org.apache.maven.artifact.Artifact.SCOPE_TEST.equals( artifact.getScope() )
                                             && !"org.eclipse.jetty.websocket".equals(artifact.getGroupId()) // skip the optional websocket artifacts
-                                            && !"org.eclipse.jetty.ee10.websocket".equals(artifact.getGroupId()) // skip the optional websocket artifacts
-                                            && !"jetty-annotations".equals(artifact.getArtifactId()) // skip the transitive artifacts from the optional websocket artifacts
-                                            && !"jetty-plus".equals(artifact.getArtifactId())
+                                            && !"org.eclipse.jetty.ee11.websocket".equals(artifact.getGroupId()) // skip the optional websocket artifacts
+                                            && !"jetty-ee11-annotations".equals(artifact.getArtifactId()) // skip the transitive artifacts from the optional websocket artifacts
+                                            && !"jetty-ee11-plus".equals(artifact.getArtifactId())
                                             && !"jetty-webapp".equals(artifact.getArtifactId())
                                             && !"jetty-ee".equals(artifact.getArtifactId())) {
                                         def jar;
@@ -152,7 +152,7 @@
             <plugin>
                 <groupId>org.apache.felix</groupId>
                 <artifactId>maven-bundle-plugin</artifactId>
-                <version>6.0.0</version>
+                <version>6.0.2</version>
                 <extensions>true</extensions>
                 <configuration>
                     <instructions>
@@ -184,8 +184,9 @@
                             org.eclipse.jetty.server.*,
                             org.eclipse.jetty.util.*,
                             org.eclipse.jetty.ee.*,
-                            !org.eclipse.jetty.ee10.websocket.*,
-                            org.eclipse.jetty.ee10.servlet.*,
+                            !org.eclipse.jetty.ee11.websocket.*,
+                            org.eclipse.jetty.ee11.servlet.*,
+                            org.eclipse.jetty.compression.*,
                             org.apache.felix.http.jetty,
                             org.apache.felix.http.jakartawrappers,
                             org.apache.felix.http.javaxwrappers
@@ -365,10 +366,11 @@
                                     org.eclipse.jetty.server.*,
                                     org.eclipse.jetty.util.*,
                                     org.eclipse.jetty.ee.*,
-                                    org.eclipse.jetty.ee10.servlet.*,
-                                    !org.eclipse.jetty.ee10.websocket.jakarta.*,
-                                    org.eclipse.jetty.ee10.websocket.*,
+                                    org.eclipse.jetty.ee11.servlet.*,
+                                    !org.eclipse.jetty.ee11.websocket.jakarta.*,
+                                    org.eclipse.jetty.ee11.websocket.*,
                                     org.eclipse.jetty.websocket.*,
+                                    org.eclipse.jetty.compression.*,
                                     org.apache.felix.http.jetty,
                                     org.apache.felix.http.jakartawrappers,
                                     org.apache.felix.http.javaxwrappers
@@ -468,11 +470,12 @@
                                     org.eclipse.jetty.server.*,
                                     org.eclipse.jetty.util.*,
                                     org.eclipse.jetty.ee.*,
-                                    !org.eclipse.jetty.ee10.websocket.server.*,
-                                    !org.eclipse.jetty.ee10.websocket.servlet.*,
-                                    org.eclipse.jetty.ee10.websocket.jakarta.*,
-                                    org.eclipse.jetty.ee10.servlet.*,
+                                    !org.eclipse.jetty.ee11.websocket.server.*,
+                                    !org.eclipse.jetty.ee11.websocket.servlet.*,
+                                    org.eclipse.jetty.ee11.websocket.jakarta.*,
+                                    org.eclipse.jetty.ee11.servlet.*,
                                     org.eclipse.jetty.websocket.*,
+                                    org.eclipse.jetty.compression.*,
                                     org.apache.felix.http.jetty,
                                     org.apache.felix.http.jakartawrappers,
                                     org.apache.felix.http.javaxwrappers
@@ -621,8 +624,8 @@
             <scope>provided</scope>
         </dependency>
         <dependency>
-            <groupId>org.eclipse.jetty.ee10</groupId>
-            <artifactId>jetty-ee10-servlet</artifactId>
+            <groupId>org.eclipse.jetty.ee11</groupId>
+            <artifactId>jetty-ee11-servlet</artifactId>
             <version>${jetty.version}</version>
         </dependency>
         <dependency>
@@ -671,14 +674,14 @@
             <version>${jetty.version}</version>
         </dependency>
         <dependency>
-            <groupId>org.eclipse.jetty.ee10.websocket</groupId>
-            <artifactId>jetty-ee10-websocket-jakarta-server</artifactId>
+            <groupId>org.eclipse.jetty.ee11.websocket</groupId>
+            <artifactId>jetty-ee11-websocket-jakarta-server</artifactId>
             <version>${jetty.version}</version>
             <optional>true</optional>
         </dependency>
         <dependency>
-            <groupId>org.eclipse.jetty.ee10.websocket</groupId>
-            <artifactId>jetty-ee10-websocket-jetty-server</artifactId>
+            <groupId>org.eclipse.jetty.ee11.websocket</groupId>
+            <artifactId>jetty-ee11-websocket-jetty-server</artifactId>
             <version>${jetty.version}</version>
             <optional>true</optional>
         </dependency>
@@ -691,6 +694,21 @@
         <dependency>
             <groupId>org.eclipse.jetty</groupId>
             <artifactId>jetty-session</artifactId>
+            <version>${jetty.version}</version>
+        </dependency>
+        <dependency>
+            <groupId>org.eclipse.jetty.compression</groupId>
+            <artifactId>jetty-compression-server</artifactId>
+            <version>${jetty.version}</version>
+        </dependency>
+        <dependency>
+            <groupId>org.eclipse.jetty.compression</groupId>
+            <artifactId>jetty-compression-gzip</artifactId>
+            <version>${jetty.version}</version>
+        </dependency>
+        <dependency>
+            <groupId>org.eclipse.jetty.compression</groupId>
+            <artifactId>jetty-compression-common</artifactId>
             <version>${jetty.version}</version>
         </dependency>
         <dependency>
@@ -714,17 +732,12 @@
         <dependency>
             <groupId>org.apache.felix</groupId>
             <artifactId>org.apache.felix.http.base</artifactId>
-            <version>5.1.16</version>
+            <version>6.0.1-SNAPSHOT</version>
         </dependency>
         <dependency>
             <groupId>org.apache.felix</groupId>
             <artifactId>org.apache.felix.http.wrappers</artifactId>
             <version>6.1.0</version>
-        </dependency>
-        <dependency>
-            <groupId>commons-fileupload</groupId>
-            <artifactId>commons-fileupload</artifactId>
-            <version>1.6.0</version>
         </dependency>
     	<!-- Testing -->
         <dependency>

@@ -59,6 +59,7 @@ public class MBeanServerTracker extends ServiceTracker<MBeanServer, MBeanContain
     {
         if ( service != null )
         {
+            service.destroy();
             this.server.removeEventListener(service);
             super.removedService(reference, service);
         }

@@ -43,6 +43,7 @@ import org.apache.felix.http.base.internal.handler.WhiteboardServletHandler;
 import org.apache.felix.http.base.internal.logger.SystemLogger;
 import org.apache.felix.http.base.internal.registry.EventListenerRegistry;
 import org.apache.felix.http.base.internal.registry.HandlerRegistry;
+import org.apache.felix.http.base.internal.registry.PerContextHandlerRegistry;
 import org.apache.felix.http.base.internal.runtime.AbstractInfo;
 import org.apache.felix.http.base.internal.runtime.DefaultServletContextHelperInfo;
 import org.apache.felix.http.base.internal.runtime.FilterInfo;
@@ -71,6 +72,7 @@ import org.apache.felix.http.base.internal.whiteboard.tracker.ServletContextHelp
 import org.apache.felix.http.base.internal.whiteboard.tracker.ServletTracker;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
+import org.osgi.framework.Bundle;
 import org.osgi.framework.BundleContext;
 import org.osgi.framework.Constants;
 import org.osgi.framework.Filter;
@@ -195,18 +197,32 @@ public final class WhiteboardManager
      */
     public void stop()
     {
-        this.webContext = null;
         this.serviceRuntime.unregister();
+
+        // Close trackers before nulling webContext: tracker callbacks
+        // re-enter via removeContextHelper and read webContext.
         for(final ServiceTracker<?, ?> t : this.trackers)
         {
-            t.close();
+            try
+            {
+                t.close();
+            }
+            catch (final Exception e)
+            {
+                SystemLogger.LOGGER.error("Exception while closing service tracker", e);
+            }
         }
-        this.trackers.clear();
-        this.preprocessorHandlers = Collections.emptyList();
-        this.contextMap.clear();
-        this.servicesMap.clear();
-        this.failureStateHandler.clear();
-        this.attributesForSharedContext.clear();
+
+        synchronized ( this.contextMap )
+        {
+            this.webContext = null;
+            this.trackers.clear();
+            this.preprocessorHandlers = Collections.emptyList();
+            this.contextMap.clear();
+            this.servicesMap.clear();
+            this.failureStateHandler.clear();
+            this.attributesForSharedContext.clear();
+        }
         this.registry.reset();
     }
 
@@ -237,7 +253,11 @@ public final class WhiteboardManager
             final WhiteboardContextHandler handler = this.getContextHandler(contextName);
             if ( handler != null )
             {
-                handler.getRegistry().getEventListenerRegistry().sessionIdChanged(event, oldSessionId);
+                final PerContextHandlerRegistry reg = handler.getRegistry();
+                if ( reg != null )
+                {
+                    reg.getEventListenerRegistry().sessionIdChanged(event, oldSessionId);
+                }
             }
         }
     }
@@ -284,7 +304,11 @@ public final class WhiteboardManager
             }
         }
         // notify context listeners first
-        handler.getRegistry().getEventListenerRegistry().contextInitialized();
+        final PerContextHandlerRegistry reg = handler.getRegistry();
+        if ( reg != null )
+        {
+            reg.getEventListenerRegistry().contextInitialized();
+        }
 
         // register services
         for(final WhiteboardServiceInfo<?> info : services)
@@ -328,7 +352,11 @@ public final class WhiteboardManager
             }
         }
         // context listeners last
-        handler.getRegistry().getEventListenerRegistry().contextDestroyed();
+        final PerContextHandlerRegistry reg = handler.getRegistry();
+        if ( reg != null )
+        {
+            reg.getEventListenerRegistry().contextDestroyed();
+        }
         for(final WhiteboardServiceInfo<?> info : listeners)
         {
             this.unregisterWhiteboardService(handler, info);
@@ -352,8 +380,14 @@ public final class WhiteboardManager
             {
                 synchronized ( this.contextMap )
                 {
+                    final ServletContext currentWebContext = this.webContext;
+                    if ( currentWebContext == null )
+                    {
+                        // stopped or being stopped; next start() will re-track
+                        return false;
+                    }
                     final WhiteboardContextHandler handler = new WhiteboardContextHandler(info,
-                            this.webContext,
+                            currentWebContext,
                             this.httpBundleContext.getBundle());
 
                     // check for activate/deactivate
@@ -480,6 +514,10 @@ public final class WhiteboardManager
                                 this.failureStateHandler.addFailure(newHead.getContextInfo(), DTOConstants.FAILURE_REASON_SERVICE_NOT_GETTABLE);
                             }
                         }
+                        if ( handlerList.isEmpty() )
+                        {
+                            this.contextMap.remove(info.getName());
+                        }
                     }
                 }
             }
@@ -494,6 +532,10 @@ public final class WhiteboardManager
     private List<WhiteboardContextHandler> getMatchingContexts(final WhiteboardServiceInfo<?> info) {
         final List<WhiteboardContextHandler> result = new ArrayList<>();
         for(final List<WhiteboardContextHandler> handlerList : this.contextMap.values()) {
+            if ( handlerList.isEmpty() )
+            {
+                continue;
+            }
             final WhiteboardContextHandler h = handlerList.get(0);
 
             // check if the context matches
@@ -536,22 +578,31 @@ public final class WhiteboardManager
             {
                 if ( info instanceof PreprocessorInfo )
                 {
-                    final PreprocessorHandler handler = new PreprocessorHandler(this.httpBundleContext,
-                            this.webContext, ((PreprocessorInfo)info));
-                    final int result = handler.init();
-                    if ( result == -1 )
+                    synchronized ( this.contextMap )
                     {
-                        synchronized ( this.preprocessorHandlers )
+                        final ServletContext currentWebContext = this.webContext;
+                        if ( currentWebContext == null )
                         {
-                            final List<PreprocessorHandler> newList = new ArrayList<>(this.preprocessorHandlers);
-                            newList.add(handler);
-                            Collections.sort(newList);
-                            this.preprocessorHandlers = newList;
+                            // stopped or being stopped; next start() will re-track
+                            return false;
                         }
-                    }
-                    else
-                    {
-                        this.failureStateHandler.addFailure(info, FAILURE_REASON_VALIDATION_FAILED);
+                        final PreprocessorHandler handler = new PreprocessorHandler(this.httpBundleContext,
+                                currentWebContext, ((PreprocessorInfo)info));
+                        final int result = handler.init();
+                        if ( result == -1 )
+                        {
+                            synchronized ( this.preprocessorHandlers )
+                            {
+                                final List<PreprocessorHandler> newList = new ArrayList<>(this.preprocessorHandlers);
+                                newList.add(handler);
+                                Collections.sort(newList);
+                                this.preprocessorHandlers = newList;
+                            }
+                        }
+                        else
+                        {
+                            this.failureStateHandler.addFailure(info, FAILURE_REASON_VALIDATION_FAILED);
+                        }
                     }
                     updateRuntimeChangeCount();
                     return true;
@@ -574,13 +625,17 @@ public final class WhiteboardManager
                                 this.registerWhiteboardService(h, info);
                                 if ( info instanceof ListenerInfo && ((ListenerInfo)info).isListenerType(ServletContextListener.class.getName()) )
                                 {
-                                    final ListenerHandler handler = h.getRegistry().getEventListenerRegistry().getServletContextListener((ListenerInfo)info);
-                                    if ( handler != null )
+                                    final PerContextHandlerRegistry hReg = h.getRegistry();
+                                    if ( hReg != null )
                                     {
-                                        final ServletContextListener listener = (ServletContextListener)handler.getListener();
-                                        if ( listener != null )
+                                        final ListenerHandler handler = hReg.getEventListenerRegistry().getServletContextListener((ListenerInfo)info);
+                                        if ( handler != null )
                                         {
-                                            EventListenerRegistry.contextInitialized(handler.getListenerInfo(), listener, new ServletContextEvent(handler.getContext()));
+                                            final ServletContextListener listener = (ServletContextListener)handler.getListener();
+                                            if ( listener != null )
+                                            {
+                                                EventListenerRegistry.contextInitialized(handler.getListenerInfo(), listener, new ServletContextEvent(handler.getContext()));
+                                            }
                                         }
                                     }
                                 }
@@ -687,13 +742,17 @@ public final class WhiteboardManager
                         {
                             if ( info instanceof ListenerInfo && ((ListenerInfo)info).isListenerType(ServletContextListener.class.getName()) )
                             {
-                                final ListenerHandler handler = h.getRegistry().getEventListenerRegistry().getServletContextListener((ListenerInfo)info);
-                                if ( handler != null )
+                                final PerContextHandlerRegistry hReg = h.getRegistry();
+                                if ( hReg != null )
                                 {
-                                    final ServletContextListener listener = (ServletContextListener) handler.getListener();
-                                    if ( listener != null )
+                                    final ListenerHandler handler = hReg.getEventListenerRegistry().getServletContextListener((ListenerInfo)info);
+                                    if ( handler != null )
                                     {
-                                        EventListenerRegistry.contextDestroyed(handler.getListenerInfo(), listener, new ServletContextEvent(handler.getContext()));
+                                        final ServletContextListener listener = (ServletContextListener) handler.getListener();
+                                        if ( listener != null )
+                                        {
+                                            EventListenerRegistry.contextDestroyed(handler.getListenerInfo(), listener, new ServletContextEvent(handler.getContext()));
+                                        }
                                     }
                                 }
                             }
@@ -716,6 +775,12 @@ public final class WhiteboardManager
     {
         try
         {
+            final PerContextHandlerRegistry reg = handler.getRegistry();
+            if ( reg == null )
+            {
+                this.failureStateHandler.addFailure(info, handler.getContextInfo().getServiceId(), DTOConstants.FAILURE_REASON_SERVLET_CONTEXT_FAILURE);
+                return;
+            }
             int failureCode = -1;
             if ( info instanceof ServletInfo )
             {
@@ -727,7 +792,7 @@ public final class WhiteboardManager
                 else
                 {
                     final ServletHandler servletHandler = getServletHandler(handler, info, servletContext);
-                    handler.getRegistry().registerServlet(servletHandler);
+                    reg.registerServlet(servletHandler);
                 }
             }
             else if ( info instanceof FilterInfo )
@@ -744,7 +809,7 @@ public final class WhiteboardManager
                             servletContext,
                             (FilterInfo)info,
                             handler.getBundleContext());
-                    handler.getRegistry().registerFilter(filterHandler);
+                    reg.registerFilter(filterHandler);
                 }
             }
             else if ( info instanceof ResourceInfo )
@@ -762,7 +827,7 @@ public final class WhiteboardManager
                             servletContext,
                             servletInfo,
                             new ResourceServlet(servletInfo.getPrefix()));
-                    handler.getRegistry().registerServlet(servleHandler);
+                    reg.registerServlet(servleHandler);
                 }
             }
 
@@ -780,7 +845,7 @@ public final class WhiteboardManager
                             servletContext,
                             (ListenerInfo)info,
                             handler.getBundleContext());
-                    handler.getRegistry().registerListeners(listenerHandler);
+                    reg.registerListeners(listenerHandler);
                 }
             }
             else
@@ -808,9 +873,7 @@ public final class WhiteboardManager
                 handler.getContextInfo().getServiceId(),
                 servletContext,
                 (ServletInfo) info,
-                handler.getBundleContext(),
-                info.getServiceReference().getBundle(),
-                this.httpBundleContext.getBundle());
+                handler.getBundleContext());
     }
 
     /**
@@ -822,26 +885,52 @@ public final class WhiteboardManager
     {
         try
         {
+            final PerContextHandlerRegistry reg = handler.getRegistry();
+            final Bundle registeringBundle = info.getServiceReference().getBundle();
             if ( info instanceof ServletInfo )
             {
-                handler.getRegistry().unregisterServlet((ServletInfo)info, true);
-                handler.ungetServletContext(info.getServiceReference().getBundle());
+                if ( reg != null )
+                {
+                    reg.unregisterServlet((ServletInfo)info, true);
+                }
+                if ( registeringBundle != null )
+                {
+                    handler.ungetServletContext(registeringBundle);
+                }
             }
             else if ( info instanceof FilterInfo )
             {
-                handler.getRegistry().unregisterFilter((FilterInfo)info, true);
-                handler.ungetServletContext(info.getServiceReference().getBundle());
+                if ( reg != null )
+                {
+                    reg.unregisterFilter((FilterInfo)info, true);
+                }
+                if ( registeringBundle != null )
+                {
+                    handler.ungetServletContext(registeringBundle);
+                }
             }
             else if ( info instanceof ResourceInfo )
             {
-                handler.getRegistry().unregisterServlet(((ResourceInfo)info).getServletInfo(), true);
-                handler.ungetServletContext(info.getServiceReference().getBundle());
+                if ( reg != null )
+                {
+                    reg.unregisterServlet(((ResourceInfo)info).getServletInfo(), true);
+                }
+                if ( registeringBundle != null )
+                {
+                    handler.ungetServletContext(registeringBundle);
+                }
             }
 
             else if ( info instanceof ListenerInfo )
             {
-                handler.getRegistry().unregisterListeners((ListenerInfo) info);
-                handler.ungetServletContext(info.getServiceReference().getBundle());
+                if ( reg != null )
+                {
+                    reg.unregisterListeners((ListenerInfo) info);
+                }
+                if ( registeringBundle != null )
+                {
+                    handler.ungetServletContext(registeringBundle);
+                }
             }
         }
         catch (final Exception e)
@@ -881,6 +970,10 @@ public final class WhiteboardManager
         {
             for(final List<WhiteboardContextHandler> handlerList : this.contextMap.values())
             {
+                if ( handlerList.isEmpty() )
+                {
+                    continue;
+                }
                 final WhiteboardContextHandler h = handlerList.get(0);
                 if ( h.getContextInfo().getName().equals(name) )
                 {

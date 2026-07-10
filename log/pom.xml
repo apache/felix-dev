@@ -29,7 +29,7 @@
   <description>
     A simple implementation of the OSGi R8 Log service.
   </description>
-  <version>1.3.1-SNAPSHOT</version>
+  <version>1.3.3-SNAPSHOT</version>
   <artifactId>org.apache.felix.log</artifactId>
 
   <properties>
