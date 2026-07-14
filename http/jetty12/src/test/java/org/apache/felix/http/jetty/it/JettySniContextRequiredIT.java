@@ -54,7 +54,7 @@ import org.osgi.service.http.HttpService;
 import org.osgi.service.servlet.whiteboard.HttpWhiteboardConstants;
 
 /**
- * Integration test for org.apache.felix.https.sslContext.sniRequired (FELIX-6846).
+ * Integration test for org.apache.felix.https.sslContext.sni.required (FELIX-6846).
  *
  * This property requires SNI at the TLS level. Unlike the HTTP-level sniRequired
  * (which returns a 400 Bad Request), a missing SNI here causes the TLS handshake
@@ -99,7 +99,7 @@ public class JettySniContextRequiredIT extends AbstractJettyTestSupport {
                 .put("org.apache.felix.https.keystore", keystorePath)
                 .put("org.apache.felix.https.keystore.password", "testpassword")
                 .put("org.apache.felix.https.keystore.key.password", "testpassword")
-                .put("org.apache.felix.https.sslContext.sniRequired", "true")
+                .put("org.apache.felix.https.sslContext.sni.required", "true")
                 .asOption();
     }
 

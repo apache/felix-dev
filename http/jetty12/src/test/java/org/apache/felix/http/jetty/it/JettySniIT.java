@@ -52,7 +52,7 @@ import org.osgi.service.http.HttpService;
 import org.osgi.service.servlet.whiteboard.HttpWhiteboardConstants;
 
 /**
- * Integration test for org.apache.felix.https.ssl.sniRequired (FELIX-6846).
+ * Integration test for org.apache.felix.https.ssl.sni.required (FELIX-6846).
  *
  * With sniRequired=true (sniHostCheck disabled so it does not interfere):
  * - A client that sends SNI matching the certificate is accepted (200 OK).
@@ -94,8 +94,8 @@ public class JettySniIT extends AbstractJettyTestSupport {
                 .put("org.apache.felix.https.keystore", keystorePath)
                 .put("org.apache.felix.https.keystore.password", "testpassword")
                 .put("org.apache.felix.https.keystore.key.password", "testpassword")
-                .put("org.apache.felix.https.ssl.sniRequired", "true")
-                .put("org.apache.felix.https.ssl.sniHostCheck", "false")
+                .put("org.apache.felix.https.ssl.sni.required", "true")
+                .put("org.apache.felix.https.ssl.sni.hostCheck", "false")
                 .asOption();
     }
 

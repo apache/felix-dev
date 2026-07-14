@@ -53,7 +53,7 @@ import org.osgi.service.http.HttpService;
 import org.osgi.service.servlet.whiteboard.HttpWhiteboardConstants;
 
 /**
- * Integration test for org.apache.felix.https.ssl.sniHostCheck (FELIX-6846).
+ * Integration test for org.apache.felix.https.ssl.sni.hostCheck (FELIX-6846).
  *
  * With sniHostCheck=true (the default), Jetty checks that the certificate
  * presented to the client matches the Host header. A Host header that does not
