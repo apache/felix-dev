@@ -115,9 +115,32 @@ public class JettyUriComplianceModeDefaultIT extends AbstractJettyTestSupport {
         }
     }
 
+    @Test
+    public void testRedirectUriCompliance() throws Exception {
+        try (HttpClient httpClient = new HttpClient()) {
+            httpClient.setFollowRedirects(false);
+            httpClient.start();
+            Object value = bundleContext.getServiceReference(HttpService.class).getProperty("org.osgi.service.http.port");
+            int httpPort = Integer.parseInt((String) value);
+
+            URI destUriRedirect = new URI(String.format("http://localhost:%d/endpoint/redirect", httpPort));
+
+            // The endpoint issues a redirect whose Location contains an ambiguous %2F.
+            // With the default redirect compliance (DEFAULT_REDIRECT) this is rejected,
+            // surfacing as an internal server error rather than a 302.
+            ContentResponse response = httpClient.GET(destUriRedirect);
+            assertEquals(500, response.getStatus());
+        }
+    }
+
      static final class UriComplianceEndpoint extends HttpServlet {
         @Override
         protected void doGet(HttpServletRequest req, HttpServletResponse resp) throws IOException {
+            if (req.getRequestURI().contains("redirect")) {
+                // Location deliberately contains an ambiguous encoded separator (%2F)
+                resp.sendRedirect("/endpoint/redirected%2Ftarget");
+                return;
+            }
             resp.setStatus(200);
             resp.getWriter().write("OK");
         }

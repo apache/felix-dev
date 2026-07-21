@@ -64,4 +64,23 @@ public class JettyUriComplianceModeLegacyIT extends JettyUriComplianceModeDefaul
             assertEquals("OK", response2.getContentAsString());
         }
     }
+
+    @Test
+    @Override
+    public void testRedirectUriCompliance() throws Exception {
+        try (HttpClient httpClient = new HttpClient()) {
+            httpClient.setFollowRedirects(false);
+            httpClient.start();
+            Object value = bundleContext.getServiceReference(HttpService.class).getProperty("org.osgi.service.http.port");
+            int httpPort = Integer.parseInt((String) value);
+
+            URI destUriRedirect = new URI(String.format("http://localhost:%d/endpoint/redirect", httpPort));
+
+            // With LEGACY compliance the ambiguous %2F in the Location header is allowed,
+            // so the redirect is emitted normally instead of being rejected.
+            ContentResponse response = httpClient.GET(destUriRedirect);
+            assertEquals(302, response.getStatus());
+            assertEquals("/endpoint/redirected%2Ftarget", response.getHeaders().get("Location"));
+        }
+    }
 }
