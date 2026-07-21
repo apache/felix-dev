@@ -578,7 +578,10 @@ public final class JettyService
         );
 
         HttpConfiguration httpConfiguration = connFactory.getHttpConfiguration();
-        httpConfiguration.addCustomizer(new SecureRequestCustomizer());
+        SecureRequestCustomizer secureRequestCustomizer = new SecureRequestCustomizer();
+        secureRequestCustomizer.setSniRequired(this.config.isSniRequired());
+        secureRequestCustomizer.setSniHostCheck(this.config.isSniHostCheck());
+        httpConfiguration.addCustomizer(secureRequestCustomizer);
 
         if (this.config.isProxyLoadBalancerConnection())
         {
@@ -751,6 +754,7 @@ public final class JettyService
         }
 
         connector.setRenegotiationAllowed(this.config.isRenegotiationAllowed());
+        connector.setSniRequired(this.config.isSniContextRequired());
     }
 
     private void configureConnector(final ServerConnector connector, int port)
@@ -784,6 +788,11 @@ public final class JettyService
             try {
                 UriCompliance compliance = UriCompliance.valueOf(uriComplianceMode);
                 config.setUriCompliance(compliance);
+                // Apply the same compliance to redirect URIs (Location header). Since Jetty 12.1
+                // this defaults to UriCompliance.DEFAULT_REDIRECT, which - like the request URI
+                // default - rejects ambiguous encodings such as %2F. Differentiating the two makes
+                // no sense: if a deployment opts into a compliance mode it should apply end-to-end.
+                config.setRedirectUriCompliance(compliance);
 
                 if (LEGACY.equals(compliance) || UNSAFE.equals(compliance) || UNAMBIGUOUS.equals(compliance)) {
                     // See https://github.com/jetty/jetty.project/issues/11448#issuecomment-1969206031

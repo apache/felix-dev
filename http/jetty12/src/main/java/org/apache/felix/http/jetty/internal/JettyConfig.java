@@ -153,6 +153,15 @@ public final class JettyConfig
     /** Felix specific properties to be able to disable renegotiation protocol for TLSv1 */
     public static final String FELIX_JETTY_RENEGOTIATION_ALLOWED = "org.apache.felix.https.jetty.renegotiateAllowed";
 
+    /** Felix specific property to require SNI at the TLS level. Defaults to false. See https://jetty.org/docs/jetty/12/operations-guide/protocols/index.html#ssl-sni */
+    public static final String FELIX_HTTPS_SNI_CONTEXT_REQUIRED = "org.apache.felix.https.sslContext.sni.required";
+
+    /** Felix specific property to require SNI at the HTTP level (returns 400 on mismatch). Defaults to false. See https://jetty.org/docs/jetty/12/operations-guide/protocols/index.html#ssl-sni */
+    public static final String FELIX_HTTPS_SNI_REQUIRED = "org.apache.felix.https.ssl.sni.required";
+
+    /** Felix specific property to check that the SNI hostname matches the Host header. Defaults to true. See https://jetty.org/docs/jetty/12/operations-guide/protocols/index.html#ssl-sni */
+    public static final String FELIX_HTTPS_SNI_HOST_CHECK = "org.apache.felix.https.ssl.sni.hostCheck";
+
     /** Felix specific property to control whether to enable Proxy/Load Balancer Connection */
     public static final String FELIX_PROXY_LOAD_BALANCER_CONNECTION_ENABLE = "org.apache.felix.proxy.load.balancer.connection.enable";
 
@@ -616,6 +625,18 @@ public final class JettyConfig
 
     public boolean isRenegotiationAllowed() {
         return getBooleanProperty(FELIX_JETTY_RENEGOTIATION_ALLOWED, false);
+    }
+
+    public boolean isSniContextRequired() {
+        return getBooleanProperty(FELIX_HTTPS_SNI_CONTEXT_REQUIRED, false);
+    }
+
+    public boolean isSniRequired() {
+        return getBooleanProperty(FELIX_HTTPS_SNI_REQUIRED, false);
+    }
+
+    public boolean isSniHostCheck() {
+        return getBooleanProperty(FELIX_HTTPS_SNI_HOST_CHECK, true);
     }
 
     public String getHttpServiceName()

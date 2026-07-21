@@ -225,6 +225,24 @@ class ConfigMetaTypeProvider implements MetaTypeProvider
                 -1,
                 bundle.getBundleContext().getProperty(JettyConfig.FELIX_JETTY_ACCEPT_QUEUE_SIZE)));
 
+        adList.add(new AttributeDefinitionImpl(JettyConfig.FELIX_HTTPS_SNI_CONTEXT_REQUIRED,
+                "SNI required at TLS level",
+                "Whether SNI is required at the TLS level. Clients without a valid SNI receive a TLS failure. Defaults to false.",
+                false,
+                bundle.getBundleContext().getProperty(JettyConfig.FELIX_HTTPS_SNI_CONTEXT_REQUIRED)));
+
+        adList.add(new AttributeDefinitionImpl(JettyConfig.FELIX_HTTPS_SNI_REQUIRED,
+                "SNI required at HTTP level",
+                "Whether SNI is required at the HTTP level. Clients without a valid SNI receive a 400 Bad Request. Defaults to false.",
+                false,
+                bundle.getBundleContext().getProperty(JettyConfig.FELIX_HTTPS_SNI_REQUIRED)));
+
+        adList.add(new AttributeDefinitionImpl(JettyConfig.FELIX_HTTPS_SNI_HOST_CHECK,
+                "SNI host check",
+                "Whether the SNI hostname must match the Host header. Defaults to true.",
+                true,
+                bundle.getBundleContext().getProperty(JettyConfig.FELIX_HTTPS_SNI_HOST_CHECK)));
+
         adList.add(new AttributeDefinitionImpl(JettyConfig.FELIX_JETTY_ERROR_PAGE_CUSTOM_HEADERS,
                 "Custom headers to add to error pages",
                 "Felix specific property to configure the custom headers to add to all error pages served by Jetty. Separate key-value pairs with ##.",
