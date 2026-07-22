@@ -46,4 +46,40 @@ public class UtilTest {
         u = Util.resolveUri(session, "three");
         assertEquals(new File("./three").getCanonicalFile().toURI().toString(), u);
     }
+
+    @Test
+    public void testUnjarZipSlip() throws Exception {
+        java.io.ByteArrayOutputStream baos = new java.io.ByteArrayOutputStream();
+        try (java.util.jar.JarOutputStream jos = new java.util.jar.JarOutputStream(baos)) {
+            java.util.jar.JarEntry entry = new java.util.jar.JarEntry("../../evil.txt");
+            jos.putNextEntry(entry);
+            jos.write("malicious content".getBytes());
+            jos.closeEntry();
+        }
+
+        java.io.ByteArrayInputStream bais = new java.io.ByteArrayInputStream(baos.toByteArray());
+        java.util.jar.JarInputStream jis = new java.util.jar.JarInputStream(bais);
+
+        File targetDir = new File("target/extraction-test-util");
+        targetDir.mkdirs();
+
+        try {
+            Util.unjar(jis, targetDir);
+            org.junit.Assert.fail("Expected IOException due to Zip Slip path traversal");
+        } catch (java.io.IOException e) {
+            org.junit.Assert.assertTrue(e.getMessage().contains("resolves outside the target directory"));
+        } finally {
+            deleteDirectory(targetDir);
+        }
+    }
+
+    private void deleteDirectory(File dir) {
+        File[] files = dir.listFiles();
+        if (files != null) {
+            for (File f : files) {
+                deleteDirectory(f);
+            }
+        }
+        dir.delete();
+    }
 }
