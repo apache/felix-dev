@@ -52,6 +52,18 @@ public class ComponentBase extends TestCase
     {
         final SAXParserFactory factory = SAXParserFactory.newInstance();
         factory.setNamespaceAware(true);
+        try
+        {
+            factory.setFeature("http://xml.org/sax/features/external-general-entities", false);
+            factory.setFeature("http://xml.org/sax/features/external-parameter-entities", false);
+            factory.setFeature("http://apache.org/xml/features/nonvalidating/load-external-dtd", false);
+            factory.setFeature("http://apache.org/xml/features/disallow-doctype-decl", true);
+            factory.setXIncludeAware(false);
+        }
+        catch (Exception e)
+        {
+            // Ignore
+        }
         final SAXParser parser = factory.newSAXParser();
 
         XmlHandler handler = new XmlHandler(new MockBundle(), logger, false, false, null);
