@@ -105,7 +105,7 @@ public class Configurator {
                 if ( active &&
                     (state == Bundle.ACTIVE || state == Bundle.STARTING) ) {
                     SystemLogger.debug("Adding bundle " + getBundleIdentity(bundle) + " : " + getBundleState(state));
-                    queue.enqueue(new Runnable() {
+                    queue.submit(new Runnable() {
 
                         @Override
                         public void run() {
@@ -128,7 +128,7 @@ public class Configurator {
                 final int state = bundle.getState();
                 if ( active && state == Bundle.UNINSTALLED ) {
                     SystemLogger.debug("Removing bundle " + getBundleIdentity(bundle) + " : " + getBundleState(state));
-                    queue.enqueue(new Runnable() {
+                    queue.submit(new Runnable() {
 
                         @Override
                         public void run() {
@@ -148,7 +148,7 @@ public class Configurator {
     }
 
     public void configAdminAdded() {
-        queue.enqueue(new Runnable() {
+        queue.submit(new Runnable() {
 
             @Override
             public void run() {
@@ -182,7 +182,7 @@ public class Configurator {
      */
     public void shutdown() {
         this.active = false;
-        this.queue.stop();
+        this.queue.shutdownNow();
         this.tracker.close();
     }
 
