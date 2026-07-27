@@ -29,6 +29,8 @@ import org.osgi.util.tracker.ServiceTracker;
 
 import static org.junit.Assert.assertEquals;
 
+import java.util.concurrent.atomic.AtomicReference;
+
 public class OsgiManagerHttpContextTest {
 
     @Test
@@ -39,7 +41,7 @@ public class OsgiManagerHttpContextTest {
         ServiceTracker<SecurityProvider, SecurityProvider> tracker = Mockito.mock(ServiceTracker.class);
         Mockito.when(tracker.getService()).thenReturn(provider);
 
-        OsgiManagerHttpContext ctx = new OsgiManagerHttpContext(bundle, tracker, "/system/console");
+        OsgiManagerHttpContext ctx = new OsgiManagerHttpContext(bundle, new AtomicReference<>(tracker), "/system/console");
 
         HttpServletRequest request = Mockito.mock(HttpServletRequest.class);
         HttpServletResponse response = Mockito.mock(HttpServletResponse.class);

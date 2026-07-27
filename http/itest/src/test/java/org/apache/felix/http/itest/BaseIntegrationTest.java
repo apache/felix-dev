@@ -35,6 +35,8 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.net.HttpURLConnection;
 import java.net.MalformedURLException;
+import java.net.URI;
+import java.net.URISyntaxException;
 import java.net.URL;
 import java.util.Collection;
 import java.util.Dictionary;
@@ -119,8 +121,8 @@ public abstract class BaseIntegrationTest {
         }
         int port = Integer.getInteger("org.osgi.service.http.port", 8080);
         try {
-            return new URL(String.format("http://localhost:%d/%s", port, path));
-        } catch (MalformedURLException e) {
+            return new URI(String.format("http://localhost:%d/%s", port, path)).toURL();
+        } catch (URISyntaxException | MalformedURLException e) {
             throw new RuntimeException(e);
         }
     }
@@ -156,15 +158,11 @@ public abstract class BaseIntegrationTest {
 
                 // scavenge sessions every 10 seconds (10 minutes is default in 9.4.x)
                 systemProperty("org.eclipse.jetty.servlet.SessionScavengingInterval").value("10"),
-                mavenBundle("org.slf4j", "slf4j-api", "1.7.32"),
-                mavenBundle("org.slf4j", "jcl-over-slf4j", "1.7.32"),
-                mavenBundle("org.slf4j", "log4j-over-slf4j", "1.7.32"),
-
-                mavenBundle("org.apache.felix", "org.apache.felix.log", "1.2.6"),
-                mavenBundle("org.apache.sling", "org.apache.sling.commons.log", "5.3.0"),
-                mavenBundle("org.apache.sling", "org.apache.sling.commons.logservice", "1.1.0"),
-
+                mavenBundle("org.osgi", "org.osgi.util.function", "1.2.0"),
+                mavenBundle("org.osgi", "org.osgi.util.converter", "1.0.9"),
+                mavenBundle("org.apache.sling", "org.apache.sling.commons.log", "6.0.4").classifier("all"),
                 mavenBundle("org.apache.sling", "org.apache.sling.commons.johnzon", "1.2.16").startLevel(START_LEVEL_SYSTEM_BUNDLES),
+                mavenBundle("commons-io", "commons-io", "2.22.0").startLevel(START_LEVEL_SYSTEM_BUNDLES),
 
                 mavenBundle("org.apache.felix", "org.apache.felix.configadmin").version("1.9.22").startLevel(START_LEVEL_SYSTEM_BUNDLES),
                 mavenBundle("org.apache.felix", "org.apache.felix.http.servlet-api", System.getProperty("http.servlet.api.version")).startLevel(START_LEVEL_SYSTEM_BUNDLES),
@@ -225,6 +223,7 @@ public abstract class BaseIntegrationTest {
         return tracker.getServiceReferences();
     }
 
+    @SuppressWarnings("unchecked")
     private <T> ServiceTracker<T, T> getTracker(Class<T> clazz) {
         synchronized ( this.trackers ) {
             ServiceTracker<T, T> tracker = (ServiceTracker<T, T>) trackers.get(clazz.getName());
@@ -246,7 +245,7 @@ public abstract class BaseIntegrationTest {
 
         for (final ServiceReference<ManagedService> serviceRef : serviceRefs) {
             ManagedService service = m_context.getService(serviceRef);
-            try {                
+            try {
                 service.updated(props);
             } catch (ConfigurationException ex) {
                 fail("Invalid configuration provisioned: " + ex.getMessage());

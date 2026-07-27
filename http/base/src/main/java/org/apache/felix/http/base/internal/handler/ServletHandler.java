@@ -24,7 +24,6 @@ import org.apache.felix.http.base.internal.dispatch.MultipartConfig;
 import org.apache.felix.http.base.internal.logger.SystemLogger;
 import org.apache.felix.http.base.internal.runtime.ServletInfo;
 import org.apache.felix.http.jakartawrappers.ServletWrapper;
-import org.osgi.framework.Bundle;
 import org.osgi.service.servlet.runtime.dto.DTOConstants;
 
 import jakarta.servlet.Servlet;
@@ -180,14 +179,13 @@ public abstract class ServletHandler implements Comparable<ServletHandler>
         catch (final Exception e)
         {
             SystemLogger.LOGGER.error(SystemLogger.formatMessage(this.getServletInfo().getServiceReference(),
-                    "Error during calling init() on servlet ".concat(this.servletInfo.getClassName(this.servlet))),
+                            "Error during calling init() on servlet ".concat(this.servletInfo.getClassName(this.servlet))),
                     e);
             return DTOConstants.FAILURE_REASON_EXCEPTION_ON_INIT;
         }
         this.useCount++;
         return -1;
     }
-
 
     public boolean destroy()
     {
@@ -247,10 +245,5 @@ public abstract class ServletHandler implements Comparable<ServletHandler>
     public MultipartConfig getMultipartConfig()
     {
         return mpConfig;
-    }
-
-    public Bundle getMultipartSecurityContext()
-    {
-        return null;
     }
 }

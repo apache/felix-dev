@@ -124,7 +124,7 @@ public abstract class AbstractServlet extends HttpServlet {
      *
      * @throws IOException If an error occurs accessing or spooling the resource.
      */
-    protected final void spoolResource(final HttpServletRequest request, final HttpServletResponse response) 
+    protected final void spoolResource(final HttpServletRequest request, final HttpServletResponse response)
     throws IOException {
         // check for a resource, fail if none
         final URL url = this.getResource(request.getPathInfo());
@@ -162,7 +162,10 @@ public abstract class AbstractServlet extends HttpServlet {
             }
 
             // describe the contents
-            response.setContentType( getServletContext().getMimeType( request.getPathInfo() ) );
+            final String contentType = getServletContext().getMimeType( request.getPathInfo());
+            if ( contentType != null ) {
+                response.setContentType( contentType );
+            }
             if (connection.getContentLength() != -1) {
                 response.setContentLength( connection.getContentLength() );
             }
@@ -184,7 +187,7 @@ public abstract class AbstractServlet extends HttpServlet {
      * UTF-8 encoding.
      *
      * @param templateFile The absolute path to the template file to read.
-     * @return The contents of the template file as a string 
+     * @return The contents of the template file as a string
      *
      * @throws NullPointerException if <code>templateFile</code> is
      *      <code>null</code>

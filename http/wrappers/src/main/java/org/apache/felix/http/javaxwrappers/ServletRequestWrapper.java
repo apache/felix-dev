@@ -40,6 +40,8 @@ import static jakarta.servlet.RequestDispatcher.INCLUDE_PATH_INFO;
 import static jakarta.servlet.RequestDispatcher.INCLUDE_QUERY_STRING;
 import static jakarta.servlet.RequestDispatcher.INCLUDE_REQUEST_URI;
 import static jakarta.servlet.RequestDispatcher.INCLUDE_SERVLET_PATH;
+import static jakarta.servlet.RequestDispatcher.ERROR_QUERY_STRING;
+import static jakarta.servlet.RequestDispatcher.ERROR_METHOD;
 
 import java.io.BufferedReader;
 import java.io.IOException;
@@ -63,6 +65,9 @@ import jakarta.servlet.http.HttpServletRequest;
  * Servlet request wrapper
  */
 public class ServletRequestWrapper implements javax.servlet.ServletRequest {
+
+    private static final String JAVAX_ERROR_METHOD = ERROR_METHOD.replace("jakarta", "javax");
+    private static final String JAVAX_ERROR_QUERY_STRING = ERROR_QUERY_STRING.replace("jakarta", "javax");
 
     private final ServletRequest request;
 
@@ -161,6 +166,14 @@ public class ServletRequestWrapper implements javax.servlet.ServletRequest {
 
         } else if ( javax.servlet.RequestDispatcher.ERROR_STATUS_CODE.equals(name) ) {
             return ERROR_STATUS_CODE;
+
+        // new in 6.1
+        } else if ( JAVAX_ERROR_METHOD.equals(name) ) {
+            return ERROR_METHOD;
+
+        // new in 6.1
+        } else if ( JAVAX_ERROR_QUERY_STRING.equals(name) ) {
+            return ERROR_QUERY_STRING;
 
         } else if ( javax.servlet.AsyncContext.ASYNC_CONTEXT_PATH.equals(name) ) {
             return ASYNC_CONTEXT_PATH;

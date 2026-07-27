@@ -29,8 +29,12 @@ import java.util.List;
 import java.util.Map;
 import java.util.jar.JarOutputStream;
 import java.util.jar.Manifest;
-import junit.framework.TestCase;
+
 import org.apache.felix.framework.util.FelixConstants;
+
+import static org.assertj.core.api.Assertions.assertThat;
+
+import org.junit.jupiter.api.Test;
 import org.osgi.framework.Bundle;
 import org.osgi.framework.Constants;
 import org.osgi.framework.launch.Framework;
@@ -39,25 +43,29 @@ import org.osgi.framework.launch.Framework;
  * Test to ensure behaviour of "felix.bootdelegation.classloaders" contract.
  * 
  */
-public class BootLoaderTest extends TestCase
+class BootLoaderTest
 {
     private File cacheDir;
 
-    public void testCanProvideOwnClassLoader() throws Exception
+    @Test
+    void canProvideOwnClassLoader() throws Exception
     {
         final ClassLoader myClassloader = new CL();
-        final List queriedFor = new ArrayList();
+        final List<Bundle> queriedFor = new ArrayList<>();
 
-        Map bundle2Classloader = new HashMap()
+        Map<Bundle,ClassLoader> bundle2Classloader = new HashMap<Bundle,ClassLoader>()
         {
-            public Object get(Object o)
+            private static final long serialVersionUID = 1L;
+
+			@Override
+			public ClassLoader get(Object o)
             {
-                queriedFor.add(o);
+                queriedFor.add((Bundle) o);
                 return myClassloader;
             }
         };
 
-        Map params = new HashMap();
+        Map<String,Object> params = new HashMap<>();
         params.put(Constants.FRAMEWORK_SYSTEMPACKAGES,
             "org.osgi.framework; version=1.4.0,"
             + "org.osgi.service.packageadmin; version=1.2.0,"
@@ -85,16 +93,17 @@ public class BootLoaderTest extends TestCase
         f.start();
 
         Bundle[] arr = f.getBundleContext().getBundles();
-        assertEquals("Two, system and mine: " + Arrays.toString(arr), 2, arr.length);
-        Class c = arr[1].loadClass("boot.test.Test");
-        assertNotNull("Class loaded", c);
-        assertEquals("One query", 1, queriedFor.size());
-        assertEquals("Queried for my bundle", arr[1], queriedFor.get(0));
+        assertThat(arr.length).as("Two, system and mine: " + Arrays.toString(arr)).isEqualTo(2);
+        Class<?> c = arr[1].loadClass("boot.test.Test");
+        assertThat(c).as("Class loaded").isNotNull();
+        assertThat(queriedFor.size()).as("One query").isEqualTo(1);
+        assertThat(queriedFor.get(0)).as("Queried for my bundle").isEqualTo(arr[1]);
     }
 
     public static final class CL extends ClassLoader
     {
-        protected Class findClass(String name) throws ClassNotFoundException
+        @Override
+		protected Class<?> findClass(String name) throws ClassNotFoundException
         {
             if (name.equals("boot.test.Test"))
             {

@@ -42,16 +42,16 @@ public class JarContent implements Content
     private static final transient String LIBRARY_DIRECTORY = "-lib";
 
     private final Logger m_logger;
-    private final Map m_configMap;
+    private final Map<?,?> m_configMap;
     private final WeakZipFileFactory m_zipFactory;
     private final Object m_revisionLock;
     private final File m_rootDir;
     private final File m_file;
     private final WeakZipFile m_zipFile;
     private final boolean m_isZipFileOwner;
-    private Map m_nativeLibMap;
+    private Map<String,Integer> m_nativeLibMap;
 
-    public JarContent(Logger logger, Map configMap, WeakZipFileFactory zipFactory,
+    public JarContent(Logger logger, Map<?,?> configMap, WeakZipFileFactory zipFactory,
         Object revisionLock, File rootDir, File file, WeakZipFile zipFile)
     {
         m_logger = logger;
@@ -79,12 +79,14 @@ public class JarContent implements Content
         m_isZipFileOwner = (zipFile == null);
     }
 
-    protected void finalize()
+    @Override
+	protected void finalize()
     {
         close();
     }
 
-    public void close()
+    @Override
+	public void close()
     {
         try
         {
@@ -101,7 +103,8 @@ public class JarContent implements Content
         }
     }
 
-    public boolean hasEntry(String name)
+    @Override
+	public boolean hasEntry(String name)
     {
         try
         {
@@ -128,7 +131,8 @@ public class JarContent implements Content
         }
     }
 
-    public Enumeration<String> getEntries()
+    @Override
+	public Enumeration<String> getEntries()
     {
         // Wrap entries enumeration to filter non-matching entries.
         Enumeration<String> e = m_zipFile.names();
@@ -137,7 +141,8 @@ public class JarContent implements Content
         return (e.hasMoreElements()) ? e : null;
     }
 
-    public byte[] getEntryAsBytes(String name) throws IllegalStateException
+    @Override
+	public byte[] getEntryAsBytes(String name) throws IllegalStateException
     {
         // Get the embedded resource.
         try
@@ -160,7 +165,8 @@ public class JarContent implements Content
         }
     }
 
-    public InputStream getEntryAsStream(String name)
+    @Override
+	public InputStream getEntryAsStream(String name)
         throws IllegalStateException, IOException
     {
         // Get the embedded resource.
@@ -187,7 +193,8 @@ public class JarContent implements Content
         return is;
     }
 
-    public URL getEntryAsURL(String name)
+    @Override
+	public URL getEntryAsURL(String name)
     {
         if (hasEntry(name))
         {
@@ -220,7 +227,8 @@ public class JarContent implements Content
         }
     }
 
-    public Content getEntryAsContent(String entryName)
+    @Override
+	public Content getEntryAsContent(String entryName)
     {
         // If the entry name refers to the content itself, then
         // just return it immediately.
@@ -303,7 +311,8 @@ public class JarContent implements Content
     }
 
 // TODO: SECURITY - This will need to consider security.
-    public String getEntryAsNativeLibrary(String entryName)
+    @Override
+	public String getEntryAsNativeLibrary(String entryName)
     {
         // Return result.
         String result = null;
@@ -340,11 +349,11 @@ public class JarContent implements Content
                 // as part of the extracted path.
                 if (m_nativeLibMap == null)
                 {
-                    m_nativeLibMap = new HashMap();
+                    m_nativeLibMap = new HashMap<>();
                 }
                 Integer libCount = (Integer) m_nativeLibMap.get(entryName);
                 // Either set or increment the library count.
-                libCount = (libCount == null) ? new Integer(0) : new Integer(libCount.intValue() + 1);
+                libCount = (libCount == null) ? 0 : libCount.intValue() + 1;
                 m_nativeLibMap.put(entryName, libCount);
                 File libFile = new File(
                     libDir, libCount.toString() + File.separatorChar + entryName);
@@ -413,7 +422,8 @@ public class JarContent implements Content
         return result;
     }
 
-    public String toString()
+    @Override
+	public String toString()
     {
         return "JAR " + m_file.getPath();
     }
@@ -432,7 +442,8 @@ public class JarContent implements Content
             m_in = in;
         }
 
-        public void run()
+        @Override
+		public void run()
         {
             try
             {

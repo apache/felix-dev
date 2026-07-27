@@ -18,69 +18,73 @@
  */
 package org.apache.felix.framework.capabilityset;
 
-import junit.framework.TestCase;
+import static org.assertj.core.api.Assertions.assertThat;
+
+import org.junit.jupiter.api.Test;
+
 import java.util.List;
 
-public class SimpleFilterTest extends TestCase
+class SimpleFilterTest
 {
-    public void testSubstringMatching()
+    @Test
+    void substringMatching()
     {
         List<String> pieces;
 
         pieces = SimpleFilter.parseSubstring("*");
-        assertTrue("Should match!", SimpleFilter.compareSubstring(pieces, ""));
+        assertThat(SimpleFilter.compareSubstring(pieces, "")).as("Should match!").isTrue();
 
         pieces = SimpleFilter.parseSubstring("foo");
-        assertFalse("Should not match!", SimpleFilter.compareSubstring(pieces, ""));
+        assertThat(SimpleFilter.compareSubstring(pieces, "")).as("Should not match!").isFalse();
 
         pieces = SimpleFilter.parseSubstring("");
-        assertTrue("Should match!", SimpleFilter.compareSubstring(pieces, ""));
-        assertFalse("Should not match!", SimpleFilter.compareSubstring(pieces, "foo"));
+        assertThat(SimpleFilter.compareSubstring(pieces, "")).as("Should match!").isTrue();
+        assertThat(SimpleFilter.compareSubstring(pieces, "foo")).as("Should not match!").isFalse();
 
         pieces = SimpleFilter.parseSubstring("foo");
-        assertTrue("Should match!", SimpleFilter.compareSubstring(pieces, "foo"));
-        assertFalse("Should not match!", SimpleFilter.compareSubstring(pieces, "barfoo"));
-        assertFalse("Should not match!", SimpleFilter.compareSubstring(pieces, "foobar"));
+        assertThat(SimpleFilter.compareSubstring(pieces, "foo")).as("Should match!").isTrue();
+        assertThat(SimpleFilter.compareSubstring(pieces, "barfoo")).as("Should not match!").isFalse();
+        assertThat(SimpleFilter.compareSubstring(pieces, "foobar")).as("Should not match!").isFalse();
 
         pieces = SimpleFilter.parseSubstring("foo*");
-        assertTrue("Should match!", SimpleFilter.compareSubstring(pieces, "foo"));
-        assertFalse("Should not match!", SimpleFilter.compareSubstring(pieces, "barfoo"));
-        assertTrue("Should match!", SimpleFilter.compareSubstring(pieces, "foobar"));
+        assertThat(SimpleFilter.compareSubstring(pieces, "foo")).as("Should match!").isTrue();
+        assertThat(SimpleFilter.compareSubstring(pieces, "barfoo")).as("Should not match!").isFalse();
+        assertThat(SimpleFilter.compareSubstring(pieces, "foobar")).as("Should match!").isTrue();
 
         pieces = SimpleFilter.parseSubstring("*foo");
-        assertTrue("Should match!", SimpleFilter.compareSubstring(pieces, "foo"));
-        assertTrue("Should match!", SimpleFilter.compareSubstring(pieces, "barfoo"));
-        assertFalse("Should match!", SimpleFilter.compareSubstring(pieces, "foobar"));
+        assertThat(SimpleFilter.compareSubstring(pieces, "foo")).as("Should match!").isTrue();
+        assertThat(SimpleFilter.compareSubstring(pieces, "barfoo")).as("Should match!").isTrue();
+        assertThat(SimpleFilter.compareSubstring(pieces, "foobar")).as("Should match!").isFalse();
 
         pieces = SimpleFilter.parseSubstring("foo*bar");
-        assertTrue("Should match!", SimpleFilter.compareSubstring(pieces, "foobar"));
-        assertFalse("Should not match!", SimpleFilter.compareSubstring(pieces, "barfoo"));
-        assertTrue("Should match!", SimpleFilter.compareSubstring(pieces, "foosldfjbar"));
+        assertThat(SimpleFilter.compareSubstring(pieces, "foobar")).as("Should match!").isTrue();
+        assertThat(SimpleFilter.compareSubstring(pieces, "barfoo")).as("Should not match!").isFalse();
+        assertThat(SimpleFilter.compareSubstring(pieces, "foosldfjbar")).as("Should match!").isTrue();
 
         pieces = SimpleFilter.parseSubstring("*foo*bar");
-        assertTrue("Should match!", SimpleFilter.compareSubstring(pieces, "foobar"));
-        assertFalse("Should not match!", SimpleFilter.compareSubstring(pieces, "foobarfoo"));
-        assertTrue("Should match!", SimpleFilter.compareSubstring(pieces, "barfoobar"));
-        assertTrue("Should match!", SimpleFilter.compareSubstring(pieces, "sdffoobsdfbar"));
+        assertThat(SimpleFilter.compareSubstring(pieces, "foobar")).as("Should match!").isTrue();
+        assertThat(SimpleFilter.compareSubstring(pieces, "foobarfoo")).as("Should not match!").isFalse();
+        assertThat(SimpleFilter.compareSubstring(pieces, "barfoobar")).as("Should match!").isTrue();
+        assertThat(SimpleFilter.compareSubstring(pieces, "sdffoobsdfbar")).as("Should match!").isTrue();
 
         pieces = SimpleFilter.parseSubstring("*foo*bar*");
-        assertTrue("Should match!", SimpleFilter.compareSubstring(pieces, "foobar"));
-        assertTrue("Should match!", SimpleFilter.compareSubstring(pieces, "foobarfoo"));
-        assertTrue("Should match!", SimpleFilter.compareSubstring(pieces, "barfoobar"));
-        assertTrue("Should match!", SimpleFilter.compareSubstring(pieces, "sdffoobsdfbar"));
-        assertTrue("Should match!", SimpleFilter.compareSubstring(pieces, "sdffoobsdfbarlj"));
-        assertFalse("Should not match!", SimpleFilter.compareSubstring(pieces, "sdffobsdfbarlj"));
+        assertThat(SimpleFilter.compareSubstring(pieces, "foobar")).as("Should match!").isTrue();
+        assertThat(SimpleFilter.compareSubstring(pieces, "foobarfoo")).as("Should match!").isTrue();
+        assertThat(SimpleFilter.compareSubstring(pieces, "barfoobar")).as("Should match!").isTrue();
+        assertThat(SimpleFilter.compareSubstring(pieces, "sdffoobsdfbar")).as("Should match!").isTrue();
+        assertThat(SimpleFilter.compareSubstring(pieces, "sdffoobsdfbarlj")).as("Should match!").isTrue();
+        assertThat(SimpleFilter.compareSubstring(pieces, "sdffobsdfbarlj")).as("Should not match!").isFalse();
 
         pieces = SimpleFilter.parseSubstring("*foo(*bar*");
-        assertTrue("Should match!", SimpleFilter.compareSubstring(pieces, "foo()bar"));
+        assertThat(SimpleFilter.compareSubstring(pieces, "foo()bar")).as("Should match!").isTrue();
 
         pieces = SimpleFilter.parseSubstring("*foo*bar*bar");
-        assertFalse("Should not match!", SimpleFilter.compareSubstring(pieces, "foobar"));
+        assertThat(SimpleFilter.compareSubstring(pieces, "foobar")).as("Should not match!").isFalse();
 
         pieces = SimpleFilter.parseSubstring("aaaa*aaaa");
-        assertFalse("Should not match!", SimpleFilter.compareSubstring(pieces, "aaaaaaa"));
+        assertThat(SimpleFilter.compareSubstring(pieces, "aaaaaaa")).as("Should not match!").isFalse();
 
         pieces = SimpleFilter.parseSubstring("aaa**aaa");
-        assertTrue("Should match!", SimpleFilter.compareSubstring(pieces, "aaaaaa"));
+        assertThat(SimpleFilter.compareSubstring(pieces, "aaaaaa")).as("Should match!").isTrue();
     }
 }

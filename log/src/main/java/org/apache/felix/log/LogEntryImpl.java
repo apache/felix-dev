@@ -143,6 +143,7 @@ final class LogEntryImpl implements LogEntry
      * @return the bundle that created this LogEntry object;<code>null</code> if no
      * bundle is associated with this LogEntry object
      */
+    @Override
     public Bundle getBundle()
     {
         return m_bundle;
@@ -155,6 +156,7 @@ final class LogEntryImpl implements LogEntry
      * this LogEntry object; <code>null</code> if no {@link ServiceReference} object
      * was provided
      */
+    @Override
     public ServiceReference<?> getServiceReference()
     {
         return m_serviceReference;
@@ -171,6 +173,7 @@ final class LogEntryImpl implements LogEntry
      * @see org.osgi.service.LogService#LOG_INFO
      * @see org.osgi.service.LogService#LOG_DEBUG
      */
+    @Override
     public int getLevel()
     {
         if (m_legacyLevel != m_level.ordinal()) {
@@ -184,6 +187,7 @@ final class LogEntryImpl implements LogEntry
      * Returns the human readable message associated with this LogEntry object.
      * @return a string containing the message associated with this LogEntry object
      */
+    @Override
     public String getMessage()
     {
         return m_message;
@@ -202,6 +206,7 @@ final class LogEntryImpl implements LogEntry
      * @return throwable object of the exception associated with this LogEntry;
      * <code>null</code> if no exception is associated with this LogEntry object
      */
+    @Override
     public Throwable getException()
     {
         return m_exception;
@@ -213,6 +218,7 @@ final class LogEntryImpl implements LogEntry
      * @return the system time in milliseconds when this LogEntry object was created
      * @see System#currentTimeMillis()
      */
+    @Override
     public long getTime()
     {
         return m_time;

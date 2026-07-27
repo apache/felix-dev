@@ -70,18 +70,18 @@ public class ResolveContextImpl extends ResolveContext
     @Override
     public Collection<Resource> getMandatoryResources()
     {
-        return new ArrayList<Resource>(m_mandatory);
+        return new ArrayList<>(m_mandatory);
     }
 
     @Override
     public Collection<Resource> getOptionalResources()
     {
-        return new ArrayList<Resource>(m_optional);
+        return new ArrayList<>(m_optional);
     }
 
     public Collection<Resource> getOndemandResources(Resource host)
     {
-        List<Resource> result = new ArrayList<Resource>();
+        List<Resource> result = new ArrayList<>();
         for (BundleRevision revision : m_ondemand)
         {
             for (BundleRequirement req : revision.getDeclaredRequirements(null))
@@ -151,7 +151,7 @@ public class ResolveContextImpl extends ResolveContext
 		// TODO: this is calculating information that probably has been calculated 
 		// already or at least could be calculated quicker taking into account the
 		// current state. We need to revisit this.
-		Set<String> exportNames = new HashSet<String>();
+		Set<String> exportNames = new HashSet<>();
         for (Capability cap : wiring.getResource().getCapabilities(null))
         {
             if (cap.getNamespace().equals(PackageNamespace.PACKAGE_NAMESPACE))
@@ -172,7 +172,7 @@ public class ResolveContextImpl extends ResolveContext
                 }
             }
         }
-        List<Wire> substitutionWires = new ArrayList<Wire>();
+        List<Wire> substitutionWires = new ArrayList<>();
         for (Wire wire : wiring.getRequiredResourceWires(null))
         {
             if (wire.getCapability().getNamespace().equals(PackageNamespace.PACKAGE_NAMESPACE))

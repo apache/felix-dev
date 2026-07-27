@@ -137,14 +137,14 @@ public class BundlesServlet extends AbstractOsgiManagerPlugin implements Invento
     private ServiceRegistration<BundleInfoProvider> bipCapabilitiesRequired;
 
     /**
-     * Default constructor 
+     * Default constructor
      * @throws IOException If template can't be read
      */
     public BundlesServlet() throws IOException {
         // load templates
         TEMPLATE_MAIN = readTemplateFile( "/templates/bundles.html" );
     }
-    
+
     @Override
     protected String getCategory() {
         return CATEGORY_OSGI;
@@ -170,24 +170,24 @@ public class BundlesServlet extends AbstractOsgiManagerPlugin implements Invento
         super.activate( bundleContext );
 
         bundleInfoTracker = new ServiceTracker<>( bundleContext, BundleInfoProvider.class, new ServiceTrackerCustomizer<BundleInfoProvider,BundleInfoProvider>() {
-                
+
                 @Override
                 public BundleInfoProvider addingService(ServiceReference<BundleInfoProvider> reference) {
                     return bundleContext.getService(reference);
                 }
-    
+
                 @Override
                 public void modifiedService(ServiceReference<BundleInfoProvider> reference, BundleInfoProvider service) {
                     // nothing to do
                 }
-    
+
                 @Override
                 public void removedService(ServiceReference<BundleInfoProvider> reference, BundleInfoProvider service) {
                     try {
                         bundleContext.ungetService(reference);
                     } catch ( final IllegalStateException ise) {
                         // might happen on shutdown, ignore
-                    } 
+                    }
                 }
         });
         bundleInfoTracker.open();
@@ -762,7 +762,11 @@ public class BundlesServlet extends AbstractOsgiManagerPlugin implements Invento
         {
             final Map<String, Object> obj = new LinkedHashMap<String, Object>();
             obj.put("key", key);
-            obj.put("value", val);
+            if ( val instanceof String ) {
+                obj.put("value", val); // escaping happens when writing into JSON via JSONWriter
+            } else {
+                obj.put("value", val);
+            }
             props.add(obj);
         }
     }

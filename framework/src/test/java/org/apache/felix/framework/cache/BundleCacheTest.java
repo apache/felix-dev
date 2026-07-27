@@ -18,8 +18,13 @@
  */
 package org.apache.felix.framework.cache;
 
-import junit.framework.TestCase;
+import static org.assertj.core.api.Assertions.assertThat;
+import static org.junit.jupiter.api.Assertions.assertNotSame;
+
 import org.apache.felix.framework.Logger;
+import org.junit.jupiter.api.AfterEach;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
 import org.osgi.framework.Constants;
 
 import java.io.File;
@@ -38,7 +43,7 @@ import java.util.jar.JarOutputStream;
 import java.util.jar.Manifest;
 import java.util.zip.ZipEntry;
 
-public class BundleCacheTest extends TestCase
+class BundleCacheTest
 {
     private File tempDir;
     private File cacheDir;
@@ -47,21 +52,20 @@ public class BundleCacheTest extends TestCase
     private File archiveFile;
     private File jarFile;
 
-    @Override
-    protected void setUp() throws Exception
+    @BeforeEach
+    void setUp() throws Exception
     {
-        super.setUp();
         tempDir = File.createTempFile("felix-temp", ".dir");
-        assertTrue("precondition", tempDir.delete());
-        assertTrue("precondition", tempDir.mkdirs());
+        assertThat(tempDir.delete()).as("precondition").isTrue();
+        assertThat(tempDir.mkdirs()).as("precondition").isTrue();
 
         cacheDir = new File(tempDir, "felix-cache");
-        assertTrue("precondition", cacheDir.mkdir());
+        assertThat(cacheDir.mkdir()).as("precondition").isTrue();
 
         filesDir = new File(tempDir, "files");
         String cacheDirPath = cacheDir.getPath();
 
-        Map<String, String> params = new HashMap<String, String>();
+        Map<String, String> params = new HashMap<>();
         params.put("felix.cache.profiledir", cacheDirPath);
         params.put("felix.cache.dir", cacheDirPath);
         params.put(Constants.FRAMEWORK_STORAGE, cacheDirPath);
@@ -96,7 +100,8 @@ public class BundleCacheTest extends TestCase
         createJar(archiveFile, jarFile);
     }
 
-    public void testNoZipSlip() throws Exception
+    @Test
+    void noZipSlip() throws Exception
     {
         File bundle = new File(filesDir, "slip");
         Manifest manifest = new Manifest();
@@ -116,15 +121,15 @@ public class BundleCacheTest extends TestCase
 
         BundleArchive archive = cache.create(1, 1, "slip", new FileInputStream(bundle), null);
 
-        testNoZipSlip(archive);
+        noZipSlip(archive);
 
         archive = cache.create(1, 1, bundle.toURI().toURL().toString(), null, null);
 
-        testNoZipSlip(archive);
+        noZipSlip(archive);
 
         archive = cache.create(1, 1, "reference:" + bundle.toURI().toURL().toString(), null, null);
 
-        testNoZipSlip(archive);
+        noZipSlip(archive);
 
         File dir = new File(filesDir, "exploded");
 
@@ -136,167 +141,172 @@ public class BundleCacheTest extends TestCase
 
         archive = cache.create(1, 1, "reference:" + dir.toURI().toURL().toString(), null, null);
 
-        testNoZipSlip(archive);
+        noZipSlip(archive);
     }
 
-    public void testNoZipSlip(BundleArchive archive) throws Exception
+    void noZipSlip(BundleArchive archive) throws Exception
     {
         Content content = archive.getCurrentRevision().getContent().getEntryAsContent("../../bar.jar");
 
-        assertNull(content);
+        assertThat(content).isNull();
 
         String lib = archive.getCurrentRevision().getContent().getEntryAsNativeLibrary("../../bar.jar");
 
-        assertNull(lib);
+        assertThat(lib).isNull();
     }
 
-    public void testDirectoryReference() throws Exception
+    @Test
+    void directoryReference() throws Exception
     {
-        BundleArchive archive = testBundle("reference:" + archiveFile.toURI().toURL(), null);
+        BundleArchive archive = bundle("reference:" + archiveFile.toURI().toURL(), null);
         String path = "../../../../../../../../../../../../../../../../..".replace("/", File.separator);
-        assertFalse(archive.getCurrentRevision().getContent().hasEntry(path));
-        assertFalse(archive.getCurrentRevision().getContent().isDirectory(path));
-        assertNull(archive.getCurrentRevision().getContent().getEntryAsURL(path));
-        assertNull(archive.getCurrentRevision().getContent().getEntryAsBytes(path + jarFile.getAbsolutePath()));
-        assertNull(archive.getCurrentRevision().getContent().getEntryAsNativeLibrary(path + jarFile.getAbsolutePath()));
-        assertEquals(0L, archive.getCurrentRevision().getContent().getContentTime(path + jarFile.getAbsolutePath()));
+        assertThat(archive.getCurrentRevision().getContent().hasEntry(path)).isFalse();
+        assertThat(archive.getCurrentRevision().getContent().isDirectory(path)).isFalse();
+        assertThat(archive.getCurrentRevision().getContent().getEntryAsURL(path)).isNull();
+        assertThat(archive.getCurrentRevision().getContent().getEntryAsBytes(path + jarFile.getAbsolutePath())).isNull();
+        assertThat(archive.getCurrentRevision().getContent().getEntryAsNativeLibrary(path + jarFile.getAbsolutePath())).isNull();
+        assertThat(archive.getCurrentRevision().getContent().getContentTime(path + jarFile.getAbsolutePath())).isEqualTo(0L);
     }
 
-    public void testJarReference() throws Exception
+    @Test
+    void jarReference() throws Exception
     {
-       testBundle("reference:" + jarFile.toURI().toURL().toString(), null);
+       bundle("reference:" + jarFile.toURI().toURL().toString(), null);
     }
 
-    public void testJar() throws Exception
+    @Test
+    void jar() throws Exception
     {
-       testBundle(jarFile.toURI().toURL().toString(), null);
+       bundle(jarFile.toURI().toURL().toString(), null);
     }
 
-    public void testInputStream() throws Exception
+    @Test
+    void inputStream() throws Exception
     {
-        testBundle("bla", jarFile);
+        bundle("bla", jarFile);
     }
 
-    private BundleArchive testBundle(String location, File file) throws Exception
+    @Test
+    private BundleArchive bundle(String location, File file) throws Exception
     {
         BundleArchive archive = cache.create(1, 1, location, file != null ? new FileInputStream(file) : null, null);
 
-        assertNotNull(archive);
+        assertThat(archive).isNotNull();
 
-        assertEquals(Long.valueOf(0), archive.getCurrentRevisionNumber());
+        assertThat(archive.getCurrentRevisionNumber()).isEqualTo(0L);
 
-        testRevision(archive);
+        revision(archive);
 
         String nativeLib = archive.getCurrentRevision().getContent().getEntryAsNativeLibrary("file1");
 
-        assertNotNull(nativeLib);
-        assertTrue(new File(nativeLib).isFile());
+        assertThat(nativeLib).isNotNull();
+        assertThat(new File(nativeLib)).isFile();
 
         archive.revise(location, file != null ? new FileInputStream(file) : null);
 
-        assertEquals(Long.valueOf(1), archive.getCurrentRevisionNumber());
+        assertThat(archive.getCurrentRevisionNumber()).isEqualTo(1L);
 
-        testRevision(archive);
+        revision(archive);
 
         String nativeLib2 = archive.getCurrentRevision().getContent().getEntryAsNativeLibrary("file1");
 
-        assertNotNull(nativeLib2);
-        assertTrue(new File(nativeLib).isFile());
-        assertTrue(new File(nativeLib2).isFile());
+        assertThat(nativeLib2).isNotNull();
+        assertThat(new File(nativeLib)).isFile();
+        assertThat(new File(nativeLib2)).isFile();
 
         archive.purge();
 
-        assertEquals(Long.valueOf(1), archive.getCurrentRevisionNumber());
+        assertThat(archive.getCurrentRevisionNumber()).isEqualTo(1L);
 
-        testRevision(archive);
+        revision(archive);
 
         String nativeLib3 = archive.getCurrentRevision().getContent().getEntryAsNativeLibrary("file1");
 
-        assertNotNull(nativeLib3);
+        assertThat(nativeLib3).isNotNull();
         assertNotSame(nativeLib, nativeLib2);
         assertNotSame(nativeLib2, nativeLib3);
-        assertFalse(new File(nativeLib).isFile());
-        assertTrue(new File(nativeLib2).isFile());
-        assertTrue(new File(nativeLib3).isFile());
+        assertThat(new File(nativeLib).isFile()).isFalse();
+        assertThat(new File(nativeLib2)).isFile();
+        assertThat(new File(nativeLib3)).isFile();
 
         return archive;
     }
 
-    private void testRevision(BundleArchive archive) throws Exception
+    @Test
+    private void revision(BundleArchive archive) throws Exception
     {
         BundleArchiveRevision revision = archive.getCurrentRevision();
-        assertNotNull(revision);
-        assertNotNull(revision.getManifestHeader());
-        assertEquals("bar", revision.getManifestHeader().get("foo"));
-        perRevision(revision.getContent(),  new TreeSet<String>(Arrays.asList("META-INF/", "META-INF/MANIFEST.MF", "file1", "inner/", "inner/empty/", "inner/file1", "inner/i+?äö \\§$%nner.jar")));
-        perRevision(revision.getContent().getEntryAsContent("inner"),  new TreeSet<String>(Arrays.asList("file1", "empty/", "i+?äö \\§$%nner.jar")));
-        assertNull(revision.getContent().getEntryAsContent("inner/inner"));
-        assertNotNull(revision.getContent().getEntryAsContent("inner/empty/"));
-        assertNull(revision.getContent().getEntryAsContent("inner/empty").getEntries());
-        perRevision(revision.getContent().getEntryAsContent("inner/").getEntryAsContent("i+?äö \\§$%nner.jar"), new TreeSet<String>(Arrays.asList("file1", "inner/", "inner/empty/", "inner/file1")));
+        assertThat(revision).isNotNull();
+        assertThat(revision.getManifestHeader()).isNotNull();
+        assertThat(revision.getManifestHeader()).containsEntry("foo", "bar");
+        perRevision(revision.getContent(),  new TreeSet<>(Arrays.asList("META-INF/", "META-INF/MANIFEST.MF", "file1", "inner/", "inner/empty/", "inner/file1", "inner/i+?äö \\§$%nner.jar")));
+        perRevision(revision.getContent().getEntryAsContent("inner"),  new TreeSet<>(Arrays.asList("file1", "empty/", "i+?äö \\§$%nner.jar")));
+        assertThat(revision.getContent().getEntryAsContent("inner/inner")).isNull();
+        assertThat(revision.getContent().getEntryAsContent("inner/empty/")).isNotNull();
+        assertThat(revision.getContent().getEntryAsContent("inner/empty").getEntries()).isNull();
+        perRevision(revision.getContent().getEntryAsContent("inner/").getEntryAsContent("i+?äö \\§$%nner.jar"), new TreeSet<>(Arrays.asList("file1", "inner/", "inner/empty/", "inner/file1")));
     }
 
     private void perRevision(Content content, Set<String> expectedEntries) throws Exception
     {
-        assertNotNull(content);
+        assertThat(content).isNotNull();
         Enumeration<String> entries =  content.getEntries();
-        Set<String> foundEntries = new TreeSet<String>();
+        Set<String> foundEntries = new TreeSet<>();
         while (entries.hasMoreElements())
         {
             foundEntries.add(entries.nextElement());
         }
-        assertEquals(expectedEntries, foundEntries);
+        assertThat(foundEntries).isEqualTo(expectedEntries);
 
-        assertTrue(content.hasEntry("file1"));
-        assertFalse(content.hasEntry("foo"));
-        assertFalse(content.hasEntry("foo/bar"));
+        assertThat(content.hasEntry("file1")).isTrue();
+        assertThat(content.hasEntry("foo")).isFalse();
+        assertThat(content.hasEntry("foo/bar")).isFalse();
 
         byte[] entry = content.getEntryAsBytes("file1");
-        assertNotNull(entry);
-        assertEquals("file1", new String(entry, "UTF-8"));
-        assertNull(content.getEntryAsBytes("foo"));
-        assertNull(content.getEntryAsBytes("foo/bar"));
+        assertThat(entry).isNotNull();
+        assertThat(new String(entry, "UTF-8")).isEqualTo("file1");
+        assertThat(content.getEntryAsBytes("foo")).isNull();
+        assertThat(content.getEntryAsBytes("foo/bar")).isNull();
 
 
         InputStream input = content.getEntryAsStream("file1");
-        assertNotNull(input);
+        assertThat(input).isNotNull();
         entry = new byte[1014];
         int j = 0;
         for (int i = input.read();i != -1; i = input.read())
         {
             entry[j++] = (byte) i;
         }
-        assertEquals("file1", new String(entry,  0 , j, "UTF-8"));
-        assertNull(content.getEntryAsStream("foo"));
-        assertNull(content.getEntryAsStream("foo/bar"));
+        assertThat(new String(entry, 0, j, "UTF-8")).isEqualTo("file1");
+        assertThat(content.getEntryAsStream("foo")).isNull();
+        assertThat(content.getEntryAsStream("foo/bar")).isNull();
 
         URL url = content.getEntryAsURL("file1");
-        assertNotNull(url);
+        assertThat(url).isNotNull();
         input = url.openStream();
-        assertNotNull(input);
+        assertThat(input).isNotNull();
         entry = new byte[1014];
         j = 0;
         for (int i = input.read();i != -1; i = input.read())
         {
             entry[j++] = (byte) i;
         }
-        assertEquals("file1", new String(entry,  0 , j, "UTF-8"));
-        assertNull(content.getEntryAsURL("foo"));
-        assertNull(content.getEntryAsURL("foo/bar"));
+        assertThat(new String(entry, 0, j, "UTF-8")).isEqualTo("file1");
+        assertThat(content.getEntryAsURL("foo")).isNull();
+        assertThat(content.getEntryAsURL("foo/bar")).isNull();
 
-        assertNull(content.getEntryAsNativeLibrary("blub"));
+        assertThat(content.getEntryAsNativeLibrary("blub")).isNull();
         String nativeLib = content.getEntryAsNativeLibrary("file1");
-        assertNotNull(nativeLib);
-        assertTrue(new File(nativeLib).isFile());
+        assertThat(nativeLib).isNotNull();
+        assertThat(new File(nativeLib)).isFile();
         content.close();
     }
 
-    @Override
-    protected void tearDown() throws Exception {
-        super.tearDown();
+    @AfterEach
+    void tearDown() throws Exception {
         cache.delete();
-        assertTrue(!cacheDir.exists());
-        assertTrue(BundleCache.deleteDirectoryTree(tempDir));
+        assertThat(cacheDir.exists()).isFalse();
+        assertThat(BundleCache.deleteDirectoryTree(tempDir)).isTrue();
     }
 
     private void createTestArchive(File archiveFile) throws Exception
@@ -310,16 +320,11 @@ public class BundleCacheTest extends TestCase
 
         target.getParentFile().mkdirs();
 
-        assertTrue(target.getParentFile().isDirectory());
+        assertThat(target.getParentFile()).isDirectory();
 
-        FileOutputStream output = new FileOutputStream(target);
-        try
+        try (FileOutputStream output = new FileOutputStream(target))
         {
             output.write(content);
-        }
-        finally
-        {
-            output.close();
         }
     }
 

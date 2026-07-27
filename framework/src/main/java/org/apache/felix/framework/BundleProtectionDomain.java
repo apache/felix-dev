@@ -53,7 +53,7 @@ public class BundleProtectionDomain extends ProtectionDomain
     private static final class BundleInputStream extends InputStream
     {
         private final Content m_root;
-        private final Enumeration m_content;
+        private final Enumeration<String> m_content;
         private final OutputStreamBuffer m_outputBuffer = new OutputStreamBuffer();
 
         private ByteArrayInputStream m_buffer = null;
@@ -65,11 +65,11 @@ public class BundleProtectionDomain extends ProtectionDomain
         {
             m_root = root;
 
-            List entries = new ArrayList();
+            List<String> entries = new ArrayList<>();
 
             int count = 0;
             String manifest = null;
-            for (Enumeration e = m_root.getEntries(); e != null && e.hasMoreElements();)
+            for (Enumeration<String> e = m_root.getEntries(); e != null && e.hasMoreElements();)
             {
                 String entry = (String) e.nextElement();
                 if (entry.endsWith("/"))
@@ -108,7 +108,8 @@ public class BundleProtectionDomain extends ProtectionDomain
             m_outputBuffer.m_outBuffer = null;
         }
 
-        public int read() throws IOException
+        @Override
+		public int read() throws IOException
         {
             if ((m_output == null) && (m_buffer == null))
             {
@@ -211,17 +212,20 @@ public class BundleProtectionDomain extends ProtectionDomain
     {
         ByteArrayOutputStream m_outBuffer = null;
 
-        public void write(int b)
+        @Override
+		public void write(int b)
         {
             m_outBuffer.write(b);
         }
 
-        public void write(byte[] buffer) throws IOException
+        @Override
+		public void write(byte[] buffer) throws IOException
         {
             m_outBuffer.write(buffer);
         }
 
-        public void write(byte[] buffer, int offset, int length)
+        @Override
+		public void write(byte[] buffer, int offset, int length)
         {
             m_outBuffer.write(buffer, offset, length);
         }
@@ -229,12 +233,12 @@ public class BundleProtectionDomain extends ProtectionDomain
 
     private static final class RevisionAsJarURL extends URLStreamHandler
     {
-        private final WeakReference m_revision;
+        private final WeakReference<BundleRevisionImpl> m_revision;
         private volatile URL url;
 
         private RevisionAsJarURL(BundleRevisionImpl revision)
         {
-            m_revision = new WeakReference(revision);
+            m_revision = new WeakReference<>(revision);
         }
 
         @Override
@@ -323,7 +327,7 @@ public class BundleProtectionDomain extends ProtectionDomain
 
             if (System.getSecurityManager() != null)
             {
-                property = (String) AccessController.doPrivileged(new PrivilegedAction<String>(){
+                property = AccessController.doPrivileged(new PrivilegedAction<String>(){
                     @Override
                     public String run()
                     {
@@ -400,7 +404,7 @@ public class BundleProtectionDomain extends ProtectionDomain
                 RevisionAsJarURL.create(revision),
                 (Certificate[]) certificates),
             null, null, null);
-        m_revision = new WeakReference<BundleRevisionImpl>(revision);
+        m_revision = new WeakReference<>(revision);
         m_hashCode = revision.hashCode();
         m_toString = "[" + revision + "]";
     }
@@ -410,7 +414,8 @@ public class BundleProtectionDomain extends ProtectionDomain
         return m_revision.get();
     }
 
-    public boolean implies(Permission permission)
+    @Override
+	public boolean implies(Permission permission)
     {
         Felix felix = getFramework();
         return felix != null && felix.impliesBundlePermission(this, permission, false);
@@ -452,12 +457,14 @@ public class BundleProtectionDomain extends ProtectionDomain
         return revision != null ? revision.getBundle().getFramework() : null;
     }
 
-    public int hashCode()
+    @Override
+	public int hashCode()
     {
         return m_hashCode;
     }
 
-    public boolean equals(Object other)
+    @Override
+	public boolean equals(Object other)
     {
         if ((other == null) || (other.getClass() != BundleProtectionDomain.class))
         {
@@ -470,7 +477,8 @@ public class BundleProtectionDomain extends ProtectionDomain
         return m_revision.get() == ((BundleProtectionDomain) other).m_revision.get();
     }
 
-    public String toString()
+    @Override
+	public String toString()
     {
         return m_toString;
     }

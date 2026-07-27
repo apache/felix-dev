@@ -23,6 +23,8 @@ import java.util.Iterator;
 import java.util.List;
 import java.util.Vector;
 
+import org.osgi.annotation.bundle.Capability;
+import org.osgi.namespace.service.ServiceNamespace;
 import org.osgi.service.log.LogEntry;
 import org.osgi.service.log.LogListener;
 import org.osgi.service.log.LogReaderService;
@@ -37,6 +39,11 @@ import org.osgi.service.log.LogReaderService;
  * notifications about {@link org.osgi.service.log.LogEntry} objects when they are created
  * through the {@link org.osgi.service.log.LogService}.
  */
+@Capability(
+        namespace = ServiceNamespace.SERVICE_NAMESPACE,
+        attribute = { "objectClass:List<String>=\"org.osgi.service.log.LogReaderService\"" },
+        uses = { LogReaderServiceImpl.class, LogReaderService.class }
+)
 final class LogReaderServiceImpl implements LogReaderService
 {
     /** The log implementation. */

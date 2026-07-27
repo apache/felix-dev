@@ -27,8 +27,6 @@ import org.apache.felix.service.command.CommandSession;
 import org.apache.sshd.server.ServerBuilder;
 import org.apache.sshd.server.SshServer;
 import org.apache.sshd.server.keyprovider.SimpleGeneratorHostKeyProvider;
-import org.apache.sshd.server.scp.ScpCommandFactory;
-import org.apache.sshd.server.subsystem.sftp.SftpSubsystemFactory;
 import org.jline.builtins.Options;
 
 public class Ssh {
@@ -100,9 +98,9 @@ public class Ssh {
         server.setPort(port);
         server.setHost(ip);
         server.setShellFactory(new ShellFactoryImpl(processor));
-        server.setCommandFactory(new ScpCommandFactory.Builder().withDelegate(new ShellCommandFactory(processor)).build());
+        server.setCommandFactory(new org.apache.sshd.scp.server.ScpCommandFactory.Builder().withDelegate(new ShellCommandFactory(processor)).build());
         server.setSubsystemFactories(Collections.singletonList(
-                new SftpSubsystemFactory.Builder().build()
+                new org.apache.sshd.sftp.server.SftpSubsystemFactory.Builder().build()
         ));
         server.setKeyPairProvider(new SimpleGeneratorHostKeyProvider());
         server.start();

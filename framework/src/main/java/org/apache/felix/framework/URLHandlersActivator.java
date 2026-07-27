@@ -39,10 +39,10 @@ import org.osgi.service.url.URLStreamHandlerService;
 **/
 class URLHandlersActivator implements BundleActivator
 {
-    private final Map m_configMap;
+    private final Map<String,Object> m_configMap;
     private final Felix m_framework;
 
-    public URLHandlersActivator(Map configMap, Felix framework)
+    public URLHandlersActivator(Map<String,Object> configMap, Felix framework)
     {
         m_configMap = configMap;
         m_framework = framework;

@@ -30,7 +30,6 @@ import java.util.Enumeration;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Hashtable;
-import java.util.Iterator;
 import java.util.List;
 import java.util.Locale;
 import java.util.Map;
@@ -38,6 +37,8 @@ import java.util.ResourceBundle;
 import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ConcurrentSkipListSet;
+import java.util.concurrent.atomic.AtomicBoolean;
+import java.util.concurrent.atomic.AtomicReference;
 
 import org.apache.felix.webconsole.servlet.User;
 import org.apache.felix.webconsole.internal.OsgiManagerPlugin;
@@ -129,7 +130,7 @@ public class OsgiManager extends HttpServlet {
     static final String PROP_ENABLE_SECRET_HEURISTIC = "secret.heuristic.enabled";
 
     static final String PROP_HTTP_SERVICE_SELECTOR = "http.service.filter";
-    
+
     /** The framework shutdown timeout */
     public static final String PROP_SHUTDOWN_TIMEOUT = "shutdown.timeout";
 
@@ -187,7 +188,7 @@ public class OsgiManager extends HttpServlet {
 
     private ServiceTracker<BrandingPlugin, BrandingPlugin> brandingTracker;
 
-    private ServiceTracker<SecurityProvider, SecurityProvider> securityProviderTracker;
+    private final AtomicReference<ServiceTracker<SecurityProvider, SecurityProvider>> securityProviderTracker = new AtomicReference<>();
 
     @SuppressWarnings("rawtypes")
     private ServiceRegistration configurationListener;
@@ -203,10 +204,10 @@ public class OsgiManager extends HttpServlet {
 
     // not-null when the ServletContextHelper service is registered
     private volatile ServiceRegistration<ServletContextHelper> servletContextRegistration;
-    
+
     // not-null when the main servlet and the resources are registered
     private volatile ServiceRegistration<Servlet> servletRegistration;
-    
+
     // default configuration from framework properties
     private Map<String, Object> defaultConfiguration;
 
@@ -224,8 +225,10 @@ public class OsgiManager extends HttpServlet {
 
     private volatile String defaultCategory = DEFAULT_CATEGORY;
 
+    private final AtomicBoolean active = new AtomicBoolean(true);
+
     @SuppressWarnings("rawtypes")
-    public OsgiManager(BundleContext bundleContext) {
+    public OsgiManager(final BundleContext bundleContext) {
         this.bundleContext = bundleContext;
         this.holder = new PluginHolder(this, bundleContext);
 
@@ -249,12 +252,6 @@ public class OsgiManager extends HttpServlet {
         brandingTracker = new BrandingServiceTracker(this);
         brandingTracker.open();
 
-        this.requiredSecurityProviders = splitCommaSeparatedString(bundleContext.getProperty(FRAMEWORK_PROP_SECURITY_PROVIDERS));
-
-        // add support for pluggable security
-        securityProviderTracker = new ServiceTracker<>(bundleContext, SecurityProvider.class, new UpdateDependenciesStateCustomizer());
-        securityProviderTracker.open();
-
         // load the default configuration from the framework
         this.defaultConfiguration = new HashMap<>();
         this.defaultConfiguration.put( PROP_MANAGER_ROOT,
@@ -271,9 +268,15 @@ public class OsgiManager extends HttpServlet {
             ConfigurationUtil.getProperty( bundleContext, FRAMEWORK_SHUTDOWN_TIMEOUT, DEFAULT_SHUTDOWN_TIMEOUT ) );
         this.defaultConfiguration.put( PROP_RELOAD_TIMEOUT,
             ConfigurationUtil.getProperty( bundleContext, FRAMEWORK_RELOAD_TIMEOUT, DEFAULT_RELOAD_TIMEOUT ) );
-        
+
+        this.requiredSecurityProviders = splitCommaSeparatedString(bundleContext.getProperty(FRAMEWORK_PROP_SECURITY_PROVIDERS));
+
         // configure and start listening for configuration
-        updateConfiguration(null);
+        this.updateConfiguration(null);
+
+        // add support for pluggable security
+        securityProviderTracker.set(new ServiceTracker<>(bundleContext, SecurityProvider.class, new UpdateDependenciesStateCustomizer()));
+        securityProviderTracker.get().open();
 
         // register managed service as a service factory
         this.configurationListener = bundleContext.registerService( "org.osgi.service.cm.ManagedService",
@@ -343,19 +346,27 @@ public class OsgiManager extends HttpServlet {
         return null;
     }
 
-    void updateRegistrationState() {
-        if (this.registeredSecurityProviders.containsAll(this.requiredSecurityProviders)) {
+    synchronized void updateRegistrationState() {
+        if (this.active.get() && this.registeredSecurityProviders.containsAll(this.requiredSecurityProviders)) {
             // register servlet context helper, servlet, resources
             this.registerHttpWhiteboardServices();
         } else {
-            Util.LOGGER.info("Not all requirements met for the Web Console. Required security providers: {}."
-                + " Registered security providers: {}", this.registeredSecurityProviders, this.registeredSecurityProviders);
             // Not all requirements met, unregister services
+            if (this.active.get()) {
+                Util.LOGGER.info("Not all requirements met for the Web Console. Required security providers: {}."
+                    + " Registered security providers: {}", this.registeredSecurityProviders, this.registeredSecurityProviders);
+            }
             this.unregisterHttpWhiteboardServices();
         }
     }
 
     public void dispose() {
+        // mark as disposed
+        this.active.set(false);
+
+        // remove registered http services
+        this.unregisterHttpWhiteboardServices();
+
         // dispose off held plugins
         holder.close();
 
@@ -369,17 +380,10 @@ public class OsgiManager extends HttpServlet {
         }
 
         // deactivate any remaining plugins
-        for (Iterator<OsgiManagerPlugin> pi = osgiManagerPlugins.iterator(); pi.hasNext();)
-        {
-            OsgiManagerPlugin plugin = pi.next();
-            plugin.deactivate();
+        for(final OsgiManagerPlugin pi : this.osgiManagerPlugins) {
+            pi.deactivate();
         }
-
-        // simply remove all operations, we should not be used anymore
         this.osgiManagerPlugins.clear();
-
-        // now drop the HttpService and continue with further destroyals
-        this.unregisterHttpWhiteboardServices();
 
         // stop listening for configuration
         if (configurationListener != null) {
@@ -388,9 +392,10 @@ public class OsgiManager extends HttpServlet {
         }
 
         // stop tracking security provider
-        if (securityProviderTracker != null) {
-            securityProviderTracker.close();
-            securityProviderTracker = null;
+        final ServiceTracker<SecurityProvider, SecurityProvider> tracker = securityProviderTracker.get();
+        securityProviderTracker.set(null);
+        if (tracker != null) {
+            tracker.close();
         }
 
         this.bundleContext = null;
@@ -538,8 +543,11 @@ public class OsgiManager extends HttpServlet {
 
     @SuppressWarnings("deprecation")
     private final void logout(final HttpServletRequest request, final HttpServletResponse response) throws IOException {
-        final SecurityProvider securityProvider = securityProviderTracker.getService();
-        securityProvider.logout(request, response);
+        final ServiceTracker<SecurityProvider, SecurityProvider> tracker = this.securityProviderTracker.get();
+        final SecurityProvider securityProvider = tracker != null ? tracker.getService() : null;
+        if (securityProvider != null) {
+            securityProvider.logout(request, response);
+        }
         if (!response.isCommitted()) {
             // check if special logout cookie is set, this is used to prevent
             // from an endless loop with basic auth
@@ -820,7 +828,7 @@ public class OsgiManager extends HttpServlet {
                 props.put(HttpWhiteboardConstants.HTTP_WHITEBOARD_RESOURCE_PATTERN, "/res/*");
                 props.put(HttpWhiteboardConstants.HTTP_WHITEBOARD_RESOURCE_PREFIX, "/res");
 
-                this.servletRegistration = getBundleContext().registerService(Servlet.class, this, props);                
+                this.servletRegistration = getBundleContext().registerService(Servlet.class, this, props);
             }
         } catch (final Exception e) {
             Util.LOGGER.error("registerHttpWhiteboardServices: Problem setting up", e);
@@ -871,7 +879,16 @@ public class OsgiManager extends HttpServlet {
         if ( osgiConfig != null ) {
             for ( Enumeration<String> keys = osgiConfig.keys(); keys.hasMoreElements(); ) {
                 final String key = keys.nextElement();
-                config.put( key, osgiConfig.get( key ) );
+                final Object value = osgiConfig.get( key );
+                if (PROP_SHUTDOWN_TIMEOUT.equals(key) || PROP_RELOAD_TIMEOUT.equals(key)) {
+                    try {
+                        config.put(key, Integer.parseInt(value.toString()));
+                    } catch (final NumberFormatException nfe) {
+                        Util.LOGGER.warn("Ignoring invalid value for {}: {}", key, value);
+                    }
+                } else {
+                    config.put(key, value);
+                }
             }
         }
 
@@ -888,6 +905,7 @@ public class OsgiManager extends HttpServlet {
         if (!newWebManagerRoot.startsWith("/")) {
             newWebManagerRoot = "/".concat(newWebManagerRoot);
         }
+        this.webManagerRoot = newWebManagerRoot;
 
         // default category
         this.defaultCategory = ConfigurationUtil.getProperty( config, PROP_CATEGORY, DEFAULT_CATEGORY );
@@ -901,11 +919,9 @@ public class OsgiManager extends HttpServlet {
         final Set<String> enabledPlugins = null == plugins ? null : new HashSet<String>(Arrays.asList(plugins));
         this.holder.initInternalPlugins(enabledPlugins, bundleContext);
 
-        // update http service registrations.
         this.unregisterHttpWhiteboardServices();
-        // switch location
-        this.webManagerRoot = newWebManagerRoot;
-        this.registerHttpWhiteboardServices();
+        // update http service registrations.
+        this.updateRegistrationState();
     }
 
     static Set<String> splitCommaSeparatedString(final String str) {

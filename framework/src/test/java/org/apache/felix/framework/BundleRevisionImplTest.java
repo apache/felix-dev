@@ -21,13 +21,15 @@ package org.apache.felix.framework;
 import java.util.Enumeration;
 import java.util.List;
 
-import junit.framework.TestCase;
-
 import org.apache.felix.framework.cache.Content;
 
-public class BundleRevisionImplTest extends TestCase
+import static org.assertj.core.api.Assertions.assertThat;
+import org.junit.jupiter.api.Test;
+
+class BundleRevisionImplTest
 {
-    public void testGetResourcesLocalNullContentPath()
+    @Test
+    void getResourcesLocalNullContentPath()
     {
         BundleRevisionImpl bri = new BundleRevisionImpl(null, null) {
             @Override
@@ -37,6 +39,6 @@ public class BundleRevisionImplTest extends TestCase
             }
         };
         Enumeration<?> en = bri.getResourcesLocal("foo");
-        assertFalse(en.hasMoreElements());
+        assertThat(en.hasMoreElements()).isFalse();
     }
 }

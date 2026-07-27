@@ -32,6 +32,7 @@ public class FormatterLoggerImpl extends LoggerImpl implements FormatterLogger {
         super(name, bundle, log, loggerAdmin);
     }
 
+    @Override
     String format(String format, LogParameters logParameters) {
         StringBuilder sb = new StringBuilder();
 

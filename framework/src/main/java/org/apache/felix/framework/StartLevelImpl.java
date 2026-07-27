@@ -40,7 +40,8 @@ public class StartLevelImpl implements StartLevel
     /* (non-Javadoc)
      * @see org.osgi.service.startlevel.StartLevel#getStartLevel()
     **/
-    public int getStartLevel()
+    @Override
+	public int getStartLevel()
     {
         return m_felix.adapt(FrameworkStartLevel.class).getStartLevel();
     }
@@ -48,7 +49,8 @@ public class StartLevelImpl implements StartLevel
     /* (non-Javadoc)
      * @see org.osgi.service.startlevel.StartLevel#setStartLevel(int)
     **/
-    public void setStartLevel(int startlevel)
+    @Override
+	public void setStartLevel(int startlevel)
     {
         m_felix.adapt(FrameworkStartLevel.class).setStartLevel(startlevel);
     }
@@ -56,7 +58,8 @@ public class StartLevelImpl implements StartLevel
     /* (non-Javadoc)
      * @see org.osgi.service.startlevel.StartLevel#getBundleStartLevel(org.osgi.framework.Bundle)
     **/
-    public int getBundleStartLevel(Bundle bundle)
+    @Override
+	public int getBundleStartLevel(Bundle bundle)
     {
         return bundle.adapt(BundleStartLevel.class).getStartLevel();
     }
@@ -64,7 +67,8 @@ public class StartLevelImpl implements StartLevel
     /* (non-Javadoc)
      * @see org.osgi.service.startlevel.StartLevel#setBundleStartLevel(org.osgi.framework.Bundle, int)
     **/
-    public void setBundleStartLevel(Bundle bundle, int startlevel)
+    @Override
+	public void setBundleStartLevel(Bundle bundle, int startlevel)
     {
         bundle.adapt(BundleStartLevel.class).setStartLevel(startlevel);
     }
@@ -72,7 +76,8 @@ public class StartLevelImpl implements StartLevel
     /* (non-Javadoc)
      * @see org.osgi.service.startlevel.StartLevel#getInitialBundleStartLevel()
     **/
-    public int getInitialBundleStartLevel()
+    @Override
+	public int getInitialBundleStartLevel()
     {
         return m_felix.adapt(FrameworkStartLevel.class).getInitialBundleStartLevel();
     }
@@ -80,7 +85,8 @@ public class StartLevelImpl implements StartLevel
     /* (non-Javadoc)
      * @see org.osgi.service.startlevel.StartLevel#setInitialBundleStartLevel(int)
     **/
-    public void setInitialBundleStartLevel(int startlevel)
+    @Override
+	public void setInitialBundleStartLevel(int startlevel)
     {
         m_felix.adapt(FrameworkStartLevel.class).setInitialBundleStartLevel(startlevel);
     }
@@ -88,7 +94,8 @@ public class StartLevelImpl implements StartLevel
     /* (non-Javadoc)
      * @see org.osgi.service.startlevel.StartLevel#isBundlePersistentlyStarted(org.osgi.framework.Bundle)
     **/
-    public boolean isBundlePersistentlyStarted(Bundle bundle)
+    @Override
+	public boolean isBundlePersistentlyStarted(Bundle bundle)
     {
         return bundle.adapt(BundleStartLevel.class).isPersistentlyStarted();
     }
@@ -96,6 +103,7 @@ public class StartLevelImpl implements StartLevel
     /* (non-Javadoc)
      * @see org.osgi.service.startlevel.StartLevel#isBundleActivationPolicyUsed(org.osgi.framework.Bundle)
     **/
+	@Override
 	public boolean isBundleActivationPolicyUsed(Bundle bundle)
     {
         return bundle.adapt(BundleStartLevel.class).isActivationPolicyUsed();

@@ -18,6 +18,9 @@ The required dependencies are:
 
 The installation of the web console is straight forward. Provide an OSGi Framework with the mentioned required dependenices and install the bundle.
 
+**Important:** The webconsole does not provide a CSRF protection out of the box! Therefore it is advisable to install additional software to protect the webconsole. For example the bundle from [Apache Sling Security](https://github.com/apache/sling-org-apache-sling-security) provides this additional protection. Make sure to use the latest version (1.3.0 or higher).
+
+
 ## Configuration
 
 The Web Console can be configured via framework properties as well as via a configuration through the OSGi Configuration Admin Service. The framework properties can be used in case your runtime does not provide a OSGi Configuration Admin Service.
@@ -55,6 +58,8 @@ Such framework properties will also be considered actual default values for miss
 Please note that setting any of these properties as framework property makes them visible to all bundles deployed. This is particularly to be considered in case of the `felix.webconsole.password` property (as for authentication, the use of a [Web Console Security Provider](EXTENSIONS.md) is suggested anyway).
 
 ## Security
+
+**Important:** The webconsole does not provide a CSRF protection out of the box! Therefore it is advisable to install additional software to protect the webconsole. For example the bundle from [Apache Sling Security](https://github.com/apache/sling-org-apache-sling-security) provides this additional protection. Make sure to use the latest version (1.3.0 or higher).
 
 The Web Console only has very basic security at the moment supporting only HTTP Basic authentication. This security is enabled by default and may be disabled by simply clearing the `username` property.
 
@@ -113,6 +118,60 @@ In this case the Configuration Manager displays the name "myRealm, myClass" as d
 
 ## Releases
 
+### Changes in 5.0.18 (22/Sep/25)
+
+#### Bug
+
+- [FELIX-6804](https://issues.apache.org/jira/browse/FELIX-6804) : Unable to change default password in webconsole
+
+
+### Changes in 5.0.14 (25/Aug/25)
+
+#### Bug
+
+- [FELIX-6796](https://issues.apache.org/jira/browse/FELIX-6796) : Potential NPE when logging into webconsole
+
+
+### Changes in 5.0.12 (13/May/25)
+
+#### Bug
+
+- [FELIX-6752](https://issues.apache.org/jira/browse/FELIX-6752) : System information throws java.lang.ClassCastException
+- [FELIX-6757](https://issues.apache.org/jira/browse/FELIX-6757) : Properly encode bundle information 
+- [FELIX-6772](https://issues.apache.org/jira/browse/FELIX-6772) : Content type of resources is never set
+
+
+### Changes in 5.0.10 (5/Feb/25)
+
+#### Bug
+
+- [FELIX-6747](https://issues.apache.org/jira/browse/FELIX-6747) : NPE in activator of webconsole
+- [FELIX-6751](https://issues.apache.org/jira/browse/FELIX-6751) : Use proper encoding for service filter
+
+
+### Changes in 5.0.8 (19/Sep/24)
+
+#### Bug
+
+- [FELIX-6727](https://issues.apache.org/jira/browse/FELIX-6727) : NullPointerException when using REST API to install a bundle
+
+
+### Changes in 5.0.6 (10/Jul/24)
+
+#### Bug
+
+- [FELIX-6715](https://issues.apache.org/jira/browse/FELIX-6715) : Incorrect link in "Using bundles" for /system/console/services/<serviceid>
+
+
+### Changes in 5.0.4 (20/Jun/24)
+
+#### Improvements
+
+- [FELIX-6712](https://issues.apache.org/jira/browse/FELIX-6712) : Release Websonsole - without JSON License
+#### Docs
+
+- [FELIX-6703]()https://issues.apache.org/jira/browse/FELIX-6703 : Missing conf properties in the documentation
+
 ### Changes in 5.0.2 (14/Apr/24)
 
 #### Bug
@@ -135,7 +194,18 @@ In this case the Configuration Manager displays the name "myRealm, myClass" as d
 - [FELIX-6654](https://issues.apache.org/jira/browse/FELIX-6654) : Remove support for commons fileupload
 
 
-### Changes in 4.9.8 (14/Apr/24)                                                                                                                                                                                                                                          #### Bug                                                                                                                                                                                                                                                                  - [FELIX-6688](https://issues.apache.org/jira/browse/FELIX-6688) : Context path of outer servlet container is not respected for authentication
+### Changes in 4.9.10 (5/Feb/25)
+
+#### Bug
+
+- [FELIX-6747](https://issues.apache.org/jira/browse/FELIX-6747) : NPE in activator of webconsole
+- [FELIX-6751](https://issues.apache.org/jira/browse/FELIX-6751) : Use proper encoding for service filter
+
+
+### Changes in 4.9.8 (14/Apr/24)                                                                                                                                                                                                                                          
+#### Bug                                                                                                                                                                  
+
+- [FELIX-6688](https://issues.apache.org/jira/browse/FELIX-6688) : Context path of outer servlet container is not respected for authentication
 
 ### Changes in 4.9.6 (7/Oct/23)
 

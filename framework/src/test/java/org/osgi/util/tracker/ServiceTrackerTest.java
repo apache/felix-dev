@@ -22,7 +22,7 @@ import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
-import org.junit.Test;
+import org.junit.jupiter.api.Test;
 import org.mockito.ArgumentCaptor;
 import org.mockito.Mockito;
 import org.osgi.framework.Bundle;
@@ -33,10 +33,10 @@ import org.osgi.framework.ServiceEvent;
 import org.osgi.framework.ServiceListener;
 import org.osgi.framework.ServiceReference;
 
-public class ServiceTrackerTest {
+class ServiceTrackerTest {
 
     @Test
-    public void testTracking() throws InvalidSyntaxException {
+    void tracking() throws InvalidSyntaxException {
         Bundle bundle = mock(Bundle.class);
         when(bundle.getState()).thenReturn(Bundle.ACTIVE);
         
@@ -51,7 +51,7 @@ public class ServiceTrackerTest {
         
         Filter filter = mock(Filter.class);
         String filterString = "(objectClass=java.lang.Runnable)";
-        when(context.createFilter(Mockito.eq(filterString))).thenReturn(filter);
+        when(context.createFilter(filterString)).thenReturn(filter);
         
         ServiceTracker<Runnable, Runnable> tracker = new ServiceTracker<Runnable, Runnable>(context, Runnable.class, customizer);
         tracker.open();

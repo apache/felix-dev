@@ -64,6 +64,7 @@ import org.jline.reader.LineReader;
 import org.jline.reader.ParsedLine;
 import org.jline.reader.Widget;
 import org.jline.terminal.Terminal;
+import org.jline.utils.StyleResolver;
 
 import static org.apache.felix.gogo.jline.Shell.getCommands;
 
@@ -683,7 +684,7 @@ public class Builtin {
         List<Candidate> candidates = new ArrayList<>();
         new FilesCompleter(session.currentDir()) {
             @Override
-            protected String getDisplay(Terminal terminal, Path p) {
+            protected String getDisplay(Terminal terminal, Path p, StyleResolver resolver, String separator) {
                 return getFileDisplay(session, p);
             }
         }.complete(reader, line, candidates);
@@ -696,7 +697,7 @@ public class Builtin {
         List<Candidate> candidates = new ArrayList<>();
         new DirectoriesCompleter(session.currentDir()) {
             @Override
-            protected String getDisplay(Terminal terminal, Path p) {
+            protected String getDisplay(Terminal terminal, Path p, StyleResolver resolver, String separator) {
                 return getFileDisplay(session, p);
             }
         }.complete(reader, line, candidates);

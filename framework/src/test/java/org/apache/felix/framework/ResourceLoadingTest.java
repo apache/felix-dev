@@ -36,32 +36,35 @@ import java.util.jar.JarOutputStream;
 import java.util.jar.Manifest;
 import java.util.zip.ZipEntry;
 
-import junit.framework.TestCase;
+import org.junit.jupiter.api.AfterEach;
+
+import static org.assertj.core.api.Assertions.assertThat;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
 import org.osgi.framework.Bundle;
 import org.osgi.framework.Constants;
 import org.osgi.framework.launch.Framework;
 import org.osgi.framework.wiring.BundleWiring;
 
-public class ResourceLoadingTest extends TestCase
+class ResourceLoadingTest
 {
     private File tempDir;
     private Framework felix;
     private File cacheDir;
 
-    @Override
-    protected void setUp() throws Exception
+    @BeforeEach
+    void setUp() throws Exception
     {
-        super.setUp();
         tempDir = File.createTempFile("felix-temp", ".dir");
-        assertTrue("precondition", tempDir.delete());
-        assertTrue("precondition", tempDir.mkdirs());
+        assertThat(tempDir.delete()).as("precondition").isTrue();
+        assertThat(tempDir.mkdirs()).as("precondition").isTrue();
 
         cacheDir = new File(tempDir, "felix-cache");
-        assertTrue("precondition", cacheDir.mkdir());
+        assertThat(cacheDir.mkdir()).as("precondition").isTrue();
 
         String cache = cacheDir.getPath();
 
-        Map<String,String> params = new HashMap<String, String>();
+        Map<String,String> params = new HashMap<>();
         params.put("felix.cache.profiledir", cache);
         params.put("felix.cache.dir", cache);
         params.put(Constants.FRAMEWORK_STORAGE, cache);
@@ -71,10 +74,9 @@ public class ResourceLoadingTest extends TestCase
         felix.start();
     }
 
-    @Override
-    protected void tearDown() throws Exception
+    @AfterEach
+    void tearDown() throws Exception
     {
-        super.tearDown();
 
         felix.stop(); // Note that this method is async
         felix = null;
@@ -84,7 +86,8 @@ public class ResourceLoadingTest extends TestCase
         cacheDir = null;
     }
 
-    public void testResourceLoadingWithHash() throws Exception
+    @Test
+    void resourceLoadingWithHash() throws Exception
     {
         String bmf = "Bundle-SymbolicName: cap.bundle\n"
             + "Bundle-Version: 1.2.3.Blah\n"
@@ -105,27 +108,27 @@ public class ResourceLoadingTest extends TestCase
 
         testBundle.start();
 
-        assertEquals(Bundle.ACTIVE, testBundle.getState());
-        assertNotNull(testBundle.getResource(name));
-        assertNotNull(testBundle.getEntry(name));
+        assertThat(testBundle.getState()).isEqualTo(Bundle.ACTIVE);
+        assertThat(testBundle.getResource(name)).isNotNull();
+        assertThat(testBundle.getEntry(name)).isNotNull();
 
         try (BufferedReader reader = new BufferedReader(new InputStreamReader(testBundle.getResource(name).openStream())))
         {
-            assertEquals("This is a Test", reader.readLine());
+            assertThat(reader.readLine()).isEqualTo("This is a Test");
         }
         try (BufferedReader reader = new BufferedReader(new InputStreamReader(testBundle.getEntry(name).openStream())))
         {
-            assertEquals("This is a Test", reader.readLine());
+            assertThat(reader.readLine()).isEqualTo("This is a Test");
         }
 
         try (BufferedReader reader = new BufferedReader(new InputStreamReader(testBundle.adapt(BundleWiring.class).getClassLoader().getResourceAsStream(name))))
         {
-            assertEquals("This is a Test", reader.readLine());
+            assertThat(reader.readLine()).isEqualTo("This is a Test");
         }
 
         try (BufferedReader reader = new BufferedReader(new InputStreamReader(testBundle.adapt(BundleWiring.class).getClassLoader().getResource(name).openStream())))
         {
-            assertEquals("This is a Test", reader.readLine());
+            assertThat(reader.readLine()).isEqualTo("This is a Test");
         }
 
         URL url = testBundle.adapt(BundleWiring.class).getClassLoader().getResource(name);
@@ -134,11 +137,12 @@ public class ResourceLoadingTest extends TestCase
 
         try (BufferedReader reader = new BufferedReader(new InputStreamReader(testURL.openStream())))
         {
-            assertEquals("This is a Test", reader.readLine());
+            assertThat(reader.readLine()).isEqualTo("This is a Test");
         }
     }
 
-    public void testResourceLoadingWithDirectory() throws Exception
+    @Test
+    void resourceLoadingWithDirectory() throws Exception
     {
         String bmf = "Bundle-SymbolicName: cap.bundle\n"
                 + "Bundle-Version: 1.2.3.Blah\n"
@@ -161,25 +165,26 @@ public class ResourceLoadingTest extends TestCase
 
         testBundle.start();
 
-        assertEquals(Bundle.ACTIVE, testBundle.getState());
-        assertTrue(testBundle.getResource("bla").toExternalForm().endsWith("/"));
-        assertTrue(testBundle.getEntry("bla").toExternalForm().endsWith("/"));
-        assertTrue(testBundle.adapt(BundleWiring.class).getClassLoader().getResource("bla").toExternalForm().endsWith("/"));
-        assertTrue(testBundle.getResource("bla/").toExternalForm().endsWith("/"));
-        assertTrue(testBundle.getEntry("bla/").toExternalForm().endsWith("/"));
-        assertTrue(testBundle.adapt(BundleWiring.class).getClassLoader().getResource("bla/").toExternalForm().endsWith("/"));
-        assertTrue(testBundle.getResource("bla/bli").toExternalForm().endsWith("/"));
-        assertTrue(testBundle.getEntry("bla/bli").toExternalForm().endsWith("/"));
-        assertTrue(testBundle.adapt(BundleWiring.class).getClassLoader().getResource("bla/bli").toExternalForm().endsWith("/"));
-        assertTrue(testBundle.getResource("bla/bli/").toExternalForm().endsWith("/"));
-        assertTrue(testBundle.getEntry("bla/bli/").toExternalForm().endsWith("/"));
-        assertTrue(testBundle.adapt(BundleWiring.class).getClassLoader().getResource("bla/bli/").toExternalForm().endsWith("/"));
-        assertTrue(testBundle.getResource("bla/bli/blub").toExternalForm().endsWith("/blub"));
-        assertTrue(testBundle.getEntry("bla/bli/blub").toExternalForm().endsWith("/blub"));
-        assertTrue(testBundle.adapt(BundleWiring.class).getClassLoader().getResource("bla/bli/blub").toExternalForm().endsWith("/blub"));
+        assertThat(testBundle.getState()).isEqualTo(Bundle.ACTIVE);
+        assertThat(testBundle.getResource("bla").toExternalForm()).endsWith("/");
+        assertThat(testBundle.getEntry("bla").toExternalForm()).endsWith("/");
+        assertThat(testBundle.adapt(BundleWiring.class).getClassLoader().getResource("bla").toExternalForm()).endsWith("/");
+        assertThat(testBundle.getResource("bla/").toExternalForm()).endsWith("/");
+        assertThat(testBundle.getEntry("bla/").toExternalForm()).endsWith("/");
+        assertThat(testBundle.adapt(BundleWiring.class).getClassLoader().getResource("bla/").toExternalForm()).endsWith("/");
+        assertThat(testBundle.getResource("bla/bli").toExternalForm()).endsWith("/");
+        assertThat(testBundle.getEntry("bla/bli").toExternalForm()).endsWith("/");
+        assertThat(testBundle.adapt(BundleWiring.class).getClassLoader().getResource("bla/bli").toExternalForm()).endsWith("/");
+        assertThat(testBundle.getResource("bla/bli/").toExternalForm()).endsWith("/");
+        assertThat(testBundle.getEntry("bla/bli/").toExternalForm()).endsWith("/");
+        assertThat(testBundle.adapt(BundleWiring.class).getClassLoader().getResource("bla/bli/").toExternalForm()).endsWith("/");
+        assertThat(testBundle.getResource("bla/bli/blub").toExternalForm()).endsWith("/blub");
+        assertThat(testBundle.getEntry("bla/bli/blub").toExternalForm()).endsWith("/blub");
+        assertThat(testBundle.adapt(BundleWiring.class).getClassLoader().getResource("bla/bli/blub").toExternalForm()).endsWith("/blub");
     }
 
-    public void testResourceLoadingUsingURLClassLoaderJDK9() throws Exception {
+    @Test
+    void resourceLoadingUsingURLClassLoaderJDK9() throws Exception {
         String bmf = "Bundle-SymbolicName: cap.bundle\n"
             + "Bundle-Version: 1.2.3.Blah\n"
             + "Bundle-ManifestVersion: 2\n"
@@ -219,11 +224,11 @@ public class ResourceLoadingTest extends TestCase
 
         ClassLoader urlClassLoader = createClassLoader(testBundle);
 
-        assertNotNull(urlClassLoader.getResource("ej2.txt"));
+        assertThat(urlClassLoader.getResource("ej2.txt")).isNotNull();
     }
 
     ClassLoader createClassLoader(Bundle bundle) {
-        List<URL> urls = new ArrayList<URL>();
+        List<URL> urls = new ArrayList<>();
         Collection<String> resources = bundle.adapt(BundleWiring.class).listResources("/", "*.jar", BundleWiring.LISTRESOURCES_LOCAL);
         for (String resource : resources) {
             urls.add(bundle.getResource(resource));
@@ -241,6 +246,6 @@ public class ResourceLoadingTest extends TestCase
                 deleteDir(file);
             }
         }
-        assertTrue(root.delete());
+        assertThat(root.delete()).isTrue();
     }
 }

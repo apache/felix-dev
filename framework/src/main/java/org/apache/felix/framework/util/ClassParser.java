@@ -39,9 +39,9 @@ import java.util.Set;
  */
 public class ClassParser
 {
-    Map<String, TypeRef> typeRefCache = new HashMap<String, TypeRef>();
-    Map<String, Descriptor> descriptorCache = new HashMap<String, Descriptor>();
-    Map<String, PackageRef> packageCache = new HashMap<String, PackageRef>();
+    Map<String, TypeRef> typeRefCache = new HashMap<>();
+    Map<String, Descriptor> descriptorCache = new HashMap<>();
+    Map<String, PackageRef> packageCache = new HashMap<>();
 
     // MUST BE BEFORE PRIMITIVES, THEY USE THE DEFAULT PACKAGE!!
     final static PackageRef DEFAULT_PACKAGE = new PackageRef();
@@ -454,7 +454,7 @@ public class ClassParser
         {
             this.descriptor = descriptor;
             int index = 0;
-            List<TypeRef> types = new ArrayList<TypeRef>();
+            List<TypeRef> types = new ArrayList<>();
             if (descriptor.charAt(index) == '(')
             {
                 index++;
@@ -616,14 +616,9 @@ public class ClassParser
 
     public Set<String> parseClassFileUses(String path, InputStream in) throws Exception
     {
-        DataInputStream din = new DataInputStream(in);
-        try
+        try (DataInputStream din = new DataInputStream(in))
         {
             return new Clazz(this, path).parseClassFileData(din);
-        }
-        finally
-        {
-            din.close();
         }
     }
 
@@ -766,7 +761,7 @@ public class ClassParser
         TypeRef className;
         Object pool[];
         int intPool[];
-        Set<String> imports = new HashSet<String>();
+        Set<String> imports = new HashSet<>();
         String path;
         int minor = 0;
         int major = 0;
@@ -918,7 +913,7 @@ public class ClassParser
                 if (o instanceof ClassConstant)
                 {
                     ClassConstant cc = (ClassConstant) o;
-                    if (cc.referred == false)
+                    if (!cc.referred)
                     {
                         detectLdc = true;
                     }
@@ -2006,7 +2001,7 @@ public class ClassParser
             {
                 if ("+-*BCDFIJSZV".indexOf(c) < 0)
                 {
-                    ;// System.err.println("Should not skip: " + c);
+                    // System.err.println("Should not skip: " + c);
                 }
             }
 

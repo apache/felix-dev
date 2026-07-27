@@ -30,18 +30,27 @@ import java.util.ArrayList;
 import java.util.Collections;
 import java.util.Dictionary;
 import java.util.Enumeration;
+import java.util.HashMap;
 import java.util.Hashtable;
 import java.util.List;
+import java.util.Map;
 import java.util.concurrent.Executor;
 import java.util.concurrent.Executors;
+
+import jakarta.servlet.SessionCookieConfig;
+import jakarta.servlet.SessionTrackingMode;
 
 import org.apache.felix.http.base.internal.HttpServiceController;
 import org.apache.felix.http.base.internal.logger.SystemLogger;
 import org.eclipse.jetty.alpn.server.ALPNServerConnectionFactory;
-import org.eclipse.jetty.ee10.servlet.ServletContextHandler;
-import org.eclipse.jetty.ee10.servlet.ServletHolder;
-import org.eclipse.jetty.ee10.servlet.SessionHandler;
-import org.eclipse.jetty.ee10.servlet.ServletHandler;
+import org.eclipse.jetty.compression.gzip.GzipCompression;
+import org.eclipse.jetty.compression.gzip.GzipEncoderConfig;
+import org.eclipse.jetty.compression.server.CompressionConfig;
+import org.eclipse.jetty.compression.server.CompressionHandler;
+import org.eclipse.jetty.ee11.servlet.ServletContextHandler;
+import org.eclipse.jetty.ee11.servlet.ServletHolder;
+import org.eclipse.jetty.ee11.servlet.SessionHandler;
+import org.eclipse.jetty.ee11.servlet.ServletHandler;
 import org.eclipse.jetty.http.HttpVersion;
 import org.eclipse.jetty.http.UriCompliance;
 import org.eclipse.jetty.http2.server.HTTP2ServerConnectionFactory;
@@ -56,8 +65,8 @@ import org.eclipse.jetty.server.Server;
 import org.eclipse.jetty.server.ServerConnector;
 import org.eclipse.jetty.server.SslConnectionFactory;
 import org.eclipse.jetty.server.handler.ContextHandlerCollection;
+import org.eclipse.jetty.server.handler.SizeLimitHandler;
 import org.eclipse.jetty.server.handler.StatisticsHandler;
-import org.eclipse.jetty.server.handler.gzip.GzipHandler;
 import org.eclipse.jetty.session.HouseKeeper;
 import org.eclipse.jetty.util.ssl.SslContextFactory;
 import org.eclipse.jetty.util.thread.QueuedThreadPool;
@@ -70,9 +79,6 @@ import org.osgi.framework.InvalidSyntaxException;
 import org.osgi.framework.ServiceFactory;
 import org.osgi.framework.ServiceRegistration;
 import org.osgi.service.servlet.runtime.HttpServiceRuntimeConstants;
-
-import jakarta.servlet.SessionCookieConfig;
-import jakarta.servlet.SessionTrackingMode;
 
 public final class JettyService
 {
@@ -222,7 +228,14 @@ public final class JettyService
         if (this.server != null)
         {
             this.controller.getEventDispatcher().setActive(false);
-            this.controller.unregister();
+            try
+            {
+                this.controller.unregister();
+            }
+            catch (final Exception e)
+            {
+                SystemLogger.LOGGER.error("Exception during controller unregister", e);
+            }
 
             if (this.fileRequestLog != null)
             {
@@ -252,6 +265,12 @@ public final class JettyService
                 this.loadBalancerCustomizerTracker = null;
             }
 
+            if (this.mbeanServerTracker != null)
+            {
+                this.mbeanServerTracker.close();
+                this.mbeanServerTracker = null;
+            }
+
             try
             {
                 this.server.stop();
@@ -261,12 +280,6 @@ public final class JettyService
             catch (Exception e)
             {
                 SystemLogger.LOGGER.error("Exception while stopping Jetty", e);
-            }
-
-            if (this.mbeanServerTracker != null)
-            {
-                this.mbeanServerTracker.close();
-                this.mbeanServerTracker = null;
             }
         }
     }
@@ -290,7 +303,7 @@ public final class JettyService
                 if (threadPoolMax >= 0) {
                     // Configurable, bounded, virtual thread executor
                     VirtualThreadPool threadPool = new VirtualThreadPool();
-                    threadPool.setMaxThreads(threadPoolMax);
+                    threadPool.setMaxConcurrentTasks(threadPoolMax);
                     this.server = new Server(threadPool);
                 } else {
                     // Simple, unlimited, virtual thread Executor
@@ -309,7 +322,14 @@ public final class JettyService
             loginService.setUserStore(new UserStore());
             this.server.addBean(loginService);
 
-            ServletContextHandler context = new ServletContextHandler(this.config.getContextPath(),                    
+            // Check if custom headers are configured for Jetty error pages
+            // If so, split them on ## and pass as map to the JettyErrorHandler
+            final String errorPageCustomHeaders = this.config.getFelixJettyErrorPageCustomHeaders();
+            if (errorPageCustomHeaders != null) {
+                addErrorHandler(errorPageCustomHeaders);
+            }
+
+            ServletContextHandler context = new ServletContextHandler(this.config.getContextPath(),
                     ServletContextHandler.SESSIONS);
 
             this.parent = new ContextHandlerCollection(context);
@@ -323,6 +343,14 @@ public final class JettyService
             holder.setAsyncSupported(true);
             context.addServlet(holder, "/*");
             context.setMaxFormContentSize(this.config.getMaxFormSize());
+
+            int requestSizeLimit = this.config.getRequestSizeLimit();
+            int responseSizeLimit = this.config.getResponseSizeLimit();
+            if (requestSizeLimit > -1 || responseSizeLimit > -1) {
+                // Use SizeLimitHandler to limit the size of the request body and response
+                // -1 is unlimited
+                context.setHandler(new SizeLimitHandler(requestSizeLimit, responseSizeLimit));
+            }
 
             if (this.config.isRegisterMBeans())
             {
@@ -346,18 +374,37 @@ public final class JettyService
 
             if (this.config.isGzipHandlerEnabled())
             {
-            	GzipHandler gzipHandler = new GzipHandler();
-            	gzipHandler.setMinGzipSize(this.config.getGzipMinGzipSize());
-            	gzipHandler.setInflateBufferSize(this.config.getGzipInflateBufferSize());
-            	gzipHandler.setSyncFlush(this.config.isGzipSyncFlush());
-            	gzipHandler.addIncludedMethods(this.config.getGzipIncludedMethods());
-            	gzipHandler.addExcludedMethods(this.config.getGzipExcludedMethods());
-            	gzipHandler.addIncludedPaths(this.config.getGzipIncludedPaths());
-            	gzipHandler.addExcludedPaths(this.config.getGzipExcludedPaths());
-            	gzipHandler.addIncludedMimeTypes(this.config.getGzipIncludedMimeTypes());
-            	gzipHandler.addExcludedMimeTypes(this.config.getGzipExcludedMimeTypes());
+            	GzipCompression gzipCompression = new GzipCompression();
+            	gzipCompression.setMinCompressSize(this.config.getGzipMinGzipSize());
+            	GzipEncoderConfig encoderConfig = new GzipEncoderConfig();
+            	encoderConfig.setSyncFlush(this.config.isGzipSyncFlush());
+            	gzipCompression.setDefaultEncoderConfig(encoderConfig);
 
-            	this.server.insertHandler(gzipHandler);
+            	CompressionConfig.Builder configBuilder = CompressionConfig.builder();
+            	for (String method : this.config.getGzipIncludedMethods()) {
+            	    configBuilder.compressIncludeMethod(method);
+            	}
+            	for (String method : this.config.getGzipExcludedMethods()) {
+            	    configBuilder.compressExcludeMethod(method);
+            	}
+            	for (String path : this.config.getGzipIncludedPaths()) {
+            	    configBuilder.compressIncludePath(path);
+            	}
+            	for (String path : this.config.getGzipExcludedPaths()) {
+            	    configBuilder.compressExcludePath(path);
+            	}
+            	for (String mimeType : this.config.getGzipIncludedMimeTypes()) {
+            	    configBuilder.compressIncludeMimeType(mimeType);
+            	}
+            	for (String mimeType : this.config.getGzipExcludedMimeTypes()) {
+            	    configBuilder.compressExcludeMimeType(mimeType);
+            	}
+
+            	CompressionHandler compressionHandler = new CompressionHandler();
+            	compressionHandler.putCompression(gzipCompression);
+            	compressionHandler.putConfiguration("/*", configBuilder.build());
+
+            	this.server.insertHandler(compressionHandler);
             }
 
             if(this.config.getStopTimeout() != -1)
@@ -415,7 +462,7 @@ public final class JettyService
                     message.append("maxThreads=").append(sizedThreadPool.getMaxThreads()).append(",");
                 } else if (threadPool instanceof VirtualThreadPool) {
                     VirtualThreadPool sizedThreadPool = (VirtualThreadPool) threadPool;
-                    message.append("maxVirtualThreads=").append(sizedThreadPool.getMaxThreads()).append(",");
+                    message.append("maxVirtualThreads=").append(sizedThreadPool.getMaxConcurrentTasks()).append(",");
                 }
                 Connector connector = this.server.getConnectors()[0];
                 if (connector instanceof ServerConnector) {
@@ -460,6 +507,21 @@ public final class JettyService
         {
             SystemLogger.LOGGER.warn("Jetty not started (HTTP and HTTPS disabled)");
         }
+    }
+
+    private void addErrorHandler(String errorPageCustomHeaders) {
+            final String[] customHeaders = errorPageCustomHeaders.split("##");
+            final Map<String, String> headers = new HashMap<>();
+            for (String customHeader : customHeaders) {
+                if (customHeader == null || !customHeader.contains("=") || customHeader.endsWith("=")) {
+                    SystemLogger.LOGGER.warn("Ignoring invalid error page custom header: {}", customHeader);
+                    continue;
+                }
+                final String key = customHeader.substring(0, customHeader.indexOf("="));
+                final String value = customHeader.substring(customHeader.indexOf("=") + 1);
+                headers.put(key.trim(), value.trim());
+            }
+            this.server.setErrorHandler(new JettyErrorHandler(headers));
     }
 
     private static String fixJettyVersion(final BundleContext ctx)
@@ -516,7 +578,10 @@ public final class JettyService
         );
 
         HttpConfiguration httpConfiguration = connFactory.getHttpConfiguration();
-        httpConfiguration.addCustomizer(new SecureRequestCustomizer());
+        SecureRequestCustomizer secureRequestCustomizer = new SecureRequestCustomizer();
+        secureRequestCustomizer.setSniRequired(this.config.isSniRequired());
+        secureRequestCustomizer.setSniHostCheck(this.config.isSniHostCheck());
+        httpConfiguration.addCustomizer(secureRequestCustomizer);
 
         if (this.config.isProxyLoadBalancerConnection())
         {
@@ -555,32 +620,32 @@ public final class JettyService
      * @param handler the sevlet context handler to initialize
      */
     private void maybeInitializeJakartaWebsocket(ServletContextHandler handler) {
-        if (isClassNameVisible("org.eclipse.jetty.ee10.websocket.jakarta.server.config.JakartaWebSocketServletContainerInitializer")) {
+        if (isClassNameVisible("org.eclipse.jetty.ee11.websocket.jakarta.server.config.JakartaWebSocketServletContainerInitializer")) {
             // Ensure that JakartaWebSocketServletContainerInitializer is initialized,
             // to setup the ServerContainer for this web application context.
-            org.eclipse.jetty.ee10.websocket.jakarta.server.config.JakartaWebSocketServletContainerInitializer.configure(handler, null);
-            SystemLogger.LOGGER.info("Jakarta WebSocket EE10 servlet container initialized");
+            org.eclipse.jetty.ee11.websocket.jakarta.server.config.JakartaWebSocketServletContainerInitializer.configure(handler, null);
+            SystemLogger.LOGGER.info("Jakarta WebSocket ee11 servlet container initialized");
         } else {
-            SystemLogger.LOGGER.warn("Failed to initialize jakarta EE10 standard websocket support since the initializer class was not found. "
-                    + "Check if the jetty-ee10-websocket-jakarta-server bundle is deployed.");
+            SystemLogger.LOGGER.warn("Failed to initialize jakarta ee11 standard websocket support since the initializer class was not found. "
+                    + "Check if the jetty-ee11-websocket-jakarta-server bundle is deployed.");
         }
     }
 
     /**
-     * Initialize the jetty EE10 websocket support for the servlet context handler.
+     * Initialize the jetty ee11 websocket support for the servlet context handler.
      * If the optional initializer class is not present then a warning will be logged.
      *
      * @param handler the sevlet context handler to initialize
      */
     private void maybeInitializeJettyWebsocket(ServletContextHandler handler) {
-        if (isClassNameVisible("org.eclipse.jetty.ee10.websocket.server.config.JettyWebSocketServletContainerInitializer")) {
+        if (isClassNameVisible("org.eclipse.jetty.ee11.websocket.server.config.JettyWebSocketServletContainerInitializer")) {
             // Ensure that JettyWebSocketServletContainerInitializer is initialized,
             // to setup the JettyWebSocketServerContainer for this web application context.
-            org.eclipse.jetty.ee10.websocket.server.config.JettyWebSocketServletContainerInitializer.configure(handler, null);
-            SystemLogger.LOGGER.info("Jetty WebSocket EE10 servlet container initialized");
+            org.eclipse.jetty.ee11.websocket.server.config.JettyWebSocketServletContainerInitializer.configure(handler, null);
+            SystemLogger.LOGGER.info("Jetty WebSocket ee11 servlet container initialized");
         } else {
-            SystemLogger.LOGGER.warn("Failed to initialize jetty EE10 specific websocket support since the initializer class was not found. "
-                    + "Check if the jetty-ee10-websocket-jetty-server bundle is deployed.");
+            SystemLogger.LOGGER.warn("Failed to initialize jetty ee11 specific websocket support since the initializer class was not found. "
+                    + "Check if the jetty-ee11-websocket-jetty-server bundle is deployed.");
         }
     }
 
@@ -593,13 +658,13 @@ public final class JettyService
         // when the server is started, retrieve the container attribute and
         // set it on the shared servlet context once available
         if (this.config.isUseJettyWebsocket() &&
-                isClassNameVisible("org.eclipse.jetty.ee10.websocket.server.config.JettyWebSocketServletContainerInitializer")) {
-            String attribute = org.eclipse.jetty.ee10.websocket.server.JettyWebSocketServerContainer.JETTY_WEBSOCKET_CONTAINER_ATTRIBUTE;
+                isClassNameVisible("org.eclipse.jetty.ee11.websocket.server.config.JettyWebSocketServletContainerInitializer")) {
+            String attribute = org.eclipse.jetty.ee11.websocket.server.JettyWebSocketServerContainer.JETTY_WEBSOCKET_CONTAINER_ATTRIBUTE;
             this.controller.setAttributeSharedServletContext(attribute, context.getServletContext().getAttribute(attribute));
         }
         if (this.config.isUseJakartaWebsocket() &&
-                isClassNameVisible("org.eclipse.jetty.ee10.websocket.jakarta.server.config.JakartaWebSocketServletContainerInitializer")) {
-            String attribute = org.eclipse.jetty.ee10.websocket.jakarta.server.config.JakartaWebSocketServletContainerInitializer.ATTR_JAKARTA_SERVER_CONTAINER;
+                isClassNameVisible("org.eclipse.jetty.ee11.websocket.jakarta.server.config.JakartaWebSocketServletContainerInitializer")) {
+            String attribute = org.eclipse.jetty.ee11.websocket.jakarta.server.config.JakartaWebSocketServletContainerInitializer.ATTR_JAKARTA_SERVER_CONTAINER;
             this.controller.setAttributeSharedServletContext(attribute, context.getServletContext().getAttribute(attribute));
         }
     }
@@ -689,6 +754,7 @@ public final class JettyService
         }
 
         connector.setRenegotiationAllowed(this.config.isRenegotiationAllowed());
+        connector.setSniRequired(this.config.isSniContextRequired());
     }
 
     private void configureConnector(final ServerConnector connector, int port)
@@ -696,6 +762,12 @@ public final class JettyService
         connector.setPort(port);
         connector.setHost(this.config.getHost());
         connector.setIdleTimeout(this.config.getHttpTimeout());
+
+        if (this.config.getAcceptQueueSize() > -1) {
+            // Set the accept queue size only if explicitly configured
+            // otherwise leave the default to Jetty to decide
+            connector.setAcceptQueueSize(this.config.getAcceptQueueSize());
+        }
 
         if (this.config.isRegisterMBeans())
         {
@@ -709,12 +781,18 @@ public final class JettyService
         config.setRequestHeaderSize(this.config.getHeaderSize());
         config.setResponseHeaderSize(this.config.getHeaderSize());
         config.setOutputBufferSize(this.config.getResponseBufferSize());
- 
+        config.setRelativeRedirectAllowed(this.config.getBooleanProperty(JettyConfig.FELIX_JETTY_ALLOW_RELATIVE_REDIRECTS, true));
+
         String uriComplianceMode = this.config.getProperty(JettyConfig.FELIX_JETTY_URI_COMPLIANCE_MODE, null);
         if (uriComplianceMode != null) {
             try {
                 UriCompliance compliance = UriCompliance.valueOf(uriComplianceMode);
                 config.setUriCompliance(compliance);
+                // Apply the same compliance to redirect URIs (Location header). Since Jetty 12.1
+                // this defaults to UriCompliance.DEFAULT_REDIRECT, which - like the request URI
+                // default - rejects ambiguous encodings such as %2F. Differentiating the two makes
+                // no sense: if a deployment opts into a compliance mode it should apply end-to-end.
+                config.setRedirectUriCompliance(compliance);
 
                 if (LEGACY.equals(compliance) || UNSAFE.equals(compliance) || UNAMBIGUOUS.equals(compliance)) {
                     // See https://github.com/jetty/jetty.project/issues/11448#issuecomment-1969206031

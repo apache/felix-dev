@@ -28,14 +28,14 @@
 
     <name>Apache Felix Http Webconsole Plugin</name>
     <artifactId>org.apache.felix.http.webconsoleplugin</artifactId>
-    <version>1.2.1-SNAPSHOT</version>
+    <version>1.2.3-SNAPSHOT</version>
     <packaging>bundle</packaging>
 
     <scm>
         <connection>scm:git:https://github.com/apache/felix-dev.git</connection>
         <developerConnection>scm:git:https://github.com/apache/felix-dev.git</developerConnection>
         <url>https://gitbox.apache.org/repos/asf?p=felix-dev.git</url>
-      <tag>HEAD</tag>
+      <tag>org.apache.felix.http.webconsoleplugin-1.2.2</tag>
    </scm>
 
     <properties>

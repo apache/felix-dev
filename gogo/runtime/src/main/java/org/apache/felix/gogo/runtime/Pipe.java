@@ -107,7 +107,12 @@ public class Pipe implements Callable<Result>, Process
         return CURRENT.get();
     }
 
-    private static Pipe setCurrentPipe(Pipe pipe) {
+    /**
+     * Set the current pipe for the current thread.
+     * @param pipe the pipe to set as current, or null to clear
+     * @return the previous pipe
+     */
+    public static Pipe setCurrentPipe(Pipe pipe) {
         Pipe previous = CURRENT.get();
         CURRENT.set(pipe);
         return previous;

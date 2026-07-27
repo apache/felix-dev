@@ -18,9 +18,12 @@
  */
 package org.apache.felix.gogo.jline.ssh;
 
+import java.io.IOException;
+
 import org.apache.felix.service.command.CommandProcessor;
-import org.apache.sshd.server.Command;
-import org.apache.sshd.server.CommandFactory;
+import org.apache.sshd.server.channel.ChannelSession;
+import org.apache.sshd.server.command.Command;
+import org.apache.sshd.server.command.CommandFactory;
 
 public class ShellCommandFactory implements CommandFactory {
 
@@ -33,5 +36,10 @@ public class ShellCommandFactory implements CommandFactory {
     public Command createCommand(String command) {
         return new ShellCommand(processor, command);
     }
+
+	@Override
+	public Command createCommand(ChannelSession channel, String command) throws IOException {
+		return null;
+	}
 
 }

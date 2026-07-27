@@ -18,23 +18,20 @@
  */
 package org.apache.felix.framework;
 
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertNull;
-import static org.junit.Assert.assertTrue;
+import static org.assertj.core.api.Assertions.assertThat;
 
 import java.io.ByteArrayInputStream;
 import java.io.File;
 import java.io.FileOutputStream;
 import java.io.IOException;
-import java.util.Arrays;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.jar.JarOutputStream;
 import java.util.jar.Manifest;
 
-import org.junit.After;
-import org.junit.Before;
-import org.junit.Test;
+import org.junit.jupiter.api.AfterEach;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
 import org.osgi.framework.Bundle;
 import org.osgi.framework.Constants;
 import org.osgi.framework.ServiceRegistration;
@@ -49,14 +46,14 @@ import org.osgi.framework.wiring.dto.BundleRevisionDTO;
 import org.osgi.framework.wiring.dto.BundleWiringDTO;
 import org.osgi.resource.dto.CapabilityDTO;
 
-public class DTOFactoryTest
+class DTOFactoryTest
 {
     private int counter;
     private Framework framework;
     private File testDir;
 
-    @Before
-    public void setUp() throws Exception
+    @BeforeEach
+    void setUp() throws Exception
     {
         String path = "/" + getClass().getName().replace('.', '/') + ".class";
         String url = getClass().getResource(path).getFile();
@@ -69,7 +66,7 @@ public class DTOFactoryTest
         cacheDir.mkdirs();
         String cache = cacheDir.getAbsolutePath();
 
-        Map<String, Object> params = new HashMap<String, Object>();
+        Map<String, Object> params = new HashMap<>();
         params.put("felix.cache.profiledir", cache);
         params.put("felix.cache.dir", cache);
         params.put(Constants.FRAMEWORK_STORAGE, cache);
@@ -79,14 +76,14 @@ public class DTOFactoryTest
         framework.start();
     }
 
-    @After
-    public void tearDown() throws Exception
+    @AfterEach
+    void tearDown() throws Exception
     {
         framework.stop();
     }
 
     @Test
-    public void testBundleStartLevelDTO() throws Exception
+    void bundleStartLevelDTO() throws Exception
     {
         String mf = "Bundle-SymbolicName: tb1\n"
                 + "Bundle-Version: 1.0.0\n"
@@ -98,18 +95,18 @@ public class DTOFactoryTest
         sl.setStartLevel(7);
 
         BundleStartLevelDTO dto = bundle.adapt(BundleStartLevelDTO.class);
-        assertEquals(bundle.getBundleId(), dto.bundle);
-        assertEquals(7, dto.startLevel);
+        assertThat(dto.bundle).isEqualTo(bundle.getBundleId());
+        assertThat(dto.startLevel).isEqualTo(7);
     }
 
     @Test
-    public void testServiceReferenceDTOArray() throws Exception
+    void serviceReferenceDTOArray() throws Exception
     {
         ServiceRegistration<String> reg = framework.getBundleContext().registerService(String.class, "hi", null);
         Long sid = (Long) reg.getReference().getProperty(Constants.SERVICE_ID);
 
         ServiceReferenceDTO[] dtos = framework.adapt(ServiceReferenceDTO[].class);
-        assertTrue(dtos.length > 0);
+        assertThat(dtos.length > 0).isTrue();
 
         boolean found = false;
         for (ServiceReferenceDTO dto : dtos)
@@ -117,20 +114,21 @@ public class DTOFactoryTest
             if (dto.id == sid)
             {
                 found = true;
-                assertEquals(0L, dto.bundle);
-                assertEquals(sid, dto.properties.get(Constants.SERVICE_ID));
-                assertTrue(Arrays.equals(new String [] {String.class.getName()},
-                        (String []) dto.properties.get(Constants.OBJECTCLASS)));
-                assertEquals(0L, dto.properties.get(Constants.SERVICE_BUNDLEID));
-                assertEquals(Constants.SCOPE_SINGLETON, dto.properties.get(Constants.SERVICE_SCOPE));
-                assertEquals(0, dto.usingBundles.length);
+                assertThat(dto.bundle).isEqualTo(0L);
+                assertThat(dto.properties)
+                        .containsEntry(Constants.SERVICE_ID, sid)
+                        .containsEntry(Constants.OBJECTCLASS, new String []{String.class.getName()});
+                assertThat(dto.properties)
+                        .containsEntry(Constants.SERVICE_BUNDLEID, 0L)
+                        .containsEntry(Constants.SERVICE_SCOPE, Constants.SCOPE_SINGLETON);
+                assertThat(dto.usingBundles.length).isEqualTo(0);
             }
         }
-        assertTrue(found);
+        assertThat(found).isTrue();
     }
 
     @Test
-    public void testServiceReferenceDTOArrayStoppedBundle() throws Exception
+    void serviceReferenceDTOArrayStoppedBundle() throws Exception
     {
         String mf = "Bundle-SymbolicName: tb2\n"
                 + "Bundle-Version: 1.2.3\n"
@@ -139,16 +137,16 @@ public class DTOFactoryTest
         File bf = createBundle(mf);
         Bundle bundle = framework.getBundleContext().installBundle(bf.toURI().toURL().toExternalForm());
 
-        assertNull("Precondition", bundle.getBundleContext());
+        assertThat(bundle.getBundleContext()).as("Precondition").isNull();
         ServiceReferenceDTO[] dtos = bundle.adapt(ServiceReferenceDTO[].class);
 
         // Note this is incorrectly tested by the Core Framework R6 CT, which expects an
         // empty array. However this is not correct and recorded as a deviation.
-        assertNull("As the bundle is not started, the dtos should be null", dtos);
+        assertThat(dtos).as("As the bundle is not started, the dtos should be null").isNull();
     }
 
     @Test
-    public void testBundleRevisionDTO() throws Exception
+    void bundleRevisionDTO() throws Exception
     {
         String mf = "Bundle-SymbolicName: tb2\n"
                 + "Bundle-Version: 1.2.3\n"
@@ -157,14 +155,14 @@ public class DTOFactoryTest
         File bf = createBundle(mf);
         Bundle bundle = framework.getBundleContext().installBundle(bf.toURI().toURL().toExternalForm());
         bundle.start();
-        assertEquals("Precondition", Bundle.ACTIVE, bundle.getState());
+        assertThat(bundle.getState()).as("Precondition").isEqualTo(Bundle.ACTIVE);
 
         BundleRevisionDTO dto = bundle.adapt(BundleRevisionDTO.class);
-        assertEquals(bundle.getBundleId(), dto.bundle);
-        assertTrue(dto.id != 0);
-        assertEquals("tb2", dto.symbolicName);
-        assertEquals("1.2.3", dto.version);
-        assertEquals(0, dto.type);
+        assertThat(dto.bundle).isEqualTo(bundle.getBundleId());
+        assertThat(dto.id != 0).isTrue();
+        assertThat(dto.symbolicName).isEqualTo("tb2");
+        assertThat(dto.version).isEqualTo("1.2.3");
+        assertThat(dto.type).isEqualTo(0);
 
         boolean foundBundle = false;
         boolean foundHost = false;
@@ -172,39 +170,42 @@ public class DTOFactoryTest
         int resource = 0;
         for (CapabilityDTO cap : dto.capabilities)
         {
-            assertTrue(cap.id != 0);
+            assertThat(cap.id != 0).isTrue();
             if (resource == 0)
                 resource = cap.resource;
             else
-                assertEquals(resource, cap.resource);
+                assertThat(cap.resource).isEqualTo(resource);
 
             if (BundleNamespace.BUNDLE_NAMESPACE.equals(cap.namespace))
             {
                 foundBundle = true;
-                assertEquals("tb2", cap.attributes.get(BundleNamespace.BUNDLE_NAMESPACE));
-                assertEquals("1.2.3", cap.attributes.get(BundleNamespace.CAPABILITY_BUNDLE_VERSION_ATTRIBUTE));
+                assertThat(cap.attributes)
+                        .containsEntry(BundleNamespace.BUNDLE_NAMESPACE, "tb2")
+                        .containsEntry(BundleNamespace.CAPABILITY_BUNDLE_VERSION_ATTRIBUTE, "1.2.3");
             }
             else if (HostNamespace.HOST_NAMESPACE.equals(cap.namespace))
             {
                 foundHost = true;
-                assertEquals("tb2", cap.attributes.get(HostNamespace.HOST_NAMESPACE));
-                assertEquals("1.2.3", cap.attributes.get(HostNamespace.CAPABILITY_BUNDLE_VERSION_ATTRIBUTE));
+                assertThat(cap.attributes)
+                        .containsEntry(HostNamespace.HOST_NAMESPACE, "tb2")
+                        .containsEntry(HostNamespace.CAPABILITY_BUNDLE_VERSION_ATTRIBUTE, "1.2.3");
             }
             else if (IdentityNamespace.IDENTITY_NAMESPACE.equals(cap.namespace))
             {
                 foundIdentity = true;
-                assertEquals("tb2", cap.attributes.get(IdentityNamespace.IDENTITY_NAMESPACE));
-                assertEquals("1.2.3", cap.attributes.get(IdentityNamespace.CAPABILITY_VERSION_ATTRIBUTE));
-                assertEquals(IdentityNamespace.TYPE_BUNDLE, cap.attributes.get(IdentityNamespace.CAPABILITY_TYPE_ATTRIBUTE));
+                assertThat(cap.attributes)
+                        .containsEntry(IdentityNamespace.IDENTITY_NAMESPACE, "tb2")
+                        .containsEntry(IdentityNamespace.CAPABILITY_VERSION_ATTRIBUTE, "1.2.3")
+                        .containsEntry(IdentityNamespace.CAPABILITY_TYPE_ATTRIBUTE, IdentityNamespace.TYPE_BUNDLE);
             }
         }
-        assertTrue(foundBundle);
-        assertTrue(foundHost);
-        assertTrue(foundIdentity);
+        assertThat(foundBundle).isTrue();
+        assertThat(foundHost).isTrue();
+        assertThat(foundIdentity).isTrue();
     }
 
     @Test
-    public void testBundleRevisionDTOArray() throws Exception {
+    void bundleRevisionDTOArray() throws Exception {
         String mf = "Bundle-SymbolicName: tb2\n"
                 + "Bundle-Version: 1.2.3\n"
                 + "Bundle-ManifestVersion: 2\n"
@@ -212,17 +213,17 @@ public class DTOFactoryTest
         File bf = createBundle(mf);
         Bundle bundle = framework.getBundleContext().installBundle(bf.toURI().toURL().toExternalForm());
         bundle.start();
-        assertEquals("Precondition", Bundle.ACTIVE, bundle.getState());
+        assertThat(bundle.getState()).as("Precondition").isEqualTo(Bundle.ACTIVE);
 
         BundleRevisionDTO[] dtos = bundle.adapt(BundleRevisionDTO[].class);
-        assertEquals(1, dtos.length);
+        assertThat(dtos.length).isEqualTo(1);
         BundleRevisionDTO dto = dtos[0];
 
-        assertEquals(bundle.getBundleId(), dto.bundle);
-        assertTrue(dto.id != 0);
-        assertEquals("tb2", dto.symbolicName);
-        assertEquals("1.2.3", dto.version);
-        assertEquals(0, dto.type);
+        assertThat(dto.bundle).isEqualTo(bundle.getBundleId());
+        assertThat(dto.id != 0).isTrue();
+        assertThat(dto.symbolicName).isEqualTo("tb2");
+        assertThat(dto.version).isEqualTo("1.2.3");
+        assertThat(dto.type).isEqualTo(0);
 
         boolean foundBundle = false;
         boolean foundHost = false;
@@ -230,39 +231,42 @@ public class DTOFactoryTest
         int resource = 0;
         for (CapabilityDTO cap : dto.capabilities)
         {
-            assertTrue(cap.id != 0);
+            assertThat(cap.id != 0).isTrue();
             if (resource == 0)
                 resource = cap.resource;
             else
-                assertEquals(resource, cap.resource);
+                assertThat(cap.resource).isEqualTo(resource);
 
             if (BundleNamespace.BUNDLE_NAMESPACE.equals(cap.namespace))
             {
                 foundBundle = true;
-                assertEquals("tb2", cap.attributes.get(BundleNamespace.BUNDLE_NAMESPACE));
-                assertEquals("1.2.3", cap.attributes.get(BundleNamespace.CAPABILITY_BUNDLE_VERSION_ATTRIBUTE));
+                assertThat(cap.attributes)
+                        .containsEntry(BundleNamespace.BUNDLE_NAMESPACE, "tb2")
+                        .containsEntry(BundleNamespace.CAPABILITY_BUNDLE_VERSION_ATTRIBUTE, "1.2.3");
             }
             else if (HostNamespace.HOST_NAMESPACE.equals(cap.namespace))
             {
                 foundHost = true;
-                assertEquals("tb2", cap.attributes.get(HostNamespace.HOST_NAMESPACE));
-                assertEquals("1.2.3", cap.attributes.get(HostNamespace.CAPABILITY_BUNDLE_VERSION_ATTRIBUTE));
+                assertThat(cap.attributes)
+                        .containsEntry(HostNamespace.HOST_NAMESPACE, "tb2")
+                        .containsEntry(HostNamespace.CAPABILITY_BUNDLE_VERSION_ATTRIBUTE, "1.2.3");
             }
             else if (IdentityNamespace.IDENTITY_NAMESPACE.equals(cap.namespace))
             {
                 foundIdentity = true;
-                assertEquals("tb2", cap.attributes.get(IdentityNamespace.IDENTITY_NAMESPACE));
-                assertEquals("1.2.3", cap.attributes.get(IdentityNamespace.CAPABILITY_VERSION_ATTRIBUTE));
-                assertEquals(IdentityNamespace.TYPE_BUNDLE, cap.attributes.get(IdentityNamespace.CAPABILITY_TYPE_ATTRIBUTE));
+                assertThat(cap.attributes)
+                        .containsEntry(IdentityNamespace.IDENTITY_NAMESPACE, "tb2")
+                        .containsEntry(IdentityNamespace.CAPABILITY_VERSION_ATTRIBUTE, "1.2.3")
+                        .containsEntry(IdentityNamespace.CAPABILITY_TYPE_ATTRIBUTE, IdentityNamespace.TYPE_BUNDLE);
             }
         }
-        assertTrue(foundBundle);
-        assertTrue(foundHost);
-        assertTrue(foundIdentity);
+        assertThat(foundBundle).isTrue();
+        assertThat(foundHost).isTrue();
+        assertThat(foundIdentity).isTrue();
     }
 
     @Test
-    public void testBundleWiringDTO() throws Exception {
+    void bundleWiringDTO() throws Exception {
         String mf = "Bundle-SymbolicName: tb2\n"
                 + "Bundle-Version: 1.2.3\n"
                 + "Bundle-ManifestVersion: 2\n"
@@ -270,10 +274,10 @@ public class DTOFactoryTest
         File bf = createBundle(mf);
         Bundle bundle = framework.getBundleContext().installBundle(bf.toURI().toURL().toExternalForm());
         bundle.start();
-        assertEquals("Precondition", Bundle.ACTIVE, bundle.getState());
+        assertThat(bundle.getState()).as("Precondition").isEqualTo(Bundle.ACTIVE);
 
         BundleWiringDTO dto = bundle.adapt(BundleWiringDTO.class);
-        assertEquals(bundle.getBundleId(), dto.bundle);
+        assertThat(dto.bundle).isEqualTo(bundle.getBundleId());
     }
 
     private File createBundle(String manifest) throws IOException

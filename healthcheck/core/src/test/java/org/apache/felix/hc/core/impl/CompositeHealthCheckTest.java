@@ -27,9 +27,9 @@ import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
 import java.util.Arrays;
+import java.util.Dictionary;
 import java.util.LinkedList;
 import java.util.List;
-import java.util.Set;
 
 import org.apache.felix.hc.api.HealthCheck;
 import org.apache.felix.hc.api.Result;
@@ -43,7 +43,6 @@ import org.apache.felix.hc.core.impl.util.HealthCheckFilter;
 import org.junit.Before;
 import org.junit.Test;
 import org.mockito.ArgumentMatcher;
-import org.mockito.Matchers;
 import org.mockito.Mock;
 import org.mockito.MockitoAnnotations;
 import org.mockito.Spy;
@@ -66,7 +65,7 @@ public class CompositeHealthCheckTest {
 
     @Before
     public void setup() {
-        MockitoAnnotations.initMocks(this);
+        MockitoAnnotations.openMocks(this);
         compositeHealthCheck.setHealthCheckExecutor(healthCheckExecutor);
         compositeHealthCheck.setFilterTags(new String[] {});
         compositeHealthCheck.setComponentContext(componentContext);
@@ -75,8 +74,7 @@ public class CompositeHealthCheckTest {
     @Test
     public void testExecution() {
 
-        doReturn((Result) null).when(compositeHealthCheck).checkForRecursion(Matchers.<ServiceReference> any(),
-                Matchers.<Set<String>> any());
+        doReturn((Result) null).when(compositeHealthCheck).checkForRecursion(any(), any());
         String[] testTags = new String[] { "tag1" };
         compositeHealthCheck.setFilterTags(testTags);
 
@@ -287,5 +285,16 @@ public class CompositeHealthCheckTest {
             throw new UnsupportedOperationException();
         }
 
+        @Override
+        public Object adapt(Class type) {
+            // TODO Auto-generated method stub
+            return null;
+        }
+
+        @Override
+        public Dictionary getProperties() {
+            // TODO Auto-generated method stub
+            return null;
+        }
     }
 }

@@ -30,13 +30,17 @@ import org.apache.felix.gogo.jline.Shell.Context;
 import org.apache.felix.service.command.CommandProcessor;
 import org.apache.felix.service.command.CommandSession;
 import org.apache.sshd.common.Factory;
+import org.apache.sshd.common.channel.Channel;
 import org.apache.sshd.common.channel.PtyMode;
-import org.apache.sshd.server.Command;
 import org.apache.sshd.server.Environment;
 import org.apache.sshd.server.ExitCallback;
-import org.apache.sshd.server.SessionAware;
 import org.apache.sshd.server.Signal;
+import org.apache.sshd.server.SignalListener;
+import org.apache.sshd.server.channel.ChannelSession;
+import org.apache.sshd.server.channel.ChannelSessionAware;
+import org.apache.sshd.server.command.Command;
 import org.apache.sshd.server.session.ServerSession;
+import org.apache.sshd.server.shell.ShellFactory;
 import org.jline.terminal.Attributes;
 import org.jline.terminal.Attributes.ControlChar;
 import org.jline.terminal.Attributes.InputFlag;
@@ -50,7 +54,7 @@ import org.jline.terminal.TerminalBuilder;
  * SSHD {@link org.apache.sshd.server.Command} factory which provides access to
  * Shell.
  */
-public class ShellFactoryImpl implements Factory<Command> {
+public class ShellFactoryImpl implements Factory<Command>,ShellFactory {
     private final CommandProcessor processor;
 
     public ShellFactoryImpl(CommandProcessor processor) {
@@ -77,11 +81,19 @@ public class ShellFactoryImpl implements Factory<Command> {
         }
     }
 
-    public Command create() {
-        return new ShellImpl();
+    @Override
+    public Command createShell(ChannelSession channel) throws IOException {
+    	ShellImpl sI=new ShellImpl();
+    	sI.setChannelSession(channel);
+    	return sI;
     }
 
-    public class ShellImpl implements Command, SessionAware {
+	@Override
+	public Command create() {
+		return new ShellImpl();
+	}
+	
+    public class ShellImpl implements Command, ChannelSessionAware {
         private InputStream in;
 
         private OutputStream out;
@@ -238,11 +250,16 @@ public class ShellFactoryImpl implements Factory<Command> {
                 for (Map.Entry<String, String> e : env.getEnv().entrySet()) {
                     session.put(e.getKey(), e.getValue());
                 }
-                env.addSignalListener(signals -> {
-                    terminal.setSize(new Size(Integer.parseInt(env.getEnv().get("COLUMNS")),
-                                                Integer.parseInt(env.getEnv().get("LINES"))));
-                    terminal.raise(Terminal.Signal.WINCH);
-                }, Signal.WINCH);
+                
+				SignalListener signalListener = new SignalListener() {
+					@Override
+					public void signal(Channel channel, Signal signal) {
+						terminal.setSize(new Size(Integer.parseInt(env.getEnv().get("COLUMNS")),
+								Integer.parseInt(env.getEnv().get("LINES"))));
+						terminal.raise(Terminal.Signal.WINCH);
+					};
+				};
+                env.addSignalListener(signalListener, Signal.WINCH);
                 Context context = new Context() {
                     @Override
                     public String getProperty(String name) {
@@ -269,6 +286,25 @@ public class ShellFactoryImpl implements Factory<Command> {
             }
         }
 
+		@Override
+		public void start(ChannelSession channel, Environment env) throws IOException {
+			// TODO Auto-generated method stub
+			
+		}
+
+		@Override
+		public void destroy(ChannelSession channel) throws Exception {
+			// TODO Auto-generated method stub
+			
+		}
+
+		@Override
+		public void setChannelSession(ChannelSession session) {
+			
+		}
+
     }
+
+
 
 }

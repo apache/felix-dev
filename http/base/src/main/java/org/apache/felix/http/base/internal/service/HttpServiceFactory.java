@@ -16,8 +16,11 @@
  */
 package org.apache.felix.http.base.internal.service;
 
+import java.util.HashMap;
 import java.util.Hashtable;
+import java.util.Map;
 
+import org.apache.felix.http.base.internal.logger.SystemLogger;
 import org.apache.felix.http.base.internal.registry.HandlerRegistry;
 import org.jetbrains.annotations.NotNull;
 import org.osgi.framework.Bundle;
@@ -76,6 +79,7 @@ public final class HttpServiceFactory
     private final HandlerRegistry handlerRegistry;
     private volatile SharedHttpServiceImpl sharedHttpService;
 
+    private volatile Map<String, Object> attributesForSharedContext = new HashMap<>();
 
     public HttpServiceFactory(final BundleContext bundleContext,
             final HandlerRegistry handlerRegistry)
@@ -101,6 +105,7 @@ public final class HttpServiceFactory
         this.context = context;
 
         this.sharedHttpService = new SharedHttpServiceImpl(handlerRegistry);
+        this.sharedHttpService.setSharedContextAttributes(attributesForSharedContext);
 
         this.active = true;
         this.httpServiceReg = bundleContext.registerService(HttpService.class, this, this.httpServiceProps);
@@ -120,6 +125,7 @@ public final class HttpServiceFactory
         this.sharedHttpService = null;
 
         this.httpServiceProps.clear();
+        this.attributesForSharedContext.clear();
     }
 
     @Override
@@ -158,6 +164,11 @@ public final class HttpServiceFactory
     public long getHttpServiceServiceId()
     {
         return (Long) this.httpServiceReg.getReference().getProperty(Constants.SERVICE_ID);
+    }
+
+    public void setAttributeSharedServletContext(String key, Object value) {
+        SystemLogger.LOGGER.info("HttpServiceFactory: Storing attribute for shared servlet context. Key '{}', value: '{}'", key, value);
+        this.attributesForSharedContext.put(key, value);
     }
 
     private boolean getBoolean(final String property)

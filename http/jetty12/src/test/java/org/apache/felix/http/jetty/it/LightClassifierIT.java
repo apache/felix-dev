@@ -56,12 +56,12 @@ public class LightClassifierIT extends AbstractJettyTestSupport {
                 spifly(),
 
                 // Minimum additional jetty dependency bundles
-                mavenBundle().groupId("org.slf4j").artifactId("slf4j-api").version("2.0.13"),
-                mavenBundle().groupId("org.slf4j").artifactId("slf4j-simple").version("2.0.13"),
-                mavenBundle().groupId("commons-io").artifactId("commons-io").version("2.16.1"),
-                mavenBundle().groupId("commons-fileupload").artifactId("commons-fileupload").version("1.5"),
+                mavenBundle().groupId("commons-io").artifactId("commons-io").version("2.19.0"),
                 mavenBundle().groupId("org.eclipse.jetty").artifactId("jetty-alpn-java-server").version(jettyVersion),
                 mavenBundle().groupId("org.eclipse.jetty").artifactId("jetty-alpn-server").version(jettyVersion),
+                mavenBundle().groupId("org.eclipse.jetty.compression").artifactId("jetty-compression-common").version(jettyVersion),
+                mavenBundle().groupId("org.eclipse.jetty.compression").artifactId("jetty-compression-gzip").version(jettyVersion),
+                mavenBundle().groupId("org.eclipse.jetty.compression").artifactId("jetty-compression-server").version(jettyVersion),
                 mavenBundle().groupId("org.eclipse.jetty").artifactId("jetty-http").version(jettyVersion),
                 mavenBundle().groupId("org.eclipse.jetty.http2").artifactId("jetty-http2-common").version(jettyVersion),
                 mavenBundle().groupId("org.eclipse.jetty.http2").artifactId("jetty-http2-hpack").version(jettyVersion),
@@ -71,9 +71,11 @@ public class LightClassifierIT extends AbstractJettyTestSupport {
                 mavenBundle().groupId("org.eclipse.jetty").artifactId("jetty-security").version(jettyVersion),
                 mavenBundle().groupId("org.eclipse.jetty").artifactId("jetty-server").version(jettyVersion),
                 mavenBundle().groupId("org.eclipse.jetty").artifactId("jetty-session").version(jettyVersion),
-                mavenBundle().groupId("org.eclipse.jetty.ee10").artifactId("jetty-ee10-servlet").version(jettyVersion),
+                mavenBundle().groupId("org.eclipse.jetty.ee11").artifactId("jetty-ee11-servlet").version(jettyVersion),
+                mavenBundle().groupId("org.eclipse.jetty.ee11").artifactId("jetty-ee11-webapp").version(jettyVersion),
+                mavenBundle().groupId("org.eclipse.jetty.ee").artifactId("jetty-ee-webapp").version(jettyVersion),
                 mavenBundle().groupId("org.eclipse.jetty").artifactId("jetty-util").version(jettyVersion),
-                mavenBundle().groupId("org.eclipse.jetty").artifactId("jetty-ee").version(jettyVersion),
+                mavenBundle().groupId("org.eclipse.jetty").artifactId("jetty-xml").version(jettyVersion),
 
                 // additional dependencies to verify FELIX-6700
                 mavenBundle().groupId("org.owasp.encoder").artifactId("encoder").version("1.2.3"),
@@ -94,7 +96,7 @@ public class LightClassifierIT extends AbstractJettyTestSupport {
     }
 
     /**
-     * Verify FELIX-6700 by checking that the webconsole bundle was resolved and active 
+     * Verify FELIX-6700 by checking that the webconsole bundle was resolved and active
      */
     @Test
     public void testWebConsoleBundleIsActive() throws Exception {

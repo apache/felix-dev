@@ -93,17 +93,20 @@ class FrameworkStartLevelImpl implements FrameworkStartLevel, Runnable
         }
     }
 
-    public Bundle getBundle()
+    @Override
+	public Bundle getBundle()
     {
         return m_felix;
     }
 
-    public int getStartLevel()
+    @Override
+	public int getStartLevel()
     {
         return m_felix.getActiveStartLevel();
     }
 
-    public void setStartLevel(int startlevel, FrameworkListener... listeners)
+    @Override
+	public void setStartLevel(int startlevel, FrameworkListener... listeners)
     {
         Object sm = System.getSecurityManager();
 
@@ -166,12 +169,14 @@ class FrameworkStartLevelImpl implements FrameworkStartLevel, Runnable
         }
     }
 
-    public int getInitialBundleStartLevel()
+    @Override
+	public int getInitialBundleStartLevel()
     {
         return m_felix.getInitialBundleStartLevel();
     }
 
-    public void setInitialBundleStartLevel(int startlevel)
+    @Override
+	public void setInitialBundleStartLevel(int startlevel)
     {
         Object sm = System.getSecurityManager();
 
@@ -197,17 +202,20 @@ class FrameworkStartLevelImpl implements FrameworkStartLevel, Runnable
             m_bundle = bundle;
         }
 
-        public Bundle getBundle()
+        @Override
+		public Bundle getBundle()
         {
             return m_bundle;
         }
 
-        public int getStartLevel()
+        @Override
+		public int getStartLevel()
         {
             return m_felix.getBundleStartLevel(m_bundle);
         }
 
-        public void setStartLevel(int startlevel)
+        @Override
+		public void setStartLevel(int startlevel)
         {
             Object sm = System.getSecurityManager();
 
@@ -239,18 +247,21 @@ class FrameworkStartLevelImpl implements FrameworkStartLevel, Runnable
             }
         }
 
-        public boolean isPersistentlyStarted()
+        @Override
+		public boolean isPersistentlyStarted()
         {
             return m_felix.isBundlePersistentlyStarted(m_bundle);
         }
 
-        public boolean isActivationPolicyUsed()
+        @Override
+		public boolean isActivationPolicyUsed()
         {
             return m_felix.isBundleActivationPolicyUsed(m_bundle);
         }
     }
 
-    public void run()
+    @Override
+	public void run()
     {
         // This thread loops forever, thus it should
         // be a daemon thread.

@@ -35,6 +35,9 @@ import org.apache.felix.http.base.internal.registry.PerContextHandlerRegistry;
 
 final class ServletResponseWrapper extends HttpServletResponseWrapper
 {
+    // Attributes from servlet API 6.1 - added here to avoid dependency to 6.1
+    private static final String ERROR_METHOD = "jakarta.servlet.error.method";
+    private static final String ERROR_QUERY_STRING = "jakarta.servlet.error.query_string";
 
     private final HttpServletRequest request;
 
@@ -96,6 +99,10 @@ final class ServletResponseWrapper extends HttpServletResponseWrapper
                         {
                             request.setAttribute(RequestDispatcher.ERROR_SERVLET_NAME, this.servletName);
                         }
+                        request.setAttribute(ERROR_METHOD, this.request.getMethod());
+                        if (this.request.getQueryString() != null) {
+                            request.setAttribute(ERROR_QUERY_STRING, this.request.getQueryString());
+                        }
 
                         final String servletPath = null;
                         final String pathInfo = request.getRequestURI();
@@ -114,9 +121,7 @@ final class ServletResponseWrapper extends HttpServletResponseWrapper
                                 errorResolution.getContext(),
                                 requestInfo,
                                 DispatcherType.ERROR,
-                                false,
-                                null,
-                                null);
+                                false);
                         final FilterChain filterChain = new InvocationChain(errorResolution, filterHandlers);
                         filterChain.doFilter(reqWrapper, this);
 
@@ -134,6 +139,8 @@ final class ServletResponseWrapper extends HttpServletResponseWrapper
                         request.removeAttribute(RequestDispatcher.ERROR_SERVLET_NAME);
                         request.removeAttribute(RequestDispatcher.ERROR_EXCEPTION);
                         request.removeAttribute(RequestDispatcher.ERROR_EXCEPTION_TYPE);
+                        request.removeAttribute(ERROR_METHOD);
+                        request.removeAttribute(ERROR_QUERY_STRING);
                     }
                 }
             }
@@ -141,6 +148,48 @@ final class ServletResponseWrapper extends HttpServletResponseWrapper
         if ( invokeSuper )
         {
             super.sendError(code, message);
+        }
+    }
+
+
+    @Override
+    public void sendRedirect(String location, int sc) throws IOException {
+        this.sendRedirect(location, sc, true);
+    }
+
+    @Override
+    public void sendRedirect(String location, boolean clearBuffer) throws IOException {
+        this.sendRedirect(location, SC_FOUND, clearBuffer);
+    }
+
+    @Override
+    public void sendRedirect(final String location, final int sc, final boolean clearBuffer) throws IOException {
+        if (this.request.getServletContext().getMajorVersion() > 6
+            || (this.request.getServletContext().getMajorVersion() == 6 && this.request.getServletContext().getMinorVersion() >= 1)) {
+            // Servlet API 6.1
+            super.sendRedirect(location, sc, clearBuffer);
+        } else {
+            // Servlet API 6.0
+            if (sc == SC_FOUND && clearBuffer) {
+                this.sendRedirect(location);
+            } else {
+                if (isCommitted()) {
+                    throw new IllegalStateException("Response already committed");
+                }
+
+                // Ignore any call from an included servlet
+                if (request.getAttribute(RequestDispatcher.INCLUDE_REQUEST_URI) != null) {
+                    return;
+                }
+
+                if (clearBuffer) {
+                    this.resetBuffer();
+                }
+                this.setStatus(sc);
+                this.setHeader("Location", location);
+
+                this.flushBuffer();
+            }
         }
     }
 }

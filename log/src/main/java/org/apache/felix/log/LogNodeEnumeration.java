@@ -48,6 +48,7 @@ final class LogNodeEnumeration implements Enumeration<LogEntry>
      * Determines whether there are any more elements to return.
      * @return <code>true</code> if there are more elements; <code>false</code> otherwise
      */
+    @Override
     public boolean hasMoreElements()
     {
         return m_next != null;
@@ -57,6 +58,7 @@ final class LogNodeEnumeration implements Enumeration<LogEntry>
      * Returns the current element and moves onto the next element.
      * @return the current element
      */
+    @Override
     public LogEntry nextElement()
     {
         LogEntry result = null;

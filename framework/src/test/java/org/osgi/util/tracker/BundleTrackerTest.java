@@ -22,7 +22,7 @@ import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
-import org.junit.Test;
+import org.junit.jupiter.api.Test;
 import org.mockito.ArgumentCaptor;
 import org.mockito.Mockito;
 import org.osgi.framework.Bundle;
@@ -34,10 +34,10 @@ import org.osgi.framework.BundleListener;
  * Checks that BundleTracker actually tracks and untracks a bundle that is entering and then  
  * leaving the observed states
  */
-public class BundleTrackerTest {
+class BundleTrackerTest {
 
     @Test
-    public void testTracking() {
+    void tracking() {
         Bundle bundle = mock(Bundle.class);
         when(bundle.getState()).thenReturn(Bundle.ACTIVE);
         

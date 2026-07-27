@@ -83,7 +83,7 @@ public class NativeLibrary
      * @return <tt>true</tt> if this native library name matches this native
      *         library definition; <tt>false</tt> otherwise.
     **/
-    public boolean match(Map configMap, String name)
+    public boolean match(Map<String,?> configMap, String name)
     {
         // First, check for an exact match.
         boolean matched = false;
@@ -99,7 +99,7 @@ public class NativeLibrary
             (String) configMap.get(Constants.FRAMEWORK_LIBRARY_EXTENSIONS), ",");
         if (exts == null)
         {
-            exts = new ArrayList<String>();
+            exts = new ArrayList<>();
         }
         // For Mac OSX, try dylib too.
         if (libname.endsWith(".jnilib") && m_libraryFile.endsWith(".dylib"))
@@ -137,7 +137,8 @@ public class NativeLibrary
         return matched;
     }
 
-    public String toString()
+    @Override
+	public String toString()
     {
         if (m_libraryFile != null)
         {

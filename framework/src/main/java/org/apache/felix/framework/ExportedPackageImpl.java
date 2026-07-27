@@ -48,7 +48,8 @@ class ExportedPackageImpl implements ExportedPackage
             : (Version) m_export.getAttributes().get(BundleCapabilityImpl.VERSION_ATTR);
     }
 
-    public Bundle getExportingBundle()
+    @Override
+	public Bundle getExportingBundle()
     {
         // If the package is stale, then return null per the spec.
         if (m_exportingBundle.isStale())
@@ -58,7 +59,8 @@ class ExportedPackageImpl implements ExportedPackage
         return m_exportingBundle;
     }
 
-    public Bundle[] getImportingBundles()
+    @Override
+	public Bundle[] getImportingBundles()
     {
         // If the package is stale, then return null per the spec.
         if (m_exportingBundle.isStale())
@@ -69,27 +71,32 @@ class ExportedPackageImpl implements ExportedPackage
         return set.toArray(new Bundle[set.size()]);
     }
 
-    public String getName()
+    @Override
+	public String getName()
     {
         return m_pkgName;
     }
 
-    public String getSpecificationVersion()
+    @Override
+	public String getSpecificationVersion()
     {
         return m_version.toString();
     }
 
-    public Version getVersion()
+    @Override
+	public Version getVersion()
     {
         return m_version;
     }
 
-    public boolean isRemovalPending()
+    @Override
+	public boolean isRemovalPending()
     {
         return m_exportingBundle.isRemovalPending();
     }
 
-    public String toString()
+    @Override
+	public String toString()
     {
         return m_pkgName + "; version=" + m_version;
     }

@@ -28,10 +28,11 @@ import java.util.Hashtable;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
-import java.util.Timer;
-import java.util.TimerTask;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ConcurrentMap;
+import java.util.concurrent.ScheduledExecutorService;
+import java.util.concurrent.ScheduledFuture;
+import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicLong;
 
 import org.apache.felix.scr.impl.inject.ComponentMethods;
@@ -130,14 +131,19 @@ public class ComponentRegistry
 
     private final ScrConfiguration m_configuration;
 
-    public ComponentRegistry( final ScrConfiguration scrConfiguration, final ScrLogger logger )
+    private final ScheduledExecutorService m_componentActor;
+
+    private final UpdateChangeCountProperty m_updateChangeCountPropertyTask;
+
+    public ComponentRegistry(final ScrConfiguration scrConfiguration, final ScrLogger logger, final ScheduledExecutorService componentActor )
     {
         m_configuration = scrConfiguration;
+        m_updateChangeCountPropertyTask = new UpdateChangeCountProperty(m_configuration.serviceChangecountTimeout(), logger, componentActor);
         m_logger = logger;
+        m_componentActor = componentActor;
         m_componentHoldersByName = new HashMap<>();
         m_componentHoldersByPid = new HashMap<>();
         m_componentsById = new HashMap<>();
-
     }
 
     //---------- ComponentManager registration by component Id
@@ -560,7 +566,7 @@ public class ComponentRegistry
      * @param serviceReference
      * @param actor
      */
-    public synchronized <T> void missingServicePresent( final ServiceReference<T> serviceReference, ComponentActorThread actor )
+    public synchronized <T> void missingServicePresent( final ServiceReference<T> serviceReference )
     {
         final List<Entry<?, ?>> dependencyManagers = m_missingDependencies.remove( serviceReference );
         if ( dependencyManagers != null )
@@ -590,7 +596,7 @@ public class ComponentRegistry
             } ;
             m_logger.log(Level.DEBUG,
                 "Scheduling runnable {0} asynchronously", null, runnable);
-            actor.schedule( runnable );
+            m_componentActor.submit( runnable );
         }
     }
 
@@ -702,83 +708,121 @@ public class ComponentRegistry
 
 	}
 
-    private final AtomicLong changeCount = new AtomicLong();
-
-    private volatile Timer changeCountTimer;
-
-    private final Object changeCountTimerLock = new Object();
-
-    private volatile ServiceRegistration<ServiceComponentRuntime> registration;
-
-    public Dictionary<String, Object> getServiceRegistrationProperties()
+	Dictionary<String, Object> getServiceRegistrationProperties()
     {
-        final Dictionary<String, Object> props = new Hashtable<>();
-        props.put(PROP_CHANGECOUNT, this.changeCount.get());
-
-        return props;
+        return m_updateChangeCountPropertyTask.getServiceRegistrationProperties();
     }
 
-    public void setRegistration(final ServiceRegistration<ServiceComponentRuntime> reg)
+	public void setRegistration(final ServiceRegistration<ServiceComponentRuntime> reg)
     {
-        this.registration = reg;
+        m_updateChangeCountPropertyTask.setRegistration(reg);
+        m_updateChangeCountPropertyTask.schedule();
     }
 
     public void updateChangeCount()
     {
-        if ( registration != null )
-        {
-            final long count = this.changeCount.incrementAndGet();
-
-            final Timer timer;
-            synchronized ( this.changeCountTimerLock ) {
-                if ( this.changeCountTimer == null ) {
-                    this.changeCountTimer = new Timer("SCR Component Registry", true);
-                }
-                timer = this.changeCountTimer;
-            }
-            try
-            {
-                timer.schedule(new TimerTask()
-                    {
-
-                        @Override
-                        public void run()
-                        {
-                            if ( changeCount.get() == count )
-                            {
-                                try
-                                {
-                                    registration.setProperties(getServiceRegistrationProperties());
-                                }
-                                catch ( final IllegalStateException ise)
-                                {
-                                    // we ignore this as this might happen on shutdown
-                                }
-                                synchronized ( changeCountTimerLock )
-                                {
-                                    if ( changeCount.get() == count )
-                                    {
-                                        changeCountTimer.cancel();
-                                        changeCountTimer = null;
-                                    }
-                                }
-
-                            }
-                        }
-                    }, m_configuration.serviceChangecountTimeout());
-            }
-            catch (Exception e) {
-                m_logger.log(Level.WARN,
-                    "Service changecount Timer for {0} had a problem", e,
-                    registration.getReference());
-            }
-        }
+        m_updateChangeCountPropertyTask.updateChangeCount();
     }
 
-    public void shutdown() {
-        final Timer timer = changeCountTimer;
-        if (timer != null) {
-            timer.cancel();
+    static class UpdateChangeCountProperty implements Runnable {
+        // TODO 1 seems really low?  
+        private static final long MIN_ALLOWED_DELAY = 1;
+        private final AtomicLong changeCount = new AtomicLong();
+        private volatile ServiceRegistration<ServiceComponentRuntime> registration;
+        private final long maxNumberOfNoChanges;
+        private final long delay;
+        private final ScrLogger logger;
+        private final ScheduledExecutorService executor;
+
+        // guarded by this
+        private int noChangesCount = 0;
+        // guarded by this
+        private ScheduledFuture<?> scheduledFuture = null;
+
+        UpdateChangeCountProperty(long delay, ScrLogger logger, ScheduledExecutorService executor)
+        {
+            this.logger = logger;
+            this.executor = executor;
+            if (delay < MIN_ALLOWED_DELAY) {
+                logger.log(Level.INFO,
+                        "The service change count timeout {0} is less than the allowable minimum {1}.  Using the allowable minimum instead.", null,
+                        delay, MIN_ALLOWED_DELAY);
+                delay = MIN_ALLOWED_DELAY;
+            }
+            this.delay = delay;
+            // Calculate the max number of no changes; must be at least 1 to avoid missing events
+            // The calculation is intended to let at least 10 seconds pass before canceling the scheduledFuture
+            maxNumberOfNoChanges = Long.max(10000 / delay, 1);
+        }
+
+        void setRegistration(ServiceRegistration<ServiceComponentRuntime> reg)
+        {
+            this.registration = reg;
+        }
+
+        Dictionary<String, Object> getServiceRegistrationProperties()
+        {
+            final Dictionary<String, Object> props = new Hashtable<>();
+            props.put(PROP_CHANGECOUNT, this.changeCount.get());
+
+            return props;
+        }
+
+        public void updateChangeCount() {
+            this.changeCount.incrementAndGet();
+            schedule();
+        }
+        synchronized void schedule()
+        {
+            // reset noChangesCount to ensure task runs at least once more if it exists
+            noChangesCount = 0;
+            if (scheduledFuture != null) {
+                return;
+            }
+            scheduledFuture = executor.scheduleWithFixedDelay(this , delay, delay, TimeUnit.MILLISECONDS);
+        }
+
+        @Override
+        public void run()
+        {
+            ServiceRegistration<ServiceComponentRuntime> currentReg = registration;
+            if (currentReg == null) {
+                return;
+            }
+            try {
+                Long registeredChangeCount = null;
+                try {
+                    registeredChangeCount = (Long) currentReg.getReference().getProperty(PROP_CHANGECOUNT);
+                } catch ( final IllegalStateException ise) {
+                    // we ignore this as this might happen on shutdown
+                }
+                if (registeredChangeCount == null || registeredChangeCount.longValue() != changeCount.get()) {
+                    try
+                    {
+                        currentReg.setProperties(getServiceRegistrationProperties());
+                    }
+                    catch ( final IllegalStateException ise)
+                    {
+                        // we ignore this as this might happen on shutdown
+                    }
+                } else {
+                    synchronized (this) {
+                        noChangesCount++;
+                        if (noChangesCount > maxNumberOfNoChanges) {
+                            // haven't had any changes for max number of tries;
+                            // cancel the scheduled future if it exists.
+                            if (scheduledFuture != null) {
+                                scheduledFuture.cancel(false);
+                                scheduledFuture = null;
+                            }
+                        }
+                    }
+                }
+            } catch (Exception e) {
+                logger.log(Level.WARN,
+                    "Service changecount update for {0} had a problem", e,
+                    currentReg.getReference());
+            }
         }
     }
 }

@@ -79,7 +79,7 @@ public class U {
                         mavenBundle("org.osgi", "org.osgi.util.promise", "1.2.0"),
                         mavenBundle("org.osgi", "org.osgi.util.function", "1.2.0"),
                         mavenBundle("org.osgi", "org.osgi.service.component", "1.5.0"),
-                        mavenBundle("org.apache.felix", "org.apache.felix.scr", "2.2.6"),
+                        mavenBundle("org.apache.felix", "org.apache.felix.scr", "2.2.12"),
                         mavenBundle("org.apache.felix", "org.apache.felix.configadmin", "1.9.26"),
                         mavenBundle("org.apache.felix", "org.apache.felix.metatype", "1.2.4"),
                         mavenBundle("org.apache.felix", "org.apache.felix.eventadmin", "1.6.4"),
@@ -90,15 +90,15 @@ public class U {
                         mavenBundle("org.apache.geronimo.specs", "geronimo-annotation_1.3_spec", "1.0"),
 
                         mavenBundle("org.apache.felix", "org.apache.felix.http.servlet-api", "2.1.0"),
-                        mavenBundle("org.apache.felix", "org.apache.felix.http.jetty", "5.0.6"),
-                        
-                        
+                        mavenBundle("org.apache.felix", "org.apache.felix.http.jetty", "5.1.32"),
+
+
                         mavenBundle().groupId("org.apache.servicemix.bundles").artifactId("org.apache.servicemix.bundles.quartz")
                                 .versionAsInProject()));
     }
-    
+
     // -- util methods
-    
+
     /** Wait until the specified number of health checks are seen by supplied executor */
     static void expectHealthChecks(int howMany, HealthCheckExecutor executor, String... tags) {
         expectHealthChecks(howMany, executor, new HealthCheckExecutionOptions(), tags);

@@ -18,8 +18,6 @@ package org.apache.felix.http.base.internal.dispatch;
 
 import java.util.Objects;
 
-import org.apache.commons.fileupload.disk.DiskFileItemFactory;
-
 public final class MultipartConfig
 {
     public static final MultipartConfig DEFAULT_CONFIG = new MultipartConfig(null, null, -1, -1, -1);
@@ -63,7 +61,7 @@ public final class MultipartConfig
         }
         else
         {
-            this.multipartThreshold = DiskFileItemFactory.DEFAULT_SIZE_THRESHOLD;
+            this.multipartThreshold = 10240;
         }
         this.multipartLocation = location;
         if ( maxFileSize > 0 || maxFileSize == -1 ) {

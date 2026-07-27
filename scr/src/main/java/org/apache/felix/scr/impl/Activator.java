@@ -97,7 +97,7 @@ public class Activator extends AbstractExtender
     private ComponentRegistry m_componentRegistry;
 
     //  thread acting upon configurations
-    private ComponentActorThread m_componentActor;
+    private ComponentActorExecutor m_componentActor;
 
     private ServiceRegistration<ServiceComponentRuntime> m_runtime_reg;
 
@@ -210,7 +210,8 @@ public class Activator extends AbstractExtender
 
         // prepare component registry
         m_componentBundles = new HashMap<>();
-        m_componentRegistry = new ComponentRegistry( this.m_configuration, this.logger );
+        m_componentActor = new ComponentActorExecutor( this.logger );
+        m_componentRegistry = new ComponentRegistry( this.m_configuration, this.logger, this.m_componentActor );
 
         final ServiceComponentRuntimeImpl runtime = new ServiceComponentRuntimeImpl( m_globalContext, m_componentRegistry );
         m_runtime_reg = m_context.registerService( ServiceComponentRuntime.class,
@@ -222,16 +223,13 @@ public class Activator extends AbstractExtender
         logger.log(Level.INFO, " Version = {0}",
             null, m_bundle.getVersion().toString() );
 
-        // create and start the component actor
-        m_componentActor = new ComponentActorThread( this.logger );
-        Thread t = new Thread( m_componentActor, "SCR Component Actor" );
-        t.setDaemon( true );
-        t.start();
-
         super.doStart();
 
-        m_componentCommands = new ComponentCommands(m_context, runtime, m_configuration);
-        m_componentCommands.register();
+        m_componentCommands = new ComponentCommands(m_context, m_globalContext, runtime, m_configuration);
+        if(m_configuration.isCommandsEnabled()) {
+            m_componentCommands.register();
+        }
+
         m_componentCommands.updateProvideScrInfoService(m_configuration.infoAsService());
         m_configuration.setScrCommand(m_componentCommands);
     }
@@ -427,14 +425,13 @@ public class Activator extends AbstractExtender
         // dispose component registry
         if ( m_componentRegistry != null )
         {
-            m_componentRegistry.shutdown();
             m_componentRegistry = null;
         }
 
         // terminate the actor thread
         if ( m_componentActor != null )
         {
-            m_componentActor.terminate();
+            m_componentActor.shutdownNow();
             m_componentActor = null;
         }
         ClassUtils.setFrameworkWiring(null);

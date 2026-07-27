@@ -243,26 +243,37 @@ class InterpolationConfigurationPlugin implements ConfigurationPlugin {
         return propertiesProvider.apply(name);
     }
 
+    /**
+     * 
+     * @param key the property key referencing the variable
+     * @param name the name of the file to read
+     * @param pid the affected PID
+     * @return
+     */
     String getVariableFromFile(final String key, final String name, final Object pid) {
         if (directory.isEmpty()) {
-            getLog().warn("Cannot replace property value {} for PID {}. No directory configured via framework property " +
-                    Activator.DIR_PROPERTY, key, pid);
+            getLog().warn("Cannot replace property value {} for PID {}. No directory configured via framework property {}",
+                    key, pid, Activator.DIR_PROPERTY);
             return null;
         }
 
         if (name.contains("..")) {
-            getLog().error("Illegal secret location: " + name + " Going up in the directory structure is not allowed");
+            getLog().error("Illegal secret location '{}' in property {}. Going up in the directory structure is not allowed", name, key);
             return null;
         }
 
         List<File> files = directory.stream().map(d -> new File(d, name)).filter(File::exists).collect(toList());
+        if (files.isEmpty()) {
+            getLog().warn("Cannot replace secret '{}' in property {}. No file found for name in any of the given directories: '{}'", name, key, directory);
+            return null;
+        }
         if (files.stream().noneMatch(File::isFile)) {
-            getLog().warn("Cannot replace variable. Configured paths are not regular files: " + files);
+            getLog().warn("Cannot replace secret '{}' in property {}. Found paths are not regular files: {}", name, key, files);
             return null;
         }
 
         if (files.stream().map(File::getAbsolutePath).noneMatch(s -> directory.stream().anyMatch(dir -> s.startsWith(dir.getAbsolutePath())))) {
-            getLog().error("Illegal secret location: " + name + " Going out the directory structure is not allowed");
+            getLog().error("Illegal secret location '{}' in property {}. Going out the directory structure is not allowed", name, key);
             return null;
         }
 

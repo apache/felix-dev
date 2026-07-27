@@ -220,8 +220,15 @@ public abstract class AbstractPluginAdapter extends HttpServlet {
             }
 
             // describe the contents
-            response.setContentType( getServletContext().getMimeType( pi ) );
-            response.setIntHeader( "Content-Length", connection.getContentLength() );
+            final String contentType = getServletContext().getMimeType(pi);
+            if ( contentType != null )
+            {
+                response.setContentType( contentType );
+            }
+            if (connection.getContentLength() != -1)
+            {
+                response.setContentLength( connection.getContentLength() );
+            }
 
             // spool the actual contents
             final OutputStream out = response.getOutputStream();

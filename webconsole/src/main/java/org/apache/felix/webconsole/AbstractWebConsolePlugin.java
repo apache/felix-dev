@@ -70,7 +70,7 @@ public abstract class AbstractWebConsolePlugin extends HttpServlet {
      */
     @Deprecated
     public static final String ATTR_FILEUPLOAD = "org.apache.felix.webconsole.fileupload";
-    
+
     /**
      * This attribute is not supported anymore
      * @deprecated Use the Servlet API for uploads
@@ -432,7 +432,7 @@ public abstract class AbstractWebConsolePlugin extends HttpServlet {
             default: Util.LOGGER.debug(message, t);
         }
     }
-    
+
     /**
      * If the request addresses a resource which may be served by the
      * <code>getResource</code> method of the
@@ -451,7 +451,7 @@ public abstract class AbstractWebConsolePlugin extends HttpServlet {
      *
      * @throws IOException If an error occurs accessing or spooling the resource.
      */
-    private final boolean spoolResource(final HttpServletRequest request, 
+    private final boolean spoolResource(final HttpServletRequest request,
         final HttpServletResponse response) throws IOException
     {
         try
@@ -532,8 +532,15 @@ public abstract class AbstractWebConsolePlugin extends HttpServlet {
                 }
 
                 // describe the contents
-                response.setContentType( getServletContext().getMimeType( pi ) );
-                response.setIntHeader( "Content-Length", connection.getContentLength() );
+                final String contentType = getServletContext().getMimeType(pi);
+                if ( contentType != null )
+                {
+                    response.setContentType( contentType );
+                }
+                if (connection.getContentLength() != -1)
+                {
+                    response.setContentLength( connection.getContentLength() );
+                }
 
                 // spool the actual contents
                 OutputStream out = response.getOutputStream();
@@ -784,7 +791,7 @@ public abstract class AbstractWebConsolePlugin extends HttpServlet {
      * {@link WebConsoleConstants#ATTR_PLUGIN_ROOT} request attribute.
      * <p>
      *
-     * @param request The request whose attribute is returned 
+     * @param request The request whose attribute is returned
      *
      * @return The {@link RequestVariableResolver} for the given request.
      * @since 3.5.0

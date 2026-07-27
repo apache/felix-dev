@@ -31,7 +31,6 @@ import java.util.zip.Deflater;
 import org.apache.felix.http.base.internal.HttpConfig;
 import org.apache.felix.http.base.internal.logger.SystemLogger;
 import org.eclipse.jetty.server.CustomRequestLog;
-import org.eclipse.jetty.server.handler.gzip.GzipHandler;
 import org.osgi.framework.BundleContext;
 
 public final class JettyConfig
@@ -106,8 +105,20 @@ public final class JettyConfig
     /** Felix specific property to configure the request buffer size. Default is 24KB */
     public static final String FELIX_JETTY_RESPONSE_BUFFER_SIZE = "org.apache.felix.http.jetty.responseBufferSize";
 
-    /** Felix specific property to configure the max form size. Default is 200KB */
+    /** Felix specific property to configure the max form size. Default is 200KB. */
     public static final String FELIX_JETTY_MAX_FORM_SIZE = "org.apache.felix.http.jetty.maxFormSize";
+
+    /** Felix specific property to configure the request size limit. Default is unlimited. See https://jetty.org/docs/jetty/12/programming-guide/server/http.html#handler-use-size-limit */
+    public static final String FELIX_JETTY_REQUEST_SIZE_LIMIT = "org.apache.felix.http.jetty.requestSizeLimit";
+
+    /** Felix specific property to configure the response size limit. Default is unlimited. See https://jetty.org/docs/jetty/12/programming-guide/server/http.html#handler-use-size-limit */
+    public static final String FELIX_JETTY_RESPONSE_SIZE_LIMIT = "org.apache.felix.http.jetty.responseSizeLimit";
+
+    /** Felix specific property to configure the accept queue size. Default is not setting it, leaving it up to Jetty. */
+    public static final String FELIX_JETTY_ACCEPT_QUEUE_SIZE = "org.apache.felix.http.jetty.acceptQueueSize";
+
+    /** Felix specific property to configure the custom headers to add to all error pages served by Jetty. Separate key-value pairs with ##. */
+    public static final String FELIX_JETTY_ERROR_PAGE_CUSTOM_HEADERS = "org.apache.felix.http.jetty.errorPageCustomHeaders";
 
     /** Felix specific property to enable Jetty MBeans. Valid values are "true", "false". Default is false */
     public static final String FELIX_HTTP_MBEANS = "org.apache.felix.http.mbeans";
@@ -141,6 +152,15 @@ public final class JettyConfig
 
     /** Felix specific properties to be able to disable renegotiation protocol for TLSv1 */
     public static final String FELIX_JETTY_RENEGOTIATION_ALLOWED = "org.apache.felix.https.jetty.renegotiateAllowed";
+
+    /** Felix specific property to require SNI at the TLS level. Defaults to false. See https://jetty.org/docs/jetty/12/operations-guide/protocols/index.html#ssl-sni */
+    public static final String FELIX_HTTPS_SNI_CONTEXT_REQUIRED = "org.apache.felix.https.sslContext.sni.required";
+
+    /** Felix specific property to require SNI at the HTTP level (returns 400 on mismatch). Defaults to false. See https://jetty.org/docs/jetty/12/operations-guide/protocols/index.html#ssl-sni */
+    public static final String FELIX_HTTPS_SNI_REQUIRED = "org.apache.felix.https.ssl.sni.required";
+
+    /** Felix specific property to check that the SNI hostname matches the Host header. Defaults to true. See https://jetty.org/docs/jetty/12/operations-guide/protocols/index.html#ssl-sni */
+    public static final String FELIX_HTTPS_SNI_HOST_CHECK = "org.apache.felix.https.ssl.sni.hostCheck";
 
     /** Felix specific property to control whether to enable Proxy/Load Balancer Connection */
     public static final String FELIX_PROXY_LOAD_BALANCER_CONNECTION_ENABLE = "org.apache.felix.proxy.load.balancer.connection.enable";
@@ -229,9 +249,6 @@ public final class JettyConfig
     /** Felix specific property to specify the minimum response size to trigger dynamic compression */
     public static final String FELIX_JETTY_GZIP_MIN_GZIP_SIZE = "org.apache.felix.jetty.gzip.minGzipSize";
 
-    /** Felix specific property to specify the size in bytes of the buffer to inflate compressed request, or 0 for no inflation. */
-    public static final String FELIX_JETTY_GZIP_INFLATE_BUFFER_SIZE = "org.apache.felix.jetty.gzip.inflateBufferSize";
-
     /** Felix specific property to specify the {@link Deflater} flush mode to use. */
     public static final String FELIX_JETTY_GZIP_SYNC_FLUSH = "org.apache.felix.jetty.gzip.syncFlush";
 
@@ -282,6 +299,9 @@ public final class JettyConfig
 
     /** Felix specific property to control whether an OSGi configuration is required */
     private static final String FELIX_REQUIRE_OSGI_CONFIG = "org.apache.felix.http.require.config";
+
+    /** Jetty specific property to control relative redirect handling (defaults to true) */
+    public static final String FELIX_JETTY_ALLOW_RELATIVE_REDIRECTS = "org.apache.felix.jetty.relativeredirectallowed";
 
     private static String validateContextPath(String ctxPath)
     {
@@ -493,6 +513,25 @@ public final class JettyConfig
         return getIntProperty(FELIX_JETTY_MAX_FORM_SIZE, 200 * 1024);
     }
 
+    public int getRequestSizeLimit()
+    {
+        return getIntProperty(FELIX_JETTY_REQUEST_SIZE_LIMIT, -1);
+    }
+
+    public int getResponseSizeLimit()
+    {
+        return getIntProperty(FELIX_JETTY_RESPONSE_SIZE_LIMIT, -1);
+    }
+
+    public int getAcceptQueueSize() {
+        // Jetty default is 0 meaning that the OS default is used
+        return getIntProperty(FELIX_JETTY_ACCEPT_QUEUE_SIZE, -1);
+    }
+
+    public String getFelixJettyErrorPageCustomHeaders() {
+        return getProperty(FELIX_JETTY_ERROR_PAGE_CUSTOM_HEADERS, null);
+    }
+
     /**
      * Returns the configured session timeout in minutes or zero if not
      * configured.
@@ -588,6 +627,18 @@ public final class JettyConfig
         return getBooleanProperty(FELIX_JETTY_RENEGOTIATION_ALLOWED, false);
     }
 
+    public boolean isSniContextRequired() {
+        return getBooleanProperty(FELIX_HTTPS_SNI_CONTEXT_REQUIRED, false);
+    }
+
+    public boolean isSniRequired() {
+        return getBooleanProperty(FELIX_HTTPS_SNI_REQUIRED, false);
+    }
+
+    public boolean isSniHostCheck() {
+        return getBooleanProperty(FELIX_HTTPS_SNI_HOST_CHECK, true);
+    }
+
     public String getHttpServiceName()
     {
     	return (String) getProperty(FELIX_HTTP_SERVICE_NAME);
@@ -653,12 +704,11 @@ public final class JettyConfig
         return getBooleanProperty(FELIX_JETTY_GZIP_HANDLER_ENABLE, false);
     }
 
-    public int getGzipMinGzipSize() {
-        return getIntProperty(FELIX_JETTY_GZIP_MIN_GZIP_SIZE, GzipHandler.DEFAULT_MIN_GZIP_SIZE);
-    }
+    /** Default minimum size of a response before it is compressed (in bytes). */
+    public static final int DEFAULT_GZIP_MIN_SIZE = 32;
 
-    public int getGzipInflateBufferSize() {
-        return getIntProperty(FELIX_JETTY_GZIP_INFLATE_BUFFER_SIZE, -1);
+    public int getGzipMinGzipSize() {
+        return getIntProperty(FELIX_JETTY_GZIP_MIN_GZIP_SIZE, DEFAULT_GZIP_MIN_SIZE);
     }
 
     public boolean isGzipSyncFlush() {

@@ -34,7 +34,7 @@ final class LogServiceFactory implements ServiceFactory<LogService>
 
     /**
      * Create a new instance.
-     * @param log the log to associate the service implementations with.,
+     * @param loggerAdminImpl
      */
     LogServiceFactory(final LoggerAdminImpl loggerAdminImpl)
     {

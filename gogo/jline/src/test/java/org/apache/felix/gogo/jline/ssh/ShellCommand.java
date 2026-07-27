@@ -21,6 +21,7 @@ package org.apache.felix.gogo.jline.ssh;
 import java.io.CharArrayWriter;
 import java.io.File;
 import java.io.FileInputStream;
+import java.io.IOException;
 import java.io.InputStream;
 import java.io.InputStreamReader;
 import java.io.OutputStream;
@@ -32,13 +33,15 @@ import java.util.logging.Logger;
 
 import org.apache.felix.service.command.CommandProcessor;
 import org.apache.felix.service.command.CommandSession;
-import org.apache.sshd.server.Command;
+import org.apache.sshd.server.command.Command;
 import org.apache.sshd.server.Environment;
 import org.apache.sshd.server.ExitCallback;
-import org.apache.sshd.server.SessionAware;
+import org.apache.sshd.server.channel.ChannelSession;
+import org.apache.sshd.server.channel.ChannelSessionAware;
 import org.apache.sshd.server.session.ServerSession;
+import org.apache.sshd.server.session.ServerSessionAware;
 
-public class ShellCommand implements Command, Runnable, SessionAware {
+public class ShellCommand implements Command, Runnable, ServerSessionAware {
 
     public static final String SHELL_INIT_SCRIPT = "karaf.shell.init.script";
     public static final String EXEC_INIT_SCRIPT = "karaf.exec.init.script";
@@ -132,5 +135,17 @@ public class ShellCommand implements Command, Runnable, SessionAware {
             // Ignore
         }
     }
+
+	@Override
+	public void start(ChannelSession channel, Environment env) throws IOException {
+		// TODO Auto-generated method stub
+		
+	}
+
+	@Override
+	public void destroy(ChannelSession channel) throws Exception {
+		// TODO Auto-generated method stub
+		
+	}
 
 }
