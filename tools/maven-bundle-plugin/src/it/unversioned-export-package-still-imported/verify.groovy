@@ -22,7 +22,7 @@ assert !manifest.isEmpty()
 manifest.eachLine() { line ->
     if (line.contains("Import-Package") && !line.contains("org.apache.felix.test1")) {
         // See https://github.com/bndtools/bnd/pull/6270
-        // bnd 7.1.0 by default would not add this to the Import-Package, as the version range is not specified
+        // bnd 7.3.0 by default would not add this to the Import-Package, as the version range is not specified
         // the maven-bundle-plugin doesn't have this issue, as a default version is added to the Export-Package statement
         // automatically if missing
         throw new Exception("Unversioned Export-Package statements should also be added to Import-Package statements, as maven-bundle-plugin adds a default version (1.0.0)");
