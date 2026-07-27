@@ -16,16 +16,15 @@
  * specific language governing permissions and limitations
  * under the License.
  */
-String manifest = new File( basedir, "target/classes/META-INF/MANIFEST.MF" ).text
-assert !manifest.isEmpty()
+package org.apache.felix.proxy.api;
 
-manifest.eachLine() { line ->
-    if (line.contains("Tool") && !line.contains("7.3.0")) {
-        throw new Exception("Wrong bnd version used");
-    }
-    if (line.contains("Embedded-Artifacts") && !line.contains("jersey-server-3.1.7.jar")) {
-        throw new Exception("The multi release jar is not properly embedded");
-    }
+import org.apache.felix.proxy.model.Message;
+
+/**
+ * Proxied interface. Its single method references {@link Message}, which lives in a different
+ * package. The bundle under test only references this interface via a class literal, so the
+ * Message package can reach Import-Package solely through bnd's Proxy.newProxyInstance detection.
+ */
+public interface Greeting {
+    Message greet();
 }
-
-

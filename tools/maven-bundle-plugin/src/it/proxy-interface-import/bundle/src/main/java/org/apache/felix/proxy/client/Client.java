@@ -16,16 +16,23 @@
  * specific language governing permissions and limitations
  * under the License.
  */
-String manifest = new File( basedir, "target/classes/META-INF/MANIFEST.MF" ).text
-assert !manifest.isEmpty()
+package org.apache.felix.proxy.client;
 
-manifest.eachLine() { line ->
-    if (line.contains("Tool") && !line.contains("7.3.0")) {
-        throw new Exception("Wrong bnd version used");
-    }
-    if (line.contains("Embedded-Artifacts") && !line.contains("jersey-server-3.1.7.jar")) {
-        throw new Exception("The multi release jar is not properly embedded");
+import java.lang.reflect.Proxy;
+
+import org.apache.felix.proxy.api.Greeting;
+
+/**
+ * Creates a dynamic proxy for {@link Greeting}. This class only references the Greeting interface
+ * (via the {@code Greeting.class} literal); it never references org.apache.felix.proxy.model
+ * directly. That package therefore appears in Import-Package only because bnd (7.2.0+) inspects
+ * the method signatures of interfaces passed to Proxy.newProxyInstance.
+ */
+public class Client {
+    public Greeting create() {
+        return (Greeting) Proxy.newProxyInstance(
+                Client.class.getClassLoader(),
+                new Class[] { Greeting.class },
+                (proxy, method, args) -> null);
     }
 }
-
-
