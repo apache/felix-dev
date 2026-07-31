@@ -141,7 +141,7 @@ public class PreprocessorHandler implements Comparable<PreprocessorHandler>
                 }
 
             }
-                        local.doFilter(req, res, chain);
+            local.doFilter(req, res, chain);
         }
         else
         {
