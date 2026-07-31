@@ -36,6 +36,9 @@ public class ResourceImpl implements Resource {
     protected final List<Capability> caps;
     protected final List<Requirement> reqs;
 
+    private int hash; // default to 0
+    private boolean hashIsZero; // default to false;
+
     /**
      * CAUTION: This constructor does not ensure that the resource
      * has the required identity capability
@@ -57,9 +60,15 @@ public class ResourceImpl implements Resource {
         reqs = new ArrayList<>(0);
     }
 
+    private void resetHash() {
+        hash = 0;
+        hashIsZero = false;
+    }
+
     public void addCapability(Capability capability) {
         assert capability.getResource() == this;
         caps.add(capability);
+        resetHash();
     }
 
     public void addCapabilities(Collection<? extends Capability> capabilities) {
@@ -67,11 +76,13 @@ public class ResourceImpl implements Resource {
             assert cap.getResource() == this;
         }
         caps.addAll(capabilities);
+        resetHash();
     }
 
     public void addRequirement(Requirement requirement) {
         assert requirement.getResource() == this;
         reqs.add(requirement);
+        resetHash();
     }
 
     public void addRequirements(Collection<? extends Requirement> requirements) {
@@ -79,6 +90,7 @@ public class ResourceImpl implements Resource {
             assert req.getResource() == this;
         }
         reqs.addAll(requirements);
+        resetHash();
     }
 
     public List<Capability> getCapabilities(String namespace) {
@@ -129,7 +141,16 @@ public class ResourceImpl implements Resource {
 
     @Override
     public int hashCode() {
-        return Objects.hash(caps, reqs);
+        int h = hash;
+        if (h == 0 && !hashIsZero) {
+            h = Objects.hash(caps, reqs);
+            if (h == 0) {
+                hashIsZero = true;
+            } else {
+                hash = h;
+            }
+        }
+        return h;
     }
 
 }
