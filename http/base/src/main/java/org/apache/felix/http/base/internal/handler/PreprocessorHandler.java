@@ -20,6 +20,7 @@ import java.io.IOException;
 
 import org.apache.felix.http.base.internal.logger.SystemLogger;
 import org.apache.felix.http.base.internal.runtime.PreprocessorInfo;
+import org.apache.felix.http.base.internal.wrappers.PreprocessorWrapper;
 import org.jetbrains.annotations.NotNull;
 import org.osgi.framework.BundleContext;
 import org.osgi.service.servlet.runtime.dto.DTOConstants;
@@ -30,6 +31,7 @@ import jakarta.servlet.ServletContext;
 import jakarta.servlet.ServletException;
 import jakarta.servlet.ServletRequest;
 import jakarta.servlet.ServletResponse;
+import jakarta.servlet.http.HttpServletRequest;
 
 /**
  * The preprocessor handler handles the initialization and destruction of preprocessor
@@ -129,7 +131,17 @@ public class PreprocessorHandler implements Comparable<PreprocessorHandler>
         final Preprocessor local = this.preprocessor;
         if ( local != null )
         {
-            local.doFilter(req, res, chain);
+            if (SystemLogger.LOGGER.isDebugEnabled()) {
+                HttpServletRequest hRequest = (HttpServletRequest) req;
+                if (local instanceof org.apache.felix.http.base.internal.wrappers.PreprocessorWrapper) {
+                    PreprocessorWrapper tmpLocal = (org.apache.felix.http.base.internal.wrappers.PreprocessorWrapper) local;
+                    SystemLogger.LOGGER.debug("Invoking OSGi preprocessor {} for path {}", tmpLocal.getPreprocessor().getClass().getName(), hRequest.getRequestURI());
+                } else {
+                    SystemLogger.LOGGER.debug("Invoking OSGi preprocessor {} for path {}", local.getClass().getName(), hRequest.getRequestURI());
+                }
+
+            }
+                        local.doFilter(req, res, chain);
         }
         else
         {
