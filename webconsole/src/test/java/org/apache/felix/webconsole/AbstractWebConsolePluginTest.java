@@ -120,6 +120,15 @@ public class AbstractWebConsolePluginTest extends TestCase
         assertNull( getGetResourceMethod.invoke( testPrivate, (Object[]) null ) );
     }
 
+
+    public void test_getResource_normalizesPath() {
+        final SimpleTestPlugin plugin = new SimpleTestPlugin();
+
+        assertNotNull(plugin.getResource("/test/res/ui/webconsole.css"));
+        assertNotNull(plugin.getResource("/test/res/ui/../ui/webconsole.css"));
+        assertNull(plugin.getResource("/test/res/../../META-INF/MANIFEST.MF"));
+    }
+
     private static class PrivateTestPlugin extends TestPlugin
     {
         @SuppressWarnings("unused")
@@ -174,5 +183,19 @@ public class AbstractWebConsolePluginTest extends TestCase
         {
         }
 
+    }
+
+    private static class SimpleTestPlugin extends SimpleWebConsolePlugin
+    {
+        SimpleTestPlugin()
+        {
+            super("test", "Test", null);
+        }
+
+        @Override
+        protected void renderContent(final HttpServletRequest req, final HttpServletResponse res)
+        {
+            // nothing to render
+        }
     }
 }
