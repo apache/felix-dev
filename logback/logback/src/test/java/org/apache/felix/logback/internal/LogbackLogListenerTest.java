@@ -29,12 +29,15 @@ import java.util.Map;
 import java.util.concurrent.atomic.AtomicReference;
 
 import org.junit.Test;
+import org.osgi.service.log.LogEntry;
 import org.osgi.service.log.LogLevel;
 import org.osgi.service.log.admin.LoggerAdmin;
 
 import ch.qos.logback.classic.Level;
 import ch.qos.logback.classic.Logger;
 import ch.qos.logback.classic.LoggerContext;
+import ch.qos.logback.classic.spi.ILoggingEvent;
+import ch.qos.logback.core.read.ListAppender;
 
 public class LogbackLogListenerTest {
 
@@ -87,6 +90,39 @@ public class LogbackLogListenerTest {
         expected.put("Events.Bundle", LogLevel.DEBUG);
         expected.put("external", LogLevel.TRACE);
         assertEquals(expected, levels.get());
+    }
+
+    @Test
+    public void loggedUsesNamedLoggerAppenderRouting() {
+        LoggerContext loggerContext = new LoggerContext();
+        Logger root = loggerContext.getLogger(Logger.ROOT_LOGGER_NAME);
+        root.setLevel(Level.TRACE);
+        Logger named = loggerContext.getLogger("test.named");
+        named.setLevel(Level.INFO);
+        named.setAdditive(false);
+        ListAppender<ILoggingEvent> rootAppender = new ListAppender<>();
+        ListAppender<ILoggingEvent> namedAppender = new ListAppender<>();
+        rootAppender.setContext(loggerContext);
+        rootAppender.start();
+        namedAppender.setContext(loggerContext);
+        namedAppender.start();
+        root.addAppender(rootAppender);
+        named.addAppender(namedAppender);
+        LoggerAdmin loggerAdmin = mock(LoggerAdmin.class);
+        org.osgi.service.log.admin.LoggerContext osgiLoggerContext =
+            mock(org.osgi.service.log.admin.LoggerContext.class);
+        mockLogLevels(loggerAdmin, osgiLoggerContext, new HashMap<>());
+        LogEntry entry = mock(LogEntry.class);
+        when(entry.getLoggerName()).thenReturn(named.getName());
+        when(entry.getMessage()).thenReturn("message");
+        when(entry.getLogLevel()).thenReturn(LogLevel.INFO);
+
+        LogbackLogListener listener = new LogbackLogListener(loggerAdmin, loggerContext);
+        listener.logged(entry);
+
+        assertEquals(1, namedAppender.list.size());
+        assertTrue(rootAppender.list.isEmpty());
+        listener.close();
     }
 
     private static AtomicReference<Map<String, LogLevel>> mockLogLevels(

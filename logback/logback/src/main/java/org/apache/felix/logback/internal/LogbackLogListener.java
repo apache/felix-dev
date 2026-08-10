@@ -187,7 +187,7 @@ public class LogbackLogListener implements AutoCloseable, LogListener, LoggerCon
             }
         });
 
-        rootLogger.callAppenders(le);
+        logger.callAppenders(le);
     }
 
     @Override
