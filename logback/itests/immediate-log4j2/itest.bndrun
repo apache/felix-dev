@@ -12,6 +12,7 @@
     org.apache.logging.log4j.api;version=latest,\
     org.apache.logging.log4j.to.slf4j;version=latest,\
     slf4j.api;version=latest,\
+    jul.to.slf4j;version=latest,\
     org.apache.felix.log;version=latest,\
     org.apache.felix.logback;version=latest
 

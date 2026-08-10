@@ -91,7 +91,6 @@
             <groupId>org.slf4j</groupId>
             <artifactId>jul-to-slf4j</artifactId>
             <version>${slf4j.api.version}</version>
-            <scope>provided</scope>
         </dependency>
         <dependency>
             <groupId>junit</groupId>
@@ -120,7 +119,6 @@
                             org.slf4j.*;version="[2.0,3)",\
                             org.osgi.framework;version="[1.9,2)",\
                             *
-                        -conditionalpackage: org.slf4j.bridge
                     ]]></bnd>
                 </configuration>
                 <executions>

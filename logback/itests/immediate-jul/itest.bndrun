@@ -9,6 +9,7 @@
     ch.qos.logback.classic;version=latest,\
     ch.qos.logback.core;version=latest,\
     slf4j.api;version=latest,\
+    jul.to.slf4j;version=latest,\
     org.apache.felix.logback;version=latest
 
 -runsystempackages: \

@@ -14,6 +14,7 @@
 
 package org.apache.felix.logback.internal;
 
+import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertTrue;
 
 import java.io.InputStream;
@@ -28,17 +29,31 @@ public class ManifestTest {
 
     @Test
     public void frameworkImportSupportsOSGiR7() throws Exception {
+        String imports = getManifestHeader("Import-Package");
+
+        assertTrue(imports, imports.contains(
+            "org.osgi.framework;version=\"[1.9,2)\""));
+    }
+
+    @Test
+    public void importsJULBridgeBundle() throws Exception {
+        String imports = getManifestHeader("Import-Package");
+        String privatePackages = getManifestHeader("Private-Package");
+
+        assertTrue(imports, imports.contains(
+            "org.slf4j.bridge;version=\"[2.0,3)\""));
+        assertFalse(privatePackages, privatePackages.contains(
+            "org.slf4j.bridge"));
+    }
+
+    private static String getManifestHeader(String name) throws Exception {
         Path classes = Paths.get(Activator.class.getProtectionDomain(
             ).getCodeSource().getLocation().toURI());
 
         try (InputStream input = Files.newInputStream(
             classes.resolve("META-INF/MANIFEST.MF"))) {
 
-            String imports = new Manifest(input).getMainAttributes().getValue(
-                "Import-Package");
-
-            assertTrue(imports, imports.contains(
-                "org.osgi.framework;version=\"[1.9,2)\""));
+            return new Manifest(input).getMainAttributes().getValue(name);
         }
     }
 
