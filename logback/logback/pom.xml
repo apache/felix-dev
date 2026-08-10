@@ -70,15 +70,15 @@
             <version>${logback.version}</version>
         </dependency>
         <dependency>
-            <groupId>org.eclipse.platform</groupId>
-            <artifactId>org.eclipse.osgi</artifactId>
-            <version>3.17.0</version>
+            <groupId>org.osgi</groupId>
+            <artifactId>osgi.core</artifactId>
+            <version>7.0.0</version>
             <scope>provided</scope>
         </dependency>
         <dependency>
-            <groupId>org.osgi</groupId>
-            <artifactId>osgi.core</artifactId>
-            <version>6.0.0</version>
+            <groupId>org.eclipse.platform</groupId>
+            <artifactId>org.eclipse.osgi</artifactId>
+            <version>3.17.0</version>
             <scope>provided</scope>
         </dependency>
         <dependency>
@@ -118,6 +118,7 @@
                             !org.eclipse.osgi.internal.hookregistry,\
                             ch.qos.logback.classic.*;version="[1.5,2)",\
                             org.slf4j.*;version="[2.0,3)",\
+                            org.osgi.framework;version="[1.9,2)",\
                             *
                         -conditionalpackage: org.slf4j.bridge
                     ]]></bnd>
