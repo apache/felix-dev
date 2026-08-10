@@ -18,8 +18,10 @@ import java.lang.invoke.MethodHandle;
 import java.lang.invoke.MethodHandles;
 import java.lang.invoke.MethodType;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.Map;
 import java.util.Optional;
+import java.util.Set;
 import java.util.concurrent.atomic.AtomicBoolean;
 
 import org.osgi.framework.Bundle;
@@ -62,9 +64,10 @@ public class LogbackLogListener implements AutoCloseable, LogListener, LoggerCon
     volatile LoggerContext loggerContext;
     volatile Logger rootLogger;
     volatile LoggerContextVO loggerContextVO;
-    final Map<String, LogLevel> initialLogLevels;
     final org.osgi.service.log.admin.LoggerContext osgiLoggerContext;
     final AtomicBoolean closed = new AtomicBoolean();
+    final Map<String, Optional<LogLevel>> originalLogLevels = new HashMap<>();
+    final Map<String, Optional<LogLevel>> appliedLogLevels = new HashMap<>();
 
     public LogbackLogListener(LoggerAdmin loggerAdmin) {
         this(loggerAdmin, getLoggerContext());
@@ -72,7 +75,6 @@ public class LogbackLogListener implements AutoCloseable, LogListener, LoggerCon
 
     LogbackLogListener(LoggerAdmin loggerAdmin, LoggerContext loggerContext) {
         osgiLoggerContext = loggerAdmin.getLoggerContext(null);
-        initialLogLevels = osgiLoggerContext.getLogLevels();
         this.loggerContext = loggerContext;
 
         try {
@@ -81,7 +83,7 @@ public class LogbackLogListener implements AutoCloseable, LogListener, LoggerCon
         }
         catch (RuntimeException | Error e) {
             try {
-                osgiLoggerContext.setLogLevels(initialLogLevels);
+                restoreLogLevels();
             }
             catch (RuntimeException | Error cleanup) {
                 e.addSuppressed(cleanup);
@@ -109,7 +111,7 @@ public class LogbackLogListener implements AutoCloseable, LogListener, LoggerCon
     public void close() {
         if (closed.compareAndSet(false, true)) {
             loggerContext.removeListener(this);
-            osgiLoggerContext.setLogLevels(initialLogLevels);
+            restoreLogLevels();
         }
     }
 
@@ -194,16 +196,8 @@ public class LogbackLogListener implements AutoCloseable, LogListener, LoggerCon
             return;
         }
 
-        Map<String, LogLevel> updatedLevels = osgiLoggerContext.getLogLevels();
-
-        if (Level.OFF.equals(level)) {
-            updatedLevels.remove(logger.getName());
-        }
-        else {
-            updatedLevels.put(logger.getName(), from(level));
-        }
-
-        osgiLoggerContext.setLogLevels(updatedLevels);
+        updateLogLevel(logger.getName(),
+            Level.OFF.equals(level) ? Optional.empty() : Optional.of(from(level)));
     }
 
     @Override
@@ -216,15 +210,13 @@ public class LogbackLogListener implements AutoCloseable, LogListener, LoggerCon
         rootLogger = loggerContext.getLogger(Logger.ROOT_LOGGER_NAME);
         loggerContextVO = loggerContext.getLoggerContextRemoteView();
 
-        Map<String, LogLevel> updatedLevels = updateLevels(loggerContext, initialLogLevels);
-
-        osgiLoggerContext.setLogLevels(updatedLevels);
+        configureLogLevels(loggerContext);
     }
 
     @Override
     public void onStop(LoggerContext context) {
         if (!closed.get()) {
-            osgiLoggerContext.setLogLevels(initialLogLevels);
+            restoreLogLevels();
         }
     }
 
@@ -346,6 +338,118 @@ public class LogbackLogListener implements AutoCloseable, LogListener, LoggerCon
         }
 
         return copy;
+    }
+
+    private synchronized void updateLogLevel(
+        String name, Optional<LogLevel> level) {
+
+        Map<String, LogLevel> currentLevels = osgiLoggerContext.getLogLevels();
+        Map<String, LogLevel> updatedLevels = new HashMap<>(currentLevels);
+        setLevel(updatedLevels, name, level);
+        Map<String, Optional<LogLevel>> nextOriginalLogLevels =
+            new HashMap<>(originalLogLevels);
+        Map<String, Optional<LogLevel>> nextAppliedLogLevels =
+            new HashMap<>(appliedLogLevels);
+
+        updateOwnership(currentLevels, updatedLevels,
+            nextOriginalLogLevels, nextAppliedLogLevels);
+        osgiLoggerContext.setLogLevels(updatedLevels);
+        replaceOwnership(nextOriginalLogLevels, nextAppliedLogLevels);
+    }
+
+    private synchronized void configureLogLevels(LoggerContext context) {
+        Map<String, LogLevel> currentLevels = osgiLoggerContext.getLogLevels();
+        Map<String, LogLevel> releasedLevels = getReleasedLogLevels(currentLevels);
+        Map<String, LogLevel> updatedLevels = updateLevels(context, releasedLevels);
+        Map<String, Optional<LogLevel>> nextOriginalLogLevels = new HashMap<>();
+        Map<String, Optional<LogLevel>> nextAppliedLogLevels = new HashMap<>();
+
+        updateOwnership(releasedLevels, updatedLevels,
+            nextOriginalLogLevels, nextAppliedLogLevels);
+        osgiLoggerContext.setLogLevels(updatedLevels);
+        replaceOwnership(nextOriginalLogLevels, nextAppliedLogLevels);
+    }
+
+    private static void updateOwnership(
+        Map<String, LogLevel> currentLevels,
+        Map<String, LogLevel> updatedLevels,
+        Map<String, Optional<LogLevel>> originalLevels,
+        Map<String, Optional<LogLevel>> appliedLevels) {
+
+        Set<String> names = new HashSet<>(currentLevels.keySet());
+        names.addAll(updatedLevels.keySet());
+        names.addAll(appliedLevels.keySet());
+
+        for (String name : names) {
+            Optional<LogLevel> current = getLevel(currentLevels, name);
+            Optional<LogLevel> updated = getLevel(updatedLevels, name);
+            Optional<LogLevel> applied = appliedLevels.get(name);
+
+            if (applied != null && !current.equals(applied)) {
+                originalLevels.remove(name);
+                appliedLevels.remove(name);
+            }
+
+            if (!current.equals(updated)) {
+                originalLevels.putIfAbsent(name, current);
+                appliedLevels.put(name, updated);
+            }
+        }
+    }
+
+    private Map<String, LogLevel> getReleasedLogLevels(
+        Map<String, LogLevel> currentLevels) {
+
+        Map<String, LogLevel> releasedLevels = new HashMap<>(currentLevels);
+
+        for (Map.Entry<String, Optional<LogLevel>> entry : appliedLogLevels.entrySet()) {
+            String name = entry.getKey();
+
+            if (getLevel(currentLevels, name).equals(entry.getValue())) {
+                setLevel(releasedLevels, name, originalLogLevels.get(name));
+            }
+        }
+
+        return releasedLevels;
+    }
+
+    private synchronized void restoreLogLevels() {
+        Map<String, LogLevel> currentLevels = osgiLoggerContext.getLogLevels();
+        Map<String, LogLevel> restoredLevels = getReleasedLogLevels(currentLevels);
+
+        if (!currentLevels.equals(restoredLevels)) {
+            osgiLoggerContext.setLogLevels(restoredLevels);
+        }
+
+        originalLogLevels.clear();
+        appliedLogLevels.clear();
+    }
+
+    private void replaceOwnership(
+        Map<String, Optional<LogLevel>> originalLevels,
+        Map<String, Optional<LogLevel>> appliedLevels) {
+
+        originalLogLevels.clear();
+        originalLogLevels.putAll(originalLevels);
+        appliedLogLevels.clear();
+        appliedLogLevels.putAll(appliedLevels);
+    }
+
+    private static Optional<LogLevel> getLevel(
+        Map<String, LogLevel> levels, String name) {
+
+        return Optional.ofNullable(levels.get(name));
+    }
+
+    private static void setLevel(
+        Map<String, LogLevel> levels, String name, Optional<LogLevel> level) {
+
+        if (level.isPresent()) {
+            levels.put(name, level.get());
+        }
+        else {
+            levels.remove(name);
+        }
     }
 
 }

@@ -14,8 +14,11 @@
 
 package org.apache.felix.logback.internal;
 
+import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertTrue;
+import static org.mockito.ArgumentMatchers.anyMap;
+import static org.mockito.Mockito.doAnswer;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
@@ -23,6 +26,7 @@ import static org.mockito.Mockito.when;
 
 import java.util.HashMap;
 import java.util.Map;
+import java.util.concurrent.atomic.AtomicReference;
 
 import org.junit.Test;
 import org.osgi.service.log.LogLevel;
@@ -35,7 +39,7 @@ import ch.qos.logback.classic.LoggerContext;
 public class LogbackLogListenerTest {
 
     @Test
-    public void closeRemovesContextListenerAndRestoresLogLevels() {
+    public void closeRemovesContextListenerAndRestoresLogLevelsAfterReset() {
         LoggerContext loggerContext = new LoggerContext();
         loggerContext.getLogger(Logger.ROOT_LOGGER_NAME).setLevel(Level.INFO);
         LoggerAdmin loggerAdmin = mock(LoggerAdmin.class);
@@ -43,17 +47,64 @@ public class LogbackLogListenerTest {
             mock(org.osgi.service.log.admin.LoggerContext.class);
         Map<String, LogLevel> initialLevels = new HashMap<>();
         initialLevels.put("existing", LogLevel.ERROR);
-        when(loggerAdmin.getLoggerContext(null)).thenReturn(osgiLoggerContext);
-        when(osgiLoggerContext.getLogLevels()).thenReturn(initialLevels);
+        AtomicReference<Map<String, LogLevel>> levels = mockLogLevels(
+            loggerAdmin, osgiLoggerContext, initialLevels);
 
         LogbackLogListener listener = new LogbackLogListener(loggerAdmin, loggerContext);
 
         assertTrue(loggerContext.getCopyOfListenerList().contains(listener));
+        listener.onReset(loggerContext);
         listener.close();
         listener.close();
 
         assertFalse(loggerContext.getCopyOfListenerList().contains(listener));
+        assertEquals(initialLevels, levels.get());
         verify(osgiLoggerContext, times(1)).setLogLevels(initialLevels);
+    }
+
+    @Test
+    public void closePreservesLogLevelsChangedByAnotherOwner() {
+        LoggerContext loggerContext = new LoggerContext();
+        loggerContext.getLogger(Logger.ROOT_LOGGER_NAME).setLevel(Level.INFO);
+        LoggerAdmin loggerAdmin = mock(LoggerAdmin.class);
+        org.osgi.service.log.admin.LoggerContext osgiLoggerContext =
+            mock(org.osgi.service.log.admin.LoggerContext.class);
+        Map<String, LogLevel> initialLevels = new HashMap<>();
+        initialLevels.put(Logger.ROOT_LOGGER_NAME, LogLevel.ERROR);
+        initialLevels.put("existing", LogLevel.WARN);
+        AtomicReference<Map<String, LogLevel>> levels = mockLogLevels(
+            loggerAdmin, osgiLoggerContext, initialLevels);
+
+        LogbackLogListener listener = new LogbackLogListener(loggerAdmin, loggerContext);
+        Map<String, LogLevel> externalLevels = new HashMap<>(levels.get());
+        externalLevels.put("Events.Bundle", LogLevel.DEBUG);
+        externalLevels.put("external", LogLevel.TRACE);
+        levels.set(externalLevels);
+
+        listener.close();
+
+        Map<String, LogLevel> expected = new HashMap<>(initialLevels);
+        expected.put("Events.Bundle", LogLevel.DEBUG);
+        expected.put("external", LogLevel.TRACE);
+        assertEquals(expected, levels.get());
+    }
+
+    private static AtomicReference<Map<String, LogLevel>> mockLogLevels(
+        LoggerAdmin loggerAdmin,
+        org.osgi.service.log.admin.LoggerContext osgiLoggerContext,
+        Map<String, LogLevel> initialLevels) {
+
+        AtomicReference<Map<String, LogLevel>> levels =
+            new AtomicReference<>(new HashMap<>(initialLevels));
+        when(loggerAdmin.getLoggerContext(null)).thenReturn(osgiLoggerContext);
+        when(osgiLoggerContext.getLogLevels()).thenAnswer(
+            invocation -> new HashMap<>(levels.get()));
+        doAnswer(invocation -> {
+            levels.set(new HashMap<>(invocation.getArgument(0)));
+            return null;
+        }).when(osgiLoggerContext).setLogLevels(anyMap());
+
+        return levels;
     }
 
 }
