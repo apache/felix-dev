@@ -1,0 +1,8 @@
+-resolve.effective: resolve, active
+
+-runproperties.base: \
+    logback.configurationFile=${fileuri;${.}/logback.xml}
+
+-runstartlevel: \
+    order=sortbynameversion,\
+    begin=-1
