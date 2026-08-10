@@ -137,7 +137,7 @@ public class LogbackLogListener implements AutoCloseable, LogListener, LoggerCon
         // Check to see if there's a logger defined in our configuration and
         // if there is, then make sure it's handled as an override for the
         // effective level.
-        if (!logger.equals(rootLogger) && !logger.isEnabledFor(level)) {
+        if (!logger.isEnabledFor(level)) {
             return;
         }
 
@@ -173,8 +173,7 @@ public class LogbackLogListener implements AutoCloseable, LogListener, LoggerCon
             return;
         }
 
-        updateLogLevel(logger.getName(),
-            Level.OFF.equals(level) ? Optional.empty() : Optional.of(from(level)));
+        updateLogLevel(logger.getName(), Optional.of(from(level)));
     }
 
     @Override
@@ -215,7 +214,7 @@ public class LogbackLogListener implements AutoCloseable, LogListener, LoggerCon
     }
 
     LogLevel from(Level level) {
-        if (Level.ALL.equals(level)) {
+        if (Level.ALL.equals(level) || Level.OFF.equals(level)) {
             return LogLevel.TRACE;
         }
         else if (Level.DEBUG.equals(level)) {
@@ -307,10 +306,7 @@ public class LogbackLogListener implements AutoCloseable, LogListener, LoggerCon
 
             if (level != null) {
                 copy.remove(name);
-
-                if (level != Level.OFF) {
-                    copy.put(name, from(level));
-                }
+                copy.put(name, from(level));
             }
         }
 

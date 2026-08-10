@@ -127,6 +127,61 @@ public class LogbackLogListenerTest {
         listener.close();
     }
 
+    @Test
+    public void loggedHonorsRootLoggerLevel() {
+        LoggerContext loggerContext = new LoggerContext();
+        Logger root = loggerContext.getLogger(Logger.ROOT_LOGGER_NAME);
+        root.setLevel(Level.WARN);
+        ListAppender<ILoggingEvent> appender = new ListAppender<>();
+        appender.setContext(loggerContext);
+        appender.start();
+        root.addAppender(appender);
+        LoggerAdmin loggerAdmin = mock(LoggerAdmin.class);
+        org.osgi.service.log.admin.LoggerContext osgiLoggerContext =
+            mock(org.osgi.service.log.admin.LoggerContext.class);
+        mockLogLevels(loggerAdmin, osgiLoggerContext, new HashMap<>());
+        LogEntry entry = mock(LogEntry.class);
+        when(entry.getLoggerName()).thenReturn(Logger.ROOT_LOGGER_NAME);
+        when(entry.getMessage()).thenReturn("message");
+        when(entry.getLogLevel()).thenReturn(LogLevel.INFO);
+
+        LogbackLogListener listener = new LogbackLogListener(loggerAdmin, loggerContext);
+        listener.logged(entry);
+
+        assertTrue(appender.list.isEmpty());
+        listener.close();
+    }
+
+    @Test
+    public void offLevelIsFilteredByLogback() {
+        LoggerContext loggerContext = new LoggerContext();
+        Logger root = loggerContext.getLogger(Logger.ROOT_LOGGER_NAME);
+        root.setLevel(Level.INFO);
+        Logger named = loggerContext.getLogger("test.off");
+        named.setLevel(Level.OFF);
+        ListAppender<ILoggingEvent> appender = new ListAppender<>();
+        appender.setContext(loggerContext);
+        appender.start();
+        root.addAppender(appender);
+        LoggerAdmin loggerAdmin = mock(LoggerAdmin.class);
+        org.osgi.service.log.admin.LoggerContext osgiLoggerContext =
+            mock(org.osgi.service.log.admin.LoggerContext.class);
+        AtomicReference<Map<String, LogLevel>> levels = mockLogLevels(
+            loggerAdmin, osgiLoggerContext, new HashMap<>());
+        LogEntry entry = mock(LogEntry.class);
+        when(entry.getLoggerName()).thenReturn(named.getName());
+        when(entry.getMessage()).thenReturn("message");
+        when(entry.getLogLevel()).thenReturn(LogLevel.ERROR);
+
+        LogbackLogListener listener = new LogbackLogListener(loggerAdmin, loggerContext);
+        listener.onLevelChange(named, Level.OFF);
+        listener.logged(entry);
+
+        assertEquals(LogLevel.TRACE, levels.get().get(named.getName()));
+        assertTrue(appender.list.isEmpty());
+        listener.close();
+    }
+
     private static AtomicReference<Map<String, LogLevel>> mockLogLevels(
         LoggerAdmin loggerAdmin,
         org.osgi.service.log.admin.LoggerContext osgiLoggerContext,
