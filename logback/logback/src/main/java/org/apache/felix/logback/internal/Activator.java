@@ -190,6 +190,7 @@ public class Activator implements BundleActivator {
                         catch (RuntimeException | Error cleanup) {
                             e.addSuppressed(cleanup);
                         }
+                        close(logbackLogListener, e);
                     }
 
                     context.ungetService(reference);
@@ -204,13 +205,32 @@ public class Activator implements BundleActivator {
             Pair pair) {
 
             try {
-                tccl(() -> {
-                    pair.getKey().removeLogListener(pair.getValue());
-                    return null;
-                });
+                try {
+                    tccl(() -> {
+                        pair.getKey().removeLogListener(pair.getValue());
+                        return null;
+                    });
+                }
+                catch (RuntimeException | Error e) {
+                    close(pair.getValue(), e);
+                    throw e;
+                }
+
+                pair.getValue().close();
             }
             finally {
                 context.ungetService(reference);
+            }
+        }
+
+        private static void close(
+            LogbackLogListener logbackLogListener, Throwable failure) {
+
+            try {
+                logbackLogListener.close();
+            }
+            catch (RuntimeException | Error cleanup) {
+                failure.addSuppressed(cleanup);
             }
         }
 

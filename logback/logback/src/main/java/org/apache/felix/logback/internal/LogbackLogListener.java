@@ -39,7 +39,7 @@ import ch.qos.logback.classic.spi.LoggerContextVO;
 import ch.qos.logback.classic.spi.LoggingEvent;
 import ch.qos.logback.classic.spi.ThrowableProxy;
 
-public class LogbackLogListener implements LogListener, LoggerContextListener {
+public class LogbackLogListener implements AutoCloseable, LogListener, LoggerContextListener {
 
     private static final String EVENTS_BUNDLE = "Events.Bundle";
     private static final String EVENTS_FRAMEWORK = "Events.Framework";
@@ -64,25 +64,53 @@ public class LogbackLogListener implements LogListener, LoggerContextListener {
     volatile LoggerContextVO loggerContextVO;
     final Map<String, LogLevel> initialLogLevels;
     final org.osgi.service.log.admin.LoggerContext osgiLoggerContext;
+    final AtomicBoolean closed = new AtomicBoolean();
 
     public LogbackLogListener(LoggerAdmin loggerAdmin) {
+        this(loggerAdmin, getLoggerContext());
+    }
+
+    LogbackLogListener(LoggerAdmin loggerAdmin, LoggerContext loggerContext) {
         osgiLoggerContext = loggerAdmin.getLoggerContext(null);
         initialLogLevels = osgiLoggerContext.getLogLevels();
+        this.loggerContext = loggerContext;
 
+        try {
+            onStart(loggerContext);
+            loggerContext.addListener(this);
+        }
+        catch (RuntimeException | Error e) {
+            try {
+                osgiLoggerContext.setLogLevels(initialLogLevels);
+            }
+            catch (RuntimeException | Error cleanup) {
+                e.addSuppressed(cleanup);
+            }
+            throw e;
+        }
+    }
+
+    private static LoggerContext getLoggerContext() {
         ILoggerFactory loggerFactory = LoggerFactory.getILoggerFactory();
 
-        if (!(loggerFactory instanceof LoggerContext)) {
-            throw new IllegalStateException("This bundle only works with logback-classic");
+        if (loggerFactory instanceof LoggerContext) {
+            return (LoggerContext)loggerFactory;
         }
 
-        onStart((LoggerContext)loggerFactory);
-
-        loggerContext.addListener(this);
+        throw new IllegalStateException("This bundle only works with logback-classic");
     }
 
     @Override
     public boolean isResetResistant() {
         return true;
+    }
+
+    @Override
+    public void close() {
+        if (closed.compareAndSet(false, true)) {
+            loggerContext.removeListener(this);
+            osgiLoggerContext.setLogLevels(initialLogLevels);
+        }
     }
 
     @Override
@@ -162,6 +190,10 @@ public class LogbackLogListener implements LogListener, LoggerContextListener {
 
     @Override
     public void onLevelChange(Logger logger, Level level) {
+        if (closed.get()) {
+            return;
+        }
+
         Map<String, LogLevel> updatedLevels = osgiLoggerContext.getLogLevels();
 
         if (Level.OFF.equals(level)) {
@@ -176,6 +208,10 @@ public class LogbackLogListener implements LogListener, LoggerContextListener {
 
     @Override
     public void onStart(LoggerContext context) {
+        if (closed.get()) {
+            return;
+        }
+
         loggerContext = context;
         rootLogger = loggerContext.getLogger(Logger.ROOT_LOGGER_NAME);
         loggerContextVO = loggerContext.getLoggerContextRemoteView();
@@ -187,12 +223,16 @@ public class LogbackLogListener implements LogListener, LoggerContextListener {
 
     @Override
     public void onStop(LoggerContext context) {
-        osgiLoggerContext.setLogLevels(initialLogLevels);
+        if (!closed.get()) {
+            osgiLoggerContext.setLogLevels(initialLogLevels);
+        }
     }
 
     @Override
     public void onReset(LoggerContext context) {
-        onStart(context);
+        if (!closed.get()) {
+            onStart(context);
+        }
     }
 
     String formatBundle(Bundle bundle, String loggerName) {

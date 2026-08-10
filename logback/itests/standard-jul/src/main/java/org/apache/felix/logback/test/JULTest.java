@@ -30,7 +30,12 @@ import org.osgi.framework.Bundle;
 import org.osgi.framework.BundleContext;
 import org.osgi.framework.FrameworkUtil;
 
+import ch.qos.logback.classic.LoggerContext;
+
 public class JULTest extends LogTestHelper {
+
+    private static final String LOG_LISTENER =
+        "org.apache.felix.logback.internal.LogbackLogListener";
 
     @Test
     public void test() {
@@ -54,10 +59,12 @@ public class JULTest extends LogTestHelper {
         try {
             if (restart) {
                 logbackBundle.stop();
+                Assert.assertEquals(0, getLogListenerCount());
             }
 
             rootLogger.addHandler(savedHandler);
             logbackBundle.start();
+            Assert.assertEquals(1, getLogListenerCount());
 
             Handler[] activeHandlers = rootLogger.getHandlers();
             Assert.assertEquals(1, activeHandlers.length);
@@ -66,6 +73,7 @@ public class JULTest extends LogTestHelper {
 
             rootLogger.addHandler(addedHandler);
             logbackBundle.stop();
+            Assert.assertEquals(0, getLogListenerCount());
 
             Assert.assertFalse(contains(rootLogger.getHandlers(), bridgeHandler));
             Assert.assertTrue(contains(rootLogger.getHandlers(), savedHandler));
@@ -81,8 +89,16 @@ public class JULTest extends LogTestHelper {
 
             if (restart) {
                 logbackBundle.start();
+                Assert.assertEquals(1, getLogListenerCount());
             }
         }
+    }
+
+    private static long getLogListenerCount() {
+        LoggerContext context = (LoggerContext)org.slf4j.LoggerFactory.getILoggerFactory();
+        return context.getCopyOfListenerList().stream()
+            .filter(listener -> LOG_LISTENER.equals(listener.getClass().getName()))
+            .count();
     }
 
     private static Bundle getBundle(BundleContext context, String symbolicName) {

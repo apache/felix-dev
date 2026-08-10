@@ -111,6 +111,7 @@ public class ActivatorTest {
 
         verify(logReaderService).addLogListener(listener);
         verify(logReaderService).removeLogListener(listener);
+        verify(listener).close();
         verify(context).ungetService(reference);
     }
 
@@ -128,6 +129,7 @@ public class ActivatorTest {
 
         assertThrows(IllegalStateException.class, () -> tracker.addingService(reference));
         verify(logReaderService).removeLogListener(listener);
+        verify(listener).close();
         verify(context).ungetService(reference);
     }
 
@@ -145,6 +147,7 @@ public class ActivatorTest {
         assertThrows(
             IllegalStateException.class,
             () -> tracker.removedService(reference, pair));
+        verify(listener).close();
         verify(context).ungetService(reference);
     }
 
