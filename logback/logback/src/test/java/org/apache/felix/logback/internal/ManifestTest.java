@@ -46,6 +46,14 @@ public class ManifestTest {
             "org.slf4j.bridge"));
     }
 
+    @Test
+    public void scmPointsToGitHubRepository() throws Exception {
+        String scm = getManifestHeader("Bundle-SCM");
+
+        assertTrue(scm, scm.contains(
+            "url=\"https://github.com/apache/felix-dev\""));
+    }
+
     private static String getManifestHeader(String name) throws Exception {
         Path classes = Paths.get(Activator.class.getProtectionDomain(
             ).getCodeSource().getLocation().toURI());
