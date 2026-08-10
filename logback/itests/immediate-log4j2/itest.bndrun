@@ -10,7 +10,7 @@
     ch.qos.logback.classic;version=latest,\
     ch.qos.logback.core;version=latest,\
     org.apache.logging.log4j.api;version=latest,\
-    org.apache.logging.log4j.to-slf4j;version=latest,\
+    org.apache.logging.log4j.to.slf4j;version=latest,\
     slf4j.api;version=latest,\
     org.apache.felix.log;version=latest,\
     org.apache.felix.logback;version=latest
@@ -23,5 +23,5 @@
 
 -runbundles: \
 	org.apache.felix.log.extension;version='[1.0.0,1.0.1)',\
-	org.apache.felix.logback.itests.immediate.log4j2;version='[1.0.0,1.0.1)',\
+	org.apache.felix.logback.itests.immediate.log4j2;version='[2.0.0,2.0.1)',\
 	org.apache.servicemix.bundles.junit;version='[4.13.2,4.13.3)'

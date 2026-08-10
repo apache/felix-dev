@@ -19,7 +19,7 @@
     org.slf4j.spi;version=${version_cleanup;${slf4j.api.version}}
 
 -runbundles: \
-	log4j.over.slf4j;version='[1.7.32,1.7.33)',\
+	log4j.over.slf4j;version='[2.0.18,2.0.19)',\
 	org.apache.felix.log.extension;version='[1.0.0,1.0.1)',\
-	org.apache.felix.logback.itests.immediate.log4j1;version='[1.0.0,1.0.1)',\
+	org.apache.felix.logback.itests.immediate.log4j1;version='[2.0.0,2.0.1)',\
 	org.apache.servicemix.bundles.junit;version='[4.13.2,4.13.3)'

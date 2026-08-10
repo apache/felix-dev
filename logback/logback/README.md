@@ -18,17 +18,17 @@ To add Logback to an OSGi framework include the following dependencies
     <dependency>
         <groupId>ch.qos.logback</groupId>
         <artifactId>logback-classic</artifactId>
-        <version>1.2.x</version>
+        <version>1.5.x</version>
     </dependency>
     <dependency>
         <groupId>ch.qos.logback</groupId>
         <artifactId>logback-core</artifactId>
-        <version>1.2.x</version>
+        <version>1.5.x</version>
     </dependency>
     <dependency>
         <groupId>org.slf4j</groupId>
         <artifactId>slf4j-api</artifactId>
-        <version>1.7.x</version>
+        <version>2.0.x</version>
     </dependency>
 
 These provide the `slf4j` logging API over the Logback backend.

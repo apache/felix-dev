@@ -15,5 +15,5 @@
 
 -runbundles: \
     org.apache.felix.log.extension;version='[1.0.0,1.0.1)',\
-    org.apache.felix.logback.itests.immediate.jul.felix;version='[1.0.0,1.0.1)',\
+    org.apache.felix.logback.itests.immediate.jul.felix;version='[2.0.0,2.0.1)',\
     org.apache.servicemix.bundles.junit;version='[4.13.2,4.13.3)'

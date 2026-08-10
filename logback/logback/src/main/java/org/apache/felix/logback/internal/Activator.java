@@ -14,9 +14,6 @@
 
 package org.apache.felix.logback.internal;
 
-import java.util.AbstractMap.SimpleEntry;
-import java.util.function.Supplier;
-
 import org.osgi.annotation.bundle.Header;
 import org.osgi.framework.BundleActivator;
 import org.osgi.framework.BundleContext;
@@ -25,20 +22,23 @@ import org.osgi.framework.ServiceReference;
 import org.osgi.service.log.LogReaderService;
 import org.osgi.service.log.admin.LoggerAdmin;
 import org.osgi.util.tracker.ServiceTracker;
+import org.slf4j.LoggerFactory;
 import org.slf4j.bridge.SLF4JBridgeHandler;
+
+import java.util.AbstractMap.SimpleEntry;
+import java.util.function.Supplier;
 
 @Header(name = Constants.BUNDLE_ACTIVATOR, value = "${@class}")
 public class Activator implements BundleActivator {
-
-    static {
-        SLF4JBridgeHandler.removeHandlersForRootLogger();
-        SLF4JBridgeHandler.install();
-    }
 
     private volatile ServiceTracker<LoggerAdmin, LRST> lat;
 
     @Override
     public void start(final BundleContext bundleContext) throws Exception {
+        LoggerFactory.getILoggerFactory();
+        SLF4JBridgeHandler.removeHandlersForRootLogger();
+        SLF4JBridgeHandler.install();
+
         lat = new ServiceTracker<LoggerAdmin, LRST>(
             bundleContext, LoggerAdmin.class, null) {
 
