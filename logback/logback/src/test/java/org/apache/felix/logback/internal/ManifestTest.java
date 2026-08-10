@@ -47,6 +47,16 @@ public class ManifestTest {
     }
 
     @Test
+    public void declaresRequiredOSGiLogServices() throws Exception {
+        String requirements = getManifestHeader("Require-Capability");
+
+        assertActiveServiceRequirement(
+            requirements, "org.osgi.service.log.LogReaderService");
+        assertActiveServiceRequirement(
+            requirements, "org.osgi.service.log.admin.LoggerAdmin");
+    }
+
+    @Test
     public void scmPointsToGitHubRepository() throws Exception {
         String scm = getManifestHeader("Bundle-SCM");
 
@@ -63,6 +73,21 @@ public class ManifestTest {
 
             return new Manifest(input).getMainAttributes().getValue(name);
         }
+    }
+
+    private static void assertActiveServiceRequirement(
+        String requirements, String serviceClass) {
+
+        String filter = "filter:=\"(objectClass=" + serviceClass + ")\"";
+
+        for (String requirement : requirements.split(",")) {
+            if (requirement.contains(filter)) {
+                assertTrue(requirement, requirement.contains("effective:=active"));
+                return;
+            }
+        }
+
+        throw new AssertionError(requirements);
     }
 
 }

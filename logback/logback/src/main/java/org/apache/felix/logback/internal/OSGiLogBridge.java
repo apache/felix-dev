@@ -21,9 +21,12 @@ import java.util.function.Function;
 import java.util.function.Predicate;
 import java.util.function.Supplier;
 
+import org.osgi.annotation.bundle.Requirement;
 import org.osgi.framework.Bundle;
 import org.osgi.framework.BundleContext;
 import org.osgi.framework.ServiceReference;
+import org.osgi.namespace.service.ServiceNamespace;
+import org.osgi.resource.Namespace;
 import org.osgi.service.log.LogReaderService;
 import org.osgi.service.log.admin.LoggerAdmin;
 import org.osgi.util.tracker.ServiceTracker;
@@ -32,6 +35,14 @@ import org.osgi.util.tracker.ServiceTracker;
  * Maintains the active connection between Felix Logback and an available OSGi
  * Log Service provider.
  */
+@Requirement(
+    namespace = ServiceNamespace.SERVICE_NAMESPACE,
+    filter = "(objectClass=org.osgi.service.log.LogReaderService)",
+    effective = Namespace.EFFECTIVE_ACTIVE)
+@Requirement(
+    namespace = ServiceNamespace.SERVICE_NAMESPACE,
+    filter = "(objectClass=org.osgi.service.log.admin.LoggerAdmin)",
+    effective = Namespace.EFFECTIVE_ACTIVE)
 final class OSGiLogBridge implements AutoCloseable {
 
     OSGiLogBridge(BundleContext context) {
