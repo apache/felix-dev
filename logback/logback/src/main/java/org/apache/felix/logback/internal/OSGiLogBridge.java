@@ -28,6 +28,10 @@ import org.osgi.service.log.LogReaderService;
 import org.osgi.service.log.admin.LoggerAdmin;
 import org.osgi.util.tracker.ServiceTracker;
 
+/**
+ * Maintains the active connection between Felix Logback and an available OSGi
+ * Log Service provider.
+ */
 final class OSGiLogBridge implements AutoCloseable {
 
     OSGiLogBridge(BundleContext context) {
@@ -333,6 +337,10 @@ final class OSGiLogBridge implements AutoCloseable {
         }
     }
 
+    /**
+     * Represents an active OSGi-to-Logback connection whose resources share a
+     * common lifetime.
+     */
     private final class Binding implements AutoCloseable {
 
         private Binding(
@@ -360,6 +368,12 @@ final class OSGiLogBridge implements AutoCloseable {
 
     }
 
+    /**
+     * Keeps the bridge's candidate set synchronized with the services
+     * available from OSGi.
+     *
+     * @param <S> the tracked service type
+     */
     static final class RankedServiceTracker<S>
         extends ServiceTracker<S, S> {
 
@@ -417,6 +431,12 @@ final class OSGiLogBridge implements AutoCloseable {
 
     }
 
+    /**
+     * Receives service lifecycle changes that may require the bridge to select
+     * a new provider.
+     *
+     * @param <S> the changing service type
+     */
     private interface ServiceChangeHandler<S> {
 
         void added(ServiceReference<S> reference, S service);

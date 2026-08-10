@@ -38,6 +38,10 @@ import ch.qos.logback.classic.spi.LoggerContextVO;
 import ch.qos.logback.classic.spi.LoggingEvent;
 import ch.qos.logback.classic.spi.ThrowableProxy;
 
+/**
+ * Presents OSGi Log Service entries to Logback and keeps OSGi log levels
+ * aligned with the Logback configuration.
+ */
 public class LogbackLogListener implements AutoCloseable, LogListener, LoggerContextListener {
 
     private static final String EVENTS_BUNDLE = "Events.Bundle";

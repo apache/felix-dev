@@ -19,6 +19,10 @@ import org.eclipse.osgi.internal.hookregistry.HookConfigurator;
 import org.eclipse.osgi.internal.hookregistry.HookRegistry;
 import org.osgi.framework.BundleActivator;
 
+/**
+ * Makes Felix Logback available during Equinox framework startup before
+ * ordinary bundles are activated.
+ */
 public class EquinoxHookSupport implements ActivatorHookFactory, HookConfigurator {
 
     @Override

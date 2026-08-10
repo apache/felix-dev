@@ -20,6 +20,9 @@ import java.util.logging.Logger;
 
 import org.slf4j.bridge.SLF4JBridgeHandler;
 
+/**
+ * Allows JUL records to use the Logback backend shared by the application.
+ */
 final class JULBridge {
 
     private Logger rootLogger;

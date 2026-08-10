@@ -20,6 +20,10 @@ import org.osgi.framework.BundleContext;
 import org.osgi.framework.Constants;
 import org.slf4j.LoggerFactory;
 
+/**
+ * Starts and stops the services that make Logback the common backend for JUL
+ * and the OSGi Log Service.
+ */
 @Header(name = Constants.BUNDLE_ACTIVATOR, value = "${@class}")
 public class Activator implements BundleActivator {
 
