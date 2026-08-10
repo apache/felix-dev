@@ -117,7 +117,7 @@ public class Activator implements BundleActivator {
         }
     }
 
-    class LRST extends ServiceTracker<LogReaderService, Pair> {
+    static class LRST extends ServiceTracker<LogReaderService, Pair> {
 
         public LRST(BundleContext context, LoggerAdmin loggerAdmin) {
             super(context, LogReaderService.class, null);
@@ -155,7 +155,7 @@ public class Activator implements BundleActivator {
 
     }
 
-    class Pair extends SimpleEntry<LogReaderService, LogbackLogListener> {
+    static class Pair extends SimpleEntry<LogReaderService, LogbackLogListener> {
 
         private static final long serialVersionUID = 1L;
 
