@@ -15,6 +15,8 @@
 package org.apache.felix.logback.internal;
 
 import java.util.AbstractMap.SimpleEntry;
+import java.util.function.BiFunction;
+import java.util.function.Function;
 import java.util.function.Supplier;
 
 import org.osgi.annotation.bundle.Header;
@@ -31,7 +33,7 @@ import org.slf4j.LoggerFactory;
 public class Activator implements BundleActivator {
 
     private final JULBridge julBridge = new JULBridge();
-    private volatile ServiceTracker<LoggerAdmin, LRST> lat;
+    private volatile LoggerAdminServiceTracker lat;
 
     @Override
     public void start(final BundleContext bundleContext) throws Exception {
@@ -39,34 +41,7 @@ public class Activator implements BundleActivator {
         julBridge.install();
 
         try {
-            lat = new ServiceTracker<LoggerAdmin, LRST>(
-                bundleContext, LoggerAdmin.class, null) {
-
-                @Override
-                public LRST addingService(
-                    ServiceReference<LoggerAdmin> reference) {
-
-                    return tccl(() -> {
-                        LoggerAdmin loggerAdmin = bundleContext.getService(reference);
-
-                        LRST lrst = new LRST(bundleContext, loggerAdmin);
-
-                        lrst.open();
-
-                        return lrst;
-                    });
-                }
-
-                @Override
-                public void removedService(
-                    ServiceReference<LoggerAdmin> reference, LRST lrst) {
-
-                    tccl(() -> {
-                        lrst.close();
-                        return null;
-                    });
-                }
-            };
+            lat = new LoggerAdminServiceTracker(bundleContext);
 
             lat.open();
         }
@@ -97,7 +72,7 @@ public class Activator implements BundleActivator {
     }
 
     private void closeTracker() {
-        ServiceTracker<LoggerAdmin, LRST> tracker = lat;
+        LoggerAdminServiceTracker tracker = lat;
         lat = null;
 
         if (tracker != null) {
@@ -117,12 +92,75 @@ public class Activator implements BundleActivator {
         }
     }
 
+    static class LoggerAdminServiceTracker extends ServiceTracker<LoggerAdmin, LRST> {
+
+        LoggerAdminServiceTracker(BundleContext context) {
+            this(context, LRST::new);
+        }
+
+        LoggerAdminServiceTracker(
+            BundleContext context,
+            BiFunction<BundleContext, LoggerAdmin, LRST> trackerFactory) {
+
+            super(context, LoggerAdmin.class, null);
+            this.trackerFactory = trackerFactory;
+        }
+
+        @Override
+        public LRST addingService(ServiceReference<LoggerAdmin> reference) {
+            return tccl(() -> {
+                LoggerAdmin loggerAdmin = context.getService(reference);
+
+                if (loggerAdmin == null) {
+                    return null;
+                }
+
+                try {
+                    LRST lrst = trackerFactory.apply(context, loggerAdmin);
+                    lrst.open();
+                    return lrst;
+                }
+                catch (RuntimeException | Error e) {
+                    context.ungetService(reference);
+                    throw e;
+                }
+            });
+        }
+
+        @Override
+        public void removedService(
+            ServiceReference<LoggerAdmin> reference, LRST lrst) {
+
+            try {
+                tccl(() -> {
+                    lrst.close();
+                    return null;
+                });
+            }
+            finally {
+                context.ungetService(reference);
+            }
+        }
+
+        private final BiFunction<BundleContext, LoggerAdmin, LRST> trackerFactory;
+
+    }
+
     static class LRST extends ServiceTracker<LogReaderService, Pair> {
 
         public LRST(BundleContext context, LoggerAdmin loggerAdmin) {
+            this(context, loggerAdmin, LogbackLogListener::new);
+        }
+
+        LRST(
+            BundleContext context,
+            LoggerAdmin loggerAdmin,
+            Function<LoggerAdmin, LogbackLogListener> listenerFactory) {
+
             super(context, LogReaderService.class, null);
 
             this.loggerAdmin = loggerAdmin;
+            this.listenerFactory = listenerFactory;
         }
 
         @Override
@@ -132,11 +170,31 @@ public class Activator implements BundleActivator {
             return tccl(() -> {
                 LogReaderService logReaderService = context.getService(reference);
 
-                LogbackLogListener logbackLogListener = new LogbackLogListener(loggerAdmin);
+                if (logReaderService == null) {
+                    return null;
+                }
 
-                logReaderService.addLogListener(logbackLogListener);
+                LogbackLogListener logbackLogListener = null;
 
-                return new Pair(logReaderService, logbackLogListener);
+                try {
+                    logbackLogListener = listenerFactory.apply(loggerAdmin);
+                    logReaderService.addLogListener(logbackLogListener);
+
+                    return new Pair(logReaderService, logbackLogListener);
+                }
+                catch (RuntimeException | Error e) {
+                    if (logbackLogListener != null) {
+                        try {
+                            logReaderService.removeLogListener(logbackLogListener);
+                        }
+                        catch (RuntimeException | Error cleanup) {
+                            e.addSuppressed(cleanup);
+                        }
+                    }
+
+                    context.ungetService(reference);
+                    throw e;
+                }
             });
         }
 
@@ -145,13 +203,19 @@ public class Activator implements BundleActivator {
             ServiceReference<LogReaderService> reference,
             Pair pair) {
 
-            tccl(() -> {
-                pair.getKey().removeLogListener(pair.getValue());
-                return null;
-            });
+            try {
+                tccl(() -> {
+                    pair.getKey().removeLogListener(pair.getValue());
+                    return null;
+                });
+            }
+            finally {
+                context.ungetService(reference);
+            }
         }
 
         private final LoggerAdmin loggerAdmin;
+        private final Function<LoggerAdmin, LogbackLogListener> listenerFactory;
 
     }
 
