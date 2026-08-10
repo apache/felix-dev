@@ -14,9 +14,6 @@
 
 package org.apache.felix.logback.internal;
 
-import java.lang.invoke.MethodHandle;
-import java.lang.invoke.MethodHandles;
-import java.lang.invoke.MethodType;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Map;
@@ -47,19 +44,6 @@ public class LogbackLogListener implements AutoCloseable, LogListener, LoggerCon
     private static final String EVENTS_FRAMEWORK = "Events.Framework";
     private static final String EVENTS_SERVICE = "Events.Service";
     private static final String LOG_SERVICE = "LogService";
-
-    private static final MethodHandles.Lookup publicLookup = MethodHandles.publicLookup();
-    private static Optional<MethodHandle> setSequenceNumber = Optional.empty();
-
-    static {
-        MethodType mt = MethodType.methodType(void.class, long.class);
-        try {
-            MethodHandle methodHandle = publicLookup.findVirtual(LoggingEvent.class, "setSquenceNumber", mt);
-
-            setSequenceNumber = Optional.of(methodHandle);
-        } catch (NoSuchMethodException | IllegalAccessException e) {
-        }
-    }
 
     volatile LoggerContext loggerContext;
     volatile Logger rootLogger;
@@ -178,14 +162,7 @@ public class LogbackLogListener implements AutoCloseable, LogListener, LoggerCon
         le.setThreadName(entry.getThreadInfo());
         le.setThrowableProxy(getThrowableProxy(entry.getException()));
         le.setTimeStamp(entry.getTime());
-
-        setSequenceNumber.ifPresent(mh -> {
-            try {
-                mh.bindTo(le).invokeExact(entry.getSequence());
-            } catch (Throwable e) {
-                e.printStackTrace();
-            }
-        });
+        le.setSequenceNumber(entry.getSequence());
 
         logger.callAppenders(le);
     }

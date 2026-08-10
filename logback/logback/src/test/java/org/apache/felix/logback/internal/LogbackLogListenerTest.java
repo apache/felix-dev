@@ -116,11 +116,13 @@ public class LogbackLogListenerTest {
         when(entry.getLoggerName()).thenReturn(named.getName());
         when(entry.getMessage()).thenReturn("message");
         when(entry.getLogLevel()).thenReturn(LogLevel.INFO);
+        when(entry.getSequence()).thenReturn(42L);
 
         LogbackLogListener listener = new LogbackLogListener(loggerAdmin, loggerContext);
         listener.logged(entry);
 
         assertEquals(1, namedAppender.list.size());
+        assertEquals(42L, namedAppender.list.get(0).getSequenceNumber());
         assertTrue(rootAppender.list.isEmpty());
         listener.close();
     }
