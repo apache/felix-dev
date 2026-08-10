@@ -209,12 +209,18 @@ public class LogbackLogListener implements AutoCloseable, LogListener, LoggerCon
     }
 
     String formatBundle(Bundle bundle, String loggerName) {
+        String symbolicName = bundle == null ? null : bundle.getSymbolicName();
+
+        if (symbolicName == null) {
+            return loggerName;
+        }
+
         return new StringBuilder().append(
             loggerName
         ).append(
             "."
         ).append(
-            bundle.getSymbolicName()
+            symbolicName
         ).toString();
     }
 

@@ -29,6 +29,7 @@ import java.util.Map;
 import java.util.concurrent.atomic.AtomicReference;
 
 import org.junit.Test;
+import org.osgi.framework.Bundle;
 import org.osgi.service.log.LogEntry;
 import org.osgi.service.log.LogLevel;
 import org.osgi.service.log.admin.LoggerAdmin;
@@ -208,6 +209,55 @@ public class LogbackLogListenerTest {
 
         assertEquals(LogLevel.TRACE, levels.get().get(named.getName()));
         assertTrue(appender.list.isEmpty());
+        listener.close();
+    }
+
+    @Test
+    public void bundleLessEventEntriesKeepBaseLoggerNames() {
+        LoggerContext loggerContext = new LoggerContext();
+        Logger root = loggerContext.getLogger(Logger.ROOT_LOGGER_NAME);
+        root.setLevel(Level.TRACE);
+        ListAppender<ILoggingEvent> appender = new ListAppender<>();
+        appender.setContext(loggerContext);
+        appender.start();
+        root.addAppender(appender);
+        LoggerAdmin loggerAdmin = mock(LoggerAdmin.class);
+        org.osgi.service.log.admin.LoggerContext osgiLoggerContext =
+            mock(org.osgi.service.log.admin.LoggerContext.class);
+        mockLogLevels(loggerAdmin, osgiLoggerContext, new HashMap<>());
+        LogbackLogListener listener = new LogbackLogListener(loggerAdmin, loggerContext);
+        String[] loggerNames = {
+            "Events.Bundle", "Events.Framework", "Events.Service", "LogService"
+        };
+
+        for (String loggerName : loggerNames) {
+            LogEntry entry = mock(LogEntry.class);
+            when(entry.getLoggerName()).thenReturn(loggerName);
+            when(entry.getMessage()).thenReturn("message");
+            when(entry.getLogLevel()).thenReturn(LogLevel.INFO);
+
+            listener.logged(entry);
+        }
+
+        assertEquals(loggerNames.length, appender.list.size());
+        for (int i = 0; i < loggerNames.length; i++) {
+            assertEquals(loggerNames[i], appender.list.get(i).getLoggerName());
+        }
+        listener.close();
+    }
+
+    @Test
+    public void bundleWithoutSymbolicNameKeepsBaseLoggerName() {
+        LoggerContext loggerContext = new LoggerContext();
+        loggerContext.getLogger(Logger.ROOT_LOGGER_NAME).setLevel(Level.TRACE);
+        LoggerAdmin loggerAdmin = mock(LoggerAdmin.class);
+        org.osgi.service.log.admin.LoggerContext osgiLoggerContext =
+            mock(org.osgi.service.log.admin.LoggerContext.class);
+        mockLogLevels(loggerAdmin, osgiLoggerContext, new HashMap<>());
+        LogbackLogListener listener = new LogbackLogListener(loggerAdmin, loggerContext);
+
+        assertEquals("Events.Bundle", listener.formatBundle(
+            mock(Bundle.class), "Events.Bundle"));
         listener.close();
     }
 
