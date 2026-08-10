@@ -14,6 +14,9 @@
 
 package org.apache.felix.logback.internal;
 
+import java.util.AbstractMap.SimpleEntry;
+import java.util.function.Supplier;
+
 import org.osgi.annotation.bundle.Header;
 import org.osgi.framework.BundleActivator;
 import org.osgi.framework.BundleContext;
@@ -23,57 +26,83 @@ import org.osgi.service.log.LogReaderService;
 import org.osgi.service.log.admin.LoggerAdmin;
 import org.osgi.util.tracker.ServiceTracker;
 import org.slf4j.LoggerFactory;
-import org.slf4j.bridge.SLF4JBridgeHandler;
-
-import java.util.AbstractMap.SimpleEntry;
-import java.util.function.Supplier;
 
 @Header(name = Constants.BUNDLE_ACTIVATOR, value = "${@class}")
 public class Activator implements BundleActivator {
 
+    private final JULBridge julBridge = new JULBridge();
     private volatile ServiceTracker<LoggerAdmin, LRST> lat;
 
     @Override
     public void start(final BundleContext bundleContext) throws Exception {
         LoggerFactory.getILoggerFactory();
-        SLF4JBridgeHandler.removeHandlersForRootLogger();
-        SLF4JBridgeHandler.install();
+        julBridge.install();
 
-        lat = new ServiceTracker<LoggerAdmin, LRST>(
-            bundleContext, LoggerAdmin.class, null) {
+        try {
+            lat = new ServiceTracker<LoggerAdmin, LRST>(
+                bundleContext, LoggerAdmin.class, null) {
 
-            @Override
-            public LRST addingService(
-                ServiceReference<LoggerAdmin> reference) {
+                @Override
+                public LRST addingService(
+                    ServiceReference<LoggerAdmin> reference) {
 
-                return tccl(() -> {
-                    LoggerAdmin loggerAdmin = bundleContext.getService(reference);
+                    return tccl(() -> {
+                        LoggerAdmin loggerAdmin = bundleContext.getService(reference);
 
-                    LRST lrst = new LRST(bundleContext, loggerAdmin);
+                        LRST lrst = new LRST(bundleContext, loggerAdmin);
 
-                    lrst.open();
+                        lrst.open();
 
-                    return lrst;
-                });
-            }
+                        return lrst;
+                    });
+                }
 
-            @Override
-            public void removedService(
-                ServiceReference<LoggerAdmin> reference, LRST lrst) {
+                @Override
+                public void removedService(
+                    ServiceReference<LoggerAdmin> reference, LRST lrst) {
 
-                tccl(() -> {
-                    lrst.close();
-                    return null;
-                });
-            }
-        };
+                    tccl(() -> {
+                        lrst.close();
+                        return null;
+                    });
+                }
+            };
 
-        lat.open();
+            lat.open();
+        }
+        catch (Exception | Error e) {
+            closeTracker(e);
+            julBridge.restore(e);
+            throw e;
+        }
     }
 
     @Override
     public void stop(BundleContext bundleContext) throws Exception {
-        lat.close();
+        try {
+            closeTracker();
+        }
+        finally {
+            julBridge.restore();
+        }
+    }
+
+    private void closeTracker(Throwable failure) {
+        try {
+            closeTracker();
+        }
+        catch (RuntimeException | Error e) {
+            failure.addSuppressed(e);
+        }
+    }
+
+    private void closeTracker() {
+        ServiceTracker<LoggerAdmin, LRST> tracker = lat;
+        lat = null;
+
+        if (tracker != null) {
+            tracker.close();
+        }
     }
 
     private static <R> R tccl(Supplier<R> action) {
