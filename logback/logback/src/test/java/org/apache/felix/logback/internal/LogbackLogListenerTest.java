@@ -93,6 +93,35 @@ public class LogbackLogListenerTest {
     }
 
     @Test
+    public void clearedNamedLevelContinuesToInheritChangedRootLevel() {
+        LoggerContext loggerContext = new LoggerContext();
+        Logger root = loggerContext.getLogger(Logger.ROOT_LOGGER_NAME);
+        root.setLevel(Level.INFO);
+        Logger named = loggerContext.getLogger("test.inherited");
+        named.setLevel(Level.ERROR);
+        LoggerAdmin loggerAdmin = mock(LoggerAdmin.class);
+        org.osgi.service.log.admin.LoggerContext osgiLoggerContext =
+            mock(org.osgi.service.log.admin.LoggerContext.class);
+        Map<String, LogLevel> initialLevels = new HashMap<>();
+        initialLevels.put(named.getName(), LogLevel.WARN);
+        AtomicReference<Map<String, LogLevel>> levels = mockLogLevels(
+            loggerAdmin, osgiLoggerContext, initialLevels);
+
+        LogbackLogListener listener = new LogbackLogListener(loggerAdmin, loggerContext);
+        assertEquals(LogLevel.ERROR, levels.get().get(named.getName()));
+
+        named.setLevel(null);
+        assertFalse(levels.get().containsKey(named.getName()));
+
+        root.setLevel(Level.TRACE);
+        assertEquals(LogLevel.TRACE, levels.get().get(Logger.ROOT_LOGGER_NAME));
+        assertFalse(levels.get().containsKey(named.getName()));
+
+        listener.close();
+        assertEquals(initialLevels, levels.get());
+    }
+
+    @Test
     public void loggedUsesNamedLoggerAppenderRouting() {
         LoggerContext loggerContext = new LoggerContext();
         Logger root = loggerContext.getLogger(Logger.ROOT_LOGGER_NAME);

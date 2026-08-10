@@ -173,7 +173,12 @@ public class LogbackLogListener implements AutoCloseable, LogListener, LoggerCon
             return;
         }
 
-        updateLogLevel(logger.getName(), Optional.of(from(level)));
+        Level configuredLevel = logger.getLevel();
+
+        updateLogLevel(
+            logger.getName(),
+            configuredLevel == null ?
+                Optional.empty() : Optional.of(from(configuredLevel)));
     }
 
     @Override
