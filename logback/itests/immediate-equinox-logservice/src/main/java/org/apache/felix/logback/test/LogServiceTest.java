@@ -23,6 +23,7 @@ import org.apache.felix.logback.test.helper.ls.LogServiceHelper;
 import org.junit.Test;
 import org.osgi.framework.BundleContext;
 import org.osgi.framework.FrameworkUtil;
+import org.osgi.framework.ServiceEvent;
 import org.osgi.framework.ServiceReference;
 import org.osgi.framework.ServiceRegistration;
 import org.osgi.service.log.LogService;
@@ -49,11 +50,17 @@ public class LogServiceTest extends LogTestHelper {
         String refString = reference.toString();
 
         try {
-            assertLog("INFO|Events.Service." + getBSN() + "|ServiceEvent REGISTERED " + refString);
+            assertExtendedServiceLog(
+                "INFO|Events.Service." + getBSN() +
+                    "|ServiceEvent REGISTERED " + refString,
+                ServiceEvent.REGISTERED, reference);
         }
         finally {
             registration.unregister();
-            assertLog("INFO|Events.Service." + getBSN() + "|ServiceEvent UNREGISTERING " + refString);
+            assertExtendedServiceLog(
+                "INFO|Events.Service." + getBSN() +
+                    "|ServiceEvent UNREGISTERING " + refString,
+                ServiceEvent.UNREGISTERING, reference);
         }
     }
 

@@ -18,17 +18,23 @@
  */
 package org.apache.felix.logback.test.helper;
 
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertTrue;
+
 import java.util.Iterator;
+import java.util.List;
 
 import org.apache.felix.logback.test.helper.ls.LogServiceHelper;
 import org.junit.BeforeClass;
 import org.junit.Test;
 import org.osgi.framework.BundleContext;
 import org.osgi.framework.FrameworkUtil;
+import org.osgi.framework.ServiceEvent;
 import org.osgi.framework.ServiceReference;
 import org.osgi.framework.ServiceRegistration;
 import org.osgi.service.log.LogService;
 import org.osgi.service.log.Logger;
+import org.slf4j.event.KeyValuePair;
 
 import ch.qos.logback.classic.LoggerContext;
 import ch.qos.logback.classic.encoder.PatternLayoutEncoder;
@@ -71,6 +77,10 @@ public abstract class LogTestHelper {
     }
 
     protected void assertLog(String record) {
+        findLog(record);
+    }
+
+    protected ILoggingEvent findLog(String record) {
         try {
             // we need to make sure we wait for async logging internals to cool down
             Thread.sleep(10);
@@ -78,14 +88,44 @@ public abstract class LogTestHelper {
         catch (InterruptedException e) {
         }
 
-        if ((listAppender.list == null) || listAppender.list.isEmpty() ||
-            !listAppender.list.stream().anyMatch(r -> {
-                String lr = new String(encoder.encode(r));
-                return lr.equals(record);
-            })) {
-
-            throw new RuntimeException("Log record not found: " + record);
+        if (listAppender.list != null) {
+            for (ILoggingEvent event : listAppender.list) {
+                if (record.equals(new String(encoder.encode(event)))) {
+                    return event;
+                }
+            }
         }
+
+        throw new RuntimeException("Log record not found: " + record);
+    }
+
+    protected void assertExtendedServiceLog(
+        String record, int type, ServiceReference<?> reference) {
+
+        ILoggingEvent event = findLog(record);
+        Object context = getKeyValue(event, "osgi.log.context");
+        Object threadId = getKeyValue(event, "osgi.log.thread.id");
+
+        assertTrue(context instanceof ServiceEvent);
+        ServiceEvent serviceEvent = (ServiceEvent)context;
+        assertEquals(type, serviceEvent.getType());
+        assertEquals(reference, serviceEvent.getServiceReference());
+        assertTrue(threadId instanceof Long);
+        assertTrue(((Long)threadId).longValue() > 0);
+    }
+
+    private static Object getKeyValue(ILoggingEvent event, String key) {
+        List<KeyValuePair> values = event.getKeyValuePairs();
+
+        if (values != null) {
+            for (KeyValuePair value : values) {
+                if (key.equals(value.key)) {
+                    return value.value;
+                }
+            }
+        }
+
+        return null;
     }
 
 }

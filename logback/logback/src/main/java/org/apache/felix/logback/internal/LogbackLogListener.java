@@ -53,16 +53,32 @@ public class LogbackLogListener implements AutoCloseable, LogListener, LoggerCon
     volatile Logger rootLogger;
     volatile LoggerContextVO loggerContextVO;
     final org.osgi.service.log.admin.LoggerContext osgiLoggerContext;
+    final LogEntryEnricher logEntryEnricher;
     final AtomicBoolean closed = new AtomicBoolean();
     final Map<String, Optional<LogLevel>> originalLogLevels = new HashMap<>();
     final Map<String, Optional<LogLevel>> appliedLogLevels = new HashMap<>();
 
     public LogbackLogListener(LoggerAdmin loggerAdmin) {
-        this(loggerAdmin, getLoggerContext());
+        this(loggerAdmin, getLoggerContext(), NoOpLogEntryEnricher.INSTANCE);
+    }
+
+    LogbackLogListener(
+        LoggerAdmin loggerAdmin, LogEntryEnricher logEntryEnricher) {
+
+        this(loggerAdmin, getLoggerContext(), logEntryEnricher);
     }
 
     LogbackLogListener(LoggerAdmin loggerAdmin, LoggerContext loggerContext) {
+        this(loggerAdmin, loggerContext, NoOpLogEntryEnricher.INSTANCE);
+    }
+
+    LogbackLogListener(
+        LoggerAdmin loggerAdmin,
+        LoggerContext loggerContext,
+        LogEntryEnricher logEntryEnricher) {
+
         osgiLoggerContext = loggerAdmin.getLoggerContext(null);
+        this.logEntryEnricher = logEntryEnricher;
         this.loggerContext = loggerContext;
 
         try {
@@ -167,6 +183,7 @@ public class LogbackLogListener implements AutoCloseable, LogListener, LoggerCon
         le.setThrowableProxy(getThrowableProxy(entry.getException()));
         le.setTimeStamp(entry.getTime());
         le.setSequenceNumber(entry.getSequence());
+        logEntryEnricher.enrich(entry, le);
 
         logger.callAppenders(le);
     }

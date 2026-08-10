@@ -47,6 +47,14 @@ public class ManifestTest {
     }
 
     @Test
+    public void equinoxLogApiIsOptional() throws Exception {
+        String imports = getManifestHeader("Import-Package");
+
+        assertTrue(imports, imports.contains(
+            "org.eclipse.equinox.log;version=\"[1.1,2)\";resolution:=optional"));
+    }
+
+    @Test
     public void declaresRequiredOSGiLogServices() throws Exception {
         String requirements = getManifestHeader("Require-Capability");
 

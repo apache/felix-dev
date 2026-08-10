@@ -46,7 +46,16 @@ import org.osgi.util.tracker.ServiceTracker;
 final class OSGiLogBridge implements AutoCloseable {
 
     OSGiLogBridge(BundleContext context) {
-        this(context, LogbackLogListener::new);
+        this(context, createListenerFactory(context.getBundle()));
+    }
+
+    private static Function<LoggerAdmin, LogbackLogListener> createListenerFactory(
+        Bundle bundle) {
+
+        LogEntryEnricher logEntryEnricher = LogEntryEnricher.create(bundle);
+
+        return loggerAdmin -> new LogbackLogListener(
+            loggerAdmin, logEntryEnricher);
     }
 
     OSGiLogBridge(
