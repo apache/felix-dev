@@ -18,8 +18,10 @@ import java.util.HashMap;
 import java.util.Map;
 import java.util.Objects;
 import java.util.function.Function;
+import java.util.function.Predicate;
 import java.util.function.Supplier;
 
+import org.osgi.framework.Bundle;
 import org.osgi.framework.BundleContext;
 import org.osgi.framework.ServiceReference;
 import org.osgi.service.log.LogReaderService;
@@ -199,10 +201,10 @@ final class OSGiLogBridge implements AutoCloseable {
             return;
         }
 
-        ServiceReference<LoggerAdmin> loggerAdminReference =
-            highestRanked(loggerAdmins);
         ServiceReference<LogReaderService> logReaderReference =
-            highestRanked(logReaders);
+            selectLogReader();
+        ServiceReference<LoggerAdmin> loggerAdminReference =
+            selectLoggerAdmin(logReaderReference);
 
         if (Objects.equals(selectedLoggerAdmin, loggerAdminReference) &&
             Objects.equals(selectedLogReader, logReaderReference)) {
@@ -252,10 +254,40 @@ final class OSGiLogBridge implements AutoCloseable {
         }
     }
 
-    private static <S> ServiceReference<S> highestRanked(
-        Map<ServiceReference<S>, S> services) {
+    private ServiceReference<LogReaderService> selectLogReader() {
+        return highestRanked(logReaders, reference -> {
+            Bundle provider = reference.getBundle();
 
-        return services.keySet().stream().max(ServiceReference::compareTo).orElse(null);
+            return provider != null && highestRanked(
+                loggerAdmins,
+                adminReference -> provider.equals(adminReference.getBundle())) != null;
+        });
+    }
+
+    private ServiceReference<LoggerAdmin> selectLoggerAdmin(
+        ServiceReference<LogReaderService> logReaderReference) {
+
+        if (logReaderReference == null) {
+            return null;
+        }
+
+        Bundle provider = logReaderReference.getBundle();
+
+        if (provider == null) {
+            return null;
+        }
+
+        return highestRanked(
+            loggerAdmins,
+            reference -> provider.equals(reference.getBundle()));
+    }
+
+    private static <S> ServiceReference<S> highestRanked(
+        Map<ServiceReference<S>, S> services,
+        Predicate<ServiceReference<S>> selector) {
+
+        return services.keySet().stream().filter(selector).max(
+            ServiceReference::compareTo).orElse(null);
     }
 
     private static Throwable runClose(Runnable action, Throwable failure) {
