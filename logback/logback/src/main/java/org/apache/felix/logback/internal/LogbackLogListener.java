@@ -14,21 +14,6 @@
 
 package org.apache.felix.logback.internal;
 
-import java.util.HashMap;
-import java.util.HashSet;
-import java.util.Map;
-import java.util.Optional;
-import java.util.Set;
-import java.util.concurrent.atomic.AtomicBoolean;
-
-import org.osgi.framework.Bundle;
-import org.osgi.service.log.LogEntry;
-import org.osgi.service.log.LogLevel;
-import org.osgi.service.log.LogListener;
-import org.osgi.service.log.admin.LoggerAdmin;
-import org.slf4j.ILoggerFactory;
-import org.slf4j.LoggerFactory;
-
 import ch.qos.logback.classic.Level;
 import ch.qos.logback.classic.Logger;
 import ch.qos.logback.classic.LoggerContext;
@@ -37,6 +22,20 @@ import ch.qos.logback.classic.spi.LoggerContextListener;
 import ch.qos.logback.classic.spi.LoggerContextVO;
 import ch.qos.logback.classic.spi.LoggingEvent;
 import ch.qos.logback.classic.spi.ThrowableProxy;
+import org.osgi.framework.Bundle;
+import org.osgi.service.log.LogEntry;
+import org.osgi.service.log.LogLevel;
+import org.osgi.service.log.LogListener;
+import org.osgi.service.log.admin.LoggerAdmin;
+import org.slf4j.ILoggerFactory;
+import org.slf4j.LoggerFactory;
+
+import java.util.HashMap;
+import java.util.HashSet;
+import java.util.Map;
+import java.util.Optional;
+import java.util.Set;
+import java.util.concurrent.atomic.AtomicBoolean;
 
 /**
  * Presents OSGi Log Service entries to Logback and keeps OSGi log levels
@@ -177,6 +176,7 @@ public class LogbackLogListener implements AutoCloseable, LogListener, LoggerCon
         le.setArgumentArray(arguments);
         le.setMessage(message);
         le.setLevel(level);
+        le.setLoggerContext(loggerContext);
         le.setLoggerContextRemoteView(loggerContextVO);
         le.setLoggerName(loggerName);
         le.setThreadName(entry.getThreadInfo());
