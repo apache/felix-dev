@@ -394,6 +394,17 @@ public class ConfigInstaller implements ArtifactInstaller, ConfigurationListener
         clearReadOnlyIfWritable(pid, config, f);
 
         Dictionary<String, Object> props = config.getProperties();
+
+        // Only update if this file is the registered source of the configuration,
+        // or if no source has been registered yet (new configuration).
+        // Skips duplicate files that share the same PID but originate from a different path.
+        if (props != null) {
+            String registeredFileName = (String) props.get(DirectoryWatcher.FILENAME);
+            if (registeredFileName != null && !registeredFileName.equals(toConfigKey(f))) {
+                return false;
+            }
+        }
+
         Hashtable<String, Object> old = props != null ? new Hashtable<String, Object>(new DictionaryAsMap<>(props)) : null;
         if (old != null) {
             old.remove( DirectoryWatcher.FILENAME );
@@ -439,6 +450,17 @@ public class ConfigInstaller implements ArtifactInstaller, ConfigurationListener
     {
         String pid[] = parsePid(f.getName());
         Configuration config = getConfiguration(toConfigKey(f), pid[0], pid[1]);
+
+        // Only delete if this file is the registered source of the configuration.
+        // If the registered felix.fileinstall.filename does not match the file being deleted, skip deletion to protect the live config.
+        Dictionary<String, Object> props = config.getProperties();
+        if (props != null) {
+            String registeredFileName = (String) props.get(DirectoryWatcher.FILENAME);
+            if (registeredFileName != null && !registeredFileName.equals(toConfigKey(f))) {
+                return false;
+            }
+        }
+
         Util.log(context, Logger.LOG_INFO, "Deleting configuration {"
                 + config.getPid()
                 + "} from " + f.getAbsolutePath(), null);
