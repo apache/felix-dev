@@ -30,6 +30,7 @@ import java.io.Reader;
 import java.io.StringReader;
 import java.nio.charset.StandardCharsets;
 import java.util.Dictionary;
+import java.util.HashMap;
 import java.util.Hashtable;
 import java.util.Map;
 
@@ -216,6 +217,35 @@ public class ConfigurationReaderImplTest {
                 .verifyAsBundleResource(bundleResource)
                 .build(new StringReader(json))
                 .readConfigurationResource();
+    }
+
+    @Test
+    public void testPreserveConfiguratorPropertyKeys() throws IOException {
+        final String json = "{\n"
+                + "  \":configurator:version\" : \"1.0.0\",\n"
+                + "  \":configurator:symbolic-name\" : \"com.example.feature\",\n"
+                + "  \"com.example.pid\" : {\n"
+                + "    \":configurator:policy\" : \"default\",\n"
+                + "    \":configurator:policy:String\" : \"force\",\n"
+                + "    \":configurator:ranking\" : 10,\n"
+                + "    \":configurator:ranking:Integer\" : 20\n"
+                + "  }\n"
+                + "}";
+        final Map<String, Object> properties = new HashMap<>();
+
+        new ConfigurationReaderImpl()
+                .withConfiguratorPropertyHandler((pid, key, value) -> {
+                    assertEquals("com.example.pid", pid);
+                    properties.put(key, value);
+                })
+                .build(new StringReader(json))
+                .readConfigurationResource();
+
+        assertEquals(4, properties.size());
+        assertEquals("default", properties.get("policy"));
+        assertEquals("force", properties.get("policy:String"));
+        assertEquals(Long.valueOf(10), properties.get("ranking"));
+        assertEquals(Long.valueOf(20), properties.get("ranking:Integer"));
     }
 
     @Test
