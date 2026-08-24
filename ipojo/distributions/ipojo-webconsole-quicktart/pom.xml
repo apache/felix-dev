@@ -110,14 +110,6 @@
         </dependency>
     </dependencies>
 
-    <!-- Add OW2 repository -->
-    <repositories>
-        <repository>
-            <id>ow2.releases</id>
-            <url>http://repository.ow2.org/nexus/content/groups/public/</url>
-        </repository>
-    </repositories>
-
     <build>
         <plugins>
             <plugin>

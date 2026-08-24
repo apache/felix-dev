@@ -47,7 +47,6 @@
                 <include>*:org.apache.felix.*:jar</include>
                 <include>javax.servlet:javax.servlet-api:*</include>
                 <include>org.osgi:org.osgi.compendium:*</include>
-                <include>org.json:org.ow2.chameleon.commons.json:*</include>
                 <include>commons-io:commons-io:*</include>
                 <include>commons-fileupload:*:*</include>
             </includes>
