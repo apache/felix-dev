@@ -25,10 +25,12 @@ import java.util.ArrayList;
 import java.util.Hashtable;
 import java.util.List;
 import java.util.Map;
+import java.util.regex.Pattern;
 
 import jakarta.json.JsonException;
 import jakarta.json.JsonNumber;
 import jakarta.json.JsonObject;
+import jakarta.json.JsonString;
 import jakarta.json.JsonValue;
 import jakarta.json.JsonValue.ValueType;
 
@@ -39,6 +41,9 @@ import org.osgi.service.configurator.ConfiguratorConstants;
 
 public class ConfigurationReaderImpl
         implements ConfigurationReader, ConfigurationReader.Builder {
+
+    private static final Pattern SYMBOLIC_NAME_PATTERN =
+            Pattern.compile("[A-Za-z0-9_-]+(?:\\.[A-Za-z0-9_-]+)*");
 
     private boolean closed = false;
 
@@ -190,13 +195,19 @@ public class ConfigurationReaderImpl
             if (!(rsrcVersion instanceof String)) {
                 throwIOException("Invalid version information : ".concat(rsrcVersion.toString()));
             }
-            final Object rsrcName = JsonSupport
-                    .convertToObject(this.jsonObject.get(ConfiguratorConstants.PROPERTY_SYMBOLIC_NAME));
-            if (rsrcName == null) {
+        }
+        final JsonValue rsrcName = this.jsonObject.get(ConfiguratorConstants.PROPERTY_SYMBOLIC_NAME);
+        if (rsrcName == null) {
+            if (!verifyAsBundleResource) {
                 throwIOException("Missing symbolic name information");
             }
-            if (!(rsrcName instanceof String)) {
-                throwIOException("Invalid symbolic name information : ".concat(rsrcVersion.toString()));
+        } else {
+            if (rsrcName.getValueType() != ValueType.STRING) {
+                throwIOException("Invalid symbolic name information : ".concat(rsrcName.toString()));
+            }
+            final String symbolicName = ((JsonString) rsrcName).getString();
+            if (!SYMBOLIC_NAME_PATTERN.matcher(symbolicName).matches()) {
+                throwIOException("Invalid symbolic name information : ".concat(rsrcName.toString()));
             }
         }
     }
