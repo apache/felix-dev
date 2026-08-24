@@ -239,7 +239,7 @@ public class ConfigurationReaderImpl
             if (isInternal) {
                 key = key.substring(ConfigurationResource.CONFIGURATOR_PROPERTY_PREFIX.length());
             }
-            final int pos = key.indexOf(':');
+            final int pos = isInternal ? -1 : key.indexOf(':');
             String typeInfo = null;
             if (pos != -1) {
                 typeInfo = key.substring(pos + 1);
