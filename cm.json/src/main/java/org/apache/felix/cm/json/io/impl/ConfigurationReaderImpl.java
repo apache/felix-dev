@@ -20,12 +20,14 @@ package org.apache.felix.cm.json.io.impl;
 
 import java.io.IOException;
 import java.io.Reader;
+import java.math.BigDecimal;
 import java.util.ArrayList;
 import java.util.Hashtable;
 import java.util.List;
 import java.util.Map;
 
 import jakarta.json.JsonException;
+import jakarta.json.JsonNumber;
 import jakarta.json.JsonObject;
 import jakarta.json.JsonValue;
 import jakarta.json.JsonValue.ValueType;
@@ -34,8 +36,6 @@ import org.apache.felix.cm.json.io.ConfigurationReader;
 import org.apache.felix.cm.json.io.ConfigurationResource;
 import org.apache.felix.cm.json.io.Configurations;
 import org.osgi.service.configurator.ConfiguratorConstants;
-import org.osgi.util.converter.ConversionException;
-import org.osgi.util.converter.Converters;
 
 public class ConfigurationReaderImpl
         implements ConfigurationReader, ConfigurationReader.Builder {
@@ -169,20 +169,13 @@ public class ConfigurationReaderImpl
      * @param root The JSON root object.
      */
     private void verifyJsonResource() throws IOException {
-        final Object version = JsonSupport
-                .convertToObject(this.jsonObject.get(ConfiguratorConstants.PROPERTY_RESOURCE_VERSION));
+        final JsonValue version = this.jsonObject.get(ConfiguratorConstants.PROPERTY_RESOURCE_VERSION);
         if (version != null) {
-            int v = -1;
-            try {
-                v = Converters.standardConverter().convert(version).defaultValue(-1).to(Integer.class);
-            } catch ( final ConversionException ce ) {
-                // ignore
-            }
-            if (v == -1) {
+            if (version.getValueType() != ValueType.NUMBER || !((JsonNumber) version).isIntegral()) {
                 throwIOException("Invalid resource version information : ".concat(version.toString()));
             }
             // we only support version 1
-            if (v != 1) {
+            if (((JsonNumber) version).bigDecimalValue().compareTo(BigDecimal.ONE) != 0) {
                 throwIOException("Unknown resource version : ".concat(version.toString()));
             }
         }
