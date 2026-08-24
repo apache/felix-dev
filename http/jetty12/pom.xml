@@ -45,7 +45,7 @@
              The optional virtual-threads support (felix.jetty.threadpool.useVirtualThreads)
              additionally requires Java 21 at runtime and is enabled conditionally (see JettyService). -->
         <felix.java.version>17</felix.java.version>
-        <jetty.version>12.1.11</jetty.version>
+        <jetty.version>12.1.12</jetty.version>
         <slf4j.version>2.0.17</slf4j.version>
         <baseline.skip>false</baseline.skip>
         <org.ops4j.pax.exam.version>4.13.3</org.ops4j.pax.exam.version>
@@ -265,6 +265,18 @@
                         <goals>
                           <goal>baseline</goal>
                         </goals>
+                        <configuration>
+                            <!-- Baseline only the packages this bundle owns. The re-exported
+                                 org.eclipse.jetty.* packages are versioned by Jetty itself, so
+                                 their versions legitimately change on every Jetty upgrade
+                                 (and Jetty's own micro releases can add API); baselining them
+                                 against a previous Felix release is meaningless and would break
+                                 on each bump. See FELIX-6856. -->
+                            <filters>
+                                <filter>!org.eclipse.jetty.*</filter>
+                                <filter>*</filter>
+                            </filters>
+                        </configuration>
                     </execution>
                     <execution>
                         <id>light-bundle</id>
