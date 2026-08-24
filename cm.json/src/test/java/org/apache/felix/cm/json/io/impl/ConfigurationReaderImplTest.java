@@ -174,6 +174,51 @@ public class ConfigurationReaderImplTest {
     }
 
     @Test
+    public void testReadValidVersion() throws IOException {
+        readVersion("\"1.2.3.qualifier-1\"", false);
+    }
+
+    @Test
+    public void testReadInvalidVersionType() throws IOException {
+        assertInvalidVersion("1", false);
+    }
+
+    @Test
+    public void testReadInvalidVersionSyntax() throws IOException {
+        for (final String version : new String[] {
+                "", "+1", "1..2", "1.2.x", "1.2.3.", "1.2.3.bad qualifier",
+                "1.2.3.4.5", "-1.2.3", " 1.2.3"
+        }) {
+            assertInvalidVersion("\"" + version + "\"", false);
+        }
+    }
+
+    @Test
+    public void testReadInvalidBundleResourceVersion() throws IOException {
+        assertInvalidVersion("\"1.2.invalid\"", true);
+    }
+
+    private void assertInvalidVersion(final String version, final boolean bundleResource) throws IOException {
+        try {
+            readVersion(version, bundleResource);
+            fail();
+        } catch (final IOException ioe) {
+            // expected
+        }
+    }
+
+    private void readVersion(final String version, final boolean bundleResource) throws IOException {
+        final String json = "{\n"
+                + "  \":configurator:version\" : " + version + ",\n"
+                + "  \":configurator:symbolic-name\" : \"com.example.feature\"\n"
+                + "}";
+        new ConfigurationReaderImpl()
+                .verifyAsBundleResource(bundleResource)
+                .build(new StringReader(json))
+                .readConfigurationResource();
+    }
+
+    @Test
     public void testReadInvalidJson() throws IOException {
         final String json = "{\n \"a\" : 5 \n \"b\" : 2\n}";
 
