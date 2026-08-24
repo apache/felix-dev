@@ -47,17 +47,17 @@ public final class JettyActivator extends AbstractHttpActivator
         properties.put("metatype.pid", JettyService.PID);
 
         metatypeReg = this.getBundleContext().registerService("org.osgi.service.metatype.MetaTypeProvider",
-                new ServiceFactory()
+                new ServiceFactory<Object>()
                 {
 
                     @Override
-                    public Object getService(final Bundle bundle, final ServiceRegistration registration)
+                    public Object getService(final Bundle bundle, final ServiceRegistration<Object> registration)
                     {
                         return new ConfigMetaTypeProvider(getBundleContext().getBundle());
                     }
 
                     @Override
-                    public void ungetService(Bundle bundle, ServiceRegistration registration, Object service)
+                    public void ungetService(Bundle bundle, ServiceRegistration<Object> registration, Object service)
                     {
                         // nothing to do
                     }
@@ -93,12 +93,12 @@ public final class JettyActivator extends AbstractHttpActivator
         factoryProps.put(Constants.SERVICE_VENDOR, "The Apache Software Foundation");
         factoryProps.put(Constants.SERVICE_DESCRIPTION, "Managed Service Factory for the Jetty Http Service");
         this.jettyServiceFactoryReg = this.getBundleContext().registerService("org.osgi.service.cm.ManagedServiceFactory",
-                new ServiceFactory()
+                new ServiceFactory<Object>()
                 {
 
                     @Override
                     public Object getService(final Bundle bundle,
-                            final ServiceRegistration registration)
+                            final ServiceRegistration<Object> registration)
                     {
                         synchronized ( jetty )
                         {
@@ -112,7 +112,7 @@ public final class JettyActivator extends AbstractHttpActivator
 
                     @Override
                     public void ungetService(final Bundle bundle,
-                            final ServiceRegistration registration,
+                            final ServiceRegistration<Object> registration,
                             final Object service)
                     {
                         // do nothing

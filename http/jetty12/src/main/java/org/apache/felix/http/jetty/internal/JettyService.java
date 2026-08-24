@@ -156,17 +156,17 @@ public final class JettyService
 	        props.put(Constants.SERVICE_VENDOR, "The Apache Software Foundation");
 	        props.put(Constants.SERVICE_DESCRIPTION, "Managed Service for the Jetty Http Service");
 			this.configServiceReg = this.context.registerService("org.osgi.service.cm.ManagedService",
-	                new ServiceFactory()
+	                new ServiceFactory<Object>()
 	                {
 
 	                    @Override
-	                    public Object getService(final Bundle bundle, final ServiceRegistration registration)
+	                    public Object getService(final Bundle bundle, final ServiceRegistration<Object> registration)
 	                    {
 	                        return new JettyManagedService(JettyService.this);
 	                    }
 
 	                    @Override
-	                    public void ungetService(Bundle bundle, ServiceRegistration registration, Object service)
+	                    public void ungetService(Bundle bundle, ServiceRegistration<Object> registration, Object service)
 	                    {
 	                        // nothing to do
 	                    }
@@ -289,32 +289,7 @@ public final class JettyService
         if (this.config.isUseHttp() || this.config.isUseHttps())
         {
 
-            final int threadPoolMax = this.config.getThreadPoolMax();
-            if (!this.config.isUseVirtualThreads() && threadPoolMax >= 0) {
-                this.server = new Server(new QueuedThreadPool(threadPoolMax));
-            } else if (this.config.isUseVirtualThreads()){
-                // See https://jetty.org/docs/jetty/12/programming-guide/arch/threads.html#thread-pool-virtual-threads
-                Method newVirtualThreadPerTaskExecutorMethod = null;
-                try {
-                    newVirtualThreadPerTaskExecutorMethod = Executors.class.getMethod("newVirtualThreadPerTaskExecutor");
-                } catch (NoSuchMethodException e){
-                    throw new IllegalArgumentException("Virtual threads are only available in Java 21 or later, or via preview flags in Java 19-20");
-                }
-                if (threadPoolMax >= 0) {
-                    // Configurable, bounded, virtual thread executor
-                    VirtualThreadPool threadPool = new VirtualThreadPool();
-                    threadPool.setMaxConcurrentTasks(threadPoolMax);
-                    this.server = new Server(threadPool);
-                } else {
-                    // Simple, unlimited, virtual thread Executor
-                    QueuedThreadPool threadPool = new QueuedThreadPool();
-                    final Executor virtualExecutor = (Executor) newVirtualThreadPerTaskExecutorMethod.invoke(null);
-                    threadPool.setVirtualThreadsExecutor(virtualExecutor);
-                    this.server = new Server(threadPool);
-                }
-            } else {
-                this.server = new Server();
-            }
+            this.server = createServer();
 
             // FELIX-5931 : PropertyUserStore used as default by HashLoginService has changed in 9.4.12.v20180830
             //              and fails without a config, therefore using plain UserStore
@@ -374,37 +349,7 @@ public final class JettyService
 
             if (this.config.isGzipHandlerEnabled())
             {
-            	GzipCompression gzipCompression = new GzipCompression();
-            	gzipCompression.setMinCompressSize(this.config.getGzipMinGzipSize());
-            	GzipEncoderConfig encoderConfig = new GzipEncoderConfig();
-            	encoderConfig.setSyncFlush(this.config.isGzipSyncFlush());
-            	gzipCompression.setDefaultEncoderConfig(encoderConfig);
-
-            	CompressionConfig.Builder configBuilder = CompressionConfig.builder();
-            	for (String method : this.config.getGzipIncludedMethods()) {
-            	    configBuilder.compressIncludeMethod(method);
-            	}
-            	for (String method : this.config.getGzipExcludedMethods()) {
-            	    configBuilder.compressExcludeMethod(method);
-            	}
-            	for (String path : this.config.getGzipIncludedPaths()) {
-            	    configBuilder.compressIncludePath(path);
-            	}
-            	for (String path : this.config.getGzipExcludedPaths()) {
-            	    configBuilder.compressExcludePath(path);
-            	}
-            	for (String mimeType : this.config.getGzipIncludedMimeTypes()) {
-            	    configBuilder.compressIncludeMimeType(mimeType);
-            	}
-            	for (String mimeType : this.config.getGzipExcludedMimeTypes()) {
-            	    configBuilder.compressExcludeMimeType(mimeType);
-            	}
-
-            	CompressionHandler compressionHandler = new CompressionHandler();
-            	compressionHandler.putCompression(gzipCompression);
-            	compressionHandler.putConfiguration("/*", configBuilder.build());
-
-            	this.server.insertHandler(compressionHandler);
+                configureGzipHandler();
             }
 
             if(this.config.getStopTimeout() != -1)
@@ -483,29 +428,99 @@ public final class JettyService
                 SystemLogger.LOGGER.error("Jetty stopped (no connectors available)");
             }
 
-            try {
-                this.requestLogTracker = new RequestLogTracker(this.context, this.config.getRequestLogFilter());
-                this.requestLogTracker.open();
-                this.server.setRequestLog(requestLogTracker);
-            } catch (InvalidSyntaxException e) {
-                SystemLogger.LOGGER.error("Invalid filter syntax in request log tracker", e);
-            }
-
-            if (this.config.isRequestLogOSGiEnabled()) {
-                this.osgiRequestLog = new LogServiceRequestLog(this.config);
-                this.osgiRequestLog.register(this.context);
-                SystemLogger.LOGGER.info("Directing Jetty request logs to the OSGi Log Service");
-            }
-
-            if (this.config.getRequestLogFilePath() != null && !this.config.getRequestLogFilePath().isEmpty()) {
-                this.fileRequestLog = new FileRequestLog(config);
-                this.fileRequestLog.start(this.context);
-                SystemLogger.LOGGER.info("Directing Jetty request logs to {}", this.config.getRequestLogFilePath());
-            }
+            configureRequestLogs();
         }
         else
         {
             SystemLogger.LOGGER.warn("Jetty not started (HTTP and HTTPS disabled)");
+        }
+    }
+
+    private Server createServer() throws Exception
+    {
+        final int threadPoolMax = this.config.getThreadPoolMax();
+        if (!this.config.isUseVirtualThreads() && threadPoolMax >= 0) {
+            return new Server(new QueuedThreadPool(threadPoolMax));
+        } else if (this.config.isUseVirtualThreads()) {
+            // See https://jetty.org/docs/jetty/12/programming-guide/arch/threads.html#thread-pool-virtual-threads
+            Method newVirtualThreadPerTaskExecutorMethod = null;
+            try {
+                newVirtualThreadPerTaskExecutorMethod = Executors.class.getMethod("newVirtualThreadPerTaskExecutor");
+            } catch (NoSuchMethodException e) {
+                throw new IllegalArgumentException("Virtual threads are only available in Java 21 or later, or via preview flags in Java 19-20");
+            }
+            if (threadPoolMax >= 0) {
+                // Configurable, bounded, virtual thread executor
+                VirtualThreadPool threadPool = new VirtualThreadPool();
+                threadPool.setMaxConcurrentTasks(threadPoolMax);
+                return new Server(threadPool);
+            } else {
+                // Simple, unlimited, virtual thread Executor
+                QueuedThreadPool threadPool = new QueuedThreadPool();
+                final Executor virtualExecutor = (Executor) newVirtualThreadPerTaskExecutorMethod.invoke(null);
+                threadPool.setVirtualThreadsExecutor(virtualExecutor);
+                return new Server(threadPool);
+            }
+        } else {
+            return new Server();
+        }
+    }
+
+    private void configureGzipHandler()
+    {
+        GzipCompression gzipCompression = new GzipCompression();
+        gzipCompression.setMinCompressSize(this.config.getGzipMinGzipSize());
+        GzipEncoderConfig encoderConfig = new GzipEncoderConfig();
+        encoderConfig.setSyncFlush(this.config.isGzipSyncFlush());
+        gzipCompression.setDefaultEncoderConfig(encoderConfig);
+
+        CompressionConfig.Builder configBuilder = CompressionConfig.builder();
+        for (String method : this.config.getGzipIncludedMethods()) {
+            configBuilder.compressIncludeMethod(method);
+        }
+        for (String method : this.config.getGzipExcludedMethods()) {
+            configBuilder.compressExcludeMethod(method);
+        }
+        for (String path : this.config.getGzipIncludedPaths()) {
+            configBuilder.compressIncludePath(path);
+        }
+        for (String path : this.config.getGzipExcludedPaths()) {
+            configBuilder.compressExcludePath(path);
+        }
+        for (String mimeType : this.config.getGzipIncludedMimeTypes()) {
+            configBuilder.compressIncludeMimeType(mimeType);
+        }
+        for (String mimeType : this.config.getGzipExcludedMimeTypes()) {
+            configBuilder.compressExcludeMimeType(mimeType);
+        }
+
+        CompressionHandler compressionHandler = new CompressionHandler();
+        compressionHandler.putCompression(gzipCompression);
+        compressionHandler.putConfiguration("/*", configBuilder.build());
+
+        this.server.insertHandler(compressionHandler);
+    }
+
+    private void configureRequestLogs() throws Exception
+    {
+        try {
+            this.requestLogTracker = new RequestLogTracker(this.context, this.config.getRequestLogFilter());
+            this.requestLogTracker.open();
+            this.server.setRequestLog(requestLogTracker);
+        } catch (InvalidSyntaxException e) {
+            SystemLogger.LOGGER.error("Invalid filter syntax in request log tracker", e);
+        }
+
+        if (this.config.isRequestLogOSGiEnabled()) {
+            this.osgiRequestLog = new LogServiceRequestLog(this.config);
+            this.osgiRequestLog.register(this.context);
+            SystemLogger.LOGGER.info("Directing Jetty request logs to the OSGi Log Service");
+        }
+
+        if (this.config.getRequestLogFilePath() != null && !this.config.getRequestLogFilePath().isEmpty()) {
+            this.fileRequestLog = new FileRequestLog(config);
+            this.fileRequestLog.start(this.context);
+            SystemLogger.LOGGER.info("Directing Jetty request logs to {}", this.config.getRequestLogFilePath());
         }
     }
 
@@ -932,6 +947,14 @@ public final class JettyService
             for (int i = 0; i < connectors.length; i++)
             {
                 final Connector connector = connectors[i];
+
+                if (!(connector instanceof ServerConnector))
+                {
+                    // FELIX-6852: only a ServerConnector exposes host/port. A connector contributed
+                    // via a ConnectorFactory that is not a ServerConnector cannot yield an endpoint URL,
+                    // so skip it instead of failing endpoint-property computation.
+                    continue;
+                }
 
                 if (getServerConnector(connector).getHost() == null || "0.0.0.0".equals(getServerConnector(connector).getHost()))
                 {
