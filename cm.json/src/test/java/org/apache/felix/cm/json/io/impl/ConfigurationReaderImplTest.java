@@ -128,6 +128,52 @@ public class ConfigurationReaderImplTest {
     }
 
     @Test
+    public void testReadValidSymbolicName() throws IOException {
+        readSymbolicName("\"com.example.feature-name_1\"", false);
+    }
+
+    @Test
+    public void testReadInvalidSymbolicNameType() throws IOException {
+        assertInvalidSymbolicName("1", false);
+    }
+
+    @Test
+    public void testReadInvalidSymbolicNameSyntax() throws IOException {
+        for (final String symbolicName : new String[] {
+                "", ".com.example", "com..example", "com.example.",
+                "com/example", "com:example", "com example", "com.ex\u00e4mple"
+        }) {
+            assertInvalidSymbolicName("\"" + symbolicName + "\"", false);
+        }
+    }
+
+    @Test
+    public void testReadInvalidBundleResourceSymbolicName() throws IOException {
+        assertInvalidSymbolicName("\"com.example:bad\"", true);
+    }
+
+    private void assertInvalidSymbolicName(final String symbolicName, final boolean bundleResource)
+            throws IOException {
+        try {
+            readSymbolicName(symbolicName, bundleResource);
+            fail();
+        } catch (final IOException ioe) {
+            // expected
+        }
+    }
+
+    private void readSymbolicName(final String symbolicName, final boolean bundleResource) throws IOException {
+        final String json = "{\n"
+                + "  \":configurator:version\" : \"1.0.0\",\n"
+                + "  \":configurator:symbolic-name\" : " + symbolicName + "\n"
+                + "}";
+        new ConfigurationReaderImpl()
+                .verifyAsBundleResource(bundleResource)
+                .build(new StringReader(json))
+                .readConfigurationResource();
+    }
+
+    @Test
     public void testReadInvalidJson() throws IOException {
         final String json = "{\n \"a\" : 5 \n \"b\" : 2\n}";
 
