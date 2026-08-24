@@ -37,6 +37,7 @@ import jakarta.json.JsonValue.ValueType;
 import org.apache.felix.cm.json.io.ConfigurationReader;
 import org.apache.felix.cm.json.io.ConfigurationResource;
 import org.apache.felix.cm.json.io.Configurations;
+import org.osgi.framework.Version;
 import org.osgi.service.configurator.ConfiguratorConstants;
 
 public class ConfigurationReaderImpl
@@ -44,6 +45,9 @@ public class ConfigurationReaderImpl
 
     private static final Pattern SYMBOLIC_NAME_PATTERN =
             Pattern.compile("[A-Za-z0-9_-]+(?:\\.[A-Za-z0-9_-]+)*");
+
+    private static final Pattern VERSION_PATTERN = Pattern.compile(
+            "[0-9]+(?:\\.[0-9]+(?:\\.[0-9]+(?:\\.[A-Za-z0-9_-]+)?)?)?");
 
     private boolean closed = false;
 
@@ -184,15 +188,22 @@ public class ConfigurationReaderImpl
                 throwIOException("Unknown resource version : ".concat(version.toString()));
             }
         }
-        if (!verifyAsBundleResource) {
-            // if this is not a bundle resource
-            // then version and symbolic name must be set
-            final Object rsrcVersion = JsonSupport
-                    .convertToObject(this.jsonObject.get(ConfiguratorConstants.PROPERTY_VERSION));
-            if (rsrcVersion == null) {
+        final JsonValue rsrcVersion = this.jsonObject.get(ConfiguratorConstants.PROPERTY_VERSION);
+        if (rsrcVersion == null) {
+            if (!verifyAsBundleResource) {
                 throwIOException("Missing version information");
             }
-            if (!(rsrcVersion instanceof String)) {
+        } else {
+            if (rsrcVersion.getValueType() != ValueType.STRING) {
+                throwIOException("Invalid version information : ".concat(rsrcVersion.toString()));
+            }
+            final String resourceVersion = ((JsonString) rsrcVersion).getString();
+            if (!VERSION_PATTERN.matcher(resourceVersion).matches()) {
+                throwIOException("Invalid version information : ".concat(rsrcVersion.toString()));
+            }
+            try {
+                new Version(resourceVersion);
+            } catch (final IllegalArgumentException iae) {
                 throwIOException("Invalid version information : ".concat(rsrcVersion.toString()));
             }
         }
