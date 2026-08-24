@@ -49,7 +49,6 @@ Several projects provide extra features to an OSGi runtime.
 - **gogo** `/gogo` - A command line shell, runtime and set of base commands for interacting with and introspecting an OSGi framework.
 - **health checks** `/healthcheck/*` - An extensible framework to monitor the status of the OSGi container at runtime. (contains **systemready**)
 - **inventory** `/inventory` - Provides some mechanisms to get the current state of the system and therefore provides an inventory of the system.
-- **ipojo** `/ipojo` - A *service component runtime* aiming to simplify OSGi application development.
 - **jaas support** `/jaas` - Bundle to simplify JAAS usage within OSGi environment.
 - **logback** `/logback` - A simple integration of the OSGi R7 Log (1.4) service to Logback backend.
 - **OSGi metrics** `/metrics/osgi` - Collecting and publishing metrics related to OSGi applications
