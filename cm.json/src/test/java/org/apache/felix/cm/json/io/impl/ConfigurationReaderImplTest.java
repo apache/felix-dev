@@ -95,6 +95,39 @@ public class ConfigurationReaderImplTest {
     }
 
     @Test
+    public void testReadValidResourceVersion() throws IOException {
+        readResourceVersion("1");
+    }
+
+    @Test
+    public void testReadInvalidResourceVersionType() throws IOException {
+        assertInvalidResourceVersion("\"1\"");
+    }
+
+    @Test
+    public void testReadFractionalResourceVersion() throws IOException {
+        assertInvalidResourceVersion("1.5");
+    }
+
+    private void assertInvalidResourceVersion(final String version) throws IOException {
+        try {
+            readResourceVersion(version);
+            fail();
+        } catch (final IOException ioe) {
+            // expected
+        }
+    }
+
+    private void readResourceVersion(final String version) throws IOException {
+        final String json = "{\n"
+                + "  \":configurator:resource-version\" : " + version + ",\n"
+                + "  \":configurator:version\" : \"1.0.0\",\n"
+                + "  \":configurator:symbolic-name\" : \"feature\"\n"
+                + "}";
+        new ConfigurationReaderImpl().build(new StringReader(json)).readConfigurationResource();
+    }
+
+    @Test
     public void testReadInvalidJson() throws IOException {
         final String json = "{\n \"a\" : 5 \n \"b\" : 2\n}";
 
