@@ -265,6 +265,18 @@
                         <goals>
                           <goal>baseline</goal>
                         </goals>
+                        <configuration>
+                            <!-- Baseline only the packages this bundle owns. The re-exported
+                                 org.eclipse.jetty.* packages are versioned by Jetty itself, so
+                                 their versions legitimately change on every Jetty upgrade
+                                 (and Jetty's own micro releases can add API); baselining them
+                                 against a previous Felix release is meaningless and would break
+                                 on each bump. See FELIX-6856. -->
+                            <filters>
+                                <filter>!org.eclipse.jetty.*</filter>
+                                <filter>*</filter>
+                            </filters>
+                        </configuration>
                     </execution>
                     <execution>
                         <id>light-bundle</id>
