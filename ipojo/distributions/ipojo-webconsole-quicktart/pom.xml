@@ -90,8 +90,8 @@
         </dependency>
         <dependency>
             <groupId>javax.servlet</groupId>
-            <artifactId>com.springsource.javax.servlet</artifactId>
-            <version>2.4.0</version>
+            <artifactId>javax.servlet-api</artifactId>
+            <version>4.0.1</version>
         </dependency>
         <dependency>
             <groupId>org.osgi</groupId>
@@ -115,12 +115,6 @@
         <repository>
             <id>ow2.releases</id>
             <url>http://repository.ow2.org/nexus/content/groups/public/</url>
-        </repository>
-
-        <repository>
-            <id>com.springsource.repository.libraries.external</id>
-            <name>SpringSource Enterprise Bundle Repository - External Library Releases</name>
-            <url>http://repository.springsource.com/maven/bundles/external</url>
         </repository>
     </repositories>
 

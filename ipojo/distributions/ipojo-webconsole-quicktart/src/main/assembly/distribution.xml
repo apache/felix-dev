@@ -45,7 +45,7 @@
         <dependencySet>
             <includes>
                 <include>*:org.apache.felix.*:jar</include>
-                <include>javax.servlet:com.springsource.javax.servlet:*</include>
+                <include>javax.servlet:javax.servlet-api:*</include>
                 <include>org.osgi:org.osgi.compendium:*</include>
                 <include>org.json:org.ow2.chameleon.commons.json:*</include>
                 <include>commons-io:commons-io:*</include>
