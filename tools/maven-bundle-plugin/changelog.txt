@@ -1,3 +1,8 @@
+Changes from 6.1.1 to 6.1.2
+---------------------------
+* Bug
+    * [FELIX-6857] - maven-bundle-plugin: do not embed type=pom dependencies (bnd fails opening the .pom as a JAR)
+
 Changes from 6.0.0 to 6.1.0
 ---------------------------
 * Improvement
