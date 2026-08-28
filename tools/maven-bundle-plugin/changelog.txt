@@ -1,4 +1,4 @@
-Changes from 6.1.2 to 6.1.3
+Changes from 6.1.2 to 6.1.4
 ---------------------------
 * Improvement
     * [FELIX-6858] - Upgrade bndlib to 7.4.0. See https://github.com/bndtools/bnd/wiki/Changes-in-7.4.0
