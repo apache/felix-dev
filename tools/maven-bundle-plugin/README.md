@@ -2,6 +2,8 @@ Maven-bundle-plugin
 
 # Upgrade notice
 
+* 6.1.3 uses bnd 7.4.0, which keeps java 17 as minimal java version.
+  * see https://github.com/bndtools/bnd/wiki/Changes-in-7.4.0 for more information.
 * 6.1.0 uses bnd 7.3.0, which keeps java 17 as minimal java version.
   * see https://github.com/bndtools/bnd/wiki/Changes-in-7.3.0 for more information.
 * 6.0.0 uses bnd 7.0.0, which has java 17 as minimal java version.
