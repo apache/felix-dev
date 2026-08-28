@@ -1,4 +1,4 @@
-Changes from 6.1.2 to 6.1.4
+Changes from 6.1.2 to 6.2.0
 ---------------------------
 * Bug
     * [FELIX-6830] - maven-bundle-plugin includes alien resources (e.g. beans_*.xsd, validation-*.xsd) from classpath dependencies when a module-info is present
