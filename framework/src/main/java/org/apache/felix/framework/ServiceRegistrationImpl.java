@@ -18,9 +18,6 @@
  */
 package org.apache.felix.framework;
 
-import java.security.AccessController;
-import java.security.PrivilegedActionException;
-import java.security.PrivilegedExceptionAction;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.Dictionary;
@@ -239,32 +236,7 @@ class ServiceRegistrationImpl<S> implements ServiceRegistration<S>
         // let it create the service object.
         if (m_factory != null)
         {
-            Object svcObj = null;
-            try
-            {
-                if (System.getSecurityManager() != null)
-                {
-                    svcObj = AccessController.doPrivileged(
-                        new ServiceFactoryPrivileged<>(acqBundle, null));
-                }
-                else
-                {
-                    svcObj = getFactoryUnchecked(acqBundle);
-                }
-            }
-            catch (PrivilegedActionException ex)
-            {
-                if (ex.getException() instanceof ServiceException)
-                {
-                    throw (ServiceException) ex.getException();
-                }
-                else
-                {
-                    throw new ServiceException(
-                        "Service factory exception: " + ex.getException().getMessage(),
-                        ServiceException.FACTORY_EXCEPTION, ex.getException());
-                }
-            }
+            Object svcObj = getFactoryUnchecked(acqBundle);
             return svcObj;
         }
         else
@@ -281,15 +253,7 @@ class ServiceRegistrationImpl<S> implements ServiceRegistration<S>
         {
             try
             {
-                if (System.getSecurityManager() != null)
-                {
-                    AccessController.doPrivileged(
-                        new ServiceFactoryPrivileged<>(relBundle, svcObj));
-                }
-                else
-                {
-                    ungetFactoryUnchecked(relBundle, svcObj);
-                }
+                ungetFactoryUnchecked(relBundle, svcObj);
             }
             catch (Throwable ex)
             {
@@ -393,38 +357,6 @@ class ServiceRegistrationImpl<S> implements ServiceRegistration<S>
     private void ungetFactoryUnchecked(Bundle bundle, S svcObj)
     {
         m_factory.ungetService(bundle, this, svcObj);
-    }
-
-    /**
-     * This simple class is used to ensure that when a service factory
-     * is called, that no other classes on the call stack interferes
-     * with the permissions of the factory itself.
-    **/
-    private class ServiceFactoryPrivileged<A> implements PrivilegedExceptionAction<A>
-    {
-        private Bundle m_bundle = null;
-        private S m_svcObj = null;
-
-        public ServiceFactoryPrivileged(Bundle bundle, S svcObj)
-        {
-            m_bundle = bundle;
-            m_svcObj = svcObj;
-        }
-
-        @SuppressWarnings("unchecked")
-		@Override
-		public A run() throws Exception
-        {
-            if (m_svcObj == null)
-            {
-                return (A)getFactoryUnchecked(m_bundle);
-            }
-            else
-            {
-                ungetFactoryUnchecked(m_bundle, m_svcObj);
-            }
-            return null;
-        }
     }
 
     //

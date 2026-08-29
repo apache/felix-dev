@@ -18,8 +18,6 @@
  */
 package org.apache.felix.framework;
 
-import java.security.AccessController;
-import java.security.PrivilegedAction;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
@@ -44,7 +42,6 @@ import org.osgi.framework.FrameworkEvent;
 import org.osgi.framework.FrameworkListener;
 import org.osgi.framework.ServiceEvent;
 import org.osgi.framework.ServiceListener;
-import org.osgi.framework.ServicePermission;
 import org.osgi.framework.ServiceReference;
 import org.osgi.framework.SynchronousBundleListener;
 import org.osgi.framework.UnfilteredServiceListener;
@@ -219,12 +216,6 @@ public class EventDispatcher
             }
             else if (clazz == ServiceListener.class)
             {
-                // Remember security context for filtering service events.
-                Object sm = System.getSecurityManager();
-                if (sm != null)
-                {
-                    acc = ((SecurityManager) sm).getSecurityContext();
-                }
                 // We need to create a Set for keeping track of matching service
                 // registrations so we can fire ServiceEvent.MODIFIED_ENDMATCH
                 // events. We need a Set even if filter is null, since the
@@ -864,21 +855,7 @@ public class EventDispatcher
         if ((bundle.getState() == Bundle.STARTING) ||
             (bundle.getState() == Bundle.ACTIVE))
         {
-            if (System.getSecurityManager() != null)
-            {
-                AccessController.doPrivileged(new PrivilegedAction() {
-                    @Override
-                    public Object run()
-                    {
-                        ((FrameworkListener) l).frameworkEvent((FrameworkEvent) event);
-                        return null;
-                    }
-                });
-            }
-            else
-            {
-                ((FrameworkListener) l).frameworkEvent((FrameworkEvent) event);
-            }
+            ((FrameworkListener) l).frameworkEvent((FrameworkEvent) event);
         }
     }
 
@@ -898,21 +875,7 @@ public class EventDispatcher
             ((bundle.getState() == Bundle.STARTING) ||
             (bundle.getState() == Bundle.ACTIVE)))
         {
-            if (System.getSecurityManager() != null)
-            {
-                AccessController.doPrivileged(new PrivilegedAction() {
-                    @Override
-                    public Object run()
-                    {
-                        ((BundleListener) l).bundleChanged((BundleEvent) event);
-                        return null;
-                    }
-                });
-            }
-            else
-            {
-                ((BundleListener) l).bundleChanged((BundleEvent) event);
-            }
+            ((BundleListener) l).bundleChanged((BundleEvent) event);
         }
     }
 
@@ -929,93 +892,38 @@ public class EventDispatcher
             return;
         }
 
-        // Check that the bundle has permission to get at least
-        // one of the service interfaces; the objectClass property
-        // of the service stores its service interfaces.
-        ServiceReference<?> ref = ((ServiceEvent) event).getServiceReference();
-
-        boolean hasPermission = true;
-        Object sm = System.getSecurityManager();
-        if ((acc != null) && (sm != null))
+        // Dispatch according to the filter.
+        boolean matched;
+        if (l instanceof UnfilteredServiceListener)
         {
-            try
-            {
-                ServicePermission perm =
-                    new ServicePermission(
-                        ref, ServicePermission.GET);
-                ((SecurityManager) sm).checkPermission(perm, acc);
-            }
-            catch (Exception ex)
-            {
-                hasPermission = false;
-            }
+            // An UnfilteredServiceListener always matches, regardless of the filter.
+            // The filter is still passed on to the Service Registry Hooks.
+            matched = true;
+        }
+        else
+        {
+            matched = (filter == null)
+                    || filter.match(((ServiceEvent) event).getServiceReference());
         }
 
-        if (hasPermission)
+        if (matched)
         {
-            // Dispatch according to the filter.
-            boolean matched;
-            if (l instanceof UnfilteredServiceListener)
+            if ((l instanceof AllServiceListener) ||
+                Util.isServiceAssignable(bundle, ((ServiceEvent) event).getServiceReference()))
             {
-                // An UnfilteredServiceListener always matches, regardless of the filter.
-                // The filter is still passed on to the Service Registry Hooks.
-                matched = true;
+                ((ServiceListener) l).serviceChanged((ServiceEvent) event);
             }
-            else
+        }
+        // We need to send an MODIFIED_ENDMATCH event if the listener
+        // matched previously.
+        else if (((ServiceEvent) event).getType() == ServiceEvent.MODIFIED)
+        {
+            if (filter.match(oldProps))
             {
-                matched = (filter == null)
-                        || filter.match(((ServiceEvent) event).getServiceReference());
-            }
-
-            if (matched)
-            {
-                if ((l instanceof AllServiceListener) ||
-                    Util.isServiceAssignable(bundle, ((ServiceEvent) event).getServiceReference()))
-                {
-                    if (System.getSecurityManager() != null)
-                    {
-                        AccessController.doPrivileged(new PrivilegedAction()
-                        {
-                            @Override
-                            public Object run()
-                            {
-                                ((ServiceListener) l).serviceChanged((ServiceEvent) event);
-                                return null;
-                            }
-                        });
-                    }
-                    else
-                    {
-                        ((ServiceListener) l).serviceChanged((ServiceEvent) event);
-                    }
-                }
-            }
-            // We need to send an MODIFIED_ENDMATCH event if the listener
-            // matched previously.
-            else if (((ServiceEvent) event).getType() == ServiceEvent.MODIFIED)
-            {
-                if (filter.match(oldProps))
-                {
-                    final ServiceEvent se = new ServiceEvent(
-                        ServiceEvent.MODIFIED_ENDMATCH,
-                        ((ServiceEvent) event).getServiceReference());
-                    if (System.getSecurityManager() != null)
-                    {
-                        AccessController.doPrivileged(new PrivilegedAction()
-                        {
-                            @Override
-                            public Object run()
-                            {
-                                ((ServiceListener) l).serviceChanged(se);
-                                return null;
-                            }
-                        });
-                    }
-                    else
-                    {
-                        ((ServiceListener) l).serviceChanged(se);
-                    }
-                }
+                final ServiceEvent se = new ServiceEvent(
+                    ServiceEvent.MODIFIED_ENDMATCH,
+                    ((ServiceEvent) event).getServiceReference());
+                ((ServiceListener) l).serviceChanged(se);
             }
         }
     }
