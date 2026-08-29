@@ -301,14 +301,16 @@ public abstract class AbstractComponentManager<S> implements ComponentManager<S>
 
     final void dumpThreads()
     {
-        try
-        {
-            String dump = new ThreadDump().call();
-            m_container.getLogger().log(Level.DEBUG, dump, null);
-        }
-        catch (Throwable t)
-        {
-            m_container.getLogger().log(Level.DEBUG, "Could not dump threads", t);
+        if (m_container.getLogger().isLogEnabled(Level.DEBUG)) {
+            try
+            {
+                String dump = new ThreadDump().call();
+                m_container.getLogger().log(Level.DEBUG, dump, null);
+            }
+            catch (Throwable t)
+            {
+                m_container.getLogger().log(Level.DEBUG, "Could not dump threads", t);
+            }
         }
     }
 
@@ -832,7 +834,7 @@ public abstract class AbstractComponentManager<S> implements ComponentManager<S>
         if (isFactory() || m_factoryInstance || dispose)
         {
             m_container.getLogger().log(Level.DEBUG,
-                "Disposing component (reason: " + reason + ")", null);
+                "Disposing component (reason: {0})", null, reason);
             clear();
         }
     }

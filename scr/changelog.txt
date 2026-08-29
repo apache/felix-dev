@@ -1,3 +1,26 @@
+Changes in 2.2.16
+-----------------
+** Improvement
+    * Document Satisfying Condition feature as OSGi R8 specification-compliant
+      - The existing satisfying condition implementation is now documented as compliant 
+        with the preliminary OSGi R8 Declarative Services specification changes
+      - See https://docs.osgi.org/specification/osgi.cmpn/8.0.0/service.component.html#service.component-satisfying.condition
+      - Added comprehensive documentation in README.md
+      - Updated code comments to reflect specification compliance
+    * #486 Stop flooding the scheduled executor with no-op tasks for change count updates
+
+Changes in 2.2.14
+-----------------
+** PRs
+    * #383 Do not print an error when a wildcard is used in component header
+    * #359 felix.scr - Fix printing of array of primitive types.
+    * #438 Enable conditional command registration.
+    * #437 Use globalContext for commands if configured
+
+** Bug
+    * [FELIX-6726] One reference can be unset more then once and will cause IllegalArgumentExceptionin Framework
+    * [FELIX-6778] Reduce number of re-creation(s) of SCR Component Registry thread
+
 Changes in 2.2.12
 -----------------
 ** Bug

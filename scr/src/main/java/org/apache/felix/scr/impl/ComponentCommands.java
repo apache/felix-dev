@@ -67,6 +67,7 @@ public class ComponentCommands implements ServiceTrackerCustomizer<Object, Servi
     private static final String INDENT_1 = "  ";
     private static final String INDENT_2 = INDENT_1 + INDENT_1;
 
+    private final BundleContext globalContext;
     private final BundleContext context;
     private final ServiceComponentRuntime scr;
     private final ScrConfiguration scrConfig;
@@ -125,7 +126,7 @@ public class ComponentCommands implements ServiceTrackerCustomizer<Object, Servi
                 Dictionary<String, Object> svcProps = new Hashtable<>();
                 svcProps.put(Constants.SERVICE_DESCRIPTION, "SCR Info Service");
                 svcProps.put(Constants.SERVICE_VENDOR, "The Apache Software Foundation");
-                scrInfoReg = context.registerService(ScrInfo.class, new ComponentCommandsScrInfo(this, context), svcProps);
+                scrInfoReg = context.registerService(ScrInfo.class, new ComponentCommandsScrInfo(this, globalContext), svcProps);
             }
         } else {
             safeUnregister(scrInfoReg);
@@ -133,8 +134,9 @@ public class ComponentCommands implements ServiceTrackerCustomizer<Object, Servi
         }
     }
 
-    protected ComponentCommands(BundleContext context, ServiceComponentRuntime scr, ScrConfiguration scrConfig) {
+    protected ComponentCommands(BundleContext context, BundleContext globalContext, ServiceComponentRuntime scr, ScrConfiguration scrConfig) {
         this.context = context;
+        this.globalContext = globalContext;
         this.scr = scr;
         this.scrConfig = scrConfig;
         this.gogoRuntimeTracker = new ServiceTracker<>(context, "org.apache.felix.service.command.CommandProcessor", this);
@@ -154,7 +156,7 @@ public class ComponentCommands implements ServiceTrackerCustomizer<Object, Servi
 
     @Descriptor("List components of a specific bundle")
     public ComponentDescriptionDTO[] list(@Descriptor("ID of the bundle") long bundleId) {
-        Bundle bundle = context.getBundle(bundleId);
+        Bundle bundle = globalContext.getBundle(bundleId);
         return bundle != null ? scr.getComponentDescriptionDTOs(bundle).toArray(new ComponentDescriptionDTO[0]) : null;
     }
 
@@ -344,7 +346,7 @@ public class ComponentCommands implements ServiceTrackerCustomizer<Object, Servi
         if (descDto.factory != null) {
             out.put("Factory", descDto.factory);
             try {
-                ServiceReference<?>[] serviceRefs = context.getAllServiceReferences(ComponentFactory.class.getName(), String.format("(&(%s=%s)(%s=%d))", ComponentConstants.COMPONENT_NAME, descDto.name, Constants.SERVICE_BUNDLEID, descDto.bundle.id));
+                ServiceReference<?>[] serviceRefs = globalContext.getAllServiceReferences(ComponentFactory.class.getName(), String.format("(&(%s=%s)(%s=%d))", ComponentConstants.COMPONENT_NAME, descDto.name, Constants.SERVICE_BUNDLEID, descDto.bundle.id));
                 if (serviceRefs != null && serviceRefs.length > 0) {
                     out.put("Factory Service", printPublishedServices(serviceRefs));
                 }
@@ -366,7 +368,7 @@ public class ComponentCommands implements ServiceTrackerCustomizer<Object, Servi
 
             // Print service registration
             try {
-                ServiceReference<?>[] serviceRefs = context.getAllServiceReferences(null, String.format("(%s=%d)", ComponentConstants.COMPONENT_ID, configDto.id));
+                ServiceReference<?>[] serviceRefs = globalContext.getAllServiceReferences(null, String.format("(%s=%d)", ComponentConstants.COMPONENT_ID, configDto.id));
                 if (serviceRefs != null && serviceRefs.length > 0) {
                     out.put("Service", printPublishedServices(serviceRefs));
                 }
@@ -517,8 +519,11 @@ public class ComponentCommands implements ServiceTrackerCustomizer<Object, Servi
             Arrays.sort(bindings, serviceRefDtoComparator);
             builder.append(MessageFormat.format(" {0,choice,0#(no active bindings)|1#(1 binding):|1<({0} bindings):}", bindings.length));
             for (ServiceReferenceDTO svcDto : bindings) {
-                Bundle provider = context.getBundle(svcDto.bundle);
-                builder.append(String.format("%n" + INDENT_1 + "  * Bound to [%d] from bundle %d (%s:%s)", svcDto.id, svcDto.bundle, provider.getSymbolicName(), provider.getVersion()));
+                Bundle provider = globalContext.getBundle(svcDto.bundle);
+                if (provider != null) {
+                    builder.append(String.format("%n" + INDENT_1 + "  * Bound to [%d] from bundle %d (%s:%s)", svcDto.id, svcDto.bundle,
+                            provider == null ? "null" : provider.getSymbolicName(),  provider == null ? "null" : provider.getVersion()));
+                }
             }
         }
     }

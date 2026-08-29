@@ -64,11 +64,11 @@ public class UploadTest extends Servlet5BaseIntegrationTest {
 
     private CountDownLatch receivedLatch;
 
-    public void setupServlet(final Map<String, Long> contents) throws Exception {
+    public void setupServlet(final Map<String, Long> contents, boolean multipartEnabled) throws Exception {
         long counter = this.getRuntimeCounter();
         Dictionary<String, Object> servletProps = new Hashtable<String, Object>();
         servletProps.put(HTTP_WHITEBOARD_SERVLET_PATTERN, PATH);
-        servletProps.put(HTTP_WHITEBOARD_SERVLET_MULTIPART_ENABLED, Boolean.TRUE);
+        servletProps.put(HTTP_WHITEBOARD_SERVLET_MULTIPART_ENABLED, multipartEnabled);
         servletProps.put(HTTP_WHITEBOARD_SERVLET_MULTIPART_MAXFILESIZE, 1024L);
 
         TestServlet servletWithErrorCode = new TestServlet() {
@@ -131,7 +131,7 @@ public class UploadTest extends Servlet5BaseIntegrationTest {
         this.receivedLatch = new CountDownLatch(1);
 
         final Map<String, Long> contents = new HashMap<>();
-        setupServlet(contents);
+        setupServlet(contents, true);
 
         postContent('a', 500, 201);
         assertTrue(receivedLatch.await(5, TimeUnit.SECONDS));
@@ -144,9 +144,21 @@ public class UploadTest extends Servlet5BaseIntegrationTest {
         this.receivedLatch = new CountDownLatch(1);
 
         final Map<String, Long> contents = new HashMap<>();
-        setupServlet(contents);
+        setupServlet(contents, true);
 
         postContent('b', 2048, 500);
+        assertTrue(receivedLatch.await(5, TimeUnit.SECONDS));
+        assertTrue(contents.isEmpty());
+    }
+
+    @Test
+    public void testNoMultipartEnabled() throws Exception {
+        this.receivedLatch = new CountDownLatch(1);
+
+        final Map<String, Long> contents = new HashMap<>();
+        setupServlet(contents, false);
+
+        postContent('c', 100, 500);
         assertTrue(receivedLatch.await(5, TimeUnit.SECONDS));
         assertTrue(contents.isEmpty());
     }

@@ -36,7 +36,12 @@ import org.apache.felix.hc.api.ResultLog.Entry;
 import org.apache.felix.hc.generalchecks.HttpRequestsCheck.RequestSpec;
 import org.apache.felix.hc.generalchecks.HttpRequestsCheck.ResponseCheck.ResponseCheckResult;
 import org.junit.Test;
+import org.mockito.ArgumentCaptor;
 import org.mockito.Mockito;
+import org.osgi.framework.BundleContext;
+import org.osgi.framework.ServiceEvent;
+import org.osgi.framework.ServiceListener;
+import org.osgi.framework.ServiceReference;
 
 public class HttpRequestsCheckTest {
 
@@ -75,7 +80,36 @@ public class HttpRequestsCheckTest {
         assertThat(proxyAddress, containsString("proxy"));
         assertThat(proxyAddress, containsString(":2000"));
     }
-    
+
+    @Test
+    public void testDefaultRequestOptionsAppliedToSpecs() throws Exception {
+        HttpRequestsCheck httpRequestsCheck = new HttpRequestsCheck(
+                createConfigWithDefaults("/path/to/page.html", "-X HEAD -H \"X-Test: Default\" -H \"Accept: text/plain\""),
+                Mockito.mock(BundleContext.class));
+
+        RequestSpec requestSpec = httpRequestsCheck.getRequstSpecs().get(0);
+        assertEquals("/path/to/page.html", requestSpec.url);
+        assertEquals("HEAD", requestSpec.method);
+        HashMap<String, String> expectedHeaders = new HashMap<String,String>();
+        expectedHeaders.put("X-Test", "Default");
+        expectedHeaders.put("Accept", "text/plain");
+        assertEquals(expectedHeaders, requestSpec.headers);
+    }
+
+    @Test
+    public void testDefaultRequestOptionsOverriddenByRequestSpec() throws Exception {
+        HttpRequestsCheck httpRequestsCheck = new HttpRequestsCheck(
+                createConfigWithDefaults("-X POST -H \"X-Test: Specific\" /path/to/page.html", "-H \"X-Test: Default\""),
+                Mockito.mock(BundleContext.class));
+
+        RequestSpec requestSpec = httpRequestsCheck.getRequstSpecs().get(0);
+        assertEquals("/path/to/page.html", requestSpec.url);
+        assertEquals("POST", requestSpec.method);
+        HashMap<String, String> expectedHeaders = new HashMap<String,String>();
+        expectedHeaders.put("X-Test", "Specific");
+        assertEquals(expectedHeaders, requestSpec.headers);
+    }
+
     @Test
     public void testSimpleRequestSpec() throws Exception {
 
@@ -91,6 +125,15 @@ public class HttpRequestsCheckTest {
         entry = fakeRequestForSpecAndReturnResponse(requestSpec, simple200HtmlResponse);
         assertEquals(Result.Status.WARN, entry.getStatus());
         assertThat(entry.getMessage(), containsString("200 (expected 401)"));
+    }
+
+    @Test
+    public void testSimpleRequestSpecIsTrimmed() throws Exception {
+
+        HttpRequestsCheck.RequestSpec requestSpec = new HttpRequestsCheck.RequestSpec("https://www.google.com/ => 200 ");
+        Entry entry = fakeRequestForSpecAndReturnResponse(requestSpec, simple200HtmlResponse);
+        assertEquals(Result.Status.OK, entry.getStatus());
+
     }
     
     @Test
@@ -110,8 +153,8 @@ public class HttpRequestsCheckTest {
 
     private Entry fakeRequestForSpecAndReturnResponse(HttpRequestsCheck.RequestSpec requestSpecOrig, HttpRequestsCheck.Response response) throws Exception {
         RequestSpec requestSpec = Mockito.spy(requestSpecOrig);
-        doReturn(response).when(requestSpec).performRequest(anyString(), anyString(), anyInt(), anyInt(), any(FormattingResultLog.class));
-        FormattingResultLog resultLog = requestSpec.check("http://localhost:8080", 10000, 10000, Result.Status.WARN, true);
+        doReturn(response).when(requestSpec).performRequest(anyString(), anyString(), anyInt(), anyInt(), any(FormattingResultLog.class), any(HttpRequestsCheckTrustedCerts.class));
+        FormattingResultLog resultLog = requestSpec.check("http://localhost:8080", 10000, 10000, Result.Status.WARN, true, null);
         Iterator<Entry> entryIt = resultLog.iterator();
         Entry lastEntry = null;
         while(entryIt.hasNext()) {
@@ -175,5 +218,106 @@ public class HttpRequestsCheckTest {
         assertArrayEquals(new String[] {"normal1", "\"one two three\"", "normal2", "'one two three'", "-p", "--words", "\"w1 w2 w3\""}, args);
     }
 
+    @Test
+    public void testDefaultBaseUrlUpdatesOnServiceEvent() throws Exception {
+        BundleContext bundleContext = Mockito.mock(BundleContext.class);
+        ServiceReference httpRef = Mockito.mock(ServiceReference.class);
+
+        Mockito.when(bundleContext.getServiceReference("org.osgi.service.http.HttpService"))
+            .thenReturn((ServiceReference) null, httpRef);
+        Mockito.when(bundleContext.getServiceReference("org.osgi.service.http.runtime.HttpServiceRuntime")).thenReturn(null);
+        Mockito.when(bundleContext.getServiceReference("org.osgi.service.servlet.runtime.HttpServiceRuntime")).thenReturn(null);
+        Mockito.when(httpRef.getProperty("org.apache.felix.http.enable")).thenReturn(true);
+        Mockito.when(httpRef.getProperty("org.osgi.service.http.port")).thenReturn("9090");
+
+        ArgumentCaptor<ServiceListener> listenerCaptor = ArgumentCaptor.forClass(ServiceListener.class);
+        Mockito.doNothing().when(bundleContext).addServiceListener(listenerCaptor.capture(), anyString());
+
+        HttpRequestsCheck httpRequestsCheck = new HttpRequestsCheck(createConfig(), bundleContext);
+
+        assertNull(httpRequestsCheck.getDefaultBaseUrl());
+
+        listenerCaptor.getValue().serviceChanged(new ServiceEvent(ServiceEvent.REGISTERED, httpRef));
+
+        assertEquals("http://localhost:9090", httpRequestsCheck.getDefaultBaseUrl());
+    }
+
+    @Test
+    public void testRelativeUrlWithoutHttpServiceReturnsUnavailableLog() throws Exception {
+        HttpRequestsCheck.RequestSpec requestSpec = new HttpRequestsCheck.RequestSpec("/path/to/page.html");
+        FormattingResultLog resultLog = requestSpec.check(null, 1000, 1000, Result.Status.WARN, false, null);
+
+        Iterator<Entry> entryIt = resultLog.iterator();
+        Entry lastEntry = null;
+        while(entryIt.hasNext()) {
+            lastEntry = entryIt.next();
+        }
+
+        assertEquals(Result.Status.TEMPORARILY_UNAVAILABLE, lastEntry.getStatus());
+        assertThat(lastEntry.getMessage(), containsString("HttpService is not available"));
+    }
+
+    private HttpRequestsCheck.Config createConfig() {
+        return createConfigWithDefaults("/path/to/page.html", "");
+    }
+
+    private HttpRequestsCheck.Config createConfigWithDefaults(String requestSpec, String defaultRequestOptions) {
+        return new HttpRequestsCheck.Config() {
+            @Override
+            public String hc_name() {
+                return HttpRequestsCheck.HC_NAME;
+            }
+
+            @Override
+            public String[] hc_tags() {
+                return new String[0];
+            }
+
+            @Override
+            public String[] requests() {
+                return new String[] { requestSpec };
+            }
+
+            @Override
+            public String defaultRequestOptions() {
+                return defaultRequestOptions;
+            }
+
+            @Override
+            public int connectTimeoutInMs() {
+                return 7000;
+            }
+
+            @Override
+            public int readTimeoutInMs() {
+                return 7000;
+            }
+
+            @Override
+            public Result.Status statusForFailedContraint() {
+                return Result.Status.WARN;
+            }
+
+            @Override
+            public boolean runInParallel() {
+                return false;
+            }
+
+            @Override
+            public String[] trustedCertificates() {
+                return new String[0];
+            }
+
+            @Override
+            public String webconsole_configurationFactory_nameHint() {
+                return "{hc.name}: {requests}";
+            }
+
+            @Override
+            public Class<? extends java.lang.annotation.Annotation> annotationType() {
+                return HttpRequestsCheck.Config.class;
+            }
+        };
+    }
 
 }

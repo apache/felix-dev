@@ -152,8 +152,7 @@ public final class Dispatcher
 		        			requestInfo,
 		        			null,
 		        			pr.handler.getServletInfo().isAsyncSupported(),
-		        			multipartConfig,
-		        			pr.handler.getMultipartSecurityContext());
+		        			multipartConfig);
 				}
 		        final FilterHandler[] filterHandlers = handlerRegistry.getFilters(pr, req.getDispatcherType(), pr.requestURI);
 

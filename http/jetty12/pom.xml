@@ -30,7 +30,7 @@
     <description>This is an implementation of the R8.1 OSGi Servlet Service, the R7 OSGi Http Service and the R7 OSGi Http Whiteboard Specification</description>
 
     <artifactId>org.apache.felix.http.jetty12</artifactId>
-    <version>1.0.37-SNAPSHOT</version>
+    <version>2.0.7-SNAPSHOT</version>
     <packaging>bundle</packaging>
 
     <scm>
@@ -41,9 +41,13 @@
   </scm>
 
     <properties>
+        <!-- Minimum required Java version. Jetty 12.1 requires Java 17, so this is the floor.
+             The optional virtual-threads support (felix.jetty.threadpool.useVirtualThreads)
+             additionally requires Java 21 at runtime and is enabled conditionally (see JettyService). -->
         <felix.java.version>17</felix.java.version>
-        <jetty.version>12.0.23</jetty.version>
-        <baseline.skip>true</baseline.skip>
+        <jetty.version>12.1.12</jetty.version>
+        <slf4j.version>2.0.17</slf4j.version>
+        <baseline.skip>false</baseline.skip>
         <org.ops4j.pax.exam.version>4.13.3</org.ops4j.pax.exam.version>
         <!-- To debug the pax process, override this with -D -->
         <pax.vm.options>-Xmx512M</pax.vm.options>
@@ -75,9 +79,9 @@
 
                                     if (artifact.getArtifactHandler().isAddedToClasspath() && !org.apache.maven.artifact.Artifact.SCOPE_TEST.equals( artifact.getScope() )
                                             && !"org.eclipse.jetty.websocket".equals(artifact.getGroupId()) // skip the optional websocket artifacts
-                                            && !"org.eclipse.jetty.ee10.websocket".equals(artifact.getGroupId()) // skip the optional websocket artifacts
-                                            && !"jetty-annotations".equals(artifact.getArtifactId()) // skip the transitive artifacts from the optional websocket artifacts
-                                            && !"jetty-plus".equals(artifact.getArtifactId())
+                                            && !"org.eclipse.jetty.ee11.websocket".equals(artifact.getGroupId()) // skip the optional websocket artifacts
+                                            && !"jetty-ee11-annotations".equals(artifact.getArtifactId()) // skip the transitive artifacts from the optional websocket artifacts
+                                            && !"jetty-ee11-plus".equals(artifact.getArtifactId())
                                             && !"jetty-webapp".equals(artifact.getArtifactId())
                                             && !"jetty-ee".equals(artifact.getArtifactId())) {
                                         def jar;
@@ -152,7 +156,7 @@
             <plugin>
                 <groupId>org.apache.felix</groupId>
                 <artifactId>maven-bundle-plugin</artifactId>
-                <version>6.0.0</version>
+                <version>6.0.2</version>
                 <extensions>true</extensions>
                 <configuration>
                     <instructions>
@@ -184,8 +188,9 @@
                             org.eclipse.jetty.server.*,
                             org.eclipse.jetty.util.*,
                             org.eclipse.jetty.ee.*,
-                            !org.eclipse.jetty.ee10.websocket.*,
-                            org.eclipse.jetty.ee10.servlet.*,
+                            !org.eclipse.jetty.ee11.websocket.*,
+                            org.eclipse.jetty.ee11.servlet.*,
+                            org.eclipse.jetty.compression.*,
                             org.apache.felix.http.jetty,
                             org.apache.felix.http.jakartawrappers,
                             org.apache.felix.http.javaxwrappers
@@ -195,9 +200,6 @@
                             org.apache.felix.http.jetty.*,
                             org.eclipse.jetty.version
                         </Private-Package>
-                        <Conditional-Package>
-                            org.apache.commons.*
-                        </Conditional-Package>
                         <Import-Package>
                             sun.misc;resolution:=optional,
                             sun.nio.ch;resolution:=optional,
@@ -263,6 +265,18 @@
                         <goals>
                           <goal>baseline</goal>
                         </goals>
+                        <configuration>
+                            <!-- Baseline only the packages this bundle owns. The re-exported
+                                 org.eclipse.jetty.* packages are versioned by Jetty itself, so
+                                 their versions legitimately change on every Jetty upgrade
+                                 (and Jetty's own micro releases can add API); baselining them
+                                 against a previous Felix release is meaningless and would break
+                                 on each bump. See FELIX-6856. -->
+                            <filters>
+                                <filter>!org.eclipse.jetty.*</filter>
+                                <filter>*</filter>
+                            </filters>
+                        </configuration>
                     </execution>
                     <execution>
                         <id>light-bundle</id>
@@ -274,10 +288,6 @@
                             <instructions>
                                <Bundle-Name>${project.name} Light</Bundle-Name>
                                <Bundle-SymbolicName>${project.artifactId}.light</Bundle-SymbolicName>
-                               <!-- We need to override this from the base configuration -->
-                               <Conditional-Package>
-                                   foo
-                               </Conditional-Package>
                                <Export-Package>
                                     org.osgi.service.http,
                                     org.osgi.service.http.context,
@@ -343,15 +353,13 @@
                         </goals>
                         <configuration>
                             <classifier>with-jetty-websockets</classifier>
+                            <!-- Only the instructions that differ from the primary bundle are declared here.
+                                 Everything else (Bundle-SymbolicName, Bundle-Version, X-Jetty-Version,
+                                 Bundle-Activator, Private-Package, DynamicImport-Package, Provide-Capability,
+                                 Require-Capability, Include-Resource, _removeheaders) is inherited from the
+                                 plugin-level <instructions> via Maven's plugin/execution configuration merge. -->
                             <instructions>
-                                <Bundle-SymbolicName>${project.artifactId}</Bundle-SymbolicName>
-                                <Bundle-Version>${project.version}</Bundle-Version>
-                                <X-Jetty-Version>
-                                    ${jetty.version}
-                                </X-Jetty-Version>
-                                <Bundle-Activator>
-                                    org.apache.felix.http.jetty.internal.JettyActivator
-                                </Bundle-Activator>
+                                <!-- Adds the Jetty-specific websocket packages on top of the primary export set -->
                                 <Export-Package>
                                     org.osgi.service.http,
                                     org.osgi.service.http.context,
@@ -372,22 +380,16 @@
                                     org.eclipse.jetty.server.*,
                                     org.eclipse.jetty.util.*,
                                     org.eclipse.jetty.ee.*,
-                                    org.eclipse.jetty.ee10.servlet.*,
-                                    !org.eclipse.jetty.ee10.websocket.jakarta.*,
-                                    org.eclipse.jetty.ee10.websocket.*,
+                                    org.eclipse.jetty.ee11.servlet.*,
+                                    !org.eclipse.jetty.ee11.websocket.jakarta.*,
+                                    org.eclipse.jetty.ee11.websocket.*,
                                     org.eclipse.jetty.websocket.*,
+                                    org.eclipse.jetty.compression.*,
                                     org.apache.felix.http.jetty,
                                     org.apache.felix.http.jakartawrappers,
                                     org.apache.felix.http.javaxwrappers
                                 </Export-Package>
-                                <Private-Package>
-                                    org.apache.felix.http.base.*,
-                                    org.apache.felix.http.jetty.*,
-                                    org.eclipse.jetty.version
-                                </Private-Package>
-                                <Conditional-Package>
-                                    org.apache.commons.*
-                                </Conditional-Package>
+                                <!-- Adds the optional org.eclipse.jetty.client import needed by the websocket bundles -->
                                 <Import-Package>
                                     org.eclipse.jetty.client;resolution:=optional,
                                     sun.misc;resolution:=optional,
@@ -406,39 +408,6 @@
                                     org.osgi.service.http.runtime.dto;version="[1.1,1.2)",
                                     *
                                 </Import-Package>
-                                <DynamicImport-Package>
-                                    org.osgi.service.cm;version="[1.3,2)",
-                                    org.osgi.service.event;version="[1.2,2)",
-                                    org.osgi.service.log;version="[1.3,2)",
-                                    org.osgi.service.metatype;version="[1.4,2)"
-                                </DynamicImport-Package>
-                                <Provide-Capability>
-                                    osgi.implementation;osgi.implementation="osgi.http";version:Version="1.1";
-                                    uses:="javax.servlet,javax.servlet.http,org.osgi.service.http.context,org.osgi.service.http.whiteboard",
-                                    osgi.implementation;osgi.implementation="osgi.http";version:Version="2.0";
-                                    uses:="jakarta.servlet,jakarta.servlet.http,org.osgi.service.servlet.context,org.osgi.service.servlet.whiteboard",
-                                    osgi.service;objectClass:List&lt;String&gt;="org.osgi.service.servlet.runtime.HttpServiceRuntime";
-                                    uses:="org.osgi.service.servlet.runtime,org.osgi.service.servlet.runtime.dto",
-                                    osgi.service;objectClass:List&lt;String&gt;="org.osgi.service.http.runtime.HttpServiceRuntime";
-                                    uses:="org.osgi.service.http.runtime,org.osgi.service.http.runtime.dto",
-                                    osgi.service;objectClass:List&lt;String&gt;="org.osgi.service.http.HttpService";
-                                    uses:="org.osgi.service.http",
-                                    osgi.serviceloader;osgi.serviceloader="org.eclipse.jetty.http.HttpFieldPreEncoder"
-                                </Provide-Capability>
-                                <Require-Capability>
-                                    osgi.contract;filter:="(&amp;(osgi.contract=JavaServlet)(version=4.0))",
-                                    osgi.contract;filter:="(&amp;(osgi.contract=JakartaServlet)(version=6.0))",
-                                    osgi.extender;filter:="(osgi.extender=osgi.serviceloader.registrar)";resolution:=optional,
-                                    osgi.extender;filter:="(osgi.extender=osgi.serviceloader.processor)";resolution:=optional,
-                                    osgi.serviceloader;filter:="(osgi.serviceloader=org.eclipse.jetty.http.HttpFieldPreEncoder)";resolution:=optional;cardinality:=multiple,
-                                    osgi.serviceloader;filter:="(osgi.serviceloader=org.eclipse.jetty.io.ssl.ALPNProcessor$Server)";resolution:=optional;cardinality:=multiple
-                                </Require-Capability>
-                                <Include-Resource>
-                                    {maven-resources},${project.build.directory}/serviceloader-resources
-                                </Include-Resource>
-                                <_removeheaders>
-                                    Private-Package,Conditional-Package,Include-Resource
-                                </_removeheaders>
                             </instructions>
                         </configuration>
                     </execution>
@@ -449,15 +418,13 @@
                         </goals>
                         <configuration>
                             <classifier>with-jakarta-websockets</classifier>
+                            <!-- Only the instructions that differ from the primary bundle are declared here.
+                                 Everything else (Bundle-SymbolicName, Bundle-Version, X-Jetty-Version,
+                                 Bundle-Activator, Private-Package, DynamicImport-Package, Provide-Capability,
+                                 Require-Capability, Include-Resource, _removeheaders) is inherited from the
+                                 plugin-level <instructions> via Maven's plugin/execution configuration merge. -->
                             <instructions>
-                                <Bundle-SymbolicName>${project.artifactId}</Bundle-SymbolicName>
-                                <Bundle-Version>${project.version}</Bundle-Version>
-                                <X-Jetty-Version>
-                                    ${jetty.version}
-                                </X-Jetty-Version>
-                                <Bundle-Activator>
-                                    org.apache.felix.http.jetty.internal.JettyActivator
-                                </Bundle-Activator>
+                                <!-- Adds the Jakarta websocket packages on top of the primary export set -->
                                 <Export-Package>
                                     org.osgi.service.http,
                                     org.osgi.service.http.context,
@@ -478,23 +445,17 @@
                                     org.eclipse.jetty.server.*,
                                     org.eclipse.jetty.util.*,
                                     org.eclipse.jetty.ee.*,
-                                    !org.eclipse.jetty.ee10.websocket.server.*,
-                                    !org.eclipse.jetty.ee10.websocket.servlet.*,
-                                    org.eclipse.jetty.ee10.websocket.jakarta.*,
-                                    org.eclipse.jetty.ee10.servlet.*,
+                                    !org.eclipse.jetty.ee11.websocket.server.*,
+                                    !org.eclipse.jetty.ee11.websocket.servlet.*,
+                                    org.eclipse.jetty.ee11.websocket.jakarta.*,
+                                    org.eclipse.jetty.ee11.servlet.*,
                                     org.eclipse.jetty.websocket.*,
+                                    org.eclipse.jetty.compression.*,
                                     org.apache.felix.http.jetty,
                                     org.apache.felix.http.jakartawrappers,
                                     org.apache.felix.http.javaxwrappers
                                 </Export-Package>
-                                <Private-Package>
-                                    org.apache.felix.http.base.*,
-                                    org.apache.felix.http.jetty.*,
-                                    org.eclipse.jetty.version
-                                </Private-Package>
-                                <Conditional-Package>
-                                    org.apache.commons.*
-                                </Conditional-Package>
+                                <!-- Adds the optional org.eclipse.jetty.client import needed by the websocket bundles -->
                                 <Import-Package>
                                     org.eclipse.jetty.client;resolution:=optional,
                                     sun.misc;resolution:=optional,
@@ -513,39 +474,6 @@
                                     org.osgi.service.http.runtime.dto;version="[1.1,1.2)",
                                     *
                                 </Import-Package>
-                                <DynamicImport-Package>
-                                    org.osgi.service.cm;version="[1.3,2)",
-                                    org.osgi.service.event;version="[1.2,2)",
-                                    org.osgi.service.log;version="[1.3,2)",
-                                    org.osgi.service.metatype;version="[1.4,2)"
-                                </DynamicImport-Package>
-                                <Provide-Capability>
-                                    osgi.implementation;osgi.implementation="osgi.http";version:Version="1.1";
-                                    uses:="javax.servlet,javax.servlet.http,org.osgi.service.http.context,org.osgi.service.http.whiteboard",
-                                    osgi.implementation;osgi.implementation="osgi.http";version:Version="2.0";
-                                    uses:="jakarta.servlet,jakarta.servlet.http,org.osgi.service.servlet.context,org.osgi.service.servlet.whiteboard",
-                                    osgi.service;objectClass:List&lt;String&gt;="org.osgi.service.servlet.runtime.HttpServiceRuntime";
-                                    uses:="org.osgi.service.servlet.runtime,org.osgi.service.servlet.runtime.dto",
-                                    osgi.service;objectClass:List&lt;String&gt;="org.osgi.service.http.runtime.HttpServiceRuntime";
-                                    uses:="org.osgi.service.http.runtime,org.osgi.service.http.runtime.dto",
-                                    osgi.service;objectClass:List&lt;String&gt;="org.osgi.service.http.HttpService";
-                                    uses:="org.osgi.service.http",
-                                    osgi.serviceloader;osgi.serviceloader="org.eclipse.jetty.http.HttpFieldPreEncoder"
-                                </Provide-Capability>
-                                <Require-Capability>
-                                    osgi.contract;filter:="(&amp;(osgi.contract=JavaServlet)(version=4.0))",
-                                    osgi.contract;filter:="(&amp;(osgi.contract=JakartaServlet)(version=6.0))",
-                                    osgi.extender;filter:="(osgi.extender=osgi.serviceloader.registrar)";resolution:=optional,
-                                    osgi.extender;filter:="(osgi.extender=osgi.serviceloader.processor)";resolution:=optional,
-                                    osgi.serviceloader;filter:="(osgi.serviceloader=org.eclipse.jetty.http.HttpFieldPreEncoder)";resolution:=optional;cardinality:=multiple,
-                                    osgi.serviceloader;filter:="(osgi.serviceloader=org.eclipse.jetty.io.ssl.ALPNProcessor$Server)";resolution:=optional;cardinality:=multiple
-                                </Require-Capability>
-                                <Include-Resource>
-                                    {maven-resources},${project.build.directory}/serviceloader-resources
-                                </Include-Resource>
-                                <_removeheaders>
-                                    Private-Package,Conditional-Package,Include-Resource
-                                </_removeheaders>
                             </instructions>
                         </configuration>
                     </execution>
@@ -594,7 +522,7 @@
         <dependency>
             <groupId>org.slf4j</groupId>
             <artifactId>slf4j-api</artifactId>
-            <version>2.0.17</version>
+            <version>${slf4j.version}</version>
             <scope>provided</scope>
         </dependency>
         <dependency>
@@ -634,8 +562,8 @@
             <scope>provided</scope>
         </dependency>
         <dependency>
-            <groupId>org.eclipse.jetty.ee10</groupId>
-            <artifactId>jetty-ee10-servlet</artifactId>
+            <groupId>org.eclipse.jetty.ee11</groupId>
+            <artifactId>jetty-ee11-servlet</artifactId>
             <version>${jetty.version}</version>
         </dependency>
         <dependency>
@@ -684,14 +612,14 @@
             <version>${jetty.version}</version>
         </dependency>
         <dependency>
-            <groupId>org.eclipse.jetty.ee10.websocket</groupId>
-            <artifactId>jetty-ee10-websocket-jakarta-server</artifactId>
+            <groupId>org.eclipse.jetty.ee11.websocket</groupId>
+            <artifactId>jetty-ee11-websocket-jakarta-server</artifactId>
             <version>${jetty.version}</version>
             <optional>true</optional>
         </dependency>
         <dependency>
-            <groupId>org.eclipse.jetty.ee10.websocket</groupId>
-            <artifactId>jetty-ee10-websocket-jetty-server</artifactId>
+            <groupId>org.eclipse.jetty.ee11.websocket</groupId>
+            <artifactId>jetty-ee11-websocket-jetty-server</artifactId>
             <version>${jetty.version}</version>
             <optional>true</optional>
         </dependency>
@@ -704,6 +632,21 @@
         <dependency>
             <groupId>org.eclipse.jetty</groupId>
             <artifactId>jetty-session</artifactId>
+            <version>${jetty.version}</version>
+        </dependency>
+        <dependency>
+            <groupId>org.eclipse.jetty.compression</groupId>
+            <artifactId>jetty-compression-server</artifactId>
+            <version>${jetty.version}</version>
+        </dependency>
+        <dependency>
+            <groupId>org.eclipse.jetty.compression</groupId>
+            <artifactId>jetty-compression-gzip</artifactId>
+            <version>${jetty.version}</version>
+        </dependency>
+        <dependency>
+            <groupId>org.eclipse.jetty.compression</groupId>
+            <artifactId>jetty-compression-common</artifactId>
             <version>${jetty.version}</version>
         </dependency>
         <dependency>
@@ -727,23 +670,12 @@
         <dependency>
             <groupId>org.apache.felix</groupId>
             <artifactId>org.apache.felix.http.base</artifactId>
-            <version>5.1.16</version>
+            <version>6.0.3-SNAPSHOT</version>
         </dependency>
         <dependency>
             <groupId>org.apache.felix</groupId>
             <artifactId>org.apache.felix.http.wrappers</artifactId>
             <version>6.1.0</version>
-        </dependency>
-        <dependency>
-            <groupId>commons-fileupload</groupId>
-            <artifactId>commons-fileupload</artifactId>
-            <version>1.6.0</version>
-            <optional>true</optional>
-        </dependency>
-        <dependency>
-            <groupId>commons-io</groupId>
-            <artifactId>commons-io</artifactId>
-            <version>2.19.0</version>
         </dependency>
     	<!-- Testing -->
         <dependency>
@@ -832,7 +764,7 @@
         <dependency>
             <groupId>org.slf4j</groupId>
             <artifactId>slf4j-simple</artifactId>
-            <version>2.0.17</version>
+            <version>${slf4j.version}</version>
             <scope>test</scope>
         </dependency>
     </dependencies>

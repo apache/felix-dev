@@ -18,7 +18,7 @@ package org.apache.felix.http.jetty.internal;
 
 import java.util.Map;
 
-import org.eclipse.jetty.ee10.servlet.ErrorHandler;
+import org.eclipse.jetty.ee11.servlet.ErrorHandler;
 import org.eclipse.jetty.http.HttpFields.Mutable;
 import org.eclipse.jetty.server.Request;
 import org.eclipse.jetty.server.Response;

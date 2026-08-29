@@ -322,9 +322,15 @@ final class Log implements BundleListener, FrameworkListener, ServiceListener
             }
         }
 
+        final Bundle bundle = event.getServiceReference().getBundle();
+        if (bundle == null)
+        {
+            return;
+        }
+
         log(
-            "Events.Service.".concat(event.getServiceReference().getBundle().getSymbolicName()),
-            event.getServiceReference().getBundle(),
+            "Events.Service.".concat(bundle.getSymbolicName()),
+            bundle,
             event.getServiceReference(),
             (eventType == ServiceEvent.MODIFIED) ? LogLevel.DEBUG : LogLevel.INFO,
             message,

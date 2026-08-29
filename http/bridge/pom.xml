@@ -29,14 +29,14 @@
     <name>Apache Felix Http Bridge</name>
     <description>This is an implementation of the OSGi Servlet Service, the OSGi Http Service and the OSGi Http Whiteboard Specification used when run as a web application</description>
     <artifactId>org.apache.felix.http.bridge</artifactId>
-    <version>6.0.1-SNAPSHOT</version>
+    <version>6.1.3-SNAPSHOT</version>
     <packaging>bundle</packaging>
 
     <scm>
         <connection>scm:git:https://github.com/apache/felix-dev.git</connection>
         <developerConnection>scm:git:https://github.com/apache/felix-dev.git</developerConnection>
         <url>https://gitbox.apache.org/repos/asf?p=felix-dev.git</url>
-      <tag>HEAD</tag>
+      <tag>org.apache.felix.http.bridge-6.1.2</tag>
   </scm>
 
     <properties>
@@ -74,12 +74,7 @@
                             org.apache.felix.http.base.*,
                             org.apache.felix.http.bridge.internal.*
                         </Private-Package>
-                        <Conditional-Package>
-                            org.apache.commons.*
-                        </Conditional-Package>
                         <Import-Package>
-                            jakarta.servlet,
-                            jakarta.servlet.http,
                        	    org.osgi.service.useradmin;resolution:=optional;version="[1.1,2)",
                             sun.misc;resolution:=optional,
                             sun.nio.ch;resolution:=optional,
@@ -108,14 +103,12 @@
                             <goal>bundle</goal>
                         </goals>
                     </execution>
-<!--
                     <execution>
                         <id>baseline</id>
                         <goals>
                           <goal>baseline</goal>
                         </goals>
                     </execution>
--->
                     <execution>
                         <id>light-bundle</id>
                         <goals>
@@ -126,10 +119,6 @@
                             <instructions>
                                 <Bundle-Name>${project.name} Light</Bundle-Name>
                                 <Bundle-SymbolicName>${project.artifactId}.light</Bundle-SymbolicName>
-                                <!-- We need to override this from the base configuration -->
-                                <Conditional-Package>
-                                    foo
-                                </Conditional-Package>
                             </instructions>
                         </configuration>
                     </execution>
@@ -148,7 +137,7 @@
         <dependency>
             <groupId>jakarta.servlet</groupId>
             <artifactId>jakarta.servlet-api</artifactId>
-            <version>6.1.0</version>
+            <version>6.0.0</version>
         </dependency>
         <dependency>
             <groupId>org.osgi</groupId>
@@ -177,21 +166,17 @@
             <groupId>commons-fileupload</groupId>
             <artifactId>commons-fileupload</artifactId>
             <version>1.6.0</version>
-        </dependency>
-        <dependency>
-            <groupId>commons-io</groupId>
-            <artifactId>commons-io</artifactId>
-            <version>2.15.0</version>
+            <scope>provided</scope>
         </dependency>
         <dependency>
             <groupId>org.apache.felix</groupId>
             <artifactId>org.apache.felix.http.base</artifactId>
-            <version>5.1.14</version>
+            <version>5.1.16</version>
         </dependency>
         <dependency>
             <groupId>org.apache.felix</groupId>
             <artifactId>org.apache.felix.http.wrappers</artifactId>
             <version>6.1.0</version>
-	    </dependency>
+        </dependency>
     </dependencies>
 </project>

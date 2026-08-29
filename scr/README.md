@@ -4,7 +4,7 @@ The Apache Felix Service Component Runtime described by the [OSGi Declarative Se
 
 The Java annotations defined by the specification make implementing components easy and reduce the amount of code that needs be written. These annotations are processed at build time and translated into XML descriptor files which in turn are listed in the `Service-Component` header of the declaring bundle. But the good news is, you usually don't have to worry about this XML, however in case things don't work as expected , it's good to know how these things work.
 
-The Apache Felix Declarative Services implementation is the reference implementation for the OSGi Declarative Services Specification Version 1.4 (R7) and therefore passes the OSGi CT.
+The Apache Felix Declarative Services implementation is the reference implementation for the OSGi Declarative Services Specification Version 1.4 (R7) and therefore passes the OSGi CT. This implementation also includes support for OSGi R8 features such as the Satisfying Condition specification.
 
 ## Example Usage
 
@@ -111,6 +111,52 @@ public Comparator(@Reference LogService logService)
     this.log = logService;
 }
 ```
+
+## Satisfying Condition (OSGi R8)
+
+Apache Felix SCR implements the Satisfying Condition feature as specified in the OSGi R8 Declarative Services specification. This feature allows components to be activated only when specific runtime conditions are met.
+
+### How It Works
+
+When the OSGi framework provides a `true` condition service (registered by the system bundle with the property `osgi.condition.id=true`), Apache Felix SCR automatically adds an implicit satisfying condition reference to all components. This implicit reference:
+
+- Has the name `osgi.ds.satisfying.condition`
+- References the `org.osgi.service.condition.Condition` service
+- Uses a dynamic policy
+- Defaults to target `(osgi.condition.id=true)`
+
+### Customizing the Satisfying Condition
+
+Components can customize the satisfying condition target by setting the `osgi.ds.satisfying.condition.target` property:
+
+```xml
+<scr:component name="my.component" xmlns:scr="http://www.osgi.org/xmlns/scr/v1.5.0">
+    <property name="osgi.ds.satisfying.condition.target" value="(my.condition=ready)"/>
+    <implementation class="com.example.MyComponent"/>
+</scr:component>
+```
+
+Alternatively, components can explicitly declare the satisfying condition reference to have full control over its configuration:
+
+```xml
+<scr:component name="my.component" xmlns:scr="http://www.osgi.org/xmlns/scr/v1.5.0">
+    <implementation class="com.example.MyComponent"/>
+    <reference name="osgi.ds.satisfying.condition"
+               interface="org.osgi.service.condition.Condition"
+               target="(my.custom.condition=true)"
+               policy="dynamic"/>
+</scr:component>
+```
+
+### Use Cases
+
+Satisfying conditions are useful for:
+- Delaying component activation until the system is fully initialized
+- Implementing conditional component activation based on runtime state
+- Managing component lifecycle based on external conditions
+
+For more details, see 
+- [112.3.13 Satisfying Condition](https://docs.osgi.org/specification/osgi.cmpn/8.0.0/service.component.html#service.component-satisfying.condition)
 
 ## Apache Maven Support
 

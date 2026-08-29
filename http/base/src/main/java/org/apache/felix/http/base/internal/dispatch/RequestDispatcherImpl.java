@@ -82,8 +82,7 @@ public final class RequestDispatcherImpl implements RequestDispatcher
 						this.requestInfo,
 						DispatcherType.FORWARD,
 						this.resolution.handler.getServletInfo().isAsyncSupported(),
-						multipartConfig,
-						this.resolution.handler.getMultipartSecurityContext());
+						multipartConfig);
 			}
             final String requestURI = UriUtils.concat(this.requestInfo.servletPath, this.requestInfo.pathInfo);
             final FilterHandler[] filterHandlers = this.resolution.handlerRegistry.getFilterHandlers(this.resolution.handler, DispatcherType.FORWARD, requestURI);
@@ -129,8 +128,7 @@ public final class RequestDispatcherImpl implements RequestDispatcher
 					this.requestInfo,
 					DispatcherType.INCLUDE,
 					this.resolution.handler.getServletInfo().isAsyncSupported(),
-					multipartConfig,
-					this.resolution.handler.getMultipartSecurityContext());
+					multipartConfig);
 
 		}
 

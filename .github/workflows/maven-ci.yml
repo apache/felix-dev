@@ -31,11 +31,11 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        java: [17,21,23,25-ea]
+        java: [17,21,23,25]
     steps:
-    - uses: actions/checkout@v4
+    - uses: actions/checkout@v6
     - name: Set up JDK ${{ matrix.java }}
-      uses: actions/setup-java@v4
+      uses: actions/setup-java@v5
       with:
         java-version: ${{ matrix.java }}
         distribution: 'temurin'
@@ -45,7 +45,7 @@ jobs:
       with:
         maven-version: 3.9.9
     - name: Check which subproject changed and build affected ones
-      uses: dorny/paths-filter@v3.0.2
+      uses: dorny/paths-filter@fbd0ab8f3e69293af611ebaee6363fc25e6d187d
       id: changes
       with:
         filters: |
@@ -75,7 +75,7 @@ jobs:
       run: mvn -B -V -Dstyle.color=always --file log/pom.xml clean verify
     - name: Felix HTTP
       if: steps.changes.outputs.http == 'true'
-      run: mvn -B -V -Dstyle.color=always "-Dit.test=!MissingWebsocketDependenciesIT" --file http/pom.xml clean install verify
+      run: mvn -B -V -Dstyle.color=always "-Dit.test=!MissingWebsocketDependenciesIT" --file http/pom.xml clean install verify "-Dmaven.repo.local=/home/runner/.m2/repository/"
       continue-on-error: true
     - name: Felix Maven bundle plugin
       if: steps.changes.outputs.maven-bundle-plugin == 'true'
@@ -98,7 +98,7 @@ jobs:
       run: mvn -B -V -Dstyle.color=always --file gogo/pom.xml clean verify
     - name: Upload Test Results
       if: always()
-      uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4.6.2
+      uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
       with:
         name: test-results-jdk${{ matrix.java }}
         if-no-files-found: warn

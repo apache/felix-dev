@@ -17,6 +17,8 @@
 package org.apache.felix.http.jakartawrappers;
 
 import java.io.IOException;
+import java.io.UnsupportedEncodingException;
+import java.nio.charset.Charset;
 import java.security.Principal;
 import java.util.ArrayList;
 import java.util.Collection;
@@ -262,5 +264,14 @@ public class HttpServletRequestWrapper extends ServletRequestWrapper
     @Override
     public boolean isTrailerFieldsReady() {
         return this.request.isTrailerFieldsReady();
+    }
+
+    @Override
+    public void setCharacterEncoding(Charset charset) {
+        try {
+            this.request.setCharacterEncoding(charset.name());
+        } catch (UnsupportedEncodingException e) {
+            throw new IllegalArgumentException(e);
+        }
     }
 }

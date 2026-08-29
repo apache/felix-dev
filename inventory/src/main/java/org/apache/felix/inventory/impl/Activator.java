@@ -29,9 +29,9 @@ import org.osgi.util.tracker.ServiceTracker;
 public class Activator implements BundleActivator
 {
 
-    private static Object logService;
+    private static LogService logService;
 
-    private ServiceTracker logServiceTracker;
+    private ServiceTracker<LogService, LogService> logServiceTracker;
 
     private InventoryPrinterManagerImpl printerManager;
 
@@ -42,17 +42,17 @@ public class Activator implements BundleActivator
      */
     public void start(final BundleContext context) throws Exception
     {
-        this.logServiceTracker = new ServiceTracker(context, "org.osgi.service.log.LogService", null)
+        this.logServiceTracker = new ServiceTracker<LogService, LogService>(context, LogService.class, null)
         {
             @Override
-            public Object addingService(ServiceReference reference)
+            public LogService addingService(ServiceReference<LogService> reference)
             {
                 Activator.logService = super.addingService(reference);
                 return Activator.logService;
             }
 
             @Override
-            public void removedService(ServiceReference reference, Object service)
+            public void removedService(ServiceReference<LogService> reference, LogService service)
             {
                 Activator.logService = null;
                 super.removedService(reference, service);
@@ -87,12 +87,11 @@ public class Activator implements BundleActivator
         }
     }
 
-    public static void log(final ServiceReference sr, final int level, final String message, final Throwable exception)
+    public static void log(final int level, final String message, final Throwable exception)
     {
-        Object logService = Activator.logService;
-        if (logService != null)
+        if (Activator.logService != null)
         {
-            ((LogService) logService).log(sr, level, message, exception);
+            Activator.logService.log(level, message, exception);
         }
         else
         {
@@ -116,10 +115,10 @@ public class Activator implements BundleActivator
                     code = "*DEBUG*";
             }
 
-            System.out.println(code + " " + message);
+            System.err.println(code + " " + message);
             if (exception != null)
             {
-                exception.printStackTrace(System.out);
+                exception.printStackTrace(System.err);
             }
         }
     }
