@@ -13,6 +13,7 @@ on:
       - 'framework/**'
       - 'gogo/**'
       - 'framework.tck/**'
+      - 'main/**'
   pull_request:
     branches: [ "master", "feature/**", "maintenance/**" ]
     paths:
@@ -25,6 +26,7 @@ on:
       - 'framework/**'
       - 'gogo/**'
       - 'framework.tck/**'
+      - 'main/**'
 
 # Cancel superseded runs when a branch is pushed again. github.head_ref is only set
 # for pull_request events, so pushes to master fall back to the unique run_id and are
@@ -76,6 +78,8 @@ jobs:
             - 'framework.tck/**'
           gogo:
             - 'gogo/**'
+          main:
+            - 'main/**'
     - name: Felix SCR
       if: steps.changes.outputs.scr == 'true'
       run: mvn -B -V -Dstyle.color=always --file scr/pom.xml clean verify
@@ -104,6 +108,9 @@ jobs:
     - name: OSGi-TCK Framework
       if: steps.changes.outputs.framework == 'true'
       run: mvn -B -V -Dstyle.color=always --file framework.tck/pom.xml clean verify
+    - name: Felix Main
+      if: steps.changes.outputs.main == 'true'
+      run: mvn -B -V -Dstyle.color=always --file main/pom.xml clean verify
     - name: Felix Gogo Shell
       if: steps.changes.outputs.gogo == 'true'
       run: mvn -B -V -Dstyle.color=always --file gogo/pom.xml clean verify
