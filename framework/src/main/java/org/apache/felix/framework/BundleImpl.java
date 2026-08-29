@@ -40,7 +40,6 @@ import java.util.Set;
 import java.util.StringTokenizer;
 
 import org.apache.felix.framework.cache.BundleArchive;
-import org.apache.felix.framework.util.SecurityManagerEx;
 import org.apache.felix.framework.util.ShrinkableCollection;
 import org.apache.felix.framework.util.StringMap;
 import org.apache.felix.framework.util.Util;
@@ -859,9 +858,6 @@ class BundleImpl implements Bundle, BundleRevisions
             }
         }
     }
-
-    private static final SecurityManagerEx m_smEx = new SecurityManagerEx();
-    private static final ClassLoader m_classloader = Felix.class.getClassLoader();
 
     <A> void checkAdapt(Class<A> type)
     {
