@@ -11,6 +11,9 @@ on:
       - 'log/**'
       - 'webconsole/**'
       - 'framework/**'
+      - 'gogo/**'
+      - 'framework.tck/**'
+      - 'examples/**'
       - 'configadmin/**'
       - 'utils/**'
       - 'resolver/**'
@@ -18,7 +21,7 @@ on:
       - 'log.extension/**'
       - 'bundlerepository/**'
   pull_request:
-    branches: [ "master" ]
+    branches: [ "master", "feature/**", "maintenance/**" ]
     paths:
       - 'scr/**'
       - 'http/**'
@@ -28,12 +31,21 @@ on:
       - 'log/**'
       - 'framework/**'
       - 'gogo/**'
+      - 'framework.tck/**'
+      - 'examples/**'
       - 'configadmin/**'
       - 'utils/**'
       - 'resolver/**'
       - 'connect/**'
       - 'log.extension/**'
       - 'bundlerepository/**'
+
+# Cancel superseded runs when a branch is pushed again. github.head_ref is only set
+# for pull_request events, so pushes to master fall back to the unique run_id and are
+# never cancelled.
+concurrency:
+  group: ${{ github.workflow }}-${{ github.head_ref || github.run_id }}
+  cancel-in-progress: true
 
 permissions: {}
 
@@ -75,6 +87,7 @@ jobs:
             - 'log/**'
           framework:
             - 'framework/**'
+            - 'framework.tck/**'
           gogo:
             - 'gogo/**'
           configadmin:
@@ -89,18 +102,18 @@ jobs:
             - 'log.extension/**'
           bundlerepository:
             - 'bundlerepository/**'
+          examples:
+            - 'examples/**'
 
     - name: Felix SCR
       if: steps.changes.outputs.scr == 'true'
       run: mvn -B -V -Dstyle.color=always --file scr/pom.xml clean verify
-      continue-on-error: true
     - name: Felix Log
       if: steps.changes.outputs.log == 'true'
       run: mvn -B -V -Dstyle.color=always --file log/pom.xml clean verify
     - name: Felix HTTP
       if: steps.changes.outputs.http == 'true'
       run: mvn -B -V -Dstyle.color=always "-Dit.test=!MissingWebsocketDependenciesIT" --file http/pom.xml clean install verify "-Dmaven.repo.local=/home/runner/.m2/repository/"
-      continue-on-error: true
     - name: Felix Maven bundle plugin
       if: steps.changes.outputs.maven-bundle-plugin == 'true'
       run: mvn -B -V -Dstyle.color=always --file tools/maven-bundle-plugin/pom.xml clean install verify
@@ -113,7 +126,6 @@ jobs:
     - name: Felix Framework
       if: steps.changes.outputs.framework == 'true'
       run: mvn -B -V -Dstyle.color=always --file framework/pom.xml clean verify
-      continue-on-error: true
     - name: OSGi-TCK Framework
       if: steps.changes.outputs.framework == 'true'
       run: mvn -B -V -Dstyle.color=always --file framework.tck/pom.xml clean verify
@@ -138,6 +150,9 @@ jobs:
     - name: Felix bundlerepository
       if: steps.changes.outputs.bundlerepository == 'true'
       run: mvn -B -V -Dstyle.color=always --file bundlerepository/pom.xml clean verify
+    - name: Felix examples
+      if: steps.changes.outputs.examples == 'true'
+      run: mvn -B -V -Dstyle.color=always --file examples/pom.xml clean verify
     - name: Upload Test Results
       if: always()
       uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1

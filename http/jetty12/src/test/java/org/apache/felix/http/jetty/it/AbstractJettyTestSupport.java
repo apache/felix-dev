@@ -175,11 +175,11 @@ public abstract class AbstractJettyTestSupport {
     public static ModifiableCompositeOption spifly() {
         return composite(
                 mavenBundle().groupId("org.apache.aries.spifly").artifactId("org.apache.aries.spifly.dynamic.bundle").version("1.3.7"),
-                mavenBundle().groupId("org.ow2.asm").artifactId("asm-analysis").version("9.7"),
-                mavenBundle().groupId("org.ow2.asm").artifactId("asm-commons").version("9.7"),
-                mavenBundle().groupId("org.ow2.asm").artifactId("asm-tree").version("9.7"),
-                mavenBundle().groupId("org.ow2.asm").artifactId("asm-util").version("9.7"),
-                mavenBundle().groupId("org.ow2.asm").artifactId("asm").version("9.7")
+                mavenBundle().groupId("org.ow2.asm").artifactId("asm-analysis").version("9.8"),
+                mavenBundle().groupId("org.ow2.asm").artifactId("asm-commons").version("9.8"),
+                mavenBundle().groupId("org.ow2.asm").artifactId("asm-tree").version("9.8"),
+                mavenBundle().groupId("org.ow2.asm").artifactId("asm-util").version("9.8"),
+                mavenBundle().groupId("org.ow2.asm").artifactId("asm").version("9.8")
         );
     }
 }
