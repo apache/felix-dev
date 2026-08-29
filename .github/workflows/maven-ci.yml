@@ -76,14 +76,6 @@ jobs:
             - 'framework.tck/**'
           gogo:
             - 'gogo/**'
-          configadmin:
-                utils:
-                resolver:
-                connect:
-                log.extension:
-                bundlerepository:
-                examples:
-      
     - name: Felix SCR
       if: steps.changes.outputs.scr == 'true'
       run: mvn -B -V -Dstyle.color=always --file scr/pom.xml clean verify
