@@ -21,7 +21,7 @@ on:
       - 'log.extension/**'
       - 'bundlerepository/**'
   pull_request:
-    branches: [ "master" ]
+    branches: [ "master", "feature/**", "maintenance/**" ]
     paths:
       - 'scr/**'
       - 'http/**'
