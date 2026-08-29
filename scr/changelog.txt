@@ -1,3 +1,15 @@
+Changes in 2.3.0
+-----------------
+** Improvement
+    * Removed the Security Manager based permission checks. Java SE 24 permanently
+      disabled the Security Manager (JEP 486), so these checks could never run:
+      DependencyManager.hasGetPermission and
+      AbstractComponentManager.hasServiceRegistrationPermissions now always allow,
+      the AccessController.doPrivileged wrappers around ConfigurationAdmin access and
+      around setAccessible on injected fields and lifecycle methods are gone, and the
+      multilocation ConfigurationPermission check in RegionConfigurationSupport is
+      removed. No exported API changed.
+
 Changes in 2.2.16
 -----------------
 ** Improvement
