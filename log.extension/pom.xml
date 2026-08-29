@@ -20,7 +20,7 @@
   <parent>
     <groupId>org.apache.felix</groupId>
     <artifactId>felix-parent</artifactId>
-    <version>9</version>
+    <version>5</version>
     <relativePath>../pom/pom.xml</relativePath>
   </parent>
   <modelVersion>4.0.0</modelVersion>
@@ -29,12 +29,12 @@
   <description>
     This framework extension fragment is used to load the Felix Log Service when placing it on the framework classpath. This artifact should also be on the framework classpath.
   </description>
-  <version>2.0.0-SNAPSHOT</version>
+  <version>1.0.1-SNAPSHOT</version>
   <artifactId>org.apache.felix.log.extension</artifactId>
 
   <properties>
-    <maven.compiler.source>8</maven.compiler.source>
-    <maven.compiler.target>8</maven.compiler.target>
+    <maven.compiler.source>1.7</maven.compiler.source>
+    <maven.compiler.target>1.7</maven.compiler.target>
   </properties>
 
   <scm>

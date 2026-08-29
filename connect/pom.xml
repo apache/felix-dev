@@ -19,14 +19,14 @@
     <parent>
         <groupId>org.apache.felix</groupId>
         <artifactId>felix-parent</artifactId>
-        <version>9</version>
+        <version>5</version>
         <relativePath>../pom/pom.xml</relativePath>
     </parent>
     <modelVersion>4.0.0</modelVersion>
     <packaging>bundle</packaging>
     <name>Apache Felix Connect</name>
     <artifactId>org.apache.felix.connect</artifactId>
-    <version>1.0.0-SNAPSHOT</version>
+    <version>0.2.1-SNAPSHOT</version>
     <description>A service registry that enables OSGi style service registry programs without using an OSGi framework.
     </description>
     <url>http://felix.apache.org/</url>
@@ -97,8 +97,8 @@
                 <groupId>org.apache.maven.plugins</groupId>
                 <artifactId>maven-compiler-plugin</artifactId>
                 <configuration>
-                    <target>8</target>
-                    <source>8</source>
+                    <target>1.6</target>
+                    <source>1.6</source>
                 </configuration>
             </plugin>
             <plugin>
