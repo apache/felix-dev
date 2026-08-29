@@ -1,3 +1,24 @@
+Changes from 7.1.0 to 8.0.0
+---------------------------
+
+** Incompatible changes
+    * The OSGi security layer has been removed. Java SE 24 permanently disabled the
+      Security Manager (JEP 486), so no permission check can run. Launching with
+      org.osgi.framework.security set now fails with a SecurityException instead of
+      starting without the requested security, Bundle.hasPermission returns true
+      unless a SecurityProvider is installed, and the
+      org.apache.felix.framework.security bundle has been removed. The OSGi
+      permission API is still exported and unchanged.
+    * The minimum Java version is now 9, so the bundle requires
+      osgi.ee JavaSE 9. Inspecting the caller's class context no longer uses a
+      SecurityManager subclass to reach getClassContext(); it uses StackWalker.
+
+** Bug
+    * FilterImpl.WrapperCapability: Filter.matches(Map) threw
+      UnsupportedOperationException for any non-empty map, and
+      WrapperCapability(ServiceReference) required the OSGi Core 1.10
+      ServiceReference.getProperties() method.
+
 Changes from 7.0.5 to 7.1.0
 ---------------------------
 
