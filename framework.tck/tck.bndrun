@@ -17,7 +17,7 @@
 	bnd.identity;id='biz.aQute.junit'
 
 
--runfw: org.apache.felix.framework;version='[7.0.0,8)
+-runfw: org.apache.felix.framework;version='[8.0.0,9)
 
 -tester: biz.aQute.tester.junit-platform
 

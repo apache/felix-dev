@@ -27,7 +27,7 @@
   <packaging>bundle</packaging>
   <name>Apache Felix Framework</name>
   <artifactId>org.apache.felix.framework</artifactId>
-  <version>7.1.0-SNAPSHOT</version>
+  <version>8.0.0-SNAPSHOT</version>
   <properties>
     <dollar>$</dollar>
     <!-- 9 is the lowest level this still builds at (see FELIX-6759): replacing the
