@@ -18,21 +18,34 @@
  */
 package org.apache.felix.framework.util;
 
+import java.util.stream.Stream;
+
 /**
  * <p>
- * Simple utility class used to provide public access to the protected
- * <tt>getClassContext()</tt> method of <tt>SecurityManager</tt>
+ * Simple utility class used to obtain the current call stack as an array of
+ * classes, innermost caller first.
+ * </p>
+ * <p>
+ * This used to extend <tt>SecurityManager</tt> purely to expose its protected
+ * <tt>getClassContext()</tt> method. The Security Manager is permanently
+ * disabled as of Java SE 24 (JEP 486) and is marked for removal, so the same
+ * information is now obtained from <tt>StackWalker</tt>, which is the supported
+ * replacement and yields frames in the same order.
  * </p>
 **/
-public class SecurityManagerEx extends SecurityManager
+public class SecurityManagerEx
 {
-    // In Android apparently getClassContext returns null - we work around this by returning an empty array in that case.
+    // On Android getClassContext() used to return null - keep tolerating an empty stack.
     private static final Class<?>[] EMPTY_CLASSES = new Class[0];
 
-    @Override
-	public Class<?>[] getClassContext()
+    private static final StackWalker WALKER =
+        StackWalker.getInstance(StackWalker.Option.RETAIN_CLASS_REFERENCE);
+
+    public Class<?>[] getClassContext()
     {
-        Class<?>[] result = super.getClassContext();
+        Class<?>[] result = WALKER.walk(
+            (Stream<StackWalker.StackFrame> frames) ->
+                frames.map(StackWalker.StackFrame::getDeclaringClass).toArray(Class<?>[]::new));
         return result != null ? result : EMPTY_CLASSES;
     }
 }

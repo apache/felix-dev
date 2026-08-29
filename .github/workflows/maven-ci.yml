@@ -11,8 +11,10 @@ on:
       - 'log/**'
       - 'webconsole/**'
       - 'framework/**'
+      - 'gogo/**'
+      - 'framework.tck/**'
   pull_request:
-    branches: [ "master" ]
+    branches: [ "master", "feature/**", "maintenance/**" ]
     paths:
       - 'scr/**'
       - 'http/**'
@@ -22,6 +24,14 @@ on:
       - 'log/**'
       - 'framework/**'
       - 'gogo/**'
+      - 'framework.tck/**'
+
+# Cancel superseded runs when a branch is pushed again. github.head_ref is only set
+# for pull_request events, so pushes to master fall back to the unique run_id and are
+# never cancelled.
+concurrency:
+  group: ${{ github.workflow }}-${{ github.head_ref || github.run_id }}
+  cancel-in-progress: true
 
 permissions: {}
 
@@ -31,7 +41,7 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        java: [17,21,23]
+        java: [17,21,23,25]
     steps:
     - uses: actions/checkout@v6
     - name: Set up JDK ${{ matrix.java }}
@@ -63,9 +73,9 @@ jobs:
             - 'log/**'
           framework:
             - 'framework/**'
+            - 'framework.tck/**'
           gogo:
             - 'gogo/**'
-
     - name: Felix SCR
       if: steps.changes.outputs.scr == 'true'
       run: mvn -B -V -Dstyle.color=always --file scr/pom.xml clean verify

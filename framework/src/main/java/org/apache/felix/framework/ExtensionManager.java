@@ -34,7 +34,6 @@ import org.apache.felix.framework.wiring.BundleCapabilityImpl;
 import org.apache.felix.framework.wiring.BundleRequirementImpl;
 import org.apache.felix.framework.wiring.BundleWireImpl;
 import org.codehaus.mojo.animal_sniffer.IgnoreJRERequirement;
-import org.osgi.framework.AdminPermission;
 import org.osgi.framework.Bundle;
 import org.osgi.framework.BundleActivator;
 import org.osgi.framework.BundleContext;
@@ -61,9 +60,6 @@ import java.io.OutputStream;
 import java.io.OutputStreamWriter;
 import java.net.URI;
 import java.net.URL;
-import java.security.AccessController;
-import java.security.AllPermission;
-import java.security.PrivilegedExceptionAction;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
@@ -408,18 +404,6 @@ class ExtensionManager implements Content
      */
     void addExtensionBundle(BundleImpl bundle) throws Exception
     {
-        Object sm = System.getSecurityManager();
-        if (sm != null)
-        {
-            ((SecurityManager) sm).checkPermission(
-                new AdminPermission(bundle, AdminPermission.EXTENSIONLIFECYCLE));
-
-            if (!((BundleProtectionDomain) bundle.getProtectionDomain()).impliesDirect(new AllPermission()))
-            {
-                throw new SecurityException("Extension Bundles must have AllPermission");
-            }
-        }
-
         String directive = ManifestParser.parseExtensionBundleHeader((String)
             ((BundleRevisionImpl) bundle.adapt(BundleRevision.class))
                 .getHeaders().get(Constants.FRAGMENT_HOST));
@@ -581,15 +565,7 @@ class ExtensionManager implements Content
             {
                 try
                 {
-                    AccessController.doPrivileged(new PrivilegedExceptionAction<Void>()
-                    {
-                        @Override
-                        public Void run() throws Exception
-                        {
-                            m_extenderFramework.add(f);
-                            return null;
-                        }
-                    });
+                    m_extenderFramework.add(f);
                 }
                 catch (Exception ex)
                 {
