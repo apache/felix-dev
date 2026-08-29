@@ -21,8 +21,6 @@ package org.apache.felix.scr.impl.inject.field;
 import java.lang.reflect.Field;
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Modifier;
-import java.security.AccessController;
-import java.security.PrivilegedAction;
 
 import org.apache.felix.scr.impl.inject.internal.ClassUtils;
 import org.apache.felix.scr.impl.logger.ComponentLogger;
@@ -276,15 +274,7 @@ public class FieldUtils {
      */
     private static void setAccessible(final Field field)
     {
-        AccessController.doPrivileged( new PrivilegedAction<Object>()
-        {
-            @Override
-            public Object run()
-            {
-                field.setAccessible( true );
-                return null;
-            }
-        } );
+        field.setAccessible( true );
     }
 
     /**

@@ -17,7 +17,7 @@
 	bnd.identity;id='biz.aQute.junit'
 
 
--runfw: org.apache.felix.framework;version='[7.0.0,8)
+-runfw: org.apache.felix.framework;version='[8.0.0,9)
 
 -tester: biz.aQute.tester.junit-platform
 
@@ -30,7 +30,7 @@
 	junit-platform-engine;version='[1.12.1,1.12.2)',\
 	org.opentest4j;version='[1.3.0,1.3.1)',\
 	junit-platform-launcher;version='[1.12.1,1.12.2)',\
-	assertj-core;version='[3.27.3,3.27.4)',\
-	biz.aQute.junit;version='[6.4.1,6.4.2)',\
+	assertj-core;version='[3.27.7,3.27.8)',\
+	biz.aQute.junit;version='[7.4.0,7.4.1)',\
 	junit-vintage-engine;version='[5.7.1,5.7.2)',\
-	net.bytebuddy.byte-buddy;version='[1.17.5,1.17.6)'
+	net.bytebuddy.byte-buddy;version='[1.18.12,1.18.13)'

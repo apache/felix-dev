@@ -26,9 +26,6 @@ import java.lang.reflect.Method;
 import java.lang.reflect.Modifier;
 import java.net.URL;
 import java.net.URLConnection;
-import java.security.AccessController;
-import java.security.PrivilegedActionException;
-import java.security.PrivilegedExceptionAction;
 import java.util.Map;
 import javax.servlet.ServletException;
 import javax.servlet.ServletRequest;
@@ -454,30 +451,7 @@ public abstract class AbstractWebConsolePlugin extends HttpServlet {
     private final boolean spoolResource(final HttpServletRequest request,
         final HttpServletResponse response) throws IOException
     {
-        try
-        {
-            // We need to call spoolResource0 in privileged block because it uses reflection, which
-            // requires the following set of permissions:
-            // (java.lang.RuntimePermission "getClassLoader")
-            // (java.lang.RuntimePermission "accessDeclaredMembers")
-            // (java.lang.reflect.ReflectPermission "suppressAccessChecks")
-            // See also https://issues.apache.org/jira/browse/FELIX-4652
-            final Boolean ret = AccessController.doPrivileged(new PrivilegedExceptionAction<Boolean>()
-            {
-
-                public Boolean run() throws Exception
-                {
-                    return spoolResource0(request, response) ? Boolean.TRUE : Boolean.FALSE;
-                }
-            });
-            return ret.booleanValue();
-        }
-        catch (PrivilegedActionException e)
-        {
-            final Exception x = e.getException();
-            throw x instanceof IOException ? (IOException) x : new IOException(
-                x.toString());
-        }
+        return spoolResource0(request, response);
     }
 
     final boolean spoolResource0( HttpServletRequest request, HttpServletResponse response ) throws IOException
