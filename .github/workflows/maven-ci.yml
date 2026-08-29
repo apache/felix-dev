@@ -13,13 +13,6 @@ on:
       - 'framework/**'
       - 'gogo/**'
       - 'framework.tck/**'
-      - 'examples/**'
-      - 'configadmin/**'
-      - 'utils/**'
-      - 'resolver/**'
-      - 'connect/**'
-      - 'log.extension/**'
-      - 'bundlerepository/**'
   pull_request:
     branches: [ "master", "feature/**", "maintenance/**" ]
     paths:
@@ -32,13 +25,6 @@ on:
       - 'framework/**'
       - 'gogo/**'
       - 'framework.tck/**'
-      - 'examples/**'
-      - 'configadmin/**'
-      - 'utils/**'
-      - 'resolver/**'
-      - 'connect/**'
-      - 'log.extension/**'
-      - 'bundlerepository/**'
 
 # Cancel superseded runs when a branch is pushed again. github.head_ref is only set
 # for pull_request events, so pushes to master fall back to the unique run_id and are
@@ -91,20 +77,13 @@ jobs:
           gogo:
             - 'gogo/**'
           configadmin:
-            - 'configadmin/**'
-          utils:
-            - 'utils/**'
-          resolver:
-            - 'resolver/**'
-          connect:
-            - 'connect/**'
-          log.extension:
-            - 'log.extension/**'
-          bundlerepository:
-            - 'bundlerepository/**'
-          examples:
-            - 'examples/**'
-
+                utils:
+                resolver:
+                connect:
+                log.extension:
+                bundlerepository:
+                examples:
+      
     - name: Felix SCR
       if: steps.changes.outputs.scr == 'true'
       run: mvn -B -V -Dstyle.color=always --file scr/pom.xml clean verify
@@ -132,27 +111,6 @@ jobs:
     - name: Felix Gogo Shell
       if: steps.changes.outputs.gogo == 'true'
       run: mvn -B -V -Dstyle.color=always --file gogo/pom.xml clean verify
-    - name: Felix configadmin
-      if: steps.changes.outputs.configadmin == 'true'
-      run: mvn -B -V -Dstyle.color=always --file configadmin/pom.xml clean verify
-    - name: Felix utils
-      if: steps.changes.outputs.utils == 'true'
-      run: mvn -B -V -Dstyle.color=always --file utils/pom.xml clean verify
-    - name: Felix resolver
-      if: steps.changes.outputs.resolver == 'true'
-      run: mvn -B -V -Dstyle.color=always --file resolver/pom.xml clean verify
-    - name: Felix connect
-      if: steps.changes.outputs.connect == 'true'
-      run: mvn -B -V -Dstyle.color=always --file connect/pom.xml clean verify
-    - name: Felix log.extension
-      if: steps.changes.outputs.log.extension == 'true'
-      run: mvn -B -V -Dstyle.color=always --file log.extension/pom.xml clean verify
-    - name: Felix bundlerepository
-      if: steps.changes.outputs.bundlerepository == 'true'
-      run: mvn -B -V -Dstyle.color=always --file bundlerepository/pom.xml clean verify
-    - name: Felix examples
-      if: steps.changes.outputs.examples == 'true'
-      run: mvn -B -V -Dstyle.color=always --file examples/pom.xml clean verify
     - name: Upload Test Results
       if: always()
       uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
