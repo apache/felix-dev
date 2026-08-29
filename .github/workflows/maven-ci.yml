@@ -100,7 +100,7 @@ jobs:
             - 'resolver/**'
           bundlerepository:
             - 'bundlerepository/**'
-          log.extension:
+          logextension:
             - 'log.extension/**'
           examples:
             - 'examples/**'
@@ -149,7 +149,7 @@ jobs:
       if: steps.changes.outputs.bundlerepository == 'true'
       run: mvn -B -V -Dstyle.color=always --file bundlerepository/pom.xml clean verify
     - name: Felix log.extension
-      if: steps.changes.outputs.log.extension == 'true'
+      if: steps.changes.outputs.logextension == 'true'
       run: mvn -B -V -Dstyle.color=always --file log.extension/pom.xml clean verify
     - name: Felix examples
       if: steps.changes.outputs.examples == 'true'
