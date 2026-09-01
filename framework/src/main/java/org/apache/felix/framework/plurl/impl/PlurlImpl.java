@@ -1,15 +1,19 @@
 /*******************************************************************************
- * Copyright (c) 2025 IBM Corporation and others.
+ * Copyright (c) Contributors to the Eclipse Foundation
  *
- * This program and the accompanying materials
- * are made available under the terms of the Eclipse Public License 2.0
- * which accompanies this distribution, and is available at
- * https://www.eclipse.org/legal/epl-2.0/
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
  *
- * SPDX-License-Identifier: EPL-2.0
+ *     http://www.apache.org/licenses/LICENSE-2.0
  *
- * Contributors:
- *     IBM Corporation - initial API and implementation
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ *
+ * SPDX-License-Identifier: Apache-2.0
  *******************************************************************************/
 package org.apache.felix.framework.plurl.impl;
 
@@ -150,8 +154,7 @@ public final class PlurlImpl implements Plurl {
 	List<ContentHandlerFactoryHolder> contentHandlerFactories = Collections.emptyList();
 	List<PlurlImplHolder> plurlImpls = Collections.emptyList();
 
-	final ServiceLoader<URLStreamHandlerFactory> builtinURLStreamHandlerFactoryLoader;
-	final ServiceLoader<ContentHandlerFactory> builtinContentHandlerFactoryLoader;
+	final List<ContentHandlerFactory> builtinContentHandlerFactories;
 	final CallStack callStack;
 
 	private final ThreadLocal<List<String>> creatingProtocols = new ThreadLocal<>();
@@ -503,8 +506,20 @@ public final class PlurlImpl implements Plurl {
 	}
 
 	public PlurlImpl() {
-		builtinContentHandlerFactoryLoader = ServiceLoader.load(ContentHandlerFactory.class);
-		builtinURLStreamHandlerFactoryLoader = ServiceLoader.load(URLStreamHandlerFactory.class);
+		// IMPLEMENTATION NOTE:
+		// We must do the ServiceLoader lookup for the built-in ContentHandlerFactory
+		// because the Plurl ContentHandlerFactory must never return null;
+		// otherwise the Plurl factory will never be called again for the requested
+		// content type. So a check for built-in handlers must be done before returning
+		// the Plurl handler.
+		// This is not necessary for URLStreamHandlerFactory or the new
+		// URLStreamHandlerProvider that may be available from the JVM because returning
+		// null from that factory still allows us to be called again if the protocol is
+		// requested again later.
+		List<ContentHandlerFactory> serviceLoaderCHFs = new ArrayList<>();
+		ServiceLoader.load(ContentHandlerFactory.class).forEach(serviceLoaderCHFs::add);
+		builtinContentHandlerFactories = Collections.unmodifiableList(serviceLoaderCHFs);
+
 		callStack = createCallStack();
 	}
 
@@ -585,7 +600,7 @@ public final class PlurlImpl implements Plurl {
 
 	ContentHandler findBuiltinContentHandlerImpl(String contentType) {
 		// first check service loader
-		for (ContentHandlerFactory f : builtinContentHandlerFactoryLoader) {
+		for (ContentHandlerFactory f : builtinContentHandlerFactories) {
 			ContentHandler h = f.createContentHandler(contentType);
 			if (h != null) {
 				return h;
@@ -628,14 +643,7 @@ public final class PlurlImpl implements Plurl {
 	}
 
 	URLStreamHandler findBuiltinURLStreamHandlerImpl(String protocol) {
-		// first check service loader
-		for (URLStreamHandlerFactory f : builtinURLStreamHandlerFactoryLoader) {
-			URLStreamHandler h = f.createURLStreamHandler(protocol);
-			if (h != null) {
-				return h;
-			}
-		}
-		// now check property
+		// check handlers pkgs property
 		String builtInHandlers = System.getProperty(PROTOCOL_HANDLER_PKGS);
 		if (builtInHandlers == null)
 			return null;
@@ -1242,8 +1250,8 @@ public final class PlurlImpl implements Plurl {
 			invoke(setURL, u, protocol, host, port, authority, userInfo, path, query, ref);
 		}
 
-		@SuppressWarnings("deprecation")
 		@Override
+		@Deprecated
 		public void setURL(URL u, String protocol, String host, int port, String file, String ref) {
 			invoke(setURLDeprecated, u, protocol, host, port, file, ref);
 		}

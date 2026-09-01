@@ -18,79 +18,159 @@
  */
 package org.apache.felix.framework;
 
-import java.io.IOException;
 import java.net.ContentHandler;
 import java.net.URLStreamHandler;
 
 import org.apache.felix.framework.plurl.Plurl;
 import org.apache.felix.framework.plurl.PlurlContentHandlerFactory;
 import org.apache.felix.framework.plurl.PlurlStreamHandlerFactory;
+import org.apache.felix.framework.plurl.impl.PlurlImpl;
+import org.apache.felix.framework.util.FelixConstants;
+import org.apache.felix.framework.util.SecureAction;
+import org.osgi.framework.Bundle;
+import org.osgi.framework.BundleReference;
 
 /**
  * <p>
- * PROTOTYPE (FELIX-6759): adapts Felix' {@link URLHandlers} onto the plurl
- * multiplexing URL factories.
+ * PROTOTYPE (FELIX-6759): registers this framework's URL handling with the plurl
+ * multiplexing factories instead of taking over the JVM singletons directly.
  * </p>
  * <p>
- * {@code URLHandlers} currently claims the JVM-wide {@code java.net.URL} stream
- * handler factory by reflectively swapping a private static field
+ * {@link URLHandlers} claims the JVM-wide {@code URLStreamHandlerFactory} by
+ * reflectively swapping a private static field on {@code java.net.URL}
  * ({@code SecureAction.swapStaticFieldIfNotClass}). Obtaining a
- * {@code MethodHandles.Lookup} trusted enough to do that is the sole reason the
- * framework still uses {@code sun.misc.Unsafe}, and it means whichever framework
- * installs itself last wins the singleton - so Felix and Equinox cannot coexist in
- * one JVM without clobbering each other.
+ * {@code MethodHandles.Lookup} trusted enough to do that is the only remaining
+ * reason the framework uses {@code sun.misc.Unsafe}, and it means the last
+ * framework to install itself wins the singleton.
  * </p>
  * <p>
- * Plurl instead installs one cooperative router through the supported
- * {@code URL.setURLStreamHandlerFactory} API and lets any number of parties
- * register with it. Each registered factory answers {@link #shouldHandle(Class)}
- * to say whether a given calling class belongs to it; plurl walks the call stack
- * and routes accordingly. That maps directly onto what
- * {@link URLHandlers#getFrameworkFromContext()} already does.
+ * Plurl installs one cooperative router through the supported
+ * {@code URL.setURLStreamHandlerFactory} API and asks each registered factory
+ * {@link #shouldHandle(Class)} to claim a calling class. That removes the need for
+ * {@code URLHandlers.getFrameworkFromContext()} to walk the call stack: by the time
+ * this factory is consulted, plurl has already established that the caller belongs to
+ * this framework instance, so {@link #createURLStreamHandler(String)} can use
+ * {@code m_felix} directly.
  * </p>
  * <p>
  * See {@code org/apache/felix/framework/plurl/README.md} for the provenance of the
- * vendored plurl sources and the <b>unresolved licensing question</b> that currently
- * blocks this approach.
+ * vendored plurl sources.
  * </p>
  */
 class PlurlURLHandlers implements PlurlStreamHandlerFactory, PlurlContentHandlerFactory
 {
-    private final URLHandlers m_delegate;
+    private final Felix m_felix;
+    private final SecureAction m_secureAction;
 
-    PlurlURLHandlers(URLHandlers delegate)
+    private PlurlURLHandlers(Felix felix, SecureAction secureAction)
     {
-        m_delegate = delegate;
+        m_felix = felix;
+        m_secureAction = secureAction;
     }
 
     /**
-     * Registers this framework's handlers with the plurl router, installing the
-     * router first if nobody has yet.
+     * The plurl router is a JVM wide singleton, so it is installed once and shared by
+     * every framework instance in this JVM. Only the per framework factories are
+     * added and removed as frameworks come and go; tearing the router down while
+     * another framework is still registered would break that framework's URLs.
      */
-    static PlurlURLHandlers install(URLHandlers delegate) throws IOException
-    {
-        PlurlURLHandlers handlers = new PlurlURLHandlers(delegate);
-        Plurl.add((PlurlStreamHandlerFactory) handlers);
-        Plurl.add((PlurlContentHandlerFactory) handlers);
-        return handlers;
-    }
+    private static Plurl m_router;
+    private static int m_routerUsers;
 
     /**
-     * Unregisters this framework's handlers, leaving the router in place for any
-     * other framework instance still using it.
-     */
-    void uninstall() throws IOException
-    {
-        Plurl.remove((PlurlStreamHandlerFactory) this);
-        Plurl.remove((PlurlContentHandlerFactory) this);
-    }
-
-    /**
-     * Tells plurl whether the given calling class belongs to this framework.
+     * Installs the plurl router if this is the first framework to need it and
+     * registers the given framework's factories with it.
      * <p>
-     * This replaces the call stack walking URLHandlers does today: rather than
-     * inspecting the stack itself to work out which framework owns the caller, the
-     * router asks each registered factory about a single candidate class.
+     * Failing to register must not prevent the framework from starting; in that case
+     * this framework simply contributes no URL handlers, which the caller sees as a
+     * {@code null} return.
+     */
+    static PlurlURLHandlers install(Felix felix, SecureAction secureAction)
+    {
+        PlurlURLHandlers handlers = new PlurlURLHandlers(felix, secureAction);
+        try
+        {
+            synchronized (PlurlURLHandlers.class)
+            {
+                if (m_router == null)
+                {
+                    // Installing is what makes the plurl: protocol resolvable, which
+                    // the static Plurl.add(..) calls below go through. Without it they
+                    // fail with "unknown protocol: plurl".
+                    Plurl router = new PlurlImpl();
+                    router.install();
+                    m_router = router;
+                }
+                m_routerUsers++;
+            }
+
+            Plurl.add((PlurlStreamHandlerFactory) handlers);
+            Plurl.add((PlurlContentHandlerFactory) handlers);
+            return handlers;
+        }
+        catch (Throwable ex)
+        {
+            felix.getLogger().log(Logger.LOG_ERROR,
+                "Unable to register this framework with plurl.", ex);
+            releaseRouter();
+            return null;
+        }
+    }
+
+    /**
+     * Unregisters this framework's factories, and uninstalls the router once the last
+     * framework using it has gone.
+     */
+    void uninstall()
+    {
+        try
+        {
+            Plurl.remove((PlurlStreamHandlerFactory) this);
+            Plurl.remove((PlurlContentHandlerFactory) this);
+        }
+        catch (Throwable ex)
+        {
+            m_felix.getLogger().log(Logger.LOG_ERROR,
+                "Unable to unregister this framework from plurl.", ex);
+        }
+        finally
+        {
+            releaseRouter();
+        }
+    }
+
+    private static void releaseRouter()
+    {
+        synchronized (PlurlURLHandlers.class)
+        {
+            if (m_routerUsers > 0)
+            {
+                m_routerUsers--;
+            }
+            if ((m_routerUsers == 0) && (m_router != null))
+            {
+                Plurl router = m_router;
+                m_router = null;
+                try
+                {
+                    router.uninstall();
+                }
+                catch (Throwable ex)
+                {
+                    // Nothing useful to do; the JVM factories stay as they are.
+                }
+            }
+        }
+    }
+
+    /**
+     * Tells plurl whether the given calling class belongs to this framework instance.
+     * <p>
+     * It is not enough for the class to come from some Felix bundle: two framework
+     * instances in the same JVM both load classes through a
+     * {@code BundleWiringImpl.BundleClassLoader}, so the owning framework has to
+     * match as well. Otherwise one framework would answer lookups for a bundle
+     * resolved in another.
      */
     @Override
     public boolean shouldHandle(Class<?> clazz)
@@ -100,25 +180,50 @@ class PlurlURLHandlers implements PlurlStreamHandlerFactory, PlurlContentHandler
             return false;
         }
         ClassLoader loader = clazz.getClassLoader();
-        if (loader == null)
+        if (!(loader instanceof BundleReference))
         {
             return false;
         }
-        String name = loader.getClass().getName();
-        return name.startsWith("org.apache.felix.framework.BundleWiringImpl$BundleClassLoader")
-            || name.startsWith("org.apache.felix.framework.ModuleImpl$ModuleClassLoader")
-            || name.equals("org.apache.felix.framework.searchpolicy.ContentClassLoader");
+        Bundle bundle = ((BundleReference) loader).getBundle();
+        return (bundle instanceof BundleImpl)
+            && (((BundleImpl) bundle).getFramework() == m_felix);
     }
 
     @Override
     public URLStreamHandler createURLStreamHandler(String protocol)
     {
-        return m_delegate.createURLStreamHandler(protocol);
+        if (FelixConstants.BUNDLE_URL_PROTOCOL.equals(protocol))
+        {
+            // Deliberately not bound to m_felix. The JVM caches one handler per
+            // protocol for the whole JVM, so a handler pinned to this framework would
+            // also be used for bundle: URLs belonging to another framework instance,
+            // which then fail to resolve. The framework is instead resolved per call
+            // from the UUID in the URL's host, which is what URLHandlers did.
+            return new URLHandlersBundleStreamHandler(m_secureAction);
+        }
+
+        // Otherwise serve a URLStreamHandlerService registered in this framework. The
+        // protocol based proxy resolves the service lazily on each use, which is how
+        // URLHandlers built these: a service can come and go while a URL object using
+        // this protocol is still around. Only claim the protocol if a service exists
+        // now, so that unrelated protocols fall through to plurl's other factories.
+        if (m_felix.getStreamHandlerService(protocol) != null)
+        {
+            return new URLHandlersStreamHandlerProxy(protocol, m_secureAction, null, null);
+        }
+
+        // Not ours. Returning null lets plurl ask the other registered factories and
+        // fall back to the JVM built-ins.
+        return null;
     }
 
     @Override
     public ContentHandler createContentHandler(String mimeType)
     {
-        return m_delegate.createContentHandler(mimeType);
+        if (m_felix.getContentHandlerService(mimeType) != null)
+        {
+            return new URLHandlersContentHandlerProxy(mimeType, m_secureAction, null);
+        }
+        return null;
     }
 }

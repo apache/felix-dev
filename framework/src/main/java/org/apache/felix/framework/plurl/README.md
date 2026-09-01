@@ -1,57 +1,59 @@
-# Plurl (vendored) — PROTOTYPE, NOT FOR RELEASE
+# Plurl (vendored)
 
 ## Provenance
 
-These sources are copied verbatim from the Eclipse OSGi Technology **plurl** project:
+These sources are copied from the Eclipse OSGi Technology **plurl** project:
 
 - Upstream: https://github.com/eclipse-osgi-technology/plurl
 - Originally: https://github.com/tjwatson/plurl-osgi
-- Copied at commit `6581777`, upstream version `0.1.0-SNAPSHOT`
 
 The **only** modification is the package rename from `org.eclipse.osgitech.plurl` to
 `org.apache.felix.framework.plurl`. Every file keeps its original license header and
-its `Copyright (c) 2025 IBM Corporation` notice unchanged.
+copyright notice unchanged.
 
 This mirrors what Eclipse Equinox did in
-https://github.com/eclipse-equinox/equinox/pull/848, which vendored the same 11 files
+https://github.com/eclipse-equinox/equinox/pull/848, which vendored the same files
 into `org.eclipse.equinox.plurl`.
 
-## ⚠️ Unresolved licensing issue
+## Licensing
 
-**This code must not be merged or released in its current state.**
-
-Every source file here declares:
+The sources are **Apache-2.0**:
 
 ```
-SPDX-License-Identifier: EPL-2.0
-Copyright (c) 2025 IBM Corporation
+Copyright (c) Contributors to the Eclipse Foundation
+Licensed under the Apache License, Version 2.0
+SPDX-License-Identifier: Apache-2.0
 ```
 
-EPL-2.0 is [Category B](https://www.apache.org/legal/resolved.html#category-b) at the
-ASF and **may not be included in an Apache source release**. Equinox was free to
-vendor these files because Eclipse projects are EPL-2.0 natively; Apache Felix is not.
+An earlier copy carried EPL-2.0 headers, which would have been a blocker: EPL-2.0 is
+[Category B](https://www.apache.org/legal/resolved.html#category-b) at the ASF and may
+not be included in an Apache source release. That was an oversight when the code moved
+to the osgi-technology project and has been corrected upstream in
+https://github.com/eclipse-osgi-technology/plurl/pull/45. The copy here also includes
+the upstream fix from https://github.com/eclipse-osgi-technology/plurl/pull/55.
 
-There is reason to believe the headers are an oversight rather than the project's
-intent: the plurl repository's own `LICENSE` file and its `pom.xml` both declare
-**Apache-2.0**, and only the source headers say EPL-2.0. (Its `NOTICE` file is also a
-copy-paste leftover referring to "slf4j-osgi".)
+## Vendoring is intended to be temporary
 
-Before this can go anywhere, one of the following has to happen:
+The longer term intention, per
+https://github.com/apache/felix-dev/pull/552#issuecomment-5466491363, is a release of
+plurl from the osgi-technology project consumed by both Equinox and Felix
+**unchanged, in its original package**, rather than copied into each framework. At the
+time of writing plurl has no release: its `distributionManagement` points at
+`oss.sonatype.org`, which was decommissioned when OSSRH migrated to the Central
+portal, so neither a release nor a snapshot is currently resolvable.
 
-1. The upstream project relicenses/corrects the source headers to Apache-2.0, so the
-   files can legitimately live in an Apache source tree; or
-2. Felix consumes plurl as a released binary dependency rather than vendored source,
-   subject to the Category B rules — which additionally requires plurl to be published
-   to Maven Central, as it currently has no release or tag; or
-3. Felix writes its own Apache-2.0 implementation of the same idea.
+Once a release exists, this directory should be deleted and replaced by a dependency
+on the published artifact, embedded into the framework bundle as a private package.
 
-## Why we want this at all
+## Why the framework uses this
 
-`URLHandlers` currently takes over the JVM-wide `java.net.URL` stream handler factory
-by reflectively swapping a private static field, which is what forces
-`SecureAction`'s use of `sun.misc.Unsafe` to obtain a trusted
-`MethodHandles.Lookup`. That is the only remaining `Unsafe` usage in the framework and
-it prevents Felix and Equinox from coexisting in one JVM without clobbering each
-other's URL singletons. Plurl replaces that with a cooperative multiplexing factory,
-which is the approach suggested in
-https://github.com/apache/felix-dev/pull/433#issuecomment-3073468820.
+`URLHandlers` used to claim the JVM-wide `java.net.URL` stream handler factory by
+reflectively swapping a private static field, and inspected the call stack to work out
+which framework instance a call belonged to. Obtaining a `MethodHandles.Lookup`
+trusted enough for that swap is the only remaining reason the framework uses
+`sun.misc.Unsafe`, and whichever framework installed itself last won the singleton.
+
+Plurl installs one cooperative router through the supported
+`URL.setURLStreamHandlerFactory` API and routes by asking each registered factory
+whether a calling class belongs to it, so several frameworks can coexist in one JVM.
+See `PlurlURLHandlers` for the Felix side of that.

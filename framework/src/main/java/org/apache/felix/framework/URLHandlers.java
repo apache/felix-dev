@@ -85,8 +85,9 @@ class URLHandlers implements URLStreamHandlerFactory, ContentHandlerFactory
 
     private static final SecureAction m_secureAction = new SecureAction();
 
-    private static volatile SecurityManagerEx m_sm = null;
-    private static volatile URLHandlers m_handler = null;
+    // Initialised eagerly: the constructor that used to set this up is no longer
+    // invoked, since plurl installs the JVM factories instead of this class.
+    private static volatile SecurityManagerEx m_sm = new SecurityManagerEx();
 
     // This maps classloaders of URLHandlers in other classloaders to lists of
     // their frameworks.
@@ -105,6 +106,14 @@ class URLHandlers implements URLStreamHandlerFactory, ContentHandlerFactory
     private static final String STREAM_HANDLER_PACKAGE_PROP = "java.protocol.handler.pkgs";
     private static final String DEFAULT_STREAM_HANDLER_PACKAGE = "sun.net.www.protocol|com.ibm.oti.net.www.protocol|gnu.java.net.protocol|wonka.net|com.acunia.wonka.net|org.apache.harmony.luni.internal.net.www.protocol|weblogic.utils|weblogic.net|javax.net.ssl|COM.newmonics.www.protocols";
     private static volatile Object m_rootURLHandlers;
+
+    // FELIX-6759: plurl replaces the java.net.URL singleton takeover that this class
+    // used to perform by reflectively swapping a private static field. Each framework
+    // instance registers its own factory with the plurl router, which routes by asking
+    // each registered factory whether a calling class belongs to it, so the call stack
+    // inspection this class used to do is no longer needed. Matches what Equinox does.
+    private static final java.util.Map<Felix, PlurlURLHandlers> m_plurlHandlers =
+        new java.util.concurrent.ConcurrentHashMap<>();
 
     private static final String m_streamPkgs;
     private static final ConcurrentHashMap<String, URLStreamHandler> m_builtIn = new ConcurrentHashMap<>();
@@ -628,10 +637,9 @@ class URLHandlers implements URLStreamHandlerFactory, ContentHandlerFactory
             // then return immediately.
             if (enable)
             {
-                // We need to create an instance if this is the first
-                // time this method is called, which will set the handler
-                // factories.
-                if (m_handler == null )
+                // The first framework takes the locks below before touching the
+                // shared framework list; later ones only need to add themselves.
+                if (m_frameworks.isEmpty())
                 {
                     register = true;
                 }
@@ -654,16 +662,50 @@ class URLHandlers implements URLStreamHandlerFactory, ContentHandlerFactory
                 {
                     synchronized (m_frameworks)
                     {
-                        if (m_handler == null )
-                        {
-                            m_handler = new URLHandlers();
-                        }
                         m_frameworks.add(framework);
                         m_counter++;
                     }
                 }
             }
         }
+
+        if (enable)
+        {
+            // FELIX-6759: the URLHandlers singleton is deliberately not created here
+            // any more. Constructing it swapped the java.net.URL static fields, which
+            // would leave the JVM factories already occupied by the time plurl runs,
+            // forcing plurl into deep reflection into java.net and failing without
+            // --add-opens. Registering with plurl on a clean JVM uses the supported
+            // URL.setURLStreamHandlerFactory API instead.
+            registerWithPlurl(framework);
+        }
+    }
+
+    /**
+     * Registers the given framework's URL handling with the plurl router.
+     * <p>
+     * Failing to register must not prevent the framework from starting. As in
+     * Equinox, the consequence is simply that this framework instance contributes no
+     * URL handlers; there is deliberately no fallback to swapping the java.net.URL
+     * singleton fields, since removing that is the point of using plurl.
+     */
+    private static void registerWithPlurl(Felix framework)
+    {
+        PlurlURLHandlers handlers =
+            PlurlURLHandlers.install(framework, m_secureAction);
+        if (handlers != null)
+        {
+            m_plurlHandlers.put(framework, handlers);
+        }
+    }
+
+    /**
+     * The plurl registration for the given framework, or <tt>null</tt> if it is not
+     * registered. Package private for testing.
+     */
+    static PlurlURLHandlers getPlurlHandlers(Felix framework)
+    {
+        return m_plurlHandlers.get(framework);
     }
 
     /**
@@ -676,12 +718,21 @@ class URLHandlers implements URLStreamHandlerFactory, ContentHandlerFactory
     **/
     public static void unregisterFrameworkInstance(Object framework)
     {
+        if (framework instanceof Felix)
+        {
+            PlurlURLHandlers handlers = m_plurlHandlers.remove(framework);
+            if (handlers != null)
+            {
+                handlers.uninstall();
+            }
+        }
+
         boolean unregister = false;
         synchronized (m_frameworks)
         {
             if (m_frameworks.contains(framework))
             {
-                if (m_frameworks.size() == 1 && m_handler != null)
+                if (m_frameworks.size() == 1)
                 {
                     unregister = true;
                 }
@@ -706,10 +757,8 @@ class URLHandlers implements URLStreamHandlerFactory, ContentHandlerFactory
                     {
                         m_frameworks.remove(framework);
                         m_counter--;
-                        if (m_frameworks.isEmpty() && m_handler != null)
+                        if (m_frameworks.isEmpty() && m_rootURLHandlers != null)
                         {
-
-                            m_handler = null;
                             try
                             {
                                 m_secureAction.invoke(m_secureAction.getDeclaredMethod(
