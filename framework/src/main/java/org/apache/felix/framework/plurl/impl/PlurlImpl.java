@@ -44,6 +44,7 @@ import java.util.Hashtable;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
+import java.util.Optional;
 import java.util.ServiceLoader;
 import java.util.Set;
 import java.util.StringTokenizer;
@@ -813,41 +814,37 @@ public final class PlurlImpl implements Plurl {
 	}
 
 	PlurlStreamHandler findPlurlStreamHandler(String protocol) {
-		URLStreamHandlerFactoryHolder f = findFactory(getURLStreamHandlerFactories());
+		return findPlurlStreamHandler(protocol, null);
+	}
+
+	PlurlStreamHandler findPlurlStreamHandler(String protocol, String spec) {
+		URLStreamHandlerFactoryHolder f = findFactory(getURLStreamHandlerFactories(), protocol, spec);
 		if (f != null) {
 			return f.getHandler(protocol);
 		}
 		return null;
 	}
 
-	/**
-	 * Returns the handler of the factory that claims this specific URL, or null when
-	 * no factory claims it. Unlike {@link #findFactory(List)} there is no call stack
-	 * inspection and no fallback to the first factory: this only answers when a
-	 * factory positively identifies the URL as its own.
-	 */
-	PlurlStreamHandler findClaimedPlurlStreamHandler(String protocol, URL url) {
-		if (!isUsableForSelection(url)) {
-			return null;
-		}
-		List<URLStreamHandlerFactoryHolder> factories = getURLStreamHandlerFactories();
-		if (factories.size() < 2) {
-			// nothing to disambiguate
-			return null;
-		}
-		for (URLStreamHandlerFactoryHolder f : factories) {
-			if (shouldHandleURL(f, url)) {
-				return f.getHandler(protocol);
-			}
-		}
-		return null;
+	private <F> F findFactory(List<F> factories) {
+		return findFactory(factories, null, null);
 	}
 
-	private <F> F findFactory(List<F> factories) {
+	private <F> F findFactory(List<F> factories, String protocol, String spec) {
 		int numFactories = factories.size();
 		if (numFactories == 1) {
 			// Handle common case of only one; just use it
 			return factories.get(0);
+		}
+		// Give the factories a chance to claim the URL being parsed first. A protocol
+		// may be shared by several factories that can only be told apart by the URL,
+		// and the URL may be used by a caller no factory recognises from the call
+		// stack.
+		if (spec != null) {
+			for (F f : factories) {
+				if (shouldHandleSpec(f, protocol, spec)) {
+					return f;
+				}
+			}
 		}
 		Class<?>[] callStackClasses = getCallStack();
 		for (Class<?> stack : callStackClasses) {
@@ -878,41 +875,37 @@ public final class PlurlImpl implements Plurl {
 		return numFactories > 0 ? factories.get(0) : null;
 	}
 
-	/**
-	 * A URL can only be used for selection once it has been parsed. During
-	 * {@code parseURL} the URL is still being populated, so there is nothing to
-	 * decide on yet.
-	 */
-	private static boolean isUsableForSelection(URL url) {
-		if (url == null) {
-			return false;
-		}
-		String host = url.getHost();
-		return (host != null) && !host.isEmpty();
-	}
-
-	private <F> boolean shouldHandleURL(F f, URL url) {
+	private <F> boolean shouldHandleSpec(F f, String protocol, String spec) {
 		if (f instanceof PlurlFactory) {
-			return ((PlurlFactory) f).shouldHandle(url);
+			return ((PlurlFactory) f).shouldHandle(protocol, spec);
 		}
 		// use reflection in case this Plurl package isn't visible to the factory impl,
-		// and tolerate copies that predate this method
+		// and tolerate factories that predate this method
+		Method m = findShouldHandleSpec(f.getClass());
+		if (m == null) {
+			return false;
+		}
 		try {
-			Method m = findShouldHandleURL(f.getClass());
-			return (m == null) ? false : (boolean) m.invoke(f, url);
+			return (boolean) m.invoke(f, protocol, spec);
 		} catch (Exception e) {
 			return false;
 		}
 	}
 
-	Method findShouldHandleURL(Class<?> clazz) {
-		try {
-			Method shouldHandle = clazz.getMethod("shouldHandle", URL.class); //$NON-NLS-1$
-			shouldHandle.setAccessible(true);
-			return shouldHandle;
-		} catch (NoSuchMethodException e) {
-			return null;
-		}
+	private final Map<Class<?>, Optional<Method>> shouldHandleSpecMethods = new ConcurrentHashMap<>();
+
+	Method findShouldHandleSpec(Class<?> clazz) {
+		// Cached: this is on the URL parsing path, and a missing method must not cost
+		// a reflective lookup and an exception every time.
+		return shouldHandleSpecMethods.computeIfAbsent(clazz, (c) -> {
+			try {
+				Method m = c.getMethod("shouldHandle", String.class, String.class); //$NON-NLS-1$
+				m.setAccessible(true);
+				return Optional.of(m);
+			} catch (NoSuchMethodException e) {
+				return Optional.empty();
+			}
+		}).orElse(null);
 	}
 
 	Method findShouldHandle(Class<?> clazz) throws NoSuchMethodException {
@@ -1005,15 +998,14 @@ public final class PlurlImpl implements Plurl {
 		}
 
 		@Override
-		public boolean shouldHandle(URL url) {
+		public boolean shouldHandle(String protocol, String spec) {
 			F f = factory.get();
 			if (f == null) {
 				return false;
 			}
-			// Delegate to the wrapped factory, reflectively when this plurl package is
-			// not the one the factory was compiled against, and tolerate factories
-			// that predate this method.
-			return shouldHandleURL(f, url);
+			// not resolved in the constructor like shouldHandle(Class): a factory is
+			// not required to have this method, so it is looked up (and cached) lazily
+			return shouldHandleSpec(f, protocol, spec);
 		}
 
 		H getHandler(String type) {
@@ -1487,28 +1479,21 @@ public final class PlurlImpl implements Plurl {
 		private final AtomicReference<PlurlStreamHandler> builtin = new AtomicReference<>();
 
 		private PlurlStreamHandler lookupPlurlStreamHandler(URL u) {
+			return lookupPlurlStreamHandler(u, null);
+		}
+
+		private PlurlStreamHandler lookupPlurlStreamHandler(URL u, String spec) {
 			if (u != null && isMultiplexing(getURLStreamHandlerFactories())) {
 				// Record the handler found for the URL;
 				// This allows to consistently use the same handler for the
 				// life of the URL object when we are multiplexing.
-				PlurlStreamHandler recorded = urlToHandler.get(u, this::findPlurlStreamHandlerImpl);
-				// The recorded handler may have been chosen during parseURL, before the
-				// URL was populated and therefore before any factory could claim it.
-				// Once the URL can be claimed, let its owner correct the record; from
-				// then on it stays pinned as before. Factories that do not implement
-				// shouldHandle(URL) never claim, so nothing changes for them.
-				PlurlStreamHandler claimed = findClaimedPlurlStreamHandler(protocol, u);
-				if (claimed != null && claimed != recorded) {
-					urlToHandler.replace(u, claimed);
-					return claimed;
-				}
-				return recorded;
+				return urlToHandler.get(u, () -> findPlurlStreamHandlerImpl(spec));
 			}
-			return findPlurlStreamHandlerImpl();
+			return findPlurlStreamHandlerImpl(spec);
 		}
 
-		private PlurlStreamHandler findPlurlStreamHandlerImpl() {
-			PlurlStreamHandler h = findPlurlStreamHandler(protocol);
+		private PlurlStreamHandler findPlurlStreamHandlerImpl(String spec) {
+			PlurlStreamHandler h = findPlurlStreamHandler(protocol, spec);
 			if (h == null) {
 				h = findBuiltin();
 				if (h == null) {
@@ -1571,7 +1556,7 @@ public final class PlurlImpl implements Plurl {
 
 		@Override
 		protected void parseURL(URL u, String spec, int start, int limit) {
-			PlurlStreamHandler h = lookupPlurlStreamHandler(u);
+			PlurlStreamHandler h = lookupPlurlStreamHandler(u, spec);
 			if (setHandler(u, h)) {
 				h.parseURL(null, u, spec, start, limit);
 			} else {
