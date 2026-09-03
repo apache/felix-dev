@@ -117,6 +117,32 @@ class PlurlURLHandlersTest
             .as("null must not be claimed").isFalse();
     }
 
+    /**
+     * shouldHandle(protocol, spec) must claim only this framework's bundle: URLs.
+     * The framework UUID is in the host, and it is the only thing that identifies an
+     * owner when the URL is parsed by a caller that is in no bundle.
+     */
+    @Test
+    void shouldHandleOnlyClaimsThisFrameworksBundleUrls()
+    {
+        PlurlURLHandlers handlers = URLHandlers.getPlurlHandlers(m_felix);
+        assertThat(handlers).isNotNull();
+
+        String uuid = m_felix._getProperty(Constants.FRAMEWORK_UUID);
+        assertThat(handlers.shouldHandle("bundle", "bundle://" + uuid + "_1.0/resource"))
+            .as("this framework's own URL").isTrue();
+        assertThat(handlers.shouldHandle("bundle", "bundle://" + uuid + "_1.0:0/resource"))
+            .as("host may carry a port").isTrue();
+        assertThat(handlers.shouldHandle("bundle", "bundle://someotherframework_1.0/resource"))
+            .as("another framework's URL must not be claimed").isFalse();
+        assertThat(handlers.shouldHandle("http", "http://" + uuid + "_1.0/resource"))
+            .as("only the bundle protocol is claimed").isFalse();
+        assertThat(handlers.shouldHandle("bundle", "bundle:relative/resource"))
+            .as("a spec with no host cannot be claimed").isFalse();
+        assertThat(handlers.shouldHandle("bundle", null))
+            .as("null must not be claimed").isFalse();
+    }
+
     private static void deleteDir(File root)
     {
         if (root == null || !root.exists())

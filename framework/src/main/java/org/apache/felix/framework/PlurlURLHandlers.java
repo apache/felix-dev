@@ -19,7 +19,6 @@
 package org.apache.felix.framework;
 
 import java.net.ContentHandler;
-import java.net.URL;
 import java.net.URLStreamHandler;
 
 import org.apache.felix.framework.plurl.Plurl;
@@ -201,15 +200,42 @@ class PlurlURLHandlers implements PlurlStreamHandlerFactory, PlurlContentHandler
      * where there is nothing on the call stack for plurl to attribute.
      */
     @Override
-    public boolean shouldHandle(URL url)
+    public boolean shouldHandle(String protocol, String spec)
     {
-        if ((url == null) || !FelixConstants.BUNDLE_URL_PROTOCOL.equals(url.getProtocol()))
+        if (!FelixConstants.BUNDLE_URL_PROTOCOL.equals(protocol) || (spec == null))
         {
             return false;
         }
-        String uuid = Util.getFrameworkUUIDFromURL(url.getHost());
+        String uuid = Util.getFrameworkUUIDFromURL(getHost(protocol, spec));
         return (uuid != null)
             && uuid.equals(m_felix._getProperty(Constants.FRAMEWORK_UUID));
+    }
+
+    /**
+     * Returns the host of the spec being parsed, or <tt>null</tt> if it has none.
+     * The URL itself cannot be asked, because plurl has to pick a factory before the
+     * URL has been parsed.
+     */
+    private static String getHost(String protocol, String spec)
+    {
+        int start = 0;
+        if (spec.regionMatches(true, 0, protocol, 0, protocol.length())
+            && (spec.length() > protocol.length())
+            && (spec.charAt(protocol.length()) == ':'))
+        {
+            start = protocol.length() + 1;
+        }
+        if (!spec.startsWith("//", start))
+        {
+            return null;
+        }
+        start += 2;
+        int end = start;
+        while ((end < spec.length()) && ("/?#".indexOf(spec.charAt(end)) < 0))
+        {
+            end++;
+        }
+        return spec.substring(start, end);
     }
 
     @Override
