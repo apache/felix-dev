@@ -94,7 +94,14 @@ public class Util
         {
             logger.log(Logger.LOG_ERROR, "Unable to load any configuration properties.", DEFAULT_EX);
         }
-        return DEFAULTS;
+        // A copy, because callers compute per framework values into the result:
+        // initializeJPMSEE writes felix.detect.java.version and ExtensionManager
+        // writes the resolved system package lists. Handing out the shared instance
+        // let the first framework created in a JVM stamp its own Java version onto
+        // every framework created afterwards.
+        Properties copy = new Properties();
+        copy.putAll(DEFAULTS);
+        return copy;
     }
 
     private static Properties loadDefaultProperties() throws IOException
