@@ -505,7 +505,7 @@ A few more things to be aware of when virtual threads are enabled:
 * Keep `org.apache.felix.http.jetty.selectors` below the number of carrier threads.
 * Jetty documents a third combination as the preferred one: a `QueuedThreadPool` whose virtual
   threads executor is a bounded `VirtualThreadPool`. There is no Felix HTTP configuration for that
-  combination.
+  combination yet, this is tracked in [FELIX-6859](https://issues.apache.org/jira/browse/FELIX-6859).
 
 Virtual threads require JDK 21 or later and are only supported by the Jetty 12 bundle. The Jetty 11
 bundle only honours `org.apache.felix.http.jetty.threadpool.max`.
