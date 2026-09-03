@@ -813,7 +813,11 @@ public final class PlurlImpl implements Plurl {
 	}
 
 	PlurlStreamHandler findPlurlStreamHandler(String protocol) {
-		URLStreamHandlerFactoryHolder f = findFactory(getURLStreamHandlerFactories());
+		return findPlurlStreamHandler(protocol, null);
+	}
+
+	PlurlStreamHandler findPlurlStreamHandler(String protocol, URL url) {
+		URLStreamHandlerFactoryHolder f = findFactory(getURLStreamHandlerFactories(), url);
 		if (f != null) {
 			return f.getHandler(protocol);
 		}
@@ -821,10 +825,25 @@ public final class PlurlImpl implements Plurl {
 	}
 
 	private <F> F findFactory(List<F> factories) {
+		return findFactory(factories, null);
+	}
+
+	private <F> F findFactory(List<F> factories, URL url) {
 		int numFactories = factories.size();
 		if (numFactories == 1) {
 			// Handle common case of only one; just use it
 			return factories.get(0);
+		}
+		// Give the factories a chance to claim the URL itself first. Several
+		// instances of the same framework can share a protocol and be told apart
+		// only by the URL, and a URL may be used by a caller that no factory
+		// recognises from the call stack.
+		if (isUsableForSelection(url)) {
+			for (F f : factories) {
+				if (shouldHandleURL(f, url)) {
+					return f;
+				}
+			}
 		}
 		Class<?>[] callStackClasses = getCallStack();
 		for (Class<?> stack : callStackClasses) {
@@ -853,6 +872,43 @@ public final class PlurlImpl implements Plurl {
 		// This means the root or "first" factory may provide protocol handlers for call stacks
 		// that have no classes known to that factory
 		return numFactories > 0 ? factories.get(0) : null;
+	}
+
+	/**
+	 * A URL can only be used for selection once it has been parsed. During
+	 * {@code parseURL} the URL is still being populated, so there is nothing to
+	 * decide on yet.
+	 */
+	private static boolean isUsableForSelection(URL url) {
+		if (url == null) {
+			return false;
+		}
+		String host = url.getHost();
+		return (host != null) && !host.isEmpty();
+	}
+
+	private <F> boolean shouldHandleURL(F f, URL url) {
+		if (f instanceof PlurlFactory) {
+			return ((PlurlFactory) f).shouldHandle(url);
+		}
+		// use reflection in case this Plurl package isn't visible to the factory impl,
+		// and tolerate copies that predate this method
+		try {
+			Method m = findShouldHandleURL(f.getClass());
+			return (m == null) ? false : (boolean) m.invoke(f, url);
+		} catch (Exception e) {
+			return false;
+		}
+	}
+
+	Method findShouldHandleURL(Class<?> clazz) {
+		try {
+			Method shouldHandle = clazz.getMethod("shouldHandle", URL.class); //$NON-NLS-1$
+			shouldHandle.setAccessible(true);
+			return shouldHandle;
+		} catch (NoSuchMethodException e) {
+			return null;
+		}
 	}
 
 	Method findShouldHandle(Class<?> clazz) throws NoSuchMethodException {
@@ -942,6 +998,18 @@ public final class PlurlImpl implements Plurl {
 				}
 			}
 			return ((PlurlFactory) f).shouldHandle(clazz);
+		}
+
+		@Override
+		public boolean shouldHandle(URL url) {
+			F f = factory.get();
+			if (f == null) {
+				return false;
+			}
+			// Delegate to the wrapped factory, reflectively when this plurl package is
+			// not the one the factory was compiled against, and tolerate factories
+			// that predate this method.
+			return shouldHandleURL(f, url);
 		}
 
 		H getHandler(String type) {
@@ -1416,16 +1484,23 @@ public final class PlurlImpl implements Plurl {
 
 		private PlurlStreamHandler lookupPlurlStreamHandler(URL u) {
 			if (u != null && isMultiplexing(getURLStreamHandlerFactories())) {
+				if (!isUsableForSelection(u)) {
+					// The URL is still being parsed, so a factory cannot claim it yet
+					// and the call stack is all there is to go on. Deliberately not
+					// recorded, so that the first use of the parsed URL selects again
+					// and can take the URL into account.
+					return findPlurlStreamHandlerImpl(u);
+				}
 				// Record the handler found for the URL;
 				// This allows to consistently use the same handler for the
 				// life of the URL object when we are multiplexing.
-				return urlToHandler.get(u, this::findPlurlStreamHandlerImpl);
+				return urlToHandler.get(u, () -> findPlurlStreamHandlerImpl(u));
 			}
-			return findPlurlStreamHandlerImpl();
+			return findPlurlStreamHandlerImpl(u);
 		}
 
-		private PlurlStreamHandler findPlurlStreamHandlerImpl() {
-			PlurlStreamHandler h = findPlurlStreamHandler(protocol);
+		private PlurlStreamHandler findPlurlStreamHandlerImpl(URL u) {
+			PlurlStreamHandler h = findPlurlStreamHandler(protocol, u);
 			if (h == null) {
 				h = findBuiltin();
 				if (h == null) {
