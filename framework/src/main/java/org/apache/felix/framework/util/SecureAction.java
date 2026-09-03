@@ -102,7 +102,6 @@ public class SecureAction
             result = new byte[0];
         }
         accessor = result;
-        getAccessor(URL.class);
     }
 
     protected static transient int BUFSIZE = 4096;
@@ -338,55 +337,87 @@ public class SecureAction
 
     private static volatile Consumer<AccessibleObject[]> m_accessorCache = null;
 
-    @SuppressWarnings("unchecked")
+    private static final Consumer<AccessibleObject[]> SET_ACCESSIBLE =
+        objects -> AccessibleObject.setAccessible(objects, true);
+
     private static Consumer<AccessibleObject[]> getAccessor(Class<?> clazz)
     {
         String packageName = clazz.getPackage().getName();
         if ("java.net".equals(packageName) || "jdk.internal.loader".equals(packageName))
         {
-            if (m_accessorCache == null)
+            // Try ordinary reflection first and only smuggle an accessor into
+            // java.base if the JVM actually refuses. When the package is open to us
+            // -- as it is under the Add-opens of the org.apache.felix.main launcher,
+            // or any --add-opens on the command line -- setAccessible just works, and
+            // reaching for Unsafe would be both unnecessary and noisy: JDK 25 prints
+            // a terminal deprecation warning for every call to it.
+            return objects ->
             {
                 try
                 {
-                    // Use reflection on Unsafe to avoid having to compile against it
-                    Class<?> unsafeClass = Class.forName("sun.misc.Unsafe"); //$NON-NLS-1$
-                    Field theUnsafe = unsafeClass.getDeclaredField("theUnsafe"); //$NON-NLS-1$
-                    // NOTE: deep reflection is allowed on sun.misc package for java 9.
-                    theUnsafe.setAccessible(true);
-                    Object unsafe = theUnsafe.get(null);
-                    Class<Consumer<AccessibleObject[]>> result;
-                    try {
-                        Method defineAnonymousClass = unsafeClass.getMethod("defineAnonymousClass", Class.class, byte[].class, Object[].class); //$NON-NLS-1$
-                        result = (Class<Consumer<AccessibleObject[]>>) defineAnonymousClass.invoke(unsafe, URL.class, accessor , null);
-                    }
-                    catch (NoSuchMethodException ex)
-                    {
-                        long offset = (long) unsafeClass.getMethod("staticFieldOffset", Field.class)
-                                .invoke(unsafe, MethodHandles.Lookup.class.getDeclaredField("IMPL_LOOKUP"));
-
-                        MethodHandles.Lookup lookup = (MethodHandles.Lookup) unsafeClass.getMethod("getObject", Object.class, long.class)
-                                .invoke(unsafe, MethodHandles.Lookup.class, offset);
-                        lookup = lookup.in(URL.class);
-                        Class<?> classOption = Class.forName("java.lang.invoke.MethodHandles$Lookup$ClassOption"); //$NON-NLS-1$
-                        Object classOptions = Array.newInstance(classOption, 0);
-                        Method defineHiddenClass = MethodHandles.Lookup.class.getMethod("defineHiddenClass", byte[].class, boolean.class, //$NON-NLS-1$
-                                classOptions.getClass());
-                        lookup = (MethodHandles.Lookup) defineHiddenClass.invoke(lookup, accessor, Boolean.FALSE, classOptions);
-                        result = (Class<Consumer<AccessibleObject[]>>) lookup.lookupClass();
-                    }
-                    m_accessorCache = result.getConstructor().newInstance();
+                    SET_ACCESSIBLE.accept(objects);
                 }
-                catch (Throwable t)
+                catch (RuntimeException ex)
                 {
-                    m_accessorCache = objects -> AccessibleObject.setAccessible(objects, true);
+                    // InaccessibleObjectException: java.base is not open to us.
+                    unsafeAccessor().accept(objects);
                 }
-            }
-            return m_accessorCache;
+            };
         }
-        else
+        return SET_ACCESSIBLE;
+    }
+
+    /**
+     * An accessor defined inside java.base itself, so that {@code setAccessible} is
+     * called by a class in that module and the access check passes without the
+     * package being open.
+     * <p>
+     * This needs {@code sun.misc.Unsafe} to obtain a trusted
+     * {@code MethodHandles.Lookup}, which is terminally deprecated as of JDK 25, so
+     * it is only used when ordinary reflection has already failed.
+     */
+    @SuppressWarnings("unchecked")
+    private static Consumer<AccessibleObject[]> unsafeAccessor()
+    {
+        if (m_accessorCache == null)
         {
-            return objects -> AccessibleObject.setAccessible(objects, true);
+            try
+            {
+                // Use reflection on Unsafe to avoid having to compile against it
+                Class<?> unsafeClass = Class.forName("sun.misc.Unsafe"); //$NON-NLS-1$
+                Field theUnsafe = unsafeClass.getDeclaredField("theUnsafe"); //$NON-NLS-1$
+                // NOTE: deep reflection is allowed on sun.misc package for java 9.
+                theUnsafe.setAccessible(true);
+                Object unsafe = theUnsafe.get(null);
+                Class<Consumer<AccessibleObject[]>> result;
+                try {
+                    Method defineAnonymousClass = unsafeClass.getMethod("defineAnonymousClass", Class.class, byte[].class, Object[].class); //$NON-NLS-1$
+                    result = (Class<Consumer<AccessibleObject[]>>) defineAnonymousClass.invoke(unsafe, URL.class, accessor , null);
+                }
+                catch (NoSuchMethodException ex)
+                {
+                    long offset = (long) unsafeClass.getMethod("staticFieldOffset", Field.class)
+                            .invoke(unsafe, MethodHandles.Lookup.class.getDeclaredField("IMPL_LOOKUP"));
+
+                    MethodHandles.Lookup lookup = (MethodHandles.Lookup) unsafeClass.getMethod("getObject", Object.class, long.class)
+                            .invoke(unsafe, MethodHandles.Lookup.class, offset);
+                    lookup = lookup.in(URL.class);
+                    Class<?> classOption = Class.forName("java.lang.invoke.MethodHandles$Lookup$ClassOption"); //$NON-NLS-1$
+                    Object classOptions = Array.newInstance(classOption, 0);
+                    Method defineHiddenClass = MethodHandles.Lookup.class.getMethod("defineHiddenClass", byte[].class, boolean.class, //$NON-NLS-1$
+                            classOptions.getClass());
+                    lookup = (MethodHandles.Lookup) defineHiddenClass.invoke(lookup, accessor, Boolean.FALSE, classOptions);
+                    result = (Class<Consumer<AccessibleObject[]>>) lookup.lookupClass();
+                }
+                m_accessorCache = result.getConstructor().newInstance();
+            }
+            catch (Throwable t)
+            {
+                // Nothing else to try; let the caller see the failure.
+                m_accessorCache = SET_ACCESSIBLE;
+            }
         }
+        return m_accessorCache;
     }
 
     public void invokeBundleCollisionHook(
