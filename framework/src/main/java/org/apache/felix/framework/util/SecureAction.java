@@ -33,7 +33,6 @@ import java.lang.reflect.Executable;
 import java.lang.reflect.Field;
 import java.lang.reflect.InvocationHandler;
 import java.lang.reflect.Method;
-import java.lang.reflect.Modifier;
 import java.lang.reflect.Proxy;
 import java.net.MalformedURLException;
 import java.net.URI;
@@ -47,8 +46,6 @@ import java.nio.file.StandardOpenOption;
 import java.security.PrivilegedAction;
 import java.security.PrivilegedExceptionAction;
 import java.util.Collection;
-import java.util.HashMap;
-import java.util.Hashtable;
 import java.util.Map;
 import java.util.function.Consumer;
 import java.util.jar.JarFile;
@@ -339,13 +336,6 @@ public class SecureAction
         return field.get(target);
     }
 
-    public Object swapStaticFieldIfNotClass(Class<?> targetClazz,
-        Class<?> targetType, Class<?> condition, String lockName) throws Exception
-    {
-        return _swapStaticFieldIfNotClass(targetClazz, targetType,
-            condition, lockName);
-    }
-
     private static volatile Consumer<AccessibleObject[]> m_accessorCache = null;
 
     @SuppressWarnings("unchecked")
@@ -396,112 +386,6 @@ public class SecureAction
         else
         {
             return objects -> AccessibleObject.setAccessible(objects, true);
-        }
-    }
-
-    private static Object _swapStaticFieldIfNotClass(Class<?> targetClazz,
-        Class<?> targetType, Class<?> condition, String lockName) throws Exception
-    {
-
-        Object lock = null;
-        if (lockName != null)
-        {
-            try
-            {
-                Field lockField =
-                    targetClazz.getDeclaredField(lockName);
-                getAccessor(targetClazz).accept(new AccessibleObject[]{lockField});
-                lock = lockField.get(null);
-            }
-            catch (NoSuchFieldException ex)
-            {
-            }
-        }
-        if (lock == null)
-        {
-            lock = targetClazz;
-        }
-        synchronized (lock)
-        {
-            Field[] fields = targetClazz.getDeclaredFields();
-
-            getAccessor(targetClazz).accept(fields);
-
-            Object result = null;
-            for (int i = 0; (i < fields.length) && (result == null); i++)
-            {
-                if (Modifier.isStatic(fields[i].getModifiers()) &&
-                    (fields[i].getType() == targetType))
-                {
-                    result = fields[i].get(null);
-
-                    if (result != null)
-                    {
-                        if ((condition == null) ||
-                            !result.getClass().getName().equals(condition.getName()))
-                        {
-                            fields[i].set(null, null);
-                        }
-                    }
-                }
-            }
-            if (result != null)
-            {
-                if ((condition == null) || !result.getClass().getName().equals(condition.getName()))
-                {
-                    // reset cache
-                    for (Field field : fields) {
-                        if (Modifier.isStatic(field.getModifiers()) &&
-                            (field.getType() == Hashtable.class))
-                        {
-                            Hashtable<?,?> cache = (Hashtable) field.get(null);
-                            if (cache != null)
-                            {
-                                cache.clear();
-                            }
-                        }
-                    }
-                }
-                return result;
-            }
-        }
-        return null;
-    }
-
-    public void flush(Class<?>targetClazz, Object lock) throws Exception
-    {
-        _flush(targetClazz, lock);
-    }
-
-    private static void _flush(Class<?>targetClazz, Object lock) throws Exception
-    {
-        synchronized (lock)
-        {
-            Field[] fields = targetClazz.getDeclaredFields();
-            getAccessor(targetClazz).accept(fields);
-            // reset cache
-            for (Field field : fields) {
-                if (Modifier.isStatic(field.getModifiers()) &&
-                    ((field.getType() == Hashtable.class) || (field.getType() == HashMap.class)))
-                {
-                    if (field.getType() == Hashtable.class)
-                    {
-                        Hashtable<?,?> cache = (Hashtable) field.get(null);
-                        if (cache != null)
-                        {
-                            cache.clear();
-                        }
-                    }
-                    else
-                    {
-                        HashMap<?,?> cache = (HashMap) field.get(null);
-                        if (cache != null)
-                        {
-                            cache.clear();
-                        }
-                    }
-                }
-            }
         }
     }
 

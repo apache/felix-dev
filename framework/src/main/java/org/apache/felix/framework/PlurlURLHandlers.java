@@ -38,21 +38,20 @@ import org.osgi.framework.BundleReference;
  * multiplexing factories instead of taking over the JVM singletons directly.
  * </p>
  * <p>
- * {@link URLHandlers} claims the JVM-wide {@code URLStreamHandlerFactory} by
- * reflectively swapping a private static field on {@code java.net.URL}
- * ({@code SecureAction.swapStaticFieldIfNotClass}). Obtaining a
- * {@code MethodHandles.Lookup} trusted enough to do that is the only remaining
- * reason the framework uses {@code sun.misc.Unsafe}, and it means the last
- * framework to install itself wins the singleton.
+ * {@link URLHandlers} used to claim the JVM-wide {@code URLStreamHandlerFactory} by
+ * reflectively clearing a private static field on {@code java.net.URL}, which needed
+ * a {@code MethodHandles.Lookup} trusted enough to write it and meant the last
+ * framework to install itself won the singleton.
  * </p>
  * <p>
  * Plurl installs one cooperative router through the supported
  * {@code URL.setURLStreamHandlerFactory} API and asks each registered factory
- * {@link #shouldHandle(Class)} to claim a calling class. That removes the need for
- * {@code URLHandlers.getFrameworkFromContext()} to walk the call stack: by the time
- * this factory is consulted, plurl has already established that the caller belongs to
- * this framework instance, so {@link #createURLStreamHandler(String)} can use
- * {@code m_felix} directly.
+ * {@link #shouldHandle(Class)} to claim a calling class, or
+ * {@link #shouldHandle(String, String)} to claim the URL being parsed. That removes
+ * the need for {@code URLHandlers.getFrameworkFromContext()} to walk the call stack:
+ * by the time this factory is consulted, plurl has already established that the
+ * caller belongs to this framework instance, so
+ * {@link #createURLStreamHandler(String)} can use {@code m_felix} directly.
  * </p>
  * <p>
  * See {@code org/apache/felix/framework/plurl/README.md} for the provenance of the
