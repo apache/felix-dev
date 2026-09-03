@@ -695,8 +695,19 @@ public final class PlurlImpl implements Plurl {
 		return null;
 	}
 
+	/**
+	 * The capabilities this implementation reports through
+	 * {@link Plurl#PLURL_CAPABILITIES}.
+	 */
+	private static final Set<String> CAPABILITIES = Collections
+			.unmodifiableSet(new HashSet<>(Arrays.asList(Plurl.PLURL_CAPABILITY_SELECT_BY_SPEC)));
+
 	URLConnection plurlOperation(URL u) {
-		final String path = u.getPath();
+		String opPath = u.getPath();
+		// Tolerate the leading slash of the documented spec form, so that
+		// "plurl://op/<operation>" works as well as the URL(protocol, host, file)
+		// form the convenience methods use.
+		final String path = opPath.startsWith("/") ? opPath.substring(1) : opPath; //$NON-NLS-1$
 		return new URLConnection(u) {
 			@Override
 			public void connect() throws IOException {
@@ -704,20 +715,22 @@ public final class PlurlImpl implements Plurl {
 			}
 
 			@Override
-			public Consumer<Object> getContent() throws IOException {
+			public Object getContent() throws IOException {
 				switch (path) {
+				case PLURL_CAPABILITIES:
+					return CAPABILITIES;
 				case PLURL_ADD_URL_STREAM_HANDLER_FACTORY:
-					return (f) -> add((URLStreamHandlerFactory) f);
+					return (Consumer<Object>) (f) -> add((URLStreamHandlerFactory) f);
 				case PLURL_REMOVE_URL_STREAM_HANDLER_FACTORY:
-					return (f) -> remove((URLStreamHandlerFactory) f);
+					return (Consumer<Object>) (f) -> remove((URLStreamHandlerFactory) f);
 				case PLURL_ADD_CONTENT_HANDLER_FACTORY:
-					return (f) -> add((ContentHandlerFactory) f);
+					return (Consumer<Object>) (f) -> add((ContentHandlerFactory) f);
 				case PLURL_REMOVE_CONTENT_HANDLER_FACTORY:
-					return (f) -> remove((ContentHandlerFactory) f);
+					return (Consumer<Object>) (f) -> remove((ContentHandlerFactory) f);
 				case PLURL_REGISTER_IMPLEMENTATION:
-					return (p) -> addImpl(p);
+					return (Consumer<Object>) (p) -> addImpl(p);
 				case PLURL_UNREGISTER_IMPLEMENTATION:
-					return (p) -> removeImpl(p);
+					return (Consumer<Object>) (p) -> removeImpl(p);
 				default:
 					throw new IOException("Unknown plurl operation: " + path); //$NON-NLS-1$
 				}

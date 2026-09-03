@@ -22,6 +22,9 @@ import java.net.ContentHandlerFactory;
 import java.net.URL;
 import java.net.URLConnection;
 import java.net.URLStreamHandlerFactory;
+import java.util.Collections;
+import java.util.HashSet;
+import java.util.Set;
 import java.util.function.Consumer;
 
 /**
@@ -128,6 +131,31 @@ public interface Plurl {
 	public static final String PLURL_FORBID_NOTHING = "plurlForbidNothing"; //$NON-NLS-1$
 
 	/**
+	 * The plurl operation used to ask the installed plurl implementation which
+	 * capabilities it supports. The content of the connection is a
+	 * {@code Set<String>} of capability names.
+	 * <p>
+	 * An implementation that predates this operation rejects it with an
+	 * {@link IOException}, so a factory can tell an older implementation apart from
+	 * one that reports no capabilities. {@link #capabilities()} does that for you.
+	 *
+	 * @see #capabilities()
+	 */
+	public static final String PLURL_CAPABILITIES = "plurlCapabilities"; //$NON-NLS-1$
+
+	/**
+	 * The capability name reported when the installed plurl implementation consults
+	 * {@link PlurlFactory#shouldHandle(String, String)} while selecting a factory.
+	 * <p>
+	 * A factory that can only be identified by the URL, rather than by the protocol
+	 * or the call stack, cannot be routed to correctly without this, so it is worth
+	 * checking for and reporting rather than silently misrouting.
+	 *
+	 * @see PlurlFactory#shouldHandle(String, String)
+	 */
+	public static final String PLURL_CAPABILITY_SELECT_BY_SPEC = "selectFactoryBySpec"; //$NON-NLS-1$
+
+	/**
 	 * Installs the plurl factories into the JVM singletons. If plurl factories are
 	 * already installed then this plurl instance is
 	 * {@link #PLURL_REGISTER_IMPLEMENTATION registered} with the existing plurl
@@ -230,6 +258,38 @@ public interface Plurl {
 	 * @throws IOException if there is no plurl implementation installed or there
 	 *                     was an error adding the factory
 	 */
+	/**
+	 * Returns the capability names supported by the {@link #install installed} plurl
+	 * implementation, or an empty set if it does not report any.
+	 * <p>
+	 * An implementation older than the {@link #PLURL_CAPABILITIES} operation rejects
+	 * the query, which is reported here as an empty set: the absence of an answer is
+	 * itself the answer. Callers should therefore treat a missing capability as "not
+	 * supported" rather than as an error.
+	 * <p>
+	 * This is a convenience method for using the plurl protocol like this:
+	 *
+	 * <pre>
+	 * ((Set&lt;String&gt;) ("plurl://op/plurlCapabilities").getContent());
+	 * </pre>
+	 *
+	 * @return the capabilities of the installed plurl implementation, never null
+	 */
+	@SuppressWarnings("unchecked")
+	public static Set<String> capabilities() {
+		try {
+			URL plurl = new URL(Plurl.PLURL_PROTOCOL, Plurl.PLURL_OP, Plurl.PLURL_CAPABILITIES);
+			Object content = plurl.openConnection().getContent();
+			if (content instanceof Set) {
+				return Collections.unmodifiableSet(new HashSet<>((Set<String>) content));
+			}
+			return Collections.emptySet();
+		} catch (IOException e) {
+			// No plurl installed, or one that predates this operation.
+			return Collections.emptySet();
+		}
+	}
+
 	public static void add(PlurlStreamHandlerFactory factory) throws IOException {
 		URL plurl = new URL(Plurl.PLURL_PROTOCOL, Plurl.PLURL_OP, Plurl.PLURL_ADD_URL_STREAM_HANDLER_FACTORY);
 		@SuppressWarnings("unchecked")
