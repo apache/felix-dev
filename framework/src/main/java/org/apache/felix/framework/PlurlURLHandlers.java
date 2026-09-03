@@ -19,6 +19,7 @@
 package org.apache.felix.framework;
 
 import java.net.ContentHandler;
+import java.net.URL;
 import java.net.URLStreamHandler;
 
 import org.apache.felix.framework.plurl.Plurl;
@@ -27,7 +28,9 @@ import org.apache.felix.framework.plurl.PlurlStreamHandlerFactory;
 import org.apache.felix.framework.plurl.impl.PlurlImpl;
 import org.apache.felix.framework.util.FelixConstants;
 import org.apache.felix.framework.util.SecureAction;
+import org.apache.felix.framework.util.Util;
 import org.osgi.framework.Bundle;
+import org.osgi.framework.Constants;
 import org.osgi.framework.BundleReference;
 
 /**
@@ -187,6 +190,26 @@ class PlurlURLHandlers implements PlurlStreamHandlerFactory, PlurlContentHandler
         Bundle bundle = ((BundleReference) loader).getBundle();
         return (bundle instanceof BundleImpl)
             && (((BundleImpl) bundle).getFramework() == m_felix);
+    }
+
+    /**
+     * Claims bundle: URLs belonging to this framework instance.
+     * <p>
+     * Every Felix framework in the JVM uses the same bundle: protocol, so the
+     * protocol alone does not identify an owner; the framework UUID in the URL host
+     * does. This matters when a URL is re-parsed by a caller that is in no bundle,
+     * where there is nothing on the call stack for plurl to attribute.
+     */
+    @Override
+    public boolean shouldHandle(URL url)
+    {
+        if ((url == null) || !FelixConstants.BUNDLE_URL_PROTOCOL.equals(url.getProtocol()))
+        {
+            return false;
+        }
+        String uuid = Util.getFrameworkUUIDFromURL(url.getHost());
+        return (uuid != null)
+            && uuid.equals(m_felix._getProperty(Constants.FRAMEWORK_UUID));
     }
 
     @Override

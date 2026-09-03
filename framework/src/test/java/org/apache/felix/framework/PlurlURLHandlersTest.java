@@ -113,7 +113,7 @@ class PlurlURLHandlersTest
             .as("JDK classes are not owned by a framework").isFalse();
         assertThat(handlers.shouldHandle(getClass()))
             .as("test classes are not loaded from a bundle").isFalse();
-        assertThat(handlers.shouldHandle(null))
+        assertThat(handlers.shouldHandle((Class<?>) null))
             .as("null must not be claimed").isFalse();
     }
 
