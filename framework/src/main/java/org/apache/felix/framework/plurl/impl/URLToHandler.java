@@ -52,6 +52,21 @@ public class URLToHandler {
 
 	Map<WeakURL, PlurlStreamHandler> entries = Collections.synchronizedMap(new HashMap<>());
 
+	/**
+	 * Replaces the handler recorded for the given URL. Used when the handler first
+	 * recorded was chosen before the URL was populated, and its owner has since
+	 * claimed it.
+	 */
+	void replace(URL u, PlurlStreamHandler handler) {
+		synchronized (entries) {
+			entries.put(new WeakURL(u, queue), handler);
+			Object x;
+			while ((x = queue.poll()) != null) {
+				entries.remove(x);
+			}
+		}
+	}
+
 	PlurlStreamHandler get(URL u, Supplier<PlurlStreamHandler> h) {
 		WeakURL lookup = new WeakURL(u, null);
 		PlurlStreamHandler existing = entries.get(lookup);
