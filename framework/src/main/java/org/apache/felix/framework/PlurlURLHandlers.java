@@ -34,7 +34,7 @@ import org.osgi.framework.BundleReference;
 
 /**
  * <p>
- * PROTOTYPE (FELIX-6759): registers this framework's URL handling with the plurl
+ * Registers this framework's URL handling with the plurl
  * multiplexing factories instead of taking over the JVM singletons directly.
  * </p>
  * <p>
