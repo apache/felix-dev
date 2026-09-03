@@ -107,6 +107,7 @@ class PlurlURLHandlers implements PlurlStreamHandlerFactory, PlurlContentHandler
 
             Plurl.add((PlurlStreamHandlerFactory) handlers);
             Plurl.add((PlurlContentHandlerFactory) handlers);
+            warnIfSelectionBySpecUnsupported(felix);
             return handlers;
         }
         catch (Throwable ex)
@@ -188,6 +189,31 @@ class PlurlURLHandlers implements PlurlStreamHandlerFactory, PlurlContentHandler
         Bundle bundle = ((BundleReference) loader).getBundle();
         return (bundle instanceof BundleImpl)
             && (((BundleImpl) bundle).getFramework() == m_felix);
+    }
+
+    /**
+     * Warns when the plurl that won the install in this JVM cannot route by the URL.
+     * <p>
+     * The router is not necessarily the copy this framework brought: it may belong to
+     * another framework instance, or to an application embedding its own, and it may
+     * be older than this one. A bundle: URL can only be attributed to a framework by
+     * the UUID it carries, so where {@link Plurl#PLURL_CAPABILITY_SELECT_BY_SPEC} is
+     * not supported such a URL is handed to whichever factory registered first, which
+     * then cannot resolve it. Nothing here can fix that, so say it plainly at startup
+     * rather than leave it to surface later as a failed resource lookup.
+     */
+    private static void warnIfSelectionBySpecUnsupported(Felix felix)
+    {
+        if (!Plurl.capabilities().contains(Plurl.PLURL_CAPABILITY_SELECT_BY_SPEC))
+        {
+            felix.getLogger().log(Logger.LOG_WARNING,
+                "The plurl implementation installed in this JVM does not support"
+                    + " selecting a factory by the URL being parsed ("
+                    + Plurl.PLURL_CAPABILITY_SELECT_BY_SPEC
+                    + "). A bundle: URL parsed by a caller outside of any bundle may be"
+                    + " routed to a different framework instance in this JVM and fail to"
+                    + " resolve.");
+        }
     }
 
     /**

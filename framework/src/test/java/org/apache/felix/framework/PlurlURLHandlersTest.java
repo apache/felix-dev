@@ -25,6 +25,8 @@ import java.net.URL;
 import java.util.HashMap;
 import java.util.Map;
 
+import org.apache.felix.framework.plurl.Plurl;
+
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -115,6 +117,21 @@ class PlurlURLHandlersTest
             .as("test classes are not loaded from a bundle").isFalse();
         assertThat(handlers.shouldHandle((Class<?>) null))
             .as("null must not be claimed").isFalse();
+    }
+
+    /**
+     * The router that routes in this JVM must be one that consults
+     * shouldHandle(protocol, spec). Felix warns at startup when it is not, because
+     * bundle: URLs are then routed to whichever factory registered first; this test
+     * pins the capability so that re-vendoring an older plurl fails here rather than
+     * silently turning that warning on for every user.
+     */
+    @Test
+    void installedPlurlSupportsSelectionBySpec()
+    {
+        assertThat(Plurl.capabilities())
+            .as("the installed plurl reports what it supports")
+            .contains(Plurl.PLURL_CAPABILITY_SELECT_BY_SPEC);
     }
 
     /**
