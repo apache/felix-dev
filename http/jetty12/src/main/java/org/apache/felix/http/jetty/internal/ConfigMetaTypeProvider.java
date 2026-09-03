@@ -168,8 +168,14 @@ class ConfigMetaTypeProvider implements MetaTypeProvider
         adList.add(new AttributeDefinitionImpl(JettyConfig.FELIX_JETTY_USE_VIRTUAL_THREADS,
                 "Use Virtual Threads",
                 "Use virtual threads in Jetty (JDK 21 or higher). Defaults to false.",
-                -1,
+                false,
                 bundle.getBundleContext().getProperty(JettyConfig.FELIX_JETTY_USE_VIRTUAL_THREADS)));
+
+        adList.add(new AttributeDefinitionImpl(JettyConfig.FELIX_JETTY_VIRTUAL_THREADS_MAX,
+                "Virtual Threads Max Concurrent Tasks",
+                "The maximum number of virtual thread tasks that run at the same time, or -1 to leave the number unbounded. Note that unlike 'Threadpool Max' this bounds concurrent tasks, not the number of threads. Only relevant if 'Use Virtual Threads' is enabled. When set to a positive value, Jetty's preferred setup is used: a QueuedThreadPool, sized by 'Threadpool Max', with a bounded VirtualThreadPool as its virtual threads executor. Defaults to -1.",
+                -1,
+                bundle.getBundleContext().getProperty(JettyConfig.FELIX_JETTY_VIRTUAL_THREADS_MAX)));
 
         adList.add(new AttributeDefinitionImpl(JettyConfig.FELIX_JETTY_ACCEPTORS,
                 "Acceptors",
