@@ -450,12 +450,14 @@ public final class JettyService
                 throw new IllegalArgumentException("Virtual threads are only available in Java 21 or later, or via preview flags in Java 19-20");
             }
             if (threadPoolMax >= 0) {
-                // Configurable, bounded, virtual thread executor
+                // Standalone VirtualThreadPool as the server's thread pool: only virtual
+                // threads, with a semaphore limiting concurrent tasks to threadPoolMax.
                 VirtualThreadPool threadPool = new VirtualThreadPool();
                 threadPool.setMaxConcurrentTasks(threadPoolMax);
                 return new Server(threadPool);
             } else {
-                // Simple, unlimited, virtual thread Executor
+                // QueuedThreadPool with an unbounded virtual-threads executor: platform
+                // threads still run the acceptors and selectors, tasks run on virtual threads.
                 QueuedThreadPool threadPool = new QueuedThreadPool();
                 final Executor virtualExecutor = (Executor) newVirtualThreadPerTaskExecutorMethod.invoke(null);
                 threadPool.setVirtualThreadsExecutor(virtualExecutor);
