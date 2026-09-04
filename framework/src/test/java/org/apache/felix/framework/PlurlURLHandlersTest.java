@@ -129,13 +129,13 @@ class PlurlURLHandlersTest
     @Test
     void installedPlurlSupportsSelectionBySpec()
     {
-        assertThat(Plurl.capabilities())
+        assertThat(Plurl.getCapability(Plurl.PLURL_CAPABILITY_SELECT_BY_SPEC))
             .as("the installed plurl reports what it supports")
-            .contains(Plurl.PLURL_CAPABILITY_SELECT_BY_SPEC);
+            .isEqualTo(Boolean.TRUE);
     }
 
     /**
-     * shouldHandle(protocol, spec) must claim only this framework's bundle: URLs.
+     * shouldHandleURL(protocol, spec) must claim only this framework's bundle: URLs.
      * The framework UUID is in the host, and it is the only thing that identifies an
      * owner when the URL is parsed by a caller that is in no bundle.
      */
@@ -146,17 +146,17 @@ class PlurlURLHandlersTest
         assertThat(handlers).isNotNull();
 
         String uuid = m_felix._getProperty(Constants.FRAMEWORK_UUID);
-        assertThat(handlers.shouldHandle("bundle", "bundle://" + uuid + "_1.0/resource"))
+        assertThat(handlers.shouldHandleURL("bundle", "bundle://" + uuid + "_1.0/resource"))
             .as("this framework's own URL").isTrue();
-        assertThat(handlers.shouldHandle("bundle", "bundle://" + uuid + "_1.0:0/resource"))
+        assertThat(handlers.shouldHandleURL("bundle", "bundle://" + uuid + "_1.0:0/resource"))
             .as("host may carry a port").isTrue();
-        assertThat(handlers.shouldHandle("bundle", "bundle://someotherframework_1.0/resource"))
+        assertThat(handlers.shouldHandleURL("bundle", "bundle://someotherframework_1.0/resource"))
             .as("another framework's URL must not be claimed").isFalse();
-        assertThat(handlers.shouldHandle("http", "http://" + uuid + "_1.0/resource"))
+        assertThat(handlers.shouldHandleURL("http", "http://" + uuid + "_1.0/resource"))
             .as("only the bundle protocol is claimed").isFalse();
-        assertThat(handlers.shouldHandle("bundle", "bundle:relative/resource"))
+        assertThat(handlers.shouldHandleURL("bundle", "bundle:relative/resource"))
             .as("a spec with no host cannot be claimed").isFalse();
-        assertThat(handlers.shouldHandle("bundle", null))
+        assertThat(handlers.shouldHandleURL("bundle", null))
             .as("null must not be claimed").isFalse();
     }
 

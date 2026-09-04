@@ -47,7 +47,7 @@ import org.osgi.framework.BundleReference;
  * Plurl installs one cooperative router through the supported
  * {@code URL.setURLStreamHandlerFactory} API and asks each registered factory
  * {@link #shouldHandle(Class)} to claim a calling class, or
- * {@link #shouldHandle(String, String)} to claim the URL being parsed. That removes
+ * {@link #shouldHandleURL(String, String)} to claim the URL being parsed. That removes
  * the need for {@code URLHandlers.getFrameworkFromContext()} to walk the call stack:
  * by the time this factory is consulted, plurl has already established that the
  * caller belongs to this framework instance, so
@@ -204,7 +204,7 @@ class PlurlURLHandlers implements PlurlStreamHandlerFactory, PlurlContentHandler
      */
     private static void warnIfSelectionBySpecUnsupported(Felix felix)
     {
-        if (!Plurl.capabilities().contains(Plurl.PLURL_CAPABILITY_SELECT_BY_SPEC))
+        if (!Boolean.TRUE.equals(Plurl.getCapability(Plurl.PLURL_CAPABILITY_SELECT_BY_SPEC)))
         {
             felix.getLogger().log(Logger.LOG_WARNING,
                 "The plurl implementation installed in this JVM does not support"
@@ -225,7 +225,7 @@ class PlurlURLHandlers implements PlurlStreamHandlerFactory, PlurlContentHandler
      * where there is nothing on the call stack for plurl to attribute.
      */
     @Override
-    public boolean shouldHandle(String protocol, String spec)
+    public boolean shouldHandleURL(String protocol, String spec)
     {
         if (!FelixConstants.BUNDLE_URL_PROTOCOL.equals(protocol) || (spec == null))
         {
