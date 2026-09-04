@@ -67,16 +67,17 @@ public class ConfigurationAdminStarter {
         this.deactivate();
     }
 
-    public void activate(final ExtPersistenceManager pm)
+    public synchronized void activate(final ExtPersistenceManager pm)
     {
         try
         {
-            configurationManager = new ConfigurationManager(pm, bundleContext);
+            final ConfigurationManager cm = new ConfigurationManager(pm, bundleContext);
+            this.configurationManager = cm;
             // start coordinator tracker
             this.startCoordinatorTracker();
 
-            final ServiceReference<ConfigurationAdmin> ref = configurationManager.start();
-            configurationManager.updateRegisteredConfigurationPlugins(this.registeredConfigurationPlugins);
+            final ServiceReference<ConfigurationAdmin> ref = cm.start();
+            cm.updateRegisteredConfigurationPlugins(this.registeredConfigurationPlugins);
             // update log
             Log.logger.set(ref);
 
@@ -87,7 +88,7 @@ public class ConfigurationAdminStarter {
         }
     }
 
-    public void deactivate()
+    public synchronized void deactivate()
     {
         this.stopCoordinatorTracker();
         if ( this.configurationManager != null )
@@ -115,7 +116,11 @@ public class ConfigurationAdminStarter {
                     synchronized ( this.sortedServices )
                     {
                         sortedServices.put(reference, srv);
-                        configurationManager.setCoordinator(sortedServices.get(sortedServices.lastKey()));
+                        final ConfigurationManager localCM = configurationManager;
+                        if ( localCM != null )
+                        {
+                            localCM.setCoordinator(sortedServices.get(sortedServices.lastKey()));
+                        }
                     }
                 }
                 return srv;
@@ -128,7 +133,11 @@ public class ConfigurationAdminStarter {
                     // update the map, service ranking might have changed
                     sortedServices.remove(reference);
                     sortedServices.put(reference, srv);
-                    configurationManager.setCoordinator(sortedServices.get(sortedServices.lastKey()));
+                    final ConfigurationManager localCM = configurationManager;
+                    if ( localCM != null )
+                    {
+                        localCM.setCoordinator(sortedServices.get(sortedServices.lastKey()));
+                    }
                 }
             }
 
@@ -137,13 +146,17 @@ public class ConfigurationAdminStarter {
                 synchronized ( this.sortedServices )
                 {
                     sortedServices.remove(reference);
-                    if ( sortedServices.isEmpty() )
+                    final ConfigurationManager localCM = configurationManager;
+                    if ( localCM != null )
                     {
-                        configurationManager.setCoordinator(null);
-                    }
-                    else
-                    {
-                        configurationManager.setCoordinator(sortedServices.get(sortedServices.lastKey()));
+                        if ( sortedServices.isEmpty() )
+                        {
+                            localCM.setCoordinator(null);
+                        }
+                        else
+                        {
+                            localCM.setCoordinator(sortedServices.get(sortedServices.lastKey()));
+                        }
                     }
                 }
                 bundleContext.ungetService(reference);
@@ -161,17 +174,17 @@ public class ConfigurationAdminStarter {
         }
     }
 
-    public void unsetPersistenceManager() {
+    public synchronized void unsetPersistenceManager() {
         this.persistenceManager = null;
         this.deactivate();
     }
 
-    public void setPersistenceManager(final ExtPersistenceManager persistenceManager) {
+    public synchronized void setPersistenceManager(final ExtPersistenceManager persistenceManager) {
         this.persistenceManager = persistenceManager;
         this.checkStart();
     }
 
-    public void updatePluginsSet(final boolean value) {
+    public synchronized void updatePluginsSet(final boolean value) {
         if (this.pluginsAvailable.compareAndSet(!value, value)) {
             if (!value) {
                 this.deactivate();
@@ -181,13 +194,13 @@ public class ConfigurationAdminStarter {
         }
     }
 
-    public void checkStart() {
+    public synchronized void checkStart() {
         if (this.pluginsAvailable.get() && this.persistenceManager != null) {
             this.activate(this.persistenceManager);
         }
     }
 
-    public void updateRegisteredConfigurationPlugins(final String propValue) {
+    public synchronized void updateRegisteredConfigurationPlugins(final String propValue) {
         this.registeredConfigurationPlugins = propValue;
         final ConfigurationManager localCM = this.configurationManager;
         if (localCM != null) {
