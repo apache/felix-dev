@@ -85,6 +85,7 @@
                             org.apache.felix.service.command,
                             org.apache.felix.service.command.annotations,
                             org.apache.felix.service.threadio,
+                            org.apache.felix.service.systemio,
                         </Export-Package>
                         <Import-Package>
                             org.osgi.service.event.*; resolution:=optional,
@@ -95,4 +96,31 @@
             </plugin>
         </plugins>
     </build>
+    <profiles>
+            <profile>
+            <id>felix</id>
+            <activation>
+                <activeByDefault>true</activeByDefault>
+            </activation>
+            <dependencies>
+                <dependency>
+                    <groupId>org.apache.felix</groupId>
+                    <artifactId>org.apache.felix.framework</artifactId>
+                    <scope>test</scope>
+                </dependency>
+            </dependencies>
+        </profile>
+        <profile>
+            <id>equinox</id>
+            <dependencies>
+                <dependency>
+                    <groupId>org.eclipse</groupId>
+                    <artifactId>org.eclipse.osgi</artifactId>
+                    <version>3.8.0.v20120529-1548</version>
+                    <scope>test</scope>
+                </dependency>
+            </dependencies>
+        </profile>
+    </profiles>
+    
 </project>

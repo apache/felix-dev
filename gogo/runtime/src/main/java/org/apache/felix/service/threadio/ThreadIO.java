@@ -21,6 +21,8 @@ package org.apache.felix.service.threadio;
 import java.io.InputStream;
 import java.io.PrintStream;
 
+import org.apache.felix.service.systemio.SystemIO;
+
 /**
  * Enable multiplexing of the standard IO streams for input, output, and error.
  * <p>
