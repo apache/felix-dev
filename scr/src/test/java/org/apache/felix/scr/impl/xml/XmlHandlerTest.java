@@ -111,6 +111,38 @@ public class XmlHandlerTest {
             trueDependency.getTarget());
     }
 
+    @Test(expected = Exception.class)
+    public void testParserRejectsXXE() throws Exception {
+        String xml = "<?xml version=\"1.0\" encoding=\"UTF-8\"?>\n" +
+            "<!DOCTYPE scr:component [\n" +
+            "  <!ENTITY xxe SYSTEM \"http://127.0.0.1:9999/test\">\n" +
+            "]>\n" +
+            "<scr:component xmlns:scr=\"http://www.osgi.org/xmlns/scr/v1.0.0\" name=\"test\">\n" +
+            "    <property name=\"val\" value=\"&xxe;\"/>\n" +
+            "    <implementation class=\"test.MyComponent\"/>\n" +
+            "</scr:component>";
+        final Bundle bundle = Mockito.mock(Bundle.class);
+        Mockito.when(bundle.getLocation()).thenReturn("bundle");
+
+        try (java.io.ByteArrayInputStream stream = new java.io.ByteArrayInputStream(xml.getBytes("UTF-8"))) {
+            XmlHandler handler = new XmlHandler(bundle, new MockBundleLogger(), false,
+                false, null);
+            final SAXParserFactory factory = SAXParserFactory.newInstance();
+            factory.setNamespaceAware(true);
+            try {
+                factory.setFeature("http://xml.org/sax/features/external-general-entities", false);
+                factory.setFeature("http://xml.org/sax/features/external-parameter-entities", false);
+                factory.setFeature("http://apache.org/xml/features/nonvalidating/load-external-dtd", false);
+                factory.setFeature("http://apache.org/xml/features/disallow-doctype-decl", true);
+                factory.setXIncludeAware(false);
+            } catch (Exception e) {
+                // Ignore
+            }
+            final SAXParser parser = factory.newSAXParser();
+            parser.parse(stream, handler);
+        }
+    }
+
     private List<ComponentMetadata> parse(final URL descriptorURL,
         ServiceReference<?> trueCondition) throws Exception
     {
@@ -125,6 +157,15 @@ public class XmlHandlerTest {
                 false, trueCondition);
             final SAXParserFactory factory = SAXParserFactory.newInstance();
             factory.setNamespaceAware(true);
+            try {
+                factory.setFeature("http://xml.org/sax/features/external-general-entities", false);
+                factory.setFeature("http://xml.org/sax/features/external-parameter-entities", false);
+                factory.setFeature("http://apache.org/xml/features/nonvalidating/load-external-dtd", false);
+                factory.setFeature("http://apache.org/xml/features/disallow-doctype-decl", true);
+                factory.setXIncludeAware(false);
+            } catch (Exception e) {
+                // Ignore
+            }
             final SAXParser parser = factory.newSAXParser();
 
             parser.parse(stream, handler);

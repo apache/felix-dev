@@ -273,6 +273,12 @@ public class DefaultBindingModule extends AbsBindingModule {
             DocumentBuilderFactory factory = DocumentBuilderFactory.newInstance();
             factory.setNamespaceAware(true);
             try {
+                factory.setFeature("http://xml.org/sax/features/external-general-entities", false);
+                factory.setFeature("http://xml.org/sax/features/external-parameter-entities", false);
+                factory.setFeature("http://apache.org/xml/features/nonvalidating/load-external-dtd", false);
+                factory.setFeature("http://apache.org/xml/features/disallow-doctype-decl", true);
+                factory.setFeature(javax.xml.XMLConstants.FEATURE_SECURE_PROCESSING, true);
+                factory.setXIncludeAware(false);
                 m_builder = factory.newDocumentBuilder();
             } catch (ParserConfigurationException e) {
                 // TODO GSA is this acceptable to throw a RuntimeException here ?
