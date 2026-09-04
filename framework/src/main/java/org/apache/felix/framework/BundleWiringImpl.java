@@ -53,7 +53,10 @@ import org.osgi.resource.Requirement;
 import org.osgi.resource.Wire;
 import org.osgi.service.resolver.ResolutionException;
 
+import java.io.BufferedReader;
 import java.io.IOException;
+import java.io.InputStream;
+import java.io.InputStreamReader;
 import java.lang.reflect.Constructor;
 import java.net.URL;
 import java.security.AccessController;
@@ -171,6 +174,12 @@ public class BundleWiringImpl implements BundleWiring
     private volatile boolean m_isDisposed = false;
 
     private volatile ConcurrentHashMap<String, ClassLoader> m_accessorLookupCache;
+
+    // Core SPI support: Maps SPI implementation class names to their provider bundles
+    private final Map<String, BundleRevision> m_spiClassMap = new ConcurrentHashMap<>();
+    
+    // Core SPI support: Prefix for Java SPI resources
+    private static final String JAVA_SPI_PREFIX = "META-INF/services/";
 
     BundleWiringImpl(
         Logger logger, Map<String,?> configMap, StatefulResolver resolver,
@@ -1232,6 +1241,12 @@ public class BundleWiringImpl implements BundleWiring
             }
         }
 
+        // Core SPI support: Check if this is a ServiceLoader resource request
+        if (name.startsWith(JAVA_SPI_PREFIX))
+        {
+            aggregateSpiResources(name, completeUrlList);
+        }
+
         return new CompoundEnumeration((Enumeration[])
                 completeUrlList.toArray(new Enumeration[completeUrlList.size()]));
     }
@@ -1565,6 +1580,12 @@ public class BundleWiringImpl implements BundleWiring
                     if (result == null)
                     {
                         result = searchDynamicImports(pkgName, name, isClass);
+                    }
+
+                    // Core SPI support: As a last resort for classes, check if this is an SPI implementation class
+                    if (result == null && isClass)
+                    {
+                        result = loadSpiClass(name);
                     }
                 }
             }
@@ -1902,6 +1923,158 @@ public class BundleWiringImpl implements BundleWiring
         {
             return convertToLocalUrl((URL) m_enumeration.nextElement());
         }
+    }
+
+    // Core SPI support methods
+
+    /**
+     * Aggregates SPI resources from all wired bundles that export the service interface package.
+     * This method is called when META-INF/services/ resources are requested.
+     */
+    private void aggregateSpiResources(String name, List<Enumeration<URL>> completeUrlList)
+    {
+        // Extract the service interface name from the resource path
+        String spiTypeName = name.substring(JAVA_SPI_PREFIX.length());
+        
+        try
+        {
+            // Try to load the service interface class from the requesting bundle
+            Class<?> spiClass = getClassByDelegation(spiTypeName);
+            
+            // Get the package name of the service interface
+            String spiPackage = Util.getClassPackage(spiTypeName);
+            
+            // Find all bundles that are wired to provide this package
+            List<BundleRevision> wiredProviders = findWiredProviders(spiPackage);
+            
+            // Collect SPI resources from all wired providers
+            for (BundleRevision providerRevision : wiredProviders)
+            {
+                if (providerRevision == m_revision)
+                {
+                    // Skip ourselves, we've already searched our own resources
+                    continue;
+                }
+                
+                BundleWiring providerWiring = providerRevision.getWiring();
+                if (providerWiring != null)
+                {
+                    // Get the resource from the provider bundle
+                    Enumeration<URL> providerUrls = 
+                        ((BundleRevisionImpl) providerRevision).getResourcesLocal(name);
+                    
+                    if (providerUrls != null && providerUrls.hasMoreElements())
+                    {
+                        completeUrlList.add(providerUrls);
+                        
+                        // Parse the SPI resource and record implementation classes
+                        parseSpiResource(providerUrls, providerRevision);
+                    }
+                }
+            }
+        }
+        catch (ClassNotFoundException e)
+        {
+            // If we can't load the service interface, we can't do cross-bundle discovery
+            // This is expected and not an error - just continue with normal resource loading
+        }
+    }
+
+    /**
+     * Finds all bundle revisions that are wired to provide the specified package.
+     */
+    private List<BundleRevision> findWiredProviders(String packageName)
+    {
+        List<BundleRevision> providers = new ArrayList<>();
+        
+        // Check imported packages
+        BundleRevision importedProvider = m_importedPkgs.get(packageName);
+        if (importedProvider != null)
+        {
+            providers.add(importedProvider);
+        }
+        
+        // Check required bundles
+        List<BundleRevision> requiredProviders = m_requiredPkgs.get(packageName);
+        if (requiredProviders != null)
+        {
+            providers.addAll(requiredProviders);
+        }
+        
+        // Include ourselves
+        providers.add(m_revision);
+        
+        return providers;
+    }
+
+    /**
+     * Parses SPI resource files and records implementation class mappings.
+     */
+    private void parseSpiResource(Enumeration<URL> urls, BundleRevision providerRevision)
+    {
+        while (urls.hasMoreElements())
+        {
+            URL url = urls.nextElement();
+            try (InputStream is = url.openStream();
+                 BufferedReader reader = new BufferedReader(new InputStreamReader(is, "UTF-8")))
+            {
+                String line;
+                while ((line = reader.readLine()) != null)
+                {
+                    // Remove comments
+                    int commentIndex = line.indexOf('#');
+                    if (commentIndex >= 0)
+                    {
+                        line = line.substring(0, commentIndex);
+                    }
+                    
+                    // Trim whitespace
+                    line = line.trim();
+                    
+                    // Skip empty lines
+                    if (line.isEmpty())
+                    {
+                        continue;
+                    }
+                    
+                    // Record the mapping from implementation class to provider bundle
+                    m_spiClassMap.put(line, providerRevision);
+                }
+            }
+            catch (IOException e)
+            {
+                // If we can't read the resource, just skip it
+                m_logger.log(m_revision.getBundle(), Logger.LOG_DEBUG,
+                    "Failed to parse SPI resource: " + url, e);
+            }
+        }
+    }
+
+    /**
+     * Attempts to load an SPI implementation class from its provider bundle.
+     * This is called as a last resort when normal class loading fails.
+     */
+    private Class<?> loadSpiClass(String className)
+    {
+        BundleRevision providerRevision = m_spiClassMap.get(className);
+        if (providerRevision != null)
+        {
+            BundleWiring providerWiring = providerRevision.getWiring();
+            if (providerWiring != null)
+            {
+                try
+                {
+                    // Load the class from the provider bundle
+                    return ((BundleWiringImpl) providerWiring).getClassByDelegation(className);
+                }
+                catch (ClassNotFoundException e)
+                {
+                    // If the provider bundle can't load the class, remove the mapping
+                    m_spiClassMap.remove(className);
+                }
+            }
+        }
+        return null;
     }
 
     public static class BundleClassLoader extends SecureClassLoader implements BundleReference
