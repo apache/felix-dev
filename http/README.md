@@ -479,23 +479,34 @@ properties can be used (some legacy property names still exist but are not docum
 | `org.apache.felix.http.jetty.selectors` | The number of Jetty selector threads for the connector. Selectors notice and schedule established connections that can make I/O progress. Default is `-1`, which lets Jetty choose: for a sized thread pool Jetty uses `max(1, min(cpus / 2, maxThreads / 16))`, and for a thread pool that is not sized, such as the `VirtualThreadPool`, it uses `max(1, cpus / 2)`. Keep the selector count below the number of carrier threads when virtual threads are active. |
 | `org.apache.felix.http.jetty.threadpool.max` | The maximum number of threads in the Jetty thread pool. Default is `-1`, meaning the property is unset and Jetty's own default applies, which is a `QueuedThreadPool` with 200 platform threads. When `org.apache.felix.http.jetty.virtualthreads.enable` is `true`, this property also selects the type of thread pool, see [Thread pool and virtual threads](#thread-pool-and-virtual-threads). |
 | `org.apache.felix.http.jetty.virtualthreads.enable` | Enables virtual threads in Jetty 12 (JDK 21 or later). Default is `false`. The value of `org.apache.felix.http.jetty.threadpool.max` then selects which thread pool is built, see [Thread pool and virtual threads](#thread-pool-and-virtual-threads). |
+| `org.apache.felix.http.jetty.virtualthreads.max` | The maximum number of virtual thread tasks that run at the same time, or `-1` to leave the number unbounded. Note that unlike `org.apache.felix.http.jetty.threadpool.max` this bounds concurrent tasks, not the number of threads. Only relevant when `org.apache.felix.http.jetty.virtualthreads.enable` is `true`. When set to a positive value, Jetty's preferred setup is used: a `QueuedThreadPool`, sized by `org.apache.felix.http.jetty.threadpool.max`, whose virtual threads executor is a bounded `VirtualThreadPool`. Platform threads then still run the acceptors and the selectors. Default is `-1`. Jetty 12 bundle only, available from version 2.0.8. |
 
 ### Thread pool and virtual threads
 
-The combination of `org.apache.felix.http.jetty.threadpool.max` and
-`org.apache.felix.http.jetty.virtualthreads.enable` decides which thread pool the Jetty 12 bundle
-builds. Both properties are unset by default, which gives a `QueuedThreadPool` with 200 platform
-threads, the Jetty default.
+The combination of `org.apache.felix.http.jetty.threadpool.max`,
+`org.apache.felix.http.jetty.virtualthreads.enable` and
+`org.apache.felix.http.jetty.virtualthreads.max` decides which thread pool the Jetty 12 bundle
+builds. All three properties are unset by default, which gives a `QueuedThreadPool` with 200
+platform threads, the Jetty default.
 
-| `virtualthreads.enable` | `threadpool.max` | Thread pool |
-|--|--|--|
-| `false` | unset (`-1`) | Jetty's default `QueuedThreadPool` with 200 platform threads. |
-| `false` | set | A `QueuedThreadPool` with `<max>` platform threads. |
-| `true` | unset (`-1`) | A `QueuedThreadPool` whose virtual threads executor is `Executors.newVirtualThreadPerTaskExecutor()`. The number of concurrent virtual thread tasks is **unbounded**. |
-| `true` | set | A standalone `VirtualThreadPool` with `setMaxConcurrentTasks(<max>)`. A semaphore limits the number of tasks that run at the same time. |
+| `virtualthreads.enable` | `threadpool.max` | `virtualthreads.max` | Thread pool |
+|--|--|--|--|
+| `false` | unset (`-1`) | - | Jetty's default `QueuedThreadPool` with 200 platform threads. |
+| `false` | set | - | A `QueuedThreadPool` with `<max>` platform threads. |
+| `true` | unset (`-1`) | unset (`-1`) | A `QueuedThreadPool` whose virtual threads executor is `Executors.newVirtualThreadPerTaskExecutor()`. The number of concurrent virtual thread tasks is **unbounded**. |
+| `true` | set | unset (`-1`) | A standalone `VirtualThreadPool` with `setMaxConcurrentTasks(<max>)`. A semaphore limits the number of tasks that run at the same time. The pool creates only virtual threads. |
+| `true` | unset or set | set | Jetty's preferred setup: a `QueuedThreadPool`, sized by `threadpool.max`, whose virtual threads executor is a `VirtualThreadPool` with `setMaxConcurrentTasks(<value>)`. Platform threads still run the acceptors and the selectors. Available from Jetty 12 bundle version 2.0.8. |
 
-Note that enabling virtual threads without setting `org.apache.felix.http.jetty.threadpool.max`
-yields the unbounded variant, which Jetty warns can exhaust memory during a load spike.
+Note that enabling virtual threads without setting either `org.apache.felix.http.jetty.threadpool.max`
+or `org.apache.felix.http.jetty.virtualthreads.max` yields the unbounded variant, which Jetty warns
+can exhaust memory during a load spike.
+
+Note also that `org.apache.felix.http.jetty.threadpool.max` and
+`org.apache.felix.http.jetty.virtualthreads.max` bound different things:
+`threadpool.max` bounds threads, `virtualthreads.max` bounds the number of tasks that run at the
+same time. The fourth row above is the exception, where `threadpool.max` is reused as a bound on
+concurrent tasks. That is kept for backwards compatibility; `virtualthreads.max` is the properly
+named equivalent.
 
 A few more things to be aware of when virtual threads are enabled:
 
@@ -503,9 +514,10 @@ A few more things to be aware of when virtual threads are enabled:
   and Jetty sets the reserved thread count to zero, so it always uses the Produce-Execute-Consume
   mode. The standalone `VirtualThreadPool` only creates virtual threads.
 * Keep `org.apache.felix.http.jetty.selectors` below the number of carrier threads.
-* Jetty documents a third combination as the preferred one: a `QueuedThreadPool` whose virtual
-  threads executor is a bounded `VirtualThreadPool`. There is no Felix HTTP configuration for that
-  combination yet, this is tracked in [FELIX-6859](https://issues.apache.org/jira/browse/FELIX-6859).
+* The combination Jetty documents as the preferred one, a `QueuedThreadPool` whose virtual threads
+  executor is a bounded `VirtualThreadPool`, is the last row of the table. It is configured with
+  `org.apache.felix.http.jetty.virtualthreads.max` and is available from Jetty 12 bundle version
+  2.0.8, see [FELIX-6859](https://issues.apache.org/jira/browse/FELIX-6859).
 
 Virtual threads require JDK 21 or later and are only supported by the Jetty 12 bundle. The Jetty 11
 bundle only honours `org.apache.felix.http.jetty.threadpool.max`.

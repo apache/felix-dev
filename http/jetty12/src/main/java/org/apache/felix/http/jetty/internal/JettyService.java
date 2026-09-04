@@ -438,10 +438,28 @@ public final class JettyService
 
     private Server createServer() throws Exception
     {
-        final int threadPoolMax = this.config.getThreadPoolMax();
-        if (!this.config.isUseVirtualThreads() && threadPoolMax >= 0) {
-            return new Server(new QueuedThreadPool(threadPoolMax));
-        } else if (this.config.isUseVirtualThreads()) {
+        final ThreadPool threadPool = createThreadPool(this.config);
+        return threadPool == null ? new Server() : new Server(threadPool);
+    }
+
+    /**
+     * Selects the Jetty thread pool for the configured combination of
+     * {@link JettyConfig#FELIX_JETTY_THREADPOOL_MAX},
+     * {@link JettyConfig#FELIX_JETTY_USE_VIRTUAL_THREADS} and
+     * {@link JettyConfig#FELIX_JETTY_VIRTUAL_THREADS_MAX}.
+     *
+     * Package private so that the selection can be asserted without starting a server.
+     *
+     * @param config The configuration
+     * @return The thread pool, or {@code null} when none is configured, in which case
+     *         Jetty's own default applies.
+     */
+    static ThreadPool createThreadPool(final JettyConfig config) throws Exception
+    {
+        final int threadPoolMax = config.getThreadPoolMax();
+        if (!config.isUseVirtualThreads()) {
+            return threadPoolMax >= 0 ? new QueuedThreadPool(threadPoolMax) : null;
+        } else {
             // See https://jetty.org/docs/jetty/12/programming-guide/arch/threads.html#thread-pool-virtual-threads
             Method newVirtualThreadPerTaskExecutorMethod = null;
             try {
@@ -449,22 +467,37 @@ public final class JettyService
             } catch (NoSuchMethodException e) {
                 throw new IllegalArgumentException("Virtual threads are only available in Java 21 or later, or via preview flags in Java 19-20");
             }
-            if (threadPoolMax >= 0) {
+            final int maxConcurrentTasks = config.getVirtualThreadsMax();
+            if (maxConcurrentTasks > 0) {
+                // Jetty's preferred setup: a QueuedThreadPool, which keeps platform threads for
+                // the acceptors and the selectors, with a bounded VirtualThreadPool as its virtual
+                // threads executor. The VirtualThreadPool is added as a bean because
+                // setVirtualThreadsExecutor() only stores the executor, it does not manage its
+                // life cycle, and an unstarted VirtualThreadPool rejects every task.
+                QueuedThreadPool threadPool = threadPoolMax >= 0 ? new QueuedThreadPool(threadPoolMax) : new QueuedThreadPool();
+                VirtualThreadPool virtualThreadPool = new VirtualThreadPool();
+                virtualThreadPool.setMaxConcurrentTasks(maxConcurrentTasks);
+                threadPool.setVirtualThreadsExecutor(virtualThreadPool);
+                threadPool.addBean(virtualThreadPool);
+                return threadPool;
+            } else if (threadPoolMax >= 0) {
                 // Standalone VirtualThreadPool as the server's thread pool: only virtual
-                // threads, with a semaphore limiting concurrent tasks to threadPoolMax.
+                // threads, with a semaphore limiting concurrent tasks to threadPoolMax. Note
+                // that this branch predates virtualthreads.max and reuses threadpool.max as a
+                // bound on concurrent tasks rather than on threads. It is kept as is for
+                // backwards compatibility; virtualthreads.max above is the properly named
+                // equivalent.
                 VirtualThreadPool threadPool = new VirtualThreadPool();
                 threadPool.setMaxConcurrentTasks(threadPoolMax);
-                return new Server(threadPool);
+                return threadPool;
             } else {
                 // QueuedThreadPool with an unbounded virtual-threads executor: platform
                 // threads still run the acceptors and selectors, tasks run on virtual threads.
                 QueuedThreadPool threadPool = new QueuedThreadPool();
                 final Executor virtualExecutor = (Executor) newVirtualThreadPerTaskExecutorMethod.invoke(null);
                 threadPool.setVirtualThreadsExecutor(virtualExecutor);
-                return new Server(threadPool);
+                return threadPool;
             }
-        } else {
-            return new Server();
         }
     }
 
