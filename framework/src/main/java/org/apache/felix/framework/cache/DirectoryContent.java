@@ -252,10 +252,11 @@ public class DirectoryContent implements Content
         // entries are relative to the root of the bundle.
         entryName = (entryName.startsWith("/")) ? entryName.substring(1) : entryName;
 
-        if (entryName.trim().startsWith(".." + File.separatorChar) ||
-                entryName.contains(File.separator + ".." + File.separatorChar) ||
-                entryName.trim().endsWith(File.separator + "..") ||
-                entryName.trim().equals(".."))
+        String normalizedEntryName = entryName.replace('\\', '/');
+        if (normalizedEntryName.trim().startsWith("../") ||
+            normalizedEntryName.contains("/../") ||
+            normalizedEntryName.trim().endsWith("/..") ||
+            normalizedEntryName.trim().equals(".."))
         {
             return null;
         }
@@ -305,10 +306,11 @@ public class DirectoryContent implements Content
         // entries are relative to the root of the bundle.
         entryName = (entryName.startsWith("/")) ? entryName.substring(1) : entryName;
 
-        if (entryName.trim().startsWith(".." + File.separatorChar) ||
-                entryName.contains(File.separator + ".." + File.separatorChar) ||
-                entryName.trim().endsWith(File.separator + "..") ||
-                entryName.trim().equals(".."))
+        String normalizedEntryName = entryName.replace('\\', '/');
+        if (normalizedEntryName.trim().startsWith("../") ||
+            normalizedEntryName.contains("/../") ||
+            normalizedEntryName.trim().endsWith("/..") ||
+            normalizedEntryName.trim().equals(".."))
         {
             return null;
         }
