@@ -28,7 +28,6 @@ import java.util.StringTokenizer;
 import org.apache.felix.eventadmin.impl.adapter.AbstractAdapter;
 import org.apache.felix.eventadmin.impl.adapter.BundleEventAdapter;
 import org.apache.felix.eventadmin.impl.adapter.FrameworkEventAdapter;
-import org.apache.felix.eventadmin.impl.adapter.LogEventAdapter;
 import org.apache.felix.eventadmin.impl.adapter.ServiceEventAdapter;
 import org.apache.felix.eventadmin.impl.handler.EventAdminImpl;
 import org.apache.felix.eventadmin.impl.security.SecureEventAdminFactory;
@@ -172,7 +171,7 @@ public class Configuration
     // The registration of the mbean
     private volatile ServiceRegistration<Object> m_mbeanreg;
 
-    // all adapters
+    // all Framework event adapters
     private AbstractAdapter[] m_adapters;
 
     private ServiceRegistration<?> m_managedServiceReg;
@@ -431,7 +430,7 @@ public class Configuration
                     m_requireTopic,
                     m_ignoreTopics);
 
-            // Finally, adapt the outside events to our kind of events as per spec
+            // Adapt Framework events as required by the Event Admin specification
             adaptEvents(m_admin);
 
             // register the admin wrapped in a service factory (SecureEventAdminFactory)
@@ -505,15 +504,14 @@ public class Configuration
     }
 
     /**
-     * Init the adapters in org.apache.felix.eventadmin.impl.adapter
+     * Initialize the Framework event adapters required by the Event Admin specification.
      */
     private void adaptEvents(final EventAdmin admin)
     {
-        m_adapters = new AbstractAdapter[4];
+        m_adapters = new AbstractAdapter[3];
         m_adapters[0] = new FrameworkEventAdapter(m_bundleContext, admin);
         m_adapters[1] = new BundleEventAdapter(m_bundleContext, admin);
         m_adapters[2] = new ServiceEventAdapter(m_bundleContext, admin);
-        m_adapters[3] = new LogEventAdapter(m_bundleContext, admin);
     }
 
     private Object tryToCreateMetaTypeProvider(final Object managedService)
@@ -565,7 +563,7 @@ public class Configuration
             final int result;
             if ( value instanceof Integer )
             {
-                result = ((Integer)value).intValue();
+                result = (Integer) value;
             }
             else
             {
@@ -606,7 +604,7 @@ public class Configuration
             final double result;
             if ( value instanceof Double )
             {
-                result = ((Double)value).doubleValue();
+                result = (Double) value;
             }
             else
             {
@@ -645,17 +643,17 @@ public class Configuration
         {
             if ( obj instanceof Boolean )
             {
-                return ((Boolean)obj).booleanValue();
+                return (Boolean) obj;
             }
             String value = obj.toString().trim().toLowerCase();
 
-            if(0 < value.length() && ("0".equals(value) || "false".equals(value)
+            if(!value.isEmpty() && ("0".equals(value) || "false".equals(value)
                 || "no".equals(value)))
             {
                 return false;
             }
 
-            if(0 < value.length() && ("1".equals(value) || "true".equals(value)
+            if(!value.isEmpty() && ("1".equals(value) || "true".equals(value)
                 || "yes".equals(value)))
             {
                 return true;
