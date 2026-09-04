@@ -11,8 +11,18 @@ on:
       - 'log/**'
       - 'webconsole/**'
       - 'framework/**'
+      - 'gogo/**'
+      - 'framework.tck/**'
+      - 'main/**'
+      - 'utils/**'
+      - 'connect/**'
+      - 'resolver/**'
+      - 'bundlerepository/**'
+      - 'log.extension/**'
+      - 'examples/**'
+      - 'configadmin/**'
   pull_request:
-    branches: [ "master" ]
+    branches: [ "master", "feature/**", "maintenance/**" ]
     paths:
       - 'scr/**'
       - 'http/**'
@@ -22,6 +32,22 @@ on:
       - 'log/**'
       - 'framework/**'
       - 'gogo/**'
+      - 'framework.tck/**'
+      - 'main/**'
+      - 'utils/**'
+      - 'connect/**'
+      - 'resolver/**'
+      - 'bundlerepository/**'
+      - 'log.extension/**'
+      - 'examples/**'
+      - 'configadmin/**'
+
+# Cancel superseded runs when a branch is pushed again. github.head_ref is only set
+# for pull_request events, so pushes to master fall back to the unique run_id and are
+# never cancelled.
+concurrency:
+  group: ${{ github.workflow }}-${{ github.head_ref || github.run_id }}
+  cancel-in-progress: true
 
 permissions: {}
 
@@ -31,7 +57,7 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        java: [17,21,23]
+        java: [17,21,23,25]
     steps:
     - uses: actions/checkout@v6
     - name: Set up JDK ${{ matrix.java }}
@@ -63,9 +89,25 @@ jobs:
             - 'log/**'
           framework:
             - 'framework/**'
+            - 'framework.tck/**'
           gogo:
             - 'gogo/**'
-
+          main:
+            - 'main/**'
+          configadmin:
+            - 'configadmin/**'
+          utils:
+            - 'utils/**'
+          connect:
+            - 'connect/**'
+          resolver:
+            - 'resolver/**'
+          bundlerepository:
+            - 'bundlerepository/**'
+          logextension:
+            - 'log.extension/**'
+          examples:
+            - 'examples/**'
     - name: Felix SCR
       if: steps.changes.outputs.scr == 'true'
       run: mvn -B -V -Dstyle.color=always --file scr/pom.xml clean verify
@@ -86,13 +128,41 @@ jobs:
       run: mvn -B -V -Dstyle.color=always --file webconsole/pom.xml clean install verify
     - name: Felix Framework
       if: steps.changes.outputs.framework == 'true'
-      run: mvn -B -V -Dstyle.color=always --file framework/pom.xml clean verify
+      # install, not verify: the TCK below is a separate Maven invocation and resolves
+      # the framework from the repository, so without installing it would silently test
+      # whatever org.apache.felix.framework happens to be published rather than the
+      # build under test.
+      run: mvn -B -V -Dstyle.color=always --file framework/pom.xml clean install
     - name: OSGi-TCK Framework
       if: steps.changes.outputs.framework == 'true'
       run: mvn -B -V -Dstyle.color=always --file framework.tck/pom.xml clean verify
+    - name: Felix Main
+      if: steps.changes.outputs.main == 'true'
+      run: mvn -B -V -Dstyle.color=always --file main/pom.xml clean verify
     - name: Felix Gogo Shell
       if: steps.changes.outputs.gogo == 'true'
       run: mvn -B -V -Dstyle.color=always --file gogo/pom.xml clean verify
+    - name: Felix utils
+      if: steps.changes.outputs.utils == 'true'
+      run: mvn -B -V -Dstyle.color=always --file utils/pom.xml clean verify
+    - name: Felix connect
+      if: steps.changes.outputs.connect == 'true'
+      run: mvn -B -V -Dstyle.color=always --file connect/pom.xml clean verify
+    - name: Felix resolver
+      if: steps.changes.outputs.resolver == 'true'
+      run: mvn -B -V -Dstyle.color=always --file resolver/pom.xml clean verify
+    - name: Felix bundlerepository
+      if: steps.changes.outputs.bundlerepository == 'true'
+      run: mvn -B -V -Dstyle.color=always --file bundlerepository/pom.xml clean verify
+    - name: Felix log.extension
+      if: steps.changes.outputs.logextension == 'true'
+      run: mvn -B -V -Dstyle.color=always --file log.extension/pom.xml clean verify
+    - name: Felix examples
+      if: steps.changes.outputs.examples == 'true'
+      run: mvn -B -V -Dstyle.color=always --file examples/pom.xml clean verify
+    - name: Felix Config Admin
+      if: steps.changes.outputs.configadmin == 'true'
+      run: mvn -B -V -Dstyle.color=always --file configadmin/pom.xml clean verify
     - name: Upload Test Results
       if: always()
       uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1

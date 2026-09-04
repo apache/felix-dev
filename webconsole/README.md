@@ -118,6 +118,13 @@ In this case the Configuration Manager displays the name "myRealm, myClass" as d
 
 ## Releases
 
+### Changes in 5.1.0
+
+#### Improvement
+
+- Removed the Security Manager based `AccessController.doPrivileged` wrappers in `AbstractWebConsolePlugin`, `OsgiManager` and `ConfigurationSupport`. Java SE 24 permanently disabled the Security Manager ([JEP 486](https://openjdk.org/jeps/486)), so those blocks could never take effect. No exported API changed, and the Web Console's own HTTP authentication is unaffected.
+
+
 ### Changes in 5.0.18 (22/Sep/25)
 
 #### Bug

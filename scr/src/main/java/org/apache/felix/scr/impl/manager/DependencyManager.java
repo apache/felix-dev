@@ -18,7 +18,6 @@
  */
 package org.apache.felix.scr.impl.manager;
 
-import java.security.Permission;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
@@ -46,7 +45,6 @@ import org.osgi.framework.BundleContext;
 import org.osgi.framework.Constants;
 import org.osgi.framework.FrameworkUtil;
 import org.osgi.framework.InvalidSyntaxException;
-import org.osgi.framework.ServicePermission;
 import org.osgi.framework.ServiceReference;
 import org.osgi.service.component.ComponentConstants;
 import org.osgi.service.component.ComponentException;
@@ -1462,77 +1460,6 @@ public class DependencyManager<S, T> implements ReferenceManager<S, T>
         }
     }
 
-    private class NoPermissionsCustomizer implements Customizer<S, T>
-    {
-
-        @Override
-        public boolean prebind(ComponentContextImpl<S> key)
-        {
-            return false;
-        }
-
-        @Override
-        public void close()
-        {
-        }
-
-        @Override
-        public Collection<RefPair<S, T>> getRefs(AtomicInteger trackingCount)
-        {
-            return Collections.emptyList();
-        }
-
-        @Override
-        public boolean isSatisfied()
-        {
-            return isOptional();
-        }
-
-        @Override
-        public void setTracker(ServiceTracker<T, RefPair<S, T>, ExtendedServiceEvent> tRefPairServiceTracker)
-        {
-        }
-
-        @Override
-        public void setTrackerOpened()
-        {
-        }
-
-        @Override
-        public void setPreviousRefMap(Map<ServiceReference<T>, RefPair<S, T>> previousRefMap)
-        {
-        }
-
-        @Override
-        public RefPair<S, T> addingService(ServiceReference<T> tServiceReference)
-        {
-            return null;
-        }
-
-        @Override
-        public void addedService(ServiceReference<T> tServiceReference, RefPair<S, T> service, int trackingCount,
-            int serviceCount, ExtendedServiceEvent event)
-        {
-        }
-
-        @Override
-        public void modifiedService(ServiceReference<T> tServiceReference, RefPair<S, T> service, int trackingCount,
-            ExtendedServiceEvent event)
-        {
-        }
-
-        @Override
-        public void removedService(ServiceReference<T> tServiceReference, RefPair<S, T> service, int trackingCount,
-            ExtendedServiceEvent event)
-        {
-        }
-    }
-
-    private String getServiceName()
-    {
-        return m_dependencyMetadata.getInterface();
-    }
-
     boolean isOptional()
     {
         return m_dependencyMetadata.isOptional();
@@ -1604,35 +1531,29 @@ public class DependencyManager<S, T> implements ReferenceManager<S, T>
 
     private ServiceReference<?>[] getFrameworkServiceReferences(String targetFilter)
     {
-        if (hasGetPermission())
+        // get bundle context, may be null if component deactivated since getting bca
+        BundleContext bc = m_componentManager.getActivator().getBundleContext();
+        if (bc == null)
         {
-            // get bundle context, may be null if component deactivated since getting bca
-            BundleContext bc = m_componentManager.getActivator().getBundleContext();
-            if (bc == null)
-            {
-                return null;
-            }
-
-            try
-            {
-                return bc.getServiceReferences(m_dependencyMetadata.getInterface(),
-                    targetFilter);
-            }
-            catch (IllegalStateException ise)
-            {
-                // bundle context is not valid any longer, cannot log
-            }
-            catch (InvalidSyntaxException ise)
-            {
-                m_componentManager.getLogger().log(Level.ERROR,
-                    "Unexpected problem with filter ''{0}''",
-                    ise, targetFilter );
-                return null;
-            }
+            return null;
         }
 
-        m_componentManager.getLogger().log(Level.DEBUG,
-            "No permission to access the services", null);
+        try
+        {
+            return bc.getServiceReferences(m_dependencyMetadata.getInterface(),
+                targetFilter);
+        }
+        catch (IllegalStateException ise)
+        {
+            // bundle context is not valid any longer, cannot log
+        }
+        catch (InvalidSyntaxException ise)
+        {
+            m_componentManager.getLogger().log(Level.ERROR,
+                "Unexpected problem with filter ''{0}''",
+                ise, targetFilter );
+        }
+
         return null;
     }
 
@@ -1828,12 +1749,6 @@ public class DependencyManager<S, T> implements ReferenceManager<S, T>
      */
     public boolean hasGetPermission()
     {
-        if (System.getSecurityManager() != null)
-        {
-            Permission perm = new ServicePermission(getServiceName(), ServicePermission.GET);
-            return m_componentManager.getBundle().hasPermission(perm);
-        }
-
         // no security manager, hence permission given
         return true;
     }
@@ -2536,14 +2451,7 @@ public class DependencyManager<S, T> implements ReferenceManager<S, T>
     private Customizer<S, T> newCustomizer()
     {
         Customizer<S, T> customizer;
-        if (!hasGetPermission())
-        {
-            customizer = new NoPermissionsCustomizer();
-            m_componentManager.getLogger().log(Level.INFO,
-                "No permission to get services for {0}",
-                    null, getName());
-        }
-        else if (m_componentManager.isFactory())
+        if (m_componentManager.isFactory())
         {
             customizer = new FactoryCustomizer();
         }

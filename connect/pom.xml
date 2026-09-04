@@ -19,7 +19,7 @@
     <parent>
         <groupId>org.apache.felix</groupId>
         <artifactId>felix-parent</artifactId>
-        <version>5</version>
+        <version>9</version>
         <relativePath>../pom/pom.xml</relativePath>
     </parent>
     <modelVersion>4.0.0</modelVersion>
@@ -97,8 +97,8 @@
                 <groupId>org.apache.maven.plugins</groupId>
                 <artifactId>maven-compiler-plugin</artifactId>
                 <configuration>
-                    <target>1.6</target>
-                    <source>1.6</source>
+                    <target>8</target>
+                    <source>8</source>
                 </configuration>
             </plugin>
             <plugin>
