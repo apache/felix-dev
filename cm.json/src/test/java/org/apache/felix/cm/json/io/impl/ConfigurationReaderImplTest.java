@@ -30,6 +30,7 @@ import java.io.Reader;
 import java.io.StringReader;
 import java.nio.charset.StandardCharsets;
 import java.util.Dictionary;
+import java.util.HashMap;
 import java.util.Hashtable;
 import java.util.Map;
 
@@ -92,6 +93,159 @@ public class ConfigurationReaderImplTest {
         assertNotNull(configs.get("config.b"));
         assertEquals("Hello World", configs.get("config.a").get("text"));
         assertEquals(8080, configs.get("config.b").get("port"));
+    }
+
+    @Test
+    public void testReadValidResourceVersion() throws IOException {
+        readResourceVersion("1");
+    }
+
+    @Test
+    public void testReadInvalidResourceVersionType() throws IOException {
+        assertInvalidResourceVersion("\"1\"");
+    }
+
+    @Test
+    public void testReadFractionalResourceVersion() throws IOException {
+        assertInvalidResourceVersion("1.5");
+    }
+
+    private void assertInvalidResourceVersion(final String version) throws IOException {
+        try {
+            readResourceVersion(version);
+            fail();
+        } catch (final IOException ioe) {
+            // expected
+        }
+    }
+
+    private void readResourceVersion(final String version) throws IOException {
+        final String json = "{\n"
+                + "  \":configurator:resource-version\" : " + version + ",\n"
+                + "  \":configurator:version\" : \"1.0.0\",\n"
+                + "  \":configurator:symbolic-name\" : \"feature\"\n"
+                + "}";
+        new ConfigurationReaderImpl().build(new StringReader(json)).readConfigurationResource();
+    }
+
+    @Test
+    public void testReadValidSymbolicName() throws IOException {
+        readSymbolicName("\"com.example.feature-name_1\"", false);
+    }
+
+    @Test
+    public void testReadInvalidSymbolicNameType() throws IOException {
+        assertInvalidSymbolicName("1", false);
+    }
+
+    @Test
+    public void testReadInvalidSymbolicNameSyntax() throws IOException {
+        for (final String symbolicName : new String[] {
+                "", ".com.example", "com..example", "com.example.",
+                "com/example", "com:example", "com example", "com.ex\u00e4mple"
+        }) {
+            assertInvalidSymbolicName("\"" + symbolicName + "\"", false);
+        }
+    }
+
+    @Test
+    public void testReadInvalidBundleResourceSymbolicName() throws IOException {
+        assertInvalidSymbolicName("\"com.example:bad\"", true);
+    }
+
+    private void assertInvalidSymbolicName(final String symbolicName, final boolean bundleResource)
+            throws IOException {
+        try {
+            readSymbolicName(symbolicName, bundleResource);
+            fail();
+        } catch (final IOException ioe) {
+            // expected
+        }
+    }
+
+    private void readSymbolicName(final String symbolicName, final boolean bundleResource) throws IOException {
+        final String json = "{\n"
+                + "  \":configurator:version\" : \"1.0.0\",\n"
+                + "  \":configurator:symbolic-name\" : " + symbolicName + "\n"
+                + "}";
+        new ConfigurationReaderImpl()
+                .verifyAsBundleResource(bundleResource)
+                .build(new StringReader(json))
+                .readConfigurationResource();
+    }
+
+    @Test
+    public void testReadValidVersion() throws IOException {
+        readVersion("\"1.2.3.qualifier-1\"", false);
+    }
+
+    @Test
+    public void testReadInvalidVersionType() throws IOException {
+        assertInvalidVersion("1", false);
+    }
+
+    @Test
+    public void testReadInvalidVersionSyntax() throws IOException {
+        for (final String version : new String[] {
+                "", "+1", "1..2", "1.2.x", "1.2.3.", "1.2.3.bad qualifier",
+                "1.2.3.4.5", "-1.2.3", " 1.2.3"
+        }) {
+            assertInvalidVersion("\"" + version + "\"", false);
+        }
+    }
+
+    @Test
+    public void testReadInvalidBundleResourceVersion() throws IOException {
+        assertInvalidVersion("\"1.2.invalid\"", true);
+    }
+
+    private void assertInvalidVersion(final String version, final boolean bundleResource) throws IOException {
+        try {
+            readVersion(version, bundleResource);
+            fail();
+        } catch (final IOException ioe) {
+            // expected
+        }
+    }
+
+    private void readVersion(final String version, final boolean bundleResource) throws IOException {
+        final String json = "{\n"
+                + "  \":configurator:version\" : " + version + ",\n"
+                + "  \":configurator:symbolic-name\" : \"com.example.feature\"\n"
+                + "}";
+        new ConfigurationReaderImpl()
+                .verifyAsBundleResource(bundleResource)
+                .build(new StringReader(json))
+                .readConfigurationResource();
+    }
+
+    @Test
+    public void testPreserveConfiguratorPropertyKeys() throws IOException {
+        final String json = "{\n"
+                + "  \":configurator:version\" : \"1.0.0\",\n"
+                + "  \":configurator:symbolic-name\" : \"com.example.feature\",\n"
+                + "  \"com.example.pid\" : {\n"
+                + "    \":configurator:policy\" : \"default\",\n"
+                + "    \":configurator:policy:String\" : \"force\",\n"
+                + "    \":configurator:ranking\" : 10,\n"
+                + "    \":configurator:ranking:Integer\" : 20\n"
+                + "  }\n"
+                + "}";
+        final Map<String, Object> properties = new HashMap<>();
+
+        new ConfigurationReaderImpl()
+                .withConfiguratorPropertyHandler((pid, key, value) -> {
+                    assertEquals("com.example.pid", pid);
+                    properties.put(key, value);
+                })
+                .build(new StringReader(json))
+                .readConfigurationResource();
+
+        assertEquals(4, properties.size());
+        assertEquals("default", properties.get("policy"));
+        assertEquals("force", properties.get("policy:String"));
+        assertEquals(Long.valueOf(10), properties.get("ranking"));
+        assertEquals(Long.valueOf(20), properties.get("ranking:Integer"));
     }
 
     @Test
