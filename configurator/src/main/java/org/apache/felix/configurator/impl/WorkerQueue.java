@@ -18,67 +18,32 @@
  */
 package org.apache.felix.configurator.impl;
 
-import java.util.ArrayList;
-import java.util.List;
-import java.util.concurrent.Executors;
+import java.util.concurrent.ScheduledThreadPoolExecutor;
 import java.util.concurrent.ThreadFactory;
+import java.util.concurrent.TimeUnit;
 
 import org.apache.felix.configurator.impl.logger.SystemLogger;
 
-public class WorkerQueue implements Runnable {
-
-    private final ThreadFactory threadFactory;
-
-    private final List<Runnable> tasks = new ArrayList<>();
-
-    private volatile Thread backgroundThread;
-
-    private volatile boolean stopped = false;
+public class WorkerQueue extends ScheduledThreadPoolExecutor {
 
     public WorkerQueue() {
-        this.threadFactory = Executors.defaultThreadFactory();
-    }
-
-    public void stop() {
-        synchronized ( this.tasks ) {
-            this.stopped = true;
-        }
-    }
-
-    public void enqueue(final Runnable r) {
-        synchronized ( this.tasks ) {
-            if ( !this.stopped ) {
-                this.tasks.add(r);
-                if ( this.backgroundThread == null ) {
-                    this.backgroundThread = this.threadFactory.newThread(this);
-                    this.backgroundThread.setDaemon(true);
-                    this.backgroundThread.setName("Apache Felix Configurator Worker Thread");
-                    this.backgroundThread.start();
-                }
+        super(1, new ThreadFactory() {
+            @Override
+            public Thread newThread(Runnable runnable) {
+                Thread thread = new Thread(runnable);
+                thread.setDaemon(true);
+                thread.setName("Apache Felix Configurator Worker Thread");
+                return thread;
             }
-        }
+        });
+        setKeepAliveTime(5, TimeUnit.SECONDS);
+        allowCoreThreadTimeOut(true);
     }
 
     @Override
-    public void run() {
-        Runnable r;
-        do {
-            r = null;
-            synchronized ( this.tasks ) {
-                if ( !this.stopped && !this.tasks.isEmpty() ) {
-                    r = this.tasks.remove(0);
-                } else {
-                    this.backgroundThread = null;
-                }
-            }
-            if ( r != null ) {
-                try {
-                    r.run();
-                } catch ( final Throwable t) {
-                    // just to be sure our loop never dies
-                    SystemLogger.error("Error processing task" + t.getMessage(), t);
-                }
-            }
-        } while ( r != null );
+    protected void afterExecute(Runnable runnable, Throwable throwable) {
+        if (throwable != null) {
+            SystemLogger.error("Error processing task" + throwable.getMessage(), throwable);
+        }
     }
 }
