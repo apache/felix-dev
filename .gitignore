@@ -18,3 +18,5 @@ dependency-reduced-pom.xml
 /.metadata/
 /workspace/
 .vscode
+bin/
+target_test-classes/
