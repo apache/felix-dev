@@ -244,6 +244,10 @@ public class DirectoryWatcherTest extends TestCase
             File parent = new File("target/tmp");
             parent.mkdirs();
             parent.setWritable(false, false);
+            if (parent.canWrite())
+            {
+                return;
+            }
             File tmp = new File(parent, "tmp");
             System.setProperty("java.io.tmpdir", tmp.toString());
 
