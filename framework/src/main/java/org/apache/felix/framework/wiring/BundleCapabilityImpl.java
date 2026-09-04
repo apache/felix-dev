@@ -24,6 +24,7 @@ import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
+import java.util.Objects;
 import java.util.Set;
 import java.util.StringTokenizer;
 import java.util.function.Function;
@@ -33,6 +34,7 @@ import org.apache.felix.framework.util.manifestparser.ManifestParser;
 import org.osgi.framework.Constants;
 import org.osgi.framework.wiring.BundleCapability;
 import org.osgi.framework.wiring.BundleRevision;
+import org.osgi.resource.Capability;
 
 public class BundleCapabilityImpl implements BundleCapability
 {
@@ -44,6 +46,7 @@ public class BundleCapabilityImpl implements BundleCapability
     private final Map<String, Object> m_attrs;
     private final List<String> m_uses;
     private final Set<String> m_mandatory;
+	private transient int hashCode;
 
     public static BundleCapabilityImpl createFrom(BundleCapabilityImpl capability, Function<Object, Object> cache)
     {
@@ -162,4 +165,26 @@ public class BundleCapabilityImpl implements BundleCapability
         }
         return "[" + m_revision + "] " + m_namespace + "; " + m_attrs;
     }
+
+	@Override
+	public int hashCode() {
+		if (hashCode != 0) {
+			return hashCode;
+		}
+		return hashCode = Objects.hash(m_namespace, m_dirs, m_attrs, m_revision);
+	}
+
+	@Override
+	public boolean equals(Object obj) {
+		if (this == obj) {
+			return true;
+		}
+		if (obj instanceof Capability) {
+			Capability other = (Capability) obj;
+			return Objects.equals(m_namespace, other.getNamespace()) && Objects.equals(m_dirs, other.getDirectives())
+					&& Objects.equals(m_attrs, other.getAttributes())
+					&& Objects.equals(m_revision, other.getResource());
+		}
+		return false;
+	}
 }
