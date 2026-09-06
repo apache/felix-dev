@@ -90,6 +90,9 @@ public final class JettyConfig
     /** Felix specific property to enable the use of virtual threads in Jetty */
     public static final String FELIX_JETTY_USE_VIRTUAL_THREADS = "org.apache.felix.http.jetty.virtualthreads.enable";
 
+    /** Felix specific property to bound the number of concurrent virtual thread tasks in Jetty */
+    public static final String FELIX_JETTY_VIRTUAL_THREADS_MAX = "org.apache.felix.http.jetty.virtualthreads.max";
+
     /** Felix specific property to control the number of jetty acceptor threads */
     public static final String FELIX_JETTY_ACCEPTORS = "org.apache.felix.http.jetty.acceptors";
 
@@ -496,6 +499,11 @@ public final class JettyConfig
 
     public boolean isUseVirtualThreads() {
         return this.getBooleanProperty(FELIX_JETTY_USE_VIRTUAL_THREADS, false);
+    }
+
+    public int getVirtualThreadsMax()
+    {
+        return getIntProperty(FELIX_JETTY_VIRTUAL_THREADS_MAX, -1);
     }
 
     public int getRequestBufferSize()
