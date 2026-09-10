@@ -16,7 +16,6 @@
  */
 package org.apache.felix.eventadmin.perftests;
 
-import static org.ops4j.pax.exam.Constants.START_LEVEL_SYSTEM_BUNDLES;
 import static org.ops4j.pax.exam.CoreOptions.bundle;
 import static org.ops4j.pax.exam.CoreOptions.mavenBundle;
 import static org.ops4j.pax.exam.CoreOptions.options;
@@ -44,7 +43,6 @@ import org.ops4j.pax.exam.Configuration;
 import org.ops4j.pax.exam.CoreOptions;
 import org.ops4j.pax.exam.Option;
 import org.ops4j.pax.exam.junit.PaxExam;
-import org.ops4j.pax.exam.options.AbstractDelegateProvisionOption;
 import org.osgi.framework.BundleContext;
 import org.osgi.framework.ServiceReference;
 import org.osgi.framework.ServiceRegistration;
@@ -97,9 +95,7 @@ public class PerformanceTestIT {
                         CoreOptions.bundle(bundleFile.toURI().toString()),
                         mavenBundle("org.ops4j.pax.url", "pax-url-mvn", "1.3.5")
                 ),
-                // below is instead of normal Pax Exam junitBundles() to deal
-                // with build server issue
-                new DirectURLJUnitBundlesOption(),
+                mavenBundle("org.apache.servicemix.bundles", "org.apache.servicemix.bundles.junit", "4.12_1"),
                 systemProperty("pax.exam.invoker").value("junit"),
                 bundle("link:classpath:META-INF/links/org.ops4j.pax.exam.invoker.junit.link")
         );
@@ -302,38 +298,5 @@ public class PerformanceTestIT {
         public void unregister() {
             registration.unregister();
         }
-    }
-
-
-    private static class DirectURLJUnitBundlesOption
-            extends AbstractDelegateProvisionOption<DirectURLJUnitBundlesOption> {
-
-        /**
-         * Constructor.
-         */
-        public DirectURLJUnitBundlesOption(){
-            super(
-                    bundle("http://repository.springsource.com/ivy/bundles/external/org.junit/com.springsource.org.junit/4.9.0/com.springsource.org.junit-4.9.0.jar")
-            );
-            noUpdate();
-            startLevel(START_LEVEL_SYSTEM_BUNDLES);
-        }
-
-        /**
-         * {@inheritDoc}
-         */
-        @Override
-        public String toString() {
-            return String.format("DirectURLJUnitBundlesOption{url=%s}", getURL());
-        }
-
-        /**
-         * {@inheritDoc}
-         */
-        @Override
-        protected DirectURLJUnitBundlesOption itself() {
-            return this;
-        }
-
     }
 }

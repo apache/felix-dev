@@ -27,7 +27,6 @@ import org.junit.After;
 import org.junit.Before;
 import org.junit.runner.RunWith;
 import org.ops4j.pax.exam.Configuration;
-import org.ops4j.pax.exam.CoreOptions;
 import org.ops4j.pax.exam.Option;
 import org.ops4j.pax.exam.junit.PaxExam;
 import org.ops4j.pax.exam.options.CompositeOption;
@@ -70,12 +69,7 @@ public class Common {
 
     public static Option junitAndMockitoBundles() {
         return new DefaultCompositeOption(
-                // Repository required to load harmcrest (OSGi-fied version).
-                repository("http://repository.springsource.com/maven/bundles/external").id(
-                        "com.springsource.repository.bundles.external"),
-
-                // Hamcrest with a version matching the range expected by Mockito
-                mavenBundle("org.hamcrest", "com.springsource.org.hamcrest.core", "1.1.0"),
+                mavenBundle("org.apache.servicemix.bundles", "org.apache.servicemix.bundles.junit", "4.11_2"),
 
                 // Mockito core does not includes Hamcrest
                 mavenBundle("org.mockito", "mockito-core", "1.9.5"),
@@ -83,11 +77,6 @@ public class Common {
                 // Objenesis with a version matching the range expected by Mockito
                 wrappedBundle(mavenBundle("org.objenesis", "objenesis", "1.2"))
                         .exports("*;version=1.2"),
-
-                // The default JUnit bundle also exports Hamcrest, but with an (incorrect) version of
-                // 4.9 which does not match the Mockito import. When deployed after the hamcrest bundles, it gets
-                // resolved correctly.
-                CoreOptions.junitBundles(),
 
                 /*
                  * Felix has implicit boot delegation enabled by default. It conflicts with Mockito:
