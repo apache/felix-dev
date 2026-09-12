@@ -1137,7 +1137,7 @@ public class BundleWiringImplTest
             reader.accept(classNode, 0);
             classNode.fields.add(new FieldNode(Opcodes.ACC_PUBLIC,
                     "awesomePublicField", "Ljava/lang/String;", null, null));
-            ClassWriter writer = new ClassWriter(reader, Opcodes.ASM4);
+            ClassWriter writer = new ClassWriter(reader, 0);
             classNode.accept(writer);
             wovenClass.setBytes(writer.toByteArray());
         }
@@ -1158,7 +1158,7 @@ public class BundleWiringImplTest
                     "awesomePublicField", "Ljava/lang/String;", null, null));
             classNode.fields.add(new FieldNode(Opcodes.ACC_PUBLIC,
                     "awesomePublicField", "Ljava/lang/String;", null, null));
-            ClassWriter writer = new ClassWriter(reader, Opcodes.ASM4);
+            ClassWriter writer = new ClassWriter(reader, 0);
             classNode.accept(writer);
             wovenClass.setBytes(writer.toByteArray());
         }
