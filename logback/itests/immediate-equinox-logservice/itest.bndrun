@@ -1,0 +1,17 @@
+-include: ../base.bndrun
+
+-runfw: org.eclipse.osgi
+
+-runrequires:\
+    osgi.identity;filter:='(osgi.identity=org.apache.felix.logback.itests.immediate.equinox.logservice)'
+
+-runpath: \
+    ch.qos.logback.classic;version=latest,\
+    ch.qos.logback.core;version=latest,\
+    slf4j.api;version=latest,\
+    jul.to.slf4j;version=latest,\
+    org.apache.felix.logback;version=latest
+
+-runbundles: \
+    org.apache.felix.logback.itests.immediate.equinox.logservice;version='[2.0.0,2.0.1)',\
+    org.apache.servicemix.bundles.junit;version='[4.13.2,4.13.3)'
