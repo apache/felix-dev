@@ -55,9 +55,9 @@ public class Activator implements BundleActivator
 
     public static final String CONTEXT = ".context";
 
-    protected ServiceRegistration<?> newProcessor(ThreadIO tio, BundleContext context)
+    protected CommandProcessorImpl newProcessor(ThreadIO tio, BundleContext context)
     {
-        processor = new CommandProcessorImpl(tio);
+        CommandProcessorImpl processor = new CommandProcessorImpl(tio);
         try
         {
             processor.addListener(new EventAdminListener(context));
@@ -73,7 +73,7 @@ public class Activator implements BundleActivator
         processor.addCommand("osgi", processor, "removeCommand");
         processor.addCommand("osgi", processor, "eval");
 
-        return context.registerService(CommandProcessor.class.getName(), processor, null);
+        return processor;
     }
 
     public void start(final BundleContext context) throws Exception
@@ -82,10 +82,12 @@ public class Activator implements BundleActivator
         threadio.start();
         threadioRegistration = context.registerService(ThreadIO.class.getName(), threadio, null);
 
-        processorRegistration = newProcessor(threadio, context);
+        processor = newProcessor(threadio, context);
 
         commandTracker = trackOSGiCommands(context);
         commandTracker.open();
+
+	processorRegistration = context.registerService(CommandProcessor.class.getName(), processor, null);
 
         converterTracker = new ServiceTracker<Converter, Converter>(context, Converter.class, null)
         {
