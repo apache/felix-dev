@@ -23,6 +23,7 @@ import java.io.InputStream;
 import java.io.OutputStream;
 import java.io.PrintStream;
 
+import org.apache.felix.gogo.runtime.systemio.SystemIOImpl;
 import org.apache.felix.gogo.runtime.threadio.ThreadIOImpl;
 import org.junit.After;
 import org.junit.Before;
@@ -33,19 +34,23 @@ public abstract class AbstractParserTest {
     private InputStream sin;
     private PrintStream sout;
     private PrintStream serr;
+    private SystemIOImpl systemIO;
 
     @Before
     public void setUp() {
         sin = new NoCloseInputStream(System.in);
         sout = new NoClosePrintStream(System.out);
         serr = new NoClosePrintStream(System.err);
-        threadIO = new ThreadIOImpl();
+        systemIO  = new SystemIOImpl();
+        systemIO.start();
+        threadIO = new ThreadIOImpl(systemIO);
         threadIO.start();
     }
 
     @After
     public void tearDown() {
         threadIO.stop();
+        systemIO.stop();
     }
 
     public class Context extends org.apache.felix.gogo.runtime.Context {
