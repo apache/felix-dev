@@ -1718,7 +1718,8 @@ public class SecureAction
         }
         else
         {
-            return dataFile.getCanonicalPath();
+			// Sanitize the file path. Use an absolute path to be able to resolve special names (e.g. "..")
+            return dataFile.toPath().toAbsolutePath().normalize().toString();
         }
     }
 
@@ -2091,7 +2092,7 @@ public class SecureAction
                         (org.osgi.framework.hooks.weaving.WovenClass) arg2);
                     return null;
                 case GET_CANONICAL_PATH:
-                    return ((File) arg1).getCanonicalPath();
+                    return ((File) arg1).toPath().toAbsolutePath().normalize().toString();
                 case CREATE_PROXY:
                     return Proxy.newProxyInstance((ClassLoader)arg1, (Class<?>[])arg2,
                             (InvocationHandler) arg3);
