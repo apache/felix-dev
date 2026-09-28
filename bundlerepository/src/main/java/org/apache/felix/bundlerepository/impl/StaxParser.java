@@ -49,6 +49,8 @@ public class StaxParser extends RepositoryParser
             setProperty(factory, XMLInputFactory.IS_NAMESPACE_AWARE, false);
             setProperty(factory, XMLInputFactory.IS_VALIDATING, false);
             setProperty(factory, XMLInputFactory.IS_COALESCING, false);
+            setProperty(factory, XMLInputFactory.SUPPORT_DTD, false);
+            setProperty(factory, XMLInputFactory.IS_SUPPORTING_EXTERNAL_ENTITIES, false);
             StaxParser.factory = factory;
         }
         return factory;

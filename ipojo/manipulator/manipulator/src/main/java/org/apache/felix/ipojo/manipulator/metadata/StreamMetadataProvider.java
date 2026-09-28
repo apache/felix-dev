@@ -72,6 +72,14 @@ public class StreamMetadataProvider implements MetadataProvider {
             XMLMetadataParser handler = new XMLMetadataParser();
 
             XMLReader parser = XMLReaderFactory.createXMLReader();
+            try {
+                parser.setFeature("http://xml.org/sax/features/external-general-entities", false);
+                parser.setFeature("http://xml.org/sax/features/external-parameter-entities", false);
+                parser.setFeature("http://apache.org/xml/features/nonvalidating/load-external-dtd", false);
+                parser.setFeature("http://apache.org/xml/features/disallow-doctype-decl", true);
+            } catch (Exception e) {
+                // Ignore
+            }
             parser.setContentHandler(handler);
             parser.setFeature("http://xml.org/sax/features/validation", true);
             parser.setFeature("http://apache.org/xml/features/validation/schema", true);
