@@ -1936,6 +1936,13 @@ public class BundlePlugin extends AbstractMojo
             scanner.setBasedir( outputDirectory );
             scanner.setIncludes( new String[]
                 { "**/*.class" } );
+            // FELIX-6830: module-info.class lives in the default (root) package. If it were counted
+            // as a local package, the default package "." would be added to Private-Package and bnd
+            // would then copy the default package of every classpath jar into the bundle, dragging in
+            // alien root-level resources (e.g. the beans_*.xsd files at the root of jakarta.enterprise.cdi-api).
+            // The module descriptor is re-added as an explicit resource below.
+            scanner.setExcludes( new String[]
+                { "**/module-info.class" } );
 
             scanner.addDefaultExcludes();
             scanner.scan();
@@ -2012,6 +2019,28 @@ public class BundlePlugin extends AbstractMojo
         {
             String newInternal = StringUtils.replace( internal, LOCAL_PACKAGES, Processor.printClauses( privatePkgs ) );
             properties.setProperty( Analyzer.PRIVATE_PACKAGE, newInternal );
+        }
+
+        // FELIX-6830: the module descriptor was deliberately left out of the package scan above (it is not a
+        // real package). Add it back as an explicit resource so the bundle keeps its module-info.class without
+        // the default package - and its alien classpath resources - being copied in.
+        if ( outputDirectory != null )
+        {
+            File moduleInfo = new File( outputDirectory, "module-info.class" );
+            if ( moduleInfo.isFile() )
+            {
+                String resourcePath = moduleInfo.getAbsolutePath().replace( File.separatorChar, '/' );
+                String clause = "module-info.class=" + resourcePath;
+                String includeResource = properties.getProperty( Analyzer.INCLUDE_RESOURCE );
+                if ( includeResource == null || includeResource.isEmpty() )
+                {
+                    properties.setProperty( Analyzer.INCLUDE_RESOURCE, clause );
+                }
+                else if ( !includeResource.contains( "module-info.class" ) )
+                {
+                    properties.setProperty( Analyzer.INCLUDE_RESOURCE, includeResource + ',' + clause );
+                }
+            }
         }
     }
 

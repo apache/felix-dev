@@ -52,6 +52,8 @@ public final class DependencyEmbedder extends AbstractDependencyFilter
     private String m_embedStripGroup;
     private String m_embedStripVersion;
 
+    private final Log m_log;
+
     /**
      * Inlined paths.
      */
@@ -67,6 +69,7 @@ public final class DependencyEmbedder extends AbstractDependencyFilter
     {
         super( dependencyArtifacts );
 
+        m_log = log;
         m_inlinedPaths = new LinkedHashSet<>();
         m_embeddedArtifacts = new LinkedHashSet<>();
     }
@@ -119,15 +122,43 @@ public final class DependencyEmbedder extends AbstractDependencyFilter
     {
         if ( null == inline || "false".equalsIgnoreCase( inline ) )
         {
-            m_embeddedArtifacts.addAll( dependencies );
+            for ( Artifact dependency : dependencies )
+            {
+                if ( isPomArtifact( dependency ) )
+                {
+                    continue;
+                }
+                m_embeddedArtifacts.add( dependency );
+            }
         }
         else
         {
             for ( Artifact dependency : dependencies )
             {
+                if ( isPomArtifact( dependency ) )
+                {
+                    continue;
+                }
                 addInlinedPaths( dependency, inline, m_inlinedPaths );
             }
         }
+    }
+
+
+    /**
+     * A {@code pom} dependency (a BOM/aggregator) resolves to a {@code .pom} file and contains no classes.
+     * Embedding it would place the {@code .pom} on the bundle classpath, which bnd then fails to open as a
+     * JAR. Such artifacts must never be embedded, so they are skipped here with a warning.
+     */
+    private boolean isPomArtifact( Artifact dependency )
+    {
+        if ( "pom".equals( dependency.getType() ) )
+        {
+            m_log.warn( "Not embedding pom dependency " + dependency.getId()
+                + "; pom artifacts contain no classes and cannot be placed on the bundle classpath" );
+            return true;
+        }
+        return false;
     }
 
 

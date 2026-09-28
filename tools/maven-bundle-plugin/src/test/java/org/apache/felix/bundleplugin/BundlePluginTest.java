@@ -37,6 +37,7 @@ import java.util.TreeMap;
 import java.util.jar.Manifest;
 
 import org.apache.felix.bundleplugin.BundlePlugin.ClassPathItem;
+import org.apache.maven.artifact.Artifact;
 import org.apache.maven.model.Organization;
 import org.apache.maven.plugin.testing.stubs.MavenProjectStub;
 import org.apache.maven.project.MavenProject;
@@ -249,6 +250,35 @@ public class BundlePluginTest extends AbstractBundlePluginTest
         String eas = manifest.getMainAttributes().getValue( "Embedded-Artifacts" );
         assertEquals( "compile-1.0.jar;g=\"g\";a=\"compile\";v=\"1.0\"," + "b-1.0.jar;g=\"g\";a=\"b\";v=\"1.0\","
             + "runtime-1.0.jar;g=\"g\";a=\"runtime\";v=\"1.0\"", eas );
+    }
+
+
+    public void testEmbedDependencyExcludesPomArtifacts() throws Exception
+    {
+        // FELIX-6857: a pom-type dependency (BOM/aggregator) resolves to a .pom file with no classes;
+        // it must never be embedded, otherwise the .pom ends up on the bundle classpath and bnd fails
+        // trying to open it as a JAR.
+        ArtifactStubFactory artifactFactory = new ArtifactStubFactory( plugin.getOutputDirectory(), true );
+
+        Set artifacts = new LinkedHashSet();
+        artifacts.add( artifactFactory.createArtifact( "g", "jardep", "1.0", Artifact.SCOPE_COMPILE, "jar", null ) );
+        artifacts.add( artifactFactory.createArtifact( "g", "pomdep", "1.0", Artifact.SCOPE_COMPILE, "pom", null ) );
+
+        MavenProject project = getMavenProjectStub();
+        project.setDependencyArtifacts( artifacts );
+
+        Map instructions = new HashMap();
+        instructions.put( DependencyEmbedder.EMBED_DEPENDENCY, "*;scope=compile" );
+
+        Builder builder = plugin.buildOSGiBundle( project, instructions, plugin.getClasspath( project ) );
+        Manifest manifest = builder.getJar().getManifest();
+
+        // only the jar is embedded; the pom is excluded from both Bundle-ClassPath and Embedded-Artifacts
+        String bcp = manifest.getMainAttributes().getValue( Constants.BUNDLE_CLASSPATH );
+        assertEquals( ".,jardep-1.0.jar", bcp );
+
+        String eas = manifest.getMainAttributes().getValue( "Embedded-Artifacts" );
+        assertEquals( "jardep-1.0.jar;g=\"g\";a=\"jardep\";v=\"1.0\"", eas );
     }
 
 
