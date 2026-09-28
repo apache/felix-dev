@@ -18,9 +18,6 @@ package org.apache.felix.webconsole.internal.servlet;
 
 import java.io.IOException;
 import java.net.URL;
-import java.security.AccessController;
-import java.security.PrivilegedActionException;
-import java.security.PrivilegedExceptionAction;
 import java.text.MessageFormat;
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -412,35 +409,18 @@ public class OsgiManager extends HttpServlet {
     public void service(final HttpServletRequest req, final HttpServletResponse res)
     throws ServletException, IOException {
         // don't really expect to be called within a non-HTTP environment
-        try {
-            AccessController.doPrivileged(new PrivilegedExceptionAction<Object>() {
-                @Override
-                public Object run() throws Exception {
-                    final HttpServletRequest wrapper = new HttpServletRequestWrapper((HttpServletRequest) req) {
-                        @Override
-                        public String getServletPath() {
-                            return "";
-                        }
-
-                        @Override
-                        public String getPathInfo() {
-                            return super.getServletPath();
-                        }
-                    };
-                    doService(wrapper, res);
-                    return null;
-                }
-            });
-        } catch (PrivilegedActionException e) {
-            Exception x = e.getException();
-            if (x instanceof IOException) {
-                throw (IOException) x;
-            } else if (x instanceof ServletException) {
-                throw (ServletException) x;
-            } else {
-                throw new IOException(x.toString());
+        final HttpServletRequest wrapper = new HttpServletRequestWrapper((HttpServletRequest) req) {
+            @Override
+            public String getServletPath() {
+                return "";
             }
-        }
+
+            @Override
+            public String getPathInfo() {
+                return super.getServletPath();
+            }
+        };
+        doService(wrapper, res);
     }
 
     private void ensureLocaleCookieSet(HttpServletRequest request, HttpServletResponse response, Locale locale) {

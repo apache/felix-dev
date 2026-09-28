@@ -27,10 +27,13 @@
   <packaging>bundle</packaging>
   <name>Apache Felix Framework</name>
   <artifactId>org.apache.felix.framework</artifactId>
-  <version>7.1.0-SNAPSHOT</version>
+  <version>8.0.0-SNAPSHOT</version>
   <properties>
     <dollar>$</dollar>
-    <felix.java.version>8</felix.java.version>
+    <!-- 9 is the lowest level this still builds at (see FELIX-6759): replacing the
+         SecurityManager based call stack inspection with StackWalker requires Java 9.
+         Everything else here still compiles at 8. -->
+    <felix.java.version>9</felix.java.version>
   </properties>
   <scm>
     <connection>scm:git:https://github.com/apache/felix-dev.git</connection>
@@ -41,15 +44,6 @@
 
   <build>
     <plugins>
-      <plugin>
-        <groupId>org.apache.maven.plugins</groupId>
-        <artifactId>maven-surefire-plugin</artifactId>
-        <configuration>
-          <argLine>
-            -Djava.security.manager=allow
-          </argLine>
-        </configuration>
-      </plugin>
       <plugin>
         <groupId>org.moditect</groupId>
         <artifactId>moditect-maven-plugin</artifactId>
@@ -219,10 +213,18 @@
             </exclusion>
         </exclusions>
     </dependency>
+    <!-- asm-all 5.2 throws IllegalArgumentException on class files newer than Java 8,
+         which breaks the weaving hook tests. asm 9.8+ supports through Java 25. -->
     <dependency>
         <groupId>org.ow2.asm</groupId>
-        <artifactId>asm-all</artifactId>
-        <version>5.2</version>
+        <artifactId>asm</artifactId>
+        <version>9.8</version>
+        <scope>test</scope>
+    </dependency>
+    <dependency>
+        <groupId>org.ow2.asm</groupId>
+        <artifactId>asm-tree</artifactId>
+        <version>9.8</version>
         <scope>test</scope>
     </dependency>
     <dependency>
@@ -234,7 +236,7 @@
     <dependency>
         <groupId>org.mockito</groupId>
         <artifactId>mockito-core</artifactId>
-        <version>5.17.0</version>
+        <version>5.18.0</version>
         <scope>test</scope>
     </dependency>
     <dependency>

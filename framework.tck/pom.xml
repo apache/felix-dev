@@ -47,7 +47,7 @@
       <plugin>
         <groupId>biz.aQute.bnd</groupId>
         <artifactId>bnd-resolver-maven-plugin</artifactId>
-        <version>7.1.0</version>
+        <version>7.4.0</version>
         <configuration>
           <includeDependencyManagement>true</includeDependencyManagement>
           <bndruns>
@@ -74,7 +74,7 @@
       <plugin>
         <groupId>biz.aQute.bnd</groupId>
         <artifactId>bnd-testing-maven-plugin</artifactId>
-        <version>7.1.0</version>
+        <version>7.4.0</version>
         <configuration>
           <failOnChanges>true</failOnChanges>
           <includeDependencyManagement>true</includeDependencyManagement>
@@ -105,7 +105,7 @@
     <dependency>
       <groupId>net.bytebuddy</groupId>
       <artifactId>byte-buddy</artifactId>
-      <version>1.17.5</version>
+      <version>1.18.12</version>
       <scope>test</scope>
     </dependency>
     <dependency>
@@ -118,12 +118,6 @@
       <groupId>org.apache.servicemix.bundles</groupId>
       <artifactId>org.apache.servicemix.bundles.junit</artifactId>
       <version>4.13.2_1</version>
-      <scope>test</scope>
-    </dependency>
-    <dependency>
-      <groupId>org.junit.platform</groupId>
-      <artifactId>junit-platform-launcher</artifactId>
-      <version>1.12.1</version>
       <scope>test</scope>
     </dependency>
     <dependency>
@@ -147,7 +141,7 @@
     <dependency>
       <groupId>org.apache.felix</groupId>
       <artifactId>org.apache.felix.framework</artifactId>
-      <version>7.1.0-SNAPSHOT</version>
+      <version>8.0.0-SNAPSHOT</version>
     </dependency>
     <!-- tck run -->
     <dependency>
