@@ -28,6 +28,8 @@ import java.net.URL;
 import java.net.URLConnection;
 import java.net.URLStreamHandler;
 
+import org.apache.felix.framework.plurl.PlurlStreamHandlerBase;
+
 import org.apache.felix.framework.util.SecureAction;
 import org.osgi.service.url.URLStreamHandlerService;
 import org.osgi.service.url.URLStreamHandlerSetter;
@@ -54,7 +56,7 @@ import org.osgi.service.url.URLStreamHandlerSetter;
  * stream handler service at any given time.
  * </p>
 **/
-public class URLHandlersStreamHandlerProxy extends URLStreamHandler
+public class URLHandlersStreamHandlerProxy extends PlurlStreamHandlerBase
     implements URLStreamHandlerSetter, InvocationHandler
 {
     private static final Class<?>[] URL_PROXY_CLASS;
@@ -140,7 +142,7 @@ public class URLHandlersStreamHandlerProxy extends URLStreamHandler
     // URLStreamHandler interface methods.
     //
     @Override
-	protected boolean equals(URL url1, URL url2)
+	public boolean equals(URL url1, URL url2)
     {
         Object svc = getStreamHandlerService();
         if (svc == null)
@@ -163,7 +165,7 @@ public class URLHandlersStreamHandlerProxy extends URLStreamHandler
     }
 
     @Override
-	protected int getDefaultPort()
+	public int getDefaultPort()
     {
         Object svc = getStreamHandlerService();
         if (svc == null)
@@ -185,7 +187,7 @@ public class URLHandlersStreamHandlerProxy extends URLStreamHandler
     }
 
     @Override
-	protected InetAddress getHostAddress(URL url)
+	public InetAddress getHostAddress(URL url)
     {
         Object svc = getStreamHandlerService();
         if (svc == null)
@@ -208,7 +210,7 @@ public class URLHandlersStreamHandlerProxy extends URLStreamHandler
     }
 
     @Override
-	protected int hashCode(URL url)
+	public int hashCode(URL url)
     {
         Object svc = getStreamHandlerService();
         if (svc == null)
@@ -231,7 +233,7 @@ public class URLHandlersStreamHandlerProxy extends URLStreamHandler
     }
 
     @Override
-	protected boolean hostsEqual(URL url1, URL url2)
+	public boolean hostsEqual(URL url1, URL url2)
     {
         Object svc = getStreamHandlerService();
         if (svc == null)
@@ -254,7 +256,7 @@ public class URLHandlersStreamHandlerProxy extends URLStreamHandler
     }
 
     @Override
-	protected URLConnection openConnection(URL url) throws IOException
+	public URLConnection openConnection(URL url) throws IOException
     {
         Object svc = getStreamHandlerService();
         if (svc == null)
@@ -308,7 +310,7 @@ public class URLHandlersStreamHandlerProxy extends URLStreamHandler
     }
 
     @Override
-	protected URLConnection openConnection(URL url, java.net.Proxy proxy) throws IOException
+	public URLConnection openConnection(URL url, java.net.Proxy proxy) throws IOException
     {
         Object svc = getStreamHandlerService();
         if (svc == null)
@@ -431,7 +433,7 @@ public class URLHandlersStreamHandlerProxy extends URLStreamHandler
     }
 
     @Override
-	protected boolean sameFile(URL url1, URL url2)
+	public boolean sameFile(URL url1, URL url2)
     {
         Object svc = getStreamHandlerService();
         if (svc == null)
@@ -471,7 +473,7 @@ public class URLHandlersStreamHandlerProxy extends URLStreamHandler
     }
 
     @Override
-	protected String toExternalForm(URL url)
+	public String toExternalForm(URL url)
     {
         return toExternalForm(url, getStreamHandlerService());
     }
