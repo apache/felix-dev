@@ -20,7 +20,7 @@
 	<parent>
 		<groupId>org.apache.felix</groupId>
 		<artifactId>felix-parent</artifactId>
-		<version>5</version>
+		<version>9</version>
 		<relativePath />
 	</parent>
 
@@ -38,7 +38,7 @@
   </scm>
 
     <properties>
-        <felix.java.version>7</felix.java.version>
+        <felix.java.version>8</felix.java.version>
     </properties>
 
     <dependencies>
@@ -78,13 +78,6 @@
                         <!-- Exclude all JSON files -->
                         <exclude>doc/*</exclude>
                     </excludes>
-                </configuration>
-            </plugin>
-            <plugin>
-                <artifactId>maven-compiler-plugin</artifactId>
-                <configuration>
-                    <source>1.7</source>
-                    <target>1.7</target>
                 </configuration>
             </plugin>
         </plugins>
