@@ -32,12 +32,11 @@ import org.osgi.resource.Requirement;
 public class ResourceImplTest {
 
     private static CapabilityImpl newCapability(ResourceImpl res, String ns) {
-        return new CapabilityImpl(res, ns, new HashMap<String, String>(), new HashMap<String, Object>());
+        return new CapabilityImpl(res, ns, new HashMap<>(), new HashMap<>());
     }
 
-    private static RequirementImpl newRequirement(ResourceImpl res) {
-        return new RequirementImpl(res, "bar",
-                new HashMap<String, String>(), new HashMap<String, Object>());
+    private static RequirementImpl newRequirement(ResourceImpl res, String ns) {
+        return new RequirementImpl(res, ns, new HashMap<>(), new HashMap<>());
     }
 
     /**
@@ -55,11 +54,8 @@ public class ResourceImplTest {
     }
 
     private static int expectedHash(ResourceImpl res) {
-        return Objects.hash(res.getCapabilities(null), res.getRequirements(null));
+        return Objects.hash(getCaps(res), getReqs(res));
     }
-
-
-    // do not touch the methods above
 
     @Test
     public void testAddCapability() {
@@ -98,8 +94,8 @@ public class ResourceImplTest {
         assertTrue(getCaps(res).isEmpty());
         assertEquals(expectedHash(res), hashBefore);
 
-        // adding an empty collection leaves the resource unchanged
-        res.addCapabilities(Collections.<Capability> emptyList());
+        // adding an empty list leaves the resource unchanged
+        res.addCapabilities(Collections.emptyList());
         assertTrue(getCaps(res).isEmpty());
         assertEquals(hashBefore, res.hashCode());
 
@@ -134,7 +130,7 @@ public class ResourceImplTest {
         assertTrue(getReqs(res).isEmpty());
         assertEquals(expectedHash(res), hashBefore);
 
-        Requirement req1 = newRequirement(res);
+        Requirement req1 = newRequirement(res, "ns1");
         res.addRequirement(req1);
         int hashWithReq1 = res.hashCode();
         assertEquals(1, getReqs(res).size());
@@ -142,7 +138,7 @@ public class ResourceImplTest {
         assertNotEquals(hashBefore, hashWithReq1);
         assertEquals(expectedHash(res), hashWithReq1);
 
-        Requirement req2 = newRequirement(res);
+        Requirement req2 = newRequirement(res, "ns2");
         res.addRequirement(req2);
         int hashWithReq2 = res.hashCode();
         assertEquals(2, getReqs(res).size());
@@ -162,13 +158,13 @@ public class ResourceImplTest {
         assertTrue(getReqs(res).isEmpty());
         assertEquals(expectedHash(res), hashBefore);
 
-        // adding an empty collection leaves the resource unchanged
-        res.addRequirements(Collections.<Requirement> emptyList());
+        // adding an empty list leaves the resource unchanged
+        res.addRequirements(Collections.emptyList());
         assertTrue(getReqs(res).isEmpty());
         assertEquals(hashBefore, res.hashCode());
 
-        Requirement req1 = newRequirement(res);
-        Requirement req2 = newRequirement(res);
+        Requirement req1 = newRequirement(res, "ns1");
+        Requirement req2 = newRequirement(res, "ns2");
         res.addRequirements(Arrays.asList(req1, req2));
         int hashWithReq1AndReq2 = res.hashCode();
         assertEquals(2, getReqs(res).size());
@@ -177,7 +173,7 @@ public class ResourceImplTest {
         assertNotEquals(hashBefore, hashWithReq1AndReq2);
         assertEquals(expectedHash(res), hashWithReq1AndReq2);
 
-        Requirement req3 = newRequirement(res);
+        Requirement req3 = newRequirement(res, "ns3");
         res.addRequirements(Collections.singletonList(req3));
         int hashWithReq3 = res.hashCode();
         assertEquals(3, getReqs(res).size());
