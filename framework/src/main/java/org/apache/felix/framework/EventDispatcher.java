@@ -87,6 +87,20 @@ public class EventDispatcher
     {
         synchronized (m_threadLock)
         {
+            // If the thread is stopping, wait until it is fully stopped.
+            while (m_stopping)
+            {
+                try
+                {
+                    m_threadLock.wait();
+                }
+                catch (InterruptedException ex)
+                {
+                    // Restore interrupted status
+                    Thread.currentThread().interrupt();
+                }
+            }
+
             // Start event dispatching thread if necessary.
             if (m_thread == null || !m_thread.isAlive())
             {
