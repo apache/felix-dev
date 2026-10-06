@@ -33,8 +33,8 @@ import org.osgi.resource.Resource;
  */
 public class ResourceImpl implements Resource {
 
-    protected final List<Capability> caps;
-    protected final List<Requirement> reqs;
+    private final List<Capability> caps;
+    private final List<Requirement> reqs;
 
     private int hash; // default to 0
     private boolean hashIsZero; // default to false;

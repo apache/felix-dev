@@ -23,6 +23,7 @@ import static org.junit.Assert.assertNotEquals;
 import static org.junit.Assert.assertTrue;
 
 import java.util.*;
+import java.util.concurrent.atomic.AtomicInteger;
 import org.junit.Test;
 import org.osgi.framework.Version;
 import org.osgi.framework.namespace.IdentityNamespace;
@@ -37,6 +38,19 @@ public class ResourceImplTest {
 
     private static RequirementImpl newRequirement(ResourceImpl res, String ns) {
         return new RequirementImpl(res, ns, new HashMap<>(), new HashMap<>());
+    }
+
+    /**
+     * Requirement whose hashCode() returns the given value and counts how often it is called
+     */
+    private static RequirementImpl newCountingRequirement(ResourceImpl res, String ns, int hash, AtomicInteger hashCodeCalls) {
+        return new RequirementImpl(res, ns, new HashMap<>(), new HashMap<>()) {
+            @Override
+            public int hashCode() {
+                hashCodeCalls.incrementAndGet();
+                return hash;
+            }
+        };
     }
 
     /**
@@ -189,11 +203,48 @@ public class ResourceImplTest {
     public void testHashCode() {
         ResourceImpl res = new ResourceImpl("host",  IdentityNamespace.TYPE_BUNDLE, Version.parseVersion("3.3.3"));
 
-        int hashBefore = res.hashCode();
-        assertEquals(expectedHash(res), hashBefore);
+        AtomicInteger reqHashCodeCalls = new AtomicInteger();
+        res.addRequirement(newCountingRequirement(res, "ns1", 3, reqHashCodeCalls));
+        int expectedHash = expectedHash(res);
+        // ignore the direct call to req.hashCode() from above
+        reqHashCodeCalls.set(0);
+        assertNotEquals(0, expectedHash);
 
-        // the value remains the same between calls
-        assertEquals(hashBefore, res.hashCode());
+        // the hash is computed once and then served from the cache
+        assertEquals(expectedHash, res.hashCode());
+        assertEquals(expectedHash, res.hashCode());
+        assertEquals(expectedHash, res.hashCode());
+        assertEquals(1, reqHashCodeCalls.get());
+    }
+
+    @Test
+    public void testHashCodeZero() {
+        ResourceImpl res = new ResourceImpl();
+
+        // Objects.hash(caps, reqs) is
+        // 31 * (31 * 1 + caps.hashCode()) + reqs.hashCode(),
+        // if caps is an empty ArrayList, caps.hashCode() is 1 and the above becomes
+        // 31 * (31 * 1 + 1) + reqs.hashCode() = 31 * 32 + reqs.hashCode() = 992 + reqs.hashCode(),
+        // if reqs has only 1 element, reqs.hashCode() is
+        // 31 * 1 + element.hashCode() = 31 + element.hashCode(),
+        // if element.hashCode() is -1023, then reqs.hashCode() is -992, and the overall hash code is 0
+        AtomicInteger reqHashCodeCalls = new AtomicInteger();
+        res.addRequirement(newCountingRequirement(res, "ns1", -1023, reqHashCodeCalls));
+        assertEquals(0, expectedHash(res));
+        // ignore the direct call to req.hashCode() from above
+        reqHashCodeCalls.set(0);
+
+        // a zero hash is computed once and then served from the cache
+        assertEquals(0, res.hashCode());
+        assertEquals(0, res.hashCode());
+        assertEquals(0, res.hashCode());
+        assertEquals(1, reqHashCodeCalls.get());
+
+        // modifying the resource clears the cached zero hash
+        res.addRequirement(newRequirement(res, "ns2"));
+        int hashWithReq2 = res.hashCode();
+        assertNotEquals(0, hashWithReq2);
+        assertEquals(expectedHash(res), hashWithReq2);
     }
 
 }
