@@ -444,6 +444,52 @@ public class BundlePluginTest extends AbstractBundlePluginTest
 
         File file = new File( getBasedir(), "target" + File.separatorChar + "test.props" );
         builder.getProperties().store( new FileOutputStream( file ), "TEST" );
-   } 
+   }
+
+    public void testToArtifactCopiesScopeAndOptionalFromDependency()
+    {
+        org.eclipse.aether.artifact.Artifact aetherArtifact =
+            new org.eclipse.aether.artifact.DefaultArtifact( "g", "a", "tests", "jar", "1.0" );
+        org.eclipse.aether.graph.DependencyNode node = new org.eclipse.aether.graph.DefaultDependencyNode(
+            new org.eclipse.aether.graph.Dependency( aetherArtifact, Artifact.SCOPE_RUNTIME, true ) );
+
+        Artifact artifact = BundlePlugin.toArtifact( node, new MavenProject() );
+
+        assertEquals( "g", artifact.getGroupId() );
+        assertEquals( "a", artifact.getArtifactId() );
+        assertEquals( "1.0", artifact.getVersion() );
+        assertEquals( "jar", artifact.getType() );
+        assertEquals( "tests", artifact.getClassifier() );
+        assertEquals( Artifact.SCOPE_RUNTIME, artifact.getScope() );
+        assertTrue( artifact.isOptional() );
+    }
+
+
+    public void testToArtifactNotOptional()
+    {
+        org.eclipse.aether.graph.DependencyNode node = new org.eclipse.aether.graph.DefaultDependencyNode(
+            new org.eclipse.aether.graph.Dependency(
+                new org.eclipse.aether.artifact.DefaultArtifact( "g", "a", "jar", "1.0" ), Artifact.SCOPE_SYSTEM ) );
+
+        Artifact artifact = BundlePlugin.toArtifact( node, new MavenProject() );
+
+        assertEquals( Artifact.SCOPE_SYSTEM, artifact.getScope() );
+        assertFalse( artifact.isOptional() );
+    }
+
+
+    public void testToArtifactOfRootIsProjectArtifact()
+    {
+        MavenProject project = new MavenProject();
+        Artifact projectArtifact = new org.apache.maven.artifact.DefaultArtifact( "g", "root", "2.0", null, "jar", null,
+            new org.apache.maven.artifact.handler.DefaultArtifactHandler( "jar" ) );
+        project.setArtifact( projectArtifact );
+
+        // the root of a collected graph has no dependency
+        Artifact artifact =
+            BundlePlugin.toArtifact( new org.eclipse.aether.graph.DefaultDependencyNode( ( org.eclipse.aether.graph.Dependency ) null ), project );
+
+        assertSame( projectArtifact, artifact );
+    }
 
 }
