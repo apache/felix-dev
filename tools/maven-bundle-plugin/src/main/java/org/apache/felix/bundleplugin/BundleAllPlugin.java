@@ -228,8 +228,6 @@ public class BundleAllPlugin extends ManifestPlugin
                 throw new MojoExecutionException( "Artifact was not found in the repo" + nodeArtifact, e );
             }
 
-            nodeArtifact.setFile( artifact.getFile() );
-
             if ( stack.size() > maxDepth )
             {
                 /* node is deeper than we want */
