@@ -237,7 +237,7 @@ public class ConfigInstaller implements ArtifactInstaller, ConfigurationListener
         {
             try
             {
-                Configuration[] configurations = getConfigurationAdmin().listConfigurations("(service.pid=" + configurationEvent.getPid() + ")");
+                Configuration[] configurations = getConfigurationAdmin().listConfigurations("(service.pid=" + escapeFilterValue(configurationEvent.getPid()) + ")");
                 if (null == configurations) {
                     return;
                 }
@@ -664,10 +664,15 @@ public class ConfigInstaller implements ArtifactInstaller, ConfigurationListener
     }
 
     private String escapeFilterValue(String s) {
-        return s.replaceAll("[(]", "\\\\(").
-                replaceAll("[)]", "\\\\)").
-                replaceAll("[=]", "\\\\=").
-                replaceAll("[\\*]", "\\\\*");
+        // The backslash is escaped first, or the escapes added after it are escaped a second time.
+        // String.replace matches a literal, so this method no longer compiles a pattern per call.
+        // doConfigurationEvent calls it for every event, where findExistingConfiguration called it
+        // once per file install.
+        return s.replace("\\", "\\\\")
+                .replace("(", "\\(")
+                .replace(")", "\\)")
+                .replace("=", "\\=")
+                .replace("*", "\\*");
     }
 
 }
