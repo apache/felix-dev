@@ -116,6 +116,16 @@ public class JsonSupportTest {
     }
 
     @Test
+    public void testConvertMixedArrayToObject() {
+        final JsonArrayBuilder builder = Json.createArrayBuilder();
+        builder.add("hello");
+        builder.add(3);
+
+        assertArrayEquals(new String[] { "hello", "3" },
+                (String[]) Configurations.convertToObject(builder.build()));
+    }
+
+    @Test
     public void testConvertObjectArrayToObject() {
         final JsonArrayBuilder sBuilder = Json.createArrayBuilder();
         final JsonObjectBuilder o1 = Json.createObjectBuilder();
