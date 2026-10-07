@@ -1,3 +1,14 @@
+Changes in 1.10.0
+-----------------
+** Bug
+    * [FELIX-6807] : UpdateThread.terminate() called Thread.stop(), which has thrown
+      UnsupportedOperationException since Java 20; it now interrupts the worker
+** Improvement
+    * [FELIX-6807] : Build on a current JDK (felix-parent 9). ConfigAdminSecurityTest
+      is excluded above JDK 17: it needs -Djava.security.manager=allow, which is a
+      fatal startup error from Java 24 on (JEP 486)
+
+
 Changes in 1.9.20
 -----------------
 ** Bug
