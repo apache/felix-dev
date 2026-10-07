@@ -21,6 +21,9 @@ on:
       - 'log.extension/**'
       - 'examples/**'
       - 'configadmin/**'
+      # a change to the workflow itself must rebuild, otherwise a CI change
+      # cannot be verified by CI
+      - '.github/workflows/**'
   pull_request:
     branches: [ "master", "feature/**", "maintenance/**" ]
     paths:
@@ -41,6 +44,9 @@ on:
       - 'log.extension/**'
       - 'examples/**'
       - 'configadmin/**'
+      # a change to the workflow itself must rebuild, otherwise a CI change
+      # cannot be verified by CI
+      - '.github/workflows/**'
 
 # Cancel superseded runs when a branch is pushed again. github.head_ref is only set
 # for pull_request events, so pushes to master fall back to the unique run_id and are
@@ -89,6 +95,8 @@ jobs:
             - 'log/**'
           framework:
             - 'framework/**'
+            # so that a workflow change is actually exercised by a build
+            - '.github/workflows/**'
             - 'framework.tck/**'
           gogo:
             - 'gogo/**'
