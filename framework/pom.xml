@@ -33,7 +33,7 @@
     <!-- 9 is the lowest level this still builds at (see FELIX-6759): replacing the
          SecurityManager based call stack inspection with StackWalker requires Java 9.
          Everything else here still compiles at 8. -->
-    <felix.java.version>9</felix.java.version>
+    <felix.java.version>11</felix.java.version>
   </properties>
   <scm>
     <connection>scm:git:https://github.com/apache/felix-dev.git</connection>
