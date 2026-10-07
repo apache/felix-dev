@@ -14,10 +14,10 @@ support and in whether the OSGi security layer is available.
 
 | | 7.x | 8.x |
 |---|---|---|
-| Minimum Java version | 8 | 9 |
+| Minimum Java version | 8 | 11 |
 | Runs on Java 24 and later | no | yes |
 | OSGi security layer | supported | **removed** |
-| `Require-Capability: osgi.ee` | `JavaSE 1.8` | `JavaSE 9` |
+| `Require-Capability: osgi.ee` | `JavaSE 1.8` | `JavaSE 11` |
 
 Pick **7.x** if you need the security layer, or if you must run on Java 8.
 Pick **8.x** if you need to run on Java 24 or later.
@@ -61,15 +61,18 @@ Bundles that merely *declare* permissions, for example by shipping
 `OSGI-INF/permissions.perm`, need no change. Only code that *relies on a permission
 being denied* is affected.
 
-### Minimum Java version raised to 9
+### Minimum Java version raised to 11
 
 The framework inspects the caller's class context in a few places to work out which
 framework instance or bundle a call belongs to. That used to be done with a
 `SecurityManager` subclass, purely to reach the protected `getClassContext()` method.
 It now uses `java.lang.StackWalker`, which is the supported replacement and available
-from Java 9.
+from Java 9, so Java 8 is no longer possible.
 
-The bundle therefore declares `Require-Capability: osgi.ee ... JavaSE 9` and will not
+The floor is 11 rather than 9 because 9 and 10 are non-LTS and long past end of life:
+going to 11 drops no supported JVM and lands on a maintained LTS.
+
+The bundle therefore declares `Require-Capability: osgi.ee ... JavaSE 11` and will not
 resolve on a Java 8 VM. Use the 7.x line if you need Java 8.
 
 ### Other changes

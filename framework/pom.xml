@@ -30,9 +30,10 @@
   <version>8.0.0-SNAPSHOT</version>
   <properties>
     <dollar>$</dollar>
-    <!-- 9 is the lowest level this still builds at (see FELIX-6759): replacing the
-         SecurityManager based call stack inspection with StackWalker requires Java 9.
-         Everything else here still compiles at 8. -->
+    <!-- See FELIX-6759. Replacing the SecurityManager based call stack inspection
+         with StackWalker requires Java 9, so 8 is no longer possible; everything else
+         here still compiles at 8. 9 and 10 are non-LTS and long EOL, so the floor is
+         11: it drops no supported JVM over 9 and lands on a maintained LTS. -->
     <felix.java.version>11</felix.java.version>
   </properties>
   <scm>
