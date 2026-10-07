@@ -27,17 +27,18 @@
     <modelVersion>4.0.0</modelVersion>
     <name>Apache Felix Utils</name>
     <description>Utility classes for OSGi.</description>
-    <version>1.11.9-SNAPSHOT</version>
+    <version>1.11.11-SNAPSHOT</version>
     <artifactId>org.apache.felix.utils</artifactId>
 
     <scm>
         <connection>scm:git:https://github.com/apache/felix-dev.git</connection>
         <developerConnection>scm:git:https://github.com/apache/felix-dev.git</developerConnection>
         <url>https://gitbox.apache.org/repos/asf?p=felix-dev.git</url>
-      <tag>HEAD</tag>
+      <tag>org.apache.felix.utils-1.11.10</tag>
   </scm>
 
     <properties>
+        <felix.java.version>8</felix.java.version>
     </properties>
 
     <dependencies>
@@ -77,13 +78,6 @@
                         <!-- Exclude all JSON files -->
                         <exclude>doc/*</exclude>
                     </excludes>
-                </configuration>
-            </plugin>
-            <plugin>
-                <artifactId>maven-compiler-plugin</artifactId>
-                <configuration>
-                    <source>8</source>
-                    <target>8</target>
                 </configuration>
             </plugin>
         </plugins>
