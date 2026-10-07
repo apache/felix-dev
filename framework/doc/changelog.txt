@@ -9,9 +9,11 @@ Changes from 7.1.0 to 8.0.0
       unless a SecurityProvider is installed, and the
       org.apache.felix.framework.security bundle has been removed. The OSGi
       permission API is still exported and unchanged.
-    * The minimum Java version is now 9, so the bundle requires
-      osgi.ee JavaSE 9. Inspecting the caller's class context no longer uses a
-      SecurityManager subclass to reach getClassContext(); it uses StackWalker.
+    * The minimum Java version is now 11, so the bundle requires
+      osgi.ee JavaSE 11. Inspecting the caller's class context no longer uses a
+      SecurityManager subclass to reach getClassContext(); it uses StackWalker,
+      which needs Java 9. The floor is 11 rather than 9 because 9 and 10 are
+      non-LTS and long past end of life, so it drops no supported JVM.
 
 ** Bug
     * FilterImpl.WrapperCapability: Filter.matches(Map) threw
