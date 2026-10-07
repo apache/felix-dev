@@ -51,6 +51,7 @@ import java.util.TreeMap;
 import java.util.jar.Attributes;
 import java.util.jar.Manifest;
 
+import org.apache.maven.RepositoryUtils;
 import org.apache.maven.archiver.ManifestSection;
 import org.apache.maven.archiver.MavenArchiveConfiguration;
 import org.apache.maven.archiver.MavenArchiver;
@@ -77,15 +78,14 @@ import org.apache.maven.plugins.annotations.LifecyclePhase;
 import org.apache.maven.plugins.annotations.Mojo;
 import org.apache.maven.plugins.annotations.Parameter;
 import org.apache.maven.plugins.annotations.ResolutionScope;
-import org.apache.maven.project.DefaultProjectBuildingRequest;
+import org.apache.maven.project.DefaultDependencyResolutionRequest;
+import org.apache.maven.project.DependencyResolutionException;
+import org.apache.maven.project.DependencyResolutionRequest;
 import org.apache.maven.project.MavenProject;
 import org.apache.maven.project.MavenProjectBuilder;
 import org.apache.maven.project.MavenProjectHelper;
 import org.apache.maven.project.ProjectBuildingException;
-import org.apache.maven.project.ProjectBuildingRequest;
-import org.apache.maven.shared.dependency.graph.DependencyGraphBuilder;
-import org.apache.maven.shared.dependency.graph.DependencyGraphBuilderException;
-import org.apache.maven.shared.dependency.graph.DependencyNode;
+import org.apache.maven.project.ProjectDependenciesResolver;
 import org.apache.maven.shared.osgi.DefaultMaven2OsgiConverter;
 import org.apache.maven.shared.osgi.Maven2OsgiConverter;
 import org.codehaus.plexus.archiver.UnArchiver;
@@ -95,6 +95,7 @@ import org.codehaus.plexus.util.FileUtils;
 import org.codehaus.plexus.util.PropertyUtils;
 import org.codehaus.plexus.util.StringUtils;
 import org.codehaus.plexus.util.WriterFactory;
+import org.eclipse.aether.graph.DependencyNode;
 import org.sonatype.plexus.build.incremental.BuildContext;
 
 import aQute.bnd.header.Attrs;
@@ -227,7 +228,7 @@ public class BundlePlugin extends AbstractMojo
     protected MavenProjectBuilder mavenProjectBuilder;
 
     @Component
-    protected DependencyGraphBuilder dependencyGraphBuilder;
+    protected ProjectDependenciesResolver projectDependenciesResolver;
 
     @Component
     private ArtifactMetadataSource artifactMetadataSource;
@@ -762,7 +763,7 @@ public class BundlePlugin extends AbstractMojo
     // We need to find the direct dependencies that have been included in the uber JAR so that we can modify the
     // POM accordingly.
     private void createDependencyReducedPom( Set<String> artifactsToRemove )
-            throws IOException, ProjectBuildingException, DependencyGraphBuilderException {
+            throws IOException, ProjectBuildingException, DependencyResolutionException {
         Model model = project.getOriginalModel();
         List<Dependency> dependencies = new ArrayList<>();
 
@@ -900,12 +901,9 @@ public class BundlePlugin extends AbstractMojo
     }
 
     public boolean updateExcludesInDeps( MavenProject project, List<Dependency> dependencies, List<Dependency> transitiveDeps )
-            throws DependencyGraphBuilderException
+            throws DependencyResolutionException
     {
-        ProjectBuildingRequest request = new DefaultProjectBuildingRequest();
-        request.setProject(project);
-        request.setRepositorySession(session.getRepositorySession());
-        DependencyNode node = dependencyGraphBuilder.buildDependencyGraph(request, null);
+        DependencyNode node = collectDependencyGraph( project );
         boolean modified = false;
         for (DependencyNode n2 : node.getChildren())
         {
@@ -953,6 +951,37 @@ public class BundlePlugin extends AbstractMojo
             }
         }
         return modified;
+    }
+
+
+    /**
+     * Collects the dependency graph of the project after conflict resolution: the root stands for the project, its
+     * children for the direct dependencies, and so on. Only POMs are downloaded, no artifact files. This is what
+     * maven-dependency-tree's {@code DependencyGraphBuilder} did on top of the same Maven API.
+     */
+    protected DependencyNode collectDependencyGraph( MavenProject project ) throws DependencyResolutionException
+    {
+        DependencyResolutionRequest request =
+            new DefaultDependencyResolutionRequest( project, session.getRepositorySession() );
+        request.setResolutionFilter( ( node, parents ) -> false );
+        return projectDependenciesResolver.resolve( request ).getDependencyGraph();
+    }
+
+    /**
+     * The artifact of a node of {@link #collectDependencyGraph(MavenProject)}, with the scope and optional flag of its
+     * dependency; for the root, which has no dependency, the artifact of the project.
+     */
+    protected static Artifact toArtifact( DependencyNode node, MavenProject project )
+    {
+        org.eclipse.aether.graph.Dependency dependency = node.getDependency();
+        if ( dependency == null )
+        {
+            return project.getArtifact();
+        }
+        Artifact artifact = RepositoryUtils.toArtifact( dependency.getArtifact() );
+        artifact.setScope( dependency.getScope() );
+        artifact.setOptional( dependency.isOptional() );
+        return artifact;
     }
 
 

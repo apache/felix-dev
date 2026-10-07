@@ -10,6 +10,8 @@ All notable changes to the `org.apache.felix.http.jetty12` bundle are documented
 
 ### Changed
 
+- Updated embedded Jetty to **12.1.14** (was 12.1.13). ([FELIX-6867](https://issues.apache.org/jira/browse/FELIX-6867))
+- Updated embedded Jetty to **12.1.13** (was 12.1.12). ([FELIX-6860](https://issues.apache.org/jira/browse/FELIX-6860))
 - Updated embedded Jetty to **12.1.12** (was 12.1.11). ([FELIX-6856](https://issues.apache.org/jira/browse/FELIX-6856))
 - Updated embedded Jetty to **12.1.11** (was 12.1.10). ([FELIX-6848](https://issues.apache.org/jira/browse/FELIX-6848))
 - Updated embedded Jetty to **12.1.10** (was 12.1.9). ([FELIX-6834](https://issues.apache.org/jira/browse/FELIX-6834))
