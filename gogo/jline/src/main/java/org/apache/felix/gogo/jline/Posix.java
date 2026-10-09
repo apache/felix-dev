@@ -249,9 +249,18 @@ public class Posix {
         };
         Date input = new Date();
         String output = null;
+        boolean utc = false;
+        for (int i = 1; i < argv.length; i++) {
+            if ("-u".equals(argv[i])) {
+                utc = true;
+            }
+        }
         for (int i = 1; i < argv.length; i++) {
             if ("-?".equals(argv[i]) || "--help".equals(argv[i])) {
                 throw new HelpException(String.join("\n", usage));
+            }
+            else if ("-u".equals(argv[i])) {
+                // handled in pre-scan
             }
             else if ("-r".equals(argv[i])) {
                 if (i + 1 < argv.length) {
@@ -265,7 +274,11 @@ public class Posix {
                     String fmt = argv[++i];
                     String inp = argv[++i];
                     String jfmt = toJavaDateFormat(fmt);
-                    input = new SimpleDateFormat(jfmt).parse(inp);
+                    SimpleDateFormat sdf = new SimpleDateFormat(jfmt);
+                    if (utc) {
+                        sdf.setTimeZone(java.util.TimeZone.getTimeZone("UTC"));
+                    }
+                    input = sdf.parse(inp);
                 } else {
                     throw new IllegalArgumentException("usage: date [-u] [-r seconds] [-v[+|-]val[mwdHMS] ...] [-f input_fmt new_date] [+output_fmt]");
                 }
@@ -285,7 +298,11 @@ public class Posix {
             output = "%c";
         }
         // Print output
-        process.out().println(new SimpleDateFormat(toJavaDateFormat(output)).format(input));
+        SimpleDateFormat sdf = new SimpleDateFormat(toJavaDateFormat(output));
+        if (utc) {
+            sdf.setTimeZone(java.util.TimeZone.getTimeZone("UTC"));
+        }
+        process.out().println(sdf.format(input));
     }
 
     private String toJavaDateFormat(String format) {
