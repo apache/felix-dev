@@ -23,10 +23,12 @@ import java.util.Arrays;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.Dictionary;
+import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Hashtable;
 import java.util.LinkedList;
 import java.util.List;
+import java.util.Map;
 import java.util.Set;
 
 import org.junit.jupiter.api.Test;
@@ -102,6 +104,38 @@ class FilterTest
         dictionary.put("checkBool", true);
         dictionary.put("checkString", o);
         return dictionary;
+    }
+
+    /**
+     * Filter.matches(Map) used to throw UnsupportedOperationException for any
+     * non-empty map, because WrapperCapability assigned an immutable empty map and
+     * then called putAll on it. See FELIX-6759 discussion; regression from
+     * 466eb93f1c.
+     */
+    @Test
+    void matchesNonEmptyMap() throws InvalidSyntaxException
+    {
+        Filter filter = new FilterImpl("(one=one-value)");
+
+        Map<String, Object> map = new HashMap<>();
+        map.put("one", "one-value");
+
+        assertThat(filter.matches(map)).isTrue();
+        assertThat(filter.matches(Collections.singletonMap("one", "other-value"))).isFalse();
+    }
+
+    /**
+     * The same constructor threw NullPointerException for a null map, where it used
+     * to fall back to an empty one.
+     */
+    @Test
+    void matchesEmptyAndUnmodifiableMap() throws InvalidSyntaxException
+    {
+        Filter filter = new FilterImpl("(one=one-value)");
+
+        assertThat(filter.matches(Collections.<String, Object>emptyMap())).isFalse();
+        assertThat(filter.matches(
+            Collections.unmodifiableMap(Collections.singletonMap("one", (Object) "one-value")))).isTrue();
     }
 
 }
