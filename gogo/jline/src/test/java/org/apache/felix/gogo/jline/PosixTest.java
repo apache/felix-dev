@@ -101,6 +101,57 @@ public class PosixTest extends AbstractParserTest {
         assertEquals("       1       5       5", res);
     }
 
+    @Test
+    public void testGrepReDosTimeout() throws Exception {
+        Context context = new Context();
+        context.addCommand("echo", new Posix(context));
+        context.addCommand("grep", new Posix(context));
+        context.addCommand("tac", this);
+
+        // This pattern (a+)+ with input aaaa...b causes catastrophic backtracking.
+        // It will trigger our ReDoS protection timeout (1 second).
+        long start = System.currentTimeMillis();
+        Object res = context.execute("echo \"aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaab\" | grep -x \"(a+)+\" | tac");
+        long duration = System.currentTimeMillis() - start;
+
+        // Assert that matching was aborted and didn't hang indefinitely (timeout is 1 second)
+        assertTrue("Matching should time out within 4 seconds", duration < 4000);
+        assertEquals("", res);
+    }
+
+    @Test
+    public void testTimeoutCharSequenceLargeTimeout() throws Exception {
+        Class<?> clazz = Class.forName("org.apache.felix.gogo.jline.Posix$TimeoutCharSequence");
+        java.lang.reflect.Constructor<?> constructor = clazz.getDeclaredConstructor(CharSequence.class, long.class);
+        constructor.setAccessible(true);
+
+        CharSequence seq = (CharSequence) constructor.newInstance("hello", Long.MAX_VALUE);
+        assertEquals(5, seq.length());
+        assertEquals('h', seq.charAt(0));
+
+        CharSequence sub = seq.subSequence(1, 4);
+        assertEquals(3, sub.length());
+        assertEquals('e', sub.charAt(0));
+    }
+
+    @Test
+    public void testTimeoutCharSequenceTriggersTimeout() throws Exception {
+        Class<?> clazz = Class.forName("org.apache.felix.gogo.jline.Posix$TimeoutCharSequence");
+        java.lang.reflect.Constructor<?> constructor = clazz.getDeclaredConstructor(CharSequence.class, long.class);
+        constructor.setAccessible(true);
+
+        CharSequence seq = (CharSequence) constructor.newInstance("hello", 0L);
+        try {
+            for (int i = 0; i < 2000; i++) {
+                seq.length();
+            }
+            fail("Expected RegexTimeoutException to be thrown");
+        } catch (Exception e) {
+            assertEquals("org.apache.felix.gogo.jline.Posix$RegexTimeoutException", e.getClass().getName());
+            assertEquals("Regular expression matching timed out", e.getMessage());
+        }
+    }
+
     public String tac() throws IOException {
         StringWriter sw = new StringWriter();
         Reader rdr = new InputStreamReader(System.in);
