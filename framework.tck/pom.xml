@@ -47,7 +47,7 @@
       <plugin>
         <groupId>biz.aQute.bnd</groupId>
         <artifactId>bnd-resolver-maven-plugin</artifactId>
-        <version>7.1.0</version>
+        <version>7.4.0</version>
         <configuration>
           <includeDependencyManagement>true</includeDependencyManagement>
           <bndruns>
@@ -74,7 +74,7 @@
       <plugin>
         <groupId>biz.aQute.bnd</groupId>
         <artifactId>bnd-testing-maven-plugin</artifactId>
-        <version>7.1.0</version>
+        <version>7.4.0</version>
         <configuration>
           <failOnChanges>true</failOnChanges>
           <includeDependencyManagement>true</includeDependencyManagement>
@@ -141,7 +141,7 @@
     <dependency>
       <groupId>org.apache.felix</groupId>
       <artifactId>org.apache.felix.framework</artifactId>
-      <version>7.1.0-SNAPSHOT</version>
+      <version>8.0.0-SNAPSHOT</version>
     </dependency>
     <!-- tck run -->
     <dependency>
