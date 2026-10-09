@@ -72,6 +72,11 @@
         <bundle.file.name>
             ${bundle.build.name}/${project.build.finalName}.jar
         </bundle.file.name>
+        <!-- Sibling Felix bundles the tests run against. Pinned to the latest release
+             so this module also builds on its own; CI overrides them with the locally
+             built versions so the tests exercise the code in this repository.
+             See FELIX-6870. -->
+        <felix.framework.version>7.0.5</felix.framework.version>
     </properties>
 
     <dependencies>
@@ -165,12 +170,15 @@
         <dependency>
             <groupId>org.apache.felix</groupId>
             <artifactId>org.apache.felix.framework</artifactId>
-            <version>7.0.5</version>
+            <version>${felix.framework.version}</version>
             <scope>test</scope>
         </dependency>
         <dependency>
             <groupId>org.apache.felix</groupId>
             <artifactId>org.apache.felix.framework.security</artifactId>
+            <!-- Not built in this repository any more (removed in the 8.0.0 framework
+                 line, FELIX-6807); only ConfigAdminSecurityTest uses it, and that test is
+                 excluded below. -->
             <version>2.8.3</version>
             <scope>test</scope>
         </dependency>

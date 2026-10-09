@@ -108,24 +108,40 @@ jobs:
             - 'log.extension/**'
           examples:
             - 'examples/**'
-    - name: Felix SCR
-      if: steps.changes.outputs.scr == 'true'
-      run: mvn -B -V -Dstyle.color=always --file scr/pom.xml clean verify
     - name: Felix Log
       if: steps.changes.outputs.log == 'true'
       run: mvn -B -V -Dstyle.color=always --file log/pom.xml clean verify
-    # Built and installed before Felix HTTP, whose integration tests run on it.
-    # Also runs when only http changed, so those tests always exercise the framework
-    # in this repository rather than the last release. See FELIX-6869.
+    # Several modules pin released Felix bundles as test-scoped dependencies so that
+    # they still build on their own. Each such pin is a property, which the steps below
+    # override with the version built from this repository, so the tests exercise the
+    # code being changed rather than the last release. A producer is therefore built and
+    # installed whenever it or one of its consumers changed. See FELIX-6870.
+    - name: Resolve the versions built in this repository
+      if: steps.changes.outputs.framework == 'true' || steps.changes.outputs.http == 'true' || steps.changes.outputs.configadmin == 'true' || steps.changes.outputs.scr == 'true' || steps.changes.outputs.gogo == 'true' || steps.changes.outputs.utils == 'true' || steps.changes.outputs.resolver == 'true'
+      run: |
+        record() {
+          echo "$1=$2" >> "$GITHUB_ENV"
+          echo "$1 = $2"
+        }
+        for module in framework configadmin utils; do
+          record "$(echo "$module" | tr 'a-z' 'A-Z')_VERSION"             "$(mvn -B -q --file "$module/pom.xml" help:evaluate -Dexpression=project.version -DforceStdout)"
+        done
+        # gogo-parent is not published anywhere, so these only resolve inside the gogo reactor.
+        for module in command runtime shell jline; do
+          record "GOGO_$(echo "$module" | tr 'a-z' 'A-Z')_VERSION"             "$(mvn -B -q --file gogo/pom.xml -pl "$module" help:evaluate -Dexpression=project.version -DforceStdout)"
+        done
     - name: Felix Framework
-      if: steps.changes.outputs.framework == 'true' || steps.changes.outputs.http == 'true'
+      if: steps.changes.outputs.framework == 'true' || steps.changes.outputs.http == 'true' || steps.changes.outputs.configadmin == 'true' || steps.changes.outputs.scr == 'true' || steps.changes.outputs.gogo == 'true'
       run: mvn -B -V -Dstyle.color=always --file framework/pom.xml clean install
+    - name: Felix Config Admin
+      if: steps.changes.outputs.configadmin == 'true' || steps.changes.outputs.scr == 'true'
+      run: mvn -B -V -Dstyle.color=always --file configadmin/pom.xml clean install "-Dfelix.framework.version=$FRAMEWORK_VERSION"
+    - name: Felix SCR
+      if: steps.changes.outputs.scr == 'true'
+      run: mvn -B -V -Dstyle.color=always --file scr/pom.xml clean verify "-Dfelix.framework.version=$FRAMEWORK_VERSION" "-Dfelix.configadmin.version=$CONFIGADMIN_VERSION"
     - name: Felix HTTP
       if: steps.changes.outputs.http == 'true'
-      run: |
-        FRAMEWORK_VERSION=$(mvn -B -q --file framework/pom.xml help:evaluate -Dexpression=project.version -DforceStdout)
-        echo "Running the integration tests against framework $FRAMEWORK_VERSION"
-        mvn -B -V -Dstyle.color=always "-Dit.test=!MissingWebsocketDependenciesIT" --file http/pom.xml clean install verify "-Dmaven.repo.local=/home/runner/.m2/repository/" "-Dfelix.framework.version=$FRAMEWORK_VERSION"
+      run: mvn -B -V -Dstyle.color=always "-Dit.test=!MissingWebsocketDependenciesIT" --file http/pom.xml clean install verify "-Dmaven.repo.local=/home/runner/.m2/repository/" "-Dfelix.framework.version=$FRAMEWORK_VERSION"
     - name: Felix Maven bundle plugin
       if: steps.changes.outputs.maven-bundle-plugin == 'true'
       run: mvn -B -V -Dstyle.color=always --file tools/maven-bundle-plugin/pom.xml clean install verify
@@ -143,16 +159,16 @@ jobs:
       run: mvn -B -V -Dstyle.color=always --file main/pom.xml clean verify
     - name: Felix Gogo Shell
       if: steps.changes.outputs.gogo == 'true'
-      run: mvn -B -V -Dstyle.color=always --file gogo/pom.xml clean verify
+      run: mvn -B -V -Dstyle.color=always --file gogo/pom.xml clean verify "-Dfelix.gogo.command.version=$GOGO_COMMAND_VERSION" "-Dfelix.gogo.runtime.version=$GOGO_RUNTIME_VERSION" "-Dfelix.gogo.shell.version=$GOGO_SHELL_VERSION" "-Dfelix.gogo.jline.version=$GOGO_JLINE_VERSION" "-Dfelix.framework.version=$FRAMEWORK_VERSION"
     - name: Felix utils
-      if: steps.changes.outputs.utils == 'true'
-      run: mvn -B -V -Dstyle.color=always --file utils/pom.xml clean verify
+      if: steps.changes.outputs.utils == 'true' || steps.changes.outputs.resolver == 'true'
+      run: mvn -B -V -Dstyle.color=always --file utils/pom.xml clean install
     - name: Felix connect
       if: steps.changes.outputs.connect == 'true'
       run: mvn -B -V -Dstyle.color=always --file connect/pom.xml clean verify
     - name: Felix resolver
       if: steps.changes.outputs.resolver == 'true'
-      run: mvn -B -V -Dstyle.color=always --file resolver/pom.xml clean verify
+      run: mvn -B -V -Dstyle.color=always --file resolver/pom.xml clean verify "-Dfelix.utils.version=$UTILS_VERSION"
     - name: Felix bundlerepository
       if: steps.changes.outputs.bundlerepository == 'true'
       run: mvn -B -V -Dstyle.color=always --file bundlerepository/pom.xml clean verify
@@ -162,9 +178,6 @@ jobs:
     - name: Felix examples
       if: steps.changes.outputs.examples == 'true'
       run: mvn -B -V -Dstyle.color=always --file examples/pom.xml clean verify
-    - name: Felix Config Admin
-      if: steps.changes.outputs.configadmin == 'true'
-      run: mvn -B -V -Dstyle.color=always --file configadmin/pom.xml clean verify
     - name: Upload Test Results
       if: always()
       uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
