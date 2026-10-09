@@ -71,6 +71,13 @@
         <maven.compiler.release>${java.version}</maven.compiler.release>
         <maven.compiler.source>${java.version}</maven.compiler.source>
         <maven.compiler.target>${java.version}</maven.compiler.target>
+
+        <!-- Sibling Felix bundles the tests run against. Pinned to the latest release
+             so this module also builds on its own; CI overrides them with the locally
+             built versions so the tests exercise the code in this repository.
+             See FELIX-6870. -->
+        <felix.framework.version>7.0.1</felix.framework.version>
+        <felix.configadmin.version>1.9.0</felix.configadmin.version>
     </properties>
     
     
@@ -259,7 +266,7 @@
         <dependency>
             <groupId>org.apache.felix</groupId>
             <artifactId>org.apache.felix.configadmin</artifactId>
-            <version>1.9.0</version>
+            <version>${felix.configadmin.version}</version>
             <scope>test</scope>
         </dependency>
     </dependencies>
@@ -399,7 +406,7 @@
                 <dependency>
                     <groupId>org.apache.felix</groupId>
                     <artifactId>org.apache.felix.framework</artifactId>
-                    <version>7.0.1</version>
+                    <version>${felix.framework.version}</version>
                     <scope>test</scope>
                 </dependency>
             </dependencies>
