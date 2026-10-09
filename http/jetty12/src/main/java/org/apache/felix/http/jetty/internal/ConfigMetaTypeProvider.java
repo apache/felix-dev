@@ -168,8 +168,14 @@ class ConfigMetaTypeProvider implements MetaTypeProvider
         adList.add(new AttributeDefinitionImpl(JettyConfig.FELIX_JETTY_USE_VIRTUAL_THREADS,
                 "Use Virtual Threads",
                 "Use virtual threads in Jetty (JDK 21 or higher). Defaults to false.",
-                -1,
+                false,
                 bundle.getBundleContext().getProperty(JettyConfig.FELIX_JETTY_USE_VIRTUAL_THREADS)));
+
+        adList.add(new AttributeDefinitionImpl(JettyConfig.FELIX_JETTY_VIRTUAL_THREADS_MAX,
+                "Virtual Threads Max Concurrent Tasks",
+                "The maximum number of virtual thread tasks that run at the same time, or -1 to leave the number unbounded. Note that unlike 'Threadpool Max' this bounds concurrent tasks, not the number of threads. Only relevant if 'Use Virtual Threads' is enabled. When set to a positive value, Jetty's preferred setup is used: a QueuedThreadPool, sized by 'Threadpool Max', with a bounded VirtualThreadPool as its virtual threads executor. Defaults to -1.",
+                -1,
+                bundle.getBundleContext().getProperty(JettyConfig.FELIX_JETTY_VIRTUAL_THREADS_MAX)));
 
         adList.add(new AttributeDefinitionImpl(JettyConfig.FELIX_JETTY_ACCEPTORS,
                 "Acceptors",
@@ -315,7 +321,7 @@ class ConfigMetaTypeProvider implements MetaTypeProvider
 
         adList.add(new AttributeDefinitionImpl(JettyConfig.FELIX_JETTY_RENEGOTIATION_ALLOWED,
                 "Renegotiation allowed",
-                "Whether TLS renegotiation is allowed (true by default)",
+                "Whether TLS renegotiation is allowed (false by default)",
                 false,
                 bundle.getBundleContext().getProperty(JettyConfig.FELIX_JETTY_RENEGOTIATION_ALLOWED)));
 
@@ -529,7 +535,7 @@ class ConfigMetaTypeProvider implements MetaTypeProvider
         adList.add(new AttributeDefinitionImpl(JettyConfig.FELIX_HTTP_REQUEST_LOG_FORMAT,
                 "SLF4J Request Log Format",
                 "The format of the request log entries. Only relevant if 'Enable SLF4J Request Logging' is checked. Valid placeholders are described in https://www.eclipse.org/jetty/documentation/jetty-11/operations-guide/index.html#og-module-requestlog",
-                CustomRequestLog.NCSA_FORMAT,
+                CustomRequestLog.EXTENDED_NCSA_FORMAT,
                 bundle.getBundleContext().getProperty(JettyConfig.FELIX_HTTP_REQUEST_LOG_FORMAT)));
 
         adList.add(new AttributeDefinitionImpl(JettyConfig.FELIX_JAKARTA_WEBSOCKET_ENABLE,

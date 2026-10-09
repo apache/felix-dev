@@ -28,7 +28,7 @@
  <modelVersion>4.0.0</modelVersion>
 
  <artifactId>maven-bundle-plugin</artifactId>
- <version>6.1.3-SNAPSHOT</version>
+ <version>6.2.1-SNAPSHOT</version>
  <packaging>maven-plugin</packaging>
 
  <name>Maven Bundle Plugin</name>
@@ -59,7 +59,7 @@
  <properties>
    <felix.java.version>8</felix.java.version>
    <maven.site.path>bundle-plugin-archives/bundle-plugin-LATEST</maven.site.path>
-   <project.build.outputTimestamp>1787901891</project.build.outputTimestamp>
+   <project.build.outputTimestamp>1788354726</project.build.outputTimestamp>
  </properties>
 
  <build>
@@ -229,11 +229,6 @@
    <groupId>org.apache.maven</groupId>
    <artifactId>maven-archiver</artifactId>
    <version>3.6.3</version>
-  </dependency>
-  <dependency>
-   <groupId>org.apache.maven.shared</groupId>
-   <artifactId>maven-dependency-tree</artifactId>
-   <version>3.3.0</version>
   </dependency>
   <dependency>
    <groupId>org.codehaus.plexus</groupId>

@@ -18,6 +18,7 @@ package org.apache.felix.http.jetty.it;
 
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotNull;
+import static org.junit.Assume.assumeTrue;
 import static org.ops4j.pax.exam.CoreOptions.mavenBundle;
 import static org.ops4j.pax.exam.cm.ConfigurationAdminOptions.newConfiguration;
 
@@ -89,10 +90,13 @@ public class JettyVirtualThreadsIT extends AbstractJettyTestSupport {
 
     @Test
     public void testJettyRunningWithVirtualThreads() throws Exception {
-        if (!System.getProperty("java.version").startsWith("21")) {
-            // This test only works on Java 21 or newer
-            return;
-        }
+        // Virtual threads require Java 21 or later. Comparing the feature version rather than
+        // matching on the version string keeps this running on every later JDK. Note that the
+        // Pax Exam runner swallows a failed assumption and reports the test as passing rather
+        // than as skipped, so on an older JDK this still shows up as a green test.
+        assumeTrue("virtual threads require Java 21 or later, running on " + Runtime.version(),
+                Runtime.version().feature() >= 21);
+
         try (HttpClient httpClient = new HttpClient()) {
             httpClient.start();
             Object value = bundleContext.getServiceReference(HttpService.class).getProperty("org.osgi.service.http.port");
