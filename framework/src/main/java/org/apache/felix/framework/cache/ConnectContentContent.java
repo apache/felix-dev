@@ -146,6 +146,19 @@ public class ConnectContentContent implements Content
         {
             return this;
         }
+
+        // Remove any leading slash.
+        String entryName = (name.startsWith("/")) ? name.substring(1) : name;
+
+        String normalizedEntryName = entryName.replace('\\', '/');
+        if (normalizedEntryName.trim().startsWith("../") ||
+            normalizedEntryName.contains("/../") ||
+            normalizedEntryName.trim().endsWith("/..") ||
+            normalizedEntryName.trim().equals(".."))
+        {
+            return null;
+        }
+
         String dir = name.endsWith("/") ? name : name + "/";
 
         if (hasEntry(dir))

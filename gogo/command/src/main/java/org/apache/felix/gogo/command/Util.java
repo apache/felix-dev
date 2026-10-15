@@ -155,6 +155,8 @@ public class Util
         // Reusable buffer.
         byte[] buffer = new byte[4096];
 
+        String canonicalBase = dir.getCanonicalPath();
+
         // Loop through JAR entries.
         for (JarEntry je = jis.getNextJarEntry();
              je != null;
@@ -166,6 +168,11 @@ public class Util
             }
 
             File target = new File(dir, je.getName());
+            String canonicalTarget = target.getCanonicalPath();
+            if (!canonicalTarget.startsWith(canonicalBase + File.separator) && !canonicalTarget.equals(canonicalBase))
+            {
+                throw new IOException("JAR entry resolves outside the target directory: " + je.getName());
+            }
 
             // Check to see if the JAR entry is a directory.
             if (je.isDirectory())
