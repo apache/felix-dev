@@ -294,6 +294,7 @@ public class URLHandlersStreamHandlerProxy extends PlurlStreamHandlerBase
                 }
                 catch (Exception ex)
                 {
+                    rethrowIOException(ex);
                     throw new IOException(ex.getMessage());
                 }
             }
@@ -305,6 +306,7 @@ public class URLHandlersStreamHandlerProxy extends PlurlStreamHandlerBase
         }
         catch (Exception ex)
         {
+            rethrowIOException(ex);
             throw new IllegalStateException("Stream handler unavailable due to: " + ex.getMessage(), ex);
         }
     }
@@ -337,10 +339,7 @@ public class URLHandlersStreamHandlerProxy extends PlurlStreamHandlerBase
             }
             catch (Exception e)
             {
-                if (e instanceof IOException)
-                {
-                    throw (IOException) e;
-                }
+                rethrowIOException(e);
                 throw new IOException(e.getMessage(), e);
             }
         }
@@ -350,11 +349,29 @@ public class URLHandlersStreamHandlerProxy extends PlurlStreamHandlerBase
         }
         catch (Exception ex)
         {
-            if (ex instanceof IOException)
-            {
-                throw (IOException) ex;
-            }
+            rethrowIOException(ex);
             throw new IllegalStateException("Stream handler unavailable due to: " + ex.getMessage(), ex);
+        }
+    }
+
+    /**
+     * Rethrows the given exception if it is an {@link IOException}, or the {@link IOException}
+     * thrown by a stream handler method invoked through reflection, which is wrapped in an
+     * {@link InvocationTargetException}, so that callers get the same exception as with a
+     * direct invocation of the handler.
+     *
+     * @param ex the exception caught while invoking a stream handler method
+     * @throws IOException the exception itself or the cause of the invocation exception
+     */
+    private static void rethrowIOException(Exception ex) throws IOException
+    {
+        if (ex instanceof IOException)
+        {
+            throw (IOException) ex;
+        }
+        if ((ex instanceof InvocationTargetException) && (ex.getCause() instanceof IOException))
+        {
+            throw (IOException) ex.getCause();
         }
     }
 
@@ -631,18 +648,28 @@ public class URLHandlersStreamHandlerProxy extends PlurlStreamHandlerBase
         throws Throwable
     {
         Class<?>[] types = method.getParameterTypes();
-        if (m_service == null)
+        try
         {
-            return m_action.invoke(m_action.getMethod(this.getClass(), method.getName(), types), this, params);
+            if (m_service == null)
+            {
+                return m_action.invoke(m_action.getMethod(this.getClass(), method.getName(), types), this, params);
+            }
+            if ("parseURL".equals(method.getName()))
+            {
+                ClassLoader loader = m_action.getClassLoader(m_service.getClass());
+                types[0] = loader.loadClass(URLStreamHandlerSetter.class.getName());
+                params[0] = m_action.createProxy(loader, new Class[]{types[0]}, 
+                        (URLHandlersStreamHandlerProxy) params[0]);
+            }
+            return m_action.invokeDirect(m_action.getDeclaredMethod(m_service.getClass(),
+                method.getName(), types), m_service, params);
         }
-        if ("parseURL".equals(method.getName()))
+        catch (InvocationTargetException ex)
         {
-            ClassLoader loader = m_action.getClassLoader(m_service.getClass());
-            types[0] = loader.loadClass(URLStreamHandlerSetter.class.getName());
-            params[0] = m_action.createProxy(loader, new Class[]{types[0]}, 
-                    (URLHandlersStreamHandlerProxy) params[0]);
+            // Throw what the invoked method threw, as a direct call would, so that the dynamic
+            // proxy propagates a declared exception, such as the IOException of openConnection,
+            // instead of wrapping it in an UndeclaredThrowableException (FELIX-6861).
+            throw ex.getTargetException();
         }
-        return m_action.invokeDirect(m_action.getDeclaredMethod(m_service.getClass(),
-            method.getName(), types), m_service, params);
     }
 }
