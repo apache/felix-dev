@@ -646,18 +646,28 @@ public class URLHandlersStreamHandlerProxy extends URLStreamHandler
         throws Throwable
     {
         Class<?>[] types = method.getParameterTypes();
-        if (m_service == null)
+        try
         {
-            return m_action.invoke(m_action.getMethod(this.getClass(), method.getName(), types), this, params);
+            if (m_service == null)
+            {
+                return m_action.invoke(m_action.getMethod(this.getClass(), method.getName(), types), this, params);
+            }
+            if ("parseURL".equals(method.getName()))
+            {
+                ClassLoader loader = m_action.getClassLoader(m_service.getClass());
+                types[0] = loader.loadClass(URLStreamHandlerSetter.class.getName());
+                params[0] = m_action.createProxy(loader, new Class[]{types[0]}, 
+                        (URLHandlersStreamHandlerProxy) params[0]);
+            }
+            return m_action.invokeDirect(m_action.getDeclaredMethod(m_service.getClass(),
+                method.getName(), types), m_service, params);
         }
-        if ("parseURL".equals(method.getName()))
+        catch (InvocationTargetException ex)
         {
-            ClassLoader loader = m_action.getClassLoader(m_service.getClass());
-            types[0] = loader.loadClass(URLStreamHandlerSetter.class.getName());
-            params[0] = m_action.createProxy(loader, new Class[]{types[0]}, 
-                    (URLHandlersStreamHandlerProxy) params[0]);
+            // Throw what the invoked method threw, as a direct call would, so that the dynamic
+            // proxy propagates a declared exception, such as the IOException of openConnection,
+            // instead of wrapping it in an UndeclaredThrowableException (FELIX-6861).
+            throw ex.getTargetException();
         }
-        return m_action.invokeDirect(m_action.getDeclaredMethod(m_service.getClass(),
-            method.getName(), types), m_service, params);
     }
 }

@@ -29,6 +29,8 @@ import java.net.URLStreamHandler;
 
 import org.apache.felix.framework.util.SecureAction;
 import org.junit.jupiter.api.Test;
+import org.osgi.service.url.AbstractURLStreamHandlerService;
+import org.osgi.service.url.URLStreamHandlerService;
 
 /**
  * An {@link IOException} thrown by a stream handler invoked through reflection is propagated
@@ -62,6 +64,37 @@ class URLHandlersStreamHandlerProxyTest
         }
     };
 
+    /**
+     * A {@link URLStreamHandlerService} whose {@code openConnection(URL, Proxy)} is public, so that the
+     * proxy invokes it through reflection.
+     */
+    public static class FailingHandlerService extends AbstractURLStreamHandlerService
+    {
+        @Override
+        public URLConnection openConnection(URL url) throws IOException
+        {
+            throw FAILURE;
+        }
+
+        @Override
+        public URLConnection openConnection(URL url, Proxy proxy) throws IOException
+        {
+            throw FAILURE;
+        }
+    }
+
+    /**
+     * A stream handler service that is not a {@link URLStreamHandlerService} of this class loader, as
+     * when it comes from another class loader, so that it is used through a dynamic proxy.
+     */
+    public static class FailingForeignHandlerService
+    {
+        public URLConnection openConnection(URL url) throws IOException
+        {
+            throw FAILURE;
+        }
+    }
+
     @Test
     void openConnectionPropagatesIOExceptionOfHandler() throws Exception
     {
@@ -80,6 +113,29 @@ class URLHandlersStreamHandlerProxyTest
         URL url = new URL(null, "felixtest://host/path", FAILING_HANDLER);
 
         assertThatThrownBy(() -> proxy.openConnection(url, Proxy.NO_PROXY)).isSameAs(FAILURE);
+    }
+
+    @Test
+    void openConnectionWithProxyPropagatesIOExceptionOfHandlerService() throws Exception
+    {
+        FailingHandlerService service = new FailingHandlerService();
+        URLHandlersStreamHandlerProxy proxy = new URLHandlersStreamHandlerProxy(
+            "felixtest", new SecureAction(), service, null);
+        URL url = new URL(null, "felixtest://host/path", FAILING_HANDLER);
+
+        assertThatThrownBy(() -> proxy.openConnection(url, Proxy.NO_PROXY)).isSameAs(FAILURE);
+    }
+
+    @Test
+    void handlerServiceOfAnotherClassLoaderPropagatesIOException() throws Exception
+    {
+        SecureAction action = new SecureAction();
+        URLStreamHandlerService service = (URLStreamHandlerService) action.createProxy(
+            URLStreamHandlerService.class.getClassLoader(), new Class<?>[]{URLStreamHandlerService.class},
+            new URLHandlersStreamHandlerProxy(new FailingForeignHandlerService(), action));
+        URL url = new URL(null, "felixtest://host/path", FAILING_HANDLER);
+
+        assertThatThrownBy(() -> service.openConnection(url)).isSameAs(FAILURE);
     }
 
     @Test
