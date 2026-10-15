@@ -292,6 +292,7 @@ public class URLHandlersStreamHandlerProxy extends URLStreamHandler
                 }
                 catch (Exception ex)
                 {
+                    rethrowIOException(ex);
                     throw new IOException(ex.getMessage());
                 }
             }
@@ -303,6 +304,7 @@ public class URLHandlersStreamHandlerProxy extends URLStreamHandler
         }
         catch (Exception ex)
         {
+            rethrowIOException(ex);
             throw new IllegalStateException("Stream handler unavailable due to: " + ex.getMessage(), ex);
         }
     }
@@ -335,10 +337,7 @@ public class URLHandlersStreamHandlerProxy extends URLStreamHandler
             }
             catch (Exception e)
             {
-                if (e instanceof IOException)
-                {
-                    throw (IOException) e;
-                }
+                rethrowIOException(e);
                 throw new IOException(e.getMessage(), e);
             }
         }
@@ -348,11 +347,29 @@ public class URLHandlersStreamHandlerProxy extends URLStreamHandler
         }
         catch (Exception ex)
         {
-            if (ex instanceof IOException)
-            {
-                throw (IOException) ex;
-            }
+            rethrowIOException(ex);
             throw new IllegalStateException("Stream handler unavailable due to: " + ex.getMessage(), ex);
+        }
+    }
+
+    /**
+     * Rethrows the given exception if it is an {@link IOException}, or the {@link IOException}
+     * thrown by a stream handler method invoked through reflection, which is wrapped in an
+     * {@link InvocationTargetException}, so that callers get the same exception as with a
+     * direct invocation of the handler.
+     *
+     * @param ex the exception caught while invoking a stream handler method
+     * @throws IOException the exception itself or the cause of the invocation exception
+     */
+    private static void rethrowIOException(Exception ex) throws IOException
+    {
+        if (ex instanceof IOException)
+        {
+            throw (IOException) ex;
+        }
+        if ((ex instanceof InvocationTargetException) && (ex.getCause() instanceof IOException))
+        {
+            throw (IOException) ex.getCause();
         }
     }
 
