@@ -218,11 +218,133 @@ public class ConfigInstallerTest extends TestCase {
                         .andReturn(null);
         EasyMock.expect(mockConfigurationAdmin.getConfiguration("pid", "?" ))
                         .andReturn(mockConfiguration);
+        EasyMock.expect(mockConfiguration.getProperties()).andReturn(null);
         EasyMock.replay(mockConfiguration, mockConfigurationAdmin, mockBundleContext, mockBundle);
 
         ConfigInstaller ci = new ConfigInstaller( mockBundleContext, mockConfigurationAdmin, new FileInstall() );
 
         assertTrue( ci.deleteConfig( new File( "pid.cfg" ) ) );
+
+        EasyMock.verify(mockConfiguration, mockConfigurationAdmin, mockBundleContext);
+    }
+
+    // verify that deleteConfig() skips deletion when the file being deleted
+    // is a duplicate (different path) from the registered live configuration.
+    public void testDeleteConfigSkipsWhenPathDiffersFromRegisteredSource() throws Exception
+    {
+        File canonicalFile = new File( "src/test/resources/watched/firstcfg.cfg" );
+        File backupFile    = new File( "src/test/resources/watched/backup/firstcfg.cfg" );
+
+        Hashtable<String, Object> props = new Hashtable<>();
+        props.put( DirectoryWatcher.FILENAME, canonicalFile.getAbsoluteFile().toURI().toString() );
+
+        EasyMock.expect(mockBundleContext.getBundle()).andReturn(mockBundle).anyTimes();
+        EasyMock.expect(mockBundle.loadClass(ConfigurationAttribute.class.getName())).andReturn((Class)ConfigurationAttribute.class).anyTimes();
+        EasyMock.expect(mockBundleContext.getProperty((String) EasyMock.anyObject()))
+            .andReturn(null)
+            .anyTimes();
+        EasyMock.expect(mockConfigurationAdmin.listConfigurations((String) EasyMock.anyObject()))
+            .andReturn(null);
+        EasyMock.expect(mockConfigurationAdmin.getConfiguration("firstcfg", "?"))
+            .andReturn(mockConfiguration);
+        EasyMock.expect(mockConfiguration.getProperties()).andReturn(props);
+        EasyMock.replay(mockConfiguration, mockConfigurationAdmin, mockBundleContext, mockBundle);
+
+        ConfigInstaller ci = new ConfigInstaller( mockBundleContext, mockConfigurationAdmin, new FileInstall() );
+
+        assertFalse( ci.deleteConfig( backupFile ) );
+
+        EasyMock.verify(mockConfiguration, mockConfigurationAdmin, mockBundleContext);
+    }
+
+    // verify that deleteConfig() proceeds normally when the file being deleted
+    // is the registered source of the live configuration.
+    public void testDeleteConfigProceedsWhenPathMatchesRegisteredSource() throws Exception
+    {
+        File canonicalFile = new File( "src/test/resources/watched/firstcfg.cfg" );
+
+        Hashtable<String, Object> props = new Hashtable<>();
+        props.put( DirectoryWatcher.FILENAME, canonicalFile.getAbsoluteFile().toURI().toString() );
+
+        mockConfiguration.delete();
+        EasyMock.expect(mockConfiguration.getPid()).andReturn("firstcfg");
+        EasyMock.expect(mockBundleContext.getBundle()).andReturn(mockBundle).anyTimes();
+        EasyMock.expect(mockBundle.loadClass(ConfigurationAttribute.class.getName())).andReturn((Class)ConfigurationAttribute.class).anyTimes();
+        EasyMock.expect(mockBundleContext.getProperty((String) EasyMock.anyObject()))
+            .andReturn(null)
+            .anyTimes();
+        EasyMock.expect(mockConfigurationAdmin.listConfigurations((String) EasyMock.anyObject()))
+            .andReturn(null);
+        EasyMock.expect(mockConfigurationAdmin.getConfiguration("firstcfg", "?"))
+            .andReturn(mockConfiguration);
+        EasyMock.expect(mockConfiguration.getProperties()).andReturn(props);
+        EasyMock.replay(mockConfiguration, mockConfigurationAdmin, mockBundleContext, mockBundle);
+
+        ConfigInstaller ci = new ConfigInstaller( mockBundleContext, mockConfigurationAdmin, new FileInstall() );
+
+        assertTrue( ci.deleteConfig( canonicalFile ) );
+
+        EasyMock.verify(mockConfiguration, mockConfigurationAdmin, mockBundleContext);
+    }
+
+    // Verify that setConfig() skips the update when the file being set is a duplicate
+    // (different path) from the registered live configuration.
+    public void testSetConfigSkipsWhenPathDiffersFromRegisteredSource() throws Exception
+    {
+        File canonicalFile = new File( "src/test/resources/watched/firstcfg.cfg" );
+        File backupFile    = new File( "src/test/resources/watched/backup/firstcfg.cfg" );
+
+        Hashtable<String, Object> props = new Hashtable<>();
+        props.put( DirectoryWatcher.FILENAME, canonicalFile.getAbsoluteFile().toURI().toString() );
+
+        EasyMock.expect(mockBundleContext.getBundle()).andReturn(mockBundle).anyTimes();
+        EasyMock.expect(mockBundle.loadClass(ConfigurationAttribute.class.getName())).andReturn((Class)ConfigurationAttribute.class).anyTimes();
+        EasyMock.expect(mockBundleContext.getProperty((String) EasyMock.anyObject()))
+                .andReturn(null)
+                .anyTimes();
+        EasyMock.expect(mockConfigurationAdmin.listConfigurations((String) EasyMock.anyObject()))
+                .andReturn(null);
+        EasyMock.expect(mockConfigurationAdmin.getConfiguration("firstcfg", "?"))
+                .andReturn(mockConfiguration);
+        EasyMock.expect(mockConfiguration.getAttributes()).andReturn(Collections.emptySet()).anyTimes();
+        EasyMock.expect(mockConfiguration.getProperties()).andReturn(props);
+        EasyMock.replay(mockConfiguration, mockConfigurationAdmin, mockBundleContext, mockBundle);
+
+        ConfigInstaller ci = new ConfigInstaller( mockBundleContext, mockConfigurationAdmin, new FileInstall() );
+
+        assertFalse( ci.setConfig( backupFile ) );
+
+        EasyMock.verify(mockConfiguration, mockConfigurationAdmin, mockBundleContext);
+    }
+
+    // Verify that setConfig() proceeds normally when the file being set is the
+    // registered source of the live configuration.
+    public void testSetConfigProceedsWhenPathMatchesRegisteredSource() throws Exception
+    {
+        File canonicalFile = new File( "src/test/resources/watched/firstcfg.cfg" );
+
+        Hashtable<String, Object> props = new Hashtable<>();
+        props.put( DirectoryWatcher.FILENAME, canonicalFile.getAbsoluteFile().toURI().toString() );
+
+        EasyMock.expect(mockBundleContext.getBundle()).andReturn(mockBundle).anyTimes();
+        EasyMock.expect(mockBundle.loadClass(ConfigurationAttribute.class.getName())).andReturn((Class)ConfigurationAttribute.class).anyTimes();
+        EasyMock.expect(mockBundleContext.getProperty((String) EasyMock.anyObject()))
+            .andReturn(null)
+            .anyTimes();
+        EasyMock.expect(mockConfigurationAdmin.listConfigurations((String) EasyMock.anyObject()))
+            .andReturn(null);
+        EasyMock.expect(mockConfigurationAdmin.getConfiguration("firstcfg", "?"))
+            .andReturn(mockConfiguration);
+        EasyMock.expect(mockConfiguration.getProperties()).andReturn(props).anyTimes();
+        EasyMock.expect(mockConfiguration.getAttributes()).andReturn(Collections.emptySet()).times(2);
+        EasyMock.expect(mockConfiguration.getPid()).andReturn("firstcfg");
+        EasyMock.expect(mockConfiguration.updateIfDifferent((Dictionary<String, Object>) EasyMock.anyObject()))
+            .andReturn(true);
+        EasyMock.replay(mockConfiguration, mockConfigurationAdmin, mockBundleContext, mockBundle);
+
+        ConfigInstaller ci = new ConfigInstaller( mockBundleContext, mockConfigurationAdmin, new FileInstall() );
+
+        assertTrue( ci.setConfig( canonicalFile ) );
 
         EasyMock.verify(mockConfiguration, mockConfigurationAdmin, mockBundleContext);
     }
