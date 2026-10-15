@@ -44,6 +44,15 @@
         <maven.deploy.skip>true</maven.deploy.skip>
         <maven.install.skip>true</maven.install.skip>
         <maven.javadoc.skip>true</maven.javadoc.skip>
+        <!-- Sibling Felix bundles these integration tests run against. The gogo BOM
+             pins released versions, so without these the tests exercise none of the
+             code in this repository. Pinned to the latest release so the module also
+             builds on its own; CI overrides them with the versions built here.
+             See FELIX-6870. -->
+        <felix.gogo.command.version>1.1.2</felix.gogo.command.version>
+        <felix.gogo.shell.version>1.1.4</felix.gogo.shell.version>
+        <felix.gogo.runtime.version>1.1.4</felix.gogo.runtime.version>
+        <felix.framework.version>6.0.1</felix.framework.version>
     </properties>
 
     <dependencies>
@@ -54,18 +63,22 @@
         <dependency>
             <groupId>org.apache.felix</groupId>
             <artifactId>org.apache.felix.gogo.command</artifactId>
+            <version>${felix.gogo.command.version}</version>
         </dependency>
         <dependency>
             <groupId>org.apache.felix</groupId>
             <artifactId>org.apache.felix.gogo.shell</artifactId>
+            <version>${felix.gogo.shell.version}</version>
         </dependency>
         <dependency>
             <groupId>org.apache.felix</groupId>
             <artifactId>org.apache.felix.gogo.runtime</artifactId>
+            <version>${felix.gogo.runtime.version}</version>
         </dependency>
         <dependency>
             <groupId>org.apache.felix</groupId>
             <artifactId>org.apache.felix.framework</artifactId>
+            <version>${felix.framework.version}</version>
         </dependency>
     </dependencies>
 
