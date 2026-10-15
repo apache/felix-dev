@@ -289,7 +289,7 @@ public class DirectoryWatcherTest extends TestCase
 
         final String bundleFileName = "firstjar.jar";
         final File bundleFile = new File(watchedDirectoryPath,bundleFileName);
-        final String bundleLocation = "file:"+watchedDirectoryPath+'/'+bundleFileName;
+        final String bundleLocation = new File(watchedDirectoryFile, bundleFileName).toURI().toString();
 
         // break execution
         final Scanner scanner = new Scanner(watchedDirectoryFile)
@@ -341,7 +341,7 @@ public class DirectoryWatcherTest extends TestCase
 
         final String bundleFileName = "firstjar.jar";
         final File bundleFile = new File(watchedDirectoryPath,bundleFileName);
-        final String bundleLocation = "blueprint:file:"+watchedDirectoryPath+'/'+bundleFileName+"$Bundle-SymbolicName=foo&Bundle-Version=1.0";
+        final String bundleLocation = "blueprint:" + new File(watchedDirectoryFile, bundleFileName).toURI().toString() + "$Bundle-SymbolicName=foo&Bundle-Version=1.0";
 
         // break execution
         Scanner scanner = new Scanner(watchedDirectoryFile)
@@ -390,7 +390,7 @@ public class DirectoryWatcherTest extends TestCase
 
         final String bundleFileName = "firstjar.jar";
         final File bundleFile = new File(watchedDirectoryPath,bundleFileName);
-        final String bundleLocation = "blueprint:file:"+watchedDirectoryPath+'/'+bundleFileName;
+        final String bundleLocation = "blueprint:" + new File(watchedDirectoryFile, bundleFileName).toURI().toString();
 
         final Scanner scanner = new Scanner(watchedDirectoryFile)
         {
