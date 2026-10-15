@@ -93,6 +93,15 @@ public class ResourceImpl implements Resource {
         resetHash();
     }
 
+    /**
+     * {@inheritDoc}
+     * <p>
+     * Implementation note: contrary to the {@link Resource} contract, for a
+     * {@code null} namespace this returns the live internal list instead of an
+     * unmodifiable one, to avoid allocating a new list on each call. Callers must
+     * not modify it. To add capabilities, use {@link #addCapability} or
+     * {@link #addCapabilities}, which also invalidate the cached hash code
+     */
     public List<Capability> getCapabilities(String namespace) {
         List<Capability> result = caps;
         if (namespace != null) {
@@ -106,6 +115,15 @@ public class ResourceImpl implements Resource {
         return result;
     }
 
+    /**
+     * {@inheritDoc}
+     * <p>
+     * Implementation note: contrary to the {@link Resource} contract, for a
+     * {@code null} namespace this returns the live internal list instead of an
+     * unmodifiable one, to avoid allocating a new list on each call. Callers must
+     * not modify it. To add requirements, use {@link #addRequirement} or
+     * {@link #addRequirements}, which also invalidate the cached hash code
+     */
     public List<Requirement> getRequirements(String namespace) {
         List<Requirement> result = reqs;
         if (namespace != null) {
