@@ -33,10 +33,8 @@ import org.codehaus.mojo.animal_sniffer.IgnoreJRERequirement;
 import org.osgi.framework.Bundle;
 import org.osgi.framework.BundleException;
 import org.osgi.framework.BundleReference;
-import org.osgi.framework.CapabilityPermission;
 import org.osgi.framework.Constants;
 import org.osgi.framework.FrameworkEvent;
-import org.osgi.framework.PackagePermission;
 import org.osgi.framework.ServiceReference;
 import org.osgi.framework.hooks.weaving.WeavingException;
 import org.osgi.framework.hooks.weaving.WeavingHook;
@@ -56,10 +54,6 @@ import org.osgi.service.resolver.ResolutionException;
 import java.io.IOException;
 import java.lang.reflect.Constructor;
 import java.net.URL;
-import java.security.AccessController;
-import java.security.PrivilegedAction;
-import java.security.PrivilegedActionException;
-import java.security.PrivilegedExceptionAction;
 import java.security.SecureClassLoader;
 import java.util.ArrayList;
 import java.util.Collection;
@@ -387,37 +381,6 @@ public class BundleWiringImpl implements BundleWiring
             }
         }
 
-        if (System.getSecurityManager() != null)
-        {
-            for (Iterator<BundleCapability> iter = capList.iterator(); iter.hasNext();)
-            {
-                BundleCapability cap = iter.next();
-                String bundleNamespace = cap.getNamespace();
-                if (bundleNamespace.isEmpty())
-                {
-                    iter.remove();
-                }
-                else if (bundleNamespace.equals(BundleRevision.PACKAGE_NAMESPACE))
-                {
-                    if (!((BundleProtectionDomain) ((BundleRevisionImpl) cap.getRevision()).getProtectionDomain()).impliesDirect(
-                            new PackagePermission((String) cap.getAttributes().get(BundleRevision.PACKAGE_NAMESPACE), PackagePermission.EXPORTONLY)))
-                    {
-                        iter.remove();
-                    }
-                }
-                else if (!bundleNamespace.equals(BundleRevision.HOST_NAMESPACE)
-                    && !bundleNamespace.equals(BundleRevision.BUNDLE_NAMESPACE)
-                    && !bundleNamespace.equals("osgi.ee"))
-                {
-                    CapabilityPermission permission = new CapabilityPermission(bundleNamespace, CapabilityPermission.PROVIDE);
-                    if (!((BundleProtectionDomain) ((BundleRevisionImpl) cap.getRevision()).getProtectionDomain()).impliesDirect(permission))
-                    {
-                        iter.remove();
-                    }
-                }
-            }
-        }
-
         m_resolvedCaps = Util.newImmutableList(capList);
         m_includedPkgFilters = (includedPkgFilters.isEmpty())
                 ? Collections.emptyMap() : includedPkgFilters;
@@ -740,16 +703,7 @@ public class BundleWiringImpl implements BundleWiring
 
             if (m_classLoader == null)
             {
-                m_classLoader = BundleRevisionImpl.getSecureAction().run(
-                    new PrivilegedAction<BundleClassLoader>()
-                    {
-                        @Override
-                        public BundleClassLoader run()
-                        {
-                            return new BundleClassLoader(BundleWiringImpl.this, determineParentClassLoader(), m_logger);
-                        }
-                    }
-                );
+                m_classLoader = new BundleClassLoader(BundleWiringImpl.this, determineParentClassLoader(), m_logger);
             }
         }
         return m_classLoader;
@@ -1714,38 +1668,7 @@ public class BundleWiringImpl implements BundleWiring
 
             // Get the class context to see the classes on the stack.
             final Class<?>[] classes = m_sm.getClassContext();
-            try
-            {
-                if (System.getSecurityManager() != null)
-                {
-                    return AccessController
-                        .doPrivileged(new PrivilegedExceptionAction()
-                        {
-                            @Override
-                            public Object run() throws Exception
-                            {
-                                return doImplicitBootDelegation(classes, name,
-                                        isClass);
-                            }
-                        });
-                }
-                else
-                {
-                    return doImplicitBootDelegation(classes, name, isClass);
-                }
-            }
-            catch (PrivilegedActionException ex)
-            {
-                Exception cause = ex.getException();
-                if (cause instanceof ClassNotFoundException)
-                {
-                    throw (ClassNotFoundException) cause;
-                }
-                else
-                {
-                    throw (ResourceNotFoundException) cause;
-                }
-            }
+            return doImplicitBootDelegation(classes, name, isClass);
         }
         return null;
     }

@@ -2,6 +2,32 @@
 
 The **Apache Felix** project is a collection of semi-related **OSGi** sub-projects that build and release individually.
 
+## Java support
+
+Sub-projects build and release individually and each declares its own minimum Java
+version, so there is no single repository-wide baseline. The CI build
+(`.github/workflows/maven-ci.yml`) compiles and tests the covered sub-projects on
+**Java 17, 21, 23 and 25**.
+
+### Security Manager
+
+The **Apache Felix Framework** no longer supports the OSGi security layer. Java SE 24
+permanently disabled the Security Manager
+([JEP 486](https://openjdk.org/jeps/486)), so permission checks can no longer be
+enforced and `System.setSecurityManager` throws. Accordingly:
+
+- Launching the framework with the `org.osgi.framework.security` property now fails
+  with a `SecurityException` rather than silently starting without the requested
+  security.
+- `Bundle.hasPermission(...)` returns `true` unless a `SecurityProvider` is installed.
+- The OSGi permission API (`AdminPermission`, `ServicePermission`, `PackagePermission`,
+  and friends) is still exported, so bundles referring to those types keep compiling
+  and resolving.
+- The `org.apache.felix.framework.security` sub-project has been removed.
+
+If you need the security layer, stay on a release that predates this change and run it
+on Java 21 or earlier.
+
 ## Felix Framework
 
 The flagship project is the **Apache Felix Framework** which implements the [**OSGi Core R7**](https://osgi.org/specification/osgi.core/7.0.0/) specification. The `/framework` directory contains the source and build tree for the **OSGi**-compliant
