@@ -41,6 +41,14 @@ public interface ClassPathExtenderFactory
         private static final Method m_addURL;
         private final ClassLoader m_loader;
 
+        // These are only looked up here, not made accessible. Looking a method up
+        // needs no access, while setAccessible on a java.base member does, and on a
+        // JVM where the package is not open that is served by defining an accessor
+        // inside java.base with sun.misc.Unsafe -- which JDK 25 reports as a
+        // terminally deprecated call. Since this runs whenever a framework instance
+        // is created, doing it here made every start pay for it, and print that
+        // warning, even when no extension bundle is ever installed. The access is
+        // requested in add(File) instead, at the point it is actually used.
         static
         {
             ClassLoader app = ClassLoader.getSystemClassLoader();
@@ -52,7 +60,6 @@ public interface ClassPathExtenderFactory
                 try
                 {
                     append = app.getClass().getDeclaredMethod("appendToClassPathForInstrumentation", String.class);
-                    new SecureAction().setAccesssible(append);
                     break;
                 }
                 catch (Throwable e)
@@ -76,7 +83,6 @@ public interface ClassPathExtenderFactory
             try
             {
                 addURL = URLClassLoader.class.getDeclaredMethod("addURL", URL.class);
-                new SecureAction().setAccesssible(addURL);
             }
             catch (Throwable e)
             {
@@ -128,6 +134,7 @@ public interface ClassPathExtenderFactory
                 loader = m_loader;
                 synchronized (m_loader)
                 {
+                    new SecureAction().setAccesssible(m_addURL);
                     m_addURL.invoke(m_loader, file.getCanonicalFile().toURI().toURL());
                 }
             }
@@ -136,6 +143,7 @@ public interface ClassPathExtenderFactory
                 loader = m_app;
                 synchronized (m_app)
                 {
+                    new SecureAction().setAccesssible(m_append);
                     m_append.invoke(m_app, file.getCanonicalFile().getPath());
                 }
             }
