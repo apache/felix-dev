@@ -35,6 +35,7 @@ import org.apache.felix.scr.impl.metadata.ReferenceMetadata;
 import org.apache.felix.scr.impl.metadata.ServiceMetadata;
 import org.osgi.framework.Bundle;
 import org.osgi.framework.ServiceReference;
+import org.osgi.service.component.ComponentConstants;
 import org.xml.sax.Attributes;
 import org.xml.sax.SAXException;
 import org.xml.sax.helpers.DefaultHandler;
@@ -493,7 +494,7 @@ public class XmlHandler extends DefaultHandler
             boolean missingSatisfyingConditionRef = true;
             for (ReferenceMetadata ref : m_currentComponent.getDependencies())
             {
-                if (ReferenceMetadata.REFERENCE_NAME_SATISFYING_CONDITION.equals(
+                if (ComponentConstants.REFERENCE_NAME_SATISFYING_CONDITION.equals(
                     ref.getName()))
                 {
                     missingSatisfyingConditionRef = false;
@@ -504,7 +505,7 @@ public class XmlHandler extends DefaultHandler
             {
                 ReferenceMetadata trueReference = new ReferenceMetadata();
                 trueReference.setName(
-                    ReferenceMetadata.REFERENCE_NAME_SATISFYING_CONDITION);
+                    ComponentConstants.REFERENCE_NAME_SATISFYING_CONDITION);
                 trueReference.setTarget(ReferenceMetadata.CONDITION_TRUE_FILTER);
                 trueReference.setInterface(ReferenceMetadata.CONDITION_SERVICE_CLASS);
                 trueReference.setPolicy(ReferenceMetadata.POLICY_DYNAMIC);
@@ -515,7 +516,7 @@ public class XmlHandler extends DefaultHandler
                 // condition targets via the osgi.ds.satisfying.condition.target property.
                 PropertyMetadata prop = new PropertyMetadata(true);
                 prop.setName(
-                    ReferenceMetadata.REFERENCE_NAME_SATISFYING_CONDITION + ".target");
+                    ComponentConstants.REFERENCE_NAME_SATISFYING_CONDITION + ".target");
                 prop.setValue(ReferenceMetadata.CONDITION_TRUE_FILTER);
                 m_currentComponent.addProperty(prop);
             }
