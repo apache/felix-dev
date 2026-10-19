@@ -27,8 +27,6 @@ import java.util.ListIterator;
 
 import org.apache.felix.framework.util.Util;
 import org.apache.felix.framework.util.manifestparser.ManifestParser;
-import org.osgi.framework.AdminPermission;
-import org.osgi.framework.PackagePermission;
 import org.osgi.framework.hooks.weaving.WovenClass;
 import org.osgi.framework.wiring.BundleWiring;
 
@@ -71,12 +69,6 @@ class WovenClassImpl implements WovenClass, List<String>
     @Override
 	public synchronized byte[] getBytes()
     {
-        SecurityManager sm = System.getSecurityManager();
-        if (sm != null)
-        {
-            sm.checkPermission(new AdminPermission(m_wiring.getBundle(),
-                    AdminPermission.WEAVE));
-        }
         byte[] bytes = m_bytes;
         if (m_isComplete)
         {
@@ -89,12 +81,6 @@ class WovenClassImpl implements WovenClass, List<String>
     @Override
 	public synchronized void setBytes(byte[] bytes)
     {
-        SecurityManager sm = System.getSecurityManager();
-        if (sm != null)
-        {
-            sm.checkPermission(new AdminPermission(m_wiring.getBundle(),
-                    AdminPermission.WEAVE));
-        }
         if (m_state >= TRANSFORMED)
         {
             throw new IllegalStateException(
@@ -193,12 +179,6 @@ class WovenClassImpl implements WovenClass, List<String>
     @Override
 	public synchronized boolean add(String s)
     {
-        SecurityManager sm = System.getSecurityManager();
-        if (sm != null)
-        {
-            sm.checkPermission(new AdminPermission(m_wiring.getBundle(),
-                    AdminPermission.WEAVE));
-        }
         if (s != null)
         {
             try
@@ -210,31 +190,14 @@ class WovenClassImpl implements WovenClass, List<String>
                 throw new IllegalArgumentException(
                         "Unable to parse dynamic import.", ex);
             }
-            checkImport(s);
             return m_imports.add(s);
         }
         return false;
     }
 
-    private void checkImport(String s)
-    {
-        SecurityManager sm = System.getSecurityManager();
-
-        if (sm != null)
-        {
-            sm.checkPermission(new PackagePermission(s, PackagePermission.IMPORT));
-        }
-    }
-
     @Override
 	public synchronized boolean remove(Object o)
     {
-        SecurityManager sm = System.getSecurityManager();
-        if (sm != null)
-        {
-            sm.checkPermission(new AdminPermission(m_wiring.getBundle(),
-                    AdminPermission.WEAVE));
-        }
         return m_imports.remove(o);
     }
 
@@ -247,12 +210,6 @@ class WovenClassImpl implements WovenClass, List<String>
     @Override
 	public synchronized boolean addAll(Collection<? extends String> collection)
     {
-        SecurityManager sm = System.getSecurityManager();
-        if (sm != null)
-        {
-            sm.checkPermission(new AdminPermission(m_wiring.getBundle(),
-                    AdminPermission.WEAVE));
-        }
         for (String s : collection)
         {
             try
@@ -264,7 +221,6 @@ class WovenClassImpl implements WovenClass, List<String>
                 throw new IllegalArgumentException(
                         "Unable to parse dynamic import.", ex);
             }
-            checkImport(s);
         }
         return m_imports.addAll(collection);
     }
@@ -273,12 +229,6 @@ class WovenClassImpl implements WovenClass, List<String>
 	public synchronized boolean addAll(int i,
             Collection<? extends String> collection)
     {
-        SecurityManager sm = System.getSecurityManager();
-        if (sm != null)
-        {
-            sm.checkPermission(new AdminPermission(m_wiring.getBundle(),
-                    AdminPermission.WEAVE));
-        }
         for (String s : collection)
         {
             try
@@ -290,7 +240,6 @@ class WovenClassImpl implements WovenClass, List<String>
                 throw new IllegalArgumentException(
                         "Unable to parse dynamic import.", ex);
             }
-            checkImport(s);
         }
         return m_imports.addAll(i, collection);
     }
@@ -298,36 +247,18 @@ class WovenClassImpl implements WovenClass, List<String>
     @Override
 	public synchronized boolean removeAll(Collection<?> collection)
     {
-        SecurityManager sm = System.getSecurityManager();
-        if (sm != null)
-        {
-            sm.checkPermission(new AdminPermission(m_wiring.getBundle(),
-                    AdminPermission.WEAVE));
-        }
         return m_imports.removeAll(collection);
     }
 
     @Override
 	public synchronized boolean retainAll(Collection<?> collection)
     {
-        SecurityManager sm = System.getSecurityManager();
-        if (sm != null)
-        {
-            sm.checkPermission(new AdminPermission(m_wiring.getBundle(),
-                    AdminPermission.WEAVE));
-        }
         return m_imports.retainAll(collection);
     }
 
     @Override
 	public synchronized void clear()
     {
-        SecurityManager sm = System.getSecurityManager();
-        if (sm != null)
-        {
-            sm.checkPermission(new AdminPermission(m_wiring.getBundle(),
-                    AdminPermission.WEAVE));
-        }
         m_imports.clear();
     }
 
@@ -340,12 +271,6 @@ class WovenClassImpl implements WovenClass, List<String>
     @Override
 	public synchronized String set(int i, String s)
     {
-        SecurityManager sm = System.getSecurityManager();
-        if (sm != null)
-        {
-            sm.checkPermission(new AdminPermission(m_wiring.getBundle(),
-                    AdminPermission.WEAVE));
-        }
         try
         {
             ManifestParser
@@ -355,19 +280,12 @@ class WovenClassImpl implements WovenClass, List<String>
             throw new IllegalArgumentException(
                     "Unable to parse dynamic import.", ex);
         }
-        checkImport(s);
         return m_imports.set(i, s);
     }
 
     @Override
 	public synchronized void add(int i, String s)
     {
-        SecurityManager sm = System.getSecurityManager();
-        if (sm != null)
-        {
-            sm.checkPermission(new AdminPermission(m_wiring.getBundle(),
-                    AdminPermission.WEAVE));
-        }
         try
         {
             ManifestParser
@@ -378,19 +296,12 @@ class WovenClassImpl implements WovenClass, List<String>
             throw new IllegalArgumentException(
                     "Unable to parse dynamic import.", ex);
         }
-        checkImport(s);
         m_imports.add(i, s);
     }
 
     @Override
 	public synchronized String remove(int i)
     {
-        SecurityManager sm = System.getSecurityManager();
-        if (sm != null)
-        {
-            sm.checkPermission(new AdminPermission(m_wiring.getBundle(),
-                    AdminPermission.WEAVE));
-        }
         return m_imports.remove(i);
     }
 
