@@ -2135,14 +2135,14 @@ public class BundleWiringImpl implements BundleWiring
 
             Thread me = Thread.currentThread();
 
-            while (clazz == null && m_classLocks.putIfAbsent(name, me) != me)
+            try
             {
-                clazz = findLoadedClass(name);
-            }
+                while (clazz == null && m_classLocks.putIfAbsent(name, me) != me)
+                {
+                    clazz = findLoadedClass(name);
+                }
 
-            if (clazz == null)
-            {
-                try
+                if (clazz == null)
                 {
                     clazz = findLoadedClass(name);
                     if (clazz == null)
@@ -2151,10 +2151,12 @@ public class BundleWiringImpl implements BundleWiring
                             bytes, content, pkgName);
                     }
                 }
-                finally
-                {
-                    m_classLocks.remove(name);
-                }
+            }
+            finally
+            {
+                // The lock is taken in the loop condition, so this thread may hold it on any exit
+                // path, also when another thread defined the class first. Only release our own lock.
+                m_classLocks.remove(name, me);
             }
             return clazz;
         }
