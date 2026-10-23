@@ -106,7 +106,14 @@ public class JsonSupport {
                 }
                 return objArray;
             }
-            return array.toString();
+            final String[] stringArray = new String[array.size()];
+            for (int i = 0; i < array.size(); i++) {
+                final JsonValue arrayValue = array.get(i);
+                stringArray[i] = arrayValue.getValueType() == ValueType.STRING
+                        ? ((JsonString) arrayValue).getString()
+                        : arrayValue.toString();
+            }
+            return stringArray;
 
         // type OBJECT -> return map
         default:
