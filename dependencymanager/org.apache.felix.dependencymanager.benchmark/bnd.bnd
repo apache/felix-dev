@@ -19,8 +19,8 @@ javac.target:          11
 Bundle-Version: 1.0.0
 -buildpath: \
 	org.apache.felix.dependencymanager;version=latest,\
-	osgi.core;version=6.0,\
-	osgi.cmpn;version=6.0
+	osgi.core;version=8.0,\
+	osgi.cmpn;version=7.0
 
 -sub:  \
 	*.bnd

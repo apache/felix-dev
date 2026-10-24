@@ -18,9 +18,9 @@
 	${mockito},\
 	org.apache.felix.dependencymanager;version=latest,\
 	${junit},\
-	osgi.core;version=6.0,\
-	osgi.cmpn;version=6.0,\
-	org.apache.felix.gogo.runtime;version=1.0
+	osgi.core;version=8.0,\
+	osgi.cmpn;version=7.0,\
+	org.apache.felix.gogo.runtime;version=latest
 Private-Package: \
 	org.apache.felix.dm.shell
 Bundle-Activator:org.apache.felix.dm.shell.Activator
@@ -34,4 +34,4 @@ Bundle-Vendor: The Apache Software Foundation
 -testpath: \
 	${junit},\
 	${mockito},\
-	org.objenesis;version=2.2
+	org.objenesis;version=3.3

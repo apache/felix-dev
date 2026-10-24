@@ -282,6 +282,18 @@ public class MultiPropertyFilterIndexReferencedTest {
 		}
 
 		@Override
+		@SuppressWarnings("rawtypes")
+		public java.util.Dictionary getProperties() {
+			return null;
+		}
+
+		@Override
+		@SuppressWarnings("rawtypes")
+		public Object adapt(Class type) {
+			return null;
+		}
+
+		@Override
 		public Bundle[] getUsingBundles() {
 			return null;
 		}
