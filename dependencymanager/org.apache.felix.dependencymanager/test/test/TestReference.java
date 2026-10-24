@@ -69,14 +69,12 @@ class TestReference implements ServiceReference {
 		return null;
 	}
 
-	@Override
-	@SuppressWarnings("rawtypes")
+		@SuppressWarnings("rawtypes")
 	public java.util.Dictionary getProperties() {
 		return null;
 	}
 
-	@Override
-	@SuppressWarnings("rawtypes")
+		@SuppressWarnings("rawtypes")
 	public Object adapt(Class type) {
 		return null;
 	}

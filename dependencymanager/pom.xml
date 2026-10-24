@@ -1,0 +1,142 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!--
+ Licensed to the Apache Software Foundation (ASF) under one
+ or more contributor license agreements.  See the NOTICE file
+ distributed with this work for additional information
+ regarding copyright ownership.  The ASF licenses this file
+ to you under the Apache License, Version 2.0 (the
+ "License"); you may not use this file except in compliance
+ with the License.  You may obtain a copy of the License at
+
+    http://www.apache.org/licenses/LICENSE-2.0
+
+ Unless required by applicable law or agreed to in writing,
+ software distributed under the License is distributed on an
+ "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
+ KIND, either express or implied.  See the License for the
+ specific language governing permissions and limitations
+ under the License.
+-->
+<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/maven-v4_0_0.xsd">
+    <modelVersion>4.0.0</modelVersion>
+
+    <parent>
+        <groupId>org.apache.felix</groupId>
+        <artifactId>felix-parent</artifactId>
+        <version>9</version>
+        <relativePath />
+    </parent>
+
+    <artifactId>dependencymanager-parent</artifactId>
+    <version>1.0.0-SNAPSHOT</version>
+    <packaging>pom</packaging>
+
+    <name>Apache Felix Dependency Manager</name>
+    <description>Apache Felix Dependency Manager Subproject</description>
+    <url>https://felix.apache.org/</url>
+
+    <scm>
+        <connection>scm:git:https://github.com/apache/felix-dev.git</connection>
+        <developerConnection>scm:git:https://github.com/apache/felix-dev.git</developerConnection>
+        <url>https://gitbox.apache.org/repos/asf?p=felix-dev.git;f=dependencymanager</url>
+        <tag>HEAD</tag>
+    </scm>
+
+    <modules>
+        <module>org.apache.felix.dependencymanager</module>
+        <module>org.apache.felix.dependencymanager.annotation</module>
+        <module>org.apache.felix.dependencymanager.runtime</module>
+        <module>org.apache.felix.dependencymanager.shell</module>
+        <module>org.apache.felix.dependencymanager.lambda</module>
+    </modules>
+
+    <properties>
+        <felix.java.version>11</felix.java.version>
+        <project.build.outputTimestamp>2026-10-24T00:00:00Z</project.build.outputTimestamp>
+        <!-- compile against the OSGi R6 API, the lowest one supported, so the imports stay as they were in r16 -->
+        <osgi.core.version>6.0.0</osgi.core.version>
+        <osgi.cmpn.version>6.0.0</osgi.cmpn.version>
+        <osgi.annotation.version>6.0.1</osgi.annotation.version>
+        <junit.version>4.13.2</junit.version>
+        <mockito.version>5.24.0</mockito.version>
+        <bnd.version>7.4.0</bnd.version>
+        <dependencymanager.version>5.0.0-SNAPSHOT</dependencymanager.version>
+        <gogo.runtime.version>1.2.0-SNAPSHOT</gogo.runtime.version>
+    </properties>
+
+    <dependencyManagement>
+        <dependencies>
+            <dependency>
+                <groupId>org.osgi</groupId>
+                <artifactId>osgi.core</artifactId>
+                <version>${osgi.core.version}</version>
+                <scope>provided</scope>
+            </dependency>
+            <dependency>
+                <groupId>org.osgi</groupId>
+                <artifactId>osgi.cmpn</artifactId>
+                <version>${osgi.cmpn.version}</version>
+                <scope>provided</scope>
+            </dependency>
+            <dependency>
+                <groupId>org.osgi</groupId>
+                <artifactId>osgi.annotation</artifactId>
+                <version>${osgi.annotation.version}</version>
+                <scope>provided</scope>
+            </dependency>
+            <dependency>
+                <groupId>junit</groupId>
+                <artifactId>junit</artifactId>
+                <version>${junit.version}</version>
+                <scope>test</scope>
+            </dependency>
+            <dependency>
+                <groupId>org.mockito</groupId>
+                <artifactId>mockito-core</artifactId>
+                <version>${mockito.version}</version>
+                <scope>test</scope>
+            </dependency>
+        </dependencies>
+    </dependencyManagement>
+
+    <build>
+        <pluginManagement>
+            <plugins>
+                <plugin>
+                    <groupId>org.apache.rat</groupId>
+                    <artifactId>apache-rat-plugin</artifactId>
+                    <configuration>
+                        <excludes combine.children="append">
+                            <!-- one line files holding the version of a package -->
+                            <exclude>**/packageinfo</exclude>
+                        </excludes>
+                    </configuration>
+                </plugin>
+                <plugin>
+                    <groupId>org.apache.felix</groupId>
+                    <artifactId>maven-bundle-plugin</artifactId>
+                    <version>6.0.2</version>
+                    <extensions>true</extensions>
+                    <configuration>
+                        <instructions>
+                            <Bundle-SymbolicName>${project.artifactId}</Bundle-SymbolicName>
+                            <Bundle-Vendor>The Apache Software Foundation</Bundle-Vendor>
+                            <Bundle-Category>osgi</Bundle-Category>
+                            <Bundle-License>https://www.apache.org/licenses/LICENSE-2.0.txt</Bundle-License>
+                            <_reproducible>true</_reproducible>
+                            <_removeheaders>Bnd-LastModified,Tool,Created-By</_removeheaders>
+                        </instructions>
+                    </configuration>
+                    <executions>
+                        <execution>
+                            <id>baseline</id>
+                            <goals>
+                                <goal>baseline</goal>
+                            </goals>
+                        </execution>
+                    </executions>
+                </plugin>
+            </plugins>
+        </pluginManagement>
+    </build>
+</project>

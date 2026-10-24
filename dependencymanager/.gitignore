@@ -9,3 +9,5 @@
 /build/
 /cnf/localrepo/
 /cnf/releaserepo/
+/target/
+**/target/
