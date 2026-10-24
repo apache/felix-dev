@@ -23,6 +23,7 @@ on:
       - 'log.extension/**'
       - 'examples/**'
       - 'configadmin/**'
+      - 'dependencymanager/**'
   pull_request:
     branches: [ "master", "feature/**", "maintenance/**" ]
     paths:
@@ -45,6 +46,7 @@ on:
       - 'log.extension/**'
       - 'examples/**'
       - 'configadmin/**'
+      - 'dependencymanager/**'
 
 # Cancel superseded runs when a branch is pushed again. github.head_ref is only set
 # for pull_request events, so pushes to master fall back to the unique run_id and are
@@ -117,6 +119,8 @@ jobs:
             - 'log.extension/**'
           examples:
             - 'examples/**'
+          dependencymanager:
+            - 'dependencymanager/**'
 
     - name: Felix Configuration JSON
       if: steps.changes.outputs.cm-json == 'true' || steps.changes.outputs.configurator == 'true'
@@ -134,7 +138,7 @@ jobs:
     # Also runs when only http changed, so those tests always exercise the framework
     # in this repository rather than the last release. See FELIX-6869.
     - name: Felix Framework
-      if: steps.changes.outputs.framework == 'true' || steps.changes.outputs.http == 'true'
+      if: steps.changes.outputs.framework == 'true' || steps.changes.outputs.http == 'true' || steps.changes.outputs.dependencymanager == 'true'
       run: mvn -B -V -Dstyle.color=always --file framework/pom.xml clean install
     - name: Felix HTTP
       if: steps.changes.outputs.http == 'true'
@@ -158,8 +162,8 @@ jobs:
       if: steps.changes.outputs.main == 'true'
       run: mvn -B -V -Dstyle.color=always --file main/pom.xml clean verify
     - name: Felix Gogo Shell
-      if: steps.changes.outputs.gogo == 'true'
-      run: mvn -B -V -Dstyle.color=always --file gogo/pom.xml clean verify
+      if: steps.changes.outputs.gogo == 'true' || steps.changes.outputs.dependencymanager == 'true'
+      run: mvn -B -V -Dstyle.color=always --file gogo/pom.xml clean install
     - name: Felix utils
       if: steps.changes.outputs.utils == 'true'
       run: mvn -B -V -Dstyle.color=always --file utils/pom.xml clean verify
@@ -179,8 +183,19 @@ jobs:
       if: steps.changes.outputs.examples == 'true'
       run: mvn -B -V -Dstyle.color=always --file examples/pom.xml clean verify
     - name: Felix Config Admin
-      if: steps.changes.outputs.configadmin == 'true'
-      run: mvn -B -V -Dstyle.color=always --file configadmin/pom.xml clean verify
+      if: steps.changes.outputs.configadmin == 'true' || steps.changes.outputs.dependencymanager == 'true'
+      run: mvn -B -V -Dstyle.color=always --file configadmin/pom.xml clean install
+    # The Dependency Manager is built with Gradle and bnd rather than Maven. It runs last,
+    # on the framework, Gogo and Config Admin snapshots installed into the local Maven
+    # repository by the steps above.
+    - name: Felix Dependency Manager
+      if: steps.changes.outputs.dependencymanager == 'true'
+      working-directory: dependencymanager
+      run: |
+        # The annotation bundle is a bnd plugin used by the other projects. It has to exist
+        # before they are configured, so it is built in a separate Gradle invocation.
+        ./gradlew --no-daemon --console=plain org.apache.felix.dependencymanager.annotation:jar
+        ./gradlew --no-daemon --console=plain build
     - name: Upload Test Results
       if: always()
       uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
