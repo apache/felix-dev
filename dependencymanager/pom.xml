@@ -57,6 +57,9 @@
         <module>org.apache.felix.dependencymanager.lambda.itest.lifecycle</module>
         <module>org.apache.felix.dependencymanager.lambda.itest.tests</module>
         <module>org.apache.felix.dependencymanager.runtime.itest</module>
+        <module>org.apache.felix.dependencymanager.samples</module>
+        <module>org.apache.felix.dependencymanager.lambda.samples</module>
+        <module>org.apache.felix.dependencymanager.benchmark</module>
     </modules>
 
     <properties>
