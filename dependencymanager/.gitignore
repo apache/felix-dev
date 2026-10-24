@@ -6,3 +6,6 @@
 /RemoteSystemsTempFiles/
 /rat-report.xml
 
+/build/
+/cnf/localrepo/
+/cnf/releaserepo/

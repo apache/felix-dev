@@ -44,19 +44,14 @@ ext.svnReleasePath = "https://dist.apache.org/repos/dist/release/felix"
 apply plugin: 'java'
 apply from: file("rat.gradle")
 
-// Add bnd as a build dependency
-buildscript {
-    dependencies {
-        classpath files('cnf/gradle/biz.aQute.bnd.gradle.jar')
-    }
-}
-
 // Configure RAT plugin to ignore some files
 rat {
   excludes = [
     'rat-report.xml',
     '**/.git/**',
     '**/.gradle/**',
+    'build/**',
+    '**/.keepme',
     '**/.project',
     '**/.settings/**',
     '**/*.iml',
@@ -82,7 +77,7 @@ rat {
 
 // Setup the workspace
 Workspace workspace
-workspace = Workspace.getWorkspace(".")
+workspace = Workspace.getWorkspace(rootProject.projectDir)
 
 task makeStaging {
     doLast {
