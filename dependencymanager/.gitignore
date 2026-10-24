@@ -1,13 +1,4 @@
-/.gradle/
-/reports/
-/generated/
-/.metadata/
-/.recommenders/
-/RemoteSystemsTempFiles/
-/rat-report.xml
-
-/build/
-/cnf/localrepo/
-/cnf/releaserepo/
 /target/
 **/target/
+/generated/
+**/generated/

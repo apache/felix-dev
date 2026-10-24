@@ -198,17 +198,11 @@ jobs:
     - name: Felix examples
       if: steps.changes.outputs.examples == 'true'
       run: mvn -B -V -Dstyle.color=always --file examples/pom.xml clean verify
-    # The Dependency Manager is built with Gradle and bnd rather than Maven. It runs last,
-    # on the framework, Gogo and Config Admin snapshots installed into the local Maven
-    # repository by the steps above.
+    # The Dependency Manager runs last. Its integration tests run on the framework, Gogo and
+    # Config Admin built and installed by the steps above, see FELIX-6870.
     - name: Felix Dependency Manager
       if: steps.changes.outputs.dependencymanager == 'true'
-      working-directory: dependencymanager
-      run: |
-        # The annotation bundle is a bnd plugin used by the other projects. It has to exist
-        # before they are configured, so it is built in a separate Gradle invocation.
-        ./gradlew --no-daemon --console=plain org.apache.felix.dependencymanager.annotation:jar
-        ./gradlew --no-daemon --console=plain build
+      run: mvn -B -V -Dstyle.color=always --file dependencymanager/pom.xml clean verify "-Dframework.version=$FRAMEWORK_VERSION" "-Dconfigadmin.version=$CONFIGADMIN_VERSION" "-Dgogo.runtime.version=$GOGO_RUNTIME_VERSION" "-Dgogo.shell.version=$GOGO_SHELL_VERSION" "-Dgogo.command.version=$GOGO_COMMAND_VERSION"
     - name: Upload Test Results
       if: always()
       uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
@@ -219,4 +213,5 @@ jobs:
           ${{ github.workspace }}/**/target/surefire-reports/*.xml
           ${{ github.workspace }}/**/target/failsafe-reports/*.xml
           ${{ github.workspace }}/**/target/test-reports/tck/*.xml
+          ${{ github.workspace }}/dependencymanager/**/target/test-reports/test/*.xml
 

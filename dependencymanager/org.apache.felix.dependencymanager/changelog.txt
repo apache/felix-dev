@@ -1,3 +1,21 @@
+Release Notes - Felix - Version org.apache.felix.dependencymanager-5.0.0
+========================================================================
+
+** List of bundles being part of the release:
+    * org.apache.felix.dependencymanager; version=5.0.0
+    * org.apache.felix.dependencymanager.shell; version=5.0.0
+    * org.apache.felix.dependencymanager.runtime; version=5.0.0
+    * org.apache.felix.dependencymanager.annotation; version=6.0.0
+    * org.apache.felix.dependencymanager.lambda; version=2.0.0
+
+** Improvement
+   * [FELIX-6872] - Support current JDKs (up to Java 25) and build the Dependency Manager with Maven
+
+   The minimum Java version is now 11, which is why the bundles get a new major version.
+   The exported packages are unchanged compared with the previous release.
+   The bundles are still compiled against OSGi R6, so their imports have not changed.
+   The deprecated use of AccessController in the service tracker and in the runtime has been removed.
+
 Release Notes - Felix - Version org.apache.felix.dependencymanager-r16
 ======================================================================
 
