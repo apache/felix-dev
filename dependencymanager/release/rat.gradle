@@ -20,7 +20,8 @@
 import org.gradle.api.Plugin
 import org.gradle.api.Project
 import org.gradle.api.Task
-import org.gradle.api.internal.project.IsolatedAntBuilder
+import org.gradle.api.tasks.Input
+import org.gradle.api.tasks.Internal
 
 apply plugin: RatPlugin
 
@@ -28,20 +29,24 @@ class RatTask extends DefaultTask {
   @Input
   List<String> excludes
 
-  def reportPath = '.'
-  def xmlReport = reportPath + '/rat-report.xml'
+  // Directory which is checked, and the file the xml report is written to.
+  @Internal
+  File baseDir
 
-  def generateXmlReport(File reportDir) {
-    def antBuilder = services.get(IsolatedAntBuilder)
-    def ratClasspath = project.configurations.rat
-    antBuilder.withClasspath(ratClasspath).execute {
-      ant.taskdef(resource: 'org/apache/rat/anttasks/antlib.xml')
-      ant.report(format: 'xml', reportFile: xmlReport) {
-        fileset(dir: ".") {
-          patternset {
-            excludes.each {
-              exclude(name: it)
-            }
+  @Internal
+  File xmlReport
+
+  def generateXmlReport() {
+    xmlReport.parentFile.mkdirs()
+    def ratClasspath = project.configurations.rat.asPath
+    def ratExcludes = excludes
+    def checkedDir = baseDir
+    project.ant.taskdef(resource: 'org/apache/rat/anttasks/antlib.xml', classpath: ratClasspath)
+    project.ant.report(format: 'xml', reportFile: xmlReport.absolutePath) {
+      fileset(dir: checkedDir.absolutePath) {
+        patternset {
+          ratExcludes.each {
+            exclude(name: it)
           }
         }
       }
@@ -49,7 +54,7 @@ class RatTask extends DefaultTask {
   }
 
   def printUnknownFiles() {
-    def ratXml = new XmlParser().parse(xmlReport)
+    def ratXml = new groovy.xml.XmlParser().parse(xmlReport)
     ratXml.resource.each { resource ->
       if (resource.'license-approval'.@name[0] == "false") {
         println('Unknown license: ' + resource.@name)
@@ -59,11 +64,7 @@ class RatTask extends DefaultTask {
 
   @TaskAction
   def rat() {
-    File reportDir = new File(reportPath)
-    if (!reportDir.exists()) {
-      reportDir.mkdirs()
-    }
-    generateXmlReport(reportDir)
+    generateXmlReport()
     printUnknownFiles()
   }
 }
@@ -75,7 +76,10 @@ class RatPlugin implements Plugin<Project> {
     Task ratTask = project.task("rat",
         type: RatTask,
         group: 'Build',
-        description: 'Runs Apache Rat checks.')
+        description: 'Runs Apache Rat checks.') {
+      baseDir = project.rootProject.projectDir
+      xmlReport = new File(project.rootProject.projectDir, 'build/rat-report.xml')
+    }
     project.tasks[JavaBasePlugin.CHECK_TASK_NAME].dependsOn ratTask
   }
 
@@ -87,7 +91,7 @@ class RatPlugin implements Plugin<Project> {
       mavenCentral()
     }
     project.dependencies {
-      rat 'org.apache.rat:apache-rat-tasks:0.8'
+      rat 'org.apache.rat:apache-rat-tasks:0.16.1'
     }
   }
 }
