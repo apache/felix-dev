@@ -463,7 +463,13 @@ class StatefulResolver
                 }
                 else if (Util.isSingleton(br) && !isSelectedSingleton(br))
                 {
-                    throw new ResolveException("Singleton conflict.", br, null);
+                    BundleRevision conflictingRevision = findConflictingSingleton(br);
+                    throw new ResolveException(
+                        "Singleton conflict for Bundle-SymbolicName " + br.getSymbolicName()
+                            + ". Another bundle is already providing this singleton BSN: "
+                            + formatConflictingBundle(conflictingRevision) + ".",
+                        br,
+                        null);
                 }
             }
             for (Iterator<BundleRevision> it = optional.iterator(); it.hasNext(); )
@@ -1428,6 +1434,42 @@ class StatefulResolver
     private synchronized boolean isSelectedSingleton(BundleRevision br)
     {
         return m_selectedSingletons.contains(br);
+    }
+
+    private synchronized BundleRevision findConflictingSingleton(BundleRevision br)
+    {
+        List<BundleRevision> singletons = m_singletons.get(br.getSymbolicName());
+        if (singletons == null)
+        {
+            return null;
+        }
+
+        for (BundleRevision singleton : singletons)
+        {
+            if ((singleton != br)
+                && ((singleton.getWiring() != null) || m_selectedSingletons.contains(singleton)))
+            {
+                return singleton;
+            }
+        }
+
+        return null;
+    }
+
+    private static String formatConflictingBundle(BundleRevision conflictingRevision)
+    {
+        if (conflictingRevision == null)
+        {
+            return "?";
+        }
+
+        Bundle conflictingBundle = conflictingRevision.getBundle();
+        String details = "[id=" + conflictingBundle.getBundleId() + "]";
+        if (conflictingBundle.getState() == Bundle.UNINSTALLED)
+        {
+            details += ". This bundle is already uninstalled. Call refreshPackages() to remove it from the framework.";
+        }
+        return details;
     }
 
     private synchronized void selectSingletons(ResolverHookRecord record)
