@@ -386,6 +386,14 @@ public class BundleRevisionImpl implements BundleRevision, Resource
         {
             return m_contentPath;
         }
+        // A closed revision has no content, but a class loader of its
+        // wiring may still look up resources concurrently. Don't cache
+        // the empty path, since a refresh can reopen this revision with
+        // resetContent().
+        if (m_content == null)
+        {
+            return Collections.emptyList();
+        }
         List<Content> contentList = new ArrayList<>();
         calculateContentPath(this, getContent(), contentList, true);
 
