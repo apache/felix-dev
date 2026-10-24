@@ -21,10 +21,10 @@ package org.apache.felix.dm.itest.api;
 import java.io.IOException;
 import java.util.Dictionary;
 import java.util.Properties;
+import java.util.function.BooleanSupplier;
 
 import org.apache.felix.dm.Component;
 import org.apache.felix.dm.DependencyManager;
-import org.apache.felix.dm.itest.util.Ensure;
 import org.apache.felix.dm.itest.util.TestBase;
 import org.junit.Assert;
 import org.osgi.service.cm.Configuration;
@@ -35,24 +35,22 @@ import org.osgi.service.cm.ConfigurationAdmin;
  * The factory configuration is created, the "Required" service is registered, so a factory configuration adapter INSTANCE1 is then created.
  * Now the "Required" service is unregistered: the factory config adapter INSTANCE1 is then stopped.
  * And when the "Required" service comes up again, then a new factory config adapter INSTANCE2 should be re-created, updated and started.
+ * When the factory configuration is removed, the factory config adapter instance is stopped.
+ * <p>
+ * Config Admin may deliver the configuration to the factory more than once (for example when the factory is
+ * registered again), which makes the adapter instance be replaced by an other one. The test does not depend on
+ * how often that happens: it follows the instances instead of counting the calls.
  * 
  * @author <a href="mailto:dev@felix.apache.org">Felix Project Team</a>
  */
 public class FELIX5200_FactoryPidNotRestartedTest extends TestBase {
-    static FactoryPidComponent m_currentInstance;
+    private static final int TIMEOUT = 10000;
     
-    static Ensure m_ensure = new Ensure();
+    // the instances of the adapter, in the order they have been started
+    static final java.util.List<FactoryPidComponent> m_instances = new java.util.concurrent.CopyOnWriteArrayList<>();
     
-    static Ensure.Steps m_steps = new Ensure.Steps(
-        1, // updated is called the first time the adapter instance is created 
-        2, // component started
-        3, // "Required" service is unregistered, and adapter instance is stopped 
-        4, // "Required" service is re-registered, a new adapter instance is created and called in updated 
-        5, // the new adapter instance is then started
-        6  // the configuration is removed and the new adapter instance is stopped
-        );
-    
-    public void testFactoryAdapterNotRestartedTest() {
+    public void testFactoryAdapterNotRestartedTest() throws InterruptedException {
+        m_instances.clear();
         DependencyManager dm = getDM();
         
         Component adapter = dm.createFactoryConfigurationAdapterService("factory.pid", "updated", false)
@@ -71,36 +69,48 @@ public class FELIX5200_FactoryPidNotRestartedTest extends TestBase {
         dm.add(adapter);
         dm.add(required);        
         // adapter instance1 updated and started
-        m_ensure.waitForStep(2, 5000);     
-        FactoryPidComponent currentInstance = m_currentInstance;
+        waitFor("the first adapter instance is started", () -> !m_instances.isEmpty());
+        FactoryPidComponent instance1 = m_instances.get(0);
+        
         dm.remove(required);        
         // adapter instance1 stopped
-        m_ensure.waitForStep(3, 5000); 
+        waitFor("the first adapter instance is stopped", () -> instance1.m_stopped);
+        int started = m_instances.size();
+        
         dm.add(required);
-        // adapter instance2 updated and started
-        m_ensure.waitForStep(5, 5000);        
-        // a new adapter instance should have been created
-        Assert.assertNotEquals(currentInstance, m_currentInstance);
+        // a new adapter instance is created, updated and started
+        waitFor("a new adapter instance is started", () -> m_instances.size() > started);
+        FactoryPidComponent instance2 = m_instances.get(m_instances.size() - 1);
+        Assert.assertNotSame(instance1, instance2);
+        
         dm.remove(configurator);
-        // adapter instance2 stopped
-        m_ensure.waitForStep(6, 5000);
+        // the configuration is removed: the last adapter instance is stopped
+        waitFor("the adapter instance is stopped when the configuration is removed", () -> instance2.m_stopped);
+    }
+    
+    private void waitFor(String what, BooleanSupplier condition) throws InterruptedException {
+        long end = System.currentTimeMillis() + TIMEOUT;
+        while (!condition.getAsBoolean()) {
+            if (System.currentTimeMillis() > end) {
+                Assert.fail("Timed out waiting until " + what);
+            }
+            Thread.sleep(10);
+        }
     }
     
     public static class FactoryPidComponent {
         RequiredService m_required;
+        volatile boolean m_stopped;
         
         void updated(Dictionary<String, Object> properties) {
-            m_ensure.steps(m_steps);  
         }
         
         void start() {
-            // the instance has to be published before the test thread is released by the step
-            m_currentInstance = this;
-            m_ensure.steps(m_steps);
+            m_instances.add(this);
         }
         
         void stop() {
-            m_ensure.steps(m_steps);
+            m_stopped = true;
         }
     }
     
