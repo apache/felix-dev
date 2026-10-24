@@ -48,6 +48,15 @@
         <module>org.apache.felix.dependencymanager.runtime</module>
         <module>org.apache.felix.dependencymanager.shell</module>
         <module>org.apache.felix.dependencymanager.lambda</module>
+        <module>org.apache.felix.dependencymanager.itest.bundle</module>
+        <module>org.apache.felix.dependencymanager.itest.bundle2</module>
+        <module>org.apache.felix.dependencymanager.itest.api</module>
+        <module>org.apache.felix.dependencymanager.index.itest.dynamic.customindex</module>
+        <module>org.apache.felix.dependencymanager.index.itest.static.customindex</module>
+        <module>org.apache.felix.dependencymanager.index.itest.tests</module>
+        <module>org.apache.felix.dependencymanager.lambda.itest.lifecycle</module>
+        <module>org.apache.felix.dependencymanager.lambda.itest.tests</module>
+        <module>org.apache.felix.dependencymanager.runtime.itest</module>
     </modules>
 
     <properties>
@@ -61,7 +70,17 @@
         <mockito.version>5.24.0</mockito.version>
         <bnd.version>7.4.0</bnd.version>
         <dependencymanager.version>5.0.0-SNAPSHOT</dependencymanager.version>
-        <gogo.runtime.version>1.2.0-SNAPSHOT</gogo.runtime.version>
+        <dependencymanager.lambda.version>2.0.0-SNAPSHOT</dependencymanager.lambda.version>
+        <dependencymanager.annotation.version>6.0.0-SNAPSHOT</dependencymanager.annotation.version>
+        <dependencymanager.runtime.version>5.0.0-SNAPSHOT</dependencymanager.runtime.version>
+        <gogo.runtime.version>1.2.0</gogo.runtime.version>
+        <gogo.shell.version>1.1.4</gogo.shell.version>
+        <gogo.command.version>1.1.2</gogo.command.version>
+        <configadmin.version>1.10.0</configadmin.version>
+        <framework.version>8.0.0</framework.version>
+        <log.version>1.3.2</log.version>
+        <metatype.version>1.2.4</metatype.version>
+        <servicemix.junit.version>4.13.2_1</servicemix.junit.version>
     </properties>
 
     <dependencyManagement>
@@ -132,6 +151,34 @@
                             <id>baseline</id>
                             <goals>
                                 <goal>baseline</goal>
+                            </goals>
+                        </execution>
+                    </executions>
+                </plugin>
+                <plugin>
+                    <groupId>biz.aQute.bnd</groupId>
+                    <artifactId>bnd-maven-plugin</artifactId>
+                    <version>${bnd.version}</version>
+                    <executions>
+                        <execution>
+                            <goals>
+                                <goal>bnd-process</goal>
+                            </goals>
+                        </execution>
+                    </executions>
+                </plugin>
+                <plugin>
+                    <groupId>biz.aQute.bnd</groupId>
+                    <artifactId>bnd-testing-maven-plugin</artifactId>
+                    <version>${bnd.version}</version>
+                    <configuration>
+                        <resolve>true</resolve>
+                        <failOnChanges>false</failOnChanges>
+                    </configuration>
+                    <executions>
+                        <execution>
+                            <goals>
+                                <goal>testing</goal>
                             </goals>
                         </execution>
                     </executions>
