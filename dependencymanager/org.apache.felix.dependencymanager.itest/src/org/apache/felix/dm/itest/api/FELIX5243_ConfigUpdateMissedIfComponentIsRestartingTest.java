@@ -45,7 +45,8 @@ import org.osgi.service.cm.ConfigurationAdmin;
  * @author <a href="mailto:dev@felix.apache.org">Felix Project Team</a>
  */
 public class FELIX5243_ConfigUpdateMissedIfComponentIsRestartingTest extends TestBase {
-	final static String PID = "ConfigurationDependencyTest.pid";
+	// Unique per test, so that the asynchronous deletion of the configuration of a previous test cannot reach the next one.
+	final String PID = "FELIX5243_ConfigUpdateMissedIfComponentIsRestartingTest.pid." + System.nanoTime();
 
 	public void testOptionalConfigurationConsumer() throws InterruptedException {
 		DependencyManager m = getDM();

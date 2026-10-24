@@ -40,7 +40,8 @@ import org.osgi.service.cm.ManagedService;
  */
 @SuppressWarnings({"unchecked", "rawtypes"})
 public class ConfigurationDependencyTest extends TestBase {
-    final static String PID = "ConfigurationDependencyTest.pid";
+    // Unique per test, so that the asynchronous deletion of the configuration of a previous test cannot reach the next one.
+    final String PID = "ConfigurationDependencyTest.pid." + System.nanoTime();
     
     /**
      * Tests that we can provision a type-safe configuration to a component.

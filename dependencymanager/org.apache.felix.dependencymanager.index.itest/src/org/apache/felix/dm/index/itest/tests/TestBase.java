@@ -223,6 +223,31 @@ public abstract class TestBase extends TestCase implements LogService, Framework
     	return (Dictionary<String, ?>) properties;
     }
 
+    @Override
+    public org.osgi.service.log.Logger getLogger(String name) {
+    	return null;
+    }
+
+    @Override
+    public org.osgi.service.log.Logger getLogger(Class<?> clazz) {
+    	return null;
+    }
+
+    @Override
+    public <L extends org.osgi.service.log.Logger> L getLogger(Bundle bundle, String name, Class<L> loggerType) {
+    	return null;
+    }
+
+    @Override
+    public <L extends org.osgi.service.log.Logger> L getLogger(String name, Class<L> loggerType) {
+    	return null;
+    }
+
+    @Override
+    public <L extends org.osgi.service.log.Logger> L getLogger(Class<?> clazz, Class<L> loggerType) {
+    	return null;
+    }
+
     public void log(int level, String message) {
         checkError(level, null);
         if (LOG_LEVEL >= level) {
