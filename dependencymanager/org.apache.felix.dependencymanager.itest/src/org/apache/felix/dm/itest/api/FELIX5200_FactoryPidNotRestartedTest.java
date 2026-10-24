@@ -94,8 +94,9 @@ public class FELIX5200_FactoryPidNotRestartedTest extends TestBase {
         }
         
         void start() {
-            m_ensure.steps(m_steps);
+            // the instance has to be published before the test thread is released by the step
             m_currentInstance = this;
+            m_ensure.steps(m_steps);
         }
         
         void stop() {
