@@ -246,7 +246,8 @@ class ServiceRegistryTest
         assertThat(sr.getHookRegistry().getHooks(ListenerHook.class).size()).as("Should be no hooks left after unregistration").isEqualTo(0);
     }
 
-    public void testRegisterCombinedService()
+    @Test
+    void registerCombinedService()
     {
         Bundle b = mock(Bundle.class);
         BundleContext c = mock(BundleContext.class);
