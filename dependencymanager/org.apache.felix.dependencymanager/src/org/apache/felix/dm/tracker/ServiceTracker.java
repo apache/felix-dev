@@ -15,8 +15,6 @@ package org.apache.felix.dm.tracker;
  * limitations under the License.
  */
 
-import java.security.AccessController;
-import java.security.PrivilegedAction;
 import java.util.HashMap;
 import java.util.Iterator;
 import java.util.LinkedHashMap;
@@ -259,15 +257,9 @@ public class ServiceTracker implements ServiceTrackerCustomizer {
 		this.context = context;
 		this.trackReference = null;
 		this.trackClass = null;
-		final Version frameworkVersion = (Version) AccessController
-				.doPrivileged(new PrivilegedAction<Version>() {
-					public Version run() {
-						String version = context
-								.getProperty(Constants.FRAMEWORK_VERSION);
-						return (version == null) ? Version.emptyVersion
-								: new Version(version);
-					}
-				});
+		final String version = context.getProperty(Constants.FRAMEWORK_VERSION);
+		final Version frameworkVersion = (version == null) ? Version.emptyVersion
+				: new Version(version);
 		final boolean endMatchSupported = (frameworkVersion
 				.compareTo(endMatchVersion) >= 0);
 		this.listenerFilter = endMatchSupported ? filter.toString() : null;
