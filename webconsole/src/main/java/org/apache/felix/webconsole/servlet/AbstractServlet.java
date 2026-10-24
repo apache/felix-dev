@@ -25,6 +25,8 @@ import java.io.InputStream;
 import java.io.OutputStream;
 import java.net.URL;
 import java.net.URLConnection;
+import java.util.ArrayDeque;
+import java.util.Deque;
 
 import org.apache.felix.webconsole.internal.Util;
 
@@ -74,17 +76,45 @@ public abstract class AbstractServlet extends HttpServlet {
      * Called to identify resources.
      * By default, if the path starts with "/res/" this is treated as a resource
      * and the URL to the resource is tried to be loaded via the class loader.
+     * Path segments are normalized before this check, so a request cannot escape
+     * the {@code /res/} directory using {@code ..} segments.
      * @param path the path
      * @return the URL of the resource or <code>null</code> if not found.
      */
     protected URL getResource( final String path ) {
+        if (path == null) {
+            return null;
+        }
         final int index = path.indexOf( '/', 1 );
         if (index != -1) {
-            if (path.substring(index).startsWith("/res/") ) {
-                return getClass().getResource( path.substring(index) );
+            final String resourcePath = normalizePath(path.substring(index));
+            if (resourcePath.startsWith("/res/") ) {
+                return getClass().getResource(resourcePath);
             }
         }
         return null;
+    }
+
+    /**
+     * Normalizes an absolute resource path without applying host filesystem
+     * semantics. Resource names always use forward slashes, irrespective of
+     * the operating system hosting the web console.
+     */
+    private static String normalizePath(final String path) {
+        final Deque<String> segments = new ArrayDeque<>();
+        for (final String segment : path.substring(1).split("/")) {
+            if (segment.isEmpty() || ".".equals(segment)) {
+                continue;
+            }
+            if ("..".equals(segment)) {
+                if (!segments.isEmpty()) {
+                    segments.removeLast();
+                }
+            } else {
+                segments.addLast(segment);
+            }
+        }
+        return '/' + String.join("/", segments);
     }
 
     /**
