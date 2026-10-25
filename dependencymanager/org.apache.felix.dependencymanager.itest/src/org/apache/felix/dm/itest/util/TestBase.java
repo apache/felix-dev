@@ -248,14 +248,14 @@ public abstract class TestBase extends TestCase implements LogService, Framework
     }
 
     public void log(int level, String message) {
-        checkError(level, null);
+        checkError(level, message, null);
         if (LOG_LEVEL >= level) {
             System.out.println(getLevel(level) + " - " + Thread.currentThread().getName() + " : " + message);
         }
     }
 
     public void log(int level, String message, Throwable exception) {
-        checkError(level, exception);
+        checkError(level, message, exception);
         if (LOG_LEVEL >= level) {
             StringBuilder sb = new StringBuilder();
             sb.append(getLevel(level) + " - " + Thread.currentThread().getName() + " : ");
@@ -266,7 +266,7 @@ public abstract class TestBase extends TestCase implements LogService, Framework
     }
 
     public void log(ServiceReference sr, int level, String message) {
-        checkError(level, null);
+        checkError(level, message, null);
         if (LOG_LEVEL >= level) {
             StringBuilder sb = new StringBuilder();
             sb.append(getLevel(level) + " - " + Thread.currentThread().getName() + " : ");
@@ -276,7 +276,7 @@ public abstract class TestBase extends TestCase implements LogService, Framework
     }
 
     public void log(ServiceReference sr, int level, String message, Throwable exception) {
-        checkError(level, exception);
+        checkError(level, message, exception);
         if (LOG_LEVEL >= level) {
             StringBuilder sb = new StringBuilder();
             sb.append(getLevel(level) + " - " + Thread.currentThread().getName() + " : ");
@@ -316,7 +316,16 @@ public abstract class TestBase extends TestCase implements LogService, Framework
         }
     }
 
-    private void checkError(int level, Throwable exception) {
+    // Config Admin logs this at error level when a factory configuration has been created but not updated yet
+    // while the factory registers. It provides the configuration with the update, so it is not an error.
+    private static boolean isIgnoredMessage(String message) {
+        return message != null && message.startsWith("Ignoring new configuration pid=");
+    }
+
+    private void checkError(int level, String message, Throwable exception) {
+        if (isIgnoredMessage(message) && exception == null) {
+            return;
+        }
         if (level <= LOG_ERROR) {
             m_errorsLogged = true;
         }
