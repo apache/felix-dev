@@ -27,6 +27,7 @@ import org.junit.Assert;
 
 import org.apache.felix.dm.Component;
 import org.apache.felix.dm.DependencyManager;
+import org.apache.felix.dm.itest.util.ConfigDeliveries;
 import org.apache.felix.dm.itest.util.Ensure;
 import org.apache.felix.dm.itest.util.TestBase;
 import org.osgi.service.cm.Configuration;
@@ -223,6 +224,7 @@ public class ConfigurationDependencyTest extends TestBase {
     
     static class ConfigurationConsumer implements ManagedService, Runnable {
         protected final Ensure m_ensure;
+        protected final ConfigDeliveries m_deliveries = new ConfigDeliveries();
 
         public ConfigurationConsumer(Ensure e) {
             m_ensure = e;
@@ -230,6 +232,9 @@ public class ConfigurationDependencyTest extends TestBase {
 
         public void updated(Dictionary props) throws ConfigurationException {
             Assert.assertNotNull(props);
+            if (m_deliveries.isRepeat(props)) {
+                return;
+            }
             m_ensure.step(2);
             if (!"testvalue".equals(props.get("testkey"))) {
                 Assert.fail("Could not find the configured property.");
@@ -254,6 +259,9 @@ public class ConfigurationDependencyTest extends TestBase {
         
         public void updated(Dictionary props) throws ConfigurationException {
 			Assert.assertNotNull(props);
+			if (m_deliveries.isRepeat(props)) {
+				return;
+			}
 			if (!"testvalue".equals(props.get("testkey"))) {
 				Assert.fail("Could not find the configured property.");
 			}
@@ -277,6 +285,9 @@ public class ConfigurationDependencyTest extends TestBase {
         }
         
         public void updated(Dictionary props) throws ConfigurationException {
+        	if (m_deliveries.isRepeat(props)) {
+        		return;
+        	}
         	if (! m_configured) {
                 Assert.assertNotNull(props);
                 if (!"testvalue".equals(props.get("testkey"))) {
@@ -311,6 +322,7 @@ public class ConfigurationDependencyTest extends TestBase {
     
     static class ConfigurationConsumerCallbackInstance {
         private final Ensure m_ensure;
+        private final ConfigDeliveries m_deliveries = new ConfigDeliveries();
 
         public ConfigurationConsumerCallbackInstance(Ensure e) {
             m_ensure = e;
@@ -318,6 +330,9 @@ public class ConfigurationDependencyTest extends TestBase {
         
         public void updateConfiguration(Dictionary props) throws Exception {
             Assert.assertNotNull(props);
+            if (m_deliveries.isRepeat(props)) {
+                return;
+            }
             m_ensure.step(2);
             if (!"testvalue".equals(props.get("testkey"))) {
                 Assert.fail("Could not find the configured property.");
@@ -369,6 +384,7 @@ public class ConfigurationDependencyTest extends TestBase {
 
     static class ConfigurationConsumerWithTypeSafeConfiguration {
         private final Ensure m_ensure;
+        private final ConfigDeliveries m_deliveries = new ConfigDeliveries();
 
         public ConfigurationConsumerWithTypeSafeConfiguration(Ensure e) {
             m_ensure = e;
@@ -377,6 +393,9 @@ public class ConfigurationDependencyTest extends TestBase {
         // configuration updates is always the first invoked callback (before init).
         public void updated(Component component, MyConfig cfg) throws ConfigurationException {
         	if (cfg != null) {
+        		if (m_deliveries.isRepeat((Object) cfg.getTestkey())) {
+        			return;
+        		}
         		Assert.assertNotNull(component);
         		Assert.assertNotNull(cfg);
         		m_ensure.step(2);
@@ -384,6 +403,7 @@ public class ConfigurationDependencyTest extends TestBase {
         			Assert.fail("Could not find the configured property.");
         		}
         	} else {
+        		m_deliveries.isRepeat((Dictionary<?, ?>) null);
         		m_ensure.step();
         	}
         }
