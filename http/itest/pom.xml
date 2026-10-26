@@ -37,6 +37,11 @@
         <http.jetty.id>org.apache.felix.http.jetty12</http.jetty.id>
         <pax.exam.version>4.13.3</pax.exam.version>
         <pax.url.aether.version>2.6.14</pax.url.aether.version>
+        <!-- Sibling Felix bundles the tests run against. Pinned to the latest release
+             so this module also builds on its own; CI overrides them with the locally
+             built versions so the tests exercise the code in this repository.
+             See FELIX-6870. -->
+        <felix.framework.version>7.0.5</felix.framework.version>
     </properties>
 
     <profiles>
@@ -163,7 +168,7 @@
         <dependency>
             <groupId>org.apache.felix</groupId>
             <artifactId>org.apache.felix.framework</artifactId>
-            <version>7.0.5</version>
+            <version>${felix.framework.version}</version>
             <scope>test</scope>
         </dependency>
     </dependencies>

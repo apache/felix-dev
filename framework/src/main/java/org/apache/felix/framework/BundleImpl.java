@@ -40,19 +40,15 @@ import java.util.Set;
 import java.util.StringTokenizer;
 
 import org.apache.felix.framework.cache.BundleArchive;
-import org.apache.felix.framework.util.SecurityManagerEx;
 import org.apache.felix.framework.util.ShrinkableCollection;
 import org.apache.felix.framework.util.StringMap;
 import org.apache.felix.framework.util.Util;
 import org.osgi.dto.DTO;
-import org.osgi.framework.AdaptPermission;
-import org.osgi.framework.AdminPermission;
 import org.osgi.framework.Bundle;
 import org.osgi.framework.BundleActivator;
 import org.osgi.framework.BundleContext;
 import org.osgi.framework.BundleException;
 import org.osgi.framework.Constants;
-import org.osgi.framework.ServicePermission;
 import org.osgi.framework.ServiceReference;
 import org.osgi.framework.Version;
 import org.osgi.framework.hooks.bundle.CollisionHook;
@@ -246,14 +242,6 @@ class BundleImpl implements Bundle, BundleRevisions
     @Override
     public BundleContext getBundleContext()
     {
-        Object sm = System.getSecurityManager();
-
-        if (sm != null)
-        {
-           ((SecurityManager) sm).checkPermission(
-               new AdminPermission(this, AdminPermission.CONTEXT));
-        }
-
         return m_context;
     }
 
@@ -283,63 +271,18 @@ class BundleImpl implements Bundle, BundleRevisions
     @Override
     public URL getEntry(String name)
     {
-        Object sm = System.getSecurityManager();
-
-        if (sm != null)
-        {
-            try
-            {
-                ((SecurityManager) sm).checkPermission(new AdminPermission(this,
-                    AdminPermission.RESOURCE));
-            }
-            catch (Exception e)
-            {
-                return null; // No permission
-            }
-        }
-
         return getFramework().getBundleEntry(this, name);
     }
 
     @Override
     public Enumeration<String> getEntryPaths(String path)
     {
-        Object sm = System.getSecurityManager();
-
-        if (sm != null)
-        {
-            try
-            {
-                ((SecurityManager) sm).checkPermission(new AdminPermission(this,
-                    AdminPermission.RESOURCE));
-            }
-            catch (Exception e)
-            {
-                return null; // No permission
-            }
-        }
-
         return getFramework().getBundleEntryPaths(this, path);
     }
 
     @Override
     public Enumeration<URL> findEntries(String path, String filePattern, boolean recurse)
     {
-        Object sm = System.getSecurityManager();
-
-        if (sm != null)
-        {
-            try
-            {
-                ((SecurityManager) sm).checkPermission(new AdminPermission(this,
-                    AdminPermission.RESOURCE));
-            }
-            catch (Exception e)
-            {
-                return null; // No permission
-            }
-        }
-
         return getFramework().findBundleEntries(
                 this, path, filePattern, recurse);
     }
@@ -353,14 +296,6 @@ class BundleImpl implements Bundle, BundleRevisions
     @Override
     public Dictionary<String, String> getHeaders(String locale)
     {
-        Object sm = System.getSecurityManager();
-
-        if (sm != null)
-        {
-            ((SecurityManager) sm).checkPermission(new AdminPermission(this,
-                AdminPermission.METADATA));
-        }
-
         if (locale == null)
         {
             locale = Locale.getDefault().toString();
@@ -623,13 +558,6 @@ class BundleImpl implements Bundle, BundleRevisions
     @Override
     public String getLocation()
     {
-        Object sm = System.getSecurityManager();
-
-        if (sm != null)
-        {
-            ((SecurityManager) sm).checkPermission(new AdminPermission(this,
-                AdminPermission.METADATA));
-        }
         return _getLocation();
     }
 
@@ -658,42 +586,12 @@ class BundleImpl implements Bundle, BundleRevisions
     @Override
     public URL getResource(String name)
     {
-        Object sm = System.getSecurityManager();
-
-        if (sm != null)
-        {
-            try
-            {
-                ((SecurityManager) sm).checkPermission(
-                    new AdminPermission(this, AdminPermission.RESOURCE));
-            }
-            catch (Exception e)
-            {
-                return null; // No permission
-            }
-        }
-
         return getFramework().getBundleResource(this, name);
     }
 
     @Override
     public Enumeration<URL> getResources(String name) throws IOException
     {
-        Object sm = System.getSecurityManager();
-
-        if (sm != null)
-        {
-            try
-            {
-                ((SecurityManager) sm).checkPermission(
-                    new AdminPermission(this, AdminPermission.RESOURCE));
-            }
-            catch (Exception e)
-            {
-                return null; // No permission
-            }
-        }
-
         // Spec says we should return null when resources not found,
         // even though ClassLoader.getResources() returns empty enumeration.
         Enumeration<URL> e = getFramework().getBundleResources(this, name);
@@ -709,84 +607,12 @@ class BundleImpl implements Bundle, BundleRevisions
     @Override
     public ServiceReference<?>[] getRegisteredServices()
     {
-        Object sm = System.getSecurityManager();
-
-        if (sm != null)
-        {
-            ServiceReference<?>[] refs = getFramework().getBundleRegisteredServices(this);
-
-            if (refs == null)
-            {
-                return refs;
-            }
-
-            List<ServiceReference<?>> result = new ArrayList<>();
-
-            for (ServiceReference<?> ref : refs) {
-                try
-                {
-                    ((SecurityManager) sm).checkPermission(new ServicePermission(
-                        ref, ServicePermission.GET));
-
-                    result.add(ref);
-                }
-                catch (Exception ex)
-                {
-                    // Silently ignore.
-                }
-            }
-
-            if (result.isEmpty())
-            {
-                return null;
-            }
-
-            return (ServiceReference[]) result.toArray(new ServiceReference[result.size()]);
-        }
-        else
-        {
-            return getFramework().getBundleRegisteredServices(this);
-        }
+        return getFramework().getBundleRegisteredServices(this);
     }
 
     @Override
     public ServiceReference<?>[] getServicesInUse()
     {
-        Object sm = System.getSecurityManager();
-
-        if (sm != null)
-        {
-            ServiceReference<?>[] refs = getFramework().getBundleServicesInUse(this);
-
-            if (refs == null)
-            {
-                return refs;
-            }
-
-            List<ServiceReference<?>> result = new ArrayList<>();
-
-            for (ServiceReference<?> ref : refs) {
-                try
-                {
-                    ((SecurityManager) sm).checkPermission(
-                        new ServicePermission(ref, ServicePermission.GET));
-
-                    result.add(ref);
-                }
-                catch (Exception ex)
-                {
-                    // Silently ignore.
-                }
-            }
-
-            if (result.isEmpty())
-            {
-                return null;
-            }
-
-            return (ServiceReference[]) result.toArray(new ServiceReference[result.size()]);
-        }
-
         return getFramework().getBundleServicesInUse(this);
     }
 
@@ -968,21 +794,6 @@ class BundleImpl implements Bundle, BundleRevisions
             throw new ClassNotFoundException("Extension bundles cannot load classes.");
         }
 
-        Object sm = System.getSecurityManager();
-
-        if (sm != null)
-        {
-            try
-            {
-                ((SecurityManager) sm).checkPermission(new AdminPermission(this,
-                    AdminPermission.CLASS));
-            }
-            catch (Exception ex)
-            {
-                throw new ClassNotFoundException("No permission.", ex);
-            }
-        }
-
         return getFramework().loadBundleClass(this, name);
     }
 
@@ -995,14 +806,6 @@ class BundleImpl implements Bundle, BundleRevisions
     @Override
     public void start(int options) throws BundleException
     {
-        Object sm = System.getSecurityManager();
-
-        if (sm != null)
-        {
-            ((SecurityManager) sm).checkPermission(new AdminPermission(this,
-                AdminPermission.EXECUTE));
-        }
-
         getFramework().startBundle(this, options);
     }
 
@@ -1015,14 +818,6 @@ class BundleImpl implements Bundle, BundleRevisions
     @Override
     public void update(InputStream is) throws BundleException
     {
-        Object sm = System.getSecurityManager();
-
-        if (sm != null)
-        {
-            ((SecurityManager) sm).checkPermission(new AdminPermission(this,
-                AdminPermission.LIFECYCLE));
-        }
-
         getFramework().updateBundle(this, is);
     }
 
@@ -1035,28 +830,12 @@ class BundleImpl implements Bundle, BundleRevisions
     @Override
     public void stop(int options) throws BundleException
     {
-        Object sm = System.getSecurityManager();
-
-        if (sm != null)
-        {
-            ((SecurityManager) sm).checkPermission(new AdminPermission(this,
-                AdminPermission.EXECUTE));
-        }
-
         getFramework().stopBundle(this, ((options & Bundle.STOP_TRANSIENT) == 0));
     }
 
     @Override
     public void uninstall() throws BundleException
     {
-        Object sm = System.getSecurityManager();
-
-        if (sm != null)
-        {
-            ((SecurityManager) sm).checkPermission(new AdminPermission(this,
-                AdminPermission.LIFECYCLE));
-        }
-
         Map<String,String> headers = getCurrentLocalizedHeader(Locale.getDefault().toString());
 
         // Uninstall the bundle.
@@ -1080,22 +859,8 @@ class BundleImpl implements Bundle, BundleRevisions
         }
     }
 
-    private static final SecurityManagerEx m_smEx = new SecurityManagerEx();
-    private static final ClassLoader m_classloader = Felix.class.getClassLoader();
-
     <A> void checkAdapt(Class<A> type)
     {
-        Object sm = System.getSecurityManager();
-        if ((sm != null) && (getFramework().getSecurityProvider() != null))
-        {
-            Class<?>[] classes = m_smEx.getClassContext();
-            if (classes.length < 3 || ((Felix.m_secureAction.getClassLoader(classes[3]) != m_classloader) ||
-                !classes[3].getName().startsWith("org.apache.felix.framework.")))
-            {
-                ((SecurityManager) sm).checkPermission(
-                    new AdaptPermission(type.getName(), this, AdaptPermission.ADAPT));
-            }
-        }
     }
 
 	@SuppressWarnings("unchecked")

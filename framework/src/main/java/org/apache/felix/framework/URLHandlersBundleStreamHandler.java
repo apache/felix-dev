@@ -20,14 +20,10 @@ package org.apache.felix.framework;
 
 import java.io.IOException;
 import java.lang.reflect.Constructor;
-import java.lang.reflect.Method;
 import java.net.*;
-import java.security.Permission;
 
 import org.apache.felix.framework.util.SecureAction;
 import org.apache.felix.framework.util.Util;
-import org.osgi.framework.AdminPermission;
-import org.osgi.framework.Bundle;
 
 class URLHandlersBundleStreamHandler extends URLStreamHandler
 {
@@ -49,10 +45,6 @@ class URLHandlersBundleStreamHandler extends URLStreamHandler
     @Override
 	protected URLConnection openConnection(URL url) throws IOException
     {
-        if (!"felix".equals(url.getAuthority()))
-        {
-            checkPermission(url);
-        }
         Object framework = m_framework;
 
         if (framework == null)
@@ -92,10 +84,7 @@ class URLHandlersBundleStreamHandler extends URLStreamHandler
     {
         super.parseURL(u, spec, start, limit);
 
-        if (checkPermission(u))
-        {
-            super.setURL(u, u.getProtocol(), u.getHost(), u.getPort(), "felix", u.getUserInfo(), u.getPath(), u.getQuery(), u.getRef());
-        }
+        super.setURL(u, u.getProtocol(), u.getHost(), u.getPort(), "felix", u.getUserInfo(), u.getPath(), u.getQuery(), u.getRef());
     }
 
     @Override
@@ -128,63 +117,5 @@ class URLHandlersBundleStreamHandler extends URLStreamHandler
 	protected java.net.InetAddress getHostAddress(URL u)
     {
         return null;
-    }
-
-    private boolean checkPermission(URL u)
-    {
-        SecurityManager sm = System.getSecurityManager();
-        if (sm != null)
-        {
-            Object framework = m_framework;
-            if (framework == null)
-            {
-                framework = URLHandlers.getFrameworkFromContext(Util.getFrameworkUUIDFromURL(u.getHost()));
-            }
-            try {
-                long bundleId = Util.getBundleIdFromRevisionId(Util.getRevisionIdFromURL(u.getHost()));
-
-                if (framework instanceof Felix)
-                {
-                    Bundle bundle = ((Felix) framework).getBundle(bundleId);
-                    if (bundle != null)
-                    {
-                        sm.checkPermission(new AdminPermission(bundle, AdminPermission.RESOURCE));
-                        return true;
-                    }
-                }
-                else if (framework != null)
-                {
-                    Method method = m_action.getDeclaredMethod(framework.getClass(), "getBundle", new Class[]{long.class});
-                    m_action.setAccesssible(method);
-                    Object bundle = method.invoke(framework, bundleId);
-                    if (bundle != null)
-                    {
-                        ClassLoader loader = m_action.getClassLoader(framework.getClass());
-
-                        sm.checkPermission((Permission) m_action.getConstructor(
-                            loader.loadClass(AdminPermission.class.getName()),
-                            new Class[] {loader.loadClass(Bundle.class.getName()), String.class}).newInstance(bundle, AdminPermission.RESOURCE));
-                        return true;
-                    }
-                }
-                else
-                {
-                    throw new IOException("No framework context found");
-                }
-            }
-            catch (SecurityException ex)
-            {
-                throw ex;
-            }
-            catch (Exception ex)
-            {
-                throw new SecurityException(ex);
-            }
-        }
-        else
-        {
-            return true;
-        }
-        return false;
     }
 }
