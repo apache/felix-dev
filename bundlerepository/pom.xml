@@ -200,6 +200,16 @@
           </execution>
         </executions>
       </plugin>
+      <plugin>
+        <groupId>org.apache.maven.plugins</groupId>
+        <artifactId>maven-javadoc-plugin</artifactId>
+        <configuration>
+          <!-- The JDK 21 doclet enforces HTML5 and rejects the pre-HTML5 markup in
+               these javadoc comments, as it does for the framework. Tracked separately;
+               it must not block a release. -->
+          <failOnError>false</failOnError>
+        </configuration>
+      </plugin>
     </plugins>
   </build>
 </project>
