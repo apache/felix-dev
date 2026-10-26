@@ -14,11 +14,11 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 #
-Bundle-Version: 5.0.3
+Bundle-Version: 6.0.0
 -buildpath: \
-	osgi.core;version=6.0,\
-	osgi.cmpn;version=6.0,\
-	biz.aQute.bndlib;version=3.5
+	osgi.core;version=8.0,\
+	osgi.cmpn;version=7.0,\
+	biz.aQute.bndlib;version=7.4.0
 Private-Package: org.apache.felix.dm.annotation.plugin.bnd
 Export-Package: org.apache.felix.dm.annotation.api
 Include-Resource: META-INF/=resources/,META-INF/changelog.txt=changelog.txt

@@ -20,6 +20,7 @@ package org.apache.felix.dm.itest.api;
 
 import org.apache.felix.dm.Component;
 import org.apache.felix.dm.DependencyManager;
+import org.apache.felix.dm.itest.util.ConfigDeliveries;
 import org.apache.felix.dm.itest.util.Ensure;
 import org.apache.felix.dm.itest.util.TestBase;
 import org.junit.Assert;
@@ -34,7 +35,8 @@ import org.osgi.service.cm.ConfigurationException;
  * @author <a href="mailto:dev@felix.apache.org">Felix Project Team</a>
  */
 public class FELIX5238_TypeSafeConfigWithDefaultMethodTest extends TestBase {
-    final static String PID = "ConfigurationDependencyTest.pid";
+    // Unique per test, so that the asynchronous deletion of the configuration of a previous test cannot reach the next one.
+    final String PID = "FELIX5238_TypeSafeConfigWithDefaultMethodTest.pid." + System.nanoTime();
     
     /**
      * Tests that we can provision a type-safe config annotation to a component.
@@ -92,6 +94,7 @@ public class FELIX5238_TypeSafeConfigWithDefaultMethodTest extends TestBase {
 
     static class ConfigurationConsumerBase {
         protected final Ensure m_ensure;
+        protected final ConfigDeliveries m_deliveries = new ConfigDeliveries();
 
         public ConfigurationConsumerBase(Ensure e) {
             m_ensure = e;
@@ -115,6 +118,9 @@ public class FELIX5238_TypeSafeConfigWithDefaultMethodTest extends TestBase {
         // configuration updates is always the first invoked callback (before init).
         public void updated(Component component, MyConfigAnnot cfg) throws ConfigurationException {
         	if (cfg != null) {
+        		if (m_deliveries.isRepeat((Object) (cfg.getTestkey() + "/" + cfg.getTestkey2()))) {
+        			return;
+        		}
         		Assert.assertNotNull(component);
         		Assert.assertNotNull(cfg);
         		if (!"testvalue".equals(cfg.getTestkey())) {
@@ -125,6 +131,7 @@ public class FELIX5238_TypeSafeConfigWithDefaultMethodTest extends TestBase {
         		}
         		m_ensure.step(2);
         	} else {
+        		m_deliveries.isRepeat((java.util.Dictionary<?, ?>) null);
         		m_ensure.step();
         	}
         }
@@ -138,6 +145,9 @@ public class FELIX5238_TypeSafeConfigWithDefaultMethodTest extends TestBase {
         // configuration updates is always the first invoked callback (before init).
         public void updated(Component component, MyConfigInterface cfg) throws ConfigurationException {
         	if (cfg != null) {
+        		if (m_deliveries.isRepeat((Object) (cfg.getTestkey() + "/" + cfg.getTestkey2()))) {
+        			return;
+        		}
         		Assert.assertNotNull(component);
         		Assert.assertNotNull(cfg);
         		if (!"testvalue".equals(cfg.getTestkey())) {
@@ -148,6 +158,7 @@ public class FELIX5238_TypeSafeConfigWithDefaultMethodTest extends TestBase {
         		}
         		m_ensure.step(2);
         	} else {
+        		m_deliveries.isRepeat((java.util.Dictionary<?, ?>) null);
         		m_ensure.step();
         	}
         }

@@ -14,18 +14,18 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 #
-javac.source:          1.8
-javac.target:          1.8
-Bundle-Version: 1.2.3
+javac.source:          11
+javac.target:          11
+Bundle-Version: 2.0.0
 -buildpath: \
 	org.apache.felix.dependencymanager;version=latest,\
-	osgi.core;version=6.0,\
-	osgi.cmpn;version=6.0,\
-	osgi.annotation;version=6.0.1	
+	osgi.core;version=8.0,\
+	osgi.cmpn;version=7.0,\
+	osgi.annotation;version=8.1	
 Export-Package: \
 	org.apache.felix.dm.lambda,\
 	org.apache.felix.dm.lambda.callbacks
--runfw: org.apache.felix.framework;version='[4.4.1,4.4.1]'
--runee: JavaSE-1.8
+-runfw: org.apache.felix.framework;version='[8.0.0,9)'
+-runee: JavaSE-11
 Private-Package: org.apache.felix.dm.lambda.impl
 Include-Resource: META-INF/=resources/,META-INF/changelog.txt=changelog.txt

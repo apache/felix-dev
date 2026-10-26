@@ -14,13 +14,13 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 #
-javac.source:          1.8
-javac.target:          1.8
+javac.source:          11
+javac.target:          11
 Bundle-Version: 1.0.0
 -buildpath: \
 	org.apache.felix.dependencymanager;version=latest,\
-	osgi.core;version=6.0,\
-	osgi.cmpn;version=6.0
+	osgi.core;version=8.0,\
+	osgi.cmpn;version=7.0
 
 -sub:  \
 	*.bnd

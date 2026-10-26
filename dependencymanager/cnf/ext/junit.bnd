@@ -15,5 +15,5 @@
 # limitations under the License.
 #
 
-junit: org.apache.servicemix.bundles.junit; version=4.12
+junit: org.apache.servicemix.bundles.junit; version=4.13.2
 test-reports: test-results

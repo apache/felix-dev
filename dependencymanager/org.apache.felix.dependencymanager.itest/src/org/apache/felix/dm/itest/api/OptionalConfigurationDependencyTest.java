@@ -20,6 +20,7 @@ package org.apache.felix.dm.itest.api;
 
 import org.apache.felix.dm.Component;
 import org.apache.felix.dm.DependencyManager;
+import org.apache.felix.dm.itest.util.ConfigDeliveries;
 import org.apache.felix.dm.itest.util.Ensure;
 import org.apache.felix.dm.itest.util.TestBase;
 import org.junit.Assert;
@@ -40,7 +41,8 @@ import org.osgi.service.cm.ConfigurationAdmin;
  * @author <a href="mailto:dev@felix.apache.org">Felix Project Team</a>
  */
 public class OptionalConfigurationDependencyTest extends TestBase {
-    final static String PID = "ConfigurationDependencyTest.pid";
+    // Unique per test, so that the asynchronous deletion of the configuration of a previous test cannot reach the next one.
+    final String PID = "OptionalConfigurationDependencyTest.pid." + System.nanoTime();
     
     public void testOptionalConfigurationConsumer() {
         DependencyManager m = getDM();
@@ -69,6 +71,7 @@ public class OptionalConfigurationDependencyTest extends TestBase {
     static class OptionalConfigurationConsumer {
         protected final Ensure m_ensure;
         protected volatile int m_updateCount;
+        private final ConfigDeliveries m_deliveries = new ConfigDeliveries();
 
         public OptionalConfigurationConsumer(Ensure e) {
             m_ensure = e;
@@ -76,6 +79,9 @@ public class OptionalConfigurationDependencyTest extends TestBase {
         
         public void updated(MyConfig cnf) { // optional configuration, called after start(), like any other optional dependency callbacks.
         	if (cnf != null) {
+        		if (m_deliveries.isRepeat((Object) cnf.getTestkey())) {
+        			return; // the same configuration delivered again
+        		}
         		m_updateCount ++;
         		if (m_updateCount == 1) {
         			if (!"default".equals(cnf.getTestkey())) {

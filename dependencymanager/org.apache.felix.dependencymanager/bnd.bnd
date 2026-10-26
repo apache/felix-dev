@@ -17,9 +17,9 @@
 -buildpath: \
 	${mockito},\
 	${junit},\
-	osgi.core;version=6.0,\
-	osgi.cmpn;version=6.0,\
-	osgi.annotation;version=6.0
+	osgi.core;version=8.0,\
+	osgi.cmpn;version=7.0,\
+	osgi.annotation;version=8.1
 Private-Package: \
 	org.apache.felix.dm.impl,\
 	org.apache.felix.dm.impl.index,\
@@ -34,7 +34,7 @@ Export-Package:  \
 Include-Resource: META-INF/=resources/,META-INF/changelog.txt=changelog.txt
 Import-Package: !org.junit,!org.mockito.*,org.osgi.framework;version="[1.8, 2)",*
 Bundle-Activator: org.apache.felix.dm.impl.Activator
-Bundle-Version: 4.6.2
+Bundle-Version: 5.0.0
 Bundle-Name: Apache Felix Dependency Manager
 Bundle-Description: Provides dynamic service and component dependency management
 Bundle-License: http://www.apache.org/licenses/LICENSE-2.0.txt
@@ -45,7 +45,7 @@ Bundle-Category: osgi
 -testpath: \
 	${junit},\
 	${mockito},\
-	org.objenesis;version=2.2
+	org.objenesis;version=3.3
 	
 
 

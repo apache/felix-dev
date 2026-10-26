@@ -20,3 +20,11 @@
 tasks.named('wrapper') {
   jarFile = rootProject.file('.gradle-wrapper/gradle-wrapper.jar')
 }
+
+// The bnd launcher based integration tests run in the testOSGi task, so the plain
+// Gradle test task of those projects legitimately has no tests to discover.
+subprojects {
+  tasks.withType(Test).configureEach {
+    failOnNoDiscoveredTests = false
+  }
+}
