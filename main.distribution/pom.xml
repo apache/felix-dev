@@ -153,6 +153,23 @@
                     </execution>
                 </executions>
             </plugin>
+            <plugin>
+                <groupId>org.apache.geronimo.genesis.plugins</groupId>
+                <artifactId>tools-maven-plugin</artifactId>
+                <executions>
+                    <execution>
+                        <id>verify-legal-files</id>
+                        <configuration>
+                            <!-- felix-parent sets strict=true. verify-legal-files looks for
+                                 LICENSE and NOTICE at the root of each artifact; this is a
+                                 binary distribution, so they correctly sit one level down,
+                                 in felix-framework-${framework.version}/, where the check
+                                 cannot see them. The archive does carry them. -->
+                            <strict>false</strict>
+                        </configuration>
+                    </execution>
+                </executions>
+            </plugin>
     </plugins>
     <resources>
       <resource>
