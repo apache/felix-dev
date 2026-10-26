@@ -27,7 +27,7 @@
   <packaging>bundle</packaging>
   <name>Apache Felix Framework</name>
   <artifactId>org.apache.felix.framework</artifactId>
-  <version>8.0.0</version>
+  <version>8.0.1-SNAPSHOT</version>
   <properties>
     <dollar>$</dollar>
     <!-- See FELIX-6759. Replacing the SecurityManager based call stack inspection
