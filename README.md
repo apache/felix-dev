@@ -7,7 +7,7 @@ The **Apache Felix** project is a collection of semi-related **OSGi** sub-projec
 Sub-projects build and release individually and each declares its own minimum Java
 version, so there is no single repository-wide baseline. The CI build
 (`.github/workflows/maven-ci.yml`) compiles and tests the covered sub-projects on
-**Java 17, 21, 23 and 25**.
+**Java 17, 21, 25 and 27**.
 
 ### Security Manager
 
