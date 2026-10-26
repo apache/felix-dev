@@ -1,3 +1,12 @@
+Changes from 7.0.5 to 8.0.0
+---------------------------
+
+** Improvement
+    * [FELIX-6807] : Update to main 8.0.0, which embeds framework 8.0.0. That
+      framework removes the OSGi security layer and requires Java 11.
+    * [FELIX-6807] : Update to Gogo Runtime 1.2.0
+    * [FELIX-6807] : Build on a current JDK (felix-parent 9)
+
 Changes from 7.0.4 to 7.0.5
 ---------------------------
 
