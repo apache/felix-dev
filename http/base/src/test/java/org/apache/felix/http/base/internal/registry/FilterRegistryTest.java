@@ -123,7 +123,32 @@ public class FilterRegistryTest {
         reg.removeFilter(h5.getFilterInfo(), true);
     }
 
+    @Test public void testErrorFilterMatchesErrorServletPath() throws InvalidSyntaxException
+    {
+        final FilterHandler h1 = createFilterHandler(1L, 0, new String[] {"ERROR"}, "/errors/*");
+        reg.addFilter(h1);
+
+        // the error servlet is at /errors/page, the original request does not matter
+        assertEquals(1, reg.getFilterHandlers(null, DispatcherType.ERROR, new String[] {"/errors/page"}).length);
+        assertEquals(1, reg.getFilterHandlers(null, DispatcherType.ERROR, new String[] {"/other", "/errors/page"}).length);
+        assertEquals(1, reg.getFilterHandlers(null, DispatcherType.ERROR, "/errors/page").length);
+
+        // error servlet outside of the filter pattern, or without any pattern
+        assertEquals(0, reg.getFilterHandlers(null, DispatcherType.ERROR, new String[] {"/other"}).length);
+        assertEquals(0, reg.getFilterHandlers(null, DispatcherType.ERROR, new String[0]).length);
+
+        // dispatcher type is still checked
+        assertEquals(0, reg.getFilterHandlers(null, DispatcherType.REQUEST, new String[] {"/errors/page"}).length);
+
+        reg.removeFilter(h1.getFilterInfo(), true);
+    }
+
     private static FilterInfo createFilterInfo(final long id, final int ranking, final String... paths) throws InvalidSyntaxException
+    {
+        return createFilterInfo(id, ranking, null, paths);
+    }
+
+    private static FilterInfo createFilterInfo(final long id, final int ranking, final String[] dispatchers, final String... paths) throws InvalidSyntaxException
     {
         final BundleContext bCtx = mock(BundleContext.class);
         when(bCtx.createFilter(ArgumentMatchers.anyString())).thenReturn(null);
@@ -136,6 +161,10 @@ public class FilterRegistryTest {
         when(ref.getProperty(Constants.SERVICE_ID)).thenReturn(id);
         when(ref.getProperty(Constants.SERVICE_RANKING)).thenReturn(ranking);
         when(ref.getProperty(HttpWhiteboardConstants.HTTP_WHITEBOARD_FILTER_PATTERN)).thenReturn(paths);
+        if ( dispatchers != null )
+        {
+            when(ref.getProperty(HttpWhiteboardConstants.HTTP_WHITEBOARD_FILTER_DISPATCHER)).thenReturn(dispatchers);
+        }
         when(ref.getPropertyKeys()).thenReturn(new String[0]);
         final FilterInfo si = new FilterInfo(ref);
 
@@ -144,7 +173,12 @@ public class FilterRegistryTest {
 
     private static FilterHandler createFilterHandler(final long id, final int ranking, final String... paths) throws InvalidSyntaxException
     {
-        final FilterInfo si = createFilterInfo(id, ranking, paths);
+        return createFilterHandler(id, ranking, null, paths);
+    }
+
+    private static FilterHandler createFilterHandler(final long id, final int ranking, final String[] dispatchers, final String... paths) throws InvalidSyntaxException
+    {
+        final FilterInfo si = createFilterInfo(id, ranking, dispatchers, paths);
         @SuppressWarnings("unchecked")
         final ServiceObjects<Filter> so = mock(ServiceObjects.class);
         final BundleContext ctx = mock(BundleContext.class);

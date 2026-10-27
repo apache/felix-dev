@@ -17,6 +17,8 @@
 package org.apache.felix.http.base.internal.dispatch;
 
 import java.io.IOException;
+import java.util.ArrayList;
+import java.util.List;
 import java.util.concurrent.atomic.AtomicInteger;
 
 import org.jetbrains.annotations.Nullable;
@@ -56,6 +58,38 @@ final class ServletResponseWrapper extends HttpServletResponseWrapper
         this.request = req;
         this.servletName = servletName;
         this.errorRegistry = errorRegistry;
+    }
+
+    /**
+     * Get the paths used to match ERROR filters against the URL patterns.
+     * These are the paths of the error servlet, not of the original request.
+     * Extension patterns have no path to match, an error servlet without
+     * patterns is only matched through its name.
+     * @param patterns The patterns of the error servlet, might be {@code null}
+     * @return The paths, might be empty
+     */
+    static String[] getErrorServletPaths(@Nullable final String[] patterns)
+    {
+        final List<String> paths = new ArrayList<>();
+        if ( patterns != null )
+        {
+            for(final String pattern : patterns)
+            {
+                if ( pattern.isEmpty() || pattern.equals("/") )
+                {
+                    paths.add("/");
+                }
+                else if ( pattern.endsWith("/*") )
+                {
+                    paths.add(pattern.substring(0, pattern.length() - 2));
+                }
+                else if ( !pattern.startsWith("*.") )
+                {
+                    paths.add(pattern);
+                }
+            }
+        }
+        return paths.toArray(new String[0]);
     }
 
     @Override
@@ -115,7 +149,8 @@ final class ServletResponseWrapper extends HttpServletResponseWrapper
                                 request.getHttpServletMapping().getMappingMatch(),
                                 false);
 
-                        final FilterHandler[] filterHandlers = errorRegistry.getFilterHandlers(errorResolution, DispatcherType.ERROR, request.getRequestURI());
+                        final FilterHandler[] filterHandlers = errorRegistry.getFilterHandlers(errorResolution, DispatcherType.ERROR,
+                                getErrorServletPaths(errorResolution.getServletInfo().getPatterns()));
 
                         final ServletRequestWrapper reqWrapper = new ServletRequestWrapper(request,
                                 errorResolution.getContext(),
