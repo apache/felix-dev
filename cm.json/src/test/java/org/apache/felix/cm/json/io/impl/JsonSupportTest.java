@@ -60,10 +60,12 @@ public class JsonSupportTest {
         assertEquals(3.1d, Configurations.convertToObject(Json.createValue(3.1)));
     }
 
+    @Test
     public void testConvertStringToObject() {
         assertEquals("hello world", Configurations.convertToObject(Json.createValue("hello world")));
     }
 
+    @Test
     public void testConvertObjectToObject() {
         final JsonObjectBuilder builder = Json.createObjectBuilder();
         builder.add("hello", "world");
