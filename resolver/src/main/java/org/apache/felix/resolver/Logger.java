@@ -83,6 +83,18 @@ public class Logger
         _log(LOG_DEBUG, msg, null);
     }
 
+    /**
+     * Logs a debug message using {@link String#format(String, Object...)}
+     * syntax; the message is only formatted if debug logging is enabled.
+     */
+    public void debug(String format, Object... args)
+    {
+        if (isDebugEnabled())
+        {
+            _log(LOG_DEBUG, String.format(format, args), null);
+        }
+    }
+
     protected void doLog(int level, String msg, Throwable throwable)
     {
         if (level > m_logLevel)

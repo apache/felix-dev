@@ -15,7 +15,7 @@
  */
 
 /**
- * Resolver Service Package Version 1.1.
+ * Resolver Service Package Version 1.2.
  * <p>
  * Bundles wishing to use this package must list the package in the
  * Import-Package header of the bundle's manifest. This package has two types of
@@ -24,16 +24,16 @@
  * <p>
  * Example import for consumers using the API in this package:
  * <p>
- * {@code  Import-Package: org.osgi.service.resolver; version="[1.1,2.0)"}
+ * {@code  Import-Package: org.osgi.service.resolver; version="[1.2,2.0)"}
  * <p>
  * Example import for providers implementing the API in this package:
  * <p>
- * {@code  Import-Package: org.osgi.service.resolver; version="[1.1,1.2)"}
+ * {@code  Import-Package: org.osgi.service.resolver; version="[1.2,1.3)"}
  * 
  * @author $Id: 260072a99b71d2c4e6cfd174fd6acc1d20768e25 $
  */
 
-@Version("1.1.1")
+@Version("1.2.0")
 package org.osgi.service.resolver;
 
 import org.osgi.annotation.versioning.Version;
