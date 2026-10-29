@@ -1,3 +1,5 @@
+[![Github CI Build](https://github.com/apache/felix-dev/actions/workflows/maven-ci.yml/badge.svg)](https://github.com/apache/felix-dev/actions/workflows/maven-ci.yml) 
+
 # Apache Felix
 
 The **Apache Felix** project is a collection of semi-related **OSGi** sub-projects that build and release individually.
