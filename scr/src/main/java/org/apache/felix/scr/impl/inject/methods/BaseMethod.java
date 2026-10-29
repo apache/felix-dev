@@ -22,8 +22,6 @@ package org.apache.felix.scr.impl.inject.methods;
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
 import java.lang.reflect.Modifier;
-import java.security.AccessController;
-import java.security.PrivilegedAction;
 import java.util.Arrays;
 import java.util.Map;
 
@@ -489,15 +487,7 @@ public abstract class BaseMethod<P extends BaseParameter, T>
 
     private static void setAccessible(final Method method)
     {
-        AccessController.doPrivileged( new PrivilegedAction<Object>()
-        {
-            @Override
-            public Object run()
-            {
-                method.setAccessible( true );
-                return null;
-            }
-        } );
+        method.setAccessible( true );
     }
 
 

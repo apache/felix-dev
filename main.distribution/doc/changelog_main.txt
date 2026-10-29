@@ -1,3 +1,11 @@
+Changes from 7.0.5 to 8.0.0
+---------------------------
+
+** Improvement
+    * [FELIX-6807] : Update to framework 8.0.0, which removes the OSGi security
+      layer and requires Java 11. See the framework changelog for details.
+    * [FELIX-6807] : Build on a current JDK (felix-parent 9)
+
 Changes from 7.0.4 to 7.0.5
 ---------------------------
 

@@ -50,10 +50,7 @@ import org.apache.felix.resolver.ResolverImpl;
 import org.osgi.framework.Bundle;
 import org.osgi.framework.BundleEvent;
 import org.osgi.framework.BundleException;
-import org.osgi.framework.BundlePermission;
-import org.osgi.framework.CapabilityPermission;
 import org.osgi.framework.Constants;
-import org.osgi.framework.PackagePermission;
 import org.osgi.framework.ServiceReference;
 import org.osgi.framework.ServiceRegistration;
 import org.osgi.framework.hooks.resolver.ResolverHook;
@@ -293,11 +290,6 @@ class StatefulResolver
 
                 BundleCapability bcap = (BundleCapability) cap;
 
-                // Filter according to security.
-                if (invokeHooksAndSecurity && filteredBySecurity((BundleRequirement)req, bcap))
-                {
-                    continue;
-                }
                 // Filter already resolved hosts, since we don't support
                 // dynamic attachment of fragments.
                 if (req.getNamespace().equals(BundleRevision.HOST_NAMESPACE)
@@ -352,69 +344,6 @@ class StatefulResolver
         return result;
     }
 
-    private boolean filteredBySecurity(BundleRequirement req, BundleCapability cap)
-    {
-        if (System.getSecurityManager() != null)
-        {
-            BundleRevisionImpl reqRevision = (BundleRevisionImpl) req.getRevision();
-
-            if (req.getNamespace().equals(BundleRevision.PACKAGE_NAMESPACE))
-            {
-                if (!((BundleProtectionDomain) ((BundleRevisionImpl) cap.getRevision()).getProtectionDomain()).impliesDirect(
-                    new PackagePermission((String) cap.getAttributes().get(BundleRevision.PACKAGE_NAMESPACE),
-                    PackagePermission.EXPORTONLY)) ||
-                    !((reqRevision == null) ||
-                        ((BundleProtectionDomain) reqRevision.getProtectionDomain()).impliesDirect(
-                            new PackagePermission((String) cap.getAttributes().get(BundleRevision.PACKAGE_NAMESPACE),
-                            cap.getRevision().getBundle(),PackagePermission.IMPORT))
-                    ))
-                {
-                    if (reqRevision != cap.getRevision())
-                    {
-                        return true;
-                    }
-                }
-            }
-            else if (req.getNamespace().equals(BundleRevision.BUNDLE_NAMESPACE))
-            {   if (!((BundleProtectionDomain) ((BundleRevisionImpl) cap.getRevision()).getProtectionDomain()).impliesDirect(
-                    new BundlePermission(cap.getRevision().getSymbolicName(), BundlePermission.PROVIDE)) ||
-                    !((reqRevision == null) ||
-                        ((BundleProtectionDomain) reqRevision.getProtectionDomain()).impliesDirect(
-                            new BundlePermission(cap.getRevision().getSymbolicName(), BundlePermission.REQUIRE))
-                    ))
-                {
-                    return true;
-                }
-            }
-            else if (req.getNamespace().equals(BundleRevision.HOST_NAMESPACE))
-            {
-                if (!((BundleProtectionDomain) reqRevision.getProtectionDomain())
-                    .impliesDirect(new BundlePermission(
-                        cap.getRevision().getSymbolicName(),
-                        BundlePermission.FRAGMENT))
-                || !((BundleProtectionDomain) ((BundleRevisionImpl) cap.getRevision()).getProtectionDomain())
-                    .impliesDirect(new BundlePermission(
-                        cap.getRevision().getSymbolicName(),
-                        BundlePermission.HOST)))
-                {
-                    return true;
-                }
-            }
-            else  if (!req.getNamespace().equals("osgi.ee"))
-            {
-                if (!((BundleProtectionDomain) ((BundleRevisionImpl) cap.getRevision()).getProtectionDomain()).impliesDirect(
-                    new CapabilityPermission(req.getNamespace(), CapabilityPermission.PROVIDE))
-                    ||
-                    !((reqRevision == null) || ((BundleProtectionDomain) reqRevision.getProtectionDomain()).impliesDirect(
-                    new CapabilityPermission(req.getNamespace(), cap.getAttributes(), cap.getRevision().getBundle(), CapabilityPermission.REQUIRE))))
-                {
-                    return true;
-                }
-            }
-        }
-        return false;
-    }
-
     void resolve(
         Set<BundleRevision> mandatory,
         Set<BundleRevision> optional)
@@ -463,7 +392,13 @@ class StatefulResolver
                 }
                 else if (Util.isSingleton(br) && !isSelectedSingleton(br))
                 {
-                    throw new ResolveException("Singleton conflict.", br, null);
+                    BundleRevision conflictingRevision = findConflictingSingleton(br);
+                    throw new ResolveException(
+                        "Singleton conflict for Bundle-SymbolicName " + br.getSymbolicName()
+                            + ". Another bundle is already providing this singleton BSN: "
+                            + formatConflictingBundle(conflictingRevision) + ".",
+                        br,
+                        null);
                 }
             }
             for (Iterator<BundleRevision> it = optional.iterator(); it.hasNext(); )
@@ -1428,6 +1363,42 @@ class StatefulResolver
     private synchronized boolean isSelectedSingleton(BundleRevision br)
     {
         return m_selectedSingletons.contains(br);
+    }
+
+    private synchronized BundleRevision findConflictingSingleton(BundleRevision br)
+    {
+        List<BundleRevision> singletons = m_singletons.get(br.getSymbolicName());
+        if (singletons == null)
+        {
+            return null;
+        }
+
+        for (BundleRevision singleton : singletons)
+        {
+            if ((singleton != br)
+                && ((singleton.getWiring() != null) || m_selectedSingletons.contains(singleton)))
+            {
+                return singleton;
+            }
+        }
+
+        return null;
+    }
+
+    private static String formatConflictingBundle(BundleRevision conflictingRevision)
+    {
+        if (conflictingRevision == null)
+        {
+            return "?";
+        }
+
+        Bundle conflictingBundle = conflictingRevision.getBundle();
+        String details = "[id=" + conflictingBundle.getBundleId() + "]";
+        if (conflictingBundle.getState() == Bundle.UNINSTALLED)
+        {
+            details += ". This bundle is already uninstalled. Call refreshPackages() to remove it from the framework.";
+        }
+        return details;
     }
 
     private synchronized void selectSingletons(ResolverHookRecord record)

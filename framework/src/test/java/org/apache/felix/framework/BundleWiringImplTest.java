@@ -19,6 +19,7 @@
 package org.apache.felix.framework;
 
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.Assertions.entry;
 import static org.assertj.core.api.Assertions.fail;
 import static org.junit.jupiter.api.Assertions.assertDoesNotThrow;
 import static org.mockito.Mockito.mock;
@@ -100,6 +101,30 @@ public class BundleWiringImplTest
                 mockRevisionImpl, fragments, wires, importedPkgs, requiredPkgs);
     }
 
+    // Creates a class loader for a bundle whose content holds the given class.
+    private BundleClassLoader createBundleClassLoaderFor(Class<?> testClass) throws Exception
+    {
+        Felix mockFramework = mock(Felix.class);
+        HookRegistry hReg = mock(HookRegistry.class);
+        Mockito.when(mockFramework.getHookRegistry()).thenReturn(hReg);
+        Content mockContent = mock(Content.class);
+        String testClassAsPath = testClass.getName().replace('.', '/') + ".class";
+        byte[] testClassBytes = createTestClassBytes(testClass, testClassAsPath);
+
+        List<Content> contentPath = new ArrayList<>();
+        contentPath.add(mockContent);
+        initializeSimpleBundleWiring();
+
+        when(mockBundle.getFramework()).thenReturn(mockFramework);
+        when(mockFramework.getBootPackages()).thenReturn(new String[0]);
+
+        when(mockRevisionImpl.getContentPath()).thenReturn(contentPath);
+        when(mockContent.getEntryAsBytes(testClassAsPath)).thenReturn(
+                testClassBytes);
+
+        return createBundleClassLoader(BundleClassLoader.class, bundleWiring);
+    }
+
     @Test
     void bundleClassLoader() throws Exception
     {
@@ -130,28 +155,7 @@ public class BundleWiringImplTest
     @Test
     void findClassExistant() throws Exception
     {
-        Felix mockFramework = mock(Felix.class);
-        HookRegistry hReg = mock(HookRegistry.class);
-        Mockito.when(mockFramework.getHookRegistry()).thenReturn(hReg);
-        Content mockContent = mock(Content.class);
-        Class testClass = TestClass.class;
-        String testClassName = testClass.getName();
-        String testClassAsPath = testClassName.replace('.', '/') + ".class";
-        byte[] testClassBytes = createTestClassBytes(testClass, testClassAsPath);
-
-        List<Content> contentPath = new ArrayList<>();
-        contentPath.add(mockContent);
-        initializeSimpleBundleWiring();
-
-        when(mockBundle.getFramework()).thenReturn(mockFramework);
-        when(mockFramework.getBootPackages()).thenReturn(new String[0]);
-
-        when(mockRevisionImpl.getContentPath()).thenReturn(contentPath);
-        when(mockContent.getEntryAsBytes(testClassAsPath)).thenReturn(
-                testClassBytes);
-
-        BundleClassLoader bundleClassLoader = createBundleClassLoader(
-                BundleClassLoader.class, bundleWiring);
+        BundleClassLoader bundleClassLoader = createBundleClassLoaderFor(TestClass.class);
         assertThat(bundleClassLoader).isNotNull();
         AtomicReference<Class<?>> foundClassRef = new AtomicReference<>();
 
@@ -161,6 +165,62 @@ public class BundleWiringImplTest
         }, "Class should not throw exception");
         Class foundClass = foundClassRef.get();
         assertThat(foundClass).as("Class Should be found in this classloader").isNotNull();
+    }
+
+    @Test
+    void defineClassParallelReleasesItsLockWhenTheClassIsAlreadyDefined() throws Exception
+    {
+        BundleClassLoader bundleClassLoader = createBundleClassLoaderFor(TestClass.class);
+        String testClassName = TestClass.class.getName();
+        Class<?> defined = bundleClassLoader.findClass(testClassName);
+        assertThat(defined).as("Class should be defined by this classloader").isNotNull();
+
+        // A thread that read the class bytes before another thread defined the class arrives
+        // here once the class exists: it takes the free lock, finds the class and returns it.
+        Class<?> found = defineClassParallelAgain(bundleClassLoader, testClassName);
+
+        assertThat(found).as("The class already defined should be returned").isSameAs(defined);
+        assertThat(getClassLocks(bundleClassLoader))
+            .as("No class lock should outlive the define, or it keeps its thread reachable")
+            .isEmpty();
+    }
+
+    @Test
+    void defineClassParallelKeepsAnotherThreadsLockWhenTheClassIsAlreadyDefined() throws Exception
+    {
+        BundleClassLoader bundleClassLoader = createBundleClassLoaderFor(TestClass.class);
+        String testClassName = TestClass.class.getName();
+        Class<?> defined = bundleClassLoader.findClass(testClassName);
+        assertThat(defined).as("Class should be defined by this classloader").isNotNull();
+
+        // Another thread has defined the class but not yet released its lock, so this thread
+        // spins on the lock until it finds the class.
+        Thread owner = new Thread();
+        Map<String, Thread> classLocks = getClassLocks(bundleClassLoader);
+        classLocks.put(testClassName, owner);
+
+        Class<?> found = defineClassParallelAgain(bundleClassLoader, testClassName);
+
+        assertThat(found).as("The class already defined should be returned").isSameAs(defined);
+        assertThat(classLocks)
+            .as("Only the thread that owns a class lock may release it")
+            .containsOnly(entry(testClassName, owner));
+    }
+
+    // Calls defineClassParallel as a thread that read the class bytes before another thread
+    // defined the class. The class is already defined, so the define arguments are never used.
+    private Class<?> defineClassParallelAgain(BundleClassLoader bundleClassLoader, String name)
+    {
+        return bundleClassLoader.defineClassParallel(name, null, Collections.emptySet(), null,
+                null, null, null);
+    }
+
+    @SuppressWarnings("unchecked")
+    private Map<String, Thread> getClassLocks(BundleClassLoader bundleClassLoader) throws NoSuchFieldException, IllegalAccessException
+    {
+        Field m_classLocks = BundleClassLoader.class.getDeclaredField("m_classLocks");
+        m_classLocks.setAccessible(true);
+        return (Map<String, Thread>) m_classLocks.get(bundleClassLoader);
     }
 
     @SuppressWarnings({"unchecked", "rawtypes"})

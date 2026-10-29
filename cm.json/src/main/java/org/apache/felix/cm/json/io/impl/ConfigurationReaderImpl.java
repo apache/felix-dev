@@ -20,25 +20,34 @@ package org.apache.felix.cm.json.io.impl;
 
 import java.io.IOException;
 import java.io.Reader;
+import java.math.BigDecimal;
 import java.util.ArrayList;
 import java.util.Hashtable;
 import java.util.List;
 import java.util.Map;
+import java.util.regex.Pattern;
 
 import jakarta.json.JsonException;
+import jakarta.json.JsonNumber;
 import jakarta.json.JsonObject;
+import jakarta.json.JsonString;
 import jakarta.json.JsonValue;
 import jakarta.json.JsonValue.ValueType;
 
 import org.apache.felix.cm.json.io.ConfigurationReader;
 import org.apache.felix.cm.json.io.ConfigurationResource;
 import org.apache.felix.cm.json.io.Configurations;
+import org.osgi.framework.Version;
 import org.osgi.service.configurator.ConfiguratorConstants;
-import org.osgi.util.converter.ConversionException;
-import org.osgi.util.converter.Converters;
 
 public class ConfigurationReaderImpl
         implements ConfigurationReader, ConfigurationReader.Builder {
+
+    private static final Pattern SYMBOLIC_NAME_PATTERN =
+            Pattern.compile("[A-Za-z0-9_-]+(?:\\.[A-Za-z0-9_-]+)*");
+
+    private static final Pattern VERSION_PATTERN = Pattern.compile(
+            "[0-9]+(?:\\.[0-9]+(?:\\.[0-9]+(?:\\.[A-Za-z0-9_-]+)?)?)?");
 
     private boolean closed = false;
 
@@ -169,41 +178,47 @@ public class ConfigurationReaderImpl
      * @param root The JSON root object.
      */
     private void verifyJsonResource() throws IOException {
-        final Object version = JsonSupport
-                .convertToObject(this.jsonObject.get(ConfiguratorConstants.PROPERTY_RESOURCE_VERSION));
+        final JsonValue version = this.jsonObject.get(ConfiguratorConstants.PROPERTY_RESOURCE_VERSION);
         if (version != null) {
-            int v = -1;
-            try {
-                v = Converters.standardConverter().convert(version).defaultValue(-1).to(Integer.class);
-            } catch ( final ConversionException ce ) {
-                // ignore
-            }
-            if (v == -1) {
+            if (version.getValueType() != ValueType.NUMBER || !((JsonNumber) version).isIntegral()) {
                 throwIOException("Invalid resource version information : ".concat(version.toString()));
             }
             // we only support version 1
-            if (v != 1) {
+            if (((JsonNumber) version).bigDecimalValue().compareTo(BigDecimal.ONE) != 0) {
                 throwIOException("Unknown resource version : ".concat(version.toString()));
             }
         }
-        if (!verifyAsBundleResource) {
-            // if this is not a bundle resource
-            // then version and symbolic name must be set
-            final Object rsrcVersion = JsonSupport
-                    .convertToObject(this.jsonObject.get(ConfiguratorConstants.PROPERTY_VERSION));
-            if (rsrcVersion == null) {
+        final JsonValue rsrcVersion = this.jsonObject.get(ConfiguratorConstants.PROPERTY_VERSION);
+        if (rsrcVersion == null) {
+            if (!verifyAsBundleResource) {
                 throwIOException("Missing version information");
             }
-            if (!(rsrcVersion instanceof String)) {
+        } else {
+            if (rsrcVersion.getValueType() != ValueType.STRING) {
                 throwIOException("Invalid version information : ".concat(rsrcVersion.toString()));
             }
-            final Object rsrcName = JsonSupport
-                    .convertToObject(this.jsonObject.get(ConfiguratorConstants.PROPERTY_SYMBOLIC_NAME));
-            if (rsrcName == null) {
+            final String resourceVersion = ((JsonString) rsrcVersion).getString();
+            if (!VERSION_PATTERN.matcher(resourceVersion).matches()) {
+                throwIOException("Invalid version information : ".concat(rsrcVersion.toString()));
+            }
+            try {
+                new Version(resourceVersion);
+            } catch (final IllegalArgumentException iae) {
+                throwIOException("Invalid version information : ".concat(rsrcVersion.toString()));
+            }
+        }
+        final JsonValue rsrcName = this.jsonObject.get(ConfiguratorConstants.PROPERTY_SYMBOLIC_NAME);
+        if (rsrcName == null) {
+            if (!verifyAsBundleResource) {
                 throwIOException("Missing symbolic name information");
             }
-            if (!(rsrcName instanceof String)) {
-                throwIOException("Invalid symbolic name information : ".concat(rsrcVersion.toString()));
+        } else {
+            if (rsrcName.getValueType() != ValueType.STRING) {
+                throwIOException("Invalid symbolic name information : ".concat(rsrcName.toString()));
+            }
+            final String symbolicName = ((JsonString) rsrcName).getString();
+            if (!SYMBOLIC_NAME_PATTERN.matcher(symbolicName).matches()) {
+                throwIOException("Invalid symbolic name information : ".concat(rsrcName.toString()));
             }
         }
     }
@@ -224,7 +239,7 @@ public class ConfigurationReaderImpl
             if (isInternal) {
                 key = key.substring(ConfigurationResource.CONFIGURATOR_PROPERTY_PREFIX.length());
             }
-            final int pos = key.indexOf(':');
+            final int pos = isInternal ? -1 : key.indexOf(':');
             String typeInfo = null;
             if (pos != -1) {
                 typeInfo = key.substring(pos + 1);

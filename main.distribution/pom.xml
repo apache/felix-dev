@@ -20,18 +20,18 @@
  <parent>
     <groupId>org.apache.felix</groupId>
     <artifactId>felix-parent</artifactId>
-    <version>3</version>
-    <relativePath>../pom/pom.xml</relativePath>
+    <version>9</version>
+    <relativePath />
   </parent>
   <modelVersion>4.0.0</modelVersion>
   <packaging>pom</packaging>
   <name>Apache Felix Main Distribution</name>
   <artifactId>org.apache.felix.main.distribution</artifactId>
-  <version>7.1.0-SNAPSHOT</version>
+  <version>8.0.1-SNAPSHOT</version>
   <properties>
     <dollar>$</dollar>
-    <framework.version>7.0.5</framework.version>
-    <gogo.runtime.version>1.1.4</gogo.runtime.version>
+    <framework.version>8.0.0</framework.version>
+    <gogo.runtime.version>1.2.0</gogo.runtime.version>
     <gogo.jline.shell.version>1.1.8</gogo.jline.shell.version>
     <gogo.command.version>1.1.2</gogo.command.version>
     <jline.version>3.13.2</jline.version>
@@ -149,6 +149,23 @@
                         </goals>
                         <configuration>
                             <skip>true</skip>
+                        </configuration>
+                    </execution>
+                </executions>
+            </plugin>
+            <plugin>
+                <groupId>org.apache.geronimo.genesis.plugins</groupId>
+                <artifactId>tools-maven-plugin</artifactId>
+                <executions>
+                    <execution>
+                        <id>verify-legal-files</id>
+                        <configuration>
+                            <!-- felix-parent sets strict=true. verify-legal-files looks for
+                                 LICENSE and NOTICE at the root of each artifact; this is a
+                                 binary distribution, so they correctly sit one level down,
+                                 in felix-framework-${framework.version}/, where the check
+                                 cannot see them. The archive does carry them. -->
+                            <strict>false</strict>
                         </configuration>
                     </execution>
                 </executions>

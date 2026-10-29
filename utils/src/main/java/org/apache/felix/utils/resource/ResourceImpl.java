@@ -33,8 +33,11 @@ import org.osgi.resource.Resource;
  */
 public class ResourceImpl implements Resource {
 
-    protected final List<Capability> caps;
-    protected final List<Requirement> reqs;
+    private final List<Capability> caps;
+    private final List<Requirement> reqs;
+
+    private int hash; // default to 0
+    private boolean hashIsZero; // default to false;
 
     /**
      * CAUTION: This constructor does not ensure that the resource
@@ -57,9 +60,15 @@ public class ResourceImpl implements Resource {
         reqs = new ArrayList<>(0);
     }
 
+    private void resetHash() {
+        hash = 0;
+        hashIsZero = false;
+    }
+
     public void addCapability(Capability capability) {
         assert capability.getResource() == this;
         caps.add(capability);
+        resetHash();
     }
 
     public void addCapabilities(Collection<? extends Capability> capabilities) {
@@ -67,11 +76,13 @@ public class ResourceImpl implements Resource {
             assert cap.getResource() == this;
         }
         caps.addAll(capabilities);
+        resetHash();
     }
 
     public void addRequirement(Requirement requirement) {
         assert requirement.getResource() == this;
         reqs.add(requirement);
+        resetHash();
     }
 
     public void addRequirements(Collection<? extends Requirement> requirements) {
@@ -79,8 +90,18 @@ public class ResourceImpl implements Resource {
             assert req.getResource() == this;
         }
         reqs.addAll(requirements);
+        resetHash();
     }
 
+    /**
+     * {@inheritDoc}
+     * <p>
+     * Implementation note: contrary to the {@link Resource} contract, for a
+     * {@code null} namespace this returns the live internal list instead of an
+     * unmodifiable one, to avoid allocating a new list on each call. Callers must
+     * not modify it. To add capabilities, use {@link #addCapability} or
+     * {@link #addCapabilities}, which also invalidate the cached hash code
+     */
     public List<Capability> getCapabilities(String namespace) {
         List<Capability> result = caps;
         if (namespace != null) {
@@ -94,6 +115,15 @@ public class ResourceImpl implements Resource {
         return result;
     }
 
+    /**
+     * {@inheritDoc}
+     * <p>
+     * Implementation note: contrary to the {@link Resource} contract, for a
+     * {@code null} namespace this returns the live internal list instead of an
+     * unmodifiable one, to avoid allocating a new list on each call. Callers must
+     * not modify it. To add requirements, use {@link #addRequirement} or
+     * {@link #addRequirements}, which also invalidate the cached hash code
+     */
     public List<Requirement> getRequirements(String namespace) {
         List<Requirement> result = reqs;
         if (namespace != null) {
@@ -129,7 +159,16 @@ public class ResourceImpl implements Resource {
 
     @Override
     public int hashCode() {
-        return Objects.hash(caps, reqs);
+        int h = hash;
+        if (h == 0 && !hashIsZero) {
+            h = Objects.hash(caps, reqs);
+            if (h == 0) {
+                hashIsZero = true;
+            } else {
+                hash = h;
+            }
+        }
+        return h;
     }
 
 }

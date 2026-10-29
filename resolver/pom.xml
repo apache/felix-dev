@@ -20,7 +20,7 @@
   <parent>
     <groupId>org.apache.felix</groupId>
     <artifactId>felix-parent</artifactId>
-    <version>5</version>
+    <version>9</version>
     <relativePath>../pom/pom.xml</relativePath>
   </parent>
   <modelVersion>4.0.0</modelVersion>
@@ -57,18 +57,23 @@
     <dependency>
       <groupId>org.apache.felix</groupId>
       <artifactId>org.apache.felix.utils</artifactId>
-      <version>1.8.0</version>
+      <version>${felix.utils.version}</version>
       <scope>test</scope>
     </dependency>
     <dependency>
+      <!-- mockito-all 1.x bundles a cglib that cannot generate classes on JDK 25 -->
       <groupId>org.mockito</groupId>
-      <artifactId>mockito-all</artifactId>
-      <version>1.10.19</version>
+      <artifactId>mockito-core</artifactId>
+      <version>5.18.0</version>
       <scope>test</scope>
     </dependency>
   </dependencies>
   <properties>
-    <felix.java.version>6</felix.java.version>
+    <!-- Sibling Felix bundles the tests run against. Pinned to the latest release
+         so this module also builds on its own; CI overrides them with the locally
+         built versions so the tests exercise the code in this repository.
+         See FELIX-6870. -->
+    <felix.utils.version>1.8.0</felix.utils.version>
   </properties>
   <build>
     <plugins>

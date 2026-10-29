@@ -60,10 +60,12 @@ public class JsonSupportTest {
         assertEquals(3.1d, Configurations.convertToObject(Json.createValue(3.1)));
     }
 
+    @Test
     public void testConvertStringToObject() {
         assertEquals("hello world", Configurations.convertToObject(Json.createValue("hello world")));
     }
 
+    @Test
     public void testConvertObjectToObject() {
         final JsonObjectBuilder builder = Json.createObjectBuilder();
         builder.add("hello", "world");
@@ -113,6 +115,16 @@ public class JsonSupportTest {
         mBuilder.add("3");
 
         assertArrayEquals(new String[] { "hello", "3" }, (String[]) Configurations.convertToObject(mBuilder.build()));
+    }
+
+    @Test
+    public void testConvertMixedArrayToObject() {
+        final JsonArrayBuilder builder = Json.createArrayBuilder();
+        builder.add("hello");
+        builder.add(3);
+
+        assertArrayEquals(new String[] { "hello", "3" },
+                (String[]) Configurations.convertToObject(builder.build()));
     }
 
     @Test
