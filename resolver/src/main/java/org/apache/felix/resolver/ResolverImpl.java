@@ -91,6 +91,7 @@ public class ResolverImpl implements Resolver
         private final ConcurrentMap<String, List<String>> m_usesCache = new ConcurrentHashMap<String, List<String>>();
         private ResolutionError m_currentError;
         volatile private CancellationException m_isCancelled = null;
+        private Logger m_logger;
 
         static ResolveSession createSession(ResolveContext resolveContext, Executor executor, Resource dynamicHost, Requirement dynamicReq, List<Capability> dynamicCandidates)
         {
@@ -117,6 +118,18 @@ public class ResolverImpl implements Resolver
                 m_mandatoryResources = new ArrayList<Resource>();
                 m_optionalResources = new ArrayList<Resource>();
             }
+        }
+
+        // The resolve context logger is queried once per session
+        Logger getLogger(Logger fallback)
+        {
+            if (m_logger == null)
+            {
+                m_logger = m_resolveContext.getLogger()
+                    .<Logger>map(l -> new ContextLogger(l, fallback))
+                    .orElse(fallback);
+            }
+            return m_logger;
         }
 
         private void initMandatoryAndOptionalResources() {
@@ -348,6 +361,14 @@ public class ResolverImpl implements Resolver
         }
     }
 
+    /**
+     * Constructor used by {@link java.util.ServiceLoader}.
+     */
+    public ResolverImpl()
+    {
+        this(new Logger(Logger.LOG_ERROR));
+    }
+
     public ResolverImpl(Logger logger)
     {
         this(logger, Runtime.getRuntime().availableProcessors());
@@ -423,6 +444,13 @@ public class ResolverImpl implements Resolver
     private Map<Resource, List<Wire>> doResolve(ResolveSession session) throws ResolutionException {
         Map<Resource, List<Wire>> wireMap = new HashMap<Resource, List<Wire>>();
         boolean retry;
+        Logger logger = session.getLogger(m_logger);
+        if (logger.isDebugEnabled())
+        {
+            logger.debug("Resolving %d mandatory and %d optional resources",
+                session.getMandatoryResources().size(),
+                session.getOptionalResources().size());
+        }
         do
         {
             retry = false;
@@ -455,7 +483,7 @@ public class ResolverImpl implements Resolver
                     // log all the resolution exceptions for the uses constraint violations
                     for (Map.Entry<Resource, ResolutionError> usesError : faultyResources.entrySet())
                     {
-                        m_logger.logUsesConstraintViolation(usesError.getKey(), usesError.getValue());
+                        logger.logUsesConstraintViolation(usesError.getKey(), usesError.getValue());
                     }
                     if (!retry)
                     {
@@ -1364,9 +1392,9 @@ public class ResolverImpl implements Resolver
                                 session.getContext(), allCandidates,
                                 resource, pkgName,
                                 sourceBlame, blame);
-                        if (m_logger.isDebugEnabled())
+                        if (session.getLogger(m_logger).isDebugEnabled())
                         {
-                            m_logger.debug(
+                            session.getLogger(m_logger).debug(
                                     "Candidate permutation failed due to a conflict with a "
                                             + "fragment import; will try another if possible."
                                             + " (" + rethrow.getMessage() + ")");
@@ -1416,9 +1444,9 @@ public class ResolverImpl implements Resolver
                     session.addPermutation(PermutationType.USES, permRef1.get());
                     session.addPermutation(PermutationType.USES, permRef2.get());
                 }
-                if (m_logger.isDebugEnabled())
+                if (session.getLogger(m_logger).isDebugEnabled())
                 {
-                    m_logger.debug("Candidate permutation failed due to a conflict between "
+                    session.getLogger(m_logger).debug("Candidate permutation failed due to a conflict between "
                             + "an export and import; will try another if possible."
                             + " (" + rethrow.getMessage() + ")");
                 }
@@ -1495,9 +1523,9 @@ public class ResolverImpl implements Resolver
                         }
                     }
 
-                    if (m_logger.isDebugEnabled())
+                    if (session.getLogger(m_logger).isDebugEnabled())
                     {
-                        m_logger.debug("Candidate permutation failed due to a conflict between "
+                        session.getLogger(m_logger).debug("Candidate permutation failed due to a conflict between "
                                         + "imports; will try another if possible."
                                         + " (" + rethrow.getMessage() + ")"
                         );

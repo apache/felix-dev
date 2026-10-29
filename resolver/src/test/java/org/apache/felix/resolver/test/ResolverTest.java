@@ -31,6 +31,7 @@ import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Optional;
 import java.util.Set;
 
 import org.apache.felix.resolver.Logger;
@@ -57,12 +58,38 @@ import org.osgi.resource.Requirement;
 import org.osgi.resource.Resource;
 import org.osgi.resource.Wire;
 import org.osgi.resource.Wiring;
+import org.osgi.service.log.FormatterLogger;
 import org.osgi.service.resolver.ResolutionException;
 import org.osgi.service.resolver.ResolveContext;
 import org.osgi.service.resolver.Resolver;
 
 public class ResolverTest
 {
+    @Test
+    public void testResolveContextLogger() throws Exception
+    {
+        FormatterLogger logger = Mockito.mock(FormatterLogger.class);
+        Mockito.when(logger.isDebugEnabled()).thenReturn(true);
+
+        Resolver resolver = new ResolverImpl();
+        Map<Resource, Wiring> wirings = new HashMap<Resource, Wiring>();
+        Map<Requirement, List<Capability>> candMap = new HashMap<Requirement, List<Capability>>();
+        List<Resource> mandatory = populateScenario1(wirings, candMap);
+        ResolveContextImpl rci = new ResolveContextImpl(wirings, candMap, mandatory, Collections.<Resource> emptyList())
+        {
+            @Override
+            public Optional<FormatterLogger> getLogger()
+            {
+                return Optional.of(logger);
+            }
+        };
+
+        resolver.resolve(rci);
+
+        Mockito.verify(logger).debug("Resolving %d mandatory and %d optional resources",
+            new Object[] { mandatory.size(), 0 });
+    }
+
     @Test
     public void testScenario1() throws Exception
     {
