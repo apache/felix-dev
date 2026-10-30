@@ -5586,6 +5586,11 @@ public class Felix extends BundleImpl implements Framework
 
     private volatile URLHandlersActivator m_urlHandlersActivator;
 
+    URLHandlersActivator getURLHandlersActivator()
+    {
+        return m_urlHandlersActivator;
+    }
+
     void setURLHandlersActivator(URLHandlersActivator urlHandlersActivator)
     {
         m_urlHandlersActivator = urlHandlersActivator;
