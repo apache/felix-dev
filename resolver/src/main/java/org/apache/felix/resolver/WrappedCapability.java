@@ -27,7 +27,7 @@ public class WrappedCapability implements HostedCapability
 {
     private final Resource m_host;
     private final Capability m_cap;
-    private final Map<String, Object> m_augmentedAttrs;
+    private Map<String, Object> m_augmentedAttrs;
 
     public WrappedCapability(Resource host, Capability cap)
     {
@@ -43,8 +43,6 @@ public class WrappedCapability implements HostedCapability
             wrapperUrl = "wrapper:" + wrapperUrl;
             augmentedDirs.put("url", wrapperUrl);
             m_augmentedAttrs = Collections.unmodifiableMap(augmentedDirs);
-        } else {
-            m_augmentedAttrs = m_cap.getAttributes();
         }
     }
 
@@ -102,7 +100,14 @@ public class WrappedCapability implements HostedCapability
 
     public Map<String, Object> getAttributes()
     {
-        return m_augmentedAttrs;
+        // The identity of the host is only known once the host is completely created
+        Map<String, Object> attributes = m_augmentedAttrs;
+        if (attributes == null)
+        {
+            attributes = HostIdentity.attributes(m_host, m_cap);
+            m_augmentedAttrs = attributes;
+        }
+        return attributes;
     }
 
 // TODO: RFC-112 - Need impl-specific type.

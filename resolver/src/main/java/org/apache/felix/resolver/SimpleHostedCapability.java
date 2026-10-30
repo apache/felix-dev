@@ -27,11 +27,13 @@ class SimpleHostedCapability implements HostedCapability
 {
     private final Resource m_host;
     private final Capability m_cap;
+    private final Map<String, Object> m_attributes;
 
     SimpleHostedCapability(Resource host, Capability cap)
     {
         m_host = host;
         m_cap = cap;
+        m_attributes = HostIdentity.attributes(host, cap);
     }
 
     public Resource getResource()
@@ -56,6 +58,6 @@ class SimpleHostedCapability implements HostedCapability
 
     public Map<String, Object> getAttributes()
     {
-        return m_cap.getAttributes();
+        return m_attributes;
     }
 }
