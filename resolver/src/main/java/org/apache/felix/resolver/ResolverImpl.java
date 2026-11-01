@@ -348,6 +348,14 @@ public class ResolverImpl implements Resolver
         }
     }
 
+    /**
+     * Constructor used by {@link java.util.ServiceLoader}.
+     */
+    public ResolverImpl()
+    {
+        this(new Logger(Logger.LOG_ERROR));
+    }
+
     public ResolverImpl(Logger logger)
     {
         this(logger, Runtime.getRuntime().availableProcessors());
