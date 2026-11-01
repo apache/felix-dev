@@ -22,10 +22,20 @@ import static org.assertj.core.api.Assertions.assertThat;
 
 import org.junit.jupiter.api.Test;
 
+import java.util.Arrays;
+import java.util.Collections;
 import java.util.List;
 
 class SimpleFilterTest
 {
+    @Test
+    void convertListAttribute()
+    {
+        SimpleFilter sf = SimpleFilter.convert(
+            Collections.singletonMap("colors", Arrays.asList("red", "blue")));
+        assertThat(sf).hasToString("(&(colors=red)(colors=blue))");
+    }
+
     @Test
     void substringMatching()
     {

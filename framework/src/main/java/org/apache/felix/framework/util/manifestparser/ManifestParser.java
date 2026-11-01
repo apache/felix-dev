@@ -334,6 +334,8 @@ public class ManifestParser
         Logger logger, List<ParsedHeaderClause> clauses, String mv)
         throws BundleException
     {
+        convertTypedAttributes(clauses);
+
         // Verify that the values are equals if the package specifies
         // both version and specification-version attributes.
         Set<String> dupeSet = new HashSet<>();
@@ -346,7 +348,7 @@ public class ManifestParser
             if ((v != null) && (sv != null))
             {
                 // Verify they are equal.
-                if (!((String) v).trim().equals(((String) sv).trim()))
+                if (!new VersionRange(v.toString().trim()).equals(new VersionRange(sv.toString().trim())))
                 {
                     throw new IllegalArgumentException(
                         "Both version and specification-version are specified, but they are not equal.");
@@ -509,6 +511,8 @@ public class ManifestParser
         Logger logger, List<ParsedHeaderClause> clauses, String mv)
         throws BundleException
     {
+        convertTypedAttributes(clauses);
+
         // Verify that the values are equals if the package specifies
         // both version and specification-version attributes.
         for (ParsedHeaderClause clause : clauses)
@@ -534,7 +538,7 @@ public class ManifestParser
             if ((v != null) && (sv != null))
             {
                 // Verify they are equal.
-                if (!((String) v).trim().equals(((String) sv).trim()))
+                if (!new VersionRange(v.toString().trim()).equals(new VersionRange(sv.toString().trim())))
                 {
                     throw new IllegalArgumentException(
                         "Both version and specification-version are specified, but they are not equal.");
@@ -736,6 +740,13 @@ public class ManifestParser
             // Should we error here if we are not an R4 bundle?
         }
 
+        return convertTypedAttributes(clauses);
+    }
+
+    private static List<ParsedHeaderClause> convertTypedAttributes(
+        List<ParsedHeaderClause> clauses)
+        throws BundleException
+    {
         // Convert attributes into specified types.
         for (ParsedHeaderClause clause : clauses)
         {
@@ -770,7 +781,7 @@ public class ManifestParser
                             || ((startIdx < 0) && (endIdx > 0)))
                         {
                             throw new BundleException(
-                                "Invalid Provide-Capability attribute list type for '"
+                                "Invalid attribute list type for '"
                                 + entry.getKey()
                                 + "' : "
                                 + type);
@@ -806,7 +817,7 @@ public class ManifestParser
                             else
                             {
                                 throw new BundleException(
-                                    "Unknown Provide-Capability attribute list type for '"
+                                    "Unknown attribute list type for '"
                                     + entry.getKey()
                                     + "' : "
                                     + type);
@@ -819,7 +830,7 @@ public class ManifestParser
                     else
                     {
                         throw new BundleException(
-                            "Unknown Provide-Capability attribute type for '"
+                            "Unknown attribute type for '"
                             + entry.getKey()
                             + "' : "
                             + type);
@@ -874,6 +885,8 @@ public class ManifestParser
         String mv, String bsn, Version bv, boolean connectModule)
         throws BundleException
     {
+        convertTypedAttributes(clauses);
+
         for (ParsedHeaderClause clause : clauses)
         {
             // Verify that the named package has not already been declared.
@@ -909,7 +922,7 @@ public class ManifestParser
             if ((v != null) && (sv != null))
             {
                 // Verify they are equal.
-                if (!((String) v).trim().equals(((String) sv).trim()))
+                if (!Version.parseVersion(v.toString()).equals(Version.parseVersion(sv.toString())))
                 {
                     throw new IllegalArgumentException(
                         "Both version and specification-version are specified, but they are not equal.");
@@ -1549,8 +1562,8 @@ public class ManifestParser
         String mv = getManifestVersion(headerMap);
         if ((mv != null) && mv.equals("2"))
         {
-            List<ParsedHeaderClause> clauses = parseStandardHeader(
-                (String) headerMap.get(Constants.FRAGMENT_HOST));
+            List<ParsedHeaderClause> clauses = convertTypedAttributes(parseStandardHeader(
+                (String) headerMap.get(Constants.FRAGMENT_HOST)));
             if (clauses.size() > 0)
             {
                 // Make sure that only one fragment host symbolic name is specified.
@@ -1749,6 +1762,7 @@ public class ManifestParser
 
     private static List<ParsedHeaderClause> normalizeRequireClauses(
         Logger logger, List<ParsedHeaderClause> clauses, String mv)
+        throws BundleException
     {
         // R3 bundles cannot require other bundles.
         if (!mv.equals("2"))
@@ -1757,6 +1771,8 @@ public class ManifestParser
         }
         else
         {
+            convertTypedAttributes(clauses);
+
             // Convert bundle version attribute to VersionRange type.
             for (ParsedHeaderClause clause : clauses)
             {

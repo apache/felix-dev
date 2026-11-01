@@ -21,6 +21,7 @@ package org.apache.felix.framework.capabilityset;
 import org.osgi.framework.VersionRange;
 
 import java.util.ArrayList;
+import java.util.Collection;
 import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
@@ -629,25 +630,17 @@ loop:   for (int i = 0; i < len; i++)
                     }
                 }
             }
+            else if (entry.getValue() instanceof Collection)
+            {
+                // A list attribute matches if it contains all of the values.
+                for (Object value : (Collection<?>) entry.getValue())
+                {
+                    filters.add(convertValue(entry.getKey(), value));
+                }
+            }
             else
             {
-                List<String> values = SimpleFilter.parseSubstring(entry.getValue().toString());
-                if (values.size() > 1)
-                {
-                    filters.add(
-                        new SimpleFilter(
-                            entry.getKey(),
-                            values,
-                            SimpleFilter.SUBSTRING));
-                }
-                else
-                {
-                    filters.add(
-                        new SimpleFilter(
-                            entry.getKey(),
-                            values.get(0),
-                            SimpleFilter.EQ));
-                }
+                filters.add(convertValue(entry.getKey(), entry.getValue()));
             }
         }
 
@@ -657,7 +650,7 @@ loop:   for (int i = 0; i < len; i++)
         {
             sf = filters.get(0);
         }
-        else if (attrs.size() > 1)
+        else if (filters.size() > 1)
         {
             sf = new SimpleFilter(null, filters, SimpleFilter.AND);
         }
@@ -667,5 +660,15 @@ loop:   for (int i = 0; i < len; i++)
         }
 
         return sf;
+    }
+
+    private static SimpleFilter convertValue(String name, Object value)
+    {
+        List<String> values = SimpleFilter.parseSubstring(value.toString());
+        if (values.size() > 1)
+        {
+            return new SimpleFilter(name, values, SimpleFilter.SUBSTRING);
+        }
+        return new SimpleFilter(name, values.get(0), SimpleFilter.EQ);
     }
 }
