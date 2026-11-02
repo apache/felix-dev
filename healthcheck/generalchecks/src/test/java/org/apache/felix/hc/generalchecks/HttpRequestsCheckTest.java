@@ -22,9 +22,10 @@ import static org.junit.Assert.assertArrayEquals;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNull;
 import static org.junit.Assert.assertThat;
-import static org.mockito.Matchers.any;
-import static org.mockito.Matchers.anyInt;
-import static org.mockito.Matchers.anyString;
+import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.anyInt;
+import static org.mockito.ArgumentMatchers.anyString;
+import static org.mockito.ArgumentMatchers.nullable;
 import static org.mockito.Mockito.doReturn;
 
 import java.util.HashMap;
@@ -153,7 +154,7 @@ public class HttpRequestsCheckTest {
 
     private Entry fakeRequestForSpecAndReturnResponse(HttpRequestsCheck.RequestSpec requestSpecOrig, HttpRequestsCheck.Response response) throws Exception {
         RequestSpec requestSpec = Mockito.spy(requestSpecOrig);
-        doReturn(response).when(requestSpec).performRequest(anyString(), anyString(), anyInt(), anyInt(), any(FormattingResultLog.class), any(HttpRequestsCheckTrustedCerts.class));
+        doReturn(response).when(requestSpec).performRequest(anyString(), anyString(), anyInt(), anyInt(), any(FormattingResultLog.class), nullable(HttpRequestsCheckTrustedCerts.class));
         FormattingResultLog resultLog = requestSpec.check("http://localhost:8080", 10000, 10000, Result.Status.WARN, true, null);
         Iterator<Entry> entryIt = resultLog.iterator();
         Entry lastEntry = null;
