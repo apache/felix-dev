@@ -138,7 +138,24 @@ public class HealthCheckMonitorIT {
         assertEquals("Expected " + expectedStatus + " result", expectedStatus, executionResult.get(0).getHealthCheckResult().getStatus());
     }
 
+    /**
+     * The monitor publishes its services from a periodic run (every second), so they show up some time
+     * after the health check was registered. Wait for them instead of asserting right away.
+     */
+    private void awaitService(final Class<?> serviceClass, final String filter) throws InvalidSyntaxException {
+        final long deadline = System.currentTimeMillis() + 10000;
+        while (bundleContext.getServiceReferences(serviceClass.getName(), filter) == null && System.currentTimeMillis() < deadline) {
+            try {
+                Thread.sleep(100);
+            } catch (final InterruptedException e) {
+                Thread.currentThread().interrupt();
+                return;
+            }
+        }
+    }
+
     private void assertHealthy(final String tag) throws InvalidSyntaxException {
+        awaitService(Healthy.class, "(tag=" + tag + ")");
         // healthy service
         final Collection<ServiceReference<Healthy>> colH = bundleContext.getServiceReferences(Healthy.class, "(tag=" + tag + ")");
         assertEquals(1, colH.size());
@@ -161,6 +178,7 @@ public class HealthCheckMonitorIT {
     }
 
     private void assertNotHealthy(final String tag) throws InvalidSyntaxException {
+        awaitService(Unhealthy.class, "(tag=" + tag + ")");
         // no healthy service
         final Collection<ServiceReference<Healthy>> colH = bundleContext.getServiceReferences(Healthy.class, "(tag=" + tag + ")");
         assertTrue(colH.isEmpty());
@@ -232,6 +250,7 @@ public class HealthCheckMonitorIT {
             this.assertHealthy(testTag);
 
             // system ready service
+            awaitService(SystemReady.class, null);
             final Collection<ServiceReference<SystemReady>> colS = bundleContext.getServiceReferences(SystemReady.class, null);
             assertFalse(colS.isEmpty());
             assertEquals(1, colS.size());
