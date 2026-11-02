@@ -24,6 +24,16 @@ on:
       - 'examples/**'
       - 'configadmin/**'
       - 'dependencymanager/**'
+      - 'healthcheck/**'
+      - 'fileinstall/**'
+      - 'inventory/**'
+      - 'configadmin-plugins/**'
+      - 'webconsole-plugins/**'
+      - 'metatype/**'
+      - 'coordinator/**'
+      - 'features/**'
+      - 'scr-ext-anno/**'
+      - 'bundlerepository.osgi-ct/**'
   pull_request:
     branches: [ "master", "feature/**", "maintenance/**" ]
     paths:
@@ -47,6 +57,16 @@ on:
       - 'examples/**'
       - 'configadmin/**'
       - 'dependencymanager/**'
+      - 'healthcheck/**'
+      - 'fileinstall/**'
+      - 'inventory/**'
+      - 'configadmin-plugins/**'
+      - 'webconsole-plugins/**'
+      - 'metatype/**'
+      - 'coordinator/**'
+      - 'features/**'
+      - 'scr-ext-anno/**'
+      - 'bundlerepository.osgi-ct/**'
 
 # Cancel superseded runs for the same branch. github.head_ref is only set for
 # pull_request events, so pushes fall back to github.ref, which groups per branch:
@@ -122,6 +142,26 @@ jobs:
             - 'examples/**'
           dependencymanager:
             - 'dependencymanager/**'
+          healthcheck:
+            - 'healthcheck/**'
+          fileinstall:
+            - 'fileinstall/**'
+          inventory:
+            - 'inventory/**'
+          configadmin-plugins:
+            - 'configadmin-plugins/**'
+          webconsole-plugins:
+            - 'webconsole-plugins/**'
+          metatype:
+            - 'metatype/**'
+          coordinator:
+            - 'coordinator/**'
+          features:
+            - 'features/**'
+          scr-ext-anno:
+            - 'scr-ext-anno/**'
+          bundlerepository-osgi-ct:
+            - 'bundlerepository.osgi-ct/**'
     - name: Felix Configuration JSON
       if: steps.changes.outputs.cm-json == 'true' || steps.changes.outputs.configurator == 'true'
       run: mvn -B -V -Dstyle.color=always --file cm.json/pom.xml clean install
@@ -200,6 +240,44 @@ jobs:
     - name: Felix examples
       if: steps.changes.outputs.examples == 'true'
       run: mvn -B -V -Dstyle.color=always --file examples/pom.xml clean verify
+    # The modules below are not part of a reactor and each pins the released Felix
+    # bundles it depends on, so they are built one by one. See FELIX-6875.
+    - name: Felix Health Check
+      if: steps.changes.outputs.healthcheck == 'true'
+      run: |
+        for module in annotation api core generalchecks webconsoleplugin; do
+          mvn -B -V -Dstyle.color=always --file healthcheck/$module/pom.xml clean verify || exit 1
+        done
+    - name: Felix File Install
+      if: steps.changes.outputs.fileinstall == 'true'
+      run: mvn -B -V -Dstyle.color=always --file fileinstall/pom.xml clean verify
+    - name: Felix Inventory
+      if: steps.changes.outputs.inventory == 'true'
+      run: mvn -B -V -Dstyle.color=always --file inventory/pom.xml clean verify
+    - name: Felix Config Admin plugins
+      if: steps.changes.outputs.configadmin-plugins == 'true'
+      run: mvn -B -V -Dstyle.color=always --file configadmin-plugins/interpolation/pom.xml clean verify
+    - name: Felix Web Console plugins
+      if: steps.changes.outputs.webconsole-plugins == 'true'
+      run: |
+        for module in ds event memoryusage obr packageadmin; do
+          mvn -B -V -Dstyle.color=always --file webconsole-plugins/$module/pom.xml clean verify || exit 1
+        done
+    - name: Felix Metatype
+      if: steps.changes.outputs.metatype == 'true'
+      run: mvn -B -V -Dstyle.color=always --file metatype/pom.xml clean verify
+    - name: Felix Coordinator
+      if: steps.changes.outputs.coordinator == 'true'
+      run: mvn -B -V -Dstyle.color=always --file coordinator/pom.xml clean verify
+    - name: Felix Features
+      if: steps.changes.outputs.features == 'true'
+      run: mvn -B -V -Dstyle.color=always --file features/pom.xml clean verify
+    - name: Felix SCR extension annotations
+      if: steps.changes.outputs.scr-ext-anno == 'true'
+      run: mvn -B -V -Dstyle.color=always --file scr-ext-anno/pom.xml clean verify
+    - name: Felix bundlerepository OSGi CT
+      if: steps.changes.outputs.bundlerepository-osgi-ct == 'true'
+      run: mvn -B -V -Dstyle.color=always --file bundlerepository.osgi-ct/pom.xml clean verify
     # The Dependency Manager runs last. Its integration tests run on the framework, Gogo and
     # Config Admin built and installed by the steps above, see FELIX-6870.
     - name: Felix Dependency Manager

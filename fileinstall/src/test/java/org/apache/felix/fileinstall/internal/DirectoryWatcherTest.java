@@ -237,39 +237,42 @@ public class DirectoryWatcherTest extends TestCase
     
     public void testInvalidTempDir() throws Exception
     {
-        String oldTmpDir = System.getProperty("java.io.tmpdir");
-        
-        try 
+        // java.io.tmpdir is read once when the JVM starts (JDK 12 and later), so setting it
+        // here would have no effect. Point File Install at the invalid directory through its
+        // own setting instead.
+        File parent = new File("target/tmp");
+        parent.mkdirs();
+        parent.setWritable(false, false);
+        try
         {
-            File parent = new File("target/tmp");
-            parent.mkdirs();
-            parent.setWritable(false, false);
             File tmp = new File(parent, "tmp");
-            System.setProperty("java.io.tmpdir", tmp.toString());
+            props.put(DirectoryWatcher.TMPDIR, tmp.toString());
 
             mockBundleContext.addBundleListener((BundleListener) org.easymock.EasyMock.anyObject());
             EasyMock.expect(mockBundleContext.createFilter((String) EasyMock.anyObject()))
                     .andReturn(null);
+            // Creating the folder fails, which is logged; the logger asks for a LogService.
+            EasyMock.expect(mockBundleContext.getServiceReference(LogService.class)).andReturn(null).anyTimes();
 
             BundleRevision mockBundleRevision = EasyMock.createNiceMock(BundleRevision.class);
             EasyMock.expect(mockBundle.adapt(BundleRevision.class)).andReturn(mockBundleRevision);
             EasyMock.expect(mockBundleRevision.getTypes())
                     .andReturn(BundleRevision.TYPE_FRAGMENT);
             EasyMock.replay(mockBundleContext, mockBundle, mockBundleRevision, mockSysBundle, mockStartLevel);
-    
+
             try
             {
                 dw = new DirectoryWatcher( new FileInstall(), props, mockBundleContext );
-                fail("Expected an IllegalStateException");
-            } 
-            catch (IllegalStateException e)
+                fail("Expected an exception for a temp directory that cannot be created");
+            }
+            catch (RuntimeException e)
             {
-                // expected
+                assertTrue(e.getMessage(), e.getMessage().contains("Cannot create folder"));
             }
         }
         finally
         {
-            System.setProperty("java.io.tmpdir", oldTmpDir);
+            parent.setWritable(true, false);
         }
     }
 
