@@ -41,7 +41,7 @@
              so this module also builds on its own; CI overrides them with the locally
              built versions so the tests exercise the code in this repository.
              See FELIX-6870. -->
-        <felix.framework.version>7.0.5</felix.framework.version>
+        <felix.framework.version>8.0.0</felix.framework.version>
     </properties>
 
     <profiles>
