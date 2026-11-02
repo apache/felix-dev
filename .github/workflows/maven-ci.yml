@@ -1,9 +1,11 @@
 name: Github CI Build
 
 on:
+  workflow_dispatch:
   push:
-    branches: [ "master" ]
+    branches: [ "master", "framework-7.x" ]
     paths:
+      - '.github/**'
       - 'cm.json/**'
       - 'configurator/**'
       - 'scr/**'
@@ -15,8 +17,9 @@ on:
       - 'framework/**'
       - 'utils/**'
   pull_request:
-    branches: [ "master" ]
+    branches: [ "master", "framework-7.x" ]
     paths:
+      - '.github/**'
       - 'cm.json/**'
       - 'configurator/**'
       - 'scr/**'
@@ -37,7 +40,7 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        java: [17,21,23]
+        java: [17,21]
     steps:
     - uses: actions/checkout@v7
     - name: Set up JDK ${{ matrix.java }}
