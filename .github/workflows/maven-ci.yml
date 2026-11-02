@@ -46,11 +46,12 @@ on:
       - 'examples/**'
       - 'configadmin/**'
 
-# Cancel superseded runs when a branch is pushed again. github.head_ref is only set
-# for pull_request events, so pushes to master fall back to the unique run_id and are
-# never cancelled.
+# Cancel superseded runs for the same branch. github.head_ref is only set for
+# pull_request events, so pushes fall back to github.ref, which groups per branch:
+# a release pushes a dozen version-only commits in a row, and only the last needs
+# building.
 concurrency:
-  group: ${{ github.workflow }}-${{ github.head_ref || github.run_id }}
+  group: ${{ github.workflow }}-${{ github.head_ref || github.ref }}
   cancel-in-progress: true
 
 permissions: {}

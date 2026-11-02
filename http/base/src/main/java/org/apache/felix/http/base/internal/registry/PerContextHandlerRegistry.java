@@ -174,6 +174,20 @@ public final class PerContextHandlerRegistry implements Comparable<PerContextHan
     }
 
     /**
+     * Get filter handlers for any of the request uris
+     * @param servletHandler The servlet handler (might be null)
+     * @param dispatcherType The dispatcher type
+     * @param requestURIs The request uris, might be empty
+     * @return The array of filter handlers, the array might be empty.
+     */
+    public @NotNull FilterHandler[] getFilterHandlers(@Nullable final ServletHandler servletHandler,
+            @NotNull final DispatcherType dispatcherType,
+            @NotNull final String[] requestURIs)
+    {
+        return this.filterRegistry.getFilterHandlers(servletHandler, dispatcherType, requestURIs);
+    }
+
+    /**
      * Get the servlet handling the error.
      * @param code The error code
      * @param exception The optional exception
