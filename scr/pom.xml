@@ -77,7 +77,7 @@
              built versions so the tests exercise the code in this repository.
              See FELIX-6870. -->
         <felix.framework.version>8.0.0</felix.framework.version>
-        <felix.configadmin.version>1.9.0</felix.configadmin.version>
+        <felix.configadmin.version>1.10.0</felix.configadmin.version>
     </properties>
     
     

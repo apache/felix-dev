@@ -51,7 +51,7 @@
              See FELIX-6870. -->
         <felix.gogo.command.version>1.1.2</felix.gogo.command.version>
         <felix.gogo.shell.version>1.1.4</felix.gogo.shell.version>
-        <felix.gogo.runtime.version>1.1.4</felix.gogo.runtime.version>
+        <felix.gogo.runtime.version>1.2.0</felix.gogo.runtime.version>
         <felix.framework.version>8.0.0</felix.framework.version>
     </properties>
 
