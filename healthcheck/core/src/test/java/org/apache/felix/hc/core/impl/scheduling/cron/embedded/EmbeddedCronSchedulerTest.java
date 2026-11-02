@@ -18,7 +18,11 @@
 package org.apache.felix.hc.core.impl.scheduling.cron.embedded;
 
 import static org.junit.Assert.assertEquals;
+import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.anyLong;
 import static org.mockito.Mockito.doReturn;
+import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.when;
 import static org.mockito.MockitoAnnotations.initMocks;
 
 import java.text.SimpleDateFormat;
@@ -108,6 +112,22 @@ public class EmbeddedCronSchedulerTest {
         
         
 
+    }
+
+
+    @Test
+    public void schedulerIsInitialisedBeforeItsFirstRun() {
+        // an executor that runs the task right inside scheduleAtFixedRate, like a worker thread that
+        // gets going before the constructor has returned (initial delay 0)
+        final ScheduledExecutorService immediateExecutor = mock(ScheduledExecutorService.class);
+        when(immediateExecutor.scheduleAtFixedRate(any(Runnable.class), anyLong(), anyLong(), any(TimeUnit.class))).thenAnswer(invocation -> {
+            invocation.<Runnable>getArgument(0).run();
+            return null;
+        });
+
+        // a run before the thread name is set would fail on Thread.setName(null) and, on a real executor,
+        // silently end the periodic task so that no job is ever fired
+        new EmbeddedCronScheduler(immediateExecutor, 0, 50, TimeUnit.MILLISECONDS, "T2");
     }
 
 
