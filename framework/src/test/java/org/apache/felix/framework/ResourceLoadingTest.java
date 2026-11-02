@@ -22,6 +22,7 @@ import java.io.BufferedReader;
 import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
 import java.io.File;
+import java.io.FileInputStream;
 import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.InputStreamReader;
@@ -29,9 +30,12 @@ import java.net.URL;
 import java.net.URLClassLoader;
 import java.util.ArrayList;
 import java.util.Collection;
+import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.concurrent.CountDownLatch;
+import java.util.concurrent.TimeUnit;
 import java.util.jar.JarOutputStream;
 import java.util.jar.Manifest;
 import java.util.zip.ZipEntry;
@@ -43,8 +47,11 @@ import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.osgi.framework.Bundle;
 import org.osgi.framework.Constants;
+import org.osgi.framework.FrameworkEvent;
 import org.osgi.framework.launch.Framework;
+import org.osgi.framework.wiring.BundleRevision;
 import org.osgi.framework.wiring.BundleWiring;
+import org.osgi.framework.wiring.FrameworkWiring;
 
 class ResourceLoadingTest
 {
@@ -225,6 +232,53 @@ class ResourceLoadingTest
         ClassLoader urlClassLoader = createClassLoader(testBundle);
 
         assertThat(urlClassLoader.getResource("ej2.txt")).isNotNull();
+    }
+
+    @Test
+    void resourceLoadingFromClosedRevisionFindsNothing() throws Exception
+    {
+        String bmf = "Bundle-SymbolicName: cap.bundle\n"
+            + "Bundle-Version: 1.2.3.Blah\n"
+            + "Bundle-ManifestVersion: 2\n"
+            + "Import-Package: org.osgi.framework\n";
+        File bundleFile = File.createTempFile("felix-bundle", ".jar", tempDir);
+
+        Manifest mf = new Manifest(new ByteArrayInputStream(bmf.getBytes("utf-8")));
+        mf.getMainAttributes().putValue("Manifest-Version", "1.0");
+        JarOutputStream os = new JarOutputStream(new FileOutputStream(bundleFile), mf);
+
+        String name = "b1.txt";
+        os.putNextEntry(new ZipEntry(name));
+        os.write("This is a Test".getBytes());
+        os.close();
+
+        Bundle testBundle = felix.getBundleContext().installBundle(bundleFile.toURI().toASCIIString());
+        testBundle.start();
+
+        BundleRevisionImpl oldRevision = (BundleRevisionImpl) testBundle.adapt(BundleRevision.class);
+        BundleWiringImpl.BundleClassLoader oldClassLoader =
+            (BundleWiringImpl.BundleClassLoader) testBundle.adapt(BundleWiring.class).getClassLoader();
+        assertThat(oldClassLoader.findResource(name)).isNotNull();
+
+        // Updating and refreshing closes the old revision, while a lookup
+        // through the class loader of its wiring may still be in progress
+        try (FileInputStream updated = new FileInputStream(bundleFile))
+        {
+            testBundle.update(updated);
+        }
+        CountDownLatch refreshed = new CountDownLatch(1);
+        felix.adapt(FrameworkWiring.class).refreshBundles(Collections.singletonList(testBundle), event ->
+        {
+            if (event.getType() == FrameworkEvent.PACKAGES_REFRESHED)
+            {
+                refreshed.countDown();
+            }
+        });
+        assertThat(refreshed.await(10, TimeUnit.SECONDS)).as("refresh completed").isTrue();
+        assertThat(oldRevision.getContent()).as("precondition: old revision is closed").isNull();
+
+        assertThat(oldClassLoader.findResource(name)).isNull();
+        assertThat(oldClassLoader.findResources(name).hasMoreElements()).isFalse();
     }
 
     ClassLoader createClassLoader(Bundle bundle) {

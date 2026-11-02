@@ -30,7 +30,7 @@
     <description>This is an implementation of the R8.1 OSGi Servlet Service, the R7 OSGi Http Service and the R7 OSGi Http Whiteboard Specification</description>
 
     <artifactId>org.apache.felix.http.jetty12</artifactId>
-    <version>2.0.9-SNAPSHOT</version>
+    <version>2.0.11-SNAPSHOT</version>
     <packaging>bundle</packaging>
 
     <scm>
@@ -677,7 +677,7 @@
         <dependency>
             <groupId>org.apache.felix</groupId>
             <artifactId>org.apache.felix.http.base</artifactId>
-            <version>6.0.3-SNAPSHOT</version>
+            <version>6.0.5-SNAPSHOT</version>
         </dependency>
         <dependency>
             <groupId>org.apache.felix</groupId>
