@@ -51,8 +51,8 @@
              See FELIX-6870. -->
         <felix.gogo.command.version>1.1.2</felix.gogo.command.version>
         <felix.gogo.shell.version>1.1.4</felix.gogo.shell.version>
-        <felix.gogo.runtime.version>1.1.4</felix.gogo.runtime.version>
-        <felix.framework.version>6.0.1</felix.framework.version>
+        <felix.gogo.runtime.version>1.2.0</felix.gogo.runtime.version>
+        <felix.framework.version>8.0.0</felix.framework.version>
     </properties>
 
     <dependencies>
@@ -81,18 +81,6 @@
             <version>${felix.framework.version}</version>
         </dependency>
     </dependencies>
-
-    <dependencyManagement>
-        <dependencies>
-            <dependency>
-                <groupId>org.apache.felix</groupId>
-                <artifactId>org.apache.felix.gogo.bom</artifactId>
-                <version>1.0.3-SNAPSHOT</version>
-                <scope>import</scope>
-                <type>pom</type>
-            </dependency>
-        </dependencies>
-    </dependencyManagement>
 
     <build>
         <plugins>
