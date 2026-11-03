@@ -54,7 +54,7 @@ public class FileSystemResourceMapper implements ResourceMapper {
 
     /**
      * Normalize the given path. Normalization simply replace any
-     * File separator (system dependant) with {@literal '/'}.
+     * File separator (system dependent) with {@literal '/'}.
      * @param path system path
      * @return normalized path
      */

@@ -172,7 +172,7 @@ public abstract class BaseMethod<P extends BaseParameter, T>
 
             if (logger.isLogEnabled(Level.TRACE))
             {
-                // Trace as this is going through the whole hierachy and will log for non-existing methods 
+                // Trace as this is going through the whole hierarchy and will log for non-existing methods 
                 // a lot of lines for e.g. the class Object not containing an activate method
                 logger.log(Level.TRACE,
                         "Locating method {0} in class {1}", null, getMethodName(), theClass.getName());
