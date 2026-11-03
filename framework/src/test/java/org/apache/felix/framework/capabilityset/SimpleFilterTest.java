@@ -21,10 +21,13 @@ package org.apache.felix.framework.capabilityset;
 import static org.assertj.core.api.Assertions.assertThat;
 
 import org.junit.jupiter.api.Test;
+import org.osgi.framework.VersionRange;
 
 import java.util.Arrays;
 import java.util.Collections;
+import java.util.LinkedHashMap;
 import java.util.List;
+import java.util.Map;
 
 class SimpleFilterTest
 {
@@ -34,6 +37,27 @@ class SimpleFilterTest
         SimpleFilter sf = SimpleFilter.convert(
             Collections.singletonMap("colors", Arrays.asList("red", "blue")));
         assertThat(sf).hasToString("(&(colors=red)(colors=blue))");
+    }
+
+    @Test
+    void convertEmptyListAttribute()
+    {
+        SimpleFilter sf = SimpleFilter.convert(
+            Collections.singletonMap("colors", Collections.emptyList()));
+        assertThat(sf).hasToString("(colors=*)").isEqualTo(SimpleFilter.parse("(colors=*)"));
+
+        Map<String, Object> attrs = new LinkedHashMap<>();
+        attrs.put("osgi.wiring.package", "org.example");
+        attrs.put("colors", Collections.emptyList());
+        assertThat(SimpleFilter.convert(attrs)).hasToString("(&(osgi.wiring.package=org.example)(colors=*))");
+    }
+
+    @Test
+    void convertSingleBoundedVersionRange()
+    {
+        SimpleFilter sf = SimpleFilter.convert(
+            Collections.singletonMap("version", new VersionRange("[1.0,2.0)")));
+        assertThat(sf).hasToString("(&(version>=1.0.0)(!(version>=2.0.0)))");
     }
 
     @Test
