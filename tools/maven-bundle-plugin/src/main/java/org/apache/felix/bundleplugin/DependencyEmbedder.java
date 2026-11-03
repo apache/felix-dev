@@ -297,7 +297,7 @@ public final class DependencyEmbedder extends AbstractDependencyFilter
             if ( instruction.contains( MAVEN_DEPENDENCIES ) )
             {
                 // if there are no embeddded dependencies, we do a special treatment and replace
-                // every occurance of MAVEN_DEPENDENCIES and a following comma with an empty string
+                // every occurrence of MAVEN_DEPENDENCIES and a following comma with an empty string
                 if ( mavenDependencies.isEmpty() )
                 {
                     String cleanInstruction = BundlePlugin.removeTagFromInstruction( instruction, MAVEN_DEPENDENCIES );
