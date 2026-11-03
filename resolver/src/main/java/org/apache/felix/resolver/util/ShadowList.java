@@ -68,6 +68,17 @@ public class ShadowList extends CandidateSelector
         unmodifiable.add(insertIdx, wrappedCapability);
     }
 
+    @Override
+    public int remove(Capability cap) {
+        // the original list has to stay aligned with the candidates
+        int index = super.remove(cap);
+        if (index != -1 && index < m_original.size())
+        {
+            m_original.remove(index);
+        }
+        return index;
+    }
+
     public void replace(Capability origCap, Capability c) {
         checkModifiable();
         int idx = unmodifiable.indexOf(origCap);
