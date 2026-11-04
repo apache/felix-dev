@@ -48,7 +48,6 @@ import javax.xml.transform.TransformerFactory;
 import javax.xml.transform.dom.DOMSource;
 import javax.xml.transform.stream.StreamResult;
 
-import org.apache.maven.artifact.manager.WagonManager;
 import org.apache.maven.artifact.repository.ArtifactRepository;
 import org.apache.maven.plugin.AbstractMojo;
 import org.apache.maven.plugin.MojoExecutionException;
@@ -59,6 +58,8 @@ import org.apache.maven.plugins.annotations.Mojo;
 import org.apache.maven.plugins.annotations.Parameter;
 import org.apache.maven.project.MavenProject;
 import org.apache.maven.settings.Settings;
+import org.apache.maven.settings.crypto.SettingsDecrypter;
+import org.codehaus.plexus.PlexusContainer;
 import org.w3c.dom.Document;
 import org.w3c.dom.Element;
 import org.w3c.dom.Node;
@@ -136,10 +137,16 @@ public final class ObrRemoteClean extends AbstractMojo
     private Settings settings;
 
     /**
-     * The Wagon manager.
+     * The Plexus container, used to look up the Wagon for the repository protocol.
      */
     @Component
-    private WagonManager m_wagonManager;
+    private PlexusContainer m_container;
+
+    /**
+     * Decrypts the passwords of the server and proxy settings.
+     */
+    @Component
+    private SettingsDecrypter m_settingsDecrypter;
 
 
     public void execute() throws MojoExecutionException
@@ -170,7 +177,7 @@ public final class ObrRemoteClean extends AbstractMojo
 
         Log log = getLog();
 
-        RemoteFileManager remoteFile = new RemoteFileManager( m_wagonManager, settings, log );
+        RemoteFileManager remoteFile = new RemoteFileManager( m_container, m_settingsDecrypter, settings, log );
         openRepositoryConnection( remoteFile );
         if ( null == prefixUrl )
         {
