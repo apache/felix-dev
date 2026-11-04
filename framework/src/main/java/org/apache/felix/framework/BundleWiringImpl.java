@@ -1186,8 +1186,71 @@ public class BundleWiringImpl implements BundleWiring
             }
         }
 
+        Enumeration<URL> delegated = findResourcesByDelegationHooks(pkgName, name);
+        if (delegated != null)
+        {
+            completeUrlList.add(delegated);
+        }
+
         return new CompoundEnumeration((Enumeration[])
                 completeUrlList.toArray(new Enumeration[completeUrlList.size()]));
+    }
+
+    private boolean isDelegationHookCandidate(String pkgName)
+    {
+        // Hooks are not asked for java.*, nor for packages that are
+        // imported, required or exported.
+        if (pkgName.startsWith("java.") || hasPackageSource(pkgName))
+        {
+            return false;
+        }
+        for (BundleCapability cap : m_resolvedCaps)
+        {
+            if (BundleRevision.PACKAGE_NAMESPACE.equals(cap.getNamespace())
+                && pkgName.equals(cap.getAttributes().get(BundleRevision.PACKAGE_NAMESPACE)))
+            {
+                return false;
+            }
+        }
+        return true;
+    }
+
+    private DelegationHookSupport getDelegationHooks()
+    {
+        DelegationHookSupport hooks =
+            m_revision.getBundle().getFramework().getDelegationHooks();
+        return hooks.hasHooks() ? hooks : null;
+    }
+
+    private Enumeration<URL> findResourcesByDelegationHooks(String pkgName, String name)
+    {
+        if (isDelegationHookCandidate(pkgName))
+        {
+            DelegationHookSupport hooks = getDelegationHooks();
+            if (hooks != null)
+            {
+                List<URL> urls = hooks.findResources(this, name);
+                if (!urls.isEmpty())
+                {
+                    return Collections.enumeration(urls);
+                }
+            }
+        }
+        return null;
+    }
+
+    private Object findByDelegationHooks(String pkgName, String name, boolean isClass)
+    {
+        if (isDelegationHookCandidate(pkgName))
+        {
+            DelegationHookSupport hooks = getDelegationHooks();
+            if (hooks != null)
+            {
+                return isClass ? (Object) hooks.findClass(this, name)
+                    : (Object) hooks.findResource(this, name);
+            }
+        }
+        return null;
     }
 
     private ClassLoader determineParentClassLoader()
@@ -1519,6 +1582,12 @@ public class BundleWiringImpl implements BundleWiring
                     if (result == null)
                     {
                         result = searchDynamicImports(pkgName, name, isClass);
+                    }
+
+                    // As the last step ask the delegation hooks.
+                    if (result == null)
+                    {
+                        result = findByDelegationHooks(pkgName, name, isClass);
                     }
                 }
             }
@@ -1878,6 +1947,11 @@ public class BundleWiringImpl implements BundleWiring
         public BundleImpl getBundle()
         {
             return m_wiring.getBundle();
+        }
+
+        BundleWiringImpl getBundleWiring()
+        {
+            return m_wiring;
         }
 
         @Override

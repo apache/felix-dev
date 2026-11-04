@@ -166,6 +166,7 @@ public class Felix extends BundleImpl implements Framework
     // but no lock for reads since it is copy on write.
     private volatile List<BundleImpl> m_uninstalledBundles;
     // Object to keep track of dependencies among bundle revisions.
+    private final DelegationHookSupport m_delegationHooks = new DelegationHookSupport(this);
     private final BundleRevisionDependencies m_dependencies =
         new BundleRevisionDependencies();
 
@@ -3923,6 +3924,11 @@ public class Felix extends BundleImpl implements Framework
     //
     // Hook service management methods.
     //
+
+    DelegationHookSupport getDelegationHooks()
+    {
+        return m_delegationHooks;
+    }
 
     HookRegistry getHookRegistry()
     {
