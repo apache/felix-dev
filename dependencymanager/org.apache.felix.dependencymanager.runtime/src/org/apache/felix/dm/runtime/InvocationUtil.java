@@ -22,8 +22,6 @@ import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
 import java.lang.reflect.Modifier;
 import java.lang.reflect.Proxy;
-import java.security.AccessController;
-import java.security.PrivilegedAction;
 
 /**
  * Java reflexion utility methods.
@@ -90,14 +88,7 @@ public class InvocationUtil
                 final Method m = clazz.getDeclaredMethod(name, signature);
                 if (!(isSuper && Modifier.isPrivate(m.getModifiers())))
                 {
-                    AccessController.doPrivileged(new PrivilegedAction<Object>()
-                    {
-                        public Object run()
-                        {
-                            m.setAccessible(true);
-                            return null;
-                        }
-                    });
+                    m.setAccessible(true);
                     return m.invoke(object, parameters[i]);
                 }
             }

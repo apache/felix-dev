@@ -21,12 +21,33 @@ Welcome to Apache Felix Dependency Manager
 Apache Felix Dependency Manager is a versatile java API, allowing to declaratively
 register, acquire, and manage dynamic OSGi services.
 
-Please refer to release/resources/src/README
+The bundles are documented on the website:
+
+  http://felix.apache.org/documentation/subprojects/apache-felix-dependency-manager.html
 
 Building and testing Apache Felix Dependency Manager
 ====================================================
 
-The build instructions can be found from release/resources/src/README.src
+Apache Felix Dependency Manager is built with Maven (a recent JDK, 11 or later, is required):
+
+  mvn clean install
+
+This builds the bundles, runs their unit tests and runs the OSGi integration tests inside a
+framework (bnd-testing-maven-plugin). The framework, Gogo and Config Admin modules of this
+repository, which the integration tests run on, have to be installed in the local Maven
+repository first, or be available as released versions.
+
+The modules are:
+
+  org.apache.felix.dependencymanager             the Dependency Manager API and implementation
+  org.apache.felix.dependencymanager.annotation  the annotations and the bnd plugin which processes them
+  org.apache.felix.dependencymanager.runtime     loads the components declared with annotations
+  org.apache.felix.dependencymanager.shell       the Gogo shell commands
+  org.apache.felix.dependencymanager.lambda      the lambda based API
+  org.apache.felix.dependencymanager.*.itest.*   the integration tests
+  org.apache.felix.dependencymanager.samples     samples, see org.apache.felix.dependencymanager.samples/README.samples
+  org.apache.felix.dependencymanager.lambda.samples
+  org.apache.felix.dependencymanager.benchmark   a stress test, see org.apache.felix.dependencymanager.benchmark/README
 
 Getting Started
 ===============

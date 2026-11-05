@@ -23,6 +23,7 @@ on:
       - 'log.extension/**'
       - 'examples/**'
       - 'configadmin/**'
+      - 'dependencymanager/**'
       - 'healthcheck/**'
       - 'fileinstall/**'
       - 'inventory/**'
@@ -55,6 +56,7 @@ on:
       - 'log.extension/**'
       - 'examples/**'
       - 'configadmin/**'
+      - 'dependencymanager/**'
       - 'healthcheck/**'
       - 'fileinstall/**'
       - 'inventory/**'
@@ -138,6 +140,8 @@ jobs:
             - 'log.extension/**'
           examples:
             - 'examples/**'
+          dependencymanager:
+            - 'dependencymanager/**'
           healthcheck:
             - 'healthcheck/**'
           fileinstall:
@@ -173,7 +177,7 @@ jobs:
     # code being changed rather than the last release. A producer is therefore built and
     # installed whenever it or one of its consumers changed. See FELIX-6870.
     - name: Resolve the versions built in this repository
-      if: steps.changes.outputs.framework == 'true' || steps.changes.outputs.http == 'true' || steps.changes.outputs.configadmin == 'true' || steps.changes.outputs.scr == 'true' || steps.changes.outputs.gogo == 'true' || steps.changes.outputs.utils == 'true' || steps.changes.outputs.resolver == 'true'
+      if: steps.changes.outputs.framework == 'true' || steps.changes.outputs.http == 'true' || steps.changes.outputs.configadmin == 'true' || steps.changes.outputs.scr == 'true' || steps.changes.outputs.gogo == 'true' || steps.changes.outputs.utils == 'true' || steps.changes.outputs.resolver == 'true' || steps.changes.outputs.dependencymanager == 'true'
       run: |
         record() {
           echo "$1=$2" >> "$GITHUB_ENV"
@@ -189,10 +193,10 @@ jobs:
           record "GOGO_$(echo "$module" | tr 'a-z' 'A-Z')_VERSION"             "$(mvn -B -q --file gogo/pom.xml -pl "$module" help:evaluate -Dexpression=project.version -DforceStdout)"
         done
     - name: Felix Framework
-      if: steps.changes.outputs.framework == 'true' || steps.changes.outputs.http == 'true' || steps.changes.outputs.configadmin == 'true' || steps.changes.outputs.scr == 'true' || steps.changes.outputs.gogo == 'true'
+      if: steps.changes.outputs.framework == 'true' || steps.changes.outputs.http == 'true' || steps.changes.outputs.configadmin == 'true' || steps.changes.outputs.scr == 'true' || steps.changes.outputs.gogo == 'true' || steps.changes.outputs.dependencymanager == 'true'
       run: mvn -B -V -Dstyle.color=always --file framework/pom.xml clean install
     - name: Felix Config Admin
-      if: steps.changes.outputs.configadmin == 'true' || steps.changes.outputs.scr == 'true'
+      if: steps.changes.outputs.configadmin == 'true' || steps.changes.outputs.scr == 'true' || steps.changes.outputs.dependencymanager == 'true'
       run: mvn -B -V -Dstyle.color=always --file configadmin/pom.xml clean install "-Dfelix.framework.version=$FRAMEWORK_VERSION"
     - name: Felix SCR
       if: steps.changes.outputs.scr == 'true'
@@ -216,8 +220,8 @@ jobs:
       if: steps.changes.outputs.main == 'true'
       run: mvn -B -V -Dstyle.color=always --file main/pom.xml clean verify
     - name: Felix Gogo Shell
-      if: steps.changes.outputs.gogo == 'true'
-      run: mvn -B -V -Dstyle.color=always --file gogo/pom.xml clean verify "-Dfelix.gogo.command.version=$GOGO_COMMAND_VERSION" "-Dfelix.gogo.runtime.version=$GOGO_RUNTIME_VERSION" "-Dfelix.gogo.shell.version=$GOGO_SHELL_VERSION" "-Dfelix.gogo.jline.version=$GOGO_JLINE_VERSION" "-Dfelix.framework.version=$FRAMEWORK_VERSION"
+      if: steps.changes.outputs.gogo == 'true' || steps.changes.outputs.dependencymanager == 'true'
+      run: mvn -B -V -Dstyle.color=always --file gogo/pom.xml clean install "-Dfelix.gogo.command.version=$GOGO_COMMAND_VERSION" "-Dfelix.gogo.runtime.version=$GOGO_RUNTIME_VERSION" "-Dfelix.gogo.shell.version=$GOGO_SHELL_VERSION" "-Dfelix.gogo.jline.version=$GOGO_JLINE_VERSION" "-Dfelix.framework.version=$FRAMEWORK_VERSION"
     - name: Felix utils
       if: steps.changes.outputs.utils == 'true' || steps.changes.outputs.resolver == 'true'
       run: mvn -B -V -Dstyle.color=always --file utils/pom.xml clean install
@@ -274,6 +278,11 @@ jobs:
     - name: Felix bundlerepository OSGi CT
       if: steps.changes.outputs.bundlerepository-osgi-ct == 'true'
       run: mvn -B -V -Dstyle.color=always --file bundlerepository.osgi-ct/pom.xml clean verify
+    # The Dependency Manager runs last. Its integration tests run on the framework, Gogo and
+    # Config Admin built and installed by the steps above, see FELIX-6870.
+    - name: Felix Dependency Manager
+      if: steps.changes.outputs.dependencymanager == 'true'
+      run: mvn -B -V -Dstyle.color=always --file dependencymanager/pom.xml clean verify "-Dframework.version=$FRAMEWORK_VERSION" "-Dconfigadmin.version=$CONFIGADMIN_VERSION" "-Dgogo.runtime.version=$GOGO_RUNTIME_VERSION" "-Dgogo.shell.version=$GOGO_SHELL_VERSION" "-Dgogo.command.version=$GOGO_COMMAND_VERSION"
     - name: Upload Test Results
       if: always()
       uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
@@ -284,4 +293,5 @@ jobs:
           ${{ github.workspace }}/**/target/surefire-reports/*.xml
           ${{ github.workspace }}/**/target/failsafe-reports/*.xml
           ${{ github.workspace }}/**/target/test-reports/tck/*.xml
+          ${{ github.workspace }}/dependencymanager/**/target/test-reports/test/*.xml
 

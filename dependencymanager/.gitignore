@@ -1,8 +1,4 @@
-/.gradle/
-/reports/
+/target/
+**/target/
 /generated/
-/.metadata/
-/.recommenders/
-/RemoteSystemsTempFiles/
-/rat-report.xml
-
+**/generated/
