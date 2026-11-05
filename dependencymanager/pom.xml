@@ -31,7 +31,7 @@
     <version>1.0.0-SNAPSHOT</version>
     <packaging>pom</packaging>
 
-    <name>Apache Felix Dependency Manager</name>
+    <name>Apache Felix Dependency Manager (parent)</name>
     <description>Apache Felix Dependency Manager Subproject</description>
     <url>https://felix.apache.org/</url>
 
