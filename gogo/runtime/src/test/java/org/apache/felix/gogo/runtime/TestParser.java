@@ -509,6 +509,14 @@ public class TestParser extends AbstractParserTest
         assertEquals(false, c.execute("$(istty 1)"));
     }
 
+    @Test
+    public void testIsTtyOutOfBounds() throws Exception
+    {
+        Context c = new Context();
+        c.addCommand("istty", this);
+        assertEquals(false, c.execute("istty 10"));
+    }
+
     public boolean istty(CommandSession session, int fd)
     {
         return Process.Utils.current().isTty(fd);
