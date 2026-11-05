@@ -81,12 +81,6 @@ public class RemoteFileManager
     private Log m_log;
 
     /**
-     * true once the wagon has been given back to the container.
-     */
-    private boolean m_wagonReleased;
-
-
-    /**
      * initialize main information.
      * @param container container provided by maven, used to look up the Wagon component of a protocol
      * @param settingsDecrypter decrypts server and proxy passwords, may be null to use them as they are
@@ -132,9 +126,8 @@ public class RemoteFileManager
      */
     private void releaseWagon()
     {
-        if ( m_wagon != null && !m_wagonReleased )
+        if ( m_wagon != null )
         {
-            m_wagonReleased = true;
             try
             {
                 m_container.release( m_wagon );
@@ -142,6 +135,10 @@ public class RemoteFileManager
             catch ( ComponentLifecycleException e )
             {
                 m_log.debug( "Unable to release Wagon", e );
+            }
+            finally
+            {
+                m_wagon = null;
             }
         }
     }
@@ -186,7 +183,6 @@ public class RemoteFileManager
         try
         {
             m_wagon = lookupWagon( repository.getProtocol() );
-            m_wagonReleased = false;
         }
         catch ( UnsupportedProtocolException e )
         {
