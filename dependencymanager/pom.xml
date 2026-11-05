@@ -80,6 +80,8 @@
         <log.version>1.3.2</log.version>
         <metatype.version>1.2.4</metatype.version>
         <servicemix.junit.version>4.13.2_1</servicemix.junit.version>
+        <!-- set to false by the performRelease profile, see tag-bundles below -->
+        <dependencymanager.tag.skip>true</dependencymanager.tag.skip>
     </properties>
 
     <dependencyManagement>
@@ -190,7 +192,67 @@
                         </execution>
                     </executions>
                 </plugin>
+                <!--
+                    The release plugin makes one tag for the whole reactor (dependencymanager-parent-x.y.z). On top
+                    of that every released bundle gets its own tag, <artifactId>-<version>, like the earlier releases.
+                    Only the bundles that list this plugin in their build are tagged, and only while performing a
+                    release: release:perform builds the tag that was just made, so HEAD of its checkout is the release.
+                -->
+                <plugin>
+                    <groupId>org.codehaus.mojo</groupId>
+                    <artifactId>exec-maven-plugin</artifactId>
+                    <version>3.5.0</version>
+                    <configuration>
+                        <skip>${dependencymanager.tag.skip}</skip>
+                        <executable>git</executable>
+                    </configuration>
+                    <executions>
+                        <execution>
+                            <id>tag-bundle</id>
+                            <phase>deploy</phase>
+                            <goals>
+                                <goal>exec</goal>
+                            </goals>
+                            <configuration>
+                                <arguments>
+                                    <argument>tag</argument>
+                                    <argument>${project.artifactId}-${project.version}</argument>
+                                </arguments>
+                            </configuration>
+                        </execution>
+                        <execution>
+                            <id>push-bundle-tag</id>
+                            <phase>deploy</phase>
+                            <goals>
+                                <goal>exec</goal>
+                            </goals>
+                            <configuration>
+                                <arguments>
+                                    <argument>push</argument>
+                                    <argument>origin</argument>
+                                    <argument>refs/tags/${project.artifactId}-${project.version}</argument>
+                                </arguments>
+                            </configuration>
+                        </execution>
+                    </executions>
+                </plugin>
             </plugins>
         </pluginManagement>
     </build>
+
+    <profiles>
+        <profile>
+            <!-- release:perform sets performRelease -->
+            <id>tag-bundles</id>
+            <activation>
+                <property>
+                    <name>performRelease</name>
+                    <value>true</value>
+                </property>
+            </activation>
+            <properties>
+                <dependencymanager.tag.skip>false</dependencymanager.tag.skip>
+            </properties>
+        </profile>
+    </profiles>
 </project>

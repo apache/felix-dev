@@ -84,6 +84,11 @@
                     </instructions>
                 </configuration>
             </plugin>
+            <plugin>
+                <!-- tags this bundle as <artifactId>-<version> when a release is performed, see the parent pom -->
+                <groupId>org.codehaus.mojo</groupId>
+                <artifactId>exec-maven-plugin</artifactId>
+            </plugin>
         </plugins>
     </build>
 </project>
