@@ -72,10 +72,6 @@
         <junit.version>4.13.2</junit.version>
         <mockito.version>5.24.0</mockito.version>
         <bnd.version>7.4.0</bnd.version>
-        <dependencymanager.version>5.0.0-SNAPSHOT</dependencymanager.version>
-        <dependencymanager.lambda.version>2.0.0-SNAPSHOT</dependencymanager.lambda.version>
-        <dependencymanager.annotation.version>6.0.0-SNAPSHOT</dependencymanager.annotation.version>
-        <dependencymanager.runtime.version>5.0.0-SNAPSHOT</dependencymanager.runtime.version>
         <gogo.runtime.version>1.2.0</gogo.runtime.version>
         <gogo.shell.version>1.1.4</gogo.shell.version>
         <gogo.command.version>1.1.2</gogo.command.version>
