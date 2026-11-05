@@ -245,7 +245,7 @@ public class ConfigInstallerTest extends TestCase {
         EasyMock.expect(mockBundleContext.getProperty((String) EasyMock.anyObject()))
                 .andReturn(null)
                 .anyTimes();
-        EasyMock.expect(mockConfigurationAdmin.listConfigurations("(felix.fileinstall.filename=file:" + file + ")"))
+        EasyMock.expect(mockConfigurationAdmin.listConfigurations("(felix.fileinstall.filename=" + file.getAbsoluteFile().toURI().toString() + ")"))
                 .andReturn(null);
         EasyMock.expect(mockConfigurationAdmin.listConfigurations("(service.pid=" + pid + ")"))
                 .andReturn(new Configuration[] { mockConfiguration });
@@ -396,7 +396,7 @@ public class ConfigInstallerTest extends TestCase {
         final Configuration newConfiguration = EasyMock.createMock(Configuration.class);
         EasyMock.expect(newConfiguration.getAttributes()).andReturn(Collections.emptySet()).times(2);
 
-        EasyMock.expect(mockConfigurationAdmin.listConfigurations("(felix.fileinstall.filename=file:" + file + ")"))
+        EasyMock.expect(mockConfigurationAdmin.listConfigurations("(felix.fileinstall.filename=" + file.getAbsoluteFile().toURI().toString() + ")"))
                 .andReturn(new Configuration[] { newConfiguration });
 
         EasyMock.expect(newConfiguration.getProperties())
