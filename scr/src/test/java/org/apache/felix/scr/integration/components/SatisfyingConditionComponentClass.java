@@ -18,7 +18,7 @@
  */
 package org.apache.felix.scr.integration.components;
 
-import org.apache.felix.scr.impl.metadata.ReferenceMetadata;
+import org.osgi.service.component.ComponentConstants;
 import org.osgi.service.component.ComponentContext;
 
 public class SatisfyingConditionComponentClass
@@ -27,7 +27,7 @@ public class SatisfyingConditionComponentClass
     void activate(ComponentContext cc)
     {
         Object trueCondition = cc.locateService(
-            ReferenceMetadata.REFERENCE_NAME_SATISFYING_CONDITION);
+            ComponentConstants.REFERENCE_NAME_SATISFYING_CONDITION);
         System.out.println("Found condition: " + trueCondition);
     }
 
