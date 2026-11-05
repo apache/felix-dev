@@ -33,7 +33,6 @@ import java.lang.reflect.Executable;
 import java.lang.reflect.Field;
 import java.lang.reflect.InvocationHandler;
 import java.lang.reflect.Method;
-import java.lang.reflect.Modifier;
 import java.lang.reflect.Proxy;
 import java.net.MalformedURLException;
 import java.net.URI;
@@ -47,8 +46,6 @@ import java.nio.file.StandardOpenOption;
 import java.security.PrivilegedAction;
 import java.security.PrivilegedExceptionAction;
 import java.util.Collection;
-import java.util.HashMap;
-import java.util.Hashtable;
 import java.util.Map;
 import java.util.function.Consumer;
 import java.util.jar.JarFile;
@@ -105,7 +102,6 @@ public class SecureAction
             result = new byte[0];
         }
         accessor = result;
-        getAccessor(URL.class);
     }
 
     protected static transient int BUFSIZE = 4096;
@@ -339,170 +335,89 @@ public class SecureAction
         return field.get(target);
     }
 
-    public Object swapStaticFieldIfNotClass(Class<?> targetClazz,
-        Class<?> targetType, Class<?> condition, String lockName) throws Exception
-    {
-        return _swapStaticFieldIfNotClass(targetClazz, targetType,
-            condition, lockName);
-    }
-
     private static volatile Consumer<AccessibleObject[]> m_accessorCache = null;
 
-    @SuppressWarnings("unchecked")
+    private static final Consumer<AccessibleObject[]> SET_ACCESSIBLE =
+        objects -> AccessibleObject.setAccessible(objects, true);
+
     private static Consumer<AccessibleObject[]> getAccessor(Class<?> clazz)
     {
         String packageName = clazz.getPackage().getName();
         if ("java.net".equals(packageName) || "jdk.internal.loader".equals(packageName))
         {
-            if (m_accessorCache == null)
+            // Try ordinary reflection first and only smuggle an accessor into
+            // java.base if the JVM actually refuses. When the package is open to us
+            // -- as it is under the Add-opens of the org.apache.felix.main launcher,
+            // or any --add-opens on the command line -- setAccessible just works, and
+            // reaching for Unsafe would be both unnecessary and noisy: JDK 25 prints
+            // a terminal deprecation warning for every call to it.
+            return objects ->
             {
                 try
                 {
-                    // Use reflection on Unsafe to avoid having to compile against it
-                    Class<?> unsafeClass = Class.forName("sun.misc.Unsafe"); //$NON-NLS-1$
-                    Field theUnsafe = unsafeClass.getDeclaredField("theUnsafe"); //$NON-NLS-1$
-                    // NOTE: deep reflection is allowed on sun.misc package for java 9.
-                    theUnsafe.setAccessible(true);
-                    Object unsafe = theUnsafe.get(null);
-                    Class<Consumer<AccessibleObject[]>> result;
-                    try {
-                        Method defineAnonymousClass = unsafeClass.getMethod("defineAnonymousClass", Class.class, byte[].class, Object[].class); //$NON-NLS-1$
-                        result = (Class<Consumer<AccessibleObject[]>>) defineAnonymousClass.invoke(unsafe, URL.class, accessor , null);
-                    }
-                    catch (NoSuchMethodException ex)
-                    {
-                        long offset = (long) unsafeClass.getMethod("staticFieldOffset", Field.class)
-                                .invoke(unsafe, MethodHandles.Lookup.class.getDeclaredField("IMPL_LOOKUP"));
-
-                        MethodHandles.Lookup lookup = (MethodHandles.Lookup) unsafeClass.getMethod("getObject", Object.class, long.class)
-                                .invoke(unsafe, MethodHandles.Lookup.class, offset);
-                        lookup = lookup.in(URL.class);
-                        Class<?> classOption = Class.forName("java.lang.invoke.MethodHandles$Lookup$ClassOption"); //$NON-NLS-1$
-                        Object classOptions = Array.newInstance(classOption, 0);
-                        Method defineHiddenClass = MethodHandles.Lookup.class.getMethod("defineHiddenClass", byte[].class, boolean.class, //$NON-NLS-1$
-                                classOptions.getClass());
-                        lookup = (MethodHandles.Lookup) defineHiddenClass.invoke(lookup, accessor, Boolean.FALSE, classOptions);
-                        result = (Class<Consumer<AccessibleObject[]>>) lookup.lookupClass();
-                    }
-                    m_accessorCache = result.getConstructor().newInstance();
+                    SET_ACCESSIBLE.accept(objects);
                 }
-                catch (Throwable t)
+                catch (RuntimeException ex)
                 {
-                    m_accessorCache = objects -> AccessibleObject.setAccessible(objects, true);
+                    // InaccessibleObjectException: java.base is not open to us.
+                    unsafeAccessor().accept(objects);
                 }
-            }
-            return m_accessorCache;
+            };
         }
-        else
-        {
-            return objects -> AccessibleObject.setAccessible(objects, true);
-        }
+        return SET_ACCESSIBLE;
     }
 
-    private static Object _swapStaticFieldIfNotClass(Class<?> targetClazz,
-        Class<?> targetType, Class<?> condition, String lockName) throws Exception
+    /**
+     * An accessor defined inside java.base itself, so that {@code setAccessible} is
+     * called by a class in that module and the access check passes without the
+     * package being open.
+     * <p>
+     * This needs {@code sun.misc.Unsafe} to obtain a trusted
+     * {@code MethodHandles.Lookup}, which is terminally deprecated as of JDK 25, so
+     * it is only used when ordinary reflection has already failed.
+     */
+    @SuppressWarnings("unchecked")
+    private static Consumer<AccessibleObject[]> unsafeAccessor()
     {
-
-        Object lock = null;
-        if (lockName != null)
+        if (m_accessorCache == null)
         {
             try
             {
-                Field lockField =
-                    targetClazz.getDeclaredField(lockName);
-                getAccessor(targetClazz).accept(new AccessibleObject[]{lockField});
-                lock = lockField.get(null);
-            }
-            catch (NoSuchFieldException ex)
-            {
-            }
-        }
-        if (lock == null)
-        {
-            lock = targetClazz;
-        }
-        synchronized (lock)
-        {
-            Field[] fields = targetClazz.getDeclaredFields();
-
-            getAccessor(targetClazz).accept(fields);
-
-            Object result = null;
-            for (int i = 0; (i < fields.length) && (result == null); i++)
-            {
-                if (Modifier.isStatic(fields[i].getModifiers()) &&
-                    (fields[i].getType() == targetType))
-                {
-                    result = fields[i].get(null);
-
-                    if (result != null)
-                    {
-                        if ((condition == null) ||
-                            !result.getClass().getName().equals(condition.getName()))
-                        {
-                            fields[i].set(null, null);
-                        }
-                    }
+                // Use reflection on Unsafe to avoid having to compile against it
+                Class<?> unsafeClass = Class.forName("sun.misc.Unsafe"); //$NON-NLS-1$
+                Field theUnsafe = unsafeClass.getDeclaredField("theUnsafe"); //$NON-NLS-1$
+                // NOTE: deep reflection is allowed on sun.misc package for java 9.
+                theUnsafe.setAccessible(true);
+                Object unsafe = theUnsafe.get(null);
+                Class<Consumer<AccessibleObject[]>> result;
+                try {
+                    Method defineAnonymousClass = unsafeClass.getMethod("defineAnonymousClass", Class.class, byte[].class, Object[].class); //$NON-NLS-1$
+                    result = (Class<Consumer<AccessibleObject[]>>) defineAnonymousClass.invoke(unsafe, URL.class, accessor , null);
                 }
+                catch (NoSuchMethodException ex)
+                {
+                    long offset = (long) unsafeClass.getMethod("staticFieldOffset", Field.class)
+                            .invoke(unsafe, MethodHandles.Lookup.class.getDeclaredField("IMPL_LOOKUP"));
+
+                    MethodHandles.Lookup lookup = (MethodHandles.Lookup) unsafeClass.getMethod("getObject", Object.class, long.class)
+                            .invoke(unsafe, MethodHandles.Lookup.class, offset);
+                    lookup = lookup.in(URL.class);
+                    Class<?> classOption = Class.forName("java.lang.invoke.MethodHandles$Lookup$ClassOption"); //$NON-NLS-1$
+                    Object classOptions = Array.newInstance(classOption, 0);
+                    Method defineHiddenClass = MethodHandles.Lookup.class.getMethod("defineHiddenClass", byte[].class, boolean.class, //$NON-NLS-1$
+                            classOptions.getClass());
+                    lookup = (MethodHandles.Lookup) defineHiddenClass.invoke(lookup, accessor, Boolean.FALSE, classOptions);
+                    result = (Class<Consumer<AccessibleObject[]>>) lookup.lookupClass();
+                }
+                m_accessorCache = result.getConstructor().newInstance();
             }
-            if (result != null)
+            catch (Throwable t)
             {
-                if ((condition == null) || !result.getClass().getName().equals(condition.getName()))
-                {
-                    // reset cache
-                    for (Field field : fields) {
-                        if (Modifier.isStatic(field.getModifiers()) &&
-                            (field.getType() == Hashtable.class))
-                        {
-                            Hashtable<?,?> cache = (Hashtable) field.get(null);
-                            if (cache != null)
-                            {
-                                cache.clear();
-                            }
-                        }
-                    }
-                }
-                return result;
+                // Nothing else to try; let the caller see the failure.
+                m_accessorCache = SET_ACCESSIBLE;
             }
         }
-        return null;
-    }
-
-    public void flush(Class<?>targetClazz, Object lock) throws Exception
-    {
-        _flush(targetClazz, lock);
-    }
-
-    private static void _flush(Class<?>targetClazz, Object lock) throws Exception
-    {
-        synchronized (lock)
-        {
-            Field[] fields = targetClazz.getDeclaredFields();
-            getAccessor(targetClazz).accept(fields);
-            // reset cache
-            for (Field field : fields) {
-                if (Modifier.isStatic(field.getModifiers()) &&
-                    ((field.getType() == Hashtable.class) || (field.getType() == HashMap.class)))
-                {
-                    if (field.getType() == Hashtable.class)
-                    {
-                        Hashtable<?,?> cache = (Hashtable) field.get(null);
-                        if (cache != null)
-                        {
-                            cache.clear();
-                        }
-                    }
-                    else
-                    {
-                        HashMap<?,?> cache = (HashMap) field.get(null);
-                        if (cache != null)
-                        {
-                            cache.clear();
-                        }
-                    }
-                }
-            }
-        }
+        return m_accessorCache;
     }
 
     public void invokeBundleCollisionHook(
