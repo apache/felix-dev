@@ -14,6 +14,7 @@ Release Notes - Felix - Version org.apache.felix.dependencymanager.shell-5.0.0
    The minimum Java version is now 11, which is why the bundles get a new major version.
    The exported packages are unchanged compared with the previous release.
    The bundles are still compiled against OSGi R6, so their imports have not changed.
+   The Gradle build has been replaced by a Maven build, and each bundle now has its own version and tag.
    The deprecated use of AccessController in the service tracker and in the runtime has been removed.
 
 Release Notes - Felix - Version org.apache.felix.dependencymanager-r16
