@@ -28,7 +28,7 @@
     </parent>
 
     <artifactId>dependencymanager-parent</artifactId>
-    <version>1.0.0</version>
+    <version>1.0.1-SNAPSHOT</version>
     <packaging>pom</packaging>
 
     <name>Apache Felix Dependency Manager (parent)</name>
@@ -39,7 +39,7 @@
         <connection>scm:git:https://github.com/apache/felix-dev.git</connection>
         <developerConnection>scm:git:https://github.com/apache/felix-dev.git</developerConnection>
         <url>https://gitbox.apache.org/repos/asf?p=felix-dev.git;f=dependencymanager</url>
-        <tag>dependencymanager-parent-1.0.0</tag>
+        <tag>HEAD</tag>
     </scm>
 
     <modules>
@@ -64,7 +64,7 @@
 
     <properties>
         <felix.java.version>11</felix.java.version>
-        <project.build.outputTimestamp>2026-11-05T09:11:53Z</project.build.outputTimestamp>
+        <project.build.outputTimestamp>2026-11-05T09:13:30Z</project.build.outputTimestamp>
         <!-- compile against the OSGi R6 API, the lowest one supported, so the imports stay as they were in r16 -->
         <osgi.core.version>6.0.0</osgi.core.version>
         <osgi.cmpn.version>6.0.0</osgi.cmpn.version>

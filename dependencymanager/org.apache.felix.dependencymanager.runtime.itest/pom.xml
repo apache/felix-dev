@@ -23,7 +23,7 @@
     <parent>
         <groupId>org.apache.felix</groupId>
         <artifactId>dependencymanager-parent</artifactId>
-        <version>1.0.0</version>
+        <version>1.0.1-SNAPSHOT</version>
         <relativePath>../pom.xml</relativePath>
     </parent>
 
@@ -38,7 +38,7 @@
         <baseline.skip>true</baseline.skip>
         <maven.deploy.skip>true</maven.deploy.skip>
         <!-- the release plugin only updates a version property defined in the pom that uses it -->
-        <dependencymanager.annotation.version>6.0.0</dependencymanager.annotation.version>
+        <dependencymanager.annotation.version>6.0.1-SNAPSHOT</dependencymanager.annotation.version>
     </properties>
 
     <dependencies>
@@ -65,12 +65,12 @@
         <dependency>
             <groupId>org.apache.felix</groupId>
             <artifactId>org.apache.felix.dependencymanager</artifactId>
-            <version>5.0.0</version>
+            <version>5.0.1-SNAPSHOT</version>
         </dependency>
         <dependency>
             <groupId>org.apache.felix</groupId>
             <artifactId>org.apache.felix.dependencymanager.runtime</artifactId>
-            <version>5.0.0</version>
+            <version>5.0.1-SNAPSHOT</version>
         </dependency>
         <dependency>
             <groupId>org.apache.felix</groupId>
@@ -80,7 +80,7 @@
         <dependency>
             <groupId>org.apache.felix</groupId>
             <artifactId>org.apache.felix.dependencymanager.shell</artifactId>
-            <version>5.0.0</version>
+            <version>5.0.1-SNAPSHOT</version>
         </dependency>
         <dependency>
             <groupId>org.apache.felix</groupId>
