@@ -581,7 +581,7 @@ public class ClassChecker extends ClassVisitor implements Opcodes {
          * This method recreate the annotations itself and any other
          * attributes.
          *
-         * @param id the paramter id
+         * @param id the parameter id
          * @param mv the method visitor visiting the destination method.
          */
         public void visitParameterAnnotation(int id, MethodVisitor mv) {
