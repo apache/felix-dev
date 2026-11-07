@@ -334,44 +334,18 @@ public class ManifestParser
         Logger logger, List<ParsedHeaderClause> clauses, String mv)
         throws BundleException
     {
+        // Typed attributes are an R4 feature, R3 bundles keep their lenient handling.
+        if (mv.equals("2"))
+        {
+            convertTypedAttributes(clauses);
+        }
+
         // Verify that the values are equals if the package specifies
         // both version and specification-version attributes.
         Set<String> dupeSet = new HashSet<>();
         for (ParsedHeaderClause clause : clauses)
         {
-            // Check for "version" and "specification-version" attributes
-            // and verify they are the same if both are specified.
-            Object v = clause.m_attrs.get(Constants.VERSION_ATTRIBUTE);
-            Object sv = clause.m_attrs.get(Constants.PACKAGE_SPECIFICATION_VERSION);
-            if ((v != null) && (sv != null))
-            {
-                // Verify they are equal.
-                if (!((String) v).trim().equals(((String) sv).trim()))
-                {
-                    throw new IllegalArgumentException(
-                        "Both version and specification-version are specified, but they are not equal.");
-                }
-            }
-
-            // Ensure that only the "version" attribute is used and convert
-            // it to the VersionRange type.
-            if ((v != null) || (sv != null))
-            {
-                clause.m_attrs.remove(Constants.PACKAGE_SPECIFICATION_VERSION);
-                v = (v == null) ? sv : v;
-                clause.m_attrs.put(
-                    Constants.VERSION_ATTRIBUTE,
-                    new VersionRange(v.toString()));
-            }
-
-            // If bundle version is specified, then convert its type to VersionRange.
-            v = clause.m_attrs.get(Constants.BUNDLE_VERSION_ATTRIBUTE);
-            if (v != null)
-            {
-                clause.m_attrs.put(
-                    Constants.BUNDLE_VERSION_ATTRIBUTE,
-                    new VersionRange(v.toString()));
-            }
+            convertVersionRanges(clause);
 
             // Verify no duplicate imports.
             for (String pkgName : clause.m_paths)
@@ -509,6 +483,12 @@ public class ManifestParser
         Logger logger, List<ParsedHeaderClause> clauses, String mv)
         throws BundleException
     {
+        // Typed attributes are an R4 feature, R3 bundles keep their lenient handling.
+        if (mv.equals("2"))
+        {
+            convertTypedAttributes(clauses);
+        }
+
         // Verify that the values are equals if the package specifies
         // both version and specification-version attributes.
         for (ParsedHeaderClause clause : clauses)
@@ -527,39 +507,7 @@ public class ManifestParser
             clause.m_dirs.put(Constants.RESOLUTION_DIRECTIVE,
                 FelixConstants.RESOLUTION_DYNAMIC);
 
-            // Check for "version" and "specification-version" attributes
-            // and verify they are the same if both are specified.
-            Object v = clause.m_attrs.get(Constants.VERSION_ATTRIBUTE);
-            Object sv = clause.m_attrs.get(Constants.PACKAGE_SPECIFICATION_VERSION);
-            if ((v != null) && (sv != null))
-            {
-                // Verify they are equal.
-                if (!((String) v).trim().equals(((String) sv).trim()))
-                {
-                    throw new IllegalArgumentException(
-                        "Both version and specification-version are specified, but they are not equal.");
-                }
-            }
-
-            // Ensure that only the "version" attribute is used and convert
-            // it to the VersionRange type.
-            if ((v != null) || (sv != null))
-            {
-                clause.m_attrs.remove(Constants.PACKAGE_SPECIFICATION_VERSION);
-                v = (v == null) ? sv : v;
-                clause.m_attrs.put(
-                    Constants.VERSION_ATTRIBUTE,
-                    new VersionRange(v.toString()));
-            }
-
-            // If bundle version is specified, then convert its type to VersionRange.
-            v = clause.m_attrs.get(Constants.BUNDLE_VERSION_ATTRIBUTE);
-            if (v != null)
-            {
-                clause.m_attrs.put(
-                    Constants.BUNDLE_VERSION_ATTRIBUTE,
-                    new VersionRange(v.toString()));
-            }
+            convertVersionRanges(clause);
 
             // Dynamic imports can have duplicates, verify that no partial package name wild carding is used
             for (String pkgName : clause.m_paths)
@@ -736,99 +684,193 @@ public class ManifestParser
             // Should we error here if we are not an R4 bundle?
         }
 
+        return convertTypedAttributes(clauses);
+    }
+
+    private static List<ParsedHeaderClause> convertTypedAttributes(
+        List<ParsedHeaderClause> clauses)
+        throws BundleException
+    {
         // Convert attributes into specified types.
         for (ParsedHeaderClause clause : clauses)
         {
             for (Entry<String, String> entry : clause.m_types.entrySet())
             {
-                String type = entry.getValue();
-                if (!type.equals("String"))
+                Object value = clause.m_attrs.get(entry.getKey());
+                try
                 {
-                    if (type.equals("Double"))
-                    {
-                        clause.m_attrs.put(
-                            entry.getKey(),
-                            Double.valueOf(clause.m_attrs.get(entry.getKey()).toString().trim()));
-                    }
-                    else if (type.equals("Version"))
-                    {
-                        clause.m_attrs.put(
-                            entry.getKey(),
-                            new Version(clause.m_attrs.get(entry.getKey()).toString().trim()));
-                    }
-                    else if (type.equals("Long"))
-                    {
-                        clause.m_attrs.put(
-                            entry.getKey(),
-                            Long.valueOf(clause.m_attrs.get(entry.getKey()).toString().trim()));
-                    }
-                    else if (type.startsWith("List"))
-                    {
-                        int startIdx = type.indexOf('<');
-                        int endIdx = type.indexOf('>');
-                        if (((startIdx > 0) && (endIdx <= startIdx))
-                            || ((startIdx < 0) && (endIdx > 0)))
-                        {
-                            throw new BundleException(
-                                "Invalid Provide-Capability attribute list type for '"
-                                + entry.getKey()
-                                + "' : "
-                                + type);
-                        }
-
-                        String listType = "String";
-                        if (endIdx > startIdx)
-                        {
-                            listType = type.substring(startIdx + 1, endIdx).trim();
-                        }
-
-                        List<String> tokens = parseDelimitedString(
-                            clause.m_attrs.get(entry.getKey()).toString(), ",", false);
-                        List<Object> values = new ArrayList<>(tokens.size());
-                        for (String token : tokens)
-                        {
-                            if (listType.equals("String"))
-                            {
-                                values.add(token);
-                            }
-                            else if (listType.equals("Double"))
-                            {
-                                values.add(Double.valueOf(token.trim()));
-                            }
-                            else if (listType.equals("Version"))
-                            {
-                                values.add(new Version(token.trim()));
-                            }
-                            else if (listType.equals("Long"))
-                            {
-                                values.add(Long.valueOf(token.trim()));
-                            }
-                            else
-                            {
-                                throw new BundleException(
-                                    "Unknown Provide-Capability attribute list type for '"
-                                    + entry.getKey()
-                                    + "' : "
-                                    + type);
-                            }
-                        }
-                        clause.m_attrs.put(
-                            entry.getKey(),
-                            values);
-                    }
-                    else
-                    {
-                        throw new BundleException(
-                            "Unknown Provide-Capability attribute type for '"
-                            + entry.getKey()
-                            + "' : "
-                            + type);
-                    }
+                    clause.m_attrs.put(
+                        entry.getKey(),
+                        convertTypedValue(entry.getKey(), entry.getValue(), value.toString()));
+                }
+                catch (IllegalArgumentException ex)
+                {
+                    throw new BundleException(
+                        "Invalid value for attribute '"
+                        + entry.getKey()
+                        + "' of type "
+                        + entry.getValue()
+                        + " : "
+                        + value,
+                        BundleException.MANIFEST_ERROR,
+                        ex);
                 }
             }
+            // The attributes have their types now, so converting the clause
+            // again must not split a list value a second time.
+            clause.m_types.clear();
         }
 
         return clauses;
+    }
+
+    private static Object convertTypedValue(String key, String type, String value)
+        throws BundleException
+    {
+        if (type.equals("String"))
+        {
+            return value;
+        }
+        else if (type.equals("Double"))
+        {
+            return Double.valueOf(value.trim());
+        }
+        else if (type.equals("Version"))
+        {
+            return new Version(value.trim());
+        }
+        else if (type.equals("Long"))
+        {
+            return Long.valueOf(value.trim());
+        }
+        else if (type.startsWith("List"))
+        {
+            int startIdx = type.indexOf('<');
+            int endIdx = type.indexOf('>');
+            if (((startIdx > 0) && (endIdx <= startIdx))
+                || ((startIdx < 0) && (endIdx > 0)))
+            {
+                throw new BundleException(
+                    "Invalid attribute list type for '"
+                    + key
+                    + "' : "
+                    + type,
+                    BundleException.MANIFEST_ERROR);
+            }
+
+            String listType = "String";
+            if (endIdx > startIdx)
+            {
+                listType = type.substring(startIdx + 1, endIdx).trim();
+            }
+
+            List<String> tokens = parseDelimitedString(value, ",", false);
+            List<Object> values = new ArrayList<>(tokens.size());
+            for (String token : tokens)
+            {
+                if (listType.equals("String"))
+                {
+                    values.add(token);
+                }
+                else if (listType.equals("Double"))
+                {
+                    values.add(Double.valueOf(token.trim()));
+                }
+                else if (listType.equals("Version"))
+                {
+                    values.add(new Version(token.trim()));
+                }
+                else if (listType.equals("Long"))
+                {
+                    values.add(Long.valueOf(token.trim()));
+                }
+                else
+                {
+                    throw new BundleException(
+                        "Unknown attribute list type for '"
+                        + key
+                        + "' : "
+                        + type,
+                        BundleException.MANIFEST_ERROR);
+                }
+            }
+            return values;
+        }
+        throw new BundleException(
+            "Unknown attribute type for '"
+            + key
+            + "' : "
+            + type,
+            BundleException.MANIFEST_ERROR);
+    }
+
+    // Converts the version and bundle-version attributes of an import
+    // clause to the VersionRange type.
+    private static void convertVersionRanges(ParsedHeaderClause clause)
+        throws BundleException
+    {
+        // Ensure that only the "version" attribute is used.
+        String v = getPackageVersion(clause, true);
+        if (v != null)
+        {
+            clause.m_attrs.put(
+                Constants.VERSION_ATTRIBUTE,
+                new VersionRange(v));
+        }
+
+        v = getVersionAttribute(clause, Constants.BUNDLE_VERSION_ATTRIBUTE);
+        if (v != null)
+        {
+            clause.m_attrs.put(
+                Constants.BUNDLE_VERSION_ATTRIBUTE,
+                new VersionRange(v));
+        }
+    }
+
+    // Merges the deprecated specification-version attribute into the version
+    // attribute and returns the version, or null if neither is specified.
+    private static String getPackageVersion(ParsedHeaderClause clause, boolean range)
+        throws BundleException
+    {
+        String v = getVersionAttribute(clause, Constants.VERSION_ATTRIBUTE);
+        String sv = getVersionAttribute(clause, Constants.PACKAGE_SPECIFICATION_VERSION);
+        clause.m_attrs.remove(Constants.PACKAGE_SPECIFICATION_VERSION);
+        if ((v != null) && (sv != null))
+        {
+            // Compare versions rather than strings, a typed version:Version=1.0
+            // is 1.0.0 while specification-version="1.0" stays a string.
+            boolean equal = range
+                ? new VersionRange(v).equals(new VersionRange(sv))
+                : Version.parseVersion(v).equals(Version.parseVersion(sv));
+            if (!equal)
+            {
+                throw new BundleException(
+                    "Both version and specification-version are specified, but they are not equal.",
+                    BundleException.MANIFEST_ERROR);
+            }
+        }
+        return (v != null) ? v : sv;
+    }
+
+    // Returns a version attribute as a string, or null if it is not specified.
+    private static String getVersionAttribute(ParsedHeaderClause clause, String name)
+        throws BundleException
+    {
+        Object value = clause.m_attrs.get(name);
+        if (value == null)
+        {
+            return null;
+        }
+        if (!(value instanceof String) && !(value instanceof Version))
+        {
+            throw new BundleException(
+                "Attribute '"
+                + name
+                + "' must be of type String or Version : "
+                + value,
+                BundleException.MANIFEST_ERROR);
+        }
+        return value.toString().trim();
     }
 
     private static List<BundleCapability> convertProvideCapabilities(
@@ -874,6 +916,12 @@ public class ManifestParser
         String mv, String bsn, Version bv, boolean connectModule)
         throws BundleException
     {
+        // Typed attributes are an R4 feature, R3 bundles keep their lenient handling.
+        if (mv.equals("2"))
+        {
+            convertTypedAttributes(clauses);
+        }
+
         for (ParsedHeaderClause clause : clauses)
         {
             // Verify that the named package has not already been declared.
@@ -902,37 +950,12 @@ public class ManifestParser
                 }
             }
 
-            // Check for "version" and "specification-version" attributes
-            // and verify they are the same if both are specified.
-            Object v = clause.m_attrs.get(Constants.VERSION_ATTRIBUTE);
-            Object sv = clause.m_attrs.get(Constants.PACKAGE_SPECIFICATION_VERSION);
-            if ((v != null) && (sv != null))
-            {
-                // Verify they are equal.
-                if (!((String) v).trim().equals(((String) sv).trim()))
-                {
-                    throw new IllegalArgumentException(
-                        "Both version and specification-version are specified, but they are not equal.");
-                }
-            }
-
-            // Always add the default version if not specified.
-            if ((v == null) && (sv == null))
-            {
-                v = Version.emptyVersion;
-            }
-
             // Ensure that only the "version" attribute is used and convert
-            // it to the appropriate type.
-            if ((v != null) || (sv != null))
-            {
-                // Convert version attribute to type Version.
-                clause.m_attrs.remove(Constants.PACKAGE_SPECIFICATION_VERSION);
-                v = (v == null) ? sv : v;
-                clause.m_attrs.put(
-                    Constants.VERSION_ATTRIBUTE,
-                    Version.parseVersion(v.toString()));
-            }
+            // it to type Version, always adding the default version if not specified.
+            String v = getPackageVersion(clause, false);
+            clause.m_attrs.put(
+                Constants.VERSION_ATTRIBUTE,
+                (v == null) ? Version.emptyVersion : Version.parseVersion(v));
 
             // If this is an R4 bundle, then make sure it doesn't specify
             // bundle symbolic name or bundle version attributes.
@@ -1549,8 +1572,8 @@ public class ManifestParser
         String mv = getManifestVersion(headerMap);
         if ((mv != null) && mv.equals("2"))
         {
-            List<ParsedHeaderClause> clauses = parseStandardHeader(
-                (String) headerMap.get(Constants.FRAGMENT_HOST));
+            List<ParsedHeaderClause> clauses = convertTypedAttributes(parseStandardHeader(
+                (String) headerMap.get(Constants.FRAGMENT_HOST)));
             if (clauses.size() > 0)
             {
                 // Make sure that only one fragment host symbolic name is specified.
@@ -1569,14 +1592,10 @@ public class ManifestParser
 
                 // If the bundle-version attribute is specified, then convert
                 // it to the proper type.
-                Object value = clauses.get(0).m_attrs.get(Constants.BUNDLE_VERSION_ATTRIBUTE);
-                value = (value == null) ? "0.0.0" : value;
-                if (value != null)
-                {
-                    clauses.get(0).m_attrs.put(
-                        Constants.BUNDLE_VERSION_ATTRIBUTE,
-                        new VersionRange(value.toString()));
-                }
+                String value = getVersionAttribute(clauses.get(0), Constants.BUNDLE_VERSION_ATTRIBUTE);
+                clauses.get(0).m_attrs.put(
+                    Constants.BUNDLE_VERSION_ATTRIBUTE,
+                    new VersionRange((value == null) ? "0.0.0" : value));
 
                 // Note that we use a linked hash map here to ensure the
                 // host symbolic name is first, which will make indexing
@@ -1749,6 +1768,7 @@ public class ManifestParser
 
     private static List<ParsedHeaderClause> normalizeRequireClauses(
         Logger logger, List<ParsedHeaderClause> clauses, String mv)
+        throws BundleException
     {
         // R3 bundles cannot require other bundles.
         if (!mv.equals("2"))
@@ -1757,15 +1777,17 @@ public class ManifestParser
         }
         else
         {
+            convertTypedAttributes(clauses);
+
             // Convert bundle version attribute to VersionRange type.
             for (ParsedHeaderClause clause : clauses)
             {
-                Object value = clause.m_attrs.get(Constants.BUNDLE_VERSION_ATTRIBUTE);
+                String value = getVersionAttribute(clause, Constants.BUNDLE_VERSION_ATTRIBUTE);
                 if (value != null)
                 {
                     clause.m_attrs.put(
                         Constants.BUNDLE_VERSION_ATTRIBUTE,
-                        new VersionRange(value.toString()));
+                        new VersionRange(value));
                 }
             }
         }

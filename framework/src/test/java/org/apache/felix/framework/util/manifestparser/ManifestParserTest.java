@@ -19,6 +19,7 @@
 package org.apache.felix.framework.util.manifestparser;
 
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
 
@@ -30,6 +31,7 @@ import java.util.List;
 import java.util.Map;
 
 import org.apache.felix.framework.BundleRevisionImpl;
+import org.apache.felix.framework.Logger;
 import org.apache.felix.framework.cache.ConnectContentContent;
 import org.apache.felix.framework.cache.Content;
 import org.apache.felix.framework.util.FelixConstants;
@@ -41,8 +43,11 @@ import org.osgi.framework.FrameworkUtil;
 import org.osgi.framework.InvalidSyntaxException;
 import org.osgi.framework.Version;
 import org.osgi.framework.connect.ConnectContent;
+import org.osgi.framework.namespace.BundleNamespace;
+import org.osgi.framework.namespace.HostNamespace;
 import org.osgi.framework.namespace.IdentityNamespace;
 import org.osgi.framework.namespace.NativeNamespace;
+import org.osgi.framework.namespace.PackageNamespace;
 import org.osgi.framework.wiring.BundleCapability;
 import org.osgi.framework.wiring.BundleRequirement;
 
@@ -166,6 +171,220 @@ class ManifestParserTest
     }
 
     @Test
+    void exportPackageTypedAttributes() throws BundleException
+    {
+        Map<String, String> headers = new HashMap<>();
+        headers.put(Constants.BUNDLE_MANIFESTVERSION, "2");
+        headers.put(Constants.BUNDLE_SYMBOLICNAME, "com.example.exporter");
+        headers.put(Constants.EXPORT_PACKAGE,
+            "com.example;version=\"1.0\";x-directive:=directiveValue;attr=value;"
+            + "longAttr:Long=42;stringAttr:String=stringValue;doubleAttr:Double=4.2;"
+            + "versionAttr:Version=4.2;longList:List<Long>=\"2,3,4\";"
+            + "stringList:List<String>=\"one,two,three\";doubleList:List<Double>=\"2.3,3.4,4.5\";"
+            + "versionList:List<Version>=\"2.3,3.4,4.5\","
+            + "com.example.typed;version:Version=2.0");
+
+        ManifestParser mp = new ManifestParser(null, null, null, headers);
+
+        BundleCapability pc = findPackageCapability(mp.getCapabilities(), "com.example");
+        assertThat(pc.getAttributes())
+            .containsEntry("attr", "value")
+            .containsEntry("longAttr", Long.valueOf(42))
+            .containsEntry("stringAttr", "stringValue")
+            .containsEntry("doubleAttr", Double.valueOf(4.2))
+            .containsEntry("versionAttr", new Version("4.2"))
+            .containsEntry("longList", Arrays.asList(Long.valueOf(2), Long.valueOf(3), Long.valueOf(4)))
+            .containsEntry("stringList", Arrays.asList("one", "two", "three"))
+            .containsEntry("doubleList", Arrays.asList(Double.valueOf(2.3), Double.valueOf(3.4), Double.valueOf(4.5)))
+            .containsEntry("versionList", Arrays.asList(new Version("2.3"), new Version("3.4"), new Version("4.5")))
+            .containsEntry(PackageNamespace.CAPABILITY_VERSION_ATTRIBUTE, new Version("1.0"))
+            .doesNotContainKey("x-directive");
+        assertThat(pc.getDirectives()).containsEntry("x-directive", "directiveValue");
+
+        BundleCapability typed = findPackageCapability(mp.getCapabilities(), "com.example.typed");
+        assertThat(typed.getAttributes())
+            .containsEntry(PackageNamespace.CAPABILITY_VERSION_ATTRIBUTE, new Version("2.0"));
+    }
+
+    @Test
+    void typedVersionWithSpecificationVersion() throws BundleException
+    {
+        Map<String, String> headers = new HashMap<>();
+        headers.put(Constants.BUNDLE_MANIFESTVERSION, "2");
+        headers.put(Constants.BUNDLE_SYMBOLICNAME, "com.example.versions");
+        headers.put(Constants.EXPORT_PACKAGE, "com.example;version:Version=1.0;specification-version=\"1.0\"");
+        headers.put(Constants.IMPORT_PACKAGE, "com.example;version:Version=1.0;specification-version=\"1.0\"");
+
+        ManifestParser mp = new ManifestParser(null, null, null, headers);
+
+        assertThat(findPackageCapability(mp.getCapabilities(), "com.example").getAttributes())
+            .containsEntry(PackageNamespace.CAPABILITY_VERSION_ATTRIBUTE, new Version("1.0"));
+        assertThat(findRequirement(mp.getRequirements(), PackageNamespace.PACKAGE_NAMESPACE).getDirectives())
+            .containsEntry(Constants.FILTER_DIRECTIVE, "(&(osgi.wiring.package=com.example)(version>=1.0.0))");
+    }
+
+    @Test
+    void importPackageTypedAttributes() throws Exception
+    {
+        BundleCapability pc = findPackageCapability(typedExporter().getCapabilities(), "com.example");
+
+        ManifestParser mp = parse("com.example.importer",
+            Constants.IMPORT_PACKAGE, "com.example;version:Version=1.0;" + TYPED_MATCHING_ATTRS);
+
+        assertMatches(findRequirement(mp.getRequirements(), PackageNamespace.PACKAGE_NAMESPACE), pc);
+    }
+
+    @Test
+    void importPackageTypedAttributesNotMatching() throws Exception
+    {
+        BundleCapability pc = findPackageCapability(typedExporter().getCapabilities(), "com.example");
+
+        for (String attr : Arrays.asList("longAttr:Long=43", "doubleAttr:Double=4.3",
+            "versionAttr:Version=4.3", "stringList:List<String>=\"one,four\"",
+            "versionList:List<Version>=\"3.5\""))
+        {
+            ManifestParser mp = parse("com.example.importer", Constants.IMPORT_PACKAGE, "com.example;" + attr);
+
+            assertNotMatches(findRequirement(mp.getRequirements(), PackageNamespace.PACKAGE_NAMESPACE), pc);
+        }
+    }
+
+    @Test
+    void importPackageEmptyListRequiresAttribute() throws Exception
+    {
+        BundleCapability pc = findPackageCapability(typedExporter().getCapabilities(), "com.example");
+
+        ManifestParser present = parse("com.example.importer",
+            Constants.IMPORT_PACKAGE, "com.example;stringList:List<String>=\"\"");
+        ManifestParser missing = parse("com.example.importer",
+            Constants.IMPORT_PACKAGE, "com.example;otherList:List<String>=\"\"");
+
+        assertMatches(findRequirement(present.getRequirements(), PackageNamespace.PACKAGE_NAMESPACE), pc);
+        assertNotMatches(findRequirement(missing.getRequirements(), PackageNamespace.PACKAGE_NAMESPACE), pc);
+    }
+
+    @Test
+    void dynamicImportPackageTypedAttributes() throws Exception
+    {
+        BundleCapability pc = findPackageCapability(typedExporter().getCapabilities(), "com.example");
+
+        List<BundleRequirement> reqs = ManifestParser.parseDynamicImportHeader(null, null,
+            "com.example;" + TYPED_MATCHING_ATTRS);
+
+        assertMatches(findRequirement(reqs, PackageNamespace.PACKAGE_NAMESPACE), pc);
+    }
+
+    @Test
+    void requireBundleTypedAttributes() throws Exception
+    {
+        BundleCapability bc = findCapability(typedHost().getCapabilities(), BundleNamespace.BUNDLE_NAMESPACE);
+
+        ManifestParser mp = parse("com.example.requirer",
+            Constants.REQUIRE_BUNDLE, "com.example.host;" + TYPED_MATCHING_ATTRS);
+
+        assertMatches(findRequirement(mp.getRequirements(), BundleNamespace.BUNDLE_NAMESPACE), bc);
+    }
+
+    @Test
+    void requireBundleTypedBundleVersion() throws Exception
+    {
+        BundleCapability bc = findCapability(typedHost().getCapabilities(), BundleNamespace.BUNDLE_NAMESPACE);
+
+        ManifestParser matching = parse("com.example.requirer",
+            Constants.REQUIRE_BUNDLE, "com.example.host;bundle-version:Version=1.0");
+        ManifestParser notMatching = parse("com.example.requirer",
+            Constants.REQUIRE_BUNDLE, "com.example.host;bundle-version:Version=2.0");
+
+        assertMatches(findRequirement(matching.getRequirements(), BundleNamespace.BUNDLE_NAMESPACE), bc);
+        assertNotMatches(findRequirement(notMatching.getRequirements(), BundleNamespace.BUNDLE_NAMESPACE), bc);
+    }
+
+    @Test
+    void fragmentHostTypedAttributes() throws Exception
+    {
+        BundleCapability hc = findCapability(typedHost().getCapabilities(), HostNamespace.HOST_NAMESPACE);
+
+        ManifestParser mp = parse("com.example.fragment",
+            Constants.FRAGMENT_HOST, "com.example.host;" + TYPED_MATCHING_ATTRS);
+
+        assertMatches(findRequirement(mp.getRequirements(), HostNamespace.HOST_NAMESPACE), hc);
+    }
+
+    @Test
+    void fragmentHostTypedBundleVersion() throws Exception
+    {
+        BundleCapability hc = findCapability(typedHost().getCapabilities(), HostNamespace.HOST_NAMESPACE);
+
+        ManifestParser matching = parse("com.example.fragment",
+            Constants.FRAGMENT_HOST, "com.example.host;bundle-version:Version=1.0");
+        ManifestParser notMatching = parse("com.example.fragment",
+            Constants.FRAGMENT_HOST, "com.example.host;bundle-version:Version=2.0");
+
+        assertMatches(findRequirement(matching.getRequirements(), HostNamespace.HOST_NAMESPACE), hc);
+        assertNotMatches(findRequirement(notMatching.getRequirements(), HostNamespace.HOST_NAMESPACE), hc);
+    }
+
+    @Test
+    void malformedTypedValue()
+    {
+        assertManifestError("'longAttr' of type Long : abc",
+            Constants.EXPORT_PACKAGE, "com.example;longAttr:Long=abc");
+        assertManifestError("'versionList' of type List<Version> : 1.0,x",
+            Constants.IMPORT_PACKAGE, "com.example;versionList:List<Version>=\"1.0,x\"");
+        assertManifestError("'doubleAttr' of type Double : x",
+            Constants.REQUIRE_BUNDLE, "com.example.host;doubleAttr:Double=x");
+    }
+
+    @Test
+    void versionAttributeMustBeStringOrVersion()
+    {
+        assertManifestError("'version' must be of type String or Version",
+            Constants.EXPORT_PACKAGE, "com.example;version:List<Version>=\"1.0,2.0\"");
+        assertManifestError("'version' must be of type String or Version",
+            Constants.IMPORT_PACKAGE, "com.example;version:Long=1");
+        assertManifestError("'bundle-version' must be of type String or Version",
+            Constants.FRAGMENT_HOST, "com.example.host;bundle-version:List<Version>=\"1.0,2.0\"");
+    }
+
+    @Test
+    void unknownTypedAttributeType()
+    {
+        assertManifestError("Unknown attribute type for 'x' : Foo",
+            Constants.EXPORT_PACKAGE, "com.example;x:Foo=1");
+        assertManifestError("Unknown attribute list type for 'x' : List<Foo>",
+            Constants.IMPORT_PACKAGE, "com.example;x:List<Foo>=1");
+        assertManifestError("Invalid attribute list type for 'x' : List<Long",
+            Constants.PROVIDE_CAPABILITY, "ns;x:List<Long=1");
+    }
+
+    @Test
+    void versionMismatchWithSpecificationVersion()
+    {
+        assertManifestError("Both version and specification-version are specified",
+            Constants.EXPORT_PACKAGE, "com.example;version=1.0;specification-version=\"2.0\"");
+        assertManifestError("Both version and specification-version are specified",
+            Constants.IMPORT_PACKAGE, "com.example;version=\"[1.0,2.0)\";specification-version=\"1.0\"");
+    }
+
+    @Test
+    void r3BundleIgnoresTypedAttributes() throws BundleException
+    {
+        // R3 bundles have no typed attributes, a malformed one is dropped
+        // with a warning as any other unknown R3 attribute.
+        Map<String, String> headers = new HashMap<>();
+        headers.put(Constants.BUNDLE_SYMBOLICNAME, "com.example.r3");
+        headers.put(Constants.EXPORT_PACKAGE, "com.example;x:Long=abc");
+        headers.put(Constants.IMPORT_PACKAGE, "com.example.other;x:Long=abc");
+
+        ManifestParser mp = new ManifestParser(new Logger(), null, null, headers);
+
+        assertThat(findPackageCapability(mp.getCapabilities(), "com.example").getAttributes())
+            .doesNotContainKey("x");
+        assertThat(findRequirement(mp.getRequirements(), PackageNamespace.PACKAGE_NAMESPACE).getDirectives())
+            .containsEntry(Constants.FILTER_DIRECTIVE, "(&(osgi.wiring.package=com.example.other)(version>=0.0.0))");
+    }
+
+    @Test
     void convertNativeCode() throws InvalidSyntaxException
     {
         List<NativeLibraryClause> nativeLibraryClauses = new ArrayList<>();
@@ -214,6 +433,19 @@ class ManifestParserTest
         return null;
     }
     
+    private BundleCapability findPackageCapability(Collection<BundleCapability> capabilities, String pkgName)
+    {
+        for (BundleCapability capability : capabilities)
+        {
+            if (PackageNamespace.PACKAGE_NAMESPACE.equals(capability.getNamespace())
+                && pkgName.equals(capability.getAttributes().get(PackageNamespace.PACKAGE_NAMESPACE)))
+            {
+                return capability;
+            }
+        }
+        return null;
+    }
+
     private BundleRequirement findRequirement(Collection<BundleRequirement> requirements, String namespace)
     {
         for(BundleRequirement requirement: requirements)
@@ -224,5 +456,57 @@ class ManifestParserTest
             }
         }
         return null;
+    }
+
+    private static final String TYPED_ATTRS = "longAttr:Long=42;doubleAttr:Double=4.2;versionAttr:Version=4.2;"
+        + "stringList:List<String>=\"one,two,three\";versionList:List<Version>=\"2.3,3.4,4.5\"";
+
+    private static final String TYPED_MATCHING_ATTRS = "longAttr:Long=42;doubleAttr:Double=4.2;versionAttr:Version=4.2;"
+        + "stringList:List<String>=\"one,three\";versionList:List<Version>=\"3.4\"";
+
+    private static ManifestParser typedExporter() throws BundleException
+    {
+        return parse("com.example.exporter", Constants.EXPORT_PACKAGE, "com.example;version=1.0;" + TYPED_ATTRS);
+    }
+
+    private static ManifestParser typedHost() throws BundleException
+    {
+        return parse("com.example.host;" + TYPED_ATTRS, Constants.BUNDLE_VERSION, "1.2.0");
+    }
+
+    private static ManifestParser parse(String bsn, String... headers) throws BundleException
+    {
+        Map<String, String> map = new HashMap<>();
+        map.put(Constants.BUNDLE_MANIFESTVERSION, "2");
+        map.put(Constants.BUNDLE_SYMBOLICNAME, bsn);
+        for (int i = 0; i < headers.length; i += 2)
+        {
+            map.put(headers[i], headers[i + 1]);
+        }
+        return new ManifestParser(null, null, null, map);
+    }
+
+    private static void assertMatches(BundleRequirement req, BundleCapability cap) throws InvalidSyntaxException
+    {
+        assertThat(req.matches(cap)).as("%s matches %s", req, cap).isTrue();
+        String filter = req.getDirectives().get(Constants.FILTER_DIRECTIVE);
+        assertThat(FrameworkUtil.createFilter(filter).matches(cap.getAttributes()))
+            .as("%s matches %s", filter, cap.getAttributes()).isTrue();
+    }
+
+    private static void assertNotMatches(BundleRequirement req, BundleCapability cap) throws InvalidSyntaxException
+    {
+        assertThat(req.matches(cap)).as("%s does not match %s", req, cap).isFalse();
+        String filter = req.getDirectives().get(Constants.FILTER_DIRECTIVE);
+        assertThat(FrameworkUtil.createFilter(filter).matches(cap.getAttributes()))
+            .as("%s does not match %s", filter, cap.getAttributes()).isFalse();
+    }
+
+    private static void assertManifestError(String message, String... headers)
+    {
+        assertThatThrownBy(() -> parse("com.example.test", headers))
+            .isInstanceOfSatisfying(BundleException.class,
+                ex -> assertThat(ex.getType()).isEqualTo(BundleException.MANIFEST_ERROR))
+            .hasMessageContaining(message);
     }
 }
