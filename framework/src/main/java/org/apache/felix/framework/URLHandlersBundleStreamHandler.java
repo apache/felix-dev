@@ -22,10 +22,12 @@ import java.io.IOException;
 import java.lang.reflect.Constructor;
 import java.net.*;
 
+import org.apache.felix.framework.plurl.PlurlStreamHandlerBase;
+
 import org.apache.felix.framework.util.SecureAction;
 import org.apache.felix.framework.util.Util;
 
-class URLHandlersBundleStreamHandler extends URLStreamHandler
+class URLHandlersBundleStreamHandler extends PlurlStreamHandlerBase
 {
     private final Object m_framework;
     private final SecureAction m_action;
@@ -43,7 +45,7 @@ class URLHandlersBundleStreamHandler extends URLStreamHandler
     }
 
     @Override
-	protected URLConnection openConnection(URL url) throws IOException
+	public URLConnection openConnection(URL url) throws IOException
     {
         Object framework = m_framework;
 
@@ -88,7 +90,7 @@ class URLHandlersBundleStreamHandler extends URLStreamHandler
     }
 
     @Override
-	protected String toExternalForm(URL u)
+	public String toExternalForm(URL u)
     {
         StringBuilder result = new StringBuilder();
         result.append(u.getProtocol());
@@ -114,7 +116,7 @@ class URLHandlersBundleStreamHandler extends URLStreamHandler
     }
 
     @Override
-	protected java.net.InetAddress getHostAddress(URL u)
+	public java.net.InetAddress getHostAddress(URL u)
     {
         return null;
     }
