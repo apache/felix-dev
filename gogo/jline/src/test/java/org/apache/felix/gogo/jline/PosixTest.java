@@ -101,6 +101,16 @@ public class PosixTest extends AbstractParserTest {
         assertEquals("       1       5       5", res);
     }
 
+    @Test
+    public void testDateUtc() throws Exception {
+        Context context = new Context();
+        context.addCommand("date", new Posix(context));
+        context.addCommand("tac", this);
+
+        Object res = context.execute("date -u '+%z' | tac");
+        assertEquals("Z", res.toString().trim());
+    }
+
     public String tac() throws IOException {
         StringWriter sw = new StringWriter();
         Reader rdr = new InputStreamReader(System.in);
