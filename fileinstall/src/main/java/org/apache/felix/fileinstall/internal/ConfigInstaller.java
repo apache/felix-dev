@@ -19,12 +19,14 @@
 package org.apache.felix.fileinstall.internal;
 
 import java.io.BufferedInputStream;
+import java.io.ByteArrayOutputStream;
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.InputStreamReader;
+import java.io.OutputStream;
 import java.io.OutputStreamWriter;
 import java.io.Reader;
 import java.io.Writer;
@@ -32,9 +34,11 @@ import java.lang.reflect.Array;
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
 import java.net.URI;
+import java.nio.file.Files;
 import java.security.AccessController;
 import java.security.PrivilegedAction;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Dictionary;
 import java.util.Enumeration;
 import java.util.HashMap;
@@ -288,13 +292,35 @@ public class ConfigInstaller implements ArtifactInstaller, ConfigurationListener
                     {
                         props.remove(key);
                     }
-                    try (Writer fw = new OutputStreamWriter(new FileOutputStream(file), encoding()))
+
+                    ByteArrayOutputStream baos = new ByteArrayOutputStream();
+                    try (Writer fw = new OutputStreamWriter(baos, encoding()))
                     {
                         props.save( fw );
                     }
-                    // we're just writing out what's already loaded into ConfigAdmin, so
-                    // update file checksum since lastModified gets updated when writing
-                    fileInstall.updateChecksum(file);
+                    byte[] newContent = baos.toByteArray();
+
+                    // re-writing a config file must be guarded by a write lock as otherwise DirectoryWatcher
+                    // might pick up an empty file and as a result, write this file to disk in a follow-up event
+                    fileInstall.lock.writeLock().lockInterruptibly();
+                    try
+                    {
+                        // do not touch the file (and its lastModified) if there is nothing to change
+                        if (!Arrays.equals(newContent, Files.readAllBytes(file.toPath())))
+                        {
+                            try (OutputStream os = new FileOutputStream(file))
+                            {
+                                os.write(newContent);
+                            }
+                            // we're just writing out what's already loaded into ConfigAdmin, so
+                            // update file checksum since lastModified gets updated when writing
+                            fileInstall.updateChecksum(file);
+                        }
+                    }
+                    finally
+                    {
+                        fileInstall.lock.writeLock().unlock();
+                    }
                 }
             }
             catch (Exception e)

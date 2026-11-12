@@ -27,6 +27,7 @@ import java.util.Collections;
 import java.util.Dictionary;
 import java.util.Hashtable;
 import java.util.concurrent.atomic.AtomicReference;
+import java.util.concurrent.locks.ReentrantReadWriteLock;
 
 import junit.framework.TestCase;
 import org.easymock.Capture;
@@ -434,6 +435,108 @@ public class ConfigInstallerTest extends TestCase {
 
         assertEquals("networkInterface = \"wlp3s1\"", Files.readAllLines( Paths.get(file.toURI()) ).get(0));
     }
+
+    /**
+     * FELIX-6515: rewriting a config file truncates it before filling it. The write must be guarded by the
+     * global write lock so that a DirectoryWatcher (which holds the read lock while processing) can never
+     * observe, and subsequently write back, an empty file.
+     */
+    public void testDoConfigurationEventRewritesFileUnderWriteLock() throws Exception
+    {
+        final File file = File.createTempFile("test", ".config");
+        try (OutputStream os = new FileOutputStream(file)) {
+            os.write("networkInterface = \"wlp3s1\"\n".getBytes("UTF-8"));
+        }
+
+        final String pid = file.getName().substring(0, file.getName().indexOf(".config"));
+
+        final ServiceReference<ConfigurationAdmin> sr = EasyMock.createMock(ServiceReference.class);
+
+        final AtomicReference<ReentrantReadWriteLock> lockRef = new AtomicReference<>();
+
+        EasyMock.expect(mockBundleContext.getBundle()).andReturn(mockBundle).anyTimes();
+        EasyMock.expect(mockBundle.loadClass(ConfigurationAttribute.class.getName())).andReturn((Class)ConfigurationAttribute.class).anyTimes();
+        EasyMock.expect(mockBundleContext.getProperty((String) EasyMock.anyObject())).andReturn(null).anyTimes();
+
+        final Dictionary<String, Object> configProps = new Hashtable<String, Object>() {
+            {
+                put("networkInterface", "wlp3s0");
+                put(DirectoryWatcher.FILENAME, file.toURI().toString());
+            }
+        };
+        EasyMock.expect(mockConfiguration.getProperties()).andReturn(configProps).anyTimes();
+        EasyMock.expect(mockConfiguration.getPid()).andReturn(pid).anyTimes();
+        EasyMock.expect(mockConfigurationAdmin.listConfigurations("(service.pid=" + pid + ")"))
+                .andReturn(new Configuration[] { mockConfiguration });
+
+        EasyMock.replay(mockBundleContext, mockConfigurationAdmin, mockBundle, mockConfiguration, sr);
+
+        final AtomicReference<Boolean> lockedOnChecksumUpdate = new AtomicReference<>();
+        final FileInstall fileInstall = new FileInstall() {
+            @Override
+            public void updateChecksum(File f) {
+                lockedOnChecksumUpdate.set(lockRef.get().isWriteLockedByCurrentThread());
+            }
+        };
+        final ReentrantReadWriteLock lock = (ReentrantReadWriteLock) fileInstall.lock;
+        lockRef.set(lock);
+        final ConfigInstaller ci = new ConfigInstaller( mockBundleContext, mockConfigurationAdmin, fileInstall );
+
+        ci.doConfigurationEvent( new ConfigurationEvent(sr , ConfigurationEvent.CM_UPDATED, null, pid ) );
+
+        assertEquals("networkInterface = \"wlp3s0\"", Files.readAllLines( Paths.get(file.toURI()) ).get(0));
+        assertEquals("Checksum must be updated before the write lock is released", Boolean.TRUE, lockedOnChecksumUpdate.get());
+        assertFalse("Write lock must be released after write-back", lock.isWriteLocked());
+    }
+
+    /**
+     * FELIX-6515: a config file whose content would not change must not be touched at all.
+     */
+    public void testDoConfigurationEventDoesNotRewriteUnchangedFile() throws Exception
+    {
+        final File file = File.createTempFile("test", ".config");
+        try (OutputStream os = new FileOutputStream(file)) {
+            os.write("networkInterface = \"wlp3s0\"\n".getBytes("UTF-8"));
+        }
+        final long lastModified = 1_000_000_000L;
+        assertTrue(file.setLastModified(lastModified));
+
+        final String pid = file.getName().substring(0, file.getName().indexOf(".config"));
+        final ServiceReference<ConfigurationAdmin> sr = EasyMock.createMock(ServiceReference.class);
+
+        EasyMock.expect(mockBundleContext.getBundle()).andReturn(mockBundle).anyTimes();
+        EasyMock.expect(mockBundle.loadClass(ConfigurationAttribute.class.getName())).andReturn((Class)ConfigurationAttribute.class).anyTimes();
+        EasyMock.expect(mockBundleContext.getProperty((String) EasyMock.anyObject())).andReturn(null).anyTimes();
+
+        final Dictionary<String, Object> configProps = new Hashtable<String, Object>() {
+            {
+                put("networkInterface", "wlp3s0");
+                put(DirectoryWatcher.FILENAME, file.toURI().toString());
+            }
+        };
+        EasyMock.expect(mockConfiguration.getProperties()).andReturn(configProps).anyTimes();
+        EasyMock.expect(mockConfiguration.getPid()).andReturn(pid).anyTimes();
+        EasyMock.expect(mockConfigurationAdmin.listConfigurations("(service.pid=" + pid + ")"))
+                .andReturn(new Configuration[] { mockConfiguration });
+
+        EasyMock.replay(mockBundleContext, mockConfigurationAdmin, mockBundle, mockConfiguration, sr);
+
+        final AtomicReference<Boolean> checksumUpdated = new AtomicReference<>(false);
+        final FileInstall fileInstall = new FileInstall() {
+            @Override
+            public void updateChecksum(File f) {
+                checksumUpdated.set(true);
+            }
+        };
+        final ConfigInstaller ci = new ConfigInstaller( mockBundleContext, mockConfigurationAdmin, fileInstall );
+
+        ci.doConfigurationEvent( new ConfigurationEvent(sr , ConfigurationEvent.CM_UPDATED, null, pid ) );
+
+        assertEquals("Unchanged file must not be modified", lastModified, file.lastModified());
+        assertFalse("Checksum must not be updated for an unchanged file", checksumUpdated.get());
+    }
+
+
 
     public void testSetConfiguration() throws Exception
     {
