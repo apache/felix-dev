@@ -628,7 +628,7 @@ public class ReferenceMetadata
      * Returns the name of the component property referring to the {@link #getTarget() target}
      * property of this reference.
      *
-     * @return the name of the target property which is the name of this referene
+     * @return the name of the target property which is the name of this reference
      *      suffixed with the string ".target".
      */
     public String getTargetPropertyName()

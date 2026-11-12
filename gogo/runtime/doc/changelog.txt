@@ -1,3 +1,11 @@
+Changes from 1.1.6 to 1.2.0
+---------------------------
+Improvement
+    Removed the Security Manager based ThreadGroup selection in ThreadUtils. Java SE
+    24 permanently disabled the Security Manager (JEP 486), so the thread group is
+    now always taken from the current thread.
+
+
 Changes from 1.1.4 to 1.1.6
 ---------------------------
 Bug

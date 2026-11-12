@@ -1,2 +1,5 @@
-This directory contains the implementation of the Apache Felix Http Service.
+This directory contains the implementation of the Apache Felix Http Service using Eclipse Jetty 11.
+
+This implementation is deprecated as Jetty 11 is EOL. Use the Jetty 12 based implementation.
+
 

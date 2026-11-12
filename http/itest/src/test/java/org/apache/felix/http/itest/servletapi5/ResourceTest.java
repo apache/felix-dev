@@ -29,7 +29,6 @@ import java.net.URL;
 import java.nio.file.Files;
 import java.util.Dictionary;
 import java.util.Hashtable;
-import java.util.concurrent.CountDownLatch;
 
 import org.junit.Test;
 import org.junit.runner.RunWith;
@@ -83,7 +82,7 @@ public class ResourceTest extends Servlet5BaseIntegrationTest {
         resourcesProps.put(HttpWhiteboardConstants.HTTP_WHITEBOARD_RESOURCE_PREFIX, "/resource");
         resourcesProps.put(HttpWhiteboardConstants.HTTP_WHITEBOARD_CONTEXT_SELECT, "(" + HttpWhiteboardConstants.HTTP_WHITEBOARD_CONTEXT_NAME + "=test)");
         final ServiceRegistration<Object> reg = this.m_context.registerService(Object.class, new Object(), resourcesProps);
-    
+
         counter = this.waitForRuntime(counter);
 
         final TestServlet servlet = new TestServlet();

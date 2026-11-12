@@ -381,6 +381,20 @@ class ServletRequestWrapper extends HttpServletRequestWrapper
         return this.asyncSupported;
     }
 
+    /**
+     * Subclass may call this to get the original implementation
+     */
+    protected Collection<Part> getOriginalParts() throws IOException, ServletException {
+        return super.getParts();
+    }
+
+    /**
+     * Subclass may call this to get the original implementation
+     */
+    protected Part getOriginalPart(String name) throws IOException, ServletException {
+        return super.getPart(name);
+    }
+
     @Override
     public Collection<Part> getParts() throws IOException, ServletException {
         throw new ServletException("No Multipart-Support available");

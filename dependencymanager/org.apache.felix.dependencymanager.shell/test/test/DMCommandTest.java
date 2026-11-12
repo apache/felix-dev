@@ -84,7 +84,7 @@ public class DMCommandTest {
         setupEmptyBundles();
         
         dme.wtf();
-        assertEquals("No unregistered components found\n", outContent.toString());
+        assertEquals("No unregistered components found" + System.lineSeparator(), outContent.toString());
     }
 
     @Test
@@ -97,9 +97,9 @@ public class DMCommandTest {
             .setInterface(Object.class.getName(), null)
             );
         dme.wtf();
-        assertEquals("No unregistered components found\n", outContent.toString());
+        assertEquals("No unregistered components found" + System.lineSeparator(), outContent.toString());
     }
-    
+
     @Test
     public void testComponentThatDependsOnAOtheComponentShouldRegisterAsFailure() {
         OUT.println("testComponentThatDependsOnAOtheComponentShouldRegisterAsFailure");

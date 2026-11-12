@@ -49,15 +49,13 @@ import org.apache.maven.plugins.annotations.LifecyclePhase;
 import org.apache.maven.plugins.annotations.Mojo;
 import org.apache.maven.plugins.annotations.Parameter;
 import org.apache.maven.plugins.annotations.ResolutionScope;
-import org.apache.maven.project.DefaultProjectBuildingRequest;
+import org.apache.maven.project.DependencyResolutionException;
 import org.apache.maven.project.MavenProject;
 import org.apache.maven.project.MavenProjectBuilder;
 import org.apache.maven.project.ProjectBuildingException;
-import org.apache.maven.project.ProjectBuildingRequest;
 import org.apache.maven.project.artifact.InvalidDependencyVersionException;
-import org.apache.maven.shared.dependency.graph.DependencyGraphBuilderException;
-import org.apache.maven.shared.dependency.graph.DependencyNode;
 import org.codehaus.plexus.util.FileUtils;
+import org.eclipse.aether.graph.DependencyNode;
 
 import aQute.bnd.osgi.Analyzer;
 import aQute.bnd.osgi.Jar;
@@ -175,12 +173,9 @@ public class BundleAllPlugin extends ManifestPlugin
 
         try
         {
-            ProjectBuildingRequest request = new DefaultProjectBuildingRequest();
-            request.setProject( getProject() );
-            request.setRepositorySession( session.getRepositorySession() );
-            dependencyTree = dependencyGraphBuilder.buildDependencyGraph( request, null );
+            dependencyTree = collectDependencyGraph( getProject() );
         }
-        catch ( DependencyGraphBuilderException e )
+        catch ( DependencyResolutionException e )
         {
             throw new MojoExecutionException( "Unable to build dependency tree", e );
         }
@@ -211,16 +206,17 @@ public class BundleAllPlugin extends ManifestPlugin
                 stack.addAll( node.getChildren() );
             }
 
-            if ( Artifact.SCOPE_SYSTEM.equals( node.getArtifact().getScope() ) )
+            Artifact nodeArtifact = toArtifact( node, getProject() );
+            if ( Artifact.SCOPE_SYSTEM.equals( nodeArtifact.getScope() ) )
             {
-                getLog().debug( "Ignoring system scoped artifact " + node.getArtifact() );
+                getLog().debug( "Ignoring system scoped artifact " + nodeArtifact );
                 continue;
             }
 
             Artifact artifact;
             try
             {
-                artifact = resolveArtifact( node.getArtifact() );
+                artifact = resolveArtifact( nodeArtifact );
             }
             catch ( ArtifactNotFoundException e )
             {
@@ -229,16 +225,14 @@ public class BundleAllPlugin extends ManifestPlugin
                     continue;
                 }
 
-                throw new MojoExecutionException( "Artifact was not found in the repo" + node.getArtifact(), e );
+                throw new MojoExecutionException( "Artifact was not found in the repo" + nodeArtifact, e );
             }
-
-            node.getArtifact().setFile( artifact.getFile() );
 
             if ( stack.size() > maxDepth )
             {
                 /* node is deeper than we want */
                 getLog().debug(
-                    "Ignoring " + node.getArtifact() + ", depth is " + stack.size() + ", bigger than " + maxDepth );
+                    "Ignoring " + nodeArtifact + ", depth is " + stack.size() + ", bigger than " + maxDepth );
                 continue;
             }
 

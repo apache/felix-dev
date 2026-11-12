@@ -149,6 +149,23 @@ public class JettyConfigTest
         assertEquals("string2", ((List<String>)toCheck.get("list")).get(1));
     }
 
+    @Test public void testGetDefaultVirtualThreadsMax()
+    {
+        assertEquals(-1, this.config.getVirtualThreadsMax());
+    }
+
+    @Test public void testGetVirtualThreadsMax()
+    {
+        Hashtable<String, Object> props = new Hashtable<>();
+        props.put(JettyConfig.FELIX_JETTY_VIRTUAL_THREADS_MAX, 200);
+        this.config.update(props);
+        assertEquals(200, this.config.getVirtualThreadsMax());
+
+        props.put(JettyConfig.FELIX_JETTY_VIRTUAL_THREADS_MAX, "200");
+        this.config.update(props);
+        assertEquals(200, this.config.getVirtualThreadsMax());
+    }
+
     @Before
     public void setUp()
     {

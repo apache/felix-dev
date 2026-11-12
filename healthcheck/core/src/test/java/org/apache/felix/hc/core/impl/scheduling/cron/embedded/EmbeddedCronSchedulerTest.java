@@ -18,7 +18,11 @@
 package org.apache.felix.hc.core.impl.scheduling.cron.embedded;
 
 import static org.junit.Assert.assertEquals;
+import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.anyLong;
 import static org.mockito.Mockito.doReturn;
+import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.when;
 import static org.mockito.MockitoAnnotations.initMocks;
 
 import java.text.SimpleDateFormat;
@@ -112,6 +116,22 @@ public class EmbeddedCronSchedulerTest {
 
 
     @Test
+    public void schedulerIsInitialisedBeforeItsFirstRun() {
+        // an executor that runs the task right inside scheduleAtFixedRate, like a worker thread that
+        // gets going before the constructor has returned (initial delay 0)
+        final ScheduledExecutorService immediateExecutor = mock(ScheduledExecutorService.class);
+        when(immediateExecutor.scheduleAtFixedRate(any(Runnable.class), anyLong(), anyLong(), any(TimeUnit.class))).thenAnswer(invocation -> {
+            invocation.<Runnable>getArgument(0).run();
+            return null;
+        });
+
+        // a run before the thread name is set would fail on Thread.setName(null) and, on a real executor,
+        // silently end the periodic task so that no job is ever fired
+        new EmbeddedCronScheduler(immediateExecutor, 0, 50, TimeUnit.MILLISECONDS, "T2");
+    }
+
+
+    @Test
     public void checkScheduledPeriodsOverlap() throws InterruptedException {
         final int callCostInMs = 1500;
         final AtomicInteger count = new AtomicInteger();
@@ -132,12 +152,17 @@ public class EmbeddedCronSchedulerTest {
         
         AsyncEmbeddedCronJob job = new AsyncEmbeddedCronJob(jobRunnable, embeddedCronSchedulerProvider, "test", "* * * * * *");
         job.schedule();
-        // it can take up to 1000ms until first fire (depending on start time of JUnit test)
-        // as job runs 1500ms the second fire has to be cancelled
-        // the third fire has to run again 
-        // a potential 4th fire (with 3000ms) has too be cancelled (as third is still running)
-        // => exact two executions
-        Thread.sleep(3000);
+        // The first fire is at the next full second after scheduling (up to 1000ms away), the
+        // second fire has to be cancelled as the job runs 1500ms, the third fire runs again.
+        // Wait for that second execution instead of sleeping a fixed time, which races
+        // with the third fire depending on the sub-second start time of the test.
+        long deadline = System.currentTimeMillis() + 6000;
+        while (count.get() < 2 && System.currentTimeMillis() < deadline) {
+            Thread.sleep(50);
+        }
+        // the fire after the second execution (1000ms later) has to be cancelled as well,
+        // as the second execution is still running (it only ends after 1500ms)
+        Thread.sleep(1000);
         LOG.info("Test Assert {}", simpleDateFormat.format(new Date()));
         assertEquals("A job running "+callCostInMs+"ms in one execution fired every second can only be executed twice", 2, count.get());
 

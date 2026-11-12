@@ -208,9 +208,6 @@ public class Felix extends BundleImpl implements Framework
     // Shutdown gate.
     private volatile ThreadGate m_shutdownGate = null;
 
-    // Security Manager created by the framework
-    private SecurityManager m_securityManager = null;
-
     // Do we need to consult the default java security policy if no security provider is present?
     private volatile boolean m_securityDefaultPolicy;
 
@@ -662,34 +659,15 @@ public class Felix extends BundleImpl implements Framework
         {
             if ((getState() == Bundle.INSTALLED) || (getState() == Bundle.RESOLVED))
             {
+                // Java SE 24 permanently disabled the Security Manager (JEP 486), so this
+                // framework can no longer enforce the OSGi security layer. Fail fast rather
+                // than silently launching without the security the launcher asked for.
                 String security = (String) m_configMap.get(Constants.FRAMEWORK_SECURITY);
                 if (security != null)
                 {
-                    if (System.getSecurityManager() != null)
-                    {
-                        throw new SecurityException("SecurityManager already installed");
-                    }
-                    security = security.trim();
-                    if (Constants.FRAMEWORK_SECURITY_OSGI.equalsIgnoreCase(security) || (security.length() == 0))
-                    {
-                        System.setSecurityManager(m_securityManager = new SecurityManager());
-                    }
-                    else
-                    {
-                        try
-                        {
-                            System.setSecurityManager(m_securityManager =
-                                (SecurityManager) Class.forName(security).newInstance());
-                        }
-                        catch (Throwable t)
-                        {
-                            SecurityException se =
-                                new SecurityException(
-                                    "Unable to install custom SecurityManager: " + security);
-                            se.initCause(t);
-                            throw se;
-                        }
-                    }
+                    throw new SecurityException(
+                        "The " + Constants.FRAMEWORK_SECURITY + " property is not supported: the Java"
+                        + " Security Manager is permanently disabled as of Java SE 24 (JEP 486).");
                 }
 
                 // Generate a framework UUID.
@@ -909,7 +887,7 @@ public class Felix extends BundleImpl implements Framework
                 // We have to check with the security provider (if there is one).
                 // This is to avoid having bundles in the cache that have been tampered with
                 SecurityProvider sp = getFramework().getSecurityProvider();
-                if ((sp != null) && (System.getSecurityManager() != null))
+                if (sp != null)
                 {
                     boolean locked = acquireGlobalLock();
                     if (!locked)
@@ -1077,7 +1055,7 @@ public class Felix extends BundleImpl implements Framework
     {
         Object certificates = null;
         SecurityProvider sp = getFramework().getSecurityProvider();
-        if ((sp != null) && (System.getSecurityManager() != null))
+        if (sp != null)
         {
             BundleImpl bundleImpl = revisionImpl.getBundle();
             sp.checkBundle(bundleImpl);
@@ -1160,14 +1138,6 @@ public class Felix extends BundleImpl implements Framework
     @Override
     public void stop() throws BundleException
     {
-        Object sm = System.getSecurityManager();
-
-        if (sm != null)
-        {
-            ((SecurityManager) sm).checkPermission(new AdminPermission(this,
-                AdminPermission.EXECUTE));
-        }
-
         if ((getState() & (Bundle.INSTALLED | Bundle.RESOLVED)) == 0)
         {
             // Spec says stop() on SystemBundle should return immediately and
@@ -1254,14 +1224,6 @@ public class Felix extends BundleImpl implements Framework
     @Override
     public void update(InputStream is) throws BundleException
     {
-        Object sm = System.getSecurityManager();
-
-        if (sm != null)
-        {
-            ((SecurityManager) sm).checkPermission(new AdminPermission(this,
-                AdminPermission.EXECUTE));
-        }
-
         // Spec says to close input stream first.
         try
         {
@@ -1337,15 +1299,6 @@ public class Felix extends BundleImpl implements Framework
 
     private void stopRefresh() throws BundleException
     {
-        Object sm = System.getSecurityManager();
-
-        if (sm != null)
-        {
-            ((SecurityManager) sm).checkPermission(new AdminPermission(this,
-                    AdminPermission.EXECUTE));
-        }
-
-
         // Stop the framework on a separate thread.
         new Thread(new Runnable() {
             @Override
@@ -2051,7 +2004,9 @@ public class Felix extends BundleImpl implements Framework
             throw new IllegalStateException("The bundle is uninstalled.");
         }
 
-        if (System.getSecurityManager() != null)
+        // Without a Security Manager there is nothing to enforce, so only consult an
+        // explicitly installed SecurityProvider; otherwise every permission is granted.
+        if (m_securityProvider != null)
         {
             try
             {
@@ -2470,11 +2425,6 @@ public class Felix extends BundleImpl implements Framework
                 {
                     throw (BundleException) th;
                 }
-                else if ((System.getSecurityManager() != null) &&
-                    (th instanceof java.security.PrivilegedActionException))
-                {
-                    th = ((java.security.PrivilegedActionException) th).getException();
-                }
 
                 // Rethrow all other exceptions as a BundleException.
                 throw new BundleException(
@@ -2580,14 +2530,6 @@ public class Felix extends BundleImpl implements Framework
                     // Verify bundle revision.
                     try
                     {
-                        Object sm = System.getSecurityManager();
-
-                        if (sm != null)
-                        {
-                            ((SecurityManager) sm).checkPermission(
-                                new AdminPermission(bundle, AdminPermission.LIFECYCLE));
-                        }
-
                         // If this is an update from a normal to an extension bundle
                         // then attach the extension
                         if (!wasExtension && bundle.isExtension())
@@ -2868,11 +2810,6 @@ public class Felix extends BundleImpl implements Framework
                 if (rethrow instanceof BundleException)
                 {
                     throw (BundleException) rethrow;
-                }
-                else if ((System.getSecurityManager() != null) &&
-                    (rethrow instanceof java.security.PrivilegedActionException))
-                {
-                    rethrow = ((java.security.PrivilegedActionException) rethrow).getException();
                 }
 
                 // Rethrow all other exceptions as a BundleException.
@@ -3293,16 +3230,7 @@ public class Felix extends BundleImpl implements Framework
                         releaseGlobalLock();
                     }
 
-                    if (!bundle.isExtension())
-                    {
-                        Object sm = System.getSecurityManager();
-                        if (sm != null)
-                        {
-                            ((SecurityManager) sm).checkPermission(
-                                new AdminPermission(bundle, AdminPermission.LIFECYCLE));
-                        }
-                    }
-                    else
+                    if (bundle.isExtension())
                     {
                         m_extensionManager.addExtensionBundle(bundle);
                     }
@@ -3931,8 +3859,6 @@ public class Felix extends BundleImpl implements Framework
     /**
      * Retrieves Array of {@link ServiceReference} objects based on calling bundle, service class name,
      * optional filter expression, and optionally filters further on the version.
-     * If running under a {@link SecurityManager}, checks that the calling bundle has permissions to
-     * see the service references and removes references that aren't.
      * @param bundle Calling Bundle
      * @param className Service Classname or <code>null</code> for all
      * @param expr Filter Criteria or <code>null</code>
@@ -3944,36 +3870,9 @@ public class Felix extends BundleImpl implements Framework
         BundleImpl bundle, String className, String expr, boolean checkAssignable)
         throws InvalidSyntaxException
     {
-        ServiceReference<?>[] refs = getServiceReferences(bundle, className, expr, checkAssignable);
-
-        Object sm = System.getSecurityManager();
-
-        if ((sm == null) || (refs == null))
-        {
-            return refs;
-        }
-
-        List<ServiceReference<?>> result = new ArrayList<>();
-
-        for (ServiceReference<?> ref : refs) {
-            try
-            {
-                ((SecurityManager) sm).checkPermission(new ServicePermission(ref, ServicePermission.GET));
-                result.add(ref);
-            }
-            catch (Exception ex)
-            {
-                // Ignore, since we are just testing permission.
-            }
-        }
-
-        if (result.isEmpty())
-        {
-            return null;
-        }
-
-        return (ServiceReference[]) result.toArray(new ServiceReference[result.size()]);
-
+        // Without a Security Manager there are no ServicePermission restrictions to
+        // filter on, so every visible reference is allowed.
+        return getServiceReferences(bundle, className, expr, checkAssignable);
     }
 
     <S> S getService(Bundle bundle, ServiceReference<S> ref, boolean isServiceObjetcs)
@@ -5227,11 +5126,6 @@ public class Felix extends BundleImpl implements Framework
             }
             m_reg.unregister();
             m_activatorList.clear();
-            if (m_securityManager != null)
-            {
-                System.setSecurityManager(null);
-                m_securityManager = null;
-            }
 
             m_dependencies.removeDependents(adapt(BundleRevision.class));
 

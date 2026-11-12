@@ -17,12 +17,13 @@
 package org.apache.felix.http.jakartawrappers;
 
 import java.io.IOException;
+import java.nio.charset.Charset;
 import java.util.Collection;
-
-import org.jetbrains.annotations.NotNull;
 
 import jakarta.servlet.http.Cookie;
 import jakarta.servlet.http.HttpServletResponse;
+
+import org.jetbrains.annotations.NotNull;
 
 /**
  * Http servlet response wrapper
@@ -73,6 +74,18 @@ public class HttpServletResponseWrapper extends ServletResponseWrapper
 
     @Override
     public void sendRedirect(final String location) throws IOException {
+        this.response.sendRedirect(location);
+    }
+
+    @Override
+    public void sendRedirect(String location, boolean clearBuffer) throws IOException {
+        this.response.sendRedirect(location);
+        this.response.flushBuffer();
+    }
+
+    @Override
+    public void sendRedirect(String location, int sc) throws IOException {
+        this.response.setStatus(sc);
         this.response.sendRedirect(location);
     }
 
@@ -140,5 +153,10 @@ public class HttpServletResponseWrapper extends ServletResponseWrapper
             throw new IOException("javax.servlet API does not support sendRedirect(String, int, boolean) with sc != 302");
         }
         this.response.sendRedirect(location);
+    }
+
+    @Override
+    public void setCharacterEncoding(Charset encoding) {
+        this.response.setCharacterEncoding(encoding.name());
     }
 }

@@ -60,10 +60,12 @@ public class JsonSupportTest {
         assertEquals(3.1d, Configurations.convertToObject(Json.createValue(3.1)));
     }
 
+    @Test
     public void testConvertStringToObject() {
         assertEquals("hello world", Configurations.convertToObject(Json.createValue("hello world")));
     }
 
+    @Test
     public void testConvertObjectToObject() {
         final JsonObjectBuilder builder = Json.createObjectBuilder();
         builder.add("hello", "world");
@@ -113,6 +115,16 @@ public class JsonSupportTest {
         mBuilder.add("3");
 
         assertArrayEquals(new String[] { "hello", "3" }, (String[]) Configurations.convertToObject(mBuilder.build()));
+    }
+
+    @Test
+    public void testConvertMixedArrayToObject() {
+        final JsonArrayBuilder builder = Json.createArrayBuilder();
+        builder.add("hello");
+        builder.add(3);
+
+        assertArrayEquals(new String[] { "hello", "3" },
+                (String[]) Configurations.convertToObject(builder.build()));
     }
 
     @Test
@@ -305,6 +317,44 @@ public class JsonSupportTest {
         assertEquals("{\n"
                 + "  \"a\" : \"\\\"\",\n"
                 + "}\n", parse(input));
+    }
+
+    @Test
+    public void testMultiLineStartTokenAfterSingleBackslashString() throws IOException {
+        final String input = "{\n"
+                             + "  \"illegal.characters\" : [\n"
+                             + "    \"\\\\\"\n"
+                             + "  ],\n"
+                             + "  \"filter.safe.user.agents\" : [\n"
+                             + "    \"Apache-HttpClient/*\"\n"
+                             + "  ]\n"
+                             + "}\n";
+
+        assertEquals(input, parse(input));
+    }
+
+    @Test
+    public void testQuoteAfterEvenNumberOfBackslashesEndsString() throws IOException {
+        final String input = "{\n"
+                             + "  \"a\" : \"\\\\\\\\\",\n"
+                             + "  \"b\" : \"value/*\"\n"
+                             + "}\n";
+
+        assertEquals(input, parse(input));
+    }
+
+    @Test
+    public void testSkippedSlashAtBufferBoundaryDoesNotDropLastChar() throws Exception {
+        String input = "abc/xyz";
+        Reader reader = JsonSupport.createCommentRemovingReader(new StringReader(input));
+
+        char[] buffer = new char[4];
+        int numRead = reader.read(buffer, 0, 4);
+        assertEquals("abc", new String(buffer, 0, numRead));
+
+        buffer = new char[4];
+        numRead = reader.read(buffer, 0, 4);
+        assertEquals("/xyz", new String(buffer, 0, numRead));
     }
 
     @Test

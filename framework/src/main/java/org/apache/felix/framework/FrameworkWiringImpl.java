@@ -22,7 +22,6 @@ import java.util.ArrayList;
 import java.util.Collection;
 import java.util.List;
 
-import org.osgi.framework.AdminPermission;
 import org.osgi.framework.Bundle;
 import org.osgi.framework.FrameworkListener;
 import org.osgi.framework.ServiceRegistration;
@@ -89,13 +88,6 @@ class FrameworkWiringImpl implements FrameworkWiring, Runnable
     @Override
 	public void refreshBundles(Collection<Bundle> bundles, FrameworkListener... listeners)
     {
-        Object sm = System.getSecurityManager();
-
-        if (sm != null)
-        {
-            ((SecurityManager) sm).checkPermission(
-                new AdminPermission(m_felix, AdminPermission.RESOLVE));
-        }
         synchronized (m_requests)
         {
             // Start a thread to perform asynchronous package refreshes.
@@ -116,14 +108,6 @@ class FrameworkWiringImpl implements FrameworkWiring, Runnable
     @Override
 	public boolean resolveBundles(Collection<Bundle> bundles)
     {
-        Object sm = System.getSecurityManager();
-
-        if (sm != null)
-        {
-            ((SecurityManager) sm).checkPermission(
-                new AdminPermission(m_felix, AdminPermission.RESOLVE));
-        }
-
         if (m_thread == null)
         {
             return false;

@@ -77,7 +77,6 @@ import org.osgi.service.packageadmin.ExportedPackage;
 import org.osgi.service.packageadmin.PackageAdmin;
 import org.osgi.util.tracker.ServiceTracker;
 import org.osgi.util.tracker.ServiceTrackerCustomizer;
-import org.owasp.encoder.Encode;
 
 import jakarta.servlet.ServletException;
 import jakarta.servlet.http.HttpServletRequest;
@@ -764,7 +763,7 @@ public class BundlesServlet extends AbstractOsgiManagerPlugin implements Invento
             final Map<String, Object> obj = new LinkedHashMap<String, Object>();
             obj.put("key", key);
             if ( val instanceof String ) {
-                obj.put("value", Encode.forJavaScript((String)val));
+                obj.put("value", val); // escaping happens when writing into JSON via JSONWriter
             } else {
                 obj.put("value", val);
             }

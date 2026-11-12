@@ -42,9 +42,11 @@ public final class EmbeddedCronScheduler implements Runnable {
             final TimeUnit timeUnit, final String schedulerThreadName) {
         
         this.scheduledExecutorService = scheduledExecutorService;
-        scheduledExecutorService.scheduleAtFixedRate(this, initialDelay, checkInterval, timeUnit);
-        
         this.schedulerThreadName = schedulerThreadName;
+
+        // schedule last: the first run (with an initial delay of 0 it can start before this constructor returns)
+        // needs the fields above, and a run that throws silently ends the periodic task
+        scheduledExecutorService.scheduleAtFixedRate(this, initialDelay, checkInterval, timeUnit);
     }
 
     public void schedule(AsyncEmbeddedCronJob cronJob) {

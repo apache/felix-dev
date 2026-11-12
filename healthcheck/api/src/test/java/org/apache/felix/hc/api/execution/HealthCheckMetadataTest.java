@@ -19,7 +19,7 @@ package org.apache.felix.hc.api.execution;
 
 import static org.junit.Assert.assertEquals;
 import static org.mockito.Mockito.when;
-import static org.mockito.MockitoAnnotations.initMocks;
+import static org.mockito.MockitoAnnotations.openMocks;
 
 import java.util.Arrays;
 import java.util.Vector;
@@ -38,7 +38,7 @@ public class HealthCheckMetadataTest {
     
     @Before
     public void setup() {
-        initMocks(this);
+        openMocks(this);
         when(hcServiceRef.getProperty(Constants.SERVICE_ID)).thenReturn(1L);
     }
     

@@ -19,8 +19,6 @@
 package org.apache.felix.scr.impl.manager;
 
 import java.io.IOException;
-import java.security.AccessController;
-import java.security.PrivilegedAction;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.Dictionary;
@@ -45,7 +43,6 @@ import org.osgi.service.cm.ConfigurationAdmin;
 import org.osgi.service.cm.ConfigurationEvent;
 import org.osgi.service.cm.ConfigurationException;
 import org.osgi.service.cm.ConfigurationListener;
-import org.osgi.service.cm.ConfigurationPermission;
 import org.osgi.service.cm.ManagedService;
 
 public abstract class RegionConfigurationSupport
@@ -84,38 +81,15 @@ public abstract class RegionConfigurationSupport
         // If RegionConfigurationSupport *directly* implements ConfigurationListener then we get NoClassDefFoundError
         // when SCR is started without a wiring to an exporter of Config Admin API. This construction allows the
         // class loading exception to be caught and confined.
-        final ConfigurationListener serviceDelegator;
-        if ( System.getSecurityManager() != null ) {
-            serviceDelegator = new ConfigurationListener()
-            {
-                @Override
-                public void configurationEvent(final ConfigurationEvent event)
-                {
-                    AccessController.doPrivileged(
-                        new PrivilegedAction<Object>()
-                        {
-                            @Override
-                            public Void run()
-                            {
-                                RegionConfigurationSupport.this.configurationEvent(event);
-                                return null;
-                            }
-                        });
-                }
-            };
-        }
-        else
+        final ConfigurationListener serviceDelegator = new ConfigurationListener()
         {
-            serviceDelegator = new ConfigurationListener()
-            {
 
-                @Override
-                public void configurationEvent(final ConfigurationEvent event)
-                {
-                    RegionConfigurationSupport.this.configurationEvent(event);
-                }
-            };
-        }
+            @Override
+            public void configurationEvent(final ConfigurationEvent event)
+            {
+                RegionConfigurationSupport.this.configurationEvent(event);
+            }
+        };
         this.m_registration = caBundleContext.registerService(ConfigurationListener.class, serviceDelegator, props );
     }
 
@@ -710,15 +684,10 @@ public abstract class RegionConfigurationSupport
         else if ( configBundleLocation.startsWith( "?" ) )
         {
             //multilocation
-            if ( System.getSecurityManager() != null )
-            {
-                result = bundle.hasPermission(
-                        new ConfigurationPermission(configBundleLocation, ConfigurationPermission.TARGET));
-            }
-            else
-            {
-                result = true;
-            }
+            // The ConfigurationPermission TARGET check that used to guard this only ran
+            // under a Security Manager, which is permanently disabled as of Java SE 24
+            // (JEP 486), so a multilocation configuration is always visible.
+            result = true;
         }
         else
         {

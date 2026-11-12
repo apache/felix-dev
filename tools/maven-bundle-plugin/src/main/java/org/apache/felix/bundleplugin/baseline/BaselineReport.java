@@ -324,23 +324,6 @@ public final class BaselineReport
         return !skip && outputDirectory != null;
     }
 
-    public void generate( @SuppressWarnings( "deprecation" ) org.codehaus.doxia.sink.Sink sink, Locale locale )
-        throws MavenReportException
-    {
-        final Context ctx = new Context();
-        ctx.sink = sink;
-        ctx.locale = locale;
-
-        try
-        {
-            execute(ctx);
-        }
-        catch ( Exception e )
-        {
-            getLog().warn( "An error occurred while producing the report page, see nested exceptions", e );
-        }
-    }
-
     public String getCategoryName()
     {
         return MavenReport.CATEGORY_PROJECT_REPORTS;
@@ -359,6 +342,22 @@ public final class BaselineReport
     private ResourceBundle getBundle( Locale locale )
     {
         return ResourceBundle.getBundle( "baseline-report", locale, getClass().getClassLoader() );
+    }
+
+    @Override
+    public void generate(Sink sink, Locale locale) throws MavenReportException {
+        final Context ctx = new Context();
+        ctx.sink = sink;
+        ctx.locale = locale;
+
+        try
+        {
+            execute(ctx);
+        }
+        catch ( Exception e )
+        {
+            getLog().warn( "An error occurred while producing the report page, see nested exceptions", e );
+        }
     }
 
     public String getOutputName()

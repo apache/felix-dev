@@ -22,8 +22,6 @@ package org.apache.felix.scr.impl.inject.methods;
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
 import java.lang.reflect.Modifier;
-import java.security.AccessController;
-import java.security.PrivilegedAction;
 import java.util.Arrays;
 import java.util.Map;
 
@@ -166,7 +164,7 @@ public abstract class BaseMethod<P extends BaseParameter, T>
             // This is 'Debug' however, as the class information, where the search 
             // was conducted, is quite important for the client's own debugging
             logger.log(Level.DEBUG,
-                    "Locating method " + getMethodName() + " within class " + theClass.getName(), null );
+                    "Locating method {0} within class {1}", null, getMethodName(), theClass.getName());
         }
 
         while (true)
@@ -174,10 +172,10 @@ public abstract class BaseMethod<P extends BaseParameter, T>
 
             if (logger.isLogEnabled(Level.TRACE))
             {
-                // Trace as this is going through the whole hierachy and will log for non-existing methods 
+                // Trace as this is going through the whole hierarchy and will log for non-existing methods 
                 // a lot of lines for e.g. the class Object not containing an activate method
                 logger.log(Level.TRACE,
-                        "Locating method " + getMethodName() + " in class " + theClass.getName(), null );
+                        "Locating method {0} in class {1}", null, getMethodName(), theClass.getName());
             }
 
             try
@@ -271,7 +269,7 @@ public abstract class BaseMethod<P extends BaseParameter, T>
         catch ( IllegalStateException ise )
         {
             rawParameter.getComponentContext().getLogger().log(Level.DEBUG,
-                ise.getMessage(), null);
+                ise.getMessage(), ise);
             return null;
         }
         catch ( IllegalAccessException ex )
@@ -489,15 +487,7 @@ public abstract class BaseMethod<P extends BaseParameter, T>
 
     private static void setAccessible(final Method method)
     {
-        AccessController.doPrivileged( new PrivilegedAction<Object>()
-        {
-            @Override
-            public Object run()
-            {
-                method.setAccessible( true );
-                return null;
-            }
-        } );
+        method.setAccessible( true );
     }
 
 

@@ -28,7 +28,6 @@ import java.net.InetAddress;
 import java.net.JarURLConnection;
 import java.net.URL;
 import java.net.URLConnection;
-import java.security.Permission;
 import java.util.HashMap;
 import java.util.Hashtable;
 import java.util.Map;
@@ -127,41 +126,10 @@ public class URLHandlersTest
         f.stop();
     }
 
-    @Test
-    void urlHandlersWithSecurity() throws Exception
-    {
-        System.setSecurityManager(new SecurityManager()
-        {
-            @Override
-            public void checkPermission(Permission perm) {}
-        });
-        try
-        {
-            urlHandlers();
-        }
-        finally
-        {
-            System.setSecurityManager(null);
-        }
-    }
-
-    @Test
-    void urlHandlersWithClassLoaderIsolationWithSecurity() throws Exception
-    {
-        System.setSecurityManager(new SecurityManager()
-        {
-            @Override
-            public void checkPermission(Permission perm) {}
-        });
-        try
-        {
-            urlHandlersWithClassLoaderIsolation();
-        }
-        finally
-        {
-            System.setSecurityManager(null);
-        }
-    }
+    // The urlHandlersWithSecurity/urlHandlersWithClassLoaderIsolationWithSecurity tests
+    // used to re-run the two tests above under a permissive SecurityManager. The Security
+    // Manager is permanently disabled as of Java SE 24 (JEP 486) and can no longer be
+    // installed, which left them as exact duplicates, so they have been removed.
 
     public static class DelegatingClassLoader extends ClassLoader
     {

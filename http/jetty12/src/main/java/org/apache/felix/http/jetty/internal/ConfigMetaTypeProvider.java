@@ -24,7 +24,6 @@ import java.util.ArrayList;
 import org.apache.felix.http.base.internal.HttpConfig;
 import org.apache.felix.http.base.internal.logger.SystemLogger;
 import org.eclipse.jetty.server.CustomRequestLog;
-import org.eclipse.jetty.server.handler.gzip.GzipHandler;
 import org.eclipse.jetty.session.HouseKeeper;
 import org.osgi.framework.Bundle;
 import org.osgi.service.metatype.AttributeDefinition;
@@ -169,8 +168,14 @@ class ConfigMetaTypeProvider implements MetaTypeProvider
         adList.add(new AttributeDefinitionImpl(JettyConfig.FELIX_JETTY_USE_VIRTUAL_THREADS,
                 "Use Virtual Threads",
                 "Use virtual threads in Jetty (JDK 21 or higher). Defaults to false.",
-                -1,
+                false,
                 bundle.getBundleContext().getProperty(JettyConfig.FELIX_JETTY_USE_VIRTUAL_THREADS)));
+
+        adList.add(new AttributeDefinitionImpl(JettyConfig.FELIX_JETTY_VIRTUAL_THREADS_MAX,
+                "Virtual Threads Max Concurrent Tasks",
+                "The maximum number of virtual thread tasks that run at the same time, or -1 to leave the number unbounded. Note that unlike 'Threadpool Max' this bounds concurrent tasks, not the number of threads. Only relevant if 'Use Virtual Threads' is enabled. When set to a positive value, Jetty's preferred setup is used: a QueuedThreadPool, sized by 'Threadpool Max', with a bounded VirtualThreadPool as its virtual threads executor. Defaults to -1.",
+                -1,
+                bundle.getBundleContext().getProperty(JettyConfig.FELIX_JETTY_VIRTUAL_THREADS_MAX)));
 
         adList.add(new AttributeDefinitionImpl(JettyConfig.FELIX_JETTY_ACCEPTORS,
                 "Acceptors",
@@ -225,6 +230,24 @@ class ConfigMetaTypeProvider implements MetaTypeProvider
                 "Felix specific property to configure the accept queue size.",
                 -1,
                 bundle.getBundleContext().getProperty(JettyConfig.FELIX_JETTY_ACCEPT_QUEUE_SIZE)));
+
+        adList.add(new AttributeDefinitionImpl(JettyConfig.FELIX_HTTPS_SNI_CONTEXT_REQUIRED,
+                "SNI required at TLS level",
+                "Whether SNI is required at the TLS level. Clients without a valid SNI receive a TLS failure. Defaults to false.",
+                false,
+                bundle.getBundleContext().getProperty(JettyConfig.FELIX_HTTPS_SNI_CONTEXT_REQUIRED)));
+
+        adList.add(new AttributeDefinitionImpl(JettyConfig.FELIX_HTTPS_SNI_REQUIRED,
+                "SNI required at HTTP level",
+                "Whether SNI is required at the HTTP level. Clients without a valid SNI receive a 400 Bad Request. Defaults to false.",
+                false,
+                bundle.getBundleContext().getProperty(JettyConfig.FELIX_HTTPS_SNI_REQUIRED)));
+
+        adList.add(new AttributeDefinitionImpl(JettyConfig.FELIX_HTTPS_SNI_HOST_CHECK,
+                "SNI host check",
+                "Whether the SNI hostname must match the Host header. Defaults to true.",
+                true,
+                bundle.getBundleContext().getProperty(JettyConfig.FELIX_HTTPS_SNI_HOST_CHECK)));
 
         adList.add(new AttributeDefinitionImpl(JettyConfig.FELIX_JETTY_ERROR_PAGE_CUSTOM_HEADERS,
                 "Custom headers to add to error pages",
@@ -298,7 +321,7 @@ class ConfigMetaTypeProvider implements MetaTypeProvider
 
         adList.add(new AttributeDefinitionImpl(JettyConfig.FELIX_JETTY_RENEGOTIATION_ALLOWED,
                 "Renegotiation allowed",
-                "Whether TLS renegotiation is allowed (true by default)",
+                "Whether TLS renegotiation is allowed (false by default)",
                 false,
                 bundle.getBundleContext().getProperty(JettyConfig.FELIX_JETTY_RENEGOTIATION_ALLOWED)));
 
@@ -375,14 +398,9 @@ class ConfigMetaTypeProvider implements MetaTypeProvider
                 bundle.getBundleContext().getProperty(JettyConfig.FELIX_JETTY_GZIP_HANDLER_ENABLE)));
         adList.add(new AttributeDefinitionImpl(JettyConfig.FELIX_JETTY_GZIP_MIN_GZIP_SIZE,
                 "Gzip Min Size",
-                String.format("The minimum response size to trigger dynamic compression. Default is %d.", GzipHandler.DEFAULT_MIN_GZIP_SIZE),
-                GzipHandler.DEFAULT_MIN_GZIP_SIZE,
+                String.format("The minimum response size to trigger dynamic compression. Default is %d.", JettyConfig.DEFAULT_GZIP_MIN_SIZE),
+                JettyConfig.DEFAULT_GZIP_MIN_SIZE,
                 bundle.getBundleContext().getProperty(JettyConfig.FELIX_JETTY_GZIP_MIN_GZIP_SIZE)));
-        adList.add(new AttributeDefinitionImpl(JettyConfig.FELIX_JETTY_GZIP_INFLATE_BUFFER_SIZE,
-                "Gzip Inflate Buffer Size",
-                "The size in bytes of the buffer to inflate compressed request, or <= 0 for no inflation. Default is -1.",
-                -1,
-                bundle.getBundleContext().getProperty(JettyConfig.FELIX_JETTY_GZIP_INFLATE_BUFFER_SIZE)));
         adList.add(new AttributeDefinitionImpl(JettyConfig.FELIX_JETTY_GZIP_SYNC_FLUSH,
                 "Gzip Sync Flush",
                 "True if Deflater#SYNC_FLUSH should be used, else Deflater#NO_FLUSH will be used. Default is false.",
@@ -517,7 +535,7 @@ class ConfigMetaTypeProvider implements MetaTypeProvider
         adList.add(new AttributeDefinitionImpl(JettyConfig.FELIX_HTTP_REQUEST_LOG_FORMAT,
                 "SLF4J Request Log Format",
                 "The format of the request log entries. Only relevant if 'Enable SLF4J Request Logging' is checked. Valid placeholders are described in https://www.eclipse.org/jetty/documentation/jetty-11/operations-guide/index.html#og-module-requestlog",
-                CustomRequestLog.NCSA_FORMAT,
+                CustomRequestLog.EXTENDED_NCSA_FORMAT,
                 bundle.getBundleContext().getProperty(JettyConfig.FELIX_HTTP_REQUEST_LOG_FORMAT)));
 
         adList.add(new AttributeDefinitionImpl(JettyConfig.FELIX_JAKARTA_WEBSOCKET_ENABLE,

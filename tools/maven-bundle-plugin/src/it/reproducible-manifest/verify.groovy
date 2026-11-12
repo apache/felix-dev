@@ -17,6 +17,12 @@
  * under the License.
  */
 
+import java.time.LocalDateTime
+import java.time.ZoneId
+import java.util.zip.ZipEntry
+import java.util.zip.ZipFile
+
+
 String manifest = new File( basedir, "target/classes/META-INF/MANIFEST.MF" ).text;
 
 assert !manifest.contains( "Build-Jdk:" )
@@ -25,3 +31,14 @@ assert manifest.contains( "Build-Jdk-Spec:" )
 assert !manifest.contains( "Build-By:" )
 
 assert !manifest.contains( "Bnd-LastModified:" )
+
+
+Enumeration<? extends ZipEntry> bundleEntries = new ZipFile(new File( basedir, "target/reproducible-1-SNAPSHOT.jar" )).entries()
+
+// ZipEntry::getTime() interprets the time information in the local timezone.
+long expectedTime = LocalDateTime.of(2000, 1, 1, 0, 0, 0).atZone(ZoneId.systemDefault()).toEpochSecond() * 1000
+
+while(bundleEntries.hasMoreElements()) {
+    ZipEntry entry = bundleEntries.nextElement()
+    assert entry.getTime() == expectedTime
+}

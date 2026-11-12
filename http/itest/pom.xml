@@ -31,22 +31,27 @@
     </scm>
 
     <properties>
-        <felix.java.version>11</felix.java.version>
+        <felix.java.version>17</felix.java.version>
         <http.servlet.api.version>6.1.0</http.servlet.api.version>
-        <http.jetty.version>5.2.1-SNAPSHOT</http.jetty.version>
-        <http.jetty.id>org.apache.felix.http.jetty</http.jetty.id>
+        <http.jetty.id>org.apache.felix.http.jetty12</http.jetty.id>
         <pax.exam.version>4.13.3</pax.exam.version>
         <pax.url.aether.version>2.6.14</pax.url.aether.version>
+        <!-- Sibling Felix bundles the tests run against. Pinned to the latest release
+             so this module also builds on its own; CI overrides them with the locally
+             built versions so the tests exercise the code in this repository.
+             See FELIX-6870. -->
+        <felix.framework.version>8.0.0</felix.framework.version>
+        <http.jetty.version>2.0.8</http.jetty.version>
     </properties>
 
     <profiles>
         <profile>
-            <id>jetty12</id>
+            <id>jetty11</id>
             <properties>
-                <felix.java.version>17</felix.java.version>
+                <felix.java.version>11</felix.java.version>
                 <http.servlet.api.version>6.1.0</http.servlet.api.version>
-                <http.jetty.version>1.1.0-SNAPSHOT</http.jetty.version>
-                <http.jetty.id>org.apache.felix.http.jetty12</http.jetty.id>
+                <http.jetty.version>5.2.6</http.jetty.version>
+                <http.jetty.id>org.apache.felix.http.jetty</http.jetty.id>
             </properties>
         </profile>
     </profiles>
@@ -163,7 +168,7 @@
         <dependency>
             <groupId>org.apache.felix</groupId>
             <artifactId>org.apache.felix.framework</artifactId>
-            <version>7.0.5</version>
+            <version>${felix.framework.version}</version>
             <scope>test</scope>
         </dependency>
     </dependencies>

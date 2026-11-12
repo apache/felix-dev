@@ -2,44 +2,47 @@
 
 This is an implementation of the [R8.1 Whiteboard Specification for Jakarta Servlet](https://docs.osgi.org/specification/osgi.cmpn/8.1.0/service.servlet.html), [HTTP Whiteboard Service as described in chapter 140](https://osgi.org/specification/osgi.cmpn/7.0.0/service.http.whiteboard.html) of the OSGi Compendium (R7) in combination with an implementation of the [HTTP Service Specification as described in chapter 102](https://osgi.org/specification/osgi.cmpn/7.0.0/service.http.html) of the OSGi Compendium. The goal is to provide a standard and simplified way to register servlets, listeners, filters, and resources in a servlet container, to managed them in servlet contexts, and to associate them with URIs. Complete set of features:
 
-  * Standard OSGi Http Service implementation
-  * Standard OSGi Http Whiteboard implementation
-  * Run either with Jetty (version 11 or 12) bundle or inside your own application server using the servlet bridge
-    * [Felix HTTP Jetty 12](https://mvnrepository.com/artifact/org.apache.felix/org.apache.felix.http.jetty12) is the preferred bundle of choice as it supports JakartaEE10 with the `jakarta` namespace.
-      * [Jetty WebSocket support](https://github.com/apache/felix-dev/pull/310), see example code [here](https://github.com/apache/felix-dev/blob/master/http/samples/whiteboard/src/main/java/org/apache/felix/http/samples/whiteboard/TestWebSocketServlet.java).
-    * [Felix HTTP Jetty 11](https://mvnrepository.com/artifact/org.apache.felix/org.apache.felix.http.jetty) is the predecessor of the Jetty 12 bundle, which shipped with [Jetty 9.4.x](https://mvnrepository.com/artifact/org.apache.felix/org.apache.felix.http.jetty/4.2.26) in the 4.x range (JavaEE8), [Jetty 11.x](https://mvnrepository.com/artifact/org.apache.felix/org.apache.felix.http.jetty/5.1.10) in the 5.x range (JakartaEE9).
-      * [Jetty WebSocket support](https://github.com/apache/felix-dev/pull/309), see example code [here](https://github.com/apache/felix-dev/blob/master/http/samples/whiteboard/src/main/java/org/apache/felix/http/samples/whiteboard/TestWebSocketServlet.java).
-  * Correctly versioned Servlet API.
+* Standard OSGi Http Service implementation
+* Standard OSGi Http Whiteboard implementation
+* Run either with Jetty (version 11 or 12) bundle or inside your own application server using the servlet bridge
+  * [Felix HTTP Jetty 12](https://mvnrepository.com/artifact/org.apache.felix/org.apache.felix.http.jetty12) is the preferred bundle of choice as it supports JakartaEE10 (1.1.x range) and JakartaEE11 (2.x range).
+    * [Jetty WebSocket support](https://github.com/apache/felix-dev/pull/310), see example code [here](https://github.com/apache/felix-dev/blob/master/http/samples/whiteboard/src/main/java/org/apache/felix/http/samples/whiteboard/TestWebSocketServlet.java).
+  * [Felix HTTP Jetty 11](https://mvnrepository.com/artifact/org.apache.felix/org.apache.felix.http.jetty) is the predecessor of the Jetty 12 bundle, which shipped with [Jetty 9.4.x](https://mvnrepository.com/artifact/org.apache.felix/org.apache.felix.http.jetty/4.2.26) in the 4.x range (JavaEE8), [Jetty 11.x](https://mvnrepository.com/artifact/org.apache.felix/org.apache.felix.http.jetty/5.1.10) in the 5.x range (JakartaEE9).
+    * [Jetty WebSocket support](https://github.com/apache/felix-dev/pull/309), see example code [here](https://github.com/apache/felix-dev/blob/master/http/samples/whiteboard/src/main/java/org/apache/felix/http/samples/whiteboard/TestWebSocketServlet.java).
+* Correctly versioned Servlet API.
 
-## Installing 
+## Installing
 
 The Apache Felix HTTP Service project includes several bundles.
 
-  * [`org.apache.felix.http.servlet-api`](https://mvnrepository.com/artifact/org.apache.felix/org.apache.felix.http.servlet-api) - Provides the Servlet API (versions 2.6, 3.0, 3.1, 4.0, 5.0 and 6.0 of the Servlet specification)
-  * [`org.apache.felix.http.api`](https://mvnrepository.com/artifact/org.apache.felix/org.apache.felix.http.api) - Provides the OSGi APIs for the Http Whiteboard and Http Service.
-  * [`org.apache.felix.http.jetty12`](https://mvnrepository.com/artifact/org.apache.felix/org.apache.felix.http.jetty12) - Implementation that is embedding Jetty server (currently Jetty 12.x, requiring Java 17). This bundle includes the http.api bundle. It's the the preferred Felix Jetty bundle to use, as Jetty 11 will be [EoL in 2025](https://github.com/jetty/jetty.project/issues/10485).
-  * [`org.apache.felix.http.jetty`](https://mvnrepository.com/artifact/org.apache.felix/org.apache.felix.http.jetty) - Predecessor implementation that is embedding Jetty server (currently Jetty 11.x, requiring Java 11). This bundle includes the http.api bundle. 
-  * [`org.apache.felix.http.sslfilter`](https://mvnrepository.com/artifact/org.apache.felix/org.apache.felix.http.sslfilter) - Servlet filter for handling SSL termination.
-  * [`org.apache.felix.http.bridge`](https://mvnrepository.com/artifact/org.apache.felix/org.apache.felix.http.bridge) - Implementation that uses the host application server (bridged mode). Must be used with the proxy (see below)
-  * [`org.apache.felix.http.proxy`](https://mvnrepository.com/artifact/org.apache.felix/org.apache.felix.http.proxy) - Proxy that is needed inside WAR when deployed inside an application server.
-  * [`org.apache.felix.http.wrappers`](https://mvnrepository.com/artifact/org.apache.felix/org.apache.felix.http.wrappers) offers wrapper classes that can be used when transitioning to the `jakarta` namespace, while having libraries that don't offer a jakartified version yet. 
+* [`org.apache.felix.http.servlet-api`](https://mvnrepository.com/artifact/org.apache.felix/org.apache.felix.http.servlet-api) - Provides the Servlet API (versions 2.6, 3.0, 3.1, 4.0, 5.0, 6.0 and 6.1 of the Servlet specification)
+* [`org.apache.felix.http.api`](https://mvnrepository.com/artifact/org.apache.felix/org.apache.felix.http.api) - Provides the OSGi APIs for the Http Whiteboard and Http Service.
+* [`org.apache.felix.http.jetty12`](https://mvnrepository.com/artifact/org.apache.felix/org.apache.felix.http.jetty12) - Implementation that is embedding Jetty server (currently Jetty 12.1.x, requiring Java 17). This bundle includes the http.api bundle. It's the preferred Felix Jetty bundle to use, as Jetty 11 has been [EoL since January 2025](https://github.com/jetty/jetty.project/issues/10485).
+* [`org.apache.felix.http.jetty`](https://mvnrepository.com/artifact/org.apache.felix/org.apache.felix.http.jetty) - Predecessor implementation that is embedding Jetty server (currently Jetty 11.x, requiring Java 11). This bundle includes the http.api bundle.
+* [`org.apache.felix.http.sslfilter`](https://mvnrepository.com/artifact/org.apache.felix/org.apache.felix.http.sslfilter) - Servlet filter for handling SSL termination.
+* [`org.apache.felix.http.bridge`](https://mvnrepository.com/artifact/org.apache.felix/org.apache.felix.http.bridge) - Implementation that uses the host application server (bridged mode). Must be used with the proxy (see below)
+* [`org.apache.felix.http.proxy`](https://mvnrepository.com/artifact/org.apache.felix/org.apache.felix.http.proxy) - Proxy that is needed inside WAR when deployed inside an application server.
+* [`org.apache.felix.http.wrappers`](https://mvnrepository.com/artifact/org.apache.felix/org.apache.felix.http.wrappers) offers wrapper classes that can be used when transitioning to the `jakarta` namespace, while having libraries that don't offer a jakartified version yet.
 
 Note that as of version **3.x**, the Servlet APIs are **no longer** packaged with the implementation bundles! If you are migrating from lower versions, be sure to add the
 `org.apache.felix.http.servlet-api` (or any other compatible Serlvet API bundle) to your
 classpath and deployment!
 
 ### Using classifiers: `light`, `with-jetty-websockets` and `with-jakarta-websockets` bundle
+
 If you would like to use your own Jetty jars instead of the one packaged with the Felix Jetty bundles, you can use the variants with the following classifiers:
+
 * `light` - A light version of the bundle that does not include the Jetty classes. This is useful when you want to use your own Jetty jars. Available for both Jetty bundles.
-* `with-jetty-websockets` - A bundle that includes the classes required for Jetty WebSocket support for Jakarta EE10. Jetty12 bundle only.
-* `with-jakarta-websockets` - A bundle that includes the classes required for Jakarta WebSocket support for Jakarta EE10. Jetty12 bundle only.
+* `with-jetty-websockets` - A bundle that includes the classes required for Jetty WebSocket support for Jakarta EE10 (1.1.x) and Jakarta EE11 (2.x). Jetty12 bundle only.
+* `with-jakarta-websockets` - A bundle that includes the classes required for Jakarta WebSocket support for Jakarta EE10 (1.1.x) and Jakarta EE11 (2.x). Jetty12 bundle only.
 
 When building the Felix Jetty bundle with Maven (`mvn clean install`), the additional bundles will be created in the `target` directory, postfixed with classifier.
 This jar can be deployed to your Felix OSGi environment, along with a compatible Jetty jars.
 See the unit tests for the required bundles and versions that need to be deployed.
 
-Or just use maven to include the dependency with the proper classifier. 
-```
+Or just use maven to include the dependency with the proper classifier.
+
+```xml
 <dependency>
    <groupId>org.apache.felix</groupId>
    <artifactId>org.apache.felix.http.jetty12</artifactId>
@@ -57,15 +60,16 @@ The Jetty implementation uses the OSGi ServiceLoader mediator technique to find 
 
 Deploying the following set of bundles would be one way to enable the ServiceLoader mediator support:
 
-  * [`org.apache.aries.spifly:org.apache.aries.spifly.dynamic.bundle:1.3.7`](https://mvnrepository.com/artifact/org.apache.aries.spifly/org.apache.aries.spifly.dynamic.bundle)
-  * [`org.ow2.asm:asm:9.7`](https://mvnrepository.com/artifact/org.ow2.asm/asm)
-  * [`org.ow2.asm:asm-analysis:9.7`](https://mvnrepository.com/artifact/org.ow2.asm/asm-analysis)
-  * [`org.ow2.asm:asm-commons:9.7`](https://mvnrepository.com/artifact/org.ow2.asm/asm-commons)
-  * [`org.ow2.asm:asm-tree:9.7`](https://mvnrepository.com/artifact/org.ow2.asm/asm-tree)
-  * [`org.ow2.asm:asm-util:9.7`](https://mvnrepository.com/artifact/org.ow2.asm/asm-util)
+* [`org.apache.aries.spifly:org.apache.aries.spifly.dynamic.bundle:1.3.7`](https://mvnrepository.com/artifact/org.apache.aries.spifly/org.apache.aries.spifly.dynamic.bundle)
+* [`org.ow2.asm:asm:9.7`](https://mvnrepository.com/artifact/org.ow2.asm/asm)
+* [`org.ow2.asm:asm-analysis:9.7`](https://mvnrepository.com/artifact/org.ow2.asm/asm-analysis)
+* [`org.ow2.asm:asm-commons:9.7`](https://mvnrepository.com/artifact/org.ow2.asm/asm-commons)
+* [`org.ow2.asm:asm-tree:9.7`](https://mvnrepository.com/artifact/org.ow2.asm/asm-tree)
+* [`org.ow2.asm:asm-util:9.7`](https://mvnrepository.com/artifact/org.ow2.asm/asm-util)
 
 ### Jetty 12 bundle
-For the Jetty 12 bundle, start the following set of bundles _before_ the Jetty 12 bundle, but after the beforementioned ServiceLoader bundles (the order is important and can be configured in `felix.auto.start.1`). 
+
+For the Jetty 12 bundle, start the following set of bundles _before_ the Jetty 12 bundle, but after the beforementioned ServiceLoader bundles (the order is important and can be configured in `felix.auto.start.1`).
 The Jetty version should correspond with the version used in the [Jetty 12 bundle](https://github.com/apache/felix-dev/blob/master/http/jetty12/pom.xml#L44).
 
 * [`jetty-alpn-server-${jetty.version}`](https://mvnrepository.com/artifact/org.eclipse.jetty/jetty-alpn-server)
@@ -88,7 +92,6 @@ of additional bundles to deploy [as described in the jetty documentation](https:
 
     * For java 8 version 1.8.0_252 or later skip the bootclasspath argument and deploy the following bundle instead:
         * `org.eclipse.jetty.alpn:alpn-api:1.1.3.v20160715`
-
 
 ## Using the OSGi Http Whiteboard
 
@@ -124,52 +127,52 @@ public class Activator implements BundleActivator {
     }
 }
 ```
+
 An implementation note for when using the Felix HTTP Jetty 12 bundle: only registering a filter without a servlet, will not work. Make sure that there is a servlet registered (on the same path as the filter) when registering a filter, even when that servlet is not hit eventually.
 
 To ensure the HTTP whiteboard service picks up your servlet and filter correctly, your service
-registration *must* provide several service properties.
-
+registration _must_ provide several service properties.
 
 ### Servlet service properties
 
 See full reference in the [OSGi specification](https://docs.osgi.org/specification/osgi.cmpn/8.1.0/service.servlet.html#service.servlet-i21223311).
 The most important properties are:
 
-  * `osgi.http.whiteboard.servlet.pattern` - defines the servlet pattern to register the servlet under, should be a path as defined in the Servlet specification.
-  * `osgi.http.whiteboard.context.select` - Filter expression to select the servlet context (optional).
-  * `osgi.http.whiteboard.servlet.asyncSupported` - Declares whether the servlet supports the asynchronous operation mode. Allowed values are true and false independent of case. Defaults to false. (optional)
-  * `osgi.http.whiteboard.servlet.multipart.enable` - Enables support for multipart configuration on the servlet. Allowed values are true and false independent of case. Defaults to false. (optional)
-  * `servlet.init.*` - these properties (sans the `servlet.init.` prefix) are made available throught the `ServletConfig` object of your servlet. This allows you to supply your servlet initialization parameters as you would normally do in the web descriptor (web.xml).
+* `osgi.http.whiteboard.servlet.pattern` - defines the servlet pattern to register the servlet under, should be a path as defined in the Servlet specification.
+* `osgi.http.whiteboard.context.select` - Filter expression to select the servlet context (optional).
+* `osgi.http.whiteboard.servlet.asyncSupported` - Declares whether the servlet supports the asynchronous operation mode. Allowed values are true and false independent of case. Defaults to false. (optional)
+* `osgi.http.whiteboard.servlet.multipart.enable` - Enables support for multipart configuration on the servlet. Allowed values are true and false independent of case. Defaults to false. (optional)
+* `servlet.init.*` - these properties (sans the `servlet.init.` prefix) are made available throught the `ServletConfig` object of your servlet. This allows you to supply your servlet initialization parameters as you would normally do in the web descriptor (web.xml).
 
 ### Filter service properties
 
 See full reference in the [OSGi specification](https://docs.osgi.org/specification/osgi.cmpn/8.1.0/service.servlet.html#d0e87922) .
 The most important properties are:
 
-  * `osgi.http.whiteboard.filter.regex` - The regular expression pattern to register filter with.
-  * `osgi.http.whiteboard.context.select` - Filter expression to select the servlet context (optional).
-  * `osgi.http.whiteboard.filter.pattern` - Apply this servlet filter to the specified URL path patterns. The format of the patterns is specified in the servlet specification.
-  * `osgi.http.whiteboard.filter.asyncSupported` - Declares whether the servlet filter supports asynchronous operation mode. Allowed values are true and false independent of case. Defaults to false. (optional)
-  * `filter.init.*` - these properties (sans the `filter.init.` prefix) are made available throught the `FilterConfig` object of your filter. This allows you to supply your filter initialization parameters as you would normally do in the web descriptor (web.xml).
+* `osgi.http.whiteboard.filter.regex` - The regular expression pattern to register filter with.
+* `osgi.http.whiteboard.context.select` - Filter expression to select the servlet context (optional).
+* `osgi.http.whiteboard.filter.pattern` - Apply this servlet filter to the specified URL path patterns. The format of the patterns is specified in the servlet specification.
+* `osgi.http.whiteboard.filter.asyncSupported` - Declares whether the servlet filter supports asynchronous operation mode. Allowed values are true and false independent of case. Defaults to false. (optional)
+* `filter.init.*` - these properties (sans the `filter.init.` prefix) are made available throught the `FilterConfig` object of your filter. This allows you to supply your filter initialization parameters as you would normally do in the web descriptor (web.xml).
 
-The order of filters is no longer managed by the `service.ranking` property, but by implementing the `compareTo` method. 
+The order of filters is no longer managed by the `service.ranking` property, but by implementing the `compareTo` method.
 Multiple servlet filters can process the same servlet request/response. If more than one Filter matches, they are processed in ranking order, as specified in `ServiceReference.compareTo`. The servlet filter with the highest ranking is processed first in the filter chain, while the servlet filter with the lowest ranking is processed last, before the Servlet.service method is called. After the servlet completes its service method the filter chain is unwound in reverse order.
 
 ### ServletContextHelper service properties
 
-See full reference in the [OSGi specification](https://docs.osgi.org/specification/osgi.cmpn/8.1.0/service.servlet.html#service.http.whiteboard.servletcontext). 
+See full reference in the [OSGi specification](https://docs.osgi.org/specification/osgi.cmpn/8.1.0/service.servlet.html#service.http.whiteboard.servletcontext).
 The most important properties are:
 
-  * `osgi.http.whiteboard.context.name` - the identifier of the registered HTTP context to be referenced by a servlet or filter service
-  * `osgi.http.whiteboard.context.path` - The path of the servlet context.
-  * `context.init.*` - Properties starting with this prefix are provided as init parameters through the ServletContext.getInitParameter and ServletContext.getInitParameterNames methods. The context.init. prefix is removed from the parameter name.
+* `osgi.http.whiteboard.context.name` - the identifier of the registered HTTP context to be referenced by a servlet or filter service
+* `osgi.http.whiteboard.context.path` - The path of the servlet context.
+* `context.init.*` - Properties starting with this prefix are provided as init parameters through the ServletContext.getInitParameter and ServletContext.getInitParameterNames methods. The context.init. prefix is removed from the parameter name.
 
 ## Using the HttpService
 
 In general the Http Service is regarded legacy and the OSGi Http Whiteboard should be used instead. If you still want to use the Http Service, this is a brief introduction. The main components provided by the Apache Felix HTTP Service bundle are:
 
- * `HttpService` - Service used to dynamically register resources and servlets;
- * `HttpContext` - Additional (optional) component to handle authentication, resource and mime type mappings.
+* `HttpService` - Service used to dynamically register resources and servlets;
+* `HttpContext` - Additional (optional) component to handle authentication, resource and mime type mappings.
 
 Servlets created for the OSGi HTTP service don't need to have any reference to the OSGi specification (they only need to
 conform to the Servlet specification), like in the example:
@@ -178,7 +181,7 @@ conform to the Servlet specification), like in the example:
 public class HelloWorld extends HttpServlet {
     @Override
     protected void doGet(HttpServletRequest req, HttpServletResponse resp) throws ServletException, IOException {
-        resp.getWriter().write("Hello World");		
+        resp.getWriter().write("Hello World");
     }
 }
 ```
@@ -231,10 +234,10 @@ calling the `HttpService.unregister` method.
 
 As you notice in the example above, the `registerServlet` method accepts four parameters:
 
- * the servlet alias;
- * the `Servlet` instance;
- * an additional configuration `Dictionary`;
- * a `HttpContext`.
+* the servlet alias;
+* the `Servlet` instance;
+* an additional configuration `Dictionary`;
+* a `HttpContext`.
 
 The servlet alias must begin with a slash and must not end with a slash. When a request is processed, the HTTP Service
 will try to exact match the requested URI with a registered servlet. If not existent, it will remove the last '/' in the
@@ -311,11 +314,11 @@ or the correct MIME type implementing the method `HttpContext.getMimeType` like 
 //....
 public String getMimeType(String file) {
     if (file.endsWith(".jpg") {
-        return "image/jpeg";  
+        return "image/jpeg";
     } else if (file.endsWith(".png")) {
-        return "image/png";  
-    } else {  
-        return "text/html";  
+        return "image/png";
+    } else {
+        return "text/html";
     }
 }
 //....
@@ -353,11 +356,10 @@ little setup is needed for this to work:
 
 A detailed example can be found [here](https://github.com/apache/felix-dev/blob/master/http/samples/bridge).
 
-
 ## Using the SSL filter
 
 This filter provides you means to transparently handle [SSL termination proxies](https://en.wikipedia.org/wiki/SSL_termination_proxy),
-allowing your servlets and filters to work *like they were accessed directly through HTTPS*. This filter is useful when
+allowing your servlets and filters to work _like they were accessed directly through HTTPS_. This filter is useful when
 deploying applications in large datacenters where frontend load-balancers distribute the load among several servers in
 the same datacenter by stripping the SSL encryption.
 
@@ -396,8 +398,12 @@ properties can be used (some legacy property names still exist but are not docum
 | `org.apache.felix.http.timeout`                           | Connection timeout in milliseconds. The default is `60000` (60 seconds).                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                             |
 | `org.apache.felix.http.session.timeout`                   | Allows for the specification of the Session life time as a number of minutes. This property serves the same purpose as the `session-timeout` element in a Web Application descriptor. The default is "0" (zero) for no timeout at all.                                                                                                                                                                                                                                                                                                                                                               |
 | `org.apache.felix.http.enable`                            | Flag to enable the use of HTTP. The default is `true`.                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                               |
+| `org.apache.felix.http.require.config`                    | If `true`, the server does not start until an OSGi configuration (via Configuration Admin) has been received, rather than starting immediately with the OSGi environment properties. The default is `false`.                                                                                                                                                                                                                                                                                                                                                                                          |
+| `org.apache.felix.http.name` | The HTTP service name, used in a service filter to target a specific HTTP instance. Default is unset. See [Multiple Servers](#multiple-servers). |
+| `org.apache.felix.http.path_exclusions` | A list of context path prefixes. A Web Application Bundle that is started with a context path matching any of these prefixes is not deployed in the servlet container. Default is `/system`. |
 | `org.apache.felix.https.enable`                           | Flag to enable the user of HTTPS. The default is `false`.                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                            |
 | `org.apache.felix.https.keystore`                         | The name of the file containing the keystore.                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                        |
+| `org.apache.felix.https.keystore.type` | The type of the keystore. Default is the keystore type of the JVM (`KeyStore.getDefaultType()`). |
 | `org.apache.felix.https.keystore.password`                | The password for the keystore.                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                       |
 | `org.apache.felix.https.keystore.key.password`            | The password for the key in the keystore.                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                            |
 | `org.apache.felix.https.truststore`                       | The name of the file containing the truststore.                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                      |
@@ -407,7 +413,11 @@ properties can be used (some legacy property names still exist but are not docum
 | `org.apache.felix.https.jetty.ciphersuites.included`      | Configures comma-separated list of SSL cipher suites to *include*. Default is `null`, meaning that the default cipher suites are used.                                                                                                                                                                                                                                                                                                                                                                                                                                                               |
 | `org.apache.felix.https.jetty.protocols.excluded`         | Configures comma-separated list of SSL protocols (e.g. SSLv3, TLSv1.0, TLSv1.1, TLSv1.2) to *exclude*. Default is `null`, meaning that no protocol is excluded.                                                                                                                                                                                                                                                                                                                                                                                                                                      |
 | `org.apache.felix.https.jetty.protocols.included`         | Configures comma-separated list of SSL protocols to *include*. Default is `null`, meaning that the default protocols are used.                                                                                                                                                                                                                                                                                                                                                                                                                                                                       |
+| `org.apache.felix.https.jetty.renegotiateAllowed` | Whether TLS renegotiation is allowed. Default is `false`. |
 | `org.apache.felix.https.clientcertificate`                | Flag to determine if the HTTPS protocol requires, wants or does not use client certificates. Legal values are `needs`, `wants` and `none`. The default is `none`.                                                                                                                                                                                                                                                                                                                                                                                                                                    |
+| `org.apache.felix.https.sslContext.sni.required`          | Whether SNI is required at the TLS level. When `true`, clients that don't send a valid SNI receive a TLS failure. Default is `false`. See [Jetty SNI docs](https://jetty.org/docs/jetty/12/operations-guide/protocols/index.html#ssl-sni). Added in Jetty12 2.0.2 / 1.2.2.                                                                                                                                                                                                                                                                                                                          |
+| `org.apache.felix.https.ssl.sni.required`                 | Whether SNI is required at the HTTP level. When `true`, clients without a valid SNI receive a `400 Bad Request`. Default is `false`. See [Jetty SNI docs](https://jetty.org/docs/jetty/12/operations-guide/protocols/index.html#ssl-sni). Added in Jetty12 2.0.2 / 1.2.2.                                                                                                                                                                                                                                                                                                                           |
+| `org.apache.felix.https.ssl.sni.hostCheck`                | Whether the SNI hostname must match the `Host` header. Default is `true`. See [Jetty SNI docs](https://jetty.org/docs/jetty/12/operations-guide/protocols/index.html#ssl-sni). Added in Jetty12 2.0.2 / 1.2.2.                                                                                                                                                                                                                                                                                                                                                                                      |
 | `org.apache.felix.http.jetty.headerBufferSize`            | Size of the buffer for request and response headers, in bytes. Default is 16 KB.                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                     |
 | `org.apache.felix.http.jetty.requestBufferSize`           | Size of the buffer for requests not fitting the header buffer, in bytes. Default is 8 KB.                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                            |
 | `org.apache.felix.http.jetty.responseBufferSize`          | Size of the buffer for responses, in bytes. Default is 24 KB.                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                        |
@@ -417,18 +427,39 @@ properties can be used (some legacy property names still exist but are not docum
 | `org.apache.felix.http.jetty.acceptQueueSize`             | Configures the Jetty12 accept queue size. Defaults to whatever Jetty configures when not specified.                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                  |
 | `org.apache.felix.http.jetty.errorPageCustomHeaders`      | Configures the custom headers to add to all error pages served by Jetty. Separate key-value pairs with `##`, e.g. `X-Custom-Header=Value##X-Custom-Header2=Value2`. Added in Jetty12 1.0.32.                                                                                                                                                                                                                                                                                                                                                                                                         |
 | `org.apache.felix.http.mbeans`                            | If `true`, enables the MBean server functionality. The default is `false`.                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                           |
+| `org.apache.felix.jetty.statisticshandler.enable` | Whether to insert a server wide Jetty `StatisticsHandler`. Default is `false`. Note that when `org.apache.felix.http.mbeans` is enabled, a `StatisticsHandler` is added to the servlet context as well, independent of this property. |
 | `org.apache.felix.http.jetty.sendServerHeader`            | If `false`, the `Server` HTTP header is no longer included in responses. The default is `false`.                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                     |
+| `org.apache.felix.jetty.stopTimeout` | The graceful stop timeout of the server in milliseconds. Default is `-1`, which leaves Jetty's own default in place. |
 | `org.eclipse.jetty.servlet.SessionCookie`                 | Name of the cookie used to transport the Session ID. The default is `JSESSIONID`.                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                    |
 | `org.eclipse.jetty.servlet.SessionURL`                    | Name of the request parameter to transport the Session ID. The default is `jsessionid`.                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                              |
 | `org.eclipse.jetty.servlet.SessionDomain`                 | Domain to set on the session cookie. The default is `null`.                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                          |
 | `org.eclipse.jetty.servlet.SessionPath`                   | The path to set on the session cookie. The default is the configured session context path ("/").                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                     |
 | `org.eclipse.jetty.servlet.MaxAge`                        | The maximum age value to set on the cookie. The default is "-1".                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                     |
+| `org.apache.felix.https.jetty.session.cookie.httpOnly` | Whether the session cookie gets the `HttpOnly` attribute. Default is `true`. |
+| `org.apache.felix.https.jetty.session.cookie.secure` | Whether the session cookie gets the `Secure` attribute. Default is `false`. |
+| `org.eclipse.jetty.servlet.SessionIdPathParameterName` | Name of the path parameter that is used for URL rewriting of the session id. Default is `jsessionid`. Set it to `none` to disable URL rewriting. |
+| `org.eclipse.jetty.servlet.CheckingRemoteSessionIdEncoding` | Whether `HttpServletResponse.encodeURL()` also appends the session id path parameter to URLs that point to a remote host. Default is `true`. |
+| `org.eclipse.jetty.servlet.SessionScavengingInterval` | The interval in seconds at which expired sessions are scavenged. Default is the Jetty `HouseKeeper` default of `600`. The value is applied after the server has been started. |
+| `org.apache.felix.http.session.container.attribute` | A list of session attribute names that are set by the servlet container itself. Used to determine whether a container session is empty and can be invalidated. Default is `org.eclipse.jetty.security.sessionCreatedSecure`. |
 | `org.eclipse.jetty.UriComplianceMode`                     | The URI compliance mode to set. The default is [DEFAULT](https://eclipse.dev/jetty/javadoc/jetty-12/org/eclipse/jetty/http/UriCompliance.html#DEFAULT). See [documentation](https://eclipse.dev/jetty/documentation/jetty-12/programming-guide/index.html#pg-server-compliance-uri.) and [possible modes](https://github.com/jetty/jetty.project/blob/jetty-12.0.x/jetty-core/jetty-http/src/main/java/org/eclipse/jetty/http/UriCompliance.java#L186C107-L186C113). Use with caution, as it may have [security implications](https://github.com/apache/felix-dev/pull/308#issuecomment-2438913766). |
+| `org.apache.felix.jetty.relativeredirectallowed` | Whether relative redirects, meaning a relative URI in the `Location` header, are allowed. Default is `true`. |
 | `org.apache.felix.proxy.load.balancer.connection.enable`  | Set this to `true` when running Felix HTTP behind a (offloading) proxy or load balancer which rewrites the requests. The default is `false`.                                                                                                                                                                                                                                                                                                                                                                                                                                                         |
 | `org.apache.felix.http.runtime.init.`                     | Properties starting with this prefix are added as service registration properties to the HttpServiceRuntime service. The prefix is removed for the property name.                                                                                                                                                                                                                                                                                                                                                                                                                                    |
+| `org.apache.felix.http.requestlog.filter` | An additional OSGi filter expression that narrows down which `org.eclipse.jetty.server.RequestLog` services receive the request log entries. It is combined with `(objectClass=org.eclipse.jetty.server.RequestLog)`. Default is unset, in which case every registered `RequestLog` service receives the entries. See [Request logging](#request-logging). |
+| `org.apache.felix.http.requestlog.osgi.enable` | Whether to log requests through an SLF4J logger, at level `INFO` and with every line prefixed with `REQUEST: `. Default is `false`. |
+| `org.apache.felix.http.requestlog.osgi.logger.name` | The name of the SLF4J logger used for the request log. Only relevant when `org.apache.felix.http.requestlog.osgi.enable` is `true`. Default is `org.apache.felix.http`. |
+| `org.apache.felix.http.requestlog.osgi.format` | The format of the SLF4J request log entries. Only relevant when `org.apache.felix.http.requestlog.osgi.enable` is `true`. Default is the Jetty `CustomRequestLog.EXTENDED_NCSA_FORMAT`. The valid placeholders are described in the [Jetty request log documentation](https://jetty.org/docs/jetty/12/operations-guide/modules/standard.html#requestlog). |
+| `org.apache.felix.http.requestlog.osgi.name` | The value of the `name` service property of the `RequestLog` service that is registered for the SLF4J request log. Default is unset. |
+| `org.apache.felix.http.requestlog.file.path` | The path of the request log file. Request logging to a file is only enabled when this property is set to a non empty value. The parent directory is created if it does not exist yet. |
+| `org.apache.felix.http.requestlog.file.format` | The format of the file request log entries. Default is the Jetty `CustomRequestLog.NCSA_FORMAT`. The valid placeholders are described in the [Jetty request log documentation](https://jetty.org/docs/jetty/12/operations-guide/modules/standard.html#requestlog). |
+| `org.apache.felix.http.requestlog.file.async` | Whether the request log file is written asynchronously, using the Jetty `AsyncRequestLogWriter`. Default is `false`. |
+| `org.apache.felix.http.requestlog.file.append` | Whether to append to an existing request log file instead of truncating it. Default is `true`. |
+| `org.apache.felix.http.requestlog.file.retaindays` | The number of days that rolled over request log files are retained. Default is `31`. |
+| `org.apache.felix.http.requestlog.file.dateformat` | The date format that is appended to the request log file name on roll over. Default is unset, which disables roll over. |
+| `org.apache.felix.http.requestlog.file.ignorepaths` | A list of paths, in servlet path spec syntax, that are excluded from the file request log. Default is none. |
+| `org.apache.felix.http.requestlog.file.name` | The value of the `name` service property of the `RequestLog` service that is registered for the file request log. Default is `file`. |
 | `org.apache.felix.jetty.gziphandler.enable`               | Whether the server should use a server-wide gzip handler. Default is false.                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                          |
 | `org.apache.felix.jetty.gzip.minGzipSize`                 | The minimum response size to trigger dynamic compression. Default is GzipHandler.DEFAULT_MIN_GZIP_SIZE.                                                                                                                                                                                                                                                                                                                                                                                                                                                                                              |
-| `org.apache.felix.jetty.gzip.inflateBufferSize`           | The size in bytes of the buffer to inflate compressed request, or <= 0 for no inflation. Default is -1.                                                                                                                                                                                                                                                                                                                                                                                                                                                                                              |
 | `org.apache.felix.jetty.gzip.syncFlush`                   | True if Deflater#SYNC_FLUSH should be used, else Deflater#NO_FLUSH will be used. Default is false.                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                   |
 | `org.apache.felix.jetty.gzip.includedMethods`             | The additional http methods to include in compression. Default is none.                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                              |
 | `org.apache.felix.jetty.gzip.excludedMethods`             | The additional http methods to exclude in compression. Default is none.                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                              |
@@ -444,8 +475,70 @@ properties can be used (some legacy property names still exist but are not docum
 | `org.apache.felix.jetty.alpn.defaultProtocol`             | The default protocol when negotiation fails. Default is http/1.1.                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                    |
 | `org.apache.felix.jakarta.websocket.enable`               | Enables Jakarta websocket support. Default is false.                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                 |
 | `org.apache.felix.jetty.websocket.enable`                 | Enables Jetty websocket support. Default is false.                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                   |
-| `org.apache.felix.http.jetty.threadpool.max`              | The maximum number of threads in the Jetty thread pool. Default is unlimited. Works for both platform threads and virtual threads (Jetty 12 only).                                                                                                                                                                                                                                                                                                                                                                                                                                                   |
-| `org.apache.felix.http.jetty.virtualthreads.enable`       | Enables using virtual threads in Jetty 12 (JDK 21 required). Default is false. When enabled, `org.apache.felix.http.jetty.threadpool.max` is used for a bounded virtual thread pool.                                                                                                                                                                                                                                                                                                                                                                                                                 |
+| `org.apache.felix.http.jetty.acceptors` | The number of Jetty acceptor threads for the connector. Acceptors accept new TCP/IP connections. Default is `-1`, which lets Jetty choose: Jetty uses `1` acceptor for a negative value, and logs a warning when the configured value is above the number of available processors. With `0` the selector threads accept the connections. |
+| `org.apache.felix.http.jetty.selectors` | The number of Jetty selector threads for the connector. Selectors notice and schedule established connections that can make I/O progress. Default is `-1`, which lets Jetty choose: for a sized thread pool Jetty uses `max(1, min(cpus / 2, maxThreads / 16))`, and for a thread pool that is not sized, such as the `VirtualThreadPool`, it uses `max(1, cpus / 2)`. Keep the selector count below the number of carrier threads when virtual threads are active. |
+| `org.apache.felix.http.jetty.threadpool.max` | The maximum number of threads in the Jetty thread pool. Default is `-1`, meaning the property is unset and Jetty's own default applies, which is a `QueuedThreadPool` with 200 platform threads. When `org.apache.felix.http.jetty.virtualthreads.enable` is `true`, this property also selects the type of thread pool, see [Thread pool and virtual threads](#thread-pool-and-virtual-threads). |
+| `org.apache.felix.http.jetty.virtualthreads.enable` | Enables virtual threads in Jetty 12 (JDK 21 or later). Default is `false`. The value of `org.apache.felix.http.jetty.threadpool.max` then selects which thread pool is built, see [Thread pool and virtual threads](#thread-pool-and-virtual-threads). |
+| `org.apache.felix.http.jetty.virtualthreads.max` | The maximum number of virtual thread tasks that run at the same time, or `-1` to leave the number unbounded. Note that unlike `org.apache.felix.http.jetty.threadpool.max` this bounds concurrent tasks, not the number of threads. Only relevant when `org.apache.felix.http.jetty.virtualthreads.enable` is `true`. When set to a positive value, Jetty's preferred setup is used: a `QueuedThreadPool`, sized by `org.apache.felix.http.jetty.threadpool.max`, whose virtual threads executor is a bounded `VirtualThreadPool`. Platform threads then still run the acceptors and the selectors. Default is `-1`. Jetty 12 bundle only, available from version 2.0.8. |
+
+### Thread pool and virtual threads
+
+The combination of `org.apache.felix.http.jetty.threadpool.max`,
+`org.apache.felix.http.jetty.virtualthreads.enable` and
+`org.apache.felix.http.jetty.virtualthreads.max` decides which thread pool the Jetty 12 bundle
+builds. All three properties are unset by default, which gives a `QueuedThreadPool` with 200
+platform threads, the Jetty default.
+
+| `virtualthreads.enable` | `threadpool.max` | `virtualthreads.max` | Thread pool |
+|--|--|--|--|
+| `false` | unset (`-1`) | - | Jetty's default `QueuedThreadPool` with 200 platform threads. |
+| `false` | set | - | A `QueuedThreadPool` with `<max>` platform threads. |
+| `true` | unset (`-1`) | unset (`-1`) | A `QueuedThreadPool` whose virtual threads executor is `Executors.newVirtualThreadPerTaskExecutor()`. The number of concurrent virtual thread tasks is **unbounded**. |
+| `true` | set | unset (`-1`) | A standalone `VirtualThreadPool` with `setMaxConcurrentTasks(<max>)`. A semaphore limits the number of tasks that run at the same time. The pool creates only virtual threads. |
+| `true` | unset or set | set | Jetty's preferred setup: a `QueuedThreadPool`, sized by `threadpool.max`, whose virtual threads executor is a `VirtualThreadPool` with `setMaxConcurrentTasks(<value>)`. Platform threads still run the acceptors and the selectors. Available from Jetty 12 bundle version 2.0.8. |
+
+Note that enabling virtual threads without setting either `org.apache.felix.http.jetty.threadpool.max`
+or `org.apache.felix.http.jetty.virtualthreads.max` yields the unbounded variant, which Jetty warns
+can exhaust memory during a load spike.
+
+Note also that `org.apache.felix.http.jetty.threadpool.max` and
+`org.apache.felix.http.jetty.virtualthreads.max` bound different things:
+`threadpool.max` bounds threads, `virtualthreads.max` bounds the number of tasks that run at the
+same time. The fourth row above is the exception, where `threadpool.max` is reused as a bound on
+concurrent tasks. That is kept for backwards compatibility; `virtualthreads.max` is the properly
+named equivalent.
+
+A few more things to be aware of when virtual threads are enabled:
+
+* With the `QueuedThreadPool` variant, platform threads still run the acceptors and the selectors,
+  and Jetty sets the reserved thread count to zero, so it always uses the Produce-Execute-Consume
+  mode. The standalone `VirtualThreadPool` only creates virtual threads.
+* Keep `org.apache.felix.http.jetty.selectors` below the number of carrier threads.
+* The combination Jetty documents as the preferred one, a `QueuedThreadPool` whose virtual threads
+  executor is a bounded `VirtualThreadPool`, is the last row of the table. It is configured with
+  `org.apache.felix.http.jetty.virtualthreads.max` and is available from Jetty 12 bundle version
+  2.0.8, see [FELIX-6859](https://issues.apache.org/jira/browse/FELIX-6859).
+
+Virtual threads require JDK 21 or later and are only supported by the Jetty 12 bundle. The Jetty 11
+bundle only honours `org.apache.felix.http.jetty.threadpool.max`.
+
+### Request logging
+
+Jetty request logging is driven by `org.eclipse.jetty.server.RequestLog` services. The bundle tracks
+those services and dispatches every request to each of them, so a custom request log can simply be
+registered as a service. Use `org.apache.felix.http.requestlog.filter` to restrict the set of
+services that is tracked. A service that throws on more than 100 log calls is dropped.
+
+Two `RequestLog` implementations are shipped and can be enabled through configuration:
+
+* An SLF4J based one, enabled with `org.apache.felix.http.requestlog.osgi.enable`, configured by the
+  other `org.apache.felix.http.requestlog.osgi.*` properties.
+* A file based one, enabled by setting `org.apache.felix.http.requestlog.file.path`, configured by
+  the other `org.apache.felix.http.requestlog.file.*` properties. The remaining `file.*` properties
+  have no effect while `file.path` is unset.
+
+Both register themselves as a `RequestLog` service, so they are picked up through the same tracker
+and are subject to `org.apache.felix.http.requestlog.filter`.
 
 ### Multiple Servers
 
@@ -464,21 +557,20 @@ The SSL-filter bundle supports the following configuration options, using the PI
 | `ssl-forward.value` | Defines what HTTP header value to look for in a request to determine whether a request is a forwarded SSL request in a request. The default is `on`. |
 | `ssl-forward-cert.header` | Defines what HTTP header to look for in a request to obtain the forwarded client certificate. The default is `X-Forwarded-SSL-Certificate`. |
 
-
 ### HTTP port settings
 
 As of HTTP Jetty version 2.2.2, it is possible to assign a free port for HTTP or HTTPS automatically, based on certain
 rules, for example, a range between 8000 and 9000. The syntax is based on the version ranges, as described in the OSGi
 specification. The following forms are supported:
 
-  * `*` or `0`: binds to the first available port;
-  * `8000`: binds to port `8000`, failing if this port is already taken;
-  * `[8000,9000]`: binds to a free port in the range 8000 (inclusive) and 9000 (inclusive);
-  * `[8000,9000)`: binds to a free port in the range 8000 (inclusive) and 9000 (exclusive);
-  * `(8000,9000]`: binds to a free port in the range 8000 (exclusive) and 9000 (inclusive);
-  * `(8000,9000)`: binds to a free port in the range 8000 (exclusive) and 9000 (exclusive);
-  * `[,9000)`: binds to a free port in the range 1 (inclusive) and 9000 (exclusive);
-  * `[8000,)`: binds to a free port in the range 8000 (inclusive) and 65535 (exclusive).
+* `*` or `0`: binds to the first available port;
+* `8000`: binds to port `8000`, failing if this port is already taken;
+* `[8000,9000]`: binds to a free port in the range 8000 (inclusive) and 9000 (inclusive);
+* `[8000,9000)`: binds to a free port in the range 8000 (inclusive) and 9000 (exclusive);
+* `(8000,9000]`: binds to a free port in the range 8000 (exclusive) and 9000 (inclusive);
+* `(8000,9000)`: binds to a free port in the range 8000 (exclusive) and 9000 (exclusive);
+* `[,9000)`: binds to a free port in the range 1 (inclusive) and 9000 (exclusive);
+* `[8000,)`: binds to a free port in the range 8000 (inclusive) and 65535 (exclusive).
 
 Note that picking a port is *not* performed atomically and multiple instances can try to bind to the same port at the
 same time.
@@ -503,7 +595,6 @@ environment. On the other hand they are hard to capture and propagate. For examp
 `contextInitialized` event may be sent before the framework and any of the contained bundles are actually ready to act.
 Likewise the `contextDestroyed` event may come to late.
 
-
 ## Servlet Context Notes
 
 `ServletContext` instances are managed internally by the Http Service implementation. For each `HttpContext` instance
@@ -522,13 +613,12 @@ the provided `HttpContext` instance:
 | `getInitParameterNames`, `getServlets`, `getServletNames` | Always returns empty `Enumeration` |
 | `getAttribute`, `getAttributeNames`, `setAttribute`, `removeAttribute` | By default maintained for each `ServletContext` managed by the Http Service. If the `org.apache.felix.http.shared*servlet*context_attributes` framework property is set to `true` these methods are actually based on the `ServletContext` provided by the servlet container and thus attributes are shared amongst all `ServlectContext` instances, incl. the `ServletContext` provided by the servlet container |
 
-
 ## Examples
 
 A set of simple examples illustrating the various features are available.
 
-  * Whiteboard sample: <https://github.com/apache/felix-dev/tree/master/http/samples/whiteboard>
-  * Servlet bridge sample: <https://github.com/apache/felix-dev/tree/master/http/samples/bridge/>
+* Whiteboard sample: <https://github.com/apache/felix-dev/tree/master/http/samples/whiteboard>
+* Servlet bridge sample: <https://github.com/apache/felix-dev/tree/master/http/samples/bridge/>
 
 ## Maven Artifacts
 
@@ -565,4 +655,268 @@ This is a list of the most recent artifacts at the time of writing this document
     <artifactId>org.apache.felix.http.sslfilter</artifactId>
     <version>2.0.2</version>
 </dependency>
+```
+
+## The OSGi TCK
+
+The implementation passes all updated tests for these specifications:
+
+* [OSGi Http Service R8](https://github.com/osgi/osgi/tree/r8-cmpn-final/org.osgi.test.cases.http)
+* [OSGi Http Whiteboard R8](https://github.com/osgi/osgi/tree/r8-cmpn-final/org.osgi.test.cases.http.whiteboard)
+* [OSGi Http Servlet Whiteboard R8.1](https://github.com/osgi/osgi/tree/8.1.0.cmpn/org.osgi.test.cases.servlet)
+
+However, as there were clarifications and fixes of those tests afterwards for running the tests, it needs:
+
+* [This fix for the servlet whiteboard](https://github.com/osgi/osgi/commit/f38f8b32a720ab9a513a20d67240d7f4c8b863ed)
+* The below patch to the http whiteboard tests:
+
+```txt
+diff --git a/org.osgi.test.cases.http.whiteboard/src/org/osgi/test/cases/http/whiteboard/junit/HttpServiceRuntimeTestCase.java b/org.osgi.test.cases.http.whiteboard/src/org/osgi/test/cases/http/whiteboard/junit/HttpServiceRuntimeTestCase.java
+index 469d7c1f70..4b8a07e1ce 100644
+--- a/org.osgi.test.cases.http.whiteboard/src/org/osgi/test/cases/http/whiteboard/junit/HttpServiceRuntimeTestCase.java
++++ b/org.osgi.test.cases.http.whiteboard/src/org/osgi/test/cases/http/whiteboard/junit/HttpServiceRuntimeTestCase.java
+@@ -552,26 +552,26 @@ public class HttpServiceRuntimeTestCase extends BaseHttpWhiteboardTestCase {
+
+ 					String name = (String) attributes.get(ContractNamespace.CONTRACT_NAMESPACE);
+
+-					if (name != null) {
++					if ("JavaServlet".equals(name)) {
+ 						Collection<Version> versions = Versions.plus(attributes
+ 								.get(ContractNamespace.CAPABILITY_VERSION_ATTRIBUTE));
+
+-						if (name.equals("JavaServlet") && !versions.isEmpty()
+-								&& versions.iterator()
+-										.next()
+-										.equals(new Version("3.1.0"))) {
+-							Map<String, String> directives = capability.getDirectives();
++						for (Version v : versions) {
++							if (v.equals(new Version("3.1.0"))) {
++								Map<String,String> directives = capability
++										.getDirectives();
+
+-							String uses = directives.get(Namespace.CAPABILITY_USES_DIRECTIVE);
++								String uses = directives.get(Namespace.CAPABILITY_USES_DIRECTIVE);
+
+-							List<String> packages = Arrays.asList(uses.split("\\s*,\\s*"));
++								List<String> packages = Arrays.asList(uses.split("\\s*,\\s*"));
+
+-							assertTrue(packages.contains("javax.servlet"));
+-							assertTrue(packages.contains("javax.servlet.annotation"));
+-							assertTrue(packages.contains("javax.servlet.descriptor"));
+-							assertTrue(packages.contains("javax.servlet.http"));
++								assertTrue(packages.contains("javax.servlet"));
++								assertTrue(packages.contains("javax.servlet.annotation"));
++								assertTrue(packages.contains("javax.servlet.descriptor"));
++								assertTrue(packages.contains("javax.servlet.http"));
+
+-							foundContract = true;
++								foundContract = true;
++							}
+ 						}
+ 					}
+ 				}
+diff --git a/org.osgi.test.cases.http.whiteboard/src/org/osgi/test/cases/http/whiteboard/junit/ServletContextHelperTestCase.java b/org.osgi.test.cases.http.whiteboard/src/org/osgi/test/cases/http/whiteboard/junit/ServletContextHelperTestCase.java
+index ab1ed531e1..fb70551cc0 100644
+--- a/org.osgi.test.cases.http.whiteboard/src/org/osgi/test/cases/http/whiteboard/junit/ServletContextHelperTestCase.java
++++ b/org.osgi.test.cases.http.whiteboard/src/org/osgi/test/cases/http/whiteboard/junit/ServletContextHelperTestCase.java
+@@ -154,17 +154,6 @@ public class ServletContextHelperTestCase extends BaseHttpWhiteboardTestCase {
+ 		}
+ 	}
+
+-	public void test_140_2_13to14() throws Exception {
+-		BundleContext context = getContext();
+-		ServiceReference<ServletContextHelper> serviceReference = context.getServiceReference(ServletContextHelper.class);
+-
+-		assertNotNull(serviceReference);
+-		assertEquals(Constants.SCOPE_BUNDLE, serviceReference.getProperty(Constants.SERVICE_SCOPE));
+-		assertEquals(
+-				DEFAULT,
+-				serviceReference.getProperty(HttpWhiteboardConstants.HTTP_WHITEBOARD_CONTEXT_NAME));
+-	}
+-
+ 	public void test_140_2_15to16() throws Exception {
+ 		BundleContext context = getContext();
+
+@@ -179,6 +168,12 @@ public class ServletContextHelperTestCase extends BaseHttpWhiteboardTestCase {
+ 	public void test_140_2_17to22() throws Exception {
+ 		final BundleContext context = getContext();
+
++		Dictionary<String, Object> contextProperties = new Hashtable<String, Object>();
++	  	contextProperties.put(HttpWhiteboardConstants.HTTP_WHITEBOARD_CONTEXT_NAME, "mycontext");
++		contextProperties.put(HttpWhiteboardConstants.HTTP_WHITEBOARD_CONTEXT_PATH, "/");
++
++		serviceRegistrations.add(context.registerService(ServletContextHelper.class, new ServletContextHelper(context.getBundle()) {}, contextProperties));
++
+ 		FindHook findHook = new FindHook() {
+
+ 			@Override
+@@ -190,11 +185,11 @@ public class ServletContextHelperTestCase extends BaseHttpWhiteboardTestCase {
+ 					return;
+ 				}
+
+-				// don't show default ServletContextHelper
++				// don't show custom context
+ 				for (Iterator<ServiceReference<?>> iterator = references.iterator(); iterator.hasNext();) {
+ 					ServiceReference<?> sr = iterator.next();
+
+-					if (DEFAULT.equals(sr.getProperty(HttpWhiteboardConstants.HTTP_WHITEBOARD_CONTEXT_NAME))) {
++					if ("mycontext".equals(sr.getProperty(HttpWhiteboardConstants.HTTP_WHITEBOARD_CONTEXT_NAME))) {
+ 						iterator.remove();
+ 					}
+ 				}
+@@ -205,13 +200,22 @@ public class ServletContextHelperTestCase extends BaseHttpWhiteboardTestCase {
+ 		serviceRegistrations.add(context.registerService(FindHook.class, findHook, null));
+
+ 		AtomicReference<ServletContext> sc1 = new AtomicReference<ServletContext>();
++		AtomicReference<ServletContext> sc2 = new AtomicReference<ServletContext>();
+
+ 		Dictionary<String, Object> properties = new Hashtable<String, Object>();
+ 		properties.put(HttpWhiteboardConstants.HTTP_WHITEBOARD_LISTENER, "true");
++		properties.put(HttpWhiteboardConstants.HTTP_WHITEBOARD_CONTEXT_SELECT,
++            		"(" + HttpWhiteboardConstants.HTTP_WHITEBOARD_CONTEXT_NAME + "=mycontext)");
+ 		ServiceRegistration<ServletContextListener> serviceRegistration = context.registerService(ServletContextListener.class, new MockSCL(sc1), properties);
+ 		serviceRegistrations.add(serviceRegistration);
+
+ 		assertNull(sc1.get());
++
++		properties = new Hashtable<String, Object>();
++		properties.put(HttpWhiteboardConstants.HTTP_WHITEBOARD_LISTENER, "true");
++		serviceRegistrations.add(context.registerService(ServletContextListener.class, new MockSCL(sc2), properties));
++
++		assertNotNull(sc2.get());
+ 	}
+
+ 	public void test_table_140_1_HTTP_WHITEBOARD_CONTEXT_NAME_type() throws Exception {
+@@ -295,17 +299,6 @@ public class ServletContextHelperTestCase extends BaseHttpWhiteboardTestCase {
+ 		assertEquals(contextName, sc1.get().getServletContextName());
+ 	}
+
+-	public void test_table_140_1_HTTP_WHITEBOARD_CONTEXT_NAME_default() throws Exception {
+-		BundleContext context = getContext();
+-		ServiceReference<ServletContextHelper> serviceReference = context.getServiceReference(ServletContextHelper.class);
+-
+-		assertNotNull(serviceReference);
+-		assertEquals(Constants.SCOPE_BUNDLE, serviceReference.getProperty(Constants.SERVICE_SCOPE));
+-		assertEquals(
+-				DEFAULT,
+-				serviceReference.getProperty(HttpWhiteboardConstants.HTTP_WHITEBOARD_CONTEXT_NAME));
+-	}
+-
+ 	public void test_table_140_1_HTTP_WHITEBOARD_CONTEXT_NAME_overrideDefault() throws Exception {
+ 		BundleContext context = getContext();
+ 		String contextPath = "/context1";
+@@ -740,67 +733,61 @@ public class ServletContextHelperTestCase extends BaseHttpWhiteboardTestCase {
+
+ 	public void test_140_2_1() throws Exception {
+ 		BundleContext context = getContext();
+-		ServiceReference<ServletContextHelper> serviceReference = context.getServiceReference(ServletContextHelper.class);
++		AtomicReference<ServletContext> sc1 = new AtomicReference<ServletContext>();
+
+-		assertNotNull(serviceReference);
++		Dictionary<String, Object> properties = new Hashtable<String, Object>();
++		properties.put(HttpWhiteboardConstants.HTTP_WHITEBOARD_LISTENER, "true");
++		serviceRegistrations.add(context.registerService(ServletContextListener.class, new MockSCL(sc1), properties));
+
+-		ServletContextHelper servletContextHelper = context.getService(serviceReference);
++		ServletContext servletContext = sc1.get();
+
+-		assertNotNull(servletContextHelper);
++		assertNotNull(servletContext);
+
+-		assertNull(servletContextHelper.getMimeType("index.html"));
++		assertNull(servletContext.getMimeType("index.html"));
+ 	}
+
+ 	public void test_140_2_2() throws Exception {
+ 		BundleContext context = getContext();
+-		ServiceReference<ServletContextHelper> serviceReference = context.getServiceReference(ServletContextHelper.class);
+-
+-		assertNotNull(serviceReference);
+-
+-		ServletContextHelper servletContextHelper = context.getService(serviceReference);
+-
+-		assertNotNull(servletContextHelper);
++		AtomicReference<ServletContext> sc1 = new AtomicReference<ServletContext>();
+
+-		assertNull(servletContextHelper.getRealPath("META-INF/MANIFEST.MF"));
++		Dictionary<String, Object> properties = new Hashtable<String, Object>();
++		properties.put(HttpWhiteboardConstants.HTTP_WHITEBOARD_LISTENER, "true");
++		serviceRegistrations.add(context.registerService(ServletContextListener.class, new MockSCL(sc1), properties));
++		ServletContext servletContext = sc1.get();
++
++		assertNotNull(servletContext);
++
++		assertNull(servletContext.getRealPath("META-INF/MANIFEST.MF"));
+ 	}
+
+ 	public void test_140_2_3() throws Exception {
+ 		BundleContext context = getContext();
+-		ServiceReference<ServletContextHelper> serviceReference = context.getServiceReference(ServletContextHelper.class);
+-
+-		assertNotNull(serviceReference);
++		AtomicReference<ServletContext> sc1 = new AtomicReference<ServletContext>();
+
+-		ServletContextHelper servletContextHelper = context.getService(serviceReference);
++		Dictionary<String, Object> properties = new Hashtable<String, Object>();
++		properties.put(HttpWhiteboardConstants.HTTP_WHITEBOARD_LISTENER, "true");
++		serviceRegistrations.add(context.registerService(ServletContextListener.class, new MockSCL(sc1), properties));
++
++                ServletContext servletContext = sc1.get();
+
+-		assertNotNull(servletContextHelper);
++		assertNotNull(servletContext);
+
+-		assertNotNull(servletContextHelper.getResource("META-INF/MANIFEST.MF"));
++		assertNotNull(servletContext.getResource("META-INF/MANIFEST.MF"));
+ 	}
+
+ 	public void test_140_2_4() throws Exception {
+ 		BundleContext context = getContext();
+-		ServiceReference<ServletContextHelper> serviceReference = context.getServiceReference(ServletContextHelper.class);
+-
+-		assertNotNull(serviceReference);
+-
+-		ServletContextHelper servletContextHelper = context.getService(serviceReference);
+-
+-		assertNotNull(servletContextHelper);
+-
+-		assertNotNull(servletContextHelper.getResourcePaths("META-INF/"));
+-	}
+-
+-	public void test_140_2_5() throws Exception {
+-		BundleContext context = getContext();
+-		ServiceReference<ServletContextHelper> serviceReference = context.getServiceReference(ServletContextHelper.class);
++		AtomicReference<ServletContext> sc1 = new AtomicReference<ServletContext>();
+
+-		assertNotNull(serviceReference);
++		Dictionary<String, Object> properties = new Hashtable<String, Object>();
++		properties.put(HttpWhiteboardConstants.HTTP_WHITEBOARD_LISTENER, "true");
++		serviceRegistrations.add(context.registerService(ServletContextListener.class, new MockSCL(sc1), properties));
+
+-		ServletContextHelper servletContextHelper = context.getService(serviceReference);
++		ServletContext servletContext = sc1.get();
+
+-		assertNotNull(servletContextHelper);
++		assertNotNull(servletContext);
+
+-		assertTrue(servletContextHelper.handleSecurity(null, null));
++		assertNotNull(servletContext.getResourcePaths("META-INF/"));
+ 	}
+
+ 	public void test_140_2_6_addFilter() throws Exception {
+diff --git a/org.osgi.test.cases.http.whiteboard/src/org/osgi/test/cases/http/whiteboard/junit/ServletTestCase.java b/org.osgi.test.cases.http.whiteboard/src/org/osgi/test/cases/http/whiteboard/junit/ServletTestCase.java
+index 14d0bf7ac6..b72a406030 100644
+--- a/org.osgi.test.cases.http.whiteboard/src/org/osgi/test/cases/http/whiteboard/junit/ServletTestCase.java
++++ b/org.osgi.test.cases.http.whiteboard/src/org/osgi/test/cases/http/whiteboard/junit/ServletTestCase.java
+@@ -910,8 +910,8 @@ public class ServletTestCase extends BaseHttpWhiteboardTestCase {
+ 			@Override
+ 			protected void service(HttpServletRequest request, HttpServletResponse response) throws ServletException, IOException {
+ 				invoked.set(true);
+-				String exception = (String) request.getAttribute(RequestDispatcher.ERROR_EXCEPTION_TYPE);
+-				response.getWriter().write((exception == null) ? "" : exception);
++				Class<?> exception = (Class<?>) request.getAttribute(RequestDispatcher.ERROR_EXCEPTION_TYPE);
++				response.getWriter().write((exception == null) ? "" : exception.getName());
+ 			}
+
+ 		}
 ```

@@ -23,8 +23,8 @@ import java.util.*;
 
 
 /**
- * This is a simple class that implements a <tt>Dictionary</tt>
- * from a <tt>Map</tt>. The resulting dictionary is immutatable.
+ * This is a simple class that implements a <code>Dictionary</code>
+ * from a <code>Map</code>. The resulting dictionary is immutatable.
 **/
 public class MapToDictionary extends Dictionary
 {

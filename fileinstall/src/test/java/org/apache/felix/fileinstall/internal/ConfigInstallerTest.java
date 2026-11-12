@@ -245,10 +245,10 @@ public class ConfigInstallerTest extends TestCase {
         EasyMock.expect(mockBundleContext.getProperty((String) EasyMock.anyObject()))
                 .andReturn(null)
                 .anyTimes();
-        EasyMock.expect(mockConfigurationAdmin.listConfigurations((String) EasyMock.anyObject()))
+        EasyMock.expect(mockConfigurationAdmin.listConfigurations("(felix.fileinstall.filename=file:" + file + ")"))
                 .andReturn(null);
-        EasyMock.expect(mockConfigurationAdmin.getConfiguration(pid, "?"))
-                .andReturn(mockConfiguration);
+        EasyMock.expect(mockConfigurationAdmin.listConfigurations("(service.pid=" + pid + ")"))
+                .andReturn(new Configuration[] { mockConfiguration });
 
         ServiceReference<ConfigurationAdmin> sr = EasyMock.createMock(ServiceReference.class);
         EasyMock.expect(mockConfiguration.updateIfDifferent(EasyMock.capture(props))).andReturn(true);
@@ -327,8 +327,8 @@ public class ConfigInstallerTest extends TestCase {
         EasyMock.expect(mockBundleContext.getProperty((String) EasyMock.anyObject()))
                 .andReturn(null)
                 .anyTimes();
-        EasyMock.expect(mockConfigurationAdmin.listConfigurations((String) EasyMock.anyObject()))
-                .andReturn(null);
+        EasyMock.expect(mockConfigurationAdmin.listConfigurations("(service.pid=" + pid + ")"))
+                .andReturn(new Configuration[] { mockConfiguration });
         EasyMock.expect(mockConfigurationAdmin.getConfiguration(pid, "?"))
                 .andReturn(mockConfiguration);
         EasyMock.expect(mockConfiguration.getPid())
@@ -386,6 +386,9 @@ public class ConfigInstallerTest extends TestCase {
                 .andReturn(cachingPersistenceConfiguration)
                 .anyTimes();
 
+        EasyMock.expect(mockConfigurationAdmin.listConfigurations("(service.pid=" + pid + ")"))
+                .andReturn(new Configuration[] { cachingPersistenceConfiguration });
+
         EasyMock.expect(mockConfigurationAdmin.getConfiguration(pid, null))
                 .andReturn(cachingPersistenceConfiguration)
                 .anyTimes();
@@ -393,7 +396,7 @@ public class ConfigInstallerTest extends TestCase {
         final Configuration newConfiguration = EasyMock.createMock(Configuration.class);
         EasyMock.expect(newConfiguration.getAttributes()).andReturn(Collections.emptySet()).times(2);
 
-        EasyMock.expect(mockConfigurationAdmin.listConfigurations((String) EasyMock.anyObject()))
+        EasyMock.expect(mockConfigurationAdmin.listConfigurations("(felix.fileinstall.filename=file:" + file + ")"))
                 .andReturn(new Configuration[] { newConfiguration });
 
         EasyMock.expect(newConfiguration.getProperties())

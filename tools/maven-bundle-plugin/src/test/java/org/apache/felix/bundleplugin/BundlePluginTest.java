@@ -37,6 +37,7 @@ import java.util.TreeMap;
 import java.util.jar.Manifest;
 
 import org.apache.felix.bundleplugin.BundlePlugin.ClassPathItem;
+import org.apache.maven.artifact.Artifact;
 import org.apache.maven.model.Organization;
 import org.apache.maven.plugin.testing.stubs.MavenProjectStub;
 import org.apache.maven.project.MavenProject;
@@ -252,6 +253,35 @@ public class BundlePluginTest extends AbstractBundlePluginTest
     }
 
 
+    public void testEmbedDependencyExcludesPomArtifacts() throws Exception
+    {
+        // FELIX-6857: a pom-type dependency (BOM/aggregator) resolves to a .pom file with no classes;
+        // it must never be embedded, otherwise the .pom ends up on the bundle classpath and bnd fails
+        // trying to open it as a JAR.
+        ArtifactStubFactory artifactFactory = new ArtifactStubFactory( plugin.getOutputDirectory(), true );
+
+        Set artifacts = new LinkedHashSet();
+        artifacts.add( artifactFactory.createArtifact( "g", "jardep", "1.0", Artifact.SCOPE_COMPILE, "jar", null ) );
+        artifacts.add( artifactFactory.createArtifact( "g", "pomdep", "1.0", Artifact.SCOPE_COMPILE, "pom", null ) );
+
+        MavenProject project = getMavenProjectStub();
+        project.setDependencyArtifacts( artifacts );
+
+        Map instructions = new HashMap();
+        instructions.put( DependencyEmbedder.EMBED_DEPENDENCY, "*;scope=compile" );
+
+        Builder builder = plugin.buildOSGiBundle( project, instructions, plugin.getClasspath( project ) );
+        Manifest manifest = builder.getJar().getManifest();
+
+        // only the jar is embedded; the pom is excluded from both Bundle-ClassPath and Embedded-Artifacts
+        String bcp = manifest.getMainAttributes().getValue( Constants.BUNDLE_CLASSPATH );
+        assertEquals( ".,jardep-1.0.jar", bcp );
+
+        String eas = manifest.getMainAttributes().getValue( "Embedded-Artifacts" );
+        assertEquals( "jardep-1.0.jar;g=\"g\";a=\"jardep\";v=\"1.0\"", eas );
+    }
+
+
     public void testEmbedDependencyNegativeClauses() throws Exception
     {
         ArtifactStubFactory artifactFactory = new ArtifactStubFactory( plugin.getOutputDirectory(), true );
@@ -414,6 +444,52 @@ public class BundlePluginTest extends AbstractBundlePluginTest
 
         File file = new File( getBasedir(), "target" + File.separatorChar + "test.props" );
         builder.getProperties().store( new FileOutputStream( file ), "TEST" );
-   } 
+   }
+
+    public void testToArtifactCopiesScopeAndOptionalFromDependency()
+    {
+        org.eclipse.aether.artifact.Artifact aetherArtifact =
+            new org.eclipse.aether.artifact.DefaultArtifact( "g", "a", "tests", "jar", "1.0" );
+        org.eclipse.aether.graph.DependencyNode node = new org.eclipse.aether.graph.DefaultDependencyNode(
+            new org.eclipse.aether.graph.Dependency( aetherArtifact, Artifact.SCOPE_RUNTIME, true ) );
+
+        Artifact artifact = BundlePlugin.toArtifact( node, new MavenProject() );
+
+        assertEquals( "g", artifact.getGroupId() );
+        assertEquals( "a", artifact.getArtifactId() );
+        assertEquals( "1.0", artifact.getVersion() );
+        assertEquals( "jar", artifact.getType() );
+        assertEquals( "tests", artifact.getClassifier() );
+        assertEquals( Artifact.SCOPE_RUNTIME, artifact.getScope() );
+        assertTrue( artifact.isOptional() );
+    }
+
+
+    public void testToArtifactNotOptional()
+    {
+        org.eclipse.aether.graph.DependencyNode node = new org.eclipse.aether.graph.DefaultDependencyNode(
+            new org.eclipse.aether.graph.Dependency(
+                new org.eclipse.aether.artifact.DefaultArtifact( "g", "a", "jar", "1.0" ), Artifact.SCOPE_SYSTEM ) );
+
+        Artifact artifact = BundlePlugin.toArtifact( node, new MavenProject() );
+
+        assertEquals( Artifact.SCOPE_SYSTEM, artifact.getScope() );
+        assertFalse( artifact.isOptional() );
+    }
+
+
+    public void testToArtifactOfRootIsProjectArtifact()
+    {
+        MavenProject project = new MavenProject();
+        Artifact projectArtifact = new org.apache.maven.artifact.DefaultArtifact( "g", "root", "2.0", null, "jar", null,
+            new org.apache.maven.artifact.handler.DefaultArtifactHandler( "jar" ) );
+        project.setArtifact( projectArtifact );
+
+        // the root of a collected graph has no dependency
+        Artifact artifact =
+            BundlePlugin.toArtifact( new org.eclipse.aether.graph.DefaultDependencyNode( ( org.eclipse.aether.graph.Dependency ) null ), project );
+
+        assertSame( projectArtifact, artifact );
+    }
 
 }

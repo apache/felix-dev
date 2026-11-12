@@ -18,6 +18,7 @@ package org.apache.felix.http.jetty.it;
 
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotNull;
+import static org.junit.Assume.assumeTrue;
 import static org.ops4j.pax.exam.CoreOptions.mavenBundle;
 import static org.ops4j.pax.exam.cm.ConfigurationAdminOptions.newConfiguration;
 
@@ -34,7 +35,6 @@ import jakarta.servlet.http.HttpServletResponse;
 
 import org.eclipse.jetty.client.ContentResponse;
 import org.eclipse.jetty.client.HttpClient;
-import org.eclipse.jetty.client.transport.HttpClientTransportOverHTTP;
 import org.junit.Before;
 import org.junit.Test;
 import org.junit.runner.RunWith;
@@ -60,14 +60,15 @@ public class JettyVirtualThreadsIT extends AbstractJettyTestSupport {
                 spifly(),
 
                 // bundles for the server side
-                mavenBundle().groupId("org.eclipse.jetty.ee10").artifactId("jetty-ee10-webapp").version(jettyVersion),
-                mavenBundle().groupId("org.eclipse.jetty").artifactId("jetty-ee").version(jettyVersion),
-                mavenBundle().groupId("org.eclipse.jetty.ee10").artifactId("jetty-ee10-servlet").version(jettyVersion),
+                mavenBundle().groupId("org.eclipse.jetty.ee11").artifactId("jetty-ee11-webapp").version(jettyVersion),
+                mavenBundle().groupId("org.eclipse.jetty.ee11").artifactId("jetty-ee11-servlet").version(jettyVersion),
                 mavenBundle().groupId("org.eclipse.jetty").artifactId("jetty-xml").version(jettyVersion),
+                mavenBundle().groupId("org.eclipse.jetty.compression").artifactId("jetty-compression-common").version(jettyVersion),
 
                 // additional bundles for the client side
                 mavenBundle().groupId("org.eclipse.jetty").artifactId("jetty-alpn-client").version(jettyVersion),
-                mavenBundle().groupId("org.eclipse.jetty").artifactId("jetty-client").version(jettyVersion)
+                mavenBundle().groupId("org.eclipse.jetty").artifactId("jetty-client").version(jettyVersion),
+                mavenBundle().groupId("org.eclipse.jetty.compression").artifactId("jetty-compression-gzip").version(jettyVersion)
         };
     }
 
@@ -89,24 +90,24 @@ public class JettyVirtualThreadsIT extends AbstractJettyTestSupport {
 
     @Test
     public void testJettyRunningWithVirtualThreads() throws Exception {
-        if (!System.getProperty("java.version").startsWith("21")) {
-            // This test only works on Java 21 or newer
-            return;
+        // Virtual threads require Java 21 or later. Comparing the feature version rather than
+        // matching on the version string keeps this running on every later JDK. Note that the
+        // Pax Exam runner swallows a failed assumption and reports the test as passing rather
+        // than as skipped, so on an older JDK this still shows up as a green test.
+        assumeTrue("virtual threads require Java 21 or later, running on " + Runtime.version(),
+                Runtime.version().feature() >= 21);
+
+        try (HttpClient httpClient = new HttpClient()) {
+            httpClient.start();
+            Object value = bundleContext.getServiceReference(HttpService.class).getProperty("org.osgi.service.http.port");
+            int httpPort = Integer.parseInt((String) value);
+
+            URI destUri = new URI(String.format("http://localhost:%d/endpoint/working", httpPort));
+
+            ContentResponse response = httpClient.GET(destUri);
+            assertEquals(200, response.getStatus());
+            assertEquals("OK", response.getContentAsString());
         }
-        HttpClientTransportOverHTTP transport = new HttpClientTransportOverHTTP();
-        HttpClient httpClient = new HttpClient(transport);
-        httpClient.start();
-
-        Object value = bundleContext.getServiceReference(HttpService.class).getProperty("org.osgi.service.http.port");
-        int httpPort = Integer.parseInt((String) value);
-
-        URI destUri = new URI(String.format("http://localhost:%d/endpoint/working", httpPort));
-
-        ContentResponse response = httpClient.GET(destUri);
-        assertEquals(200, response.getStatus());
-        assertEquals("OK", response.getContentAsString());
-
-        httpClient.close();
     }
 
      static final class ExampleEndpoint extends HttpServlet {

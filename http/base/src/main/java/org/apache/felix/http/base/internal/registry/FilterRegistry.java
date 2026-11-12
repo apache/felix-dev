@@ -176,6 +176,21 @@ public final class FilterRegistry
             @NotNull final DispatcherType dispatcherType,
             @NotNull final String requestURI)
     {
+        return getFilterHandlers(handler, dispatcherType, new String[] {requestURI});
+    }
+
+    /**
+     * Get all filters handling any of the paths.
+     * Filters are applied to one of the paths and/or the servlet
+     * @param handler Optional servlet handler
+     * @param dispatcherType The dispatcher type
+     * @param requestURIs The paths to match the URL patterns against, might be empty
+     * @return The array of filter handlers, might be empty.
+     */
+    public @NotNull FilterHandler[] getFilterHandlers(@Nullable final ServletHandler handler,
+            @NotNull final DispatcherType dispatcherType,
+            @NotNull final String[] requestURIs)
+    {
         final List<FilterHandler> result = new ArrayList<FilterHandler>();
         final List<FilterRegistrationStatus> allFilters = this.filters;
 
@@ -191,10 +206,17 @@ public final class FilterRegistry
                 boolean added = false;
                 for(final PathResolver resolver : status.getResolvers())
                 {
-                    if ( resolver.resolve(requestURI) != null )
+                    for(final String requestURI : requestURIs)
                     {
-                        result.add(status.getHandler());
-                        added = true;
+                        if ( resolver.resolve(requestURI) != null )
+                        {
+                            result.add(status.getHandler());
+                            added = true;
+                            break;
+                        }
+                    }
+                    if ( added )
+                    {
                         break;
                     }
                 }

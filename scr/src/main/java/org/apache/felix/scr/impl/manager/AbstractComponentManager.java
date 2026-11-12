@@ -21,7 +21,6 @@ package org.apache.felix.scr.impl.manager;
 import java.io.PrintWriter;
 import java.io.StringWriter;
 import java.lang.reflect.InvocationTargetException;
-import java.security.Permission;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
@@ -49,12 +48,10 @@ import org.apache.felix.scr.impl.logger.ComponentLogger;
 import org.apache.felix.scr.impl.logger.InternalLogger.Level;
 import org.apache.felix.scr.impl.metadata.ComponentMetadata;
 import org.apache.felix.scr.impl.metadata.ReferenceMetadata;
-import org.apache.felix.scr.impl.metadata.ServiceMetadata;
 import org.apache.felix.scr.impl.metadata.TargetedPID;
 import org.osgi.framework.Bundle;
 import org.osgi.framework.BundleContext;
 import org.osgi.framework.ServiceException;
-import org.osgi.framework.ServicePermission;
 import org.osgi.framework.ServiceReference;
 import org.osgi.framework.ServiceRegistration;
 import org.osgi.service.component.ComponentConstants;
@@ -301,14 +298,16 @@ public abstract class AbstractComponentManager<S> implements ComponentManager<S>
 
     final void dumpThreads()
     {
-        try
-        {
-            String dump = new ThreadDump().call();
-            m_container.getLogger().log(Level.DEBUG, dump, null);
-        }
-        catch (Throwable t)
-        {
-            m_container.getLogger().log(Level.DEBUG, "Could not dump threads", t);
+        if (m_container.getLogger().isLogEnabled(Level.DEBUG)) {
+            try
+            {
+                String dump = new ThreadDump().call();
+                m_container.getLogger().log(Level.DEBUG, dump, null);
+            }
+            catch (Throwable t)
+            {
+                m_container.getLogger().log(Level.DEBUG, "Could not dump threads", t);
+            }
         }
     }
 
@@ -832,7 +831,7 @@ public abstract class AbstractComponentManager<S> implements ComponentManager<S>
         if (isFactory() || m_factoryInstance || dispose)
         {
             m_container.getLogger().log(Level.DEBUG,
-                "Disposing component (reason: " + reason + ")", null);
+                "Disposing component (reason: {0})", null, reason);
             clear();
         }
     }
@@ -1129,33 +1128,8 @@ public abstract class AbstractComponentManager<S> implements ComponentManager<S>
 
     private boolean hasServiceRegistrationPermissions()
     {
-        boolean allowed = true;
-        if (System.getSecurityManager() != null)
-        {
-            final ServiceMetadata serviceMetadata = getComponentMetadata().getServiceMetadata();
-            if (serviceMetadata != null)
-            {
-                final String[] services = serviceMetadata.getProvides();
-                if (services != null && services.length > 0)
-                {
-                    final Bundle bundle = getBundle();
-                    for (String service : services)
-                    {
-                        final Permission perm = new ServicePermission(service, ServicePermission.REGISTER);
-                        if (!bundle.hasPermission(perm))
-                        {
-                            m_container.getLogger().log(Level.DEBUG,
-                                "Permission to register service {0} is denied", null,
-                                    service );
-                            allowed = false;
-                        }
-                    }
-                }
-            }
-        }
-
-        // no security manager or no services to register
-        return allowed;
+        // no security manager, hence permission given
+        return true;
     }
 
     private List<DependencyManager<S, ?>> loadDependencyManagers(final ComponentMetadata metadata)

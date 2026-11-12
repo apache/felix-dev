@@ -104,13 +104,11 @@ public class FilterImpl implements Filter
     {
         private final Map<String, Object> m_map;
 
+        @SuppressWarnings("unchecked")
         public WrapperCapability(Map<String, ?> map)
         {
             super(null, null, Collections.emptyMap(), Collections.emptyMap());
-                m_map = Collections.emptyMap();
-                if(map != null ) {
-            }
-            m_map.putAll(map);
+            m_map = (map == null) ? Collections.emptyMap() : (Map<String, Object>) map;
         }
 
         public WrapperCapability(Dictionary<String, ?> dict, boolean caseSensitive)
@@ -122,7 +120,14 @@ public class FilterImpl implements Filter
         public WrapperCapability(ServiceReference<?> sr)
         {
             super(null, null, Collections.emptyMap(), Collections.emptyMap());
-            m_map = new DictionaryToMap(sr.getProperties(), false);
+            // Read the properties one by one rather than via getProperties(): that
+            // method was only added in OSGi Core 1.10 and is not implemented by every
+            // ServiceReference, whereas getPropertyKeys()/getProperty() always are.
+            m_map = new StringMap();
+            for (String key : sr.getPropertyKeys())
+            {
+                m_map.put(key, sr.getProperty(key));
+            }
         }
 
         @Override

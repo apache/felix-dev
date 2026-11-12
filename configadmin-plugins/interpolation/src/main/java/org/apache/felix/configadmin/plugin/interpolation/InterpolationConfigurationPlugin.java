@@ -302,7 +302,7 @@ class InterpolationConfigurationPlugin implements ConfigurationPlugin {
      * @return The converted value
      */
     Object convertType(String type, final String value, final String delimiter) {
-        // if delimiter is specifed but no type, assume String[]
+        // if delimiter is specified but no type, assume String[]
         if ( delimiter != null && type == null ) {
             type = "String[]";
         }

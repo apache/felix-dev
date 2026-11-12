@@ -17,6 +17,7 @@
 package org.apache.felix.inventory.impl.webconsole;
 
 import java.io.PrintWriter;
+import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
 import java.lang.reflect.Modifier;
 import java.net.URL;
@@ -26,7 +27,9 @@ import java.util.List;
 import java.util.Set;
 
 import org.apache.felix.inventory.Format;
+import org.apache.felix.inventory.impl.Activator;
 import org.osgi.framework.ServiceReference;
+import org.osgi.service.log.LogService;
 
 /**
  * Helper class for a configuration printer.
@@ -312,9 +315,27 @@ public class ConfigurationPrinterAdapter
         {
             return m.invoke(obj, args);
         }
-        catch (final Throwable e)
+        catch (InvocationTargetException ite)
         {
-            // ignore
+            Activator.log(
+                LogService.LOG_ERROR,
+                String.format(
+                        "Error invoking method '%s' on %s: %s",
+                        m.getName(),
+                        obj.getClass(),
+                       ite.getTargetException().getMessage()),
+                ite.getTargetException());
+        }
+        catch (IllegalAccessException iae)
+        {
+            Activator.log(
+                LogService.LOG_ERROR,
+                String.format(
+                        "Illegal access while invoking method '%s' on %s: %s",
+                        m.getName(),
+                        obj.getClass(),
+                        iae.getMessage()),
+                iae);
         }
         return null;
     }
