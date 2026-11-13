@@ -248,9 +248,13 @@ jobs:
         for module in annotation api core generalchecks webconsoleplugin; do
           mvn -B -V -Dstyle.color=always --file healthcheck/$module/pom.xml clean verify || exit 1
         done
+    # fileinstall still inherits felix-parent 6, which binds ianal-maven-plugin
+    # 1.0-alpha-1. That plugin fails on JDK 17+ ("module java.base does not opens
+    # java.io"), so the 'verify' phase cannot run here. Stick to 'test' until the
+    # module is moved to a newer parent.
     - name: Felix File Install
       if: steps.changes.outputs.fileinstall == 'true'
-      run: mvn -B -V -Dstyle.color=always --file fileinstall/pom.xml clean verify
+      run: mvn -B -V -Dstyle.color=always --file fileinstall/pom.xml clean test
     - name: Felix Inventory
       if: steps.changes.outputs.inventory == 'true'
       run: mvn -B -V -Dstyle.color=always --file inventory/pom.xml clean verify
@@ -294,4 +298,3 @@ jobs:
           ${{ github.workspace }}/**/target/failsafe-reports/*.xml
           ${{ github.workspace }}/**/target/test-reports/tck/*.xml
           ${{ github.workspace }}/dependencymanager/**/target/test-reports/test/*.xml
-
