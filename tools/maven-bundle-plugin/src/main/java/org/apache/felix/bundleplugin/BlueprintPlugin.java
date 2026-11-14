@@ -41,6 +41,7 @@ import javax.xml.transform.stream.StreamSource;
 
 import org.apache.felix.utils.manifest.Attribute;
 import org.apache.felix.utils.manifest.Clause;
+import org.apache.felix.utils.manifest.Directive;
 import org.osgi.framework.Constants;
 
 import aQute.bnd.header.Attrs;
@@ -58,6 +59,9 @@ public class BlueprintPlugin implements AnalyzerPlugin
 
     static Pattern QN = Pattern.compile( "[_A-Za-z$][_A-Za-z0-9$]*(\\.[_A-Za-z$][_A-Za-z0-9$]*)*" );
     static Pattern PATHS = Pattern.compile( ".*\\.xml" );
+
+    // OSGi core spec 1.3.2: extended ::= ( alphanum | '_' | '-' | '.' )+ ; anything else must be quoted
+    static final Pattern TOKEN = Pattern.compile( "[A-Za-z0-9_.-]+" );
 
     Transformer transformer;
 
@@ -298,12 +302,12 @@ public class BlueprintPlugin implements AnalyzerPlugin
                 {
                     for (Clause clause : parseHeader(org))
                     {
-                        merge.add(clause.toString());
+                        merge.add(toHeaderClause(clause));
                     }
                 }
                 for (Clause clause : hdrs.get(header))
                 {
-                    merge.add(clause.toString());
+                    merge.add(toHeaderClause(clause));
                 }
                 StringBuilder sb = new StringBuilder();
                 for (String clause : merge)
@@ -319,6 +323,50 @@ public class BlueprintPlugin implements AnalyzerPlugin
             }
         }
         return false;
+    }
+
+
+    /**
+     * Serializes a clause like {@link Clause#toString()}, but quotes every directive and attribute value
+     * that is not a plain OSGi token. {@link Clause#toString()} only quotes values containing ',', so a
+     * service filter such as {@code (ns=http://...)} would be written unquoted, and bnd truncates such
+     * a value at the first '=' when it parses the header again.
+     */
+    static String toHeaderClause( Clause clause )
+    {
+        StringBuilder sb = new StringBuilder( clause.getName() );
+        for ( Directive directive : clause.getDirectives() )
+        {
+            sb.append( ';' ).append( directive.getName() ).append( ":=" );
+            appendValue( sb, directive.getValue() );
+        }
+        for ( Attribute attribute : clause.getAttributes() )
+        {
+            sb.append( ';' ).append( attribute.getName() ).append( '=' );
+            appendValue( sb, attribute.getValue() );
+        }
+        return sb.toString();
+    }
+
+
+    private static void appendValue( StringBuilder sb, String value )
+    {
+        if ( TOKEN.matcher( value ).matches() )
+        {
+            sb.append( value );
+            return;
+        }
+        sb.append( '"' );
+        for ( int i = 0; i < value.length(); i++ )
+        {
+            char c = value.charAt( i );
+            if ( c == '"' || c == '\\' )
+            {
+                sb.append( '\\' );
+            }
+            sb.append( c );
+        }
+        sb.append( '"' );
     }
 
 
