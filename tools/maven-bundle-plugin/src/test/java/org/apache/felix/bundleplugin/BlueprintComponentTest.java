@@ -42,12 +42,9 @@ import org.apache.maven.project.DefaultProjectBuildingRequest;
 import org.apache.maven.project.ProjectBuildingRequest;
 import org.osgi.framework.Constants;
 
-import aQute.bnd.header.Attrs;
-import aQute.bnd.header.OSGiHeader;
 import aQute.bnd.osgi.Analyzer;
 import aQute.bnd.osgi.Builder;
 import aQute.bnd.osgi.Jar;
-import aQute.bnd.osgi.Processor;
 import aQute.bnd.osgi.Verifier;
 import aQute.libg.generics.Create;
 
@@ -140,19 +137,18 @@ public class BlueprintComponentTest extends AbstractMojoTestCase
         }
 
         assertNotNull( impSvc );
+        // namespace handler filters contain '=' and must be quoted, otherwise bnd (>= 7.2 re-parses
+        // the header when writing the manifest) truncates them at the first '='
         if ("service".equals(mode)) {
-            // namespace handler filters contain '=' and must be quoted, otherwise bnd (>= 7.2 re-parses
-            // the header when writing the manifest) truncates them at the first '='
-            List<String> filters = Create.list();
-            for (Map.Entry<String, Attrs> clause : OSGiHeader.parseHeader(impSvc).entrySet())
-            {
-                if (Processor.removeDuplicateMarker(clause.getKey()).equals("foo.bar.Namespace"))
-                {
-                    filters.add(clause.getValue().get("filter"));
-                }
-            }
+            List<String> filters = BlueprintPluginTest.values( impSvc, "foo.bar.Namespace", "filter" );
             assertTrue( filters.toString(), filters.contains("(ns=http://foo.bar/tx)") );
             assertTrue( filters.toString(), filters.contains("(ns=http://foo.bar/t2)") );
+        } else {
+            String reqCap = manifest.getMainAttributes().getValue( Constants.REQUIRE_CAPABILITY );
+            assertNotNull( reqCap );
+            List<String> filters = BlueprintPluginTest.values( reqCap, "osgi.service", "filter:" );
+            assertTrue( filters.toString(), filters.contains("(&(objectClass=foo.bar.Namespace)(ns=http://foo.bar/tx))") );
+            assertTrue( filters.toString(), filters.contains("(&(objectClass=foo.bar.Namespace)(ns=http://foo.bar/t2))") );
         }
 
         String impPkg = manifest.getMainAttributes().getValue( Constants.IMPORT_PACKAGE );

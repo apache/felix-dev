@@ -45,6 +45,7 @@ import org.apache.felix.utils.manifest.Directive;
 import org.osgi.framework.Constants;
 
 import aQute.bnd.header.Attrs;
+import aQute.bnd.header.OSGiHeader;
 import aQute.bnd.osgi.Analyzer;
 import aQute.bnd.osgi.Descriptors.PackageRef;
 import aQute.bnd.osgi.Jar;
@@ -59,9 +60,6 @@ public class BlueprintPlugin implements AnalyzerPlugin
 
     static Pattern QN = Pattern.compile( "[_A-Za-z$][_A-Za-z0-9$]*(\\.[_A-Za-z$][_A-Za-z0-9$]*)*" );
     static Pattern PATHS = Pattern.compile( ".*\\.xml" );
-
-    // OSGi core spec 1.3.2: extended ::= ( alphanum | '_' | '-' | '.' )+ ; anything else must be quoted
-    static final Pattern TOKEN = Pattern.compile( "[A-Za-z0-9_.-]+" );
 
     Transformer transformer;
 
@@ -166,7 +164,8 @@ public class BlueprintPlugin implements AnalyzerPlugin
                     } else {
                         filter = "(&(" + Constants.OBJECTCLASS + "=" + clause.getName() + ")" + filter + ")";
                     }
-                    sb.append("filter:=\"").append(filter).append("\"");
+                    sb.append("filter:=");
+                    OSGiHeader.quote(sb, filter);
                     reqs.add(sb.toString());
                 }
                 else if (!"generic".equals(mode))
@@ -203,9 +202,8 @@ public class BlueprintPlugin implements AnalyzerPlugin
                     {
                         sb.append(";");
                         sb.append(hc[0].getAttributes()[i].getName());
-                        sb.append("=\"");
-                        sb.append(hc[0].getAttributes()[i].getValue());
-                        sb.append("\"");
+                        sb.append("=");
+                        OSGiHeader.quote(sb, hc[0].getAttributes()[i].getValue());
                     }
                     caps.add(sb.toString());
                 }
@@ -300,9 +298,10 @@ public class BlueprintPlugin implements AnalyzerPlugin
                 String org = analyzer.getProperty(header);
                 if (org != null && !org.isEmpty())
                 {
-                    for (Clause clause : parseHeader(org))
+                    // the configured header is bnd syntax (single quotes, \" escapes), so parse it with bnd
+                    for (Map.Entry<String, Attrs> clause : OSGiHeader.parseHeader(org, analyzer).entrySet())
                     {
-                        merge.add(toHeaderClause(clause));
+                        merge.add(toHeaderClause(Processor.removeDuplicateMarker(clause.getKey()), clause.getValue()));
                     }
                 }
                 for (Clause clause : hdrs.get(header))
@@ -327,46 +326,39 @@ public class BlueprintPlugin implements AnalyzerPlugin
 
 
     /**
-     * Serializes a clause like {@link Clause#toString()}, but quotes every directive and attribute value
-     * that is not a plain OSGi token. {@link Clause#toString()} only quotes values containing ',', so a
-     * service filter such as {@code (ns=http://...)} would be written unquoted, and bnd truncates such
-     * a value at the first '=' when it parses the header again.
+     * Serializes a clause in bnd header syntax. {@link Clause#toString()} only quotes values containing
+     * ',', so a service filter such as {@code (ns=http://...)} would be written unquoted, and bnd
+     * truncates such a value at the first '=' when it parses the header again. bnd's own quoting is
+     * used instead, so bnd reads every value back unchanged.
      */
     static String toHeaderClause( Clause clause )
     {
-        StringBuilder sb = new StringBuilder( clause.getName() );
+        Attrs attrs = new Attrs();
         for ( Directive directive : clause.getDirectives() )
         {
-            sb.append( ';' ).append( directive.getName() ).append( ":=" );
-            appendValue( sb, directive.getValue() );
+            attrs.put( directive.getName() + ":", directive.getValue() );
         }
         for ( Attribute attribute : clause.getAttributes() )
         {
-            sb.append( ';' ).append( attribute.getName() ).append( '=' );
-            appendValue( sb, attribute.getValue() );
+            attrs.put( attribute.getName(), attribute.getValue() );
         }
-        return sb.toString();
+        return toHeaderClause( clause.getName(), attrs );
     }
 
 
-    private static void appendValue( StringBuilder sb, String value )
+    static String toHeaderClause( String name, Attrs attrs )
     {
-        if ( TOKEN.matcher( value ).matches() )
+        // directives first, like Clause.toString(), so that equal clauses are merged
+        Attrs ordered = new Attrs();
+        for ( String key : attrs.keySet() )
         {
-            sb.append( value );
-            return;
-        }
-        sb.append( '"' );
-        for ( int i = 0; i < value.length(); i++ )
-        {
-            char c = value.charAt( i );
-            if ( c == '"' || c == '\\' )
+            if ( key.endsWith( ":" ) )
             {
-                sb.append( '\\' );
+                ordered.put( key, attrs.get( key ) );
             }
-            sb.append( c );
         }
-        sb.append( '"' );
+        ordered.mergeWith( attrs, false );
+        return ordered.isEmpty() ? name : name + ";" + ordered;
     }
 
 
