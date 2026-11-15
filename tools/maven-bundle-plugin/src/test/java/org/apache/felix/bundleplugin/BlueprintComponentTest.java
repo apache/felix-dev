@@ -137,6 +137,19 @@ public class BlueprintComponentTest extends AbstractMojoTestCase
         }
 
         assertNotNull( impSvc );
+        // namespace handler filters contain '=' and must be quoted, otherwise bnd (>= 7.2 re-parses
+        // the header when writing the manifest) truncates them at the first '='
+        if ("service".equals(mode)) {
+            List<String> filters = BlueprintPluginTest.values( impSvc, "foo.bar.Namespace", "filter" );
+            assertTrue( filters.toString(), filters.contains("(ns=http://foo.bar/tx)") );
+            assertTrue( filters.toString(), filters.contains("(ns=http://foo.bar/t2)") );
+        } else {
+            String reqCap = manifest.getMainAttributes().getValue( Constants.REQUIRE_CAPABILITY );
+            assertNotNull( reqCap );
+            List<String> filters = BlueprintPluginTest.values( reqCap, "osgi.service", "filter:" );
+            assertTrue( filters.toString(), filters.contains("(&(objectClass=foo.bar.Namespace)(ns=http://foo.bar/tx))") );
+            assertTrue( filters.toString(), filters.contains("(&(objectClass=foo.bar.Namespace)(ns=http://foo.bar/t2))") );
+        }
 
         String impPkg = manifest.getMainAttributes().getValue( Constants.IMPORT_PACKAGE );
         List<String> pkgs = Create.list();

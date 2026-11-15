@@ -41,9 +41,11 @@ import javax.xml.transform.stream.StreamSource;
 
 import org.apache.felix.utils.manifest.Attribute;
 import org.apache.felix.utils.manifest.Clause;
+import org.apache.felix.utils.manifest.Directive;
 import org.osgi.framework.Constants;
 
 import aQute.bnd.header.Attrs;
+import aQute.bnd.header.OSGiHeader;
 import aQute.bnd.osgi.Analyzer;
 import aQute.bnd.osgi.Descriptors.PackageRef;
 import aQute.bnd.osgi.Jar;
@@ -162,7 +164,8 @@ public class BlueprintPlugin implements AnalyzerPlugin
                     } else {
                         filter = "(&(" + Constants.OBJECTCLASS + "=" + clause.getName() + ")" + filter + ")";
                     }
-                    sb.append("filter:=\"").append(filter).append("\"");
+                    sb.append("filter:=");
+                    OSGiHeader.quote(sb, filter);
                     reqs.add(sb.toString());
                 }
                 else if (!"generic".equals(mode))
@@ -199,9 +202,8 @@ public class BlueprintPlugin implements AnalyzerPlugin
                     {
                         sb.append(";");
                         sb.append(hc[0].getAttributes()[i].getName());
-                        sb.append("=\"");
-                        sb.append(hc[0].getAttributes()[i].getValue());
-                        sb.append("\"");
+                        sb.append("=");
+                        OSGiHeader.quote(sb, hc[0].getAttributes()[i].getValue());
                     }
                     caps.add(sb.toString());
                 }
@@ -296,14 +298,15 @@ public class BlueprintPlugin implements AnalyzerPlugin
                 String org = analyzer.getProperty(header);
                 if (org != null && !org.isEmpty())
                 {
-                    for (Clause clause : parseHeader(org))
+                    // the configured header is bnd syntax (single quotes, \" escapes), so parse it with bnd
+                    for (Map.Entry<String, Attrs> clause : OSGiHeader.parseHeader(org, analyzer).entrySet())
                     {
-                        merge.add(clause.toString());
+                        merge.add(toHeaderClause(Processor.removeDuplicateMarker(clause.getKey()), clause.getValue()));
                     }
                 }
                 for (Clause clause : hdrs.get(header))
                 {
-                    merge.add(clause.toString());
+                    merge.add(toHeaderClause(clause));
                 }
                 StringBuilder sb = new StringBuilder();
                 for (String clause : merge)
@@ -319,6 +322,43 @@ public class BlueprintPlugin implements AnalyzerPlugin
             }
         }
         return false;
+    }
+
+
+    /**
+     * Serializes a clause in bnd header syntax. {@link Clause#toString()} only quotes values containing
+     * ',', so a service filter such as {@code (ns=http://...)} would be written unquoted, and bnd
+     * truncates such a value at the first '=' when it parses the header again. bnd's own quoting is
+     * used instead, so bnd reads every value back unchanged.
+     */
+    static String toHeaderClause( Clause clause )
+    {
+        Attrs attrs = new Attrs();
+        for ( Directive directive : clause.getDirectives() )
+        {
+            attrs.put( directive.getName() + ":", directive.getValue() );
+        }
+        for ( Attribute attribute : clause.getAttributes() )
+        {
+            attrs.put( attribute.getName(), attribute.getValue() );
+        }
+        return toHeaderClause( clause.getName(), attrs );
+    }
+
+
+    static String toHeaderClause( String name, Attrs attrs )
+    {
+        // directives first, like Clause.toString(), so that equal clauses are merged
+        Attrs ordered = new Attrs();
+        for ( String key : attrs.keySet() )
+        {
+            if ( key.endsWith( ":" ) )
+            {
+                ordered.put( key, attrs.get( key ) );
+            }
+        }
+        ordered.mergeWith( attrs, false );
+        return ordered.isEmpty() ? name : name + ";" + ordered;
     }
 
 

@@ -133,7 +133,7 @@
                 <xsl:when test="@filter">
                     <xsl:choose>
                         <xsl:when test="@component-name">
-                            <xsl:value-of select="concat(';filter=&quot;(&amp;', @filter, ')(osgi.service.blueprint.compname=',  @component-name, ')&quot;')" />
+                            <xsl:value-of select="concat(';filter=&quot;(&amp;', @filter, '(osgi.service.blueprint.compname=', @component-name, '))&quot;')" />
                          </xsl:when>
                         <xsl:otherwise>
                             <xsl:value-of select="concat(';filter=&quot;', @filter, '&quot;')" />
@@ -170,7 +170,7 @@
                 <xsl:when test="@filter">
                     <xsl:choose>
                         <xsl:when test="@component-name">
-                            <xsl:value-of select="concat(';filter=&quot;(&amp;', @filter, ')(osgi.service.blueprint.compname=',  @component-name, ')&quot;')" />
+                            <xsl:value-of select="concat(';filter=&quot;(&amp;', @filter, '(osgi.service.blueprint.compname=', @component-name, '))&quot;')" />
                          </xsl:when>
                         <xsl:otherwise>
                             <xsl:value-of select="concat(';filter=&quot;', @filter, '&quot;')" />
