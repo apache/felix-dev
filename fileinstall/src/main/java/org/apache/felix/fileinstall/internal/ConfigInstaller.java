@@ -19,6 +19,7 @@
 package org.apache.felix.fileinstall.internal;
 
 import java.io.BufferedInputStream;
+import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
 import java.io.File;
 import java.io.FileInputStream;
@@ -261,52 +262,62 @@ public class ConfigInstaller implements ArtifactInstaller, ConfigurationListener
                         return;
                     }
 
-                    TypedProperties props = new TypedProperties( bundleSubstitution() );
-                    try (Reader r = new InputStreamReader(new FileInputStream(file), encoding()))
+                    if (fileInstall.lock.getReadHoldCount() > 0)
                     {
-                        props.load(r);
-                    }
-                    // remove "removed" properties from the cfg file
-                    List<String> propertiesToRemove = new ArrayList<>();
-                    for( String key : props.keySet() )
-                    {
-                        if( dict.get(key) == null
-                                && !Constants.SERVICE_PID.equals(key)
-                                && !ConfigurationAdmin.SERVICE_FACTORYPID.equals(key)
-                                && !DirectoryWatcher.FILENAME.equals(key) ) {
-                            propertiesToRemove.add(key);
-                        }
-                    }
-                    for( Enumeration<?> e  = dict.keys(); e.hasMoreElements(); )
-                    {
-                        String key = e.nextElement().toString();
-                        if( !Constants.SERVICE_PID.equals(key)
-                                && !ConfigurationAdmin.SERVICE_FACTORYPID.equals(key)
-                                && !DirectoryWatcher.FILENAME.equals(key) )
-                        {
-                            Object val = dict.get( key );
-                            props.put( key, val );
-                        }
-                    }
-                    for( String key : propertiesToRemove )
-                    {
-                        props.remove(key);
+                        Util.log(context, Logger.LOG_WARNING, "Cannot save configuration because thread holds read lock: " + fileName, null);
+                        return;
                     }
 
-                    ByteArrayOutputStream baos = new ByteArrayOutputStream();
-                    try (Writer fw = new OutputStreamWriter(baos, encoding()))
-                    {
-                        props.save( fw );
-                    }
-                    byte[] newContent = baos.toByteArray();
-
-                    // re-writing a config file must be guarded by a write lock as otherwise DirectoryWatcher
-                    // might pick up an empty file and as a result, write this file to disk in a follow-up event
+                    // Guard load-merge-compare-write as one critical section so DirectoryWatcher cannot
+                    // pick up a partially written (empty) file between the truncate and the write.
+                    // The read lock check above is a safety net: DirectoryWatcher holds the read lock
+                    // while processing files, and ReentrantReadWriteLock does not allow upgrading a
+                    // read lock to a write lock on the same thread.
                     fileInstall.lock.writeLock().lockInterruptibly();
                     try
                     {
+                        byte[] currentContent = Files.readAllBytes(file.toPath());
+                        TypedProperties props = new TypedProperties( bundleSubstitution() );
+                        try (Reader r = new InputStreamReader(new ByteArrayInputStream(currentContent), encoding()))
+                        {
+                            props.load(r);
+                        }
+                        // remove "removed" properties from the cfg file
+                        List<String> propertiesToRemove = new ArrayList<>();
+                        for( String key : props.keySet() )
+                        {
+                            if( dict.get(key) == null
+                                    && !Constants.SERVICE_PID.equals(key)
+                                    && !ConfigurationAdmin.SERVICE_FACTORYPID.equals(key)
+                                    && !DirectoryWatcher.FILENAME.equals(key) ) {
+                                propertiesToRemove.add(key);
+                            }
+                        }
+                        for( Enumeration<?> e  = dict.keys(); e.hasMoreElements(); )
+                        {
+                            String key = e.nextElement().toString();
+                            if( !Constants.SERVICE_PID.equals(key)
+                                    && !ConfigurationAdmin.SERVICE_FACTORYPID.equals(key)
+                                    && !DirectoryWatcher.FILENAME.equals(key) )
+                            {
+                                Object val = dict.get( key );
+                                props.put( key, val );
+                            }
+                        }
+                        for( String key : propertiesToRemove )
+                        {
+                            props.remove(key);
+                        }
+
+                        ByteArrayOutputStream baos = new ByteArrayOutputStream();
+                        try (Writer fw = new OutputStreamWriter(baos, encoding()))
+                        {
+                            props.save( fw );
+                        }
+                        byte[] newContent = baos.toByteArray();
+
                         // do not touch the file (and its lastModified) if there is nothing to change
-                        if (!Arrays.equals(newContent, Files.readAllBytes(file.toPath())))
+                        if (!Arrays.equals(newContent, currentContent))
                         {
                             try (OutputStream os = new FileOutputStream(file))
                             {
@@ -322,6 +333,11 @@ public class ConfigInstaller implements ArtifactInstaller, ConfigurationListener
                         fileInstall.lock.writeLock().unlock();
                     }
                 }
+            }
+            catch (InterruptedException e)
+            {
+                Thread.currentThread().interrupt();
+                Util.log( context, Logger.LOG_ERROR, "Unable to save configuration", e );
             }
             catch (Exception e)
             {
