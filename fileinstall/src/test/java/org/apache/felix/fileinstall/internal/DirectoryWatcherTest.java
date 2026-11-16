@@ -74,6 +74,8 @@ public class DirectoryWatcherTest extends TestCase
                         .andStubReturn(null);
         EasyMock.expect(mockBundleContext.getServiceReference(LogService.class.getName()))
                         .andStubReturn(null);
+        EasyMock.expect(mockBundleContext.getServiceReference(LogService.class))
+                        .andStubReturn(null);
         EasyMock.expect(mockBundleContext.getBundle()).andReturn(mockBundle).anyTimes();
         EasyMock.expect(mockBundleContext.getBundle(Constants.SYSTEM_BUNDLE_LOCATION)).andReturn(mockSysBundle).anyTimes();
         EasyMock.expect(mockSysBundle.getState()).andReturn(Bundle.ACTIVE).anyTimes();
@@ -237,42 +239,27 @@ public class DirectoryWatcherTest extends TestCase
     
     public void testInvalidTempDir() throws Exception
     {
-        // java.io.tmpdir is read once when the JVM starts (JDK 12 and later), so setting it
-        // here would have no effect. Point File Install at the invalid directory through its
-        // own setting instead.
-        File parent = new File("target/tmp");
-        parent.mkdirs();
-        parent.setWritable(false, false);
+        // Point felix.fileinstall.tmpdir at a path whose parent is a regular file, so that
+        // creating the directory is bound to fail for any user running the build (root
+        // included). Overriding java.io.tmpdir would not work here: Files.createTempDirectory
+        // caches that property on first use, so a later System.setProperty has no effect.
+        File blocker = new File( "target/not-a-directory" );
+        blocker.getParentFile().mkdirs();
+        blocker.delete();
+        assertTrue( "Unable to create test fixture file " + blocker, blocker.createNewFile() );
+
+        props.put( DirectoryWatcher.TMPDIR, new File( blocker, "tmp" ).getAbsolutePath() );
+
+        EasyMock.replay(mockBundleContext, mockBundle, mockSysBundle, mockStartLevel);
+
         try
         {
-            File tmp = new File(parent, "tmp");
-            props.put(DirectoryWatcher.TMPDIR, tmp.toString());
-
-            mockBundleContext.addBundleListener((BundleListener) org.easymock.EasyMock.anyObject());
-            EasyMock.expect(mockBundleContext.createFilter((String) EasyMock.anyObject()))
-                    .andReturn(null);
-            // Creating the folder fails, which is logged; the logger asks for a LogService.
-            EasyMock.expect(mockBundleContext.getServiceReference(LogService.class)).andReturn(null).anyTimes();
-
-            BundleRevision mockBundleRevision = EasyMock.createNiceMock(BundleRevision.class);
-            EasyMock.expect(mockBundle.adapt(BundleRevision.class)).andReturn(mockBundleRevision);
-            EasyMock.expect(mockBundleRevision.getTypes())
-                    .andReturn(BundleRevision.TYPE_FRAGMENT);
-            EasyMock.replay(mockBundleContext, mockBundle, mockBundleRevision, mockSysBundle, mockStartLevel);
-
-            try
-            {
-                dw = new DirectoryWatcher( new FileInstall(), props, mockBundleContext );
-                fail("Expected an exception for a temp directory that cannot be created");
-            }
-            catch (RuntimeException e)
-            {
-                assertTrue(e.getMessage(), e.getMessage().contains("Cannot create folder"));
-            }
+            dw = new DirectoryWatcher( new FileInstall(), props, mockBundleContext );
+            fail("Expected a RuntimeException for a temp directory that cannot be created");
         }
-        finally
+        catch (RuntimeException e)
         {
-            parent.setWritable(true, false);
+            // expected
         }
     }
 

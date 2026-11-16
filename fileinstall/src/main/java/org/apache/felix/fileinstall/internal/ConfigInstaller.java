@@ -391,9 +391,26 @@ public class ConfigInstaller implements ArtifactInstaller, ConfigurationListener
         String pid[] = parsePid(f.getName());
         Configuration config = getConfiguration(toConfigKey(f), pid[0], pid[1]);
 
+        Dictionary<String, Object> props = config.getProperties();
+
+        // Only update if this file is the registered source of the configuration,
+        // or if no source has been registered yet (new configuration).
+        // Skips duplicate files that share the same PID but originate from a different path.
+        if (props != null) {
+            String registeredFileName = (String) props.get(DirectoryWatcher.FILENAME);
+            if (registeredFileName != null) {
+                File registeredFile = fromConfigKey(registeredFileName);
+                if (!normalize(registeredFile).equals(normalize(f))) {
+                    Util.log(context, Logger.LOG_WARNING, "Skipping configuration update for "
+                            + f.getAbsolutePath() + ": PID {" + config.getPid()
+                            + "} is already owned by " + registeredFileName, null);
+                    return false;
+                }
+            }
+        }
+
         clearReadOnlyIfWritable(pid, config, f);
 
-        Dictionary<String, Object> props = config.getProperties();
         Hashtable<String, Object> old = props != null ? new Hashtable<String, Object>(new DictionaryAsMap<>(props)) : null;
         if (old != null) {
             old.remove( DirectoryWatcher.FILENAME );
@@ -431,14 +448,31 @@ public class ConfigInstaller implements ArtifactInstaller, ConfigurationListener
      * Remove the configuration.
      *
      * @param f
-     *            File where the configuration in was defined.
-     * @return <code>true</code>
+     *            File where the configuration was defined.
+     * @return <code>true</code> if the configuration was deleted, <code>false</code> if skipped.
      * @throws Exception
      */
     boolean deleteConfig(File f) throws Exception
     {
         String pid[] = parsePid(f.getName());
         Configuration config = getConfiguration(toConfigKey(f), pid[0], pid[1]);
+
+        // Only delete if this file is the registered source of the configuration.
+        // If the registered felix.fileinstall.filename does not match the file being deleted, skip deletion to protect the live config.
+        Dictionary<String, Object> props = config.getProperties();
+        if (props != null) {
+            String registeredFileName = (String) props.get(DirectoryWatcher.FILENAME);
+            if (registeredFileName != null) {
+                File registeredFile = fromConfigKey(registeredFileName);
+                if (!normalize(registeredFile).equals(normalize(f))) {
+                    Util.log(context, Logger.LOG_WARNING, "Skipping configuration deletion for "
+                            + f.getAbsolutePath() + ": PID {" + config.getPid()
+                            + "} is owned by " + registeredFileName, null);
+                    return false;
+                }
+            }
+        }
+
         Util.log(context, Logger.LOG_INFO, "Deleting configuration {"
                 + config.getPid()
                 + "} from " + f.getAbsolutePath(), null);
@@ -447,11 +481,15 @@ public class ConfigInstaller implements ArtifactInstaller, ConfigurationListener
     }
 
     String toConfigKey(File f) {
-        return f.getAbsoluteFile().toURI().toString();
+        return normalize(f).toURI().toString();
     }
 
     File fromConfigKey(String key) {
         return new File(URI.create(key));
+    }
+
+    File normalize(File f) {
+        return f.toPath().toAbsolutePath().normalize().toFile();
     }
 
     String[] parsePid(String path)
