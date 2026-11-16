@@ -21,7 +21,6 @@ package org.apache.felix.fileinstall.internal;
 import java.io.File;
 import java.util.*;
 import java.util.concurrent.CountDownLatch;
-import java.util.concurrent.locks.ReadWriteLock;
 import java.util.concurrent.locks.ReentrantReadWriteLock;
 
 import org.apache.felix.fileinstall.ArtifactInstaller;
@@ -60,7 +59,7 @@ public class FileInstall implements BundleActivator, ServiceTrackerCustomizer
     BundleContext context;
     final Map<String, DirectoryWatcher> watchers = new HashMap<String, DirectoryWatcher>();
     ServiceTracker listenersTracker;
-    final ReadWriteLock lock = new ReentrantReadWriteLock();
+    final ReentrantReadWriteLock lock = new ReentrantReadWriteLock();
     ServiceRegistration urlHandlerRegistration;
     volatile boolean stopped;
 

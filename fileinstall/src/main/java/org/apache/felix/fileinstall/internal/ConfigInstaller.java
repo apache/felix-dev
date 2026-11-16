@@ -19,12 +19,15 @@
 package org.apache.felix.fileinstall.internal;
 
 import java.io.BufferedInputStream;
+import java.io.ByteArrayInputStream;
+import java.io.ByteArrayOutputStream;
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.InputStreamReader;
+import java.io.OutputStream;
 import java.io.OutputStreamWriter;
 import java.io.Reader;
 import java.io.Writer;
@@ -32,9 +35,11 @@ import java.lang.reflect.Array;
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
 import java.net.URI;
+import java.nio.file.Files;
 import java.security.AccessController;
 import java.security.PrivilegedAction;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Dictionary;
 import java.util.Enumeration;
 import java.util.HashMap;
@@ -257,45 +262,82 @@ public class ConfigInstaller implements ArtifactInstaller, ConfigurationListener
                         return;
                     }
 
-                    TypedProperties props = new TypedProperties( bundleSubstitution() );
-                    try (Reader r = new InputStreamReader(new FileInputStream(file), encoding()))
+                    if (fileInstall.lock.getReadHoldCount() > 0)
                     {
-                        props.load(r);
+                        Util.log(context, Logger.LOG_WARNING, "Cannot save configuration because thread holds read lock: " + fileName, null);
+                        return;
                     }
-                    // remove "removed" properties from the cfg file
-                    List<String> propertiesToRemove = new ArrayList<>();
-                    for( String key : props.keySet() )
+
+                    // Guard load-merge-compare-write as one critical section so DirectoryWatcher cannot
+                    // pick up a partially written (empty) file between the truncate and the write.
+                    // The read lock check above is a safety net: DirectoryWatcher holds the read lock
+                    // while processing files, and ReentrantReadWriteLock does not allow upgrading a
+                    // read lock to a write lock on the same thread.
+                    fileInstall.lock.writeLock().lockInterruptibly();
+                    try
                     {
-                        if( dict.get(key) == null
-                                && !Constants.SERVICE_PID.equals(key)
-                                && !ConfigurationAdmin.SERVICE_FACTORYPID.equals(key)
-                                && !DirectoryWatcher.FILENAME.equals(key) ) {
-                            propertiesToRemove.add(key);
-                        }
-                    }
-                    for( Enumeration<?> e  = dict.keys(); e.hasMoreElements(); )
-                    {
-                        String key = e.nextElement().toString();
-                        if( !Constants.SERVICE_PID.equals(key)
-                                && !ConfigurationAdmin.SERVICE_FACTORYPID.equals(key)
-                                && !DirectoryWatcher.FILENAME.equals(key) )
+                        byte[] currentContent = Files.readAllBytes(file.toPath());
+                        TypedProperties props = new TypedProperties( bundleSubstitution() );
+                        try (Reader r = new InputStreamReader(new ByteArrayInputStream(currentContent), encoding()))
                         {
-                            Object val = dict.get( key );
-                            props.put( key, val );
+                            props.load(r);
+                        }
+                        // remove "removed" properties from the cfg file
+                        List<String> propertiesToRemove = new ArrayList<>();
+                        for( String key : props.keySet() )
+                        {
+                            if( dict.get(key) == null
+                                    && !Constants.SERVICE_PID.equals(key)
+                                    && !ConfigurationAdmin.SERVICE_FACTORYPID.equals(key)
+                                    && !DirectoryWatcher.FILENAME.equals(key) ) {
+                                propertiesToRemove.add(key);
+                            }
+                        }
+                        for( Enumeration<?> e  = dict.keys(); e.hasMoreElements(); )
+                        {
+                            String key = e.nextElement().toString();
+                            if( !Constants.SERVICE_PID.equals(key)
+                                    && !ConfigurationAdmin.SERVICE_FACTORYPID.equals(key)
+                                    && !DirectoryWatcher.FILENAME.equals(key) )
+                            {
+                                Object val = dict.get( key );
+                                props.put( key, val );
+                            }
+                        }
+                        for( String key : propertiesToRemove )
+                        {
+                            props.remove(key);
+                        }
+
+                        ByteArrayOutputStream baos = new ByteArrayOutputStream();
+                        try (Writer fw = new OutputStreamWriter(baos, encoding()))
+                        {
+                            props.save( fw );
+                        }
+                        byte[] newContent = baos.toByteArray();
+
+                        // do not touch the file (and its lastModified) if there is nothing to change
+                        if (!Arrays.equals(newContent, currentContent))
+                        {
+                            try (OutputStream os = new FileOutputStream(file))
+                            {
+                                os.write(newContent);
+                            }
+                            // we're just writing out what's already loaded into ConfigAdmin, so
+                            // update file checksum since lastModified gets updated when writing
+                            fileInstall.updateChecksum(file);
                         }
                     }
-                    for( String key : propertiesToRemove )
+                    finally
                     {
-                        props.remove(key);
+                        fileInstall.lock.writeLock().unlock();
                     }
-                    try (Writer fw = new OutputStreamWriter(new FileOutputStream(file), encoding()))
-                    {
-                        props.save( fw );
-                    }
-                    // we're just writing out what's already loaded into ConfigAdmin, so
-                    // update file checksum since lastModified gets updated when writing
-                    fileInstall.updateChecksum(file);
                 }
+            }
+            catch (InterruptedException e)
+            {
+                Thread.currentThread().interrupt();
+                Util.log( context, Logger.LOG_ERROR, "Unable to save configuration", e );
             }
             catch (Exception e)
             {

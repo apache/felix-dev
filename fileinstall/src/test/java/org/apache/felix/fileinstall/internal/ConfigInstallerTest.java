@@ -23,10 +23,14 @@ import java.io.FileOutputStream;
 import java.io.OutputStream;
 import java.nio.file.Files;
 import java.nio.file.Paths;
+import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Collections;
 import java.util.Dictionary;
 import java.util.Hashtable;
+import java.util.List;
 import java.util.concurrent.atomic.AtomicReference;
+import java.util.concurrent.locks.ReentrantReadWriteLock;
 
 import junit.framework.TestCase;
 import org.easymock.Capture;
@@ -40,6 +44,7 @@ import org.osgi.service.cm.Configuration;
 import org.osgi.service.cm.Configuration.ConfigurationAttribute;
 import org.osgi.service.cm.ConfigurationAdmin;
 import org.osgi.service.cm.ConfigurationEvent;
+import org.osgi.service.log.LogService;
 
 /**
  * Tests for ConfigInstaller
@@ -683,6 +688,243 @@ public class ConfigInstallerTest extends TestCase {
         ci.doConfigurationEvent( new ConfigurationEvent(sr , ConfigurationEvent.CM_UPDATED, null, pid ) );
 
         assertEquals("networkInterface = \"wlp3s1\"", Files.readAllLines( Paths.get(file.toURI()) ).get(0));
+    }
+
+    /**
+     * FELIX-6515: rewriting a config file truncates it before filling it. The write must be guarded by the
+     * global write lock so that a DirectoryWatcher (which holds the read lock while processing) can never
+     * observe, and subsequently write back, an empty file.
+     */
+    public void testDoConfigurationEventRewritesFileUnderWriteLock() throws Exception
+    {
+        final File file = File.createTempFile("test", ".config");
+        try (OutputStream os = new FileOutputStream(file)) {
+            os.write("networkInterface = \"wlp3s1\"\n".getBytes("UTF-8"));
+        }
+
+        final String pid = file.getName().substring(0, file.getName().indexOf(".config"));
+
+        final ServiceReference<ConfigurationAdmin> sr = EasyMock.createMock(ServiceReference.class);
+
+        final AtomicReference<ReentrantReadWriteLock> lockRef = new AtomicReference<>();
+        final List<Boolean> lockedOnEncodingLookup = new ArrayList<>();
+
+        EasyMock.expect(mockBundleContext.getBundle()).andReturn(mockBundle).anyTimes();
+        EasyMock.expect(mockBundle.loadClass(ConfigurationAttribute.class.getName())).andReturn((Class)ConfigurationAttribute.class).anyTimes();
+        EasyMock.expect(mockBundleContext.getProperty((String) EasyMock.anyObject()))
+                .andAnswer(new IAnswer<String>() {
+                    @Override
+                    public String answer() throws Throwable {
+                        if (DirectoryWatcher.CONFIG_ENCODING.equals(EasyMock.getCurrentArguments()[0])) {
+                            lockedOnEncodingLookup.add(lockRef.get().isWriteLockedByCurrentThread());
+                        }
+                        return null;
+                    }
+                })
+                .anyTimes();
+
+        final Dictionary<String, Object> configProps = new Hashtable<String, Object>() {
+            {
+                put("networkInterface", "wlp3s0");
+                put(DirectoryWatcher.FILENAME, file.toURI().toString());
+            }
+        };
+        EasyMock.expect(mockConfiguration.getProperties()).andReturn(configProps).anyTimes();
+        EasyMock.expect(mockConfiguration.getPid()).andReturn(pid).anyTimes();
+        EasyMock.expect(mockConfigurationAdmin.listConfigurations("(service.pid=" + pid + ")"))
+                .andReturn(new Configuration[] { mockConfiguration });
+
+        EasyMock.replay(mockBundleContext, mockConfigurationAdmin, mockBundle, mockConfiguration, sr);
+
+        final AtomicReference<Boolean> lockedOnChecksumUpdate = new AtomicReference<>();
+        final FileInstall fileInstall = new FileInstall() {
+            @Override
+            public void updateChecksum(File f) {
+                lockedOnChecksumUpdate.set(lockRef.get().isWriteLockedByCurrentThread());
+            }
+        };
+        final ReentrantReadWriteLock lock = fileInstall.lock;
+        lockRef.set(lock);
+        final ConfigInstaller ci = new ConfigInstaller( mockBundleContext, mockConfigurationAdmin, fileInstall );
+
+        ci.doConfigurationEvent( new ConfigurationEvent(sr , ConfigurationEvent.CM_UPDATED, null, pid ) );
+
+        assertEquals("networkInterface = \"wlp3s0\"", Files.readAllLines( Paths.get(file.toURI()) ).get(0));
+        assertEquals("Encoding is read once to load and once to write the file under the write lock",
+                Arrays.asList(Boolean.TRUE, Boolean.TRUE), lockedOnEncodingLookup);
+        assertEquals("Checksum must be updated before the write lock is released", Boolean.TRUE, lockedOnChecksumUpdate.get());
+        assertFalse("Write lock must be released after write-back", lock.isWriteLocked());
+    }
+
+    /**
+     * FELIX-6515: a config file whose content would not change must not be touched at all.
+     */
+    public void testDoConfigurationEventDoesNotRewriteUnchangedFile() throws Exception
+    {
+        final File file = File.createTempFile("test", ".config");
+        try (OutputStream os = new FileOutputStream(file)) {
+            os.write("networkInterface = \"wlp3s0\"\n".getBytes("UTF-8"));
+        }
+        final long lastModified = 1_000_000_000L;
+        assertTrue(file.setLastModified(lastModified));
+
+        final String pid = file.getName().substring(0, file.getName().indexOf(".config"));
+        final ServiceReference<ConfigurationAdmin> sr = EasyMock.createMock(ServiceReference.class);
+
+        EasyMock.expect(mockBundleContext.getBundle()).andReturn(mockBundle).anyTimes();
+        EasyMock.expect(mockBundle.loadClass(ConfigurationAttribute.class.getName())).andReturn((Class)ConfigurationAttribute.class).anyTimes();
+        EasyMock.expect(mockBundleContext.getProperty((String) EasyMock.anyObject())).andReturn(null).anyTimes();
+
+        final Dictionary<String, Object> configProps = new Hashtable<String, Object>() {
+            {
+                put("networkInterface", "wlp3s0");
+                put(DirectoryWatcher.FILENAME, file.toURI().toString());
+            }
+        };
+        EasyMock.expect(mockConfiguration.getProperties()).andReturn(configProps).anyTimes();
+        EasyMock.expect(mockConfiguration.getPid()).andReturn(pid).anyTimes();
+        EasyMock.expect(mockConfigurationAdmin.listConfigurations("(service.pid=" + pid + ")"))
+                .andReturn(new Configuration[] { mockConfiguration });
+
+        EasyMock.replay(mockBundleContext, mockConfigurationAdmin, mockBundle, mockConfiguration, sr);
+
+        final AtomicReference<Boolean> checksumUpdated = new AtomicReference<>(false);
+        final FileInstall fileInstall = new FileInstall() {
+            @Override
+            public void updateChecksum(File f) {
+                checksumUpdated.set(true);
+            }
+        };
+        final ConfigInstaller ci = new ConfigInstaller( mockBundleContext, mockConfigurationAdmin, fileInstall );
+
+        ci.doConfigurationEvent( new ConfigurationEvent(sr , ConfigurationEvent.CM_UPDATED, null, pid ) );
+
+        assertEquals("Unchanged file must not be modified", lastModified, file.lastModified());
+        assertFalse("Checksum must not be updated for an unchanged file", checksumUpdated.get());
+    }
+
+    /**
+     * FELIX-6515: if the event arrives on a thread already holding the read lock (e.g. DirectoryWatcher
+     * dispatching synchronous events), attempting to acquire the write lock would deadlock. The write-back
+     * must be skipped.
+     */
+    public void testDoConfigurationEventSkipsSaveWhenReadLockHeldByCurrentThread() throws Exception
+    {
+        final File file = File.createTempFile("test", ".config");
+        try (OutputStream os = new FileOutputStream(file)) {
+            os.write("networkInterface = \"wlp3s1\"\n".getBytes("UTF-8"));
+        }
+        final long lastModified = 1_000_000_000L;
+        assertTrue(file.setLastModified(lastModified));
+
+        final String pid = file.getName().substring(0, file.getName().indexOf(".config"));
+        final ServiceReference<ConfigurationAdmin> sr = EasyMock.createMock(ServiceReference.class);
+
+        EasyMock.expect(mockBundleContext.getBundle()).andReturn(mockBundle).anyTimes();
+        EasyMock.expect(mockBundle.loadClass(ConfigurationAttribute.class.getName())).andReturn((Class)ConfigurationAttribute.class).anyTimes();
+        EasyMock.expect(mockBundleContext.getServiceReference(LogService.class)).andReturn(null).anyTimes();
+        EasyMock.expect(mockBundleContext.getProperty((String) EasyMock.anyObject())).andReturn(null).anyTimes();
+
+        final Dictionary<String, Object> configProps = new Hashtable<String, Object>() {
+            {
+                put("networkInterface", "wlp3s0");
+                put(DirectoryWatcher.FILENAME, file.toURI().toString());
+            }
+        };
+        EasyMock.expect(mockConfiguration.getProperties()).andReturn(configProps).anyTimes();
+        EasyMock.expect(mockConfiguration.getPid()).andReturn(pid).anyTimes();
+        EasyMock.expect(mockConfigurationAdmin.listConfigurations("(service.pid=" + pid + ")"))
+                .andReturn(new Configuration[] { mockConfiguration });
+
+        EasyMock.replay(mockBundleContext, mockConfigurationAdmin, mockBundle, mockConfiguration, sr);
+
+        final AtomicReference<Boolean> checksumUpdated = new AtomicReference<>(false);
+        final FileInstall fileInstall = new FileInstall() {
+            @Override
+            public void updateChecksum(File f) {
+                checksumUpdated.set(true);
+            }
+        };
+        final ConfigInstaller ci = new ConfigInstaller( mockBundleContext, mockConfigurationAdmin, fileInstall );
+
+        final AtomicReference<Throwable> error = new AtomicReference<>();
+        Thread t = new Thread(new Runnable() {
+            @Override
+            public void run() {
+                try {
+                    // Simulate the read lock already being held on this thread. This cannot happen with a
+                    // spec-compliant ConfigAdmin (which must dispatch ConfigurationListener events
+                    // asynchronously), but the guard must not deadlock if it ever does.
+                    fileInstall.lock.readLock().lock();
+                    try {
+                        ci.doConfigurationEvent( new ConfigurationEvent(sr , ConfigurationEvent.CM_UPDATED, null, pid ) );
+                    } finally {
+                        fileInstall.lock.readLock().unlock();
+                    }
+                } catch (Throwable th) {
+                    error.set(th);
+                }
+            }
+        });
+        t.setDaemon(true);
+        t.start();
+        t.join(5000);
+        assertFalse("Thread holding read lock should not block or hang", t.isAlive());
+        if (error.get() != null) {
+            throw new AssertionError("Exception during event handling: " + error.get().getMessage());
+        }
+
+        assertEquals("File must not be modified when read lock is held by current thread",
+                "networkInterface = \"wlp3s1\"\n", new String(Files.readAllBytes(Paths.get(file.toURI())), "UTF-8"));
+        assertEquals("File timestamp must not change", lastModified, file.lastModified());
+        assertFalse("Checksum must not be updated", checksumUpdated.get());
+    }
+
+    /**
+     * FELIX-6515: lockInterruptibly() throws InterruptedException when interrupted. The interrupt flag must
+     * be restored.
+     */
+    public void testDoConfigurationEventRestoresInterruptFlagWhenInterrupted() throws Exception
+    {
+        final File file = File.createTempFile("test", ".config");
+        try (OutputStream os = new FileOutputStream(file)) {
+            os.write("networkInterface = \"wlp3s1\"\n".getBytes("UTF-8"));
+        }
+
+        final String pid = file.getName().substring(0, file.getName().indexOf(".config"));
+        final ServiceReference<ConfigurationAdmin> sr = EasyMock.createMock(ServiceReference.class);
+
+        EasyMock.expect(mockBundleContext.getBundle()).andReturn(mockBundle).anyTimes();
+        EasyMock.expect(mockBundle.loadClass(ConfigurationAttribute.class.getName())).andReturn((Class)ConfigurationAttribute.class).anyTimes();
+        EasyMock.expect(mockBundleContext.getServiceReference(LogService.class)).andReturn(null).anyTimes();
+        EasyMock.expect(mockBundleContext.getProperty((String) EasyMock.anyObject())).andReturn(null).anyTimes();
+
+        final Dictionary<String, Object> configProps = new Hashtable<String, Object>() {
+            {
+                put("networkInterface", "wlp3s0");
+                put(DirectoryWatcher.FILENAME, file.toURI().toString());
+            }
+        };
+        EasyMock.expect(mockConfiguration.getProperties()).andReturn(configProps).anyTimes();
+        EasyMock.expect(mockConfiguration.getPid()).andReturn(pid).anyTimes();
+        EasyMock.expect(mockConfigurationAdmin.listConfigurations("(service.pid=" + pid + ")"))
+                .andReturn(new Configuration[] { mockConfiguration });
+
+        EasyMock.replay(mockBundleContext, mockConfigurationAdmin, mockBundle, mockConfiguration, sr);
+
+        final FileInstall fileInstall = new FileInstall();
+        final ConfigInstaller ci = new ConfigInstaller( mockBundleContext, mockConfigurationAdmin, fileInstall );
+
+        try
+        {
+            Thread.currentThread().interrupt();
+            ci.doConfigurationEvent( new ConfigurationEvent(sr , ConfigurationEvent.CM_UPDATED, null, pid ) );
+            assertTrue("Interrupt flag must be restored when interrupted during lock acquisition", Thread.interrupted());
+        }
+        finally
+        {
+            Thread.interrupted();
+        }
     }
 
     public void testSetConfiguration() throws Exception
