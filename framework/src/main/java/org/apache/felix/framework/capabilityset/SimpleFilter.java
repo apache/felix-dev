@@ -21,6 +21,7 @@ package org.apache.felix.framework.capabilityset;
 import org.osgi.framework.VersionRange;
 
 import java.util.ArrayList;
+import java.util.Collection;
 import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
@@ -569,8 +570,12 @@ loop:   for (int i = 0; i < len; i++)
      * over the map's entry set. If ordering of attributes is important (e.g.,
      * for hitting attribute indices), then the map's entry set should iterate
      * in the desired order. Equality testing is assumed for all attribute types
-     * other than version ranges, which are handled appropriated. If the attribute
-     * map is empty, then a filter that matches anything is returned.
+     * other than version ranges and collections, which are handled appropriated.
+     * A collection, such as a {@code List} typed attribute, becomes one equality
+     * test per element, so it matches a capability attribute that contains all
+     * of the elements; the OSGi specification does not define list matching for
+     * these headers. An empty collection only tests that the attribute is present.
+     * If the attribute map is empty, then a filter that matches anything is returned.
      * @param attrs Map of attributes to convert to a filter.
      * @return A filter corresponding to the attributes.
      */
@@ -629,25 +634,23 @@ loop:   for (int i = 0; i < len; i++)
                     }
                 }
             }
+            else if (entry.getValue() instanceof Collection)
+            {
+                // A list attribute matches if it contains all of the values,
+                // an empty list still requires the attribute to be present.
+                Collection<?> values = (Collection<?>) entry.getValue();
+                if (values.isEmpty())
+                {
+                    filters.add(new SimpleFilter(entry.getKey(), "*", SimpleFilter.PRESENT));
+                }
+                for (Object value : values)
+                {
+                    filters.add(convertValue(entry.getKey(), value));
+                }
+            }
             else
             {
-                List<String> values = SimpleFilter.parseSubstring(entry.getValue().toString());
-                if (values.size() > 1)
-                {
-                    filters.add(
-                        new SimpleFilter(
-                            entry.getKey(),
-                            values,
-                            SimpleFilter.SUBSTRING));
-                }
-                else
-                {
-                    filters.add(
-                        new SimpleFilter(
-                            entry.getKey(),
-                            values.get(0),
-                            SimpleFilter.EQ));
-                }
+                filters.add(convertValue(entry.getKey(), entry.getValue()));
             }
         }
 
@@ -657,7 +660,7 @@ loop:   for (int i = 0; i < len; i++)
         {
             sf = filters.get(0);
         }
-        else if (attrs.size() > 1)
+        else if (filters.size() > 1)
         {
             sf = new SimpleFilter(null, filters, SimpleFilter.AND);
         }
@@ -667,5 +670,15 @@ loop:   for (int i = 0; i < len; i++)
         }
 
         return sf;
+    }
+
+    private static SimpleFilter convertValue(String name, Object value)
+    {
+        List<String> values = SimpleFilter.parseSubstring(value.toString());
+        if (values.size() > 1)
+        {
+            return new SimpleFilter(name, values, SimpleFilter.SUBSTRING);
+        }
+        return new SimpleFilter(name, values.get(0), SimpleFilter.EQ);
     }
 }
