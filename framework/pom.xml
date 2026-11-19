@@ -68,6 +68,7 @@
                     exports org.osgi.framework.connect;
                     exports org.osgi.framework.dto;
                     exports org.osgi.framework.hooks.bundle;
+                    exports org.osgi.framework.hooks.delegation;
                     exports org.osgi.framework.hooks.resolver;
                     exports org.osgi.framework.hooks.service;
                     exports org.osgi.framework.hooks.weaving;

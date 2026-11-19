@@ -44,6 +44,7 @@ public class HookRegistry
         addHookClass(org.osgi.framework.hooks.bundle.CollisionHook.class);
         addHookClass(org.osgi.framework.hooks.bundle.FindHook.class);
         addHookClass(org.osgi.framework.hooks.bundle.EventHook.class);
+        addHookClass(org.osgi.framework.hooks.delegation.DelegationHook.class);
         addHookClass(org.osgi.framework.hooks.service.EventHook.class);
         addHookClass(org.osgi.framework.hooks.service.EventListenerHook.class);
         addHookClass(org.osgi.framework.hooks.service.FindHook.class);
