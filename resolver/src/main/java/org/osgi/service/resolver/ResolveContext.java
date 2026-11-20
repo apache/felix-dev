@@ -22,8 +22,10 @@ import java.util.Collections;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
+import java.util.Optional;
 import java.util.Set;
 import java.util.concurrent.CancellationException;
+import java.util.concurrent.Executor;
 
 import org.osgi.annotation.versioning.ConsumerType;
 import org.osgi.framework.namespace.BundleNamespace;
@@ -251,6 +253,35 @@ public abstract class ResolveContext {
 	 */
 	public void onCancel(Runnable callback) {
 		// do nothing by default
+	}
+
+	/**
+	 * Returns an optional {@link Executor} that the resolver can use to run
+	 * work in parallel during the resolve operation.
+	 * <p>
+	 * By default a resolve context provides no executor and the resolver
+	 * decides how to perform the work. A resolve context that wants to control
+	 * the threads used by the resolver (for example to limit the parallelism,
+	 * or to run the work on the calling thread) must override this method and
+	 * return the same executor for the duration of a resolve operation. The
+	 * resolver is not required to call this method or to use the executor. A
+	 * resolver that uses it must prefer it to any other executor it has for
+	 * this resolve operation.
+	 * <p>
+	 * The resolver must not assume that tasks submitted to the executor run
+	 * concurrently, or that they run on a different thread than the caller.
+	 * The resolver must not shut down the executor and must not depend on any
+	 * lifecycle of it. A resolver that blocks the calling thread until
+	 * submitted tasks complete must not block threads of the executor itself,
+	 * as the executor might be bounded.
+	 * 
+	 * @return An {@link Optional} containing the {@link Executor} to use
+	 *         during the resolve operation, or an empty Optional if no
+	 *         executor is available. Must not be {@code null}.
+	 * @since 1.2
+	 */
+	public Optional<Executor> getExecutor() {
+		return Optional.empty();
 	}
 
 	/**
