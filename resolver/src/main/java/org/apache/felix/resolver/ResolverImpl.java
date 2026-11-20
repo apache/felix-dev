@@ -369,7 +369,13 @@ public class ResolverImpl implements Resolver
 
     public Map<Resource, List<Wire>> resolve(ResolveContext rc) throws ResolutionException
     {
-        if (m_executor != null)
+        // An executor provided by the resolve context takes precedence
+        Optional<Executor> contextExecutor = rc.getExecutor();
+        if (contextExecutor.isPresent())
+        {
+            return resolve(rc, contextExecutor.get());
+        }
+        else if (m_executor != null)
         {
             return resolve(rc, m_executor);
         }
@@ -667,7 +673,7 @@ public class ResolverImpl implements Resolver
                         "Matching candidate does not provide a package name.");
                 }
             }
-            ResolveSession session = ResolveSession.createSession(context,  new DumbExecutor(), host, dynamicRequirement, matches);
+            ResolveSession session = ResolveSession.createSession(context, context.getExecutor().orElseGet(DumbExecutor::new), host, dynamicRequirement, matches);
             return doResolve(session);
         }
 
