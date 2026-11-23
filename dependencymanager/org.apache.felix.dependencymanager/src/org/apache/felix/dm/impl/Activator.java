@@ -42,8 +42,8 @@ public class Activator implements BundleActivator {
 
 	@Override
 	public void start(BundleContext context) throws Exception {		
-		// make sure the backdoor is set in system properties (needed by tests)
-		ServiceRegistryCacheManager.init(); 
+		// create the service registry cache, if configured (and set the backdoor in system properties, needed by tests)
+		ServiceRegistryCacheManager.init(context);
 
 		m_context = context;
 		Filter execFilter = context.createFilter("(objectClass=" + ComponentExecutorFactory.class.getName() + ")");

@@ -50,27 +50,71 @@ public class ServiceRegistryCacheManager {
 	 * the DependendencyManager bundle context used by the ServiceRegistryCache.
 	 */
 	private static volatile BundleContext m_context;
-	
+
 	/**
-	 * Boolean used to check if we are already initialized
-	 */
-	private static volatile boolean m_init = false;
-	
-	/**
-	 * Static initializer: we create the registry cache in case "org.apache.felix.dependencymanager.filterindex" system property is configured.
-	 */
-	static {
-		init();
-	}
-	
-	/**
-	 * Gets the service registry cache, if enabled.
+	 * Gets the service registry cache, if enabled. Before returning the cache, we try to make sure the DependencyManager
+	 * bundle is started, because the cache is initialized by the DependencyManager bundle Activator.
+	 *
+	 * The cache is only an optimization: this method never throws, and if the DependencyManager bundle can't be started,
+	 * the error is reported and the cache (possibly null) is returned.
+	 *
+	 * Never call this method from the DependencyManager Activator.
+	 *
 	 * @return the service registry cache, if enabled, or null
 	 */
 	public static ServiceRegistryCache getCache() {
+		try {
+			Bundle dm = FrameworkUtil.getBundle(ServiceRegistryCacheManager.class);
+			if (dm != null && dm.getState() != Bundle.ACTIVE) {
+				startDependencyManager(dm);
+			}
+		} catch (Exception e) {
+			// we can't start the DependencyManager bundle: never prevent the user bundle from starting, just don't use the indices
+			e.printStackTrace();
+		}
 		return m_cache;
 	}
-	
+
+	/**
+	 * Starts the DependencyManager bundle, so that its Activator has initialized the cache when we return it.
+	 *
+	 * We first try a transient start, because while the framework is raising its start level, a transient start is much
+	 * more likely to activate the bundle immediately than a persistent start (this describes the Felix framework):
+	 * <ul>
+	 * <li>the framework raises its active start level one level at a time, and its start level thread starts the
+	 * bundles from a queue, in start level order;</li>
+	 * <li>a persistent start called from another thread is queued if the bundle start level is greater than or equal to
+	 * the active start level: it returns without starting the bundle;</li>
+	 * <li>a transient start is never queued: if the bundle start level is lower than or equal to the active start level,
+	 * it activates the bundle immediately (or waits until the thread that is already starting it has completed), else
+	 * it fails with START_TRANSIENT_ERROR.</li>
+	 * </ul>
+	 * For example, if all bundles have the start level 2, the active start level is 2 during almost the whole startup:
+	 * a transient start activates the DependencyManager bundle immediately, whereas a persistent start only queues it,
+	 * so the cache would not be initialized yet (this was the cause of FELIX-6874).
+	 *
+	 * If the transient start fails with START_TRANSIENT_ERROR, we fall back to a persistent start: it still activates
+	 * the bundle immediately if the framework has just begun to raise its start level (no bundle is queued yet, and the
+	 * active start level is still 0). Else, the bundle is started later, and our caller does not use the cache.
+	 *
+	 * @param dm the DependencyManager bundle
+	 * @throws BundleException if the DependencyManager bundle can't be started
+	 */
+	private static void startDependencyManager(Bundle dm) throws BundleException {
+		try {
+			dm.start(Bundle.START_TRANSIENT);
+		} catch (BundleException e) {
+			if (dm.getState() == Bundle.ACTIVE) {
+				return; // started meanwhile by another thread
+			}
+			if (e.getType() != BundleException.START_TRANSIENT_ERROR) {
+				throw e;
+			}
+			// start level not met yet: fall back to a persistent start (see javadoc)
+			dm.start();
+		}
+	}
+
 	/**
 	 * Registers a FilterIndex into the service registry cache. The cache is created if necessary.
 	 * @param index a new FilterIndex to be registered in the cache
@@ -86,7 +130,7 @@ public class ServiceRegistryCacheManager {
 	 * @param index the FilterIndex to unregister
 	 */
 	public static void unregisterFilterIndex(FilterIndex index) {
-		ServiceRegistryCache cache = ServiceRegistryCacheManager.getCache();
+		ServiceRegistryCache cache = m_cache;
 		if (cache != null) {
 			cache.removeFilterIndex(index);
 			boolean close = false;
@@ -124,33 +168,22 @@ public class ServiceRegistryCacheManager {
 	}
 	
 	/**
-	 * Initialize the service registry cache.
+	 * Initialize the service registry cache. Called by the DependencyManager Activator, with the DependencyManager bundle context
+	 * (the framework serializes the Activator start, so we don't need to synchronize).
+	 * Initialization is only done once, even if the DependencyManager bundle is restarted.
+	 * @param context the DependencyManager bundle context
 	 */
-	public static void init() {
-		try {
-			if (m_init) {
-				return;
-			}
-			Bundle bundle = FrameworkUtil.getBundle(ServiceRegistryCacheManager.class);
-			if (bundle != null) {
-				if (bundle.getState() != Bundle.STARTING && bundle.getState() != Bundle.ACTIVE) {
-					bundle.start(); // take care: may callback our registerFilterIndex method 
-				}
-				m_context = bundle.getBundleContext();
-				String index = m_context.getProperty(DependencyManager.SERVICEREGISTRY_CACHE_INDICES);
-				if (index != null) {
-					resetIndices(index);
-				}
-			}
-			Consumer<String> reset = ServiceRegistryCacheManager::reset;
-			System.getProperties().put(RESET, reset);	
-			m_init = true;
+	public static void init(BundleContext context) {
+		if (m_context != null) {
+			return;
 		}
-
-		catch (BundleException e) {
-			// if we cannot start ourselves, we cannot use the indices
-			e.printStackTrace();
-		}				
+		m_context = context;
+		String index = m_context.getProperty(DependencyManager.SERVICEREGISTRY_CACHE_INDICES);
+		if (index != null) {
+			resetIndices(index);
+		}
+		Consumer<String> reset = ServiceRegistryCacheManager::reset;
+		System.getProperties().put(RESET, reset);
 	}
 		
 	private static void resetIndices(String index) {

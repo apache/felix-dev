@@ -42,6 +42,13 @@
     </scm>
 
     <dependencies>
+        <!-- embedded framework used by FELIX6874_ParallelStartTest (first, so its org.osgi.framework classes are used) -->
+        <dependency>
+            <groupId>org.apache.felix</groupId>
+            <artifactId>org.apache.felix.framework</artifactId>
+            <version>${framework.version}</version>
+            <scope>test</scope>
+        </dependency>
         <dependency>
             <groupId>org.osgi</groupId>
             <artifactId>osgi.core</artifactId>
