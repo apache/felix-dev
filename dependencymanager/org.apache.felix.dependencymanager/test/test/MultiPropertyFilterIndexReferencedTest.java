@@ -59,6 +59,23 @@ public class MultiPropertyFilterIndexReferencedTest {
 	
 	@SuppressWarnings("rawtypes")
 	@Test
+	public void objectClassArrayOfReferenceIsNotModified() {
+		MultiPropertyFilterIndex index = new MultiPropertyFilterIndex("objectClass");
+		String[] objectClass = new String[] { "org.example.Zeta", "org.example.alpha", "org.example.Mid" };
+		String[] expected = objectClass.clone();
+
+		TestReference ref = new TestReference();
+		ref.addProperty("service.id", 4711);
+		ref.addProperty("objectclass", objectClass);
+
+		index.addedService(ref, new String("Service"));
+
+		assertTrue("The index must not sort the array of the service reference", java.util.Arrays.equals(expected, objectClass));
+	}
+
+
+	@SuppressWarnings("rawtypes")
+	@Test
 	public void noContextCid() {
 		MultiPropertyFilterIndex multiPropertyIndex_new = new MultiPropertyFilterIndex("objectClass,cid,!context");
 

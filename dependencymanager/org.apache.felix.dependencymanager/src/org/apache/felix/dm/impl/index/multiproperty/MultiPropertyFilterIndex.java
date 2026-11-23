@@ -249,8 +249,10 @@ public class MultiPropertyFilterIndex implements FilterIndex, ServiceTrackerCust
 	}
 
 
-	List<MultiPropertyKey> getPermutations(String key, String[] values) {
+	List<MultiPropertyKey> getPermutations(String key, String[] propertyValues) {
 		List<MultiPropertyKey> results = new ArrayList<>();
+		// Sort a copy. The array of a service property can be the live array of the registration, which other threads read and sort too.
+		String[] values = propertyValues.clone();
 		Arrays.sort(values, String.CASE_INSENSITIVE_ORDER);
 		for (int v = 0; v < values.length; v++) {
 			String processValue = values[v];
