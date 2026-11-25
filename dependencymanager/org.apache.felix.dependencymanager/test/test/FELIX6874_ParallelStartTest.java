@@ -24,6 +24,7 @@ import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.PrintWriter;
 import java.io.StringWriter;
+import java.lang.reflect.Field;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.ArrayList;
@@ -34,6 +35,7 @@ import java.util.ServiceLoader;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.TimeUnit;
+import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.atomic.AtomicReference;
 import java.util.jar.Attributes;
 import java.util.jar.JarEntry;
@@ -53,21 +55,25 @@ import org.osgi.framework.FrameworkEvent;
 import org.osgi.framework.launch.Framework;
 import org.osgi.framework.launch.FrameworkFactory;
 
+import test.felix6874.ReentrantActivator;
 import test.felix6874.UserActivator;
 
 /**
- * FELIX-6874: user bundles started in parallel with the DependencyManager bundle, like the AutoProcessor of
- * Felix PR #236 does: a pool of 8 threads calls start() once on every bundle, while the framework starts.
+ * FELIX-6874: user bundles started in parallel with the DependencyManager bundle, like the
+ * AutoProcessor of Felix PR #236 does: a pool of 8 threads calls start() once on every bundle,
+ * while the framework starts.
  *
- * All bundles use the default start level (1). If a pool thread starts a user bundle before the DM bundle
- * is started, the service registry cache initialization must not fail (in DM 5.0.0,
- * ServiceRegistryCacheManager.<clinit> throws a NullPointerException, and the class becomes unusable).
+ * All bundles use the default start level (1). If a pool thread starts a user bundle before the DM
+ * bundle is started, the service registry cache initialization must not fail (in DM 5.0.0,
+ * ServiceRegistryCacheManager.<clinit> throws a NullPointerException, and the class becomes
+ * unusable).
  *
- * This is a race: the scenario is run again with a new embedded Felix framework, at most "felix6874.runs" times
- * (system property, default 200).
+ * This is a race: the scenario is run again with a new embedded Felix framework, at most
+ * "felix6874.runs" times (system property, default 200).
  *
- * This class also checks that a DependencyManager bundle stopped by a management agent is not restarted by the user
- * bundles started afterwards.
+ * This class also checks that a DependencyManager bundle stopped by a management agent is not
+ * restarted by the user bundles started afterwards, and that a re-entrant call to the service
+ * registry cache from the DependencyManager Activator thread is harmless.
  */
 public class FELIX6874_ParallelStartTest {
 
@@ -88,9 +94,10 @@ public class FELIX6874_ParallelStartTest {
     }
 
     /**
-     * A DependencyManager bundle stopped by a management agent must not be restarted by a user bundle creating a
-     * DependencyManager, and this user bundle must not use the service registry cache of the stopped DependencyManager
-     * bundle. The management agent can still restart the DependencyManager bundle.
+     * A DependencyManager bundle stopped by a management agent must not be restarted by a user
+     * bundle creating a DependencyManager, and this user bundle must not use the service registry
+     * cache of the stopped DependencyManager bundle. The management agent can still restart the
+     * DependencyManager bundle.
      */
     @Test
     public void testStoppedDependencyManagerIsNotRestartedByUserBundles() throws Exception {
@@ -129,14 +136,79 @@ public class FELIX6874_ParallelStartTest {
         }
     }
 
-    /** Returns true if the DependencyManager of the given user bundle uses the service registry cache. */
+    /**
+     * The DependencyManager Activator calls getService() on other bundles' services when it starts:
+     * a ServiceFactory may then create a DependencyManager on the Activator thread, while the
+     * DependencyManager bundle is STARTING. This re-entrant call to the service registry cache must
+     * neither try to start the DependencyManager bundle (which fails, since it is already being
+     * started by this thread), nor log a start failure; the DependencyManager just doesn't use the
+     * cache. Once the Activator has completed, the cache is used again, even on the same thread.
+     */
+    @Test
+    public void testReentrantCallFromDependencyManagerActivator() throws Exception {
+        File dmJar = createDependencyManagerBundle(m_tmp.newFile("dependencymanager.jar"));
+        File factoryJar = createUserBundle(m_tmp.newFile("factory-bundle.jar"), ReentrantActivator.class);
+        File userJar = createUserBundle(m_tmp.newFile("user-bundle.jar"));
+
+        Map<String, String> config = new HashMap<>();
+        config.put(DependencyManager.SERVICEREGISTRY_CACHE_INDICES, "objectClass,user.bundle");
+        config.put(Constants.FRAMEWORK_STORAGE, m_tmp.newFolder("felix-cache").getAbsolutePath());
+        config.put(Constants.FRAMEWORK_STORAGE_CLEAN, Constants.FRAMEWORK_STORAGE_CLEAN_ONFIRSTINIT);
+        config.put(Constants.FRAMEWORK_BSNVERSION, Constants.FRAMEWORK_BSNVERSION_MULTIPLE);
+        config.put(Constants.FRAMEWORK_SYSTEMPACKAGES_EXTRA, "org.osgi.service.cm,org.osgi.service.metatype");
+        Framework framework = ServiceLoader.load(FrameworkFactory.class).iterator().next().newFramework(config);
+        framework.start();
+        try {
+            BundleContext context = framework.getBundleContext();
+            Bundle dm = install(context, dmJar, "dependencymanager");
+            Bundle factory = install(context, factoryJar, "factory-bundle");
+            Bundle user = install(context, userJar, "user-bundle");
+
+            factory.start(); // registers its ServiceFactory, nothing calls it yet
+            dm.start(); // the Activator gets the ServiceFactory service, on this thread
+
+            Class<?> activator = factory.loadClass(ReentrantActivator.class.getName());
+            Assert.assertEquals("the ServiceFactory has not been called by the DependencyManager Activator",
+                true, activator.getField("s_called").get(null));
+            Assert.assertEquals("the ServiceFactory must be called while the DependencyManager bundle is starting",
+                Bundle.STARTING, activator.getField("s_dmState").get(null));
+            Assert.assertNull("the ServiceFactory could not create its DependencyManager",
+                activator.getField("s_failure").get(null));
+            Assert.assertEquals("the DependencyManager created during the Activator start must not use the cache",
+                false, activator.getField("s_cacheUsed").get(null));
+            Assert.assertEquals("DependencyManager bundle not active", Bundle.ACTIVE, dm.getState());
+            Assert.assertFalse("a failure to start the DependencyManager bundle has been logged", startFailureLogged(dm));
+
+            user.start(); // same thread as the DependencyManager activation, which has completed
+            Assert.assertTrue("the user bundle must use the service registry cache", cacheUsed(user));
+        } finally {
+            framework.stop();
+            framework.waitForStop(30000);
+        }
+    }
+
+    /**
+     * Returns true if ServiceRegistryCacheManager has logged a failure to start the
+     * DependencyManager bundle.
+     */
+    private static boolean startFailureLogged(Bundle dm) throws Exception {
+        Field field = dm.loadClass("org.apache.felix.dm.impl.index.ServiceRegistryCacheManager").getDeclaredField("m_startFailureLogged");
+        field.setAccessible(true);
+        return ((AtomicBoolean) field.get(null)).get();
+    }
+
+    /**
+     * Returns true if the DependencyManager of the given user bundle uses the service registry
+     * cache.
+     */
     private static boolean cacheUsed(Bundle userBundle) throws Exception {
         return (Boolean) userBundle.loadClass(UserActivator.class.getName()).getField("s_cacheUsed").get(null);
     }
 
     /**
      * Runs the scenario RUNS times.
-     * @param indices the filter indices (org.apache.felix.dependencymanager.filterindex property), or null for no service registry cache
+     * @param indices the filter indices (org.apache.felix.dependencymanager.filterindex property),
+     * or null for no service registry cache
      */
     private void test(String indices) throws Exception {
         File dmJar = createDependencyManagerBundle(m_tmp.newFile("dependencymanager.jar"));
@@ -151,13 +223,16 @@ public class FELIX6874_ParallelStartTest {
         }
     }
 
-    /** Starts a new framework once. Returns the FELIX-6874 exception thrown by a bundle start, or null. */
+    /**
+     * Starts a new framework once. Returns the FELIX-6874 exception thrown by a bundle start, or
+     * null.
+     */
     private Throwable runOnce(int run, File dmJar, File userJar, File storage, String indices) throws Exception {
         Map<String, String> config = new HashMap<>();
         if (indices != null) {
             config.put(DependencyManager.SERVICEREGISTRY_CACHE_INDICES, indices);
-            // the user bundles add components using the filter index (without index, keep the user activators
-            // as light as possible, the race is easier to reproduce)
+            // the user bundles add components using the filter index (without index, keep the user
+            // activators as light as possible, the race is easier to reproduce)
             config.put(UserActivator.COMPONENTS, "true");
         }
         config.put(Constants.FRAMEWORK_STORAGE, storage.getAbsolutePath());
@@ -176,7 +251,8 @@ public class FELIX6874_ParallelStartTest {
             framework.init();
             BundleContext context = framework.getBundleContext();
 
-            // the bundles started by the FelixStartLevel thread report their start errors as framework events
+            // the bundles started by the FelixStartLevel thread report their start errors as
+            // framework events
             context.addFrameworkListener(event -> {
                 if (event.getType() == FrameworkEvent.ERROR && event.getThrowable() != null) {
                     record(failure, event.getThrowable());
@@ -189,7 +265,8 @@ public class FELIX6874_ParallelStartTest {
             }
             bundles.add(install(context, dmJar, "dependencymanager"));
 
-            // AutoProcessor of PR #236: a pool of 8 threads starts the bundles, the launcher does not wait.
+            // AutoProcessor of PR #236: a pool of 8 threads starts the bundles, the launcher does
+            // not wait.
             pool = Executors.newFixedThreadPool(8);
             for (Bundle bundle : bundles) {
                 pool.execute(() -> {
@@ -213,7 +290,8 @@ public class FELIX6874_ParallelStartTest {
                     Assert.assertEquals("run " + run + ": bundle " + bundle.getLocation() + " not active",
                         Bundle.ACTIVE, bundle.getState());
                 }
-                // each user bundle must use the service registry cache (if enabled), and its client component must be started
+                // each user bundle must use the service registry cache (if enabled), and its client
+                // component must be started
                 for (Bundle bundle : bundles.subList(0, USER_BUNDLES)) {
                     Class<?> activator = bundle.loadClass(UserActivator.class.getName());
                     Assert.assertEquals("run " + run + ": bundle " + bundle.getLocation() + ": service registry cache usage",
@@ -231,7 +309,8 @@ public class FELIX6874_ParallelStartTest {
             framework.stop();
             stopped = framework.waitForStop(30000);
         }
-        // checked after the finally block, so that it does not hide an exception thrown by the try block
+        // checked after the finally block, so that it does not hide an exception thrown by the try
+        // block
         Assert.assertNotEquals("run " + run + ": the framework did not stop", FrameworkEvent.WAIT_TIMEDOUT, stopped.getType());
         return failure.get();
     }
@@ -263,20 +342,31 @@ public class FELIX6874_ParallelStartTest {
         return createBundle(jar, manifest, classes, classes.resolve("org/apache/felix/dm"));
     }
 
-    /** Creates a user bundle, which only contains the UserActivator class. */
+    /** Creates a user bundle, with the UserActivator class as activator. */
     private static File createUserBundle(File jar) throws Exception {
+        return createUserBundle(jar, UserActivator.class);
+    }
+
+    /**
+     * Creates a user bundle, which contains the classes of the test.felix6874 package, with the
+     * given activator.
+     */
+    private static File createUserBundle(File jar, Class<?> activator) throws Exception {
         Manifest manifest = new Manifest();
         Attributes attrs = manifest.getMainAttributes();
         attrs.put(Attributes.Name.MANIFEST_VERSION, "1.0");
         attrs.putValue(Constants.BUNDLE_MANIFESTVERSION, "2");
         attrs.putValue(Constants.BUNDLE_SYMBOLICNAME, "felix6874.user");
-        attrs.putValue(Constants.BUNDLE_ACTIVATOR, UserActivator.class.getName());
+        attrs.putValue(Constants.BUNDLE_ACTIVATOR, activator.getName());
         attrs.putValue(Constants.IMPORT_PACKAGE, "org.apache.felix.dm,org.osgi.framework");
         Path classes = classesDir(UserActivator.class);
         return createBundle(jar, manifest, classes, classes.resolve("test/felix6874"));
     }
 
-    /** Returns the classes directory (target/classes or target/test-classes) containing the given class. */
+    /**
+     * Returns the classes directory (target/classes or target/test-classes) containing the given
+     * class.
+     */
     private static Path classesDir(Class<?> clazz) throws Exception {
         return new File(clazz.getProtectionDomain().getCodeSource().getLocation().toURI()).toPath();
     }

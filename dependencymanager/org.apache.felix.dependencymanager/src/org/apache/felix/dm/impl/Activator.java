@@ -42,17 +42,24 @@ public class Activator implements BundleActivator {
 
 	@Override
 	public void start(BundleContext context) throws Exception {		
-		// create the service registry cache, if configured (and set the backdoor in system properties, needed by tests)
-		ServiceRegistryCacheManager.init(context);
+		try {
+			// create the service registry cache, if configured (and set the backdoor in system
+			// properties, needed by tests)
+			ServiceRegistryCacheManager.init(context);
 
-		m_context = context;
-		Filter execFilter = context.createFilter("(objectClass=" + ComponentExecutorFactory.class.getName() + ")");
-		m_execTracker = new ServiceTracker<>(context, execFilter, new ExecutorFactoryCustomizer());
-		m_execTracker.open();
+			m_context = context;
+			Filter execFilter = context.createFilter("(objectClass=" + ComponentExecutorFactory.class.getName() + ")");
+			m_execTracker = new ServiceTracker<>(context, execFilter, new ExecutorFactoryCustomizer());
+			m_execTracker.open();
 		
-		Filter indexFilter = context.createFilter("(objectClass=" + FilterIndex.class.getName() + ")");
-		m_indexTracker = new ServiceTracker<>(context, indexFilter, new FilterIndexCustomizer());
-		m_indexTracker.open();
+			Filter indexFilter = context.createFilter("(objectClass=" + FilterIndex.class.getName() + ")");
+			m_indexTracker = new ServiceTracker<>(context, indexFilter, new FilterIndexCustomizer());
+			m_indexTracker.open();
+		} finally {
+			// getCache() may be called by user bundles from now on (it returns null while we are
+			// starting, on this thread)
+			ServiceRegistryCacheManager.activated();
+		}
 	}
 
 	@Override

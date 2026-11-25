@@ -54,37 +54,54 @@ public class ServiceRegistryCacheManager {
 	private static volatile BundleContext m_context;
 
 	/**
-	 * True when the DependencyManager bundle has been stopped after having been started (deliberately, or because the
-	 * framework is shutting down). Reset by init() when the bundle is started again.
+	 * True when the DependencyManager bundle has been stopped after having been started
+	 * (deliberately, or because the framework is shutting down). Reset by init() when the bundle is
+	 * started again.
 	 */
 	private static volatile boolean m_stopped;
 
 	/**
-	 * Set once a failure to start the DependencyManager bundle has been logged: getCache() is called each time a
-	 * DependencyManager is created, and the failures usually have the same cause, so we log only once, even if getCache()
-	 * is called concurrently.
+	 * The thread currently running the DependencyManager Activator start method, or null. The
+	 * Activator calls getService on other bundles' services (see its tracker customizers): if a
+	 * service factory creates a DependencyManager, getCache() is called back on this thread while
+	 * the bundle is STARTING, and must not try to start it.
+	 */
+	private static volatile Thread m_activatingThread;
+
+	/**
+	 * Set once a failure to start the DependencyManager bundle has been logged: getCache() is
+	 * called each time a DependencyManager is created, and the failures usually have the same
+	 * cause, so we log only once, even if getCache() is called concurrently.
 	 */
 	private static final AtomicBoolean m_startFailureLogged = new AtomicBoolean();
 
 	/**
-	 * Gets the service registry cache, if enabled. Before returning the cache, we try to make sure the DependencyManager
-	 * bundle is started, because the cache is initialized by the DependencyManager bundle Activator.
+	 * Gets the service registry cache, if enabled. Before returning the cache, we try to make sure
+	 * the DependencyManager bundle is started, because the cache is initialized by the
+	 * DependencyManager bundle Activator.
 	 *
-	 * The cache is only an optimization: this method never throws. If the DependencyManager bundle can't be started, null
-	 * is returned, and the error is logged only once.
+	 * The cache is only an optimization: this method never throws. If the DependencyManager bundle
+	 * can't be started, null is returned, and the error is logged only once.
 	 *
-	 * If the DependencyManager bundle has been stopped after having been started, we don't restart it, and we return null:
-	 * the cache was opened with the DependencyManager bundle context, which is no longer valid, so the cache doesn't
-	 * receive service events anymore. We read the bundle state before m_stopped, so a stop which is in progress (STOPPING)
-	 * or complete (m_stopped is set before the state becomes RESOLVED) is detected. Only a stop which happens between our
-	 * checks and the start of the bundle is not detected: the DependencyManager bundle may then be restarted (transiently).
+	 * If the DependencyManager bundle has been stopped after having been started, we don't restart
+	 * it, and we return null: the cache was opened with the DependencyManager bundle context, which
+	 * is no longer valid, so the cache doesn't receive service events anymore. We read the bundle
+	 * state before m_stopped, so a stop which is in progress (STOPPING) or complete (m_stopped is
+	 * set before the state becomes RESOLVED) is detected. Only a stop which happens between our
+	 * checks and the start of the bundle is not detected: the DependencyManager bundle may then be
+	 * restarted (transiently).
 	 *
-	 * Never call this method from the DependencyManager Activator.
+	 * If called back from the DependencyManager Activator thread while the Activator is starting
+	 * (for example from a service factory called by one of the Activator trackers), null is
+	 * returned: the cache is not ready yet, and the bundle is already being started by this thread.
 	 *
 	 * @param logger the logger used to report a failure to start the DependencyManager bundle
 	 * @return the service registry cache, if enabled, or null
 	 */
 	public static ServiceRegistryCache getCache(Logger logger) {
+		if (Thread.currentThread() == m_activatingThread) {
+			return null; // re-entrant call from the Activator start method
+		}
 		try {
 			Bundle dm = FrameworkUtil.getBundle(ServiceRegistryCacheManager.class);
 			if (dm != null) { // null outside OSGi: there's no bundle to start
@@ -97,9 +114,9 @@ public class ServiceRegistryCacheManager {
 				}
 			}
 		} catch (Exception e) {
-			// we can't start the DependencyManager bundle: never prevent the user bundle from starting, just don't use the indices
-			// (don't return m_cache: it may be bound to the bundle context of a failed or previous activation, which is no
-			// longer valid)
+			// we can't start the DependencyManager bundle: never prevent the user bundle from
+			// starting, just don't use the indices (don't return m_cache: it may be bound to the
+			// bundle context of a failed or previous activation, which is no longer valid)
 			if (m_startFailureLogged.compareAndSet(false, true)) {
 				logger.log(Logger.LOG_ERROR,
 					"Could not start the DependencyManager bundle, the service registry cache won't be used", e);
@@ -110,26 +127,30 @@ public class ServiceRegistryCacheManager {
 	}
 
 	/**
-	 * Starts the DependencyManager bundle, so that its Activator has initialized the cache when we return it.
+	 * Starts the DependencyManager bundle, so that its Activator has initialized the cache when we
+	 * return it.
 	 *
-	 * We first try a transient start, because while the framework is raising its start level, a transient start is much
-	 * more likely to activate the bundle immediately than a persistent start (this describes the Felix framework):
+	 * We first try a transient start, because while the framework is raising its start level, a
+	 * transient start is much more likely to activate the bundle immediately than a persistent
+	 * start (this describes the Felix framework):
 	 * <ul>
-	 * <li>the framework raises its active start level one level at a time, and its start level thread starts the
-	 * bundles from a queue, in start level order;</li>
-	 * <li>a persistent start called from another thread is queued if the bundle start level is greater than or equal to
-	 * the active start level: it returns without starting the bundle;</li>
-	 * <li>a transient start is never queued: if the bundle start level is lower than or equal to the active start level,
-	 * it activates the bundle immediately (or waits until the thread that is already starting it has completed), else
-	 * it fails with START_TRANSIENT_ERROR.</li>
+	 * <li>the framework raises its active start level one level at a time, and its start level
+	 * thread starts the bundles from a queue, in start level order;</li>
+	 * <li>a persistent start called from another thread is queued if the bundle start level is
+	 * greater than or equal to the active start level: it returns without starting the bundle;</li>
+	 * <li>a transient start is never queued: if the bundle start level is lower than or equal to
+	 * the active start level, it activates the bundle immediately (or waits until the thread that
+	 * is already starting it has completed), else it fails with START_TRANSIENT_ERROR.</li>
 	 * </ul>
-	 * For example, if all bundles have the start level 2, the active start level is 2 during almost the whole startup:
-	 * a transient start activates the DependencyManager bundle immediately, whereas a persistent start only queues it,
-	 * so the cache would not be initialized yet (this was the cause of FELIX-6874).
+	 * For example, if all bundles have the start level 2, the active start level is 2 during almost
+	 * the whole startup: a transient start activates the DependencyManager bundle immediately,
+	 * whereas a persistent start only queues it, so the cache would not be initialized yet (this
+	 * was the cause of FELIX-6874).
 	 *
-	 * If the transient start fails with START_TRANSIENT_ERROR, we fall back to a persistent start: it still activates
-	 * the bundle immediately if the framework has just begun to raise its start level (no bundle is queued yet, and the
-	 * active start level is still 0). Else, the bundle is started later, and our caller does not use the cache.
+	 * If the transient start fails with START_TRANSIENT_ERROR, we fall back to a persistent start:
+	 * it still activates the bundle immediately if the framework has just begun to raise its start
+	 * level (no bundle is queued yet, and the active start level is still 0). Else, the bundle is
+	 * started later, and our caller does not use the cache.
 	 *
 	 * @param dm the DependencyManager bundle
 	 * @throws BundleException if the DependencyManager bundle can't be started
@@ -202,13 +223,14 @@ public class ServiceRegistryCacheManager {
 	}
 	
 	/**
-	 * Initialize the service registry cache. Called by the DependencyManager Activator, with the DependencyManager bundle context
-	 * (the framework serializes the Activator start, so we don't need to synchronize).
-	 * Initialization is only done once, even if the DependencyManager bundle is restarted (except m_stopped, which is
-	 * reset at each start).
+	 * Initialize the service registry cache. Called by the DependencyManager Activator, with the
+	 * DependencyManager bundle context (the framework serializes the Activator start, so we don't
+	 * need to synchronize). Initialization is only done once, even if the DependencyManager bundle
+	 * is restarted (except m_stopped, which is reset at each start).
 	 * @param context the DependencyManager bundle context
 	 */
 	public static void init(BundleContext context) {
+		m_activatingThread = Thread.currentThread(); // cleared by activated()
 		m_stopped = false;
 		if (m_context != null) {
 			return;
@@ -223,8 +245,17 @@ public class ServiceRegistryCacheManager {
 	}
 		
 	/**
-	 * Called by the DependencyManager Activator when the DependencyManager bundle is stopped: from now on, getCache()
-	 * neither restarts the DependencyManager bundle nor returns the cache, until the bundle is started again.
+	 * Called by the DependencyManager Activator when its start method has completed (successfully
+	 * or not): getCache() is no longer re-entrant for the Activator thread.
+	 */
+	public static void activated() {
+		m_activatingThread = null;
+	}
+
+	/**
+	 * Called by the DependencyManager Activator when the DependencyManager bundle is stopped: from
+	 * now on, getCache() neither restarts the DependencyManager bundle nor returns the cache, until
+	 * the bundle is started again.
 	 */
 	public static void stopped() {
 		m_stopped = true;
