@@ -25,6 +25,7 @@ import java.io.IOException;
 import java.io.PrintWriter;
 import java.io.StringWriter;
 import java.lang.reflect.Field;
+import java.lang.reflect.Method;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.ArrayList;
@@ -32,6 +33,7 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.ServiceLoader;
+import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.TimeUnit;
@@ -54,6 +56,8 @@ import org.osgi.framework.Constants;
 import org.osgi.framework.FrameworkEvent;
 import org.osgi.framework.launch.Framework;
 import org.osgi.framework.launch.FrameworkFactory;
+import org.osgi.framework.startlevel.BundleStartLevel;
+import org.osgi.framework.startlevel.FrameworkStartLevel;
 
 import test.felix6874.ReentrantActivator;
 import test.felix6874.UserActivator;
@@ -72,8 +76,10 @@ import test.felix6874.UserActivator;
  * "felix6874.runs" times (system property, default 200).
  *
  * This class also checks that a DependencyManager bundle stopped by a management agent is not
- * restarted by the user bundles started afterwards, and that a re-entrant call to the service
- * registry cache from the DependencyManager Activator thread is harmless.
+ * restarted by the user bundles started afterwards, that a re-entrant call to the service
+ * registry cache from the DependencyManager Activator thread is harmless, and that the
+ * DependencyManager bundle is still started when its transient start fails with
+ * START_TRANSIENT_ERROR.
  */
 public class FELIX6874_ParallelStartTest {
 
@@ -181,6 +187,81 @@ public class FELIX6874_ParallelStartTest {
 
             user.start(); // same thread as the DependencyManager activation, which has completed
             Assert.assertTrue("the user bundle must use the service registry cache", cacheUsed(user));
+        } finally {
+            framework.stop();
+            framework.waitForStop(30000);
+        }
+    }
+
+    /**
+     * START_TRANSIENT_ERROR fallback. While the framework raises its start level, the start level
+     * thread sets the target start level before queuing the bundles to start: in between, a
+     * persistent start called from another thread activates the bundle immediately, although the
+     * active start level is still lower than the bundle start level. The DependencyManager created
+     * by the user bundle then fails to start the DependencyManager bundle (same start level as the
+     * user bundle) with a transient start (START_TRANSIENT_ERROR), and the persistent start
+     * fallback must activate it immediately, so that the user bundle uses the cache.
+     *
+     * To open this window deterministically, the test thread holds the Felix global lock (internal
+     * API, called by reflection) while the framework raises its start level from 1 to 2: the start
+     * level thread sets its target start level, then waits for the global lock before queuing the
+     * bundles, while the test thread, which owns the global lock, can still start bundles.
+     */
+    @Test
+    public void testTransientStartFailureFallsBackToPersistentStart() throws Exception {
+        File dmJar = createDependencyManagerBundle(m_tmp.newFile("dependencymanager.jar"));
+        File userJar = createUserBundle(m_tmp.newFile("user-bundle.jar"));
+
+        Map<String, String> config = new HashMap<>();
+        config.put(DependencyManager.SERVICEREGISTRY_CACHE_INDICES, "objectClass,user.bundle");
+        config.put(Constants.FRAMEWORK_STORAGE, m_tmp.newFolder("felix-cache").getAbsolutePath());
+        config.put(Constants.FRAMEWORK_STORAGE_CLEAN, Constants.FRAMEWORK_STORAGE_CLEAN_ONFIRSTINIT);
+        config.put(Constants.FRAMEWORK_BSNVERSION, Constants.FRAMEWORK_BSNVERSION_MULTIPLE);
+        config.put(Constants.FRAMEWORK_SYSTEMPACKAGES_EXTRA, "org.osgi.service.cm,org.osgi.service.metatype");
+        config.put(Constants.FRAMEWORK_BEGINNING_STARTLEVEL, "1");
+        Framework framework = ServiceLoader.load(FrameworkFactory.class).iterator().next().newFramework(config);
+        framework.start();
+        try {
+            BundleContext context = framework.getBundleContext();
+            FrameworkStartLevel frameworkStartLevel = framework.adapt(FrameworkStartLevel.class);
+            // same start level for the DependencyManager bundle and the user bundle
+            frameworkStartLevel.setInitialBundleStartLevel(2);
+            Bundle dm = install(context, dmJar, "dependencymanager");
+            Bundle user = install(context, userJar, "user-bundle");
+
+            Method acquireGlobalLock = framework.getClass().getDeclaredMethod("acquireGlobalLock");
+            Method releaseGlobalLock = framework.getClass().getDeclaredMethod("releaseGlobalLock");
+            Field targetStartLevel = framework.getClass().getDeclaredField("m_targetStartLevel");
+            acquireGlobalLock.setAccessible(true);
+            releaseGlobalLock.setAccessible(true);
+            targetStartLevel.setAccessible(true);
+
+            CountDownLatch startLevelChanged = new CountDownLatch(1);
+            Assert.assertTrue("could not acquire the framework global lock", (Boolean) acquireGlobalLock.invoke(framework));
+            try {
+                frameworkStartLevel.setStartLevel(2, event -> startLevelChanged.countDown());
+                long deadline = System.currentTimeMillis() + 30000;
+                while (targetStartLevel.getInt(framework) != 2) {
+                    if (System.currentTimeMillis() > deadline) {
+                        Assert.fail("the start level thread did not set its target start level");
+                    }
+                    Thread.sleep(10);
+                }
+                Assert.assertEquals("the active start level must still be 1", 1, frameworkStartLevel.getStartLevel());
+
+                user.start(); // activated immediately, on this thread
+            } finally {
+                releaseGlobalLock.invoke(framework);
+            }
+
+            Assert.assertEquals("user bundle not active", Bundle.ACTIVE, user.getState());
+            Assert.assertEquals("DependencyManager bundle not active", Bundle.ACTIVE, dm.getState());
+            // a transient start doesn't mark the bundle as persistently started
+            Assert.assertTrue("the DependencyManager bundle has not been started by the persistent start fallback",
+                dm.adapt(BundleStartLevel.class).isPersistentlyStarted());
+            Assert.assertTrue("the user bundle must use the service registry cache", cacheUsed(user));
+            Assert.assertFalse("a failure to start the DependencyManager bundle has been logged", startFailureLogged(dm));
+            Assert.assertTrue("the framework start level has not been raised", startLevelChanged.await(30, TimeUnit.SECONDS));
         } finally {
             framework.stop();
             framework.waitForStop(30000);
