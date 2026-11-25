@@ -54,6 +54,8 @@
         <module>org.apache.felix.dependencymanager.index.itest.dynamic.customindex</module>
         <module>org.apache.felix.dependencymanager.index.itest.static.customindex</module>
         <module>org.apache.felix.dependencymanager.index.itest.tests</module>
+        <module>org.apache.felix.dependencymanager.index.itest.refresh.bundle</module>
+        <module>org.apache.felix.dependencymanager.index.itest.refresh.tests</module>
         <module>org.apache.felix.dependencymanager.lambda.itest.lifecycle</module>
         <module>org.apache.felix.dependencymanager.lambda.itest.tests</module>
         <module>org.apache.felix.dependencymanager.runtime.itest</module>
