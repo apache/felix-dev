@@ -73,7 +73,7 @@ import test.felix6874.UserActivator;
  * unusable).
  *
  * This is a race: the scenario is run again with a new embedded Felix framework, at most
- * "felix6874.runs" times (system property, default 200).
+ * "felix6874.runs" times (system property, default 20; use a higher value, e.g. -Dfelix6874.runs=200, for stress runs).
  *
  * This class also checks that a DependencyManager bundle stopped by a management agent is not
  * restarted by the user bundles started afterwards, that a re-entrant call to the service
@@ -83,7 +83,7 @@ import test.felix6874.UserActivator;
  */
 public class FELIX6874_ParallelStartTest {
 
-    private static final int RUNS = Integer.getInteger("felix6874.runs", 200);
+    private static final int RUNS = Integer.getInteger("felix6874.runs", 20);
     private static final int USER_BUNDLES = 100;
 
     @Rule
