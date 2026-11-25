@@ -85,7 +85,7 @@ public class DependencyManager extends DependencyManagerCompat {
     }
 
     DependencyManager(BundleContext context, Logger logger) {
-        m_context = createContext(context);
+        m_context = createContext(context, logger);
         m_logger = logger;
         synchronized (m_dependencyManagers) {
             m_dependencyManagers.add(new WeakReference<DependencyManager>(this));
@@ -310,8 +310,8 @@ public class DependencyManager extends DependencyManagerCompat {
         return new PropertyMetaDataImpl();
     }
 
-    private BundleContext createContext(BundleContext context) {
-    	ServiceRegistryCache cache = ServiceRegistryCacheManager.getCache();
+    private BundleContext createContext(BundleContext context, Logger logger) {
+    	ServiceRegistryCache cache = ServiceRegistryCacheManager.getCache(logger);
         if (cache != null) {
             return cache.createBundleContextInterceptor(context);
         }

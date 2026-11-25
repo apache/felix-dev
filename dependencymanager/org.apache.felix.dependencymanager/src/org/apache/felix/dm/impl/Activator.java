@@ -57,6 +57,9 @@ public class Activator implements BundleActivator {
 
 	@Override
 	public void stop(BundleContext context) throws Exception {
+		// from now on, user bundles must neither restart us nor use the cache
+		ServiceRegistryCacheManager.stopped();
+
 		if (m_execTracker != null) {
 			m_execTracker.close();
 		}

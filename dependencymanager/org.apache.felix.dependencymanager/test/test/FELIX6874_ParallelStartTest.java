@@ -65,6 +65,9 @@ import test.felix6874.UserActivator;
  *
  * This is a race: the scenario is run again with a new embedded Felix framework, at most "felix6874.runs" times
  * (system property, default 200).
+ *
+ * This class also checks that a DependencyManager bundle stopped by a management agent is not restarted by the user
+ * bundles started afterwards.
  */
 public class FELIX6874_ParallelStartTest {
 
@@ -82,6 +85,53 @@ public class FELIX6874_ParallelStartTest {
     @Test
     public void testUserBundlesStartedInParallelWithDependencyManagerAndFilterIndex() throws Exception {
         test("objectClass,user.bundle");
+    }
+
+    /**
+     * A DependencyManager bundle stopped by a management agent must not be restarted by a user bundle creating a
+     * DependencyManager, and this user bundle must not use the service registry cache of the stopped DependencyManager
+     * bundle. The management agent can still restart the DependencyManager bundle.
+     */
+    @Test
+    public void testStoppedDependencyManagerIsNotRestartedByUserBundles() throws Exception {
+        File dmJar = createDependencyManagerBundle(m_tmp.newFile("dependencymanager.jar"));
+        File userJar = createUserBundle(m_tmp.newFile("user-bundle.jar"));
+
+        Map<String, String> config = new HashMap<>();
+        config.put(DependencyManager.SERVICEREGISTRY_CACHE_INDICES, "objectClass,user.bundle");
+        config.put(Constants.FRAMEWORK_STORAGE, m_tmp.newFolder("felix-cache").getAbsolutePath());
+        config.put(Constants.FRAMEWORK_STORAGE_CLEAN, Constants.FRAMEWORK_STORAGE_CLEAN_ONFIRSTINIT);
+        config.put(Constants.FRAMEWORK_BSNVERSION, Constants.FRAMEWORK_BSNVERSION_MULTIPLE);
+        config.put(Constants.FRAMEWORK_SYSTEMPACKAGES_EXTRA, "org.osgi.service.cm,org.osgi.service.metatype");
+        Framework framework = ServiceLoader.load(FrameworkFactory.class).iterator().next().newFramework(config);
+        framework.start();
+        try {
+            BundleContext context = framework.getBundleContext();
+            Bundle dm = install(context, dmJar, "dependencymanager");
+            Bundle user1 = install(context, userJar, "user-bundle-1");
+            Bundle user2 = install(context, userJar, "user-bundle-2");
+
+            dm.start();
+            user1.start();
+            Assert.assertTrue("user bundle 1 must use the service registry cache", cacheUsed(user1));
+
+            dm.stop(); // like a management agent
+            user2.start(); // creates a DependencyManager
+            Assert.assertEquals("user bundle 2 not active", Bundle.ACTIVE, user2.getState());
+            Assert.assertEquals("the stopped DependencyManager bundle has been restarted", Bundle.RESOLVED, dm.getState());
+            Assert.assertFalse("user bundle 2 must not use the cache of the stopped DependencyManager bundle", cacheUsed(user2));
+
+            dm.start(); // the management agent can still restart it
+            Assert.assertEquals("the DependencyManager bundle can't be restarted", Bundle.ACTIVE, dm.getState());
+        } finally {
+            framework.stop();
+            framework.waitForStop(30000);
+        }
+    }
+
+    /** Returns true if the DependencyManager of the given user bundle uses the service registry cache. */
+    private static boolean cacheUsed(Bundle userBundle) throws Exception {
+        return (Boolean) userBundle.loadClass(UserActivator.class.getName()).getField("s_cacheUsed").get(null);
     }
 
     /**
