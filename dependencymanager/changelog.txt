@@ -1,5 +1,19 @@
-Release Notes - Felix - Dependency Manager
-==========================================
+Release Notes - Felix - Dependency Manager 5.0.2
+===============================================
+
+** List of bundles being part of the release:
+    * org.apache.felix.dependencymanager; version=5.0.2
+
+   The other bundles are not part of this release, they are still released as
+   org.apache.felix.dependencymanager.shell 5.0.0, org.apache.felix.dependencymanager.runtime 5.0.0,
+   org.apache.felix.dependencymanager.annotation 6.0.0 and org.apache.felix.dependencymanager.lambda 2.0.0.
+
+** Bug
+   * [FELIX-6874] - Dependency Manager: intermittent NPE in ServiceRegistryCacheManager when bundles are started concurrently
+   * [FELIX-6880] - DM filter index sorts the shared objectClass array of a service registration in place
+
+Release Notes - Felix - Dependency Manager 5.0.0
+================================================
 
 ** List of bundles being part of the release:
     * org.apache.felix.dependencymanager; version=5.0.0
