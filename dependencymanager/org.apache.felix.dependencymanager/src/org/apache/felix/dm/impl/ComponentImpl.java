@@ -1364,7 +1364,11 @@ public class ComponentImpl implements Component, ComponentContext, ComponentDecl
             return;
         }
         Set<Event> dependencyEvents = m_dependencyEvents.get(dc);
+        // Remove using the old ordering key, then refresh the key (service ranking may have changed) and add it back.
         dependencyEvents.remove(e);
+        if (e instanceof ServiceEventImpl) {
+            ((ServiceEventImpl) e).refreshRanking();
+        }
         dependencyEvents.add(e);
                 
         switch (m_state) {
