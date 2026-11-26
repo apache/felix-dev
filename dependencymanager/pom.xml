@@ -82,6 +82,8 @@
         <log.version>1.3.2</log.version>
         <metatype.version>1.2.4</metatype.version>
         <servicemix.junit.version>4.13.2_1</servicemix.junit.version>
+        <!-- mvn -N exec:exec@release-plan -Dplan.only=true only prints the plan, and changes nothing -->
+        <plan.only>false</plan.only>
     </properties>
 
     <dependencyManagement>
@@ -206,7 +208,7 @@
         </pluginManagement>
         <plugins>
             <plugin>
-                <!-- proposes the bundles to release: mvn -N exec:exec@release-plan -->
+                <!-- releases the bundles that changed, and asks what it needs: mvn -N exec:exec@release-plan -->
                 <groupId>org.codehaus.mojo</groupId>
                 <artifactId>exec-maven-plugin</artifactId>
                 <inherited>false</inherited>
@@ -215,7 +217,15 @@
                         <id>release-plan</id>
                         <configuration>
                             <executable>${java.home}/bin/java</executable>
+                            <!-- the program reads from the console, and runs Maven itself -->
+                            <inheritIo>true</inheritIo>
+                            <successCodes>
+                                <successCode>0</successCode>
+                                <successCode>3</successCode>
+                            </successCodes>
                             <arguments>
+                                <argument>-Dmaven.home=${maven.home}</argument>
+                                <argument>-Dplan.only=${plan.only}</argument>
                                 <argument>${project.basedir}/release/ReleasePlan.java</argument>
                             </arguments>
                         </configuration>

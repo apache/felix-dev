@@ -26,48 +26,48 @@ Before you start
 * Add the release to changelog.txt: the list of the bundles that are part of it, and their issues. Commit it.
 * Check that the version in Jira exists, and that the issues of the release are resolved.
 
-Find out what to release
-========================
+Release
+=======
 
   mvn -N exec:exec@release-plan
 
-This lists, for every bundle, if something changed since the tag of its latest release, and proposes the versions.
-It only looks at git: the changes in the source of a bundle count, but not the changes of its tests and its
-documentation. The pom of a bundle only counts for the changes that are not about a version: the plan says so
-with a bundle that did not change otherwise. Check the changes of the modules a bundle depends on before you
-leave that bundle out. A module that is a bundle but does not list the maven-antrun-plugin like the other bundles
-(see pom.xml) does not take part: the plan warns about it. A bundle you do want to release anyway needs a version that was not released
-before, which you can set in the options for the release plugin below.
+Run it in a terminal, from this directory. It guides you through the release, and asks for what it needs: you
+type an answer and press enter, or just press enter for the answer between the brackets. It:
 
-The output ends with the mvn release:prepare command with the options to use. They set the release version and
-the next development version of every module. The bundles that did not change are put back to the version that
-they were released with, and that is also how the build knows not to deploy them again (see the apache-release
-profile in pom.xml).
+* checks that the working tree is clean, that you are not behind origin, and fetches the tags: they tell what was
+  released before.
+* shows, for every bundle, if something changed since the tag of its latest release. It only looks at git: the
+  changes in the source of a bundle count, but not the changes of its tests and its documentation. The pom of a
+  bundle only counts for the changes that are not about a version: it says so with a bundle that did not change
+  otherwise. Check the changes of the modules a bundle depends on before you leave that bundle out. A module that
+  is a bundle but does not list the maven-antrun-plugin like the other bundles (see pom.xml) does not take part:
+  it warns about it.
+* proposes the versions, and asks you to confirm the version of the parent and of every bundle that changed. The
+  bundles that did not change are put back to the version that they were released with, and that is also how the
+  build knows not to deploy them again (see the apache-release profile in pom.xml).
+* warns when changelog.txt does not list the bundles and versions that are released.
+* offers a dry run, which builds everything and changes nothing. (The real prepare builds everything too, before
+  it commits anything, so the dry run is not needed.)
+* runs mvn release:prepare, after you confirmed it. That builds and tests everything, commits the release
+  versions, creates the tag dependencymanager-parent-x.y.z for the whole build, commits the next development
+  versions, and pushes all that. When it fails it offers to roll back what it changed.
+* runs mvn release:perform, after you confirmed it. That builds the tag, signs the artifacts (you will be asked
+  for your gpg passphrase), and deploys them to a staging repository on https://repository.apache.org. Only the
+  parent pom and the bundles that changed are deployed: a bundle whose version has been released before is
+  skipped. Every bundle that is deployed is also tagged with its own tag, <artifactId>-<version>, for example
+  org.apache.felix.dependencymanager-5.0.2, and the tag is pushed.
 
-Prepare the release
-===================
+Every step that changes something asks first, and nothing that is not answered is done: without a terminal the
+release stops. The commands it runs are shown, so you can run them yourself, too: with
 
-Run the command the plan proposes. Add -DdryRun=true first to see what it does, without committing or pushing.
-Do a dry run with the complete build once (not with -DpreparationGoals=validate): it runs the integration tests
-and the baseline check of the bundles, also of the ones that are put back to the version they were released with.
+  mvn -N exec:exec@release-plan -Dplan.only=true
 
-  mvn release:prepare -B -Dproject.rel...=... -Dproject.dev...=...
+it only prints the proposal and the mvn release:prepare command with the options for the versions
+(-Dproject.rel.<groupId>:<artifactId>=... and -Dproject.dev....), and changes nothing. Run that command, and then
+mvn release:perform.
 
-(plain mvn release:prepare works too, but then it asks for the versions of every module and proposes the
-development version without -SNAPSHOT, so type the versions from the plan)
-
-This builds and tests everything, commits the release versions, creates the tag dependencymanager-parent-x.y.z
-for the whole build, commits the next development versions, and pushes all that.
-
-Stage the release
-=================
-
-  mvn release:perform
-
-This builds the tag, signs the artifacts (you will be asked for your gpg passphrase), and deploys them to a staging
-repository on https://repository.apache.org. Only the parent pom and the bundles that changed are deployed: a
-bundle whose version has been released before is skipped. Every bundle that is deployed is also tagged with its
-own tag, <artifactId>-<version>, for example org.apache.felix.dependencymanager-5.0.2, and the tag is pushed.
+The source release is the file dependencymanager-parent-x.y.z-source-release.zip: it holds the whole directory,
+so also the bundles which are not part of this release.
 
 A bundle is tagged right after it was deployed. When the perform fails halfway, drop the staging repository
 and run mvn release:perform again: a tag on the commit that is being released is not taken for a release of
@@ -77,9 +77,6 @@ commit is a bundle that was released before, and it is skipped.) No tag is made 
 Log in to https://repository.apache.org, check that the staging repository holds what you expect (the pom, jar,
 sources, javadoc, and the signature and checksums of each), and close it. The id of the repository (for example
 1560 for orgapachefelix-1560) is used below.
-
-The source release is the file dependencymanager-parent-x.y.z-source-release.zip: it holds the whole directory,
-so also the bundles which are not part of this release.
 
 Voting on the release
 =====================
