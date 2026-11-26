@@ -354,7 +354,10 @@ public class ComponentImpl implements Component, ComponentContext, ComponentDecl
                     .setFactory(m_instanceFactory, m_instanceFactoryCreateMethod) // if not set, no effect
                     .setComposition(m_compositionManager, m_compositionManagerGetMethod) // if not set, no effect
                     .setCallbacks(m_callbackInstance, m_callbackInit, m_callbackStart, m_callbackStop, m_callbackDestroy); // if not set, no effect
-        	clone.setThreadPool(m_executor);
+        	// The clone keeps its own serial executor (no thread pool): since nobody else can run its queue yet,
+        	// clone.start() below is executed synchronously by the current thread, and the instance is fully
+        	// initialized (dependencies injected, init/start callbacks invoked) before being returned to the consumer.
+        	// We never wait for a task executed by a thread pool, so a thread pool thread calling getService can't be blocked.
         	clone.setAutoConfig(ServiceRegistration.class, false); // don't inject the ServiceRegistration for the moment
         	configureAutoConfigState(clone, ComponentImpl.this);
         	// copy prototype dependencies, except instance bound dependencies
@@ -372,8 +375,9 @@ public class ComponentImpl implements Component, ComponentContext, ComponentDecl
         	
         	clone.start();
         	Object instance = clone.getInstance();
-        	if (instance == null) {
-        		// Race condition: the prototype is probably deactivating.
+        	if (instance == null || ! clone.isAvailable()) {
+        		// Race condition: the prototype is probably deactivating (a required dependency has been lost).
+        		clone.stop();
         		throw new IllegalStateException("Can't create prototype instance");
         	}
         	m_clones.put(instance, clone);
