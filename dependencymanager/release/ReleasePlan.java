@@ -139,8 +139,20 @@ public class ReleasePlan {
         System.out.println("Dependency Manager release");
         System.out.println("==========================");
         System.out.println();
-        if (!git(base, "status", "--porcelain").isEmpty()) {
-            throw new Stop("the working tree has changes, commit or stash them first (git status).");
+        // like the release plugin, do not mind files that are not tracked
+        if (!git(base, "status", "--porcelain", "--untracked-files=no").isEmpty()) {
+            throw new Stop("tracked files have changes, commit or stash them first (git status).");
+        }
+        // what an earlier attempt of a release left behind
+        if (new File(base, "release.properties").exists()) {
+            System.out.println("release.properties and the backups of the poms are left from an earlier release attempt.");
+            if (!confirm("Remove them (mvn release:clean)? Stops otherwise.", true)) {
+                throw new Stop("run mvn release:clean first.");
+            }
+            if (run(base, mvn("release:clean", "-B")) != 0) {
+                throw new Stop("mvn release:clean failed.");
+            }
+            System.out.println();
         }
         String branch = git(base, "rev-parse", "--abbrev-ref", "HEAD").get(0);
         if (!branch.equals("master") && !branch.equals("main")) {
