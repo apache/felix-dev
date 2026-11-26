@@ -28,7 +28,7 @@
     </parent>
 
     <artifactId>dependencymanager-parent</artifactId>
-    <version>1.0.1-SNAPSHOT</version>
+    <version>1.0.2</version>
     <packaging>pom</packaging>
 
     <name>Apache Felix Dependency Manager (parent)</name>
@@ -39,7 +39,7 @@
         <connection>scm:git:https://github.com/apache/felix-dev.git</connection>
         <developerConnection>scm:git:https://github.com/apache/felix-dev.git</developerConnection>
         <url>https://gitbox.apache.org/repos/asf?p=felix-dev.git;f=dependencymanager</url>
-        <tag>HEAD</tag>
+        <tag>dependencymanager-parent-1.0.2</tag>
     </scm>
 
     <modules>
@@ -66,7 +66,7 @@
 
     <properties>
         <felix.java.version>11</felix.java.version>
-        <project.build.outputTimestamp>2026-11-05T09:13:30Z</project.build.outputTimestamp>
+        <project.build.outputTimestamp>2026-11-26T15:09:04Z</project.build.outputTimestamp>
         <!-- compile against the OSGi R6 API, the lowest one supported, so the imports stay as they were in r16 -->
         <osgi.core.version>6.0.0</osgi.core.version>
         <osgi.cmpn.version>6.0.0</osgi.cmpn.version>
@@ -272,40 +272,40 @@
                                                 repository.
                                             -->
                                             <exec executable="git" resultproperty="dm.head.rc" outputproperty="dm.head" failonerror="false">
-                                                <arg value="rev-parse"/>
-                                                <arg value="HEAD"/>
+                                                <arg value="rev-parse" />
+                                                <arg value="HEAD" />
                                             </exec>
                                             <exec executable="git" resultproperty="dm.released.rc" outputproperty="dm.released.tag" failonerror="false">
-                                                <arg value="ls-remote"/>
-                                                <arg value="--tags"/>
-                                                <arg value="origin"/>
-                                                <arg value="refs/tags/${project.artifactId}-${project.version}"/>
+                                                <arg value="ls-remote" />
+                                                <arg value="--tags" />
+                                                <arg value="origin" />
+                                                <arg value="refs/tags/${project.artifactId}-${project.version}" />
                                             </exec>
                                             <fail message="Cannot find out if ${project.artifactId}-${project.version} was released before (git exit codes ${dm.head.rc} and ${dm.released.rc})">
                                                 <condition>
                                                     <or>
                                                         <not>
-                                                            <equals arg1="${dm.head.rc}" arg2="0"/>
+                                                            <equals arg1="${dm.head.rc}" arg2="0" />
                                                         </not>
                                                         <not>
-                                                            <equals arg1="${dm.released.rc}" arg2="0"/>
+                                                            <equals arg1="${dm.released.rc}" arg2="0" />
                                                         </not>
                                                     </or>
                                                 </condition>
                                             </fail>
                                             <condition property="maven.deploy.skip" value="true">
                                                 <and>
-                                                    <length string="${dm.released.tag}" when="greater" length="0"/>
+                                                    <length string="${dm.released.tag}" when="greater" length="0" />
                                                     <not>
-                                                        <contains string="${dm.released.tag}" substring="${dm.head}"/>
+                                                        <contains string="${dm.released.tag}" substring="${dm.head}" />
                                                     </not>
                                                 </and>
                                             </condition>
                                             <!-- no tag for a bundle that is not deployed, nor for a snapshot -->
                                             <condition property="dm.tag.skip" value="true">
                                                 <or>
-                                                    <istrue value="${maven.deploy.skip}"/>
-                                                    <contains string="${project.version}" substring="-SNAPSHOT"/>
+                                                    <istrue value="${maven.deploy.skip}" />
+                                                    <contains string="${project.version}" substring="-SNAPSHOT" />
                                                 </or>
                                             </condition>
                                             <echo level="info" if:true="${maven.deploy.skip}">${project.artifactId}-${project.version} was released before, it is not deployed again</echo>
@@ -322,14 +322,14 @@
                                         <skip>${dm.tag.skip}</skip>
                                         <target>
                                             <exec executable="git" failonerror="true">
-                                                <arg value="tag"/>
-                                                <arg value="-f"/>
-                                                <arg value="${project.artifactId}-${project.version}"/>
+                                                <arg value="tag" />
+                                                <arg value="-f" />
+                                                <arg value="${project.artifactId}-${project.version}" />
                                             </exec>
                                             <exec executable="git" failonerror="true">
-                                                <arg value="push"/>
-                                                <arg value="origin"/>
-                                                <arg value="refs/tags/${project.artifactId}-${project.version}"/>
+                                                <arg value="push" />
+                                                <arg value="origin" />
+                                                <arg value="refs/tags/${project.artifactId}-${project.version}" />
                                             </exec>
                                         </target>
                                     </configuration>
