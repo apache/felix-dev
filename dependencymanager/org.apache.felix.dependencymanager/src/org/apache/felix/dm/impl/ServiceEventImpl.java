@@ -69,8 +69,30 @@ public class ServiceEventImpl extends Event {
 
 	/**
 	 * The actual service.
+	 * <p>
+	 * Volatile: this field is accessed from several threads which are not serialized by the component queue.
+	 * It may be lazily written by {@link #getEvent()} from a tracker thread or from any user thread (for example
+	 * when a temporal dependency proxy is invoked), while {@link #close()} may concurrently read it from the thread
+	 * unregistering the service, in order to unget it.
 	 */
 	private volatile Object m_service;
+	
+	/**
+	 * The service ranking used to order this event. It is a snapshot, so that the ordering key of an
+	 * event stored in a sorted collection does not change behind the collection's back when the 
+	 * service ranking is modified. See {@link #refreshRanking()}.
+	 * <p>
+	 * Not volatile: this field is only written by {@link #refreshRanking()} (called from the component serial queue) and
+	 * only read by {@link #compareTo(Event)}, which is only called by the sorted set of dependency events
+	 * when it is modified (add/remove/contains), also from the component serial queue. The initial value written by
+	 * the constructor (possibly from a tracker thread) is safely published to the queue when the event is scheduled.
+	 */
+	private int m_ranking;
+	
+	/**
+	 * The service id used to order this event.
+	 */
+	private final long m_serviceId;
 	
     public ServiceEventImpl(ComponentContext ctx, ServiceReference<?> reference, Object service) {
 	    super(service);
@@ -80,6 +102,26 @@ public class ServiceEventImpl extends Event {
 		m_serviceObjects = (m_bundleContext != null) ? m_bundleContext.getServiceObjects(reference) : null;
 		m_reference = reference;
 		m_logger = ctx.getLogger();
+		m_ranking = readRanking(reference);
+		m_serviceId = readServiceId(reference);
+    }
+
+    /**
+     * Updates the ordering key with the current service ranking. Must be called while this event is not 
+     * stored in a sorted collection (typically: remove it, refresh it, add it back).
+     */
+    public void refreshRanking() {
+        m_ranking = readRanking(m_reference);
+    }
+
+    private static int readRanking(ServiceReference<?> reference) {
+        Object ranking = reference.getProperty(Constants.SERVICE_RANKING);
+        return (ranking instanceof Integer) ? (Integer) ranking : 0;
+    }
+
+    private static long readServiceId(ServiceReference<?> reference) {
+        Object id = reference.getProperty(Constants.SERVICE_ID);
+        return (id instanceof Long) ? (Long) id : 0L;
     }
 
     /**
@@ -158,7 +200,12 @@ public class ServiceEventImpl extends Event {
 
     @Override
     public int compareTo(Event b) {
-    	return getReference().compareTo(((ServiceEventImpl) b).getReference());
+        // Same ordering as ServiceReference.compareTo, but based on the snapshot taken at creation/refresh time.
+        ServiceEventImpl other = (ServiceEventImpl) b;
+        if (m_ranking != other.m_ranking) {
+            return m_ranking < other.m_ranking ? -1 : 1;
+        }
+        return Long.compare(other.m_serviceId, m_serviceId);
     }
         
     @Override
