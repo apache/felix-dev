@@ -82,8 +82,6 @@
         <log.version>1.3.2</log.version>
         <metatype.version>1.2.4</metatype.version>
         <servicemix.junit.version>4.13.2_1</servicemix.junit.version>
-        <!-- set to false by the performRelease profile, see tag-bundles below -->
-        <dependencymanager.tag.skip>true</dependencymanager.tag.skip>
     </properties>
 
     <dependencyManagement>
@@ -194,67 +192,143 @@
                         </execution>
                     </executions>
                 </plugin>
-                <!--
-                    The release plugin makes one tag for the whole reactor (dependencymanager-parent-x.y.z). On top
-                    of that every released bundle gets its own tag, <artifactId>-<version>, like the earlier releases.
-                    Only the bundles that list this plugin in their build are tagged, and only while performing a
-                    release: release:perform builds the tag that was just made, so HEAD of its checkout is the release.
-                -->
+                <plugin>
+                    <groupId>org.apache.maven.plugins</groupId>
+                    <artifactId>maven-antrun-plugin</artifactId>
+                    <version>3.1.0</version>
+                </plugin>
                 <plugin>
                     <groupId>org.codehaus.mojo</groupId>
                     <artifactId>exec-maven-plugin</artifactId>
                     <version>3.5.0</version>
-                    <configuration>
-                        <skip>${dependencymanager.tag.skip}</skip>
-                        <executable>git</executable>
-                    </configuration>
-                    <executions>
-                        <execution>
-                            <id>tag-bundle</id>
-                            <phase>deploy</phase>
-                            <goals>
-                                <goal>exec</goal>
-                            </goals>
-                            <configuration>
-                                <arguments>
-                                    <argument>tag</argument>
-                                    <argument>${project.artifactId}-${project.version}</argument>
-                                </arguments>
-                            </configuration>
-                        </execution>
-                        <execution>
-                            <id>push-bundle-tag</id>
-                            <phase>deploy</phase>
-                            <goals>
-                                <goal>exec</goal>
-                            </goals>
-                            <configuration>
-                                <arguments>
-                                    <argument>push</argument>
-                                    <argument>origin</argument>
-                                    <argument>refs/tags/${project.artifactId}-${project.version}</argument>
-                                </arguments>
-                            </configuration>
-                        </execution>
-                    </executions>
                 </plugin>
             </plugins>
         </pluginManagement>
+        <plugins>
+            <plugin>
+                <!-- proposes the bundles to release: mvn -N exec:exec@release-plan -->
+                <groupId>org.codehaus.mojo</groupId>
+                <artifactId>exec-maven-plugin</artifactId>
+                <inherited>false</inherited>
+                <executions>
+                    <execution>
+                        <id>release-plan</id>
+                        <configuration>
+                            <executable>${java.home}/bin/java</executable>
+                            <arguments>
+                                <argument>${project.basedir}/release/ReleasePlan.java</argument>
+                            </arguments>
+                        </configuration>
+                    </execution>
+                </executions>
+            </plugin>
+        </plugins>
     </build>
 
     <profiles>
         <profile>
-            <!-- release:perform sets performRelease -->
-            <id>tag-bundles</id>
-            <activation>
-                <property>
-                    <name>performRelease</name>
-                    <value>true</value>
-                </property>
-            </activation>
-            <properties>
-                <dependencymanager.tag.skip>false</dependencymanager.tag.skip>
-            </properties>
+            <!--
+                The release plugin makes one tag for the whole reactor (dependencymanager-parent-x.y.z). The bundles
+                are versioned and released separately though, so while performing a release (release:perform
+                builds the tag that was just made, with the apache-release profile of the Felix parent pom, which
+                this profile adds to; the profile is not activated by performRelease, as the release plugin 3.x
+                does not set that):
+                - a bundle whose version was released before, which is a bundle that did not change, is not deployed,
+                - and a bundle that is deployed is tagged as <artifactId>-<version>, like the earlier releases.
+                Only the bundles that list the antrun plugin in their build take part, see also release/ReleasePlan.java.
+            -->
+            <id>apache-release</id>
+            <build>
+                <pluginManagement>
+                    <plugins>
+                        <plugin>
+                            <groupId>org.apache.maven.plugins</groupId>
+                            <artifactId>maven-antrun-plugin</artifactId>
+                            <executions>
+                                <execution>
+                                    <id>skip-released-bundle</id>
+                                    <phase>initialize</phase>
+                                    <goals>
+                                        <goal>run</goal>
+                                    </goals>
+                                    <configuration>
+                                        <exportAntProperties>true</exportAntProperties>
+                                        <target xmlns:if="ant:if">
+                                            <!--
+                                                A tag of this version on another commit than the one being released
+                                                is from an earlier release: the bundle did not change and is skipped.
+                                                A tag on this commit is from an earlier attempt of this perform. It
+                                                does not count, as the bundle may not have made it to the staging
+                                                repository.
+                                            -->
+                                            <exec executable="git" resultproperty="dm.head.rc" outputproperty="dm.head" failonerror="false">
+                                                <arg value="rev-parse"/>
+                                                <arg value="HEAD"/>
+                                            </exec>
+                                            <exec executable="git" resultproperty="dm.released.rc" outputproperty="dm.released.tag" failonerror="false">
+                                                <arg value="ls-remote"/>
+                                                <arg value="--tags"/>
+                                                <arg value="origin"/>
+                                                <arg value="refs/tags/${project.artifactId}-${project.version}"/>
+                                            </exec>
+                                            <fail message="Cannot find out if ${project.artifactId}-${project.version} was released before (git exit codes ${dm.head.rc} and ${dm.released.rc})">
+                                                <condition>
+                                                    <or>
+                                                        <not>
+                                                            <equals arg1="${dm.head.rc}" arg2="0"/>
+                                                        </not>
+                                                        <not>
+                                                            <equals arg1="${dm.released.rc}" arg2="0"/>
+                                                        </not>
+                                                    </or>
+                                                </condition>
+                                            </fail>
+                                            <condition property="maven.deploy.skip" value="true">
+                                                <and>
+                                                    <length string="${dm.released.tag}" when="greater" length="0"/>
+                                                    <not>
+                                                        <contains string="${dm.released.tag}" substring="${dm.head}"/>
+                                                    </not>
+                                                </and>
+                                            </condition>
+                                            <!-- no tag for a bundle that is not deployed, nor for a snapshot -->
+                                            <condition property="dm.tag.skip" value="true">
+                                                <or>
+                                                    <istrue value="${maven.deploy.skip}"/>
+                                                    <contains string="${project.version}" substring="-SNAPSHOT"/>
+                                                </or>
+                                            </condition>
+                                            <echo level="info" if:true="${maven.deploy.skip}">${project.artifactId}-${project.version} was released before, it is not deployed again</echo>
+                                        </target>
+                                    </configuration>
+                                </execution>
+                                <execution>
+                                    <id>tag-bundle</id>
+                                    <phase>deploy</phase>
+                                    <goals>
+                                        <goal>run</goal>
+                                    </goals>
+                                    <configuration>
+                                        <skip>${dm.tag.skip}</skip>
+                                        <target>
+                                            <exec executable="git" failonerror="true">
+                                                <arg value="tag"/>
+                                                <arg value="-f"/>
+                                                <arg value="${project.artifactId}-${project.version}"/>
+                                            </exec>
+                                            <exec executable="git" failonerror="true">
+                                                <arg value="push"/>
+                                                <arg value="origin"/>
+                                                <arg value="refs/tags/${project.artifactId}-${project.version}"/>
+                                            </exec>
+                                        </target>
+                                    </configuration>
+                                </execution>
+                            </executions>
+                        </plugin>
+                    </plugins>
+                </pluginManagement>
+            </build>
         </profile>
     </profiles>
 </project>

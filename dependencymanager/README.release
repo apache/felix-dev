@@ -1,0 +1,139 @@
+Apache Felix Dependency Manager Release Guide
+=============================================
+
+This document describes how to release the Dependency Manager with Maven. It is based on the Release FAQ [1]. The
+release is made with the Maven release plugin, from this directory.
+
+The bundles in this directory are versioned and released separately: a release only contains the bundles which
+changed, and the other bundles stay at the version they were last released with. Like for the other Felix
+subprojects, the version in the pom of a bundle is a development version with an odd patch number
+(5.0.1-SNAPSHOT), which is released with the next even one (5.0.2).
+
+Prerequisites
+=============
+
+* A JDK, 11 or later, and Maven.
+* gpg, with a public key added to the KEYS file [2].
+* Your Apache credentials in ~/.m2/settings.xml, for the server id apache.releases.https.
+* The tags of the repository, which tell what was released before: git fetch origin --tags
+* A clean checkout of master, with all the changes you want to release committed and pushed.
+
+Before you start
+================
+
+* Make sure there are no dependencies on snapshots or unreleased versions of other modules, apart from the modules
+  of this directory.
+* Add the release to changelog.txt: the list of the bundles that are part of it, and their issues. Commit it.
+* Check that the version in Jira exists, and that the issues of the release are resolved.
+
+Find out what to release
+========================
+
+  mvn -N exec:exec@release-plan
+
+This lists, for every bundle, if something changed since the tag of its latest release, and proposes the versions.
+It only looks at git: the changes in the source of a bundle count, but not the changes of its tests and its
+documentation. The pom of a bundle only counts for the changes that are not about a version: the plan says so
+with a bundle that did not change otherwise. Check the changes of the modules a bundle depends on before you
+leave that bundle out. A module that is a bundle but does not list the maven-antrun-plugin like the other bundles
+(see pom.xml) does not take part: the plan warns about it. A bundle you do want to release anyway needs a version that was not released
+before, which you can set in the options for the release plugin below.
+
+The output ends with the mvn release:prepare command with the options to use. They set the release version and
+the next development version of every module. The bundles that did not change are put back to the version that
+they were released with, and that is also how the build knows not to deploy them again (see the apache-release
+profile in pom.xml).
+
+Prepare the release
+===================
+
+Run the command the plan proposes. Add -DdryRun=true first to see what it does, without committing or pushing.
+Do a dry run with the complete build once (not with -DpreparationGoals=validate): it runs the integration tests
+and the baseline check of the bundles, also of the ones that are put back to the version they were released with.
+
+  mvn release:prepare -B -Dproject.rel...=... -Dproject.dev...=...
+
+(plain mvn release:prepare works too, but then it asks for the versions of every module and proposes the
+development version without -SNAPSHOT, so type the versions from the plan)
+
+This builds and tests everything, commits the release versions, creates the tag dependencymanager-parent-x.y.z
+for the whole build, commits the next development versions, and pushes all that.
+
+Stage the release
+=================
+
+  mvn release:perform
+
+This builds the tag, signs the artifacts (you will be asked for your gpg passphrase), and deploys them to a staging
+repository on https://repository.apache.org. Only the parent pom and the bundles that changed are deployed: a
+bundle whose version has been released before is skipped. Every bundle that is deployed is also tagged with its
+own tag, <artifactId>-<version>, for example org.apache.felix.dependencymanager-5.0.2, and the tag is pushed.
+
+A bundle is tagged right after it was deployed. When the perform fails halfway, drop the staging repository
+and run mvn release:perform again: a tag on the commit that is being released is not taken for a release of
+an earlier time, so the bundles that were deployed before the failure are deployed again. (A tag on another
+commit is a bundle that was released before, and it is skipped.) No tag is made for a snapshot version.
+
+Log in to https://repository.apache.org, check that the staging repository holds what you expect (the pom, jar,
+sources, javadoc, and the signature and checksums of each), and close it. The id of the repository (for example
+1560 for orgapachefelix-1560) is used below.
+
+The source release is the file dependencymanager-parent-x.y.z-source-release.zip: it holds the whole directory,
+so also the bundles which are not part of this release.
+
+Voting on the release
+=====================
+
+Start a vote on the dev@felix.apache.org list, for example:
+
+>>>
+To: "Felix Developers List" <dev@felix.apache.org>
+Subject: [VOTE] Release Apache Felix Dependency Manager 5.0.2
+
+Hi,
+
+I would like to call for a vote on the following Dependency Manager release:
+
+  org.apache.felix.dependencymanager 5.0.2
+
+We solved N issues in this release:
+https://issues.apache.org/jira/projects/FELIX/versions/...
+
+Staging repository:
+https://repository.apache.org/content/repositories/orgapachefelix-<id>
+
+You can use this UNIX script to download the release and verify the signatures:
+https://github.com/apache/felix-dev/blob/master/check_staged_release.sh
+
+Usage:
+  sh check_staged_release.sh <id> /tmp/felix-staging
+
+Please vote to approve this release:
+
+  [ ] +1 Approve the release
+  [ ] -1 Don't approve the release (please provide specific comments)
+
+This vote will be open for 72 hours.
+<<<
+
+Promoting the release
+=====================
+
+When the vote has passed:
+
+* Release the staging repository on https://repository.apache.org, which publishes it to Maven Central.
+* Copy the source release and the jars, with their signatures and checksums, to the release area
+  https://dist.apache.org/repos/dist/release/felix, and remove the superseded ones.
+* Update the downloads page and the news of the website, and mark the versions as released in Jira.
+* Announce the release on the dev@ and users@ lists.
+
+Cancelling the release
+======================
+
+* Drop the staging repository on https://repository.apache.org.
+* Delete the tags that were created: dependencymanager-parent-x.y.z and the tag of every bundle that was
+  deployed, locally and on origin (git push origin --delete <tag>).
+* Fix the problem, and prepare the release again.
+
+[1] http://www.apache.org/dev/release.html
+[2] http://www.apache.org/dist/felix/KEYS

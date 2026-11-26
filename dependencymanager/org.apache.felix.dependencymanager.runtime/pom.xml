@@ -85,9 +85,9 @@
                 </configuration>
             </plugin>
             <plugin>
-                <!-- tags this bundle as <artifactId>-<version> when a release is performed, see the parent pom -->
-                <groupId>org.codehaus.mojo</groupId>
-                <artifactId>exec-maven-plugin</artifactId>
+                <!-- takes part in the release of individual bundles, see the release-bundles profile of the parent pom -->
+                <groupId>org.apache.maven.plugins</groupId>
+                <artifactId>maven-antrun-plugin</artifactId>
             </plugin>
         </plugins>
     </build>
