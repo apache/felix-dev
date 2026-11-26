@@ -58,7 +58,8 @@ type an answer and press enter, or just press enter for the answer between the b
   org.apache.felix.dependencymanager-5.0.2, and the tag is pushed.
 
 Every step that changes something asks first, and nothing that is not answered is done: without a terminal the
-release stops. The commands it runs are shown, so you can run them yourself, too: with
+release stops. (When it says that there is no input although you are in a terminal, run the program without Maven:
+java release/ReleasePlan.java) The commands it runs are shown, so you can run them yourself, too: with
 
   mvn -N exec:exec@release-plan -Dplan.only=true
 
