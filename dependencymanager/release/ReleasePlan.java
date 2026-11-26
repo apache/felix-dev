@@ -60,17 +60,27 @@ import org.w3c.dom.NodeList;
 public class ReleasePlan {
     private static final String GROUP_ID = "org.apache.felix";
 
-    /** The exit code when the release is stopped on purpose, the pom does not take it for a failure. */
-    private static final int STOPPED = 3;
+    /** The exit code when you said no, the pom does not take it for a failure. */
+    private static final int DECLINED = 3;
+
+    /** The exit code when the release failed: Maven fails the build then. */
+    private static final int FAILED = 1;
 
     private static final BufferedReader INPUT = new BufferedReader(new InputStreamReader(System.in));
 
-    /** Thrown when the release is stopped. */
+    /** Thrown when the release does not go on: because it failed, or because you said no. */
     private static class Stop extends Exception {
         private static final long serialVersionUID = 1L;
 
+        final boolean declined;
+
         Stop(String message) {
+            this(message, false);
+        }
+
+        Stop(String message, boolean declined) {
             super(message);
+            this.declined = declined;
         }
     }
 
@@ -126,8 +136,8 @@ public class ReleasePlan {
             release(base, parent, modules);
         } catch (Stop stop) {
             System.out.println();
-            System.out.println("Stopped: " + stop.getMessage());
-            System.exit(STOPPED);
+            System.out.println((stop.declined ? "Stopped: " : "FAILED: ") + stop.getMessage());
+            System.exit(stop.declined ? DECLINED : FAILED);
         }
     }
 
@@ -147,7 +157,7 @@ public class ReleasePlan {
         if (new File(base, "release.properties").exists()) {
             System.out.println("release.properties and the backups of the poms are left from an earlier release attempt.");
             if (!confirm("Remove them (mvn release:clean)? Stops otherwise.", true)) {
-                throw new Stop("run mvn release:clean first.");
+                throw new Stop("run mvn release:clean first.", true);
             }
             if (run(base, mvn("release:clean", "-B")) != 0) {
                 throw new Stop("mvn release:clean failed.");
@@ -359,7 +369,7 @@ public class ReleasePlan {
         System.out.println("tags the whole build as " + parent.artifactId + "-" + parent.release + ", commits the next development versions,");
         System.out.println("and pushes all that to origin.");
         if (!confirm("Prepare the release?", false)) {
-            throw new Stop("nothing has been changed.");
+            throw new Stop("nothing has been changed.", true);
         }
         List<String> prepare = mvn("release:prepare", "-B", "-Dresume=false");
         prepare.addAll(options);
@@ -384,8 +394,9 @@ public class ReleasePlan {
             return;
         }
         if (run(base, mvn("release:perform", "-B")) != 0) {
-            throw new Stop("release:perform failed, see the output above. When it is fixed, run mvn release:perform again:\n"
-                + "the bundles that were deployed before it failed are deployed again. Drop the staging repository first.");
+            throw new Stop("release:perform failed, see the output above. The release is prepared and pushed, so do not run this\n"
+                + "program again: when the problem is fixed, run mvn release:perform in this directory. The bundles that\n"
+                + "were deployed before it failed are deployed again. Drop the staging repository first if there is one.");
         }
 
         printNextSteps(parent, modules);
@@ -558,7 +569,7 @@ public class ReleasePlan {
     /** Asks for a yes, a no stops the release. */
     private static void mustConfirm(String question, boolean defaultYes) throws Stop, IOException {
         if (!confirm(question, defaultYes)) {
-            throw new Stop("nothing has been changed.");
+            throw new Stop("nothing has been changed.", true);
         }
     }
 
