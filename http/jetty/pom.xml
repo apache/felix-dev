@@ -49,7 +49,7 @@
              from the reactor, because each module here builds on its own and the
              framework is not necessarily built first; 8.0.0 is the latest release.
              Override to test against a locally built framework, for example:
-             mvn verify -Dfelix.framework.version=8.0.1-SNAPSHOT
+             mvn verify -Dfelix.framework.version=8.1.0-SNAPSHOT
              after mvn install in framework/. See FELIX-6869. -->
         <felix.framework.version>8.0.0</felix.framework.version>
         <!-- To debug the pax process, override this with -D -->
