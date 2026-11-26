@@ -427,6 +427,18 @@ public class BundleComponentActivator implements ComponentActivator
                 getConfiguration().keepInstances(), m_trueCondition);
             final SAXParserFactory factory = SAXParserFactory.newInstance();
             factory.setNamespaceAware(true);
+            try
+            {
+                factory.setFeature("http://xml.org/sax/features/external-general-entities", false);
+                factory.setFeature("http://xml.org/sax/features/external-parameter-entities", false);
+                factory.setFeature("http://apache.org/xml/features/nonvalidating/load-external-dtd", false);
+                factory.setFeature("http://apache.org/xml/features/disallow-doctype-decl", true);
+                factory.setXIncludeAware(false);
+            }
+            catch (Exception e)
+            {
+                logger.log(Level.WARN, "Failed to configure SAXParserFactory to prevent XXE", e);
+            }
             final SAXParser parser = factory.newSAXParser();
 
             parser.parse( stream, handler );
