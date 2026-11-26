@@ -170,7 +170,12 @@ public class ReleasePlan {
         }
         System.out.println("Fetching the tags and the latest commits of origin...");
         git(base, "fetch", "origin", "--tags");
-        List<String> counts = git(base, "rev-list", "--left-right", "--count", "origin/" + branch + "...HEAD");
+        List<String> counts;
+        try {
+            counts = git(base, "rev-list", "--left-right", "--count", "origin/" + branch + "...HEAD");
+        } catch (IllegalStateException e) {
+            throw new Stop("cannot compare " + branch + " with origin/" + branch + ", is the branch pushed?");
+        }
         if (counts.isEmpty()) {
             throw new Stop("cannot compare " + branch + " with origin/" + branch + ".");
         }
