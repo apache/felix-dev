@@ -271,17 +271,18 @@
                                                 does not count, as the bundle may not have made it to the staging
                                                 repository.
                                             -->
-                                            <exec executable="git" resultproperty="dm.head.rc" outputproperty="dm.head" failonerror="false">
+                                            <exec executable="git" resultproperty="dm.head.rc" outputproperty="dm.head" logError="true" failonerror="false">
                                                 <arg value="rev-parse" />
                                                 <arg value="HEAD" />
                                             </exec>
-                                            <exec executable="git" resultproperty="dm.released.rc" outputproperty="dm.released.tag" failonerror="false">
+                                            <exec executable="git" resultproperty="dm.released.rc" outputproperty="dm.released.tag" logError="true" failonerror="false">
                                                 <arg value="ls-remote" />
                                                 <arg value="--tags" />
                                                 <arg value="origin" />
                                                 <arg value="refs/tags/${project.artifactId}-${project.version}" />
                                             </exec>
-                                            <!-- git lists nothing for a tag that does not exist, and Ant then leaves the property unset -->
+                                            <!-- git lists nothing for a tag that does not exist, and Ant then leaves the property unset.
+                                                 What git says on stderr, such as a warning about an ssh key, is not part of the output (logError). -->
                                             <property name="dm.released.tag" value=""/>
                                             <fail message="Cannot find out if ${project.artifactId}-${project.version} was released before (git exit codes ${dm.head.rc} and ${dm.released.rc})">
                                                 <condition>
@@ -297,7 +298,7 @@
                                             </fail>
                                             <condition property="maven.deploy.skip" value="true">
                                                 <and>
-                                                    <length string="${dm.released.tag}" when="greater" length="0" />
+                                                    <contains string="${dm.released.tag}" substring="refs/tags/${project.artifactId}-${project.version}"/>
                                                     <not>
                                                         <contains string="${dm.released.tag}" substring="${dm.head}" />
                                                     </not>
