@@ -1551,11 +1551,11 @@ public class ComponentImpl implements Component, ComponentContext, ComponentDecl
             // service name can either be a string or an array of strings
             ServiceRegistration<?> registration;
 
-            // determine service properties
-            Dictionary<String, Object> properties = calculateServiceProperties();
-
-            // register the service
             try {
+                // determine service properties
+                Dictionary<String, Object> properties = calculateServiceProperties();
+
+                // register the service
                 Object componentInstance = null;
                 switch (m_scope) {
                    case SINGLETON: componentInstance = m_componentInstance; break;
@@ -1571,8 +1571,8 @@ public class ComponentImpl implements Component, ComponentContext, ComponentDecl
                 }
                 wrapper.setServiceRegistration(registration);
             }
-            catch (IllegalArgumentException iae) {
-                m_logger.log(Logger.LOG_ERROR, "Could not register service " + m_componentInstance, iae);
+            catch (RuntimeException e) {
+                m_logger.log(Logger.LOG_ERROR, "Could not register service " + m_componentInstance, e);
                 // set the registration to an illegal state object, which will make all invocations on this
                 // wrapper fail with an ISE (which also occurs when the SR becomes invalid)
                 wrapper.setIllegalState();
