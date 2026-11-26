@@ -380,7 +380,7 @@ public class MultiPropertyFilterIndex implements FilterIndex, ServiceTrackerCust
 					if (references.isEmpty()) {
 						m_keyToServiceReferencesMap.remove(keys.get(i));
 					} else {
-						((ArrayList) reference).trimToSize();
+						((ArrayList<?>) references).trimToSize();
 					}
 				}
 			}
