@@ -281,6 +281,8 @@
                                                 <arg value="origin" />
                                                 <arg value="refs/tags/${project.artifactId}-${project.version}" />
                                             </exec>
+                                            <!-- git lists nothing for a tag that does not exist, and Ant then leaves the property unset -->
+                                            <property name="dm.released.tag" value=""/>
                                             <fail message="Cannot find out if ${project.artifactId}-${project.version} was released before (git exit codes ${dm.head.rc} and ${dm.released.rc})">
                                                 <condition>
                                                     <or>
