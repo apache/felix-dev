@@ -40,6 +40,21 @@ class BundleRevisionDependencies
     private final Map<BundleRevision, Map<BundleCapability, Set<BundleWire>>>
         m_dependentsMap = new HashMap<>();
 
+    // Revisions that got classes from a provider through a DelegationHook.
+    // There is no wire for this, so it is tracked separately.
+    private final Map<BundleRevision, Set<BundleRevision>>
+        m_delegationDependentsMap = new HashMap<>();
+
+    public synchronized void addDelegationDependent(
+        BundleRevision provider, BundleRevision requirer)
+    {
+        if (provider != requirer)
+        {
+            m_delegationDependentsMap.computeIfAbsent(provider, k -> new HashSet<>())
+                .add(requirer);
+        }
+    }
+
     public synchronized void addDependent(BundleWire bw)
     {
         BundleRevision provider = bw.getProvider();
@@ -85,6 +100,7 @@ class BundleRevisionDependencies
     public synchronized void removeDependents(BundleRevision provider)
     {
         m_dependentsMap.remove(provider);
+        m_delegationDependentsMap.remove(provider);
     }
 
     public synchronized Map<BundleCapability, Set<BundleWire>>
@@ -197,6 +213,14 @@ class BundleRevisionDependencies
                         }
                     }
                 }
+                Set<BundleRevision> delegating = m_delegationDependentsMap.get(revision);
+                if (delegating != null)
+                {
+                    for (BundleRevision requirer : delegating)
+                    {
+                        result.add(requirer.getBundle());
+                    }
+                }
             }
         }
 
@@ -275,6 +299,10 @@ class BundleRevisionDependencies
     public synchronized void removeDependencies(Bundle bundle)
     {
         List<BundleRevision> revs = bundle.adapt(BundleRevisions.class).getRevisions();
+        for (Set<BundleRevision> delegating : m_delegationDependentsMap.values())
+        {
+            delegating.removeAll(revs);
+        }
         for (BundleRevision rev : revs)
         {
             BundleWiring wiring = rev.getWiring();
