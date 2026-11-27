@@ -20,6 +20,7 @@ package org.apache.felix.dm.impl.index;
 
 import java.util.Arrays;
 import java.util.Collection;
+import java.util.Collections;
 import java.util.Iterator;
 import java.util.List;
 
@@ -174,6 +175,7 @@ public class BundleContextInterceptor extends BundleContextInterceptorBase {
     public <S> Collection<ServiceReference<S>> getServiceReferences(Class<S> clazz, String filter)
         throws InvalidSyntaxException
     {
-        return Arrays.asList(getServiceReferences(clazz.getName(), filter));
+        ServiceReference[] refs = getServiceReferences(clazz.getName(), filter);
+        return refs == null ? Collections.emptyList() : Arrays.asList(refs);
     }
 }
