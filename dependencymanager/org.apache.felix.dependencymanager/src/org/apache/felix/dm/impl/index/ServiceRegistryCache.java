@@ -54,8 +54,9 @@ public class ServiceRegistryCache implements ServiceListener/*, CommandProvider*
     }
     
     public void addFilterIndex(FilterIndex index) {
-        m_filterIndexList.add(index);
+        // only add the index once opened: an index which fails to open must not be used
         index.open(m_filterIndexBundleContext);
+        m_filterIndexList.add(index);
     }
     
     public void removeFilterIndex(FilterIndex index) {
