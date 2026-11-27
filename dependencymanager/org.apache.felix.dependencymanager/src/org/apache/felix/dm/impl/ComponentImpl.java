@@ -32,9 +32,9 @@ import java.lang.reflect.Method;
 import java.lang.reflect.Proxy;
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Collections;
 import java.util.Dictionary;
 import java.util.Enumeration;
-import java.util.HashMap;
 import java.util.Hashtable;
 import java.util.IdentityHashMap;
 import java.util.List;
@@ -207,7 +207,7 @@ public class ComponentImpl implements Component, ComponentContext, ComponentDecl
      * Holds all the services of a given dependency context. Caution: the last entry in the skiplist is the highest 
      * ranked service.
      */
-    private final Map<DependencyContext, ConcurrentSkipListSet<Event>> m_dependencyEvents = new HashMap<>();
+    private final Map<DependencyContext, ConcurrentSkipListSet<Event>> m_dependencyEvents = new ConcurrentHashMap<>();
     
     /**
      * Flag used to check if this component has been added in a DependencyManager object.
@@ -585,13 +585,16 @@ public class ComponentImpl implements Component, ComponentContext, ComponentDecl
 
     @Override
     public Event getDependencyEvent(DependencyContext dc) {
+        // The dependency may have been concurrently removed from the component (we can be called from any thread).
         ConcurrentSkipListSet<Event> events = m_dependencyEvents.get(dc);
-        return events.size() > 0 ? events.last() : null;
+        return events != null && events.size() > 0 ? events.last() : null;
     }
     
     @Override
     public Set<Event> getDependencyEvents(DependencyContext dc) {
-        return m_dependencyEvents.get(dc);
+        // The dependency may have been concurrently removed from the component (we can be called from any thread).
+        Set<Event> events = m_dependencyEvents.get(dc);
+        return events != null ? events : Collections.emptySet();
     }
 
     @Override
