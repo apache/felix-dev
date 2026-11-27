@@ -206,7 +206,8 @@ public class AdapterFilterIndex extends AbstractFactoryFilterIndex implements Fi
             context = m_context;
         }
         if (context != null) {
-            return context.getService(reference);
+            // Only references are indexed: do not get the service, this would activate lazy services.
+            return reference;
         }
         else {
             throw new IllegalStateException("No valid bundle context.");
