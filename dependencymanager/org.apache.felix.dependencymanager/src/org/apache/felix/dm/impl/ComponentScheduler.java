@@ -20,7 +20,9 @@ package org.apache.felix.dm.impl;
 
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ConcurrentMap;
+import java.util.concurrent.ExecutionException;
 import java.util.concurrent.Executor;
+import java.util.concurrent.FutureTask;
 
 import org.apache.felix.dm.Component;
 import org.apache.felix.dm.ComponentDeclaration;
@@ -87,8 +89,28 @@ public class ComponentScheduler {
     }
 
     public void remove(final Component c) {
-        m_pending.remove(c);
-        ((ComponentContext) c).stop();
+        // Serialized with bind(), which may be starting this component: the removal then takes
+        // effect after the start, and the component is stopped.
+        FutureTask<Void> task = new FutureTask<>(() -> {
+            m_pending.remove(c);
+            ((ComponentContext) c).stop();
+        }, null);
+        m_serial.execute(task);
+        // The task runs immediately, unless another thread is running m_serial: wait for it, so
+        // that the component is stopped when this method returns.
+        try {
+            task.get();
+        }
+        catch (InterruptedException e) {
+            Thread.currentThread().interrupt();
+        }
+        catch (ExecutionException e) {
+            Throwable cause = e.getCause();
+            if (cause instanceof Error) {
+                throw (Error) cause;
+            }
+            throw cause instanceof RuntimeException ? (RuntimeException) cause : new RuntimeException(cause);
+        }
     }
 
     private boolean mayStartNow(Component c) {
