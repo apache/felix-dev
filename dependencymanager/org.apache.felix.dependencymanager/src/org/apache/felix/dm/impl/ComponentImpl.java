@@ -1316,9 +1316,12 @@ public class ComponentImpl implements Component, ComponentContext, ComponentDecl
             return;
         }
         m_logger.debug("handleAdded %s", e);
-        
+
         Set<Event> dependencyEvents = m_dependencyEvents.get(dc);
-        dependencyEvents.add(e);        
+        if (dependencyEvents == null) {
+            return; // the dependency has been removed from the component
+        }
+        dependencyEvents.add(e);
         dc.setAvailable(true);
                   
         // In the following switch block, we sometimes only recalculate state changes 
@@ -1364,6 +1367,9 @@ public class ComponentImpl implements Component, ComponentContext, ComponentDecl
             return;
         }
         Set<Event> dependencyEvents = m_dependencyEvents.get(dc);
+        if (dependencyEvents == null) {
+            return; // the dependency has been removed from the component
+        }
         dependencyEvents.remove(e);
         dependencyEvents.add(e);
                 
@@ -1394,6 +1400,9 @@ public class ComponentImpl implements Component, ComponentContext, ComponentDecl
     		}
     		// Check if the dependency is still available.
     		Set<Event> dependencyEvents = m_dependencyEvents.get(dc);
+    		if (dependencyEvents == null) {
+    			return; // the dependency has been removed from the component
+    		}
     		int size = dependencyEvents.size();
     		if (dependencyEvents.contains(e)) {
     			size--; // the dependency is currently registered and is about to be removed.
@@ -1435,7 +1444,10 @@ public class ComponentImpl implements Component, ComponentContext, ComponentDecl
     		if (! m_isStarted) {
     			return;
     		}
-    		Set<Event> dependencyEvents = m_dependencyEvents.get(dc);        
+    		Set<Event> dependencyEvents = m_dependencyEvents.get(dc);
+    		if (dependencyEvents == null) {
+    			return; // the dependency has been removed from the component
+    		}
     		dependencyEvents.remove(oldEvent);
     		dependencyEvents.add(newEvent);
                 
@@ -1757,6 +1769,11 @@ public class ComponentImpl implements Component, ComponentContext, ComponentDecl
     			m_dependencies.remove(dep);
     			generateNameBasedOnServiceAndProperties();
     			dep.stop();
+    			// The dependency is no longer part of this component: release its events.
+    			Set<Event> events = m_dependencyEvents.remove(dep);
+    			if (events != null) {
+    				events.forEach(Event::close);
+    			}
     		}
     	}
     }
