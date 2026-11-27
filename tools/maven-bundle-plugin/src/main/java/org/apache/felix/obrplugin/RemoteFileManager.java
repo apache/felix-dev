@@ -212,6 +212,11 @@ public class RemoteFileManager
             releaseWagon();
             throw new MojoExecutionException( "Authentication failed", e );
         }
+        catch ( RuntimeException e )
+        {
+            releaseWagon();
+            throw e;
+        }
     }
 
 
