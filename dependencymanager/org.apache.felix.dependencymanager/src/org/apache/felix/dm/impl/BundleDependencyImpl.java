@@ -47,9 +47,6 @@ public class BundleDependencyImpl extends AbstractDependency<BundleDependency> i
     private volatile Filter m_filter;
     private volatile long m_bundleId = -1;
     private Object m_nullObject;
-    private volatile boolean m_propagate;
-    private volatile Object m_propagateCallbackInstance;
-    private volatile String m_propagateCallbackMethod;
 
     public BundleDependencyImpl() {
     }
@@ -61,9 +58,6 @@ public class BundleDependencyImpl extends AbstractDependency<BundleDependency> i
         m_bundleInstance = prototype.m_bundleInstance;
         m_filter = prototype.m_filter;
         m_bundleId = prototype.m_bundleId;
-        m_propagate = prototype.m_propagate;
-        m_propagateCallbackInstance = prototype.m_propagateCallbackInstance;
-        m_propagateCallbackMethod = prototype.m_propagateCallbackMethod;       
     }
     
     @Override
