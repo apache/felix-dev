@@ -1251,8 +1251,14 @@ public class ComponentImpl implements Component, ComponentContext, ComponentDecl
             invoke(m_callbackDestroy);
             removeInstanceBoundDependencies();
             invokeRemoveRequiredDependencies();
+            boolean keepInstance = someDependenciesNeedInstance();
+            if (keepInstance) {
+                // The instance survives, and its fields are not updated while waiting for required dependencies:
+                // remove the injected services now, they will be injected again when the component is restarted.
+                removeAutoConfigDependenciesFromInstance();
+            }
             notifyListeners(newState);
-            if (! someDependenciesNeedInstance()) {
+            if (! keepInstance) {
                 destroyComponent();
             }
             return true;
@@ -1647,6 +1653,16 @@ public class ComponentImpl implements Component, ComponentContext, ComponentDecl
         }
     }
     
+    private void removeAutoConfigDependenciesFromInstance() {
+        for (DependencyContext d : m_dependencies) {
+            if (d.isAutoConfig() && !d.isInstanceBound()) {
+                for (Event e : m_dependencyEvents.get(d)) {
+                    updateImplementation(d.getAutoConfigType(), d, d.getAutoConfigName(), e, false, false);
+                }
+            }
+        }
+    }
+
     private void invokeAutoConfigInstanceBoundDependencies() {
         for (DependencyContext d : m_dependencies) {
             if (d.isAutoConfig() && d.isInstanceBound()) {
