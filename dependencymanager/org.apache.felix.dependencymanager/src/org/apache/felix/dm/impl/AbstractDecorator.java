@@ -44,7 +44,8 @@ public abstract class AbstractDecorator  {
     protected volatile DependencyManager m_manager;
     private final Map<Object, Component> m_services = new ConcurrentHashMap<>();
     private volatile ComponentContext m_decoratorComponent;
-    private final Map<Dependency, Dependency> m_depclones = new HashMap<>();
+    // For each dependency added to the decorator: the copy owned by each instantiated service.
+    private final Map<Dependency, Map<Component, Dependency>> m_depclones = new HashMap<>();
 
     public abstract Component createService(Object[] properties) throws Exception;
     
@@ -102,7 +103,7 @@ public abstract class AbstractDecorator  {
 	    			.map(dc -> dc.createCopy())
 	    			.toArray(Dependency[]::new);
 	    	for (int i = 0; i < dependencies.length; i ++) {
-	    		m_depclones.put(dependencies[i], copy[i]);
+	    		m_depclones.computeIfAbsent(dependencies[i], k -> new HashMap<>()).put(component, copy[i]);
 	    	}
             component.add(copy);
         }
@@ -112,11 +113,15 @@ public abstract class AbstractDecorator  {
      * Remove a Dependency from all instantiated services.
      */
     public void removeDependency(Dependency d) {
+        Map<Component, Dependency> copies = m_depclones.remove(d);
+        if (copies == null) {
+            return;
+        }
         for (Component component : m_services.values()) {
-        	Dependency copy = m_depclones.remove(d);
-        	if (copy != null) {
-        		component.remove(copy);
-        	}
+            Dependency copy = copies.get(component);
+            if (copy != null) {
+                component.remove(copy);
+            }
         }
     }
     
@@ -145,10 +150,14 @@ public abstract class AbstractDecorator  {
     }
 
     public void deleted(String pid) {
-        Component service = m_services.remove(pid);
-        if (service != null) {
-            m_manager.remove(service);
-        }
+        // Called from the ConfigAdmin thread: handle it in the internal decorator component queue, like updated.
+        m_decoratorComponent.getExecutor().execute(() -> {
+            Component service = m_services.remove(pid);
+            if (service != null) {
+                forgetDependencyCopies(service);
+                m_manager.remove(service);
+            }
+        });
     }
 
     // callbacks for resources
@@ -163,9 +172,10 @@ public abstract class AbstractDecorator  {
         if (newService == null) {
             throw new IllegalStateException("Service should not be null here.");
         }
+        forgetDependencyCopies(newService);
         m_manager.remove(newService);
     }
-    
+
     // callbacks for services
     public void added(ServiceReference<?> ref, Object service) throws Exception {
         Component newService = createService(new Object[] { ref, service });
@@ -179,6 +189,7 @@ public abstract class AbstractDecorator  {
         if (newService == null) {
             throw new IllegalStateException("Service should not be null here.");
         }
+        forgetDependencyCopies(newService);
         m_manager.remove(newService);
     }
     
@@ -203,15 +214,27 @@ public abstract class AbstractDecorator  {
         if (newService == null) {
             throw new IllegalStateException("Service should not be null here.");
         }
+        forgetDependencyCopies(newService);
         m_manager.remove(newService);
     }
-      
+
     public void stop() {
         for (Component component : m_services.values()) {
             m_manager.remove(component);
         }
         m_services.clear();
-    }    
+        m_depclones.clear();
+    }
+
+    /**
+     * Forgets the dependency copies owned by a service which is no longer instantiated.
+     */
+    private void forgetDependencyCopies(Component service) {
+        m_depclones.values().removeIf(copies -> {
+            copies.remove(service);
+            return copies.isEmpty();
+        });
+    }
     
     public void configureAutoConfigState(Component target, ComponentContext source) {
         configureAutoConfigState(target, source, BundleContext.class);
