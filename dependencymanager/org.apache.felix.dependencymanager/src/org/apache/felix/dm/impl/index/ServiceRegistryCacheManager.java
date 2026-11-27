@@ -261,49 +261,60 @@ public class ServiceRegistryCacheManager {
 		m_stopped = true;
 	}
 		
+	/**
+	 * Creates the indices specified in the org.apache.felix.dependencymanager.filterindex property.
+	 * The cache is only an optimization: an index which can't be created is logged and ignored,
+	 * and the other indices are still created.
+	 */
 	private static void resetIndices(String index) {
-		try {
-			if (index != null) {
-				ServiceRegistryCache cache = createCache(m_context); // may already exist, in case the Activator has called back our registerFilterIndex method
-					
-				String[] props = index.split(";");
-				for (int i = 0; i < props.length; i++) {
-					// Check if a classname is specified for the current index.
-					// (syntax is "full_class_name:index")
-					int colon = props[i].indexOf(":");
-					if (colon != -1) {
-						String className = props[i].substring(0, colon).trim();
-						String indexDefinition = props[i].substring(colon + 1);
-						cache.addFilterIndex(createCustomIndex(className, indexDefinition));
-					} else if (props[i].equals("*aspect*")) {
-						cache.addFilterIndex(new AspectFilterIndex());
-					} else if (props[i].equals("*adapter*")) {
-						cache.addFilterIndex(new AdapterFilterIndex());
-					} else {
-						cache.addFilterIndex(new MultiPropertyFilterIndex(props[i]));
-					}
-				}
-			}			
+		if (index == null) {
+			return;
 		}
-
-		catch (Exception e) {
-			e.printStackTrace();
-		}				
+		ServiceRegistryCache cache;
+		try {
+			cache = createCache(m_context); // may already exist, in case the Activator has called back our registerFilterIndex method
+		} catch (Exception e) {
+			log("Could not create the service registry cache, it won't be used", e);
+			return;
+		}
+		String[] props = index.split(";");
+		for (int i = 0; i < props.length; i++) {
+			try {
+				cache.addFilterIndex(createIndex(props[i]));
+			} catch (Exception | LinkageError e) {
+				log("Could not create the filter index \"" + props[i] + "\", it won't be used", e);
+			}
+		}
 	}
-		
+
+	private static FilterIndex createIndex(String prop) throws Exception {
+		// Check if a classname is specified for the current index.
+		// (syntax is "full_class_name:index")
+		int colon = prop.indexOf(":");
+		if (colon != -1) {
+			String className = prop.substring(0, colon).trim();
+			String indexDefinition = prop.substring(colon + 1);
+			return createCustomIndex(className, indexDefinition);
+		} else if (prop.equals("*aspect*")) {
+			return new AspectFilterIndex();
+		} else if (prop.equals("*adapter*")) {
+			return new AdapterFilterIndex();
+		} else {
+			return new MultiPropertyFilterIndex(prop);
+		}
+	}
+
 	/**
 	 * Creates a custom index using its classname, that has been specified in the org.apache.felix.dependencymanager.filterindex system property.
 	 */
-	private static FilterIndex createCustomIndex(String className, String indexDefinition) {
-		try {
-			Class<?> customIndexClass = Class.forName(className);
-			Constructor<?> ctor = customIndexClass.getConstructor(String.class);
-			FilterIndex index = (FilterIndex) ctor.newInstance(indexDefinition);
-			return index;
-		} catch (Exception e) {
-			e.printStackTrace();
-			return null;
-		}
+	private static FilterIndex createCustomIndex(String className, String indexDefinition) throws Exception {
+		Class<?> customIndexClass = Class.forName(className);
+		Constructor<?> ctor = customIndexClass.getConstructor(String.class);
+		return (FilterIndex) ctor.newInstance(indexDefinition);
+	}
+
+	private static void log(String msg, Throwable error) {
+		new Logger(m_context).log(Logger.LOG_ERROR, msg, error);
 	}
 	
 	/**
