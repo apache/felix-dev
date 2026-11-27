@@ -21,167 +21,103 @@ package org.apache.felix.dm.impl;
 import java.util.concurrent.ConcurrentLinkedQueue;
 import java.util.concurrent.Executor;
 import java.util.concurrent.RejectedExecutionException;
-import java.util.concurrent.atomic.AtomicBoolean;
+import java.util.concurrent.atomic.AtomicInteger;
+import java.util.concurrent.atomic.AtomicReference;
 
 import org.apache.felix.dm.Logger;
 import org.osgi.service.log.LogService;
 
-/**   
- * A DispatchExecutor is a queue that can execute FIFO tasks in a shared threadpool configured for the dispatcher.
- * Each task scheduled in a given DispatchExecutor will be executed serially in FIFO order; and multiple 
- * DispatchExecutor instances may each run concurrently with respect to each other.
+/**
+ * A lock free queue of tasks executed serially, in FIFO order, either in a shared threadpool or
+ * from the caller thread. Many DispatchExecutor instances may run concurrently in the same threadpool.
  * <p>
- * 
- * This class also supports synchronous scheduling, like the @link {@link SerialExecutor} class; and in this case,
- * only one caller thread will execute the tasks scheduled in the DispatchQueue (and the internal 
- * threadpool won't be used).
- * 
- * <p> 
- * 
- * This class is <b>lock free</b> by design and ensures <b>"safe object publication"</b> between scheduling threads and
- * actual executing thread: if one thread T1 schedules a task, but another thread T2 actually 
- * executes it, then all the objects from the T1 thread will be "safely published" to the executing T2 thread.
- * Safe publication is ensured  because we are using a ConcurrentLinkedQueue, and volatile attributes.
- * (see [1], chapter 3.5.3 (Safe publication idioms). 
- * 
- * [1] Java Concurrency In Practice, Addison Wesley
- * 
+ * A task scheduled by the thread which is currently executing the queue is run inline (immediately).
+ * <p>
+ * {@code m_pending} counts the tasks submitted but not yet executed: the thread which increments it
+ * from 0 becomes the owner of the queue, and runs tasks until the counter drops back to 0.
+ * Safe publication between the submitting threads and the owner is ensured by the concurrent queue
+ * and the atomic counter.
+ *
  * @author <a href="mailto:dev@felix.apache.org">Felix Project Team</a>
  */
 public class DispatchExecutor implements Executor, Runnable {
-	/**
-	 * The threadpool used for the execution of the tasks that are scheduled in this queue.
-	 */
-	private final Executor m_threadPool;
+    private final ConcurrentLinkedQueue<Runnable> m_tasks = new ConcurrentLinkedQueue<>();
+    private final AtomicInteger m_pending = new AtomicInteger();
+    private final AtomicReference<Thread> m_executingThread = new AtomicReference<>();
+    private final Executor m_threadPool;
+    private final Logger m_logger;
 
-	/** 
-	 * List of tasks scheduled in our queue.
-	 */
-	protected final ConcurrentLinkedQueue<Runnable> m_tasks = new ConcurrentLinkedQueue<>();
-
-    /**
-     * Marker used to remember the id of the thread currently executing this dispatch queue.
-     */
-    private volatile Thread m_executingThread;
-
-    /** 
-     * Flag telling if this dispatch queue is already scheduled for execution in the threadpool.
-     */
-    private final AtomicBoolean m_scheduled = new AtomicBoolean();
-
-    /** 
-	 * Logger used to log exceptions thrown by scheduled tasks. 
-	 */
-	private final Logger m_logger;
-	
-	/**
-	 * Creates a new DispatchQueue, which can be executed within a fixed thread pool. Multiple queue
-	 * can be executed concurrently, but all runnables scheduled in a given queue will be executed serially, 
-	 * in FIFO order. 
-	 * 
-	 * @param threadPool the executor (typically a threadpool) used to execute this DispatchExecutor.
-	 * @param logger the Logger used when errors are taking place
-	 */
     public DispatchExecutor(Executor threadPool, Logger logger) {
-		m_logger = logger;
-		m_threadPool = threadPool;
-	}
-	
-    /**
-     * Enqueues a task for later execution. You must call {@link #execute()} in order
-     * to trigger the actual execution of all scheduled tasks (in FIFO order).
-     */
-    public void schedule(Runnable task) {
-        m_tasks.add(task);
+        m_threadPool = threadPool;
+        m_logger = logger;
     }
 
-	/**
-	 * Submits a task in this queue, and schedule the execution of this DispatchQueue in the threadpool. 	 
-	 * The task is immediately executed (inline execution) if the queue is currently being executed by 
-	 * the current thread.
-	 */
-	public void execute(Runnable task) {
-	    execute(task, true);
-	}
-	
-	/**
-     * Schedules a task in this queue.
-     * If the queue is currently being executed by the current thread, then the task is executed immediately.
-     * @tasks the task to schedule
-     * @threadpool true if the queue should be executed in the threadpool, false if the queue must be executed by
-     * only one caller thread.
+    /**
+     * Executes a task in the threadpool (or inline if called from the thread executing this queue).
+     */
+    @Override
+    public void execute(Runnable task) {
+        execute(task, true);
+    }
+
+    /**
+     * Executes a task inline if called from the thread executing this queue. Otherwise, enqueues it and,
+     * if the queue is idle, executes the queue in the threadpool, or from the caller thread if
+     * {@code threadpool} is false.
      */
     public void execute(Runnable task, boolean threadpool) {
-        Thread currThread = Thread.currentThread();
-        if (m_executingThread == currThread) {
+        if (m_executingThread.get() == Thread.currentThread()) {
             runTask(task);
-        } else {
-            schedule(task);
-            execute(threadpool);
+            return;
         }
-    }
-	
-    /**
-     * Schedules the execution of this DispatchQueue in the threadpool.
-     */
-	public void execute() {
-	    execute(true);
-	}
-	
-    /**
-     * Schedules the execution of this DispatchQueue in the threadpool, or from a single caller thread.
-     * 
-     * @param threadpool true means the DispatchQueue is executed in the threadpool, false means the queue is executed from the
-     * caller thread.
-     */
-    public void execute(boolean threadpool) {
-        if (m_scheduled.compareAndSet(false, true)) { // schedules our run method in the tpool.
-            try {
-                if (threadpool) {
+        m_tasks.offer(task);
+        if (m_pending.getAndIncrement() == 0) {
+            if (threadpool) {
+                try {
                     m_threadPool.execute(this);
-                } else {
-                    run(); // run all queue tasks from the caller thread
+                } catch (RejectedExecutionException e) {
+                    run(); // the threadpool is stopped (framework shutting down?): run from the caller thread
                 }
-            } catch (RejectedExecutionException e) {
-                // The threadpool seems stopped (maybe the framework is being stopped). Anyway, just execute our tasks
-                // from the current thread.
+            } else {
                 run();
             }
         }
     }
 
-	/**
-	 * Run all tasks scheduled in this queue, in FIFO order. This method may be executed either in the threadpool, or from
-	 * the caller thread.
-	 */
-	@Override
-	public void run() {
+    /**
+     * Runs the queued tasks until the queue is empty. Only called by the owner of the queue.
+     */
+    @Override
+    public void run() {
+        Thread self = Thread.currentThread();
+        m_executingThread.set(self);
+        do {
+            runTask(m_tasks.poll());
+        } while (m_pending.decrementAndGet() > 0);
+        queueReleased();
+        // Another thread may already own the queue: only clear the executing thread if it is still us.
+        m_executingThread.compareAndSet(self, null);
+    }
+
+    /**
+     * Called by the thread which has just executed this queue, right after it has released the queue
+     * (so another thread may already be executing it). Does nothing by default: only used by tests.
+     */
+    void queueReleased() {
+    }
+
+    /**
+     * Runs a task. Never throws: an exception escaping from run() would leave m_pending
+     * above 0, and the queue would never be executed again.
+     */
+    private void runTask(Runnable task) {
         try {
-            // We do a memory barrier in order to ensure consistent per-thread
-            // memory visibility
-            m_executingThread = Thread.currentThread();
-            Runnable task;
-            while ((task = m_tasks.poll()) != null) {
-                runTask(task);
-            }
-        } finally {
-            m_scheduled.set(false);
-            m_executingThread = null;
-            if (m_tasks.peek() != null) {
-                execute();
+            task.run();
+        } catch (Throwable t) {
+            try {
+                m_logger.log(LogService.LOG_ERROR, "Error processing tasks", t);
+            } catch (Throwable ignored) {
             }
         }
-	}
-
-	/**
-	 * Runs a given task
-	 * @param task the task to execute
-	 */
-    private void runTask(Runnable task) {
-		try {
-		    task.run();
-		} catch (Throwable t) {
-			m_logger.log(LogService.LOG_ERROR, "Error processing tasks", t);
-		}
-	}
+    }
 }
