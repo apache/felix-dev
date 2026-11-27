@@ -31,7 +31,10 @@ import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Optional;
 import java.util.Set;
+import java.util.concurrent.Executor;
+import java.util.concurrent.atomic.AtomicInteger;
 
 import org.apache.felix.resolver.Logger;
 import org.apache.felix.resolver.ResolverImpl;
@@ -43,6 +46,7 @@ import org.apache.felix.resolver.test.util.PackageCapability;
 import org.apache.felix.resolver.test.util.PackageRequirement;
 import org.apache.felix.resolver.test.util.ResolveContextImpl;
 import org.apache.felix.resolver.test.util.ResourceImpl;
+import org.junit.Assert;
 import org.junit.Test;
 import org.mockito.Mockito;
 import org.osgi.framework.Constants;
@@ -63,6 +67,37 @@ import org.osgi.service.resolver.Resolver;
 
 public class ResolverTest
 {
+    @Test
+    public void testResolveContextExecutor() throws Exception
+    {
+        AtomicInteger tasks = new AtomicInteger();
+        Executor executor = new Executor()
+        {
+            public void execute(Runnable command)
+            {
+                tasks.incrementAndGet();
+                command.run();
+            }
+        };
+
+        Resolver resolver = new ResolverImpl(new Logger(Logger.LOG_DEBUG));
+        Map<Resource, Wiring> wirings = new HashMap<Resource, Wiring>();
+        Map<Requirement, List<Capability>> candMap = new HashMap<Requirement, List<Capability>>();
+        List<Resource> mandatory = populateScenario1(wirings, candMap);
+        ResolveContextImpl rci = new ResolveContextImpl(wirings, candMap, mandatory, Collections.<Resource> emptyList())
+        {
+            @Override
+            public Optional<Executor> getExecutor()
+            {
+                return Optional.of(executor);
+            }
+        };
+
+        resolver.resolve(rci);
+
+        Assert.assertTrue("The executor of the resolve context was not used", tasks.get() > 0);
+    }
+
     @Test
     public void testScenario1() throws Exception
     {
