@@ -154,6 +154,10 @@ public class ServiceDependencyImpl extends AbstractDependency<ServiceDependency>
         m_trackedServiceFilter = prototype.m_trackedServiceFilter;
         m_trackedServiceFilterUnmodified = prototype.m_trackedServiceFilterUnmodified;
         m_trackedServiceReference = prototype.m_trackedServiceReference;
+        m_trackedServiceReferenceId = prototype.m_trackedServiceReferenceId;
+        m_swap = prototype.m_swap;
+        m_debug = prototype.m_debug;
+        m_debugKey = prototype.m_debugKey;
         m_autoConfigInstance = prototype.m_autoConfigInstance;
         m_defaultImplementation = prototype.m_defaultImplementation;
         m_autoConfig = prototype.m_autoConfig;

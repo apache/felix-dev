@@ -79,6 +79,8 @@ public class ConfigurationDependencyImpl extends AbstractDependency<Configuratio
 	    m_logger = prototype.m_logger;
         m_metaType = prototype.m_metaType != null ? new MetaTypeProviderImpl(prototype.m_metaType, this, null) : null;
         m_needsInstance = prototype.needsInstance();
+        m_needsInstanceCalled = prototype.m_needsInstanceCalled;
+        m_optional = prototype.m_optional;
         m_configTypes = prototype.m_configTypes;
 	}
 		
