@@ -147,7 +147,16 @@ public final class ObrDeployFile extends AbstractFileMojo
 
         // ======== LOCK REMOTE OBR ========
         log.info( "LOCK " + remoteFile + '/' + repositoryName );
-        remoteFile.lockFile( repositoryName, ignoreLock );
+        try
+        {
+            remoteFile.lockFile( repositoryName, ignoreLock );
+        }
+        catch ( MojoExecutionException | RuntimeException e )
+        {
+            // the lock was not acquired, so there is nothing to unlock, but the wagon must be released
+            remoteFile.disconnect();
+            throw e;
+        }
         File downloadedRepositoryXml = null;
 
         try
