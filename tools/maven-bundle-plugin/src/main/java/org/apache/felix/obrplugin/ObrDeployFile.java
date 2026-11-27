@@ -24,7 +24,6 @@ import java.net.URI;
 import java.util.Arrays;
 import java.util.List;
 
-import org.apache.maven.artifact.manager.WagonManager;
 import org.apache.maven.artifact.repository.ArtifactRepository;
 import org.apache.maven.plugin.MojoExecutionException;
 import org.apache.maven.plugin.logging.Log;
@@ -34,6 +33,8 @@ import org.apache.maven.plugins.annotations.Mojo;
 import org.apache.maven.plugins.annotations.Parameter;
 import org.apache.maven.project.MavenProject;
 import org.apache.maven.settings.Settings;
+import org.apache.maven.settings.crypto.SettingsDecrypter;
+import org.codehaus.plexus.PlexusContainer;
 
 
 /**
@@ -99,10 +100,16 @@ public final class ObrDeployFile extends AbstractFileMojo
     private Settings settings;
 
     /**
-     * The Wagon manager.
+     * The Plexus container, used to look up the Wagon for the repository protocol.
      */
     @Component
-    private WagonManager m_wagonManager;
+    private PlexusContainer m_container;
+
+    /**
+     * Decrypts the passwords of the server and proxy settings.
+     */
+    @Component
+    private SettingsDecrypter m_settingsDecrypter;
 
 
     public void execute() throws MojoExecutionException
@@ -135,12 +142,21 @@ public final class ObrDeployFile extends AbstractFileMojo
         Log log = getLog();
         ObrUpdate update;
 
-        RemoteFileManager remoteFile = new RemoteFileManager( m_wagonManager, settings, log );
+        RemoteFileManager remoteFile = new RemoteFileManager( m_container, m_settingsDecrypter, settings, log );
         remoteFile.connect( repositoryId, url );
 
         // ======== LOCK REMOTE OBR ========
         log.info( "LOCK " + remoteFile + '/' + repositoryName );
-        remoteFile.lockFile( repositoryName, ignoreLock );
+        try
+        {
+            remoteFile.lockFile( repositoryName, ignoreLock );
+        }
+        catch ( MojoExecutionException | RuntimeException e )
+        {
+            // the lock was not acquired, so there is nothing to unlock, but the wagon must be released
+            remoteFile.disconnect();
+            throw e;
+        }
         File downloadedRepositoryXml = null;
 
         try
